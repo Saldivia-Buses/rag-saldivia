@@ -114,9 +114,23 @@ func (s *Purchasing) CreateOrder(ctx context.Context, req CreateOrderRequest) (*
 		}
 	}
 
+	// Calculate total from lines (SUM(qty * price)) — update order in same TX
+	// Simple sum since pgtype.Numeric arithmetic is complex, use SQL
+	_, _ = tx.Exec(ctx,
+		`UPDATE erp_purchase_orders SET total = (
+			SELECT COALESCE(SUM(quantity * unit_price), 0)
+			FROM erp_purchase_order_lines WHERE order_id = $1 AND tenant_id = $2
+		) WHERE id = $1 AND tenant_id = $2`,
+		order.ID, req.TenantID)
+
 	if err := tx.Commit(ctx); err != nil {
 		return nil, fmt.Errorf("commit order: %w", err)
 	}
+
+	// Re-fetch order with updated total
+	order, _ = s.repo.GetPurchaseOrder(ctx, repository.GetPurchaseOrderParams{
+		ID: order.ID, TenantID: req.TenantID,
+	})
 
 	idStr := uuidStr(order.ID)
 	s.audit.Write(ctx, audit.Entry{
