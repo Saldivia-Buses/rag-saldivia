@@ -62,6 +62,8 @@ func main() {
 	suggestionsHandler := handler.NewSuggestions(suggestionsSvc)
 	catalogsSvc := service.NewCatalogs(repo, auditWriter, publisher)
 	catalogsHandler := handler.NewCatalogs(catalogsSvc)
+	entitiesSvc := service.NewEntities(repo, auditWriter, publisher)
+	entitiesHandler := handler.NewEntities(entitiesSvc)
 
 	// Health
 	hc := health.New("erp")
@@ -87,6 +89,7 @@ func main() {
 		r.Use(authRead) // default for mount, write endpoints override below
 		r.Mount("/v1/erp/suggestions", suggestionsHandler.Routes(authWrite))
 		r.Mount("/v1/erp/catalogs", catalogsHandler.Routes(authWrite))
+		r.Mount("/v1/erp/entities", entitiesHandler.Routes(authWrite))
 	})
 
 	app.Run()

@@ -309,6 +309,65 @@ type ErpCatalog struct {
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
 
+type ErpEntity struct {
+	ID             pgtype.UUID        `json:"id"`
+	TenantID       string             `json:"tenant_id"`
+	Type           string             `json:"type"`
+	Code           string             `json:"code"`
+	Name           string             `json:"name"`
+	EncryptedTaxID []byte             `json:"encrypted_tax_id"`
+	TaxIDHash      pgtype.Text        `json:"tax_id_hash"`
+	Email          pgtype.Text        `json:"email"`
+	Phone          pgtype.Text        `json:"phone"`
+	Address        []byte             `json:"address"`
+	Metadata       []byte             `json:"metadata"`
+	Active         bool               `json:"active"`
+	DeletedAt      pgtype.Timestamptz `json:"deleted_at"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
+}
+
+type ErpEntityContact struct {
+	ID        pgtype.UUID        `json:"id"`
+	TenantID  string             `json:"tenant_id"`
+	EntityID  pgtype.UUID        `json:"entity_id"`
+	Type      string             `json:"type"`
+	Label     string             `json:"label"`
+	Value     string             `json:"value"`
+	Metadata  []byte             `json:"metadata"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpEntityDocument struct {
+	ID         pgtype.UUID        `json:"id"`
+	TenantID   string             `json:"tenant_id"`
+	EntityID   pgtype.UUID        `json:"entity_id"`
+	Name       string             `json:"name"`
+	DocType    string             `json:"doc_type"`
+	FileKey    string             `json:"file_key"`
+	UploadedAt pgtype.Timestamptz `json:"uploaded_at"`
+}
+
+type ErpEntityNote struct {
+	ID        pgtype.UUID        `json:"id"`
+	TenantID  string             `json:"tenant_id"`
+	EntityID  pgtype.UUID        `json:"entity_id"`
+	UserID    string             `json:"user_id"`
+	Type      string             `json:"type"`
+	Body      string             `json:"body"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpEntityRelation struct {
+	ID        pgtype.UUID        `json:"id"`
+	TenantID  string             `json:"tenant_id"`
+	FromID    pgtype.UUID        `json:"from_id"`
+	ToID      pgtype.UUID        `json:"to_id"`
+	Type      string             `json:"type"`
+	Metadata  []byte             `json:"metadata"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
 type ErpSequence struct {
 	ID        pgtype.UUID `json:"id"`
 	TenantID  string      `json:"tenant_id"`
