@@ -94,6 +94,13 @@ http:
       entryPoints: [web]
       middlewares: [dev-cors, dev-tenant]
 
+    # ERP — legacy Histrix replacement modules
+    erp:
+      rule: "PathPrefix(`/v1/erp`)"
+      service: erp
+      entryPoints: [web]
+      middlewares: [dev-cors, dev-tenant]
+
   services:
     auth:
       loadBalancer:
@@ -139,6 +146,10 @@ http:
       loadBalancer:
         servers:
           - url: "http://host.docker.internal:8011"
+    erp:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8013"
 
   middlewares:
     # CORS for dev — frontend on :3000, API on :80
