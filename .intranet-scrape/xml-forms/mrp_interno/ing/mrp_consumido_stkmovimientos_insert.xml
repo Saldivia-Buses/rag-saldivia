@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" limit="0">
+    <title>DETALLE ORDEN PRODUCCION</title>
+    <obs></obs>
+    <form >
+        <table id="STKINMOV" label="MOVIMIENTOS" >
+    	    <select>select '01', stkarticulohijo_id, [__stkdeposito_id__], [__stkconcepto_consumido_id__], '[__fecha_cierre__]' , '[__fecha_cierre__]', [__unidad_id__] , ([__producido_ordendetalle__] * cantidad) , ([__producido_ordendetalle__] * cantidad) , [__id_mrpordendetalle__] from STKPIEZA where idPieza = '[__stkarticulo_id__]'</select>
+
+            <field id="siscod" 	   _id_temp="stkarticulo_id" />
+
+            <field id="artcod" 	   id_temp="stkarticulo_id" />
+
+            <field id="depcod" 	   id_cab="stkdeposito_id" />
+            <field id="movcod" 	   id_cab="stkconcepto_id" />
+            
+            <field id="movfec"   id_cab="fecha_cierre" />
+            <field id="movalt"    id_cab="fecha_cierre" />
+
+            <field id="tipuni" 	   id_temp="unidad_id"/>
+
+            <field id="movcant" 	   id_temp="producido_ordendetalle"/>
+            <field id="movuso" 	   id_temp="producido_ordendetalle"/>
+
+            <field id="movnro"    id_temp="id_mrpordendetalle" />
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="cabecera" >
+	<title>Recibo</title>
+	<obs/>
+	<form >
+		<table id="CCTMOVIM" label="Recibo">
+			<field id="siscod" oculto="true">
+				<label>Cod.</label>
+				<help/>
+				<valor>'02'</valor>
+				<condicion operador="=">'02'</condicion>
+			</field>
+<!--			<field id="ctacod">
+				<label xml="cctcuent.xml">Cliente</label>
+				<help>Codigo de Cliente</help>
+				<ayuda_ex id="CCTCUENT" xml="HLPcctcuent.xml" dir="/help_local">
+					<field id="siscod" oculto="true">
+						<label>siscod</label>
+						<condicion operador="=">'02'</condicion>
+					</field>
+					<field id="ctacod">
+						<label>Nro</label>
+					</field>
+					<field id="ctanom">
+						<label>Nombre</label>
+						<detalle>ctanom</detalle>
+					</field>
+					<field id="ctanro">
+						<label>Cuit</label>
+						<detalle>ctanro</detalle>
+					</field>
+					
+					<clave>ctacod</clave>
+					<descripcion>ctanom</descripcion>
+				</ayuda_ex>
+				<tipo>decimal</tipo>
+			</field>
+			-->
+			<field id="sisctb"  oculto="true">
+				<label>sisctb</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=" >'sisctb'</condicion>
+					</field>
+				</parametro>
+			</field>			
+<!--			<field id="ctbpro"  ctbcuenta="1" oculto="true" >
+				<label>ctbdeu</label>
+				<parametro id="ctbparam_paralf.xml" retorna="paralf">
+					<field id="siscod">
+						<condicion operador="=" valorde="sisctb"></condicion>
+					</field>
+					<field id="parcla">
+						<condicion operador="=">'ctbdeu'</condicion>
+					</field>
+				</parametro>
+			</field>			-->	
+	<!--		<field deshabilitado="true" id="ctanom">
+				<label modpos="nobr">Señores</label>
+				<help>Nombre</help>
+				<tipo>character</tipo>
+			</field> -->
+<!--			<field deshabilitado="true" id="ctanro">
+				<label modpos="nobr">Cuit</label>
+				<help>Cuit</help>
+				<tipo>character</tipo>
+			</field>			-->
+			<field id="movfec" ctbfecha="1">
+				<label modpos="nobr">Fecha</label>
+				<help/>
+				<valor>today</valor>
+				<detalle>cajfec</detalle>
+				<detalle>movfec</detalle>				
+			</field>
+			<!--
+                  <field id="ctadir" tabla="CCTCUENT">
+                      <label  >Domicilio</label>
+                      <help>Domicilio</help>
+					  <tipo>varchar</tipo>					  
+                  </field>					  -->
+			<field id="concod" oculto="true">
+				<label modpos="nobr">concod</label>
+				<help/>
+				<valor>4</valor>
+			</field>
+			<field id="ctbtipo" oculto="true" ctbtipo="1">
+				<valor>2</valor>
+			</field>
+			<field id="movcta" oculto="true" >
+				<label modpos="nobr">movcta</label>
+				<help/>
+				<valor>1</valor>
+			</field>
+			<field id="zoncod" oculto="true" >
+				<label modpos="nobr">zoncod</label>
+				<valor>0</valor>
+			</field>
+
+			<field deshabilitado="true" id="movnpv">
+				<label modpos="nobr">Recibo</label>
+				<help>Comprobante</help>
+				<format>%04d</format>
+				<detalle>movnpv</detalle>				
+			</field>
+			<field id="siscaj" oculto="true">
+				<label>siscaj</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'siscaj'</condicion>
+					</field>
+				</parametro>
+			</field>
+			<field deshabilitado="true" id="movnroOP" local="true" ctbregnro="1">
+				<label modpos="nobr">Numero</label>
+				<help>Numero</help>
+				<parametro id="cajparam_parent.xml" retorna="parent">
+<!--					<field id="siscod">
+						<condicion operador="=" valorde="siscaj"/>
+							<tipo>varchar</tipo>
+							<valor>'05'</valor>
+					</field> -->
+					<field id="parcla" oculto="true">
+						<condicion operador="=">'nrorec'</condicion>
+					</field>
+					<field id="parent">
+						<complete>parent + 1</complete>
+					</field>					
+				</parametro>
+				<tipo>integer</tipo>
+				<format>%012d</format>
+				<detalle>movnro</detalle>
+				<detalle>cajnro</detalle>
+				<detalle>carrec</detalle>
+				<detalle>movinc</detalle>
+
+			</field>
+			<field id="fpago" local="true" obj="recibo_cajmovim_ing.xml">
+				<label  colspan="4">forma de pago</label>
+			</field>
+			<field id="movref__1" >
+				<label modpos="nobr" colspan="3">Ref</label>
+			</field>
+
+
+			<field id="opecla" local="true" oculto="true">
+				<label>Usuario</label>
+				<valor eval="true">$_SESSION['usuario']</valor>
+			</field>
+
+		</table>
+<!--		<join tipo="left">
+			<table id="CCTCUENT">
+				<field id="siscod" oculto="true">
+					<label>cctcuent.siscod</label>
+					<condicion operador="=">CCTMOVIM.siscod</condicion>
+				</field>
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">CCTMOVIM.ctacod</condicion>
+				</field>
+			</table>
+		</join> -->
+	</form>
+</histrix>

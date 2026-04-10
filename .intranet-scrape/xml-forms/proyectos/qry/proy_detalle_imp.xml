@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="abm-mini"   path="/fotos/proyectos/">
+        <title>Proyectos</title>
+        <obs></obs>
+        <form>
+                <table id="PROY_DETALLE" >
+                    <title>Proyecto</title>
+                	<field id="proyecto_id" oculto="true">
+                	</field>
+                    <field id="id_proydetalle" autoinc="true" noshow="true">
+                    </field>
+                    <field id="fecha_detalle">
+                        <label modpos="nobr">Fecha</label>
+                        <help>Fecha del Proyecto</help>
+                        <valor>today</valor>
+                    </field>
+                	<field id="tipodetalle_id">
+                        <label>Detalle</label>
+                	    <helper xml="proy_tipodetalle.xml" dir="/proyectos/man" type="combo" empty="true" />
+                	</field>
+                       <field id="descripcion_detalle">
+                            <label>Descripción</label>
+                            <size>30</size>
+                        </field>
+<!--
+                    <field id="directorio" deshabilitado="true" noshow="true">
+                      <label modpos="nobr">DIR</label>
+                    </field>
+
+                    <field id="pathdet" local="true" noshow="true">
+                        <if exp="true">
+                            <true>'proyecto_id/detalle/directorio'</true>
+                            <false>''</false>
+                        </if>
+                    </field>
+
+                   <field id="archivos_etapa" _local="true" path="pathdet" imageHeight="70">
+                              <expression>CONCAT('../xml/fotos/proyectos/', proyecto_id, '/detalle/', directorio, '/')</expression>
+
+                        <label >Archivos</label>
+                        <help>Archivos de la etapa</help>
+                        <tipo>dir</tipo>
+                    </field>
+-->
+                </table>
+        </form>           
+</histrix>

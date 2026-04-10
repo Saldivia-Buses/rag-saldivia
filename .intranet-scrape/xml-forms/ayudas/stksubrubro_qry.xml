@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  Ayuda
+Tarea: Ayuda para la Tabla de Rubros de Articulos
+Autor: d!ego2k
+Fecha: 13/10/10
+*******************************************************************************
+-->
+    <histrix tipo="consulta">
+	<title>SubRubros</title>
+	 <obs></obs>
+		<form >
+		    <table id="STK_SUBRUBROS" label="Rubros">
+				<field id="id_stksubrubro" esClave="true" noshow="true" />
+
+				<field id="nombre_subrubro">
+					<label>Nombre</label>
+				</field>
+
+		    </table>
+		</form>
+    </histrix>	

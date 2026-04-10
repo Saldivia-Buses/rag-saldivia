@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" imprime="false" procesa="false" showCantidad="false" tooltip="false" llenoTemporal="TEMPTABLENAME" importTempTable="TEMPTABLENAME" exportasuma="true" llenareferente="true">
+  <title>Movimientos</title>
+  <obs/>
+  <form>
+    <table id="CTB_DETALLES" label="cabecera" idCampoCond="grabar">
+
+      <movimientos>
+        <relacion id="ctbdetalle_ins.xml"/>
+      </movimientos>
+
+      <field id="cuenta_id">
+        <label modpos="nobr">Cuenta</label>
+        <helper type="combo" xml="cuentas_habilitadas_qry.xml" dir="/ayudas/" />
+      </field>
+
+      <field id="ctbcentro_id">
+        <label>Centro</label>
+        <helper type="combo" id="CTB_CENTROS" empty="true">
+          <field id="id_ctbcentro" />
+          <field id="nombre_centro" />
+        </helper>
+      </field>
+
+      <field id="doh" local="true">
+        <label colstyle="display:none;" />
+        <helper type="combo">
+            <option value="0">Debe</option>
+            <option value="1">Haber</option>
+        </helper>
+      </field>
+
+      <field id="importe" local="true">
+        <label colstyle="display:none;">importe</label>
+        <size>10</size>
+      </field>
+
+      <field id="debe" suma="true" noZero="true" local="true" deshabilitado="true">
+        <label modpos="nobr">Debe</label>
+        <if exp="doh == 0">
+          <true>importe</true>
+          <false>0</false>
+        </if>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="haber" suma="true" noZero="true" local="true" deshabilitado="true">
+        <label modpos="nobr">Haber</label>
+        <if exp="doh == 0">
+          <true>0</true>
+          <false>importe</false>
+        </if>
+        <tipo>numeric</tipo>
+      </field>
+
+
+
+      <field id="_ORDEN" local="true" _esClave="true" deshabilitado="true" noshow="true">
+        <label>Orden</label>
+      </field>
+
+      <field id="grabar" local="true" noshow="true">
+        <if exp="debe != 0 || haber != 0">
+          <true>1</true>
+          <false>0</false>
+        </if>
+      </field>
+
+      <!-- Campos de Validación -->
+
+      <field id="valid" validRow="true" noshow="true">
+        <if exp="debe + haber">
+          <true>1</true>
+          <false>0</false>
+        </if>
+      </field>
+
+      <field id="balancea" colstyle="display:none" formstyle="display:none" deshabilitado="true" local="true" suma="true" acumula="true">
+        <if exp="true">
+          <true>debe - haber</true>
+          <false>0</false>
+        </if>
+        <tipo>numeric</tipo>
+        <jseval campodestino="difasiento" total="true">balancea</jseval>
+        <detalle>difasiento</detalle>
+      </field>
+
+    </table>
+  </form>
+</histrix>

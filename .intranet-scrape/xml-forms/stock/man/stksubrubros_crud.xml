@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CRUD
+Tarea: Tabla de Rubros de Articulos
+Autor: d!ego2k
+Fecha: 13/10/10
+*******************************************************************************
+-->
+    <histrix tipo="abm-mini">
+	<title>Rubros</title>
+	 <obs></obs>
+		<form>
+		    <table id="STK_SUBRUBROS" label="SubRubros">
+				<field id="id_stksubrubro" esClave="true" noshow="true" />
+				<field id="stkrubro_id" oculto="true" />
+
+				<field id="nombre_subrubro">
+					<label>Nombre</label>
+				</field>
+
+		    </table>
+		</form>
+    </histrix>	

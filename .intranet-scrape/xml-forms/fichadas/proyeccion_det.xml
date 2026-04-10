@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" conBusqueda="true" imprimetanda="true">
+	<title>FICHA PERSONAL</title>
+	<obs></obs>
+	<form   >
+		<table id="PERSONAL" label="Ficha Personal">
+			<field id="idPersona" noshow="true">
+				<detalle>idPersona</detalle>
+			</field>
+
+			<field id="seccion_local" local="true" noshow="true" />
+
+			<field id="id_seccion">
+		<!--	     <expression having="false">(select SECCION.id_seccion from SECCIONHISTORIA
+				   left join SECCION on SECCION.id_seccion = SECCIONHISTORIA.id_seccion
+				   where SECCIONHISTORIA.IdPersona = PERSONAL.IdPersona
+    	and SECCIONHISTORIA.fechaDesde &lt;= str_to_date('[__hastafecha__]', '%d/%m/%Y')
+
+				   order by SECCIONHISTORIA.fechaDesde desc limit 1)
+			     </expression>-->
+	                            <tabla_ex id="SECCION">
+        	                        <field id="id_seccion"></field>
+            	                        <field id="nombre"></field>
+                                        <order>
+                		            <field id="nombre"></field>
+                    	                </order>
+                                    </tabla_ex>
+                                    
+	                          </field>
+
+			<field id="legajo">
+				<detalle>legajo</detalle>
+				<label modpos="nobr">Legajo</label>
+			</field>
+			<field id="apellido">
+				<label modpos="nobr" colspan="6">Apellido</label>
+				<help>Apellido</help>
+			</field>
+			<field id="Nombre">
+				<label modpos="nobr">Nombre</label>
+				<help>Nombre</help>
+			</field>
+            <field id="IdCateg2">
+                <label style="width:200px;" modpos="nobr">Categ.</label>
+                <expression><![CDATA[(select descripcion from CATEGHISTORIA left join CATPERSONAL on CATPERSONAL.IdSindicato = CATEGHISTORIA.idSindicato and CATPERSONAL.IdCateg = CATEGHISTORIA.IdCateg where CATEGHISTORIA.IdPersona = PERSONAL.IdPersona and  CATEGHISTORIA.fechaDesde <= CONCAT(RIGHT(REPLACE('[__hastafecha__]', '/', ''), 4), SUBSTRING(REPLACE('[__hastafecha__]', '/', ''), 3, 2), LEFT(REPLACE('[__hastafecha__]', '/', ''), 2)) order by CATEGHISTORIA.fechaDesde desc limit 1)]]></expression>
+            </field>
+			<field id="mitarjeta">
+				<expression>select PERSONAL_TARJETA.tarjeta FROM PERSONAL_TARJETA where PERSONAL_TARJETA.idPersona = PERSONAL.idPersona and STR_TO_DATE('[__hastafecha__]', '%d/%m/%Y') > PERSONAL_TARJETA.fechaDesde order by PERSONAL_TARJETA.fechaDesde DESC limit 1 </expression>
+				<label >Tarjeta</label>
+				<help>Tarjeta</help>
+<!--				<detalle>tarjeta</detalle> -->
+				<tipo>varchar</tipo>
+			</field>
+			
+			<field id="fechaEgreso" _noshow="true">
+				<label >Baja</label>
+				<help>Baja</help>
+			<condicion operador="=">'0000-00-00' or ( fechaEgreso &gt;= str_to_date('[__desdefecha__]', '%d/%m/%Y') 
+<!--  and fechaEgreso &lt;= str_to_date('[__hastafecha__]', '%d/%m/%Y') 
+ --> )</condicion>
+ 			</field>
+
+			<field id="colorear_egreso" clasefila="true" noshow="true">
+			    <expression>case when PERSONAL.fechaEgreso != '0000-00-00' then 'resaltadoRojo' else '' end</expression>
+			</field>
+
+			<field id="colorear_ingreso" clasefila="true" noshow="true">
+			    <expression>case when PERSONAL.fecing &gt;= str_to_date('[__desdefecha__]', '%d/%m/%Y') then 'resaltado' else '' end</expression>
+			</field>
+
+			<field id="fecing" noshow="true">
+				<label >Alta</label>
+				<help>Baja</help>
+				<condicion operador="&lt;=">str_to_date('[__hastafecha__]', '%d/%m/%Y')</condicion>
+			</field>
+			<field id="Ingreso" local="true">
+				<label >Fecha Ingreso</label>
+				<expression>PERSONAL.fecing</expression>
+				<tipo>date</tipo>
+			</field>
+			<field id="desdefecha" local="true" noshow="true">
+					<operador>&gt;=</operador>
+				<tipo>date</tipo>
+				<detalle>desdefecha</detalle>
+				<label>Desde Fecha</label>
+			</field>
+			<field id="hastafecha" local="true"  noshow="true">
+					<operador>&lt;=</operador>
+			
+				<tipo>date</tipo>
+				<detalle>hastafecha</detalle>
+				<label>Hasta Fecha</label>
+			</field>
+			
+			<field id="idJornada" noshow="true">
+			</field>
+			
+    	    <field id="antique1">
+	        <label>Años</label>    
+    		<expression>CONCAT(IF((YEAR(CURDATE()) - YEAR(fecing)) &gt; 0, (YEAR(CURDATE()) - YEAR(fecing)) - (MID(CURDATE(), 6, 5) &lt; MID(fecing, 6, 5)), IF((YEAR(CURDATE()) - YEAR(fecing)) &lt; 0, (YEAR(CURDATE()) - YEAR(fecing)) + (MID(fecing, 6, 5) &lt; MID(CURDATE(), 6, 5)), (YEAR(CURDATE()) - YEAR(fecing)))), ' Años')</expression>
+	        <tipo>varchar</tipo>
+	    </field>
+	    <field id="antique">
+	        <label>meses</label>
+	      <!--<expression>DATE_FORMAT(FROM_DAYS(TO_DAYS(NOW())-TO_DAYS(PERSONAL.fecing)) , '%y anos %m meses')</expression> -->
+	        <expression>CONCAT(IF((((YEAR(CURDATE()) - 1) * 12 + MONTH(CURDATE())) - ((YEAR(fecing) - 1) * 12 + MONTH(fecing))) > 0, (((YEAR(CURDATE()) - 1) * 12 + MONTH(CURDATE())) - ((YEAR(fecing) - 1) * 12 + MONTH(fecing))) - (MID(CURDATE(), 9, 2) &gt; MID(fecing, 9, 2)), IF((((YEAR(CURDATE()) - 1) * 12 + MONTH(CURDATE())) - ((YEAR(fecing) - 1) * 12 + MONTH(fecing))) &lt; 0, (((YEAR(CURDATE()) - 1) * 12 + MONTH(CURDATE())) - ((YEAR(fecing) - 1) * 12 + MONTH(fecing))) + (MID(fecing, 9, 2) &lt; MID(CURDATE(), 9, 2)), (((YEAR(CURDATE()) - 1) * 12 + MONTH(CURDATE())) - ((YEAR(fecing) - 1) * 12 + MONTH(fecing))))) - IF((YEAR(CURDATE()) - YEAR(fecing)) &gt; 0, (YEAR(CURDATE()) - YEAR(fecing)) - (MID(CURDATE(), 6, 5) &lt; MID(fecing, 6, 5)), IF((YEAR(CURDATE()) - YEAR(fecing)) &lt; 0, (YEAR(CURDATE()) - YEAR(fecing)) + (MID(fecing, 6, 5) &lt; MID(CURDATE(), 6, 5)), (YEAR(CURDATE()) - YEAR(fecing)))) * 12 , ' Meses')</expression>
+                <tipo>varchar</tipo>
+    	    </field>
+            <field id="hextras50" suma="true">
+                <label>Extras 50</label>
+                <expression><![CDATA[SUM(CASE when (TIME_TO_SEC(TIMEDIFF( TIMEDIFF((case when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') )  >= '00:30:00' && TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) <= '00:55:00'
+                                    then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) ,':30:00')
+                                        when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) < '00:30:00' then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) ,':00:00')
+                                    when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) > '00:55:00' then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) + 1 ,':00:00')
+                                                        end), (case when TIMEDIFF(h1, CONCAT(substring(h1, 1, 2),':00:00') ) > '00:05:00' then CONCAT(substring(h1, 1, 2) + 1 ,':00:00') 
+                                                        else CONCAT(substring(h1, 1, 2),':00:00') 
+                                                        end)) , TIMEDIFF(hegreso, hingreso))) / 3600) > 0 and
+                                                  (TIME_TO_SEC(TIMEDIFF( TIMEDIFF((case when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') )  >= '00:30:00' && TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) <= '00:55:00'
+                                    then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) ,':30:00')
+                                        when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) < '00:30:00' then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) ,':00:00')
+                                    when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) > '00:55:00' then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) + 1 ,':00:00')
+                                                        end), (case when TIMEDIFF(h1, CONCAT(substring(h1, 1, 2),':00:00') ) > '00:05:00' then CONCAT(substring(h1, 1, 2) + 1 ,':00:00') 
+                                                        else CONCAT(substring(h1, 1, 2),':00:00') 
+                                                        end)) , TIMEDIFF(hegreso, hingreso))) / 3600) < FICHADADIA.max_extras_50 
+                                    then (TIME_TO_SEC(TIMEDIFF( TIMEDIFF((case when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') )  >= '00:30:00' && TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) <= '00:55:00'
+                                    then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) ,':30:00')
+                                        when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) < '00:30:00' then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) ,':00:00')
+                                    when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) > '00:55:00' then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) + 1 ,':00:00')
+                                                        end), (case when TIMEDIFF(h1, CONCAT(substring(h1, 1, 2),':00:00') ) > '00:05:00' then CONCAT(substring(h1, 1, 2) + 1 ,':00:00') 
+                                                        else CONCAT(substring(h1, 1, 2),':00:00') 
+                                                        end)) , TIMEDIFF(hegreso, hingreso))) / 3600)
+                                            when (TIME_TO_SEC(TIMEDIFF( TIMEDIFF((case when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') )  >= '00:30:00' && TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) <= '00:55:00'
+                                    then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) ,':30:00')
+                                        when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) < '00:30:00' then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) ,':00:00')
+                                    when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) > '00:55:00' then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) + 1 ,':00:00')
+                                                        end), (case when TIMEDIFF(h1, CONCAT(substring(h1, 1, 2),':00:00') ) > '00:05:00' then CONCAT(substring(h1, 1, 2) + 1 ,':00:00') 
+                                                        else CONCAT(substring(h1, 1, 2),':00:00') 
+                                                        end)) , TIMEDIFF(hegreso, hingreso))) / 3600) >= FICHADADIA.max_extras_50  then FICHADADIA.max_extras_50 else 0 end)  ]]>
+                </expression>
+                <tipo>numeric</tipo>
+                                    
+            </field>
+            <field id="hextras100" suma="true">
+                <label>Extras 100</label>
+                <expression><![CDATA[SUM(CASE when (TIME_TO_SEC(TIMEDIFF( TIMEDIFF((case when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') )  >= '00:30:00' && TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) <= '00:55:00'
+                                    then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) ,':30:00')
+                                        when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) < '00:30:00' then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) ,':00:00')
+                                    when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) > '00:55:00' then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) + 1 ,':00:00')
+                                                        end), (case when TIMEDIFF(h1, CONCAT(substring(h1, 1, 2),':00:00') ) > '00:05:00' then CONCAT(substring(h1, 1, 2) + 1 ,':00:00') 
+                                                        else CONCAT(substring(h1, 1, 2),':00:00') 
+                                                        end)) , TIMEDIFF(hegreso, hingreso))) / 3600) > FICHADADIA.max_extras_50
+                                             then (TIME_TO_SEC(TIMEDIFF( TIMEDIFF((case when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') )  >= '00:30:00' && TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) <= '00:55:00'
+                                    then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) ,':30:00')
+                                        when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) < '00:30:00' then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) ,':00:00')
+                                    when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) > '00:55:00' then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) + 1 ,':00:00')
+                                                        end), (case when TIMEDIFF(h1, CONCAT(substring(h1, 1, 2),':00:00') ) > '00:05:00' then CONCAT(substring(h1, 1, 2) + 1 ,':00:00') 
+                                                        else CONCAT(substring(h1, 1, 2),':00:00') 
+                                                        end)) , TIMEDIFF(hegreso, hingreso))) / 3600) - FICHADADIA.max_extras_50 else 0 end ) ]]>
+                </expression>
+                <tipo>numeric</tipo>
+
+            </field>
+            <field id="trabajadas" _noshow="true" suma="true">
+                <label>Horas</label>
+                <expression sql="true"><![CDATA[
+                    select SEC_TO_TIME(sum(FF.minutos)) from 
+                    (select F1.fecha,
+               
+@egr:= (SELECT H.egreso from HORARIOHIST as H  where H.desdeFecha <= F1.fecha and H.dia = DAYOFWEEK(F1.fecha) order by H.desdeFecha DESC limit 1) as "egr",
+@ing:= (SELECT H.ingreso from HORARIOHIST as H where H.desdeFecha <= F1.fecha and H.dia = DAYOFWEEK(F1.fecha) order by H.desdeFecha DESC limit 1) as "ing",
+
+@h1:= (select H1.hora from FICHADAS as H1 left join FERIADOS ON FERIADOS.idFeriado = H1.fecha where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= F1.fecha order by fechaDesde DESC limit 1) and H1.fecha = F1.fecha and H1.borrado = 0 order by H1.hora  limit 0, 1) as "h1",
+@h2:= (select H1.hora from FICHADAS as H1 left join FERIADOS ON FERIADOS.idFeriado = H1.fecha where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= F1.fecha order by fechaDesde DESC limit 1) and H1.fecha = F1.fecha and H1.borrado = 0 order by H1.hora  limit 1, 1) as "h2",
+@h3:= (select H1.hora from FICHADAS as H1 left join FERIADOS ON FERIADOS.idFeriado = H1.fecha where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= F1.fecha order by fechaDesde DESC limit 1) and H1.fecha = F1.fecha and H1.borrado = 0 order by H1.hora  limit 2, 1) as "h3",
+@h4:= (select H1.hora from FICHADAS as H1 left join FERIADOS ON FERIADOS.idFeriado = H1.fecha where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= F1.fecha order by fechaDesde DESC limit 1) and H1.fecha = F1.fecha and H1.borrado = 0 order by H1.hora  limit 3, 1) as "h4",
+
+ifnull( time_to_sec( timediff( case when @h2 > @egr then @egr else @h2 end , case when @h1 < @ing then @ing else @h1 end )), 0)
++
+ifnull( time_to_sec( timediff( case when @h4 > @egr then @egr else @h4 end , case when @h4 < @ing then @ing else @h3 end )), 0)
+
+as "minutos"
+
+                   
+             from GEN_CALENDAR as F1 left join FERIADOS ON FERIADOS.idFeriado = F1.fecha
+        where
+                          F1.fecha  >= '[__desdefecha__]' and
+                          F1.fecha  <= '[__hastafecha__]' and
+        isnUll(FERIADOS.idFeriado)) as FF ]]>
+                </expression>
+                <tipo>time</tipo>
+            </field>
+
+            <field id="proyeccion" _noshow="true" suma="true" style="color:blue;">
+                <label>Proyeccion</label>
+                <expression sql="true"><![CDATA[
+                    select
+                    concat(CAST(FLOOR((sum(FF.minutos)/3600)) as char),':', 
+                      LPAD(CAST(FLOOR((sum(FF.minutos)%3600)/60)AS CHAR),2,'0'),':', 
+                      LPAD(CAST((sum(FF.minutos)%60) AS CHAR),2,'0'))
+                     from 
+                    (select F1.fecha,
+               
+@egr2:= (SELECT H.egresoPremio  from HORARIOHIST as H  where H.horario = [__idJornada__] and H.desdeFecha <= F1.fecha and H.dia = DAYOFWEEK(F1.fecha) order by H.desdeFecha DESC limit 1) as "egr",
+@ing2:= (SELECT H.ingresoPremio from HORARIOHIST as H  where H.horario = [__idJornada__] and H.desdeFecha <= F1.fecha and H.dia = DAYOFWEEK(F1.fecha) order by H.desdeFecha DESC limit 1) as "ing",
+
+ifnull( time_to_sec( timediff( @egr2 , @ing2 )), 0)
+
+as "minutos"
+
+                   
+             from GEN_CALENDAR as F1 left join FERIADOS ON FERIADOS.idFeriado = F1.fecha
+        where
+                          F1.fecha  >= (select (case when fechaDesde < '[__desdefecha__]' then '[__desdefecha__]' else fechaDesde end) from SECCIONHISTORIA where fechaDesde <= '[__hastafecha__]' and IdPersona = '[__idPersona__]' order by fechaDesde DESC limit 1) and
+                          F1.fecha  <= (select (case when fechaEgreso = '0000-00-00' then '[__hastafecha__]' else fechaEgreso end) from PERSONAL where IdPersona = '[__idPersona__]') and
+        isnUll(FERIADOS.idFeriado)) as FF ]]>
+                </expression>
+                <tipo>time</tipo>
+            </field>
+	    <field id="diferencia" local="true">
+		<label>Diferencia</label>
+		<expression sql="true">
+<![CDATA[
+
+SELECT sec_to_time([__hextras50__] * 3600 + [__hextras100__] * 3600 +
+            (ifnull((select time_to_sec(SEC_TO_TIME(sum(FF.minutos))) from 
+                    (select F1.fecha,
+@egr:= (SELECT H.egreso from HORARIOHIST as H  where H.desdeFecha <= F1.fecha and H.dia = DAYOFWEEK(F1.fecha) order by H.desdeFecha DESC limit 1) as "egr",
+@ing:= (SELECT H.ingreso from HORARIOHIST as H where H.desdeFecha <= F1.fecha and H.dia = DAYOFWEEK(F1.fecha) order by H.desdeFecha DESC limit 1) as "ing",
+@h1:= (select H1.hora from FICHADAS as H1 left join FERIADOS ON FERIADOS.idFeriado = H1.fecha where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= F1.fecha order by fechaDesde DESC limit 1) and H1.fecha = F1.fecha and H1.borrado = 0 order by H1.hora  limit 0, 1) as "h1",
+@h2:= (select H1.hora from FICHADAS as H1 left join FERIADOS ON FERIADOS.idFeriado = H1.fecha where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= F1.fecha order by fechaDesde DESC limit 1) and H1.fecha = F1.fecha and H1.borrado = 0 order by H1.hora  limit 1, 1) as "h2",
+@h3:= (select H1.hora from FICHADAS as H1 left join FERIADOS ON FERIADOS.idFeriado = H1.fecha where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= F1.fecha order by fechaDesde DESC limit 1) and H1.fecha = F1.fecha and H1.borrado = 0 order by H1.hora  limit 2, 1) as "h3",
+@h4:= (select H1.hora from FICHADAS as H1 left join FERIADOS ON FERIADOS.idFeriado = H1.fecha where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= F1.fecha order by fechaDesde DESC limit 1) and H1.fecha = F1.fecha and H1.borrado = 0 order by H1.hora  limit 3, 1) as "h4",
+ifnull( time_to_sec( timediff( case when @h2 > @egr then @egr else @h2 end , case when @h1 < @ing then @ing else @h1 end )), 0)
++
+ifnull( time_to_sec( timediff( case when @h4 > @egr then @egr else @h4 end , case when @h4 < @ing then @ing else @h3 end )), 0)
+as "minutos"           
+             from GEN_CALENDAR as F1 left join FERIADOS ON FERIADOS.idFeriado = F1.fecha
+        where
+                          F1.fecha  >= '[__desdefecha__]' and
+                          F1.fecha  <= '[__hastafecha__]' and
+        isnUll(FERIADOS.idFeriado)) as FF), 0)
+-
+ifnull((                    select
+		    time_to_sec(concat(CAST(FLOOR((sum(FF.minutos)/3600)) as char),':', 
+                      LPAD(CAST(FLOOR((sum(FF.minutos)%3600)/60)AS CHAR),2,'0'),':', 
+                      LPAD(CAST((sum(FF.minutos)%60) AS CHAR),2,'0')))
+                     from 
+                    (select F1.fecha,
+@egr2:= (SELECT H.egresoPremio  from HORARIOHIST as H  where H.horario = [__idJornada__] and H.desdeFecha <= F1.fecha and H.dia = DAYOFWEEK(F1.fecha) order by H.desdeFecha DESC limit 1) as "egr",
+@ing2:= (SELECT H.ingresoPremio from HORARIOHIST as H  where H.horario = [__idJornada__] and H.desdeFecha <= F1.fecha and H.dia = DAYOFWEEK(F1.fecha) order by H.desdeFecha DESC limit 1) as "ing",
+ifnull( time_to_sec( timediff( @egr2 , @ing2 )), 0)
+as "minutos"
+             from GEN_CALENDAR as F1 left join FERIADOS ON FERIADOS.idFeriado = F1.fecha
+        where
+                          F1.fecha  >= '[__desdefecha__]' and
+                          F1.fecha  <= '[__hastafecha__]' and
+        isnUll(FERIADOS.idFeriado)) as FF), 0)) )
+ ]]>
+		</expression>
+		<tipo>time</tipo>
+	    </field>
+
+      <field id="francos" local="true" suma="true">
+                <helper type="link" xml="francos_per_int.xml">
+                <parameter target="legajo" source="legajo"/>
+                <parameter target="IdPersona" source="IdPersona"/>
+                <!--<paring destino="fechainicio" operador="&gt;=" >desde_filt</paring>
+                <paring destino="fechafin" operador="&lt;=" >hasta_filt</paring>-->
+            </helper>
+                <expression><![CDATA[select count(*) from FRANCOS_PER F
+                                        join CALENDAR ON CALENDAR.fecha >= F.fechainicio and CALENDAR.fecha <= (case when F.fechafin = '0000-00-00' then str_to_date('[__hastafecha__]', '%d/%m/%Y') else F.fechafin end) 
+                                     where F.IdPersona = PERSONAL.IdPersona and 
+                                          CALENDAR.fecha >= str_to_date('[__desdefecha__]', '%d/%m/%Y') and 
+                                          CALENDAR.fecha <= str_to_date('[__hastafecha__]', '%d/%m/%Y') and
+                                          dayofweek(CALENDAR.fecha) NOT IN (1,7) and 
+                                          CALENDAR.fecha NOT IN (select idFeriado from FERIADOS)]]></expression>
+        <label style="font-size:14px;">Faltas</label>
+        </field>
+
+	    <group>
+                <field id="legajo" tabla="PERSONAL"></field>
+            </group>
+                       
+			<order>
+				<field id="apellido"></field>
+			</order>
+		</table>
+       <join tipo="left">
+            <table id="GEN_CALENDAR">
+                <field id="fecha">
+                    <condicion operador="&gt;=">STR_TO_DATE('[__desdefecha__]', '%d/%m/%Y') and GEN_CALENDAR.fecha &lt;= STR_TO_DATE('[__hastafecha__]', '%d/%m/%Y')</condicion>
+                </field>
+            </table>
+        </join>
+        
+        <join tipo="left">
+            <table id="FICHADADIA">
+                <field id="legajo">
+                    <condicion operador="=">PERSONAL.legajo</condicion>
+                </field>
+                <field id="fecha">
+                    <condicion operador="=">GEN_CALENDAR.fecha</condicion>
+                </field>
+            </table>
+        </join>
+
+<!--        <join tipo="left">
+            <table id="SECCIONHISTORIA">
+                <field id="IdPersona">
+                    <condicion operador="=">PERSONAL.IdPersona</condicion>
+                </field>
+                <field id="fechaDesde">
+                    <condicion operador="&lt;=">STR_TO_DATE('[__hastafecha__]', '%d/%m/%Y')</condicion>
+                </field>
+                <field id="id_seccion">
+                    <condicion operador="=">'[__seccion_local__]'</condicion>
+                </field>
+            </table>
+        </join>-->
+	</form>
+</histrix>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  Ayuda
+Tarea: Ayuda para la Tabla de Conceptos de Stock
+Autor: d!ego2k
+Fecha: 13/10/10
+*******************************************************************************
+-->
+    <histrix tipo="consulta">
+	<title>Conceptos Stock</title>
+	 <obs></obs>
+		<form >
+		    <table id="STK_CONCEPTOS" label="Conceptos Stock">
+
+				<field id="id_stkconcepto" esClave="true" noshow="true" />
+
+				<field id="nombre_concepto">
+					<label>Nombre</label>
+				</field>
+
+				<field id="tipo_concepto" noshow="true" />
+
+				<order>
+					<field id="nombre_concepto" />
+				</order>
+		    </table>
+		</form>
+    </histrix>	

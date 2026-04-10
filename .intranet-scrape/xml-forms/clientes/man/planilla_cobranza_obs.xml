@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert">
+  <title>Planilla de Cobranza</title>
+  <obs/>
+  <form >
+  
+    <table id="REG_MOVIMIENTO_OBS" label="Planilla de Cobranza" idCampoCond="graba">
+	  
+	  <field id="fec_observacion" 	id_cab="hoy" />
+	  <field id="hora_observacion" 	id_cab="hora" />
+	  <field id="regmovim_id" 		id_temp="id_regmovim" />
+	  <field id="login" 			id_cab="login" />
+	  <field id="observacion" 		id_cab="observacion" />
+	  <field id="gencontacto_id" 	id_cab="gencontacto_id" />
+
+    </table>
+  </form>
+</histrix>

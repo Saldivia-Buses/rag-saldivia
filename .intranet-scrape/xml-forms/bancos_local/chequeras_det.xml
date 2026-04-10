@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta">
+	<title>DETALLE CHEQUERAS</title>
+	<obs></obs>
+	<form >
+
+		<table id="CARCHEQU" label="Imputaciones">
+			<field id="carfec">
+				<label>Fecha</label>
+			</field>
+			<field id="siscod" oculto="true">
+				<valor>04</valor>
+			</field>
+			<field id="c1" local="true">
+			</field>
+			<field id="c2" local="true">
+			</field>
+
+			<field id="carnro">
+				<condicion operador="&gt;=">[__c1__]</condicion>
+			</field>
+			<field id="_carnro2">
+				<condicion operador="&lt;=">[__c2__]</condicion>
+				<expression>carnro</expression>
+			</field>
+
+
+<!-- 		<field id="movinc" linkint="cctmovim_comp_rec.xml" linkdes="Ver Detalle del Recibo" >
+				<label>Nro</label>
+				<paring destino="carrec">movinc</paring>
+				<paring destino="movnro">movinc</paring>
+				<paring destino="cajnro">movinc</paring>
+				<paring destino="movnpv">movipv</paring>
+				<paring destino="cajfec">movife</paring>
+				<paring destino="movfec">movife</paring>
+				<paring destino="movinc">movinc</paring>
+			</field>-->
+			<field id="carimp">
+				<label>Importe</label>
+			</field>
+
+
+			<field id="ccbcod">
+				<label>codigo </label>
+			</field>
+
+
+
+		</table>
+
+		<!-- <join tipo="left">
+			<table id="CCTMOVIM">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">CCTIMPUT.siscod</condicion>
+
+				</field>
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">CCTIMPUT.ctacod</condicion>
+				</field>
+				<field id="movnpv" oculto="true">
+					<condicion operador="=">CCTIMPUT.movipv</condicion>
+				</field>
+				<field id="movnro" oculto="true">
+					<condicion operador="=">CCTIMPUT.movinc</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CCTCONCE">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">CCTIMPUT.siscod</condicion>
+
+				</field>
+				<field id="concod" oculto="true">
+					<condicion operador="=">CCTIMPUT.movicc</condicion>
+				</field>
+			</table>
+		</join>-->
+
+	</form>
+</histrix>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="delete" limit="0">
+       <title>ASIENTO</title>
+        <obs></obs>
+               <form >
+					<table id="CTBREGIS" label="ANULACION ORDEN DE PAGO" >
+						<field id="siscod"  esClave="true">
+							<valor>22</valor>
+						</field>
+						<field id="regmin" id_temp="minuta" esClave="true">
+						</field>
+						<field id="regfec" id_temp="movife" esClave="true">
+						</field>
+						
+						<field id="regnro" id_temp="movinc" esClave="true">
+						</field>
+						
+						
+					</table>
+               </form>
+        </histrix>

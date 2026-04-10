@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="nosql" grabafinal="true" postGrabacion="true" barraDrag="true">
+	<titulo>evento</titulo>
+	<obs/>
+	<consulta >
+		<tabla id="PARAVENTO" label="Eventos">
+
+			<campo id="mail" id_cab="mail">
+			</campo>
+			<campo id="clave" id_cab="clave">
+			</campo>
+
+			<campo id="idEncuesta" id_cab="idEncuesta">
+			</campo>
+
+			<campo id="titulo" id_cab="titulo">
+			</campo>
+
+			<ejecuta>
+				<![CDATA[
+					    
+					$this->sendMail("mail", "clave" ,  "idEncuesta", "titulo");
+				]]>
+			</ejecuta>
+
+
+
+		</tabla>
+	</consulta>
+</abm>

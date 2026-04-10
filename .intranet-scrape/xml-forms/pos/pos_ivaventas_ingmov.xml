@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="abm" grabafinal="true">
+       <title>IVAVENTAS</title>
+        <obs></obs>
+               <form >	
+					<table id="IVAVENTAS" label="IVAVENTAS">
+						<field id="fecreg" id_cab="movfec">
+						</field>
+						<field id="feciva" id_cab="movfec">
+						</field>
+						<field id="codcom" id_cab="concod">
+						</field>
+						<field id="codlet" id_cab="movlet">
+						</field>
+						<field id="nronpv" id_cab="movnpv">
+						</field>
+						<field id="nrocom" id_cab="movnro">
+						</field>
+						<field id="ctacod" id_cab="ctacod">
+						</field>
+						<field id="ctanom" id_cab="ctanom">
+						</field>
+						<field id="tipdoc" id_cab="doccod">
+						</field>
+						<field id="nrodoc" id_cab="ctanro">
+						</field>
+						<field id="ivacod" >
+							<valor>1</valor>
+						</field>
+
+						<field id="totcom" id_temp="total">
+						</field>
+						<field id="nogcom" id_temp="nogravado">
+						</field>
+						<field id="execom" id_temp="exento">
+						</field>
+						
+					</table>
+               </form>
+        </histrix>

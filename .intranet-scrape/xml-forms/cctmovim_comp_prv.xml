@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8" ?>
+   <abm tipo="ficha" sololectura="true" PDFsincabecera="true" imprime="false" >
+       <titulo>Factura</titulo>
+        <obs></obs>
+               <consulta>
+                  <tabla id="CCTMOVIM" label="Movimientos">
+
+                  <field id="siscod" oculto="true">
+                      <label>Cod.</label>
+                      <help> </help>
+          					  <valor>'01'</valor>
+          					  <condicion operador="=">'01'</condicion>
+
+                  </field>
+
+
+	             <field id="movnpv">
+                      <label posx="70" posy="20" PDFnolabel="true">Npv</label>
+                      <help> Comprobante</help>
+				               <formato>%04d</formato>
+                  </field>
+                  <field id="movnro" >
+                      <label posx="5" posy="20" PDFnolabel="true" modpos="nobr">Número</label>
+                      <help> Numero Comprobante</help>
+                  </field>
+
+				          <field id="condes" tabla="CCTCONCE" oculto="true">
+       	              <label PDFnolabel="true">Tipo</label>
+           	          <help>Tipo de Comprobante</help>
+                  </field>
+
+                  <field id="ctacod" noshow="true" >
+                      <label PDFnolabel="true">Cuenta</label>
+                      <help>Codigo de Cuenta </help>
+                  </field>
+                  <field id="movfec">
+                      <label posx="145" posy="51" PDFnolabel="true" PDFsize="20">Fecha </label>
+                      <help> </help>
+					             <formato>d  m  y</formato>
+                  </field>
+					  
+                  <field id="ctanom">
+                      <label modpos ="nobr" posx="40" posy="63" PDFnolabel="true">Nombre</label>
+                      <help>Nombre</help>
+					             <tipo>character</tipo>
+                  </field>
+					  
+                  <field id="ivacod" tabla="CCTCUENT" >
+                      <label   posx="150" posy="63" PDFnolabel="true">Iva</label>
+                      <help>Nombre</help>
+            					  <tabla_ex id="FSMCTIVA">
+            						  <field id="ivacod"></field>
+            						  <field id="ivanom"></field>
+            					  </tabla_ex>
+                  </field>
+
+                  <field id="ctadir" tabla="CCTCUENT">
+                      <label  posx="40" posy="69" PDFnolabel="true">Domicilio</label>
+                      <help>Domicilio</help>
+                  </field>					  
+                  <field id="ctaloc" tabla="CCTCUENT">
+                      <label  modpos="nobr" posx="40" posy="74" PDFnolabel="true">Localidad</label>
+                      <help>Localidad</help>
+                  </field>					  
+                  <field id="prvcod" tabla="CCTCUENT">
+                      <label  posx="40" posy="79" PDFnolabel="true">Provincia</label>
+                      <help>Provincia</help>
+            					  <tabla_ex id="FSMPROVS">
+            						  <field id="prvcod"></field>
+            						  <field id="prvnom"></field>
+            					  </tabla_ex>
+                  </field>					  	
+                  <field id="ctanro" tabla="CCTCUENT">
+                      <label  posx="150" posy="79" PDFnolabel="true">Cuit</label>
+                      <help>Cuit</help>
+                  </field>					  					  				  
+	             <field id="regmin" oculto="true">
+                  </field>
+
+					  <!--
+                  <field id="movvto">
+                      <label>Venc. </label>
+                      <help> </help>
+                  </field>
+					  -->
+<!--  				  <field id="text1"  >
+						<expresion>movimp</expresion>
+	  				    <label posx="20" posy="100" PDFnolabel="true">Total</label>
+						<tipo aletras="true" >varchar</tipo>
+						<size>20</size>
+				 </field> -->
+                  <field id="movimp" suma="true">
+                      <label posx="160" posy="245" PDFnolabel="true" PDFsize="15">Total Comprobante</label>
+                  </field>
+
+            		    <field id="ocpnro" _linkint="cpsencab_cabreimp.xml" _linkdes="Orden de Compra" _linkdir="/compras">
+                      <label modpos="nobr">Nro Orden Compra</label>
+                      <expression>select ocpnro from FACREMIT where FACREMIT.ctacod = CCTMOVIM.ctacod and remnro = movnro limit 1</expression>
+                      <helper type="link" xml="cpsencab_cabreimp.xml" dir="/compras">
+                        <parameter source="ctacod" target="ctacod"/>
+                        <parameter source="ocpnro" target="ocpnro"/>
+                      </helper>
+            			    <!-- <expression>select ocpnro from FACREMIT where FACREMIT.ctacod = CCTMOVIM.ctacod and remnro = movnro limit 1</expression>
+                                <label modpos="nobr">Nro Orden Compra</label>
+                                <paring destino="ctacod">ctacod</paring>
+                                <paring destino="ocpnro">ocpnro</paring> -->
+                    </field>
+
+                 <field id="facdetal" local="true" _obj="facdetal_min.xml" >
+    	  				    <label colspan="6" posx="20" posy="+1" PDFnolabel="true">Detalle</label>
+                     <helper type="object" xml="facdetal_min.xml" >
+                        <parameter source="movnro" target="nrofac"/>
+                        <parameter source="movnpv" target="nropue"/>
+                        <parameter source="ctacod" target="ctacod"/>
+                      </helper>
+       	  				 <!--  <paring destino="nrofac">movnro</paring>
+       	  				  <paring destino="nropue">movnpv</paring>					 
+      	  				  <paring destino="ctacod">ctacod</paring> -->
+  				      </field>		
+
+<!--   				  <field id="cajmovim" local="true" obj="cajmovim_recibo.xml" >
+	  				    <label colspan="6" posx="20" posy="+1" PDFnolabel="true">Concepto</label>
+				 </field>					  
+
+				  <field id="cctimput" local="true" obj="cctimput_recibo.xml" >
+	  				  <label colspan="6" posx="20" posy="+1"  PDFsize="7">Imputaciones</label>
+	  				  <paring destino="siscod">siscod</paring>
+  				 </field>					  
+				  <field id="cctimput2" local="true" obj="cctimput_recibo_2.xml" >
+	  				  <label colspan="6" posx="20" posy="+1"  PDFsize="7">Comp.Imputados</label>
+	  				  <paring destino="ctacoddes">ctacod</paring>
+				 </field>
+                 <field id="carchequ" local="true" obj="carchequ_recibo.xml">
+                      <label colspan="6" posx="20" posy="+1" PDFsize="5">Detalle de Valores</label>
+                      <help> </help>
+                  </field>					  				
+
+                 <field id="carchehi" local="true" obj="carchehi_recibo.xml">
+                      <label colspan="6" posx="20" posy="-1"  PDFsize="5">Detalle de valores</label>
+                      <help> </help>
+                  </field>					  				
+	-->
+    <!--              <field id="movsal" suma="true">
+                      <label>Saldo</label>
+                      <help> </help>
+		    
+                  </field>-->
+
+                  </tabla>
+
+				  <join tipo="left">
+				 	<tabla id="CCTCONCE">
+						<field id="siscod" oculto="true">
+						    <label>cctcuent.siscod</label>
+						    <condicion operador="=">CCTMOVIM.siscod</condicion>
+						</field>
+
+						<field id="concod" oculto="true">
+				    		<condicion operador="=">CCTMOVIM.concod</condicion>
+						</field>
+
+						<field id="condes" oculto="true">
+						</field>
+				    </tabla>
+				  </join>
+				  <join tipo="left">
+				 	<tabla id="CCTCUENT">
+						<field id="siscod" oculto="true">
+						    <label>cctcuent.siscod</label>
+						    <condicion operador="=">CCTMOVIM.siscod</condicion>
+						</field>
+
+						<field id="ctacod" oculto="true">
+				    		<condicion operador="=">CCTMOVIM.ctacod</condicion>
+						</field>
+				    </tabla>
+				  </join>				   
+               </consulta>
+        </abm>

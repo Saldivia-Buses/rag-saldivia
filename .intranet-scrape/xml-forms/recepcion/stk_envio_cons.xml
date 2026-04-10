@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+    <title>Envío de Materiales</title>
+    <obs></obs>
+    <form detalle="stk_envio_detalle.xml">
+        <table id="STK_ENVIOS" label="Envío de Materiales">
+            <field id="id_stkenvio" esClave="true" noshow="true" print="false">
+                <detalle>stkenvio_id</detalle>
+            </field>
+            <field id="subsistema_id" noshow="true" print="false"/>
+            <field id="puesto_envio">
+                <label>Puesto</label>
+            </field>
+            <field id="nro_envio">
+                <label size="23" posx="6" posy="24" PDFsize="11">Nº Envio</label>
+            </field>
+            <field id="fecha_envio">
+                <label size="23" posx="6" posy="+2" PDFsize="11">Fecha</label>
+                <tipo>date</tipo>
+            </field>
+            <field id="nombre_cuenta" tabla="REG_CUENTA" >
+                <expression>
+                    concat('(',REG_CUENTA.nro_cuenta, ') ',REG_CUENTA.nombre_cuenta)
+                </expression>
+                <label size="23" posx="6" posy="+1" PDFsize="11" rowspan="2">Proveedor</label>
+                <help>Nombre del proveedor</help>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="nro_remito">
+                <label>Remito</label>
+            </field>
+            <field id="observaciones" >
+                <label posx="6" posy="+2" PDFsize="11">Observaciones</label>
+            </field>
+        </table>
+        <join tipo="inner">
+            <table id="REG_CUENTA">
+                <field id="id_regcuenta" oculto="true">
+                    <condicion operador="=">STK_ENVIOS.regcuenta_id</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

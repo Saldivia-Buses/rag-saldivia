@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="insert"   >
+        <title>Ingreso de No Acciones de Conformidad</title>
+        <obs></obs>
+        <form >
+                <table id="CAL_ACCIONES_NCONF" idCampoCond="grabaAccion">
+                        <field id="noconformidad_id" lastId="noconformidad_insert.xml"/>
+                        <field id="descripcion_accionnconf" id_temp="contencion_nconf"/>
+                        <field id="fecha_accionnconf"   id_temp="fecha_nconf"	     />
+                        <field id="resp_rhpersonal_id"    id_temp="resp_rhpersonal_id"  />
+                        <field id="login"    id_temp="login_id"  />             
+                        <field id="tipo_accionnconf"    id_temp="tipo_accionnconf"  />                        
+                           
+                </table>
+        </form>           
+</histrix>

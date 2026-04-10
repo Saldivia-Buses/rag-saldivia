@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="insert" >
+       <title>COMPROBANTES</title>
+        <obs></obs>
+               <form >
+					<table id="CAJCOMPR" label="FACTURAS">
+						<field id="siscod" id_cab="sisprv">
+						</field>
+						<field id="ctacod" id_cab="ctacod">
+						</field>
+						<field id="ctanom" id_cab="ctanom">
+						</field>
+						<field id="movfec" id_temp="movfec">
+						</field>
+						<field id="concod" id_temp="concod">
+						</field>
+						<field id="movnpv" id_temp="movnpv">
+						</field>
+						<field id="movnro" id_temp="movnro">
+						</field>
+						<field id="movcta" id_temp="movcta">
+						</field>
+						<field id="movimp" id_temp="movimp">
+						</field>
+						<field id="movvto" id_temp="movfec">
+						</field>
+						<field id="movsal" id_temp="movsal">
+						</field>
+						<field id="movord" id_temp="_ORDEN">
+						</field>
+						<!-- faltan un monton aca -->
+						<field id="zoncod" id_temp="zoncod"></field>
+						<field id="movlet" id_temp="movlet"></field> 
+						<field id="movinc" id_temp="movinc"></field>
+
+						<field id="movicc" >
+							<valor>4</valor>
+						</field>
+						<field id="movipv" id_temp="movipv"></field>
+						
+						<field id="nrocom" id_cab="movnroOP"></field>
+						
+						<!--						<field id="regmin" esNroMinuta="true">
+						
+						</field> -->
+						
+					</table>
+               </form>
+        </histrix>

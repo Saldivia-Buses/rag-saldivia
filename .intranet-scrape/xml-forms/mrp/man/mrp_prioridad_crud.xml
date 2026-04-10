@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" >
+  <title>Prioridades</title>
+  <obs />
+  <form >
+    <table id="MRP_PRIORIDAD" label="Prioridades">
+
+		<field id="id_mrpprioridad" noshow="true" autoinc="true">
+		</field>
+
+		<field id="nombre_mrpprioridad">
+			<label>prioridad</label>
+			<tipo>varchar</tipo>
+			<size>30</size>
+		</field>
+		<field id="peso_mrpprioridad">
+			<label>peso</label>
+		</field>
+
+		<order>
+			<field id="peso_mrpprioridad" />
+		</order>
+    </table>
+  </form>
+</histrix>

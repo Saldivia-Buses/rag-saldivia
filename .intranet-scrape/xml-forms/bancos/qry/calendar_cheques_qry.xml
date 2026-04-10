@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="calendar" calendarAspectRatio="1.7" borra="false" inserta="false" sidePanel="false">
+	<title>Vencimiento Cheques</title>
+  	<obs/>
+	<form>
+		<table id="REG_MOVIMIENTOS">                      
+
+			<filters>
+				<field id="regcuenta_id">
+					<label>Cuena</label>
+					<operador>=</operador>
+				</field>
+			</filters>
+                      
+			<field id="id_regmovim" tabla="REG_MOVIMIENTOS" noshow="true" calendarId="true" />
+
+			<field id="subsistema_id" tabla="REG_MOVIMIENTOS" noshow="true">
+				<condicion operador="!=">PROV.subsistema_id</condicion>
+			</field>
+
+			<field id="concepto_id" tabla="REG_MOVIMIENTOS" noshow="true" />
+
+			<field id="regcuenta_id" tabla="REG_MOVIMIENTOS" noshow="true">
+				<helper type="combo" xml="regcuenta_cmb.xml" dir="/ayudas" empty="true" />
+			</field>
+
+			<field id="cajmovimiento_id" tabla="REG_MOVIMIENTOS" noshow="true" />
+
+			<field id="fecha" tabla="GEN_CALENDAR" calendarStartDate="true">
+				<label>Fecha</label>
+				<tipo>date</tipo>
+				<condicion operador="&gt;=">CURDATE()</condicion>
+			</field>  
+ 
+			<field id="color" calendarColor="true">
+				<expression>IF(mod(day(GEN_CALENDAR.fecha), 2) != 0, '#343434', '#508AFF')</expression>
+			</field>
+
+			<field id="edita" calendarEditable="true" noshow="true" local="true" valauto="true">
+				<valor>0</valor>
+			</field>
+
+			<field id="conciliado" tabla="REG_MOVIMIENTOS">
+				<label>Conciliado</label>
+				<condicion operador="=">'0000-00-00'</condicion>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="titulo" calendarSubject="true">
+				<label>Titulo</label>
+				<expression>concat(BANCO.nombre_cuenta,' $', sum(REG_MOVIMIENTOS.importe_movimiento))</expression>
+			</field>
+
+			<field id="detalle" calendarDescription="true">
+				<label>Detalle</label>
+				<expression><![CDATA[select concat('<b><u>',BANCO.nombre_cuenta,':</u> $',sum(REG_MOVIMIENTOS.importe_movimiento), '</b><br>', group_concat('Nro ',REG_MOVIMIENTOS.nro_movimiento,' -  $', REG_MOVIMIENTOS.importe_movimiento,' - ',REG_CUENTA.nombre_cuenta  SEPARATOR '<br>'))]]></expression>
+			</field>
+
+			<group>
+				<field id="fecha" tabla="GEN_CALENDAR" />
+				<field id="regcuenta_id" tabla="REG_MOVIMIENTOS" />
+			</group>
+
+			<order>
+				<field id="fecha" tabla="GEN_CALENDAR" />
+				<field id="regcuenta_id" tabla="REG_MOVIMIENTOS" />
+			</order>
+
+		</table> 
+
+		<join>
+			<table id="GEN_CALENDAR">
+				<field id="fecha">
+					<condicion operador="&gt;=">(case when REG_MOVIMIENTOS.conciliado != '0000-00-00' then REG_MOVIMIENTOS.conciliado else REG_MOVIMIENTOS.vencimiento_movimiento end) and GEN_CALENDAR.fecha &lt;= (case when REG_MOVIMIENTOS.conciliado != '0000-00-00' then REG_MOVIMIENTOS.conciliado else DATE_ADD(REG_MOVIMIENTOS.vencimiento_movimiento, INTERVAL 1 MONTH) end)</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join>
+			<table id="REG_MOVIMIENTOS" as="PROV">   
+				<field id="cajmovimiento_id">
+					<condicion operador="=">REG_MOVIMIENTOS.cajmovimiento_id</condicion>
+				</field>
+				<field id="id_regmovim">
+					<condicion operador="!=">REG_MOVIMIENTOS.id_regmovim</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="REG_CUENTA">   
+				<field id="id_regcuenta">
+					<condicion operador="=">PROV.regcuenta_id</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join>
+			<table id="REG_CUENTA" as="BANCO">   
+				<field id="id_regcuenta">
+					<condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+				</field>
+			</table>
+		</join>
+
+	</form>
+</histrix>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+    <title>Impresoras</title>
+    <obs></obs>
+    <form >
+        <table id="HTXPRINTERS" label="Impresoras">
+            <field id="systemName" _editable="true">
+                <label>Nombre Impresora</label>
+                <help>Nombre de la Impresora</help>
+            </field>
+            <field id="description" _editable="true">
+                <label>Descripción</label>
+                <help>Descripción de la Impresora</help>
+                <size>80</size>
+            </field>
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" llenoTemporal="false" procesa="false" tooltip="false" showCantidad="false" updateTotals="true" subtipo="vertical" unserializeParent="false" preventDuplication="true" importTempTable="TEMPTABLENAME">
+  <title>Ingreso Movimientos Stock</title>
+  <obs/>
+  <form>
+	<table id="STK_MOVIMIENTOS" label="Ingreso de movimientos">
+
+		<movimientos>
+			<relacion id="stkmovimientos_insert.xml" /> 
+		</movimientos>
+		
+		<fieldGroup style="vertical-align:middle; padding:2px 2px 2px 2px;">	
+
+			<field id="id_stkmovimiento" oculto="true">
+				<condicion operador="=">-1</condicion>
+			</field>
+
+			<field id="_ORDEN" local="true">
+				<label Formstyle="display:none;">#</label>
+			</field>
+
+			<field id="stkarticulo_id" required="true">
+				<label>Codigo de Articulo</label>
+				<helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+					<field id="wstklista_id" local="true">
+						<valor>1</valor>
+					</field>        
+					<field id="nuevo_costo">
+						<expression>STK_ARTICULOS.precio_costo</expression>
+						<detalle>nuevo_costo</detalle>           
+					</field>
+					<field id="precio_costo">
+						<detalle>precio_costo</detalle>
+					</field>
+					<field id="baja_articulo">
+						<condicion operador="!=">1</condicion>
+					</field>
+					<field id="stock_actual">
+						<label>Stock</label>
+						<expression>(select sum(cantidad_stock) from STK_STOCKACTUAL where stkarticulo_id = STK_ARTICULOS.id_stkarticulo)</expression>
+						<detalle>stock_actual</detalle>
+					</field>
+					<field id="costo_actual">
+						<expression>STK_ARTICULOS.precio_costo</expression>
+						<detalle>costo_actual</detalle>
+					</field>
+					<field id="total_costo_actual">
+						<expression>(select (sum(cantidad_stock) * STK_ARTICULOS.precio_costo) from STK_STOCKACTUAL where stkarticulo_id = STK_ARTICULOS.id_stkarticulo)</expression>
+						<detalle>total_costo_actual</detalle>
+					</field>
+					<field id="genmoneda_origen_id">
+						<detalle>genmoneda_origen_id</detalle>
+					</field>
+				</helper>
+			</field>   
+
+			<field id="precio_costo" local="true" noshow="true"/>
+
+			<field id="nombre_articulo" local="true" deshabilitado="true">
+				<label modpos="nobr" colspan="5">Ref. Articulo</label>
+				<size>60</size>
+			</field>
+
+			<field id="cantidad" required="true">
+				<label>Cantidad</label>
+				<tipo>numeric</tipo>
+				<jseval campodestino="costo_promedio">(habilita == 1 ? (((cantidad * nuevo_costo) + (costo_actual * stock_actual)) / (stock_actual + cantidad)).toFixed(2) : precio_costo)</jseval>
+			</field>
+
+			<field id="nuevo_costo" local="true" required="true" activador="habilita">
+				<label modpos="nobr">Costo</label>
+				<tipo>decimal</tipo>
+				<jseval campodestino="costo_promedio">(habilita == 1 ? (((cantidad * nuevo_costo) + (costo_actual * stock_actual)) / (stock_actual + cantidad)).toFixed(2) : precio_costo)</jseval>
+			</field>  
+
+			<field id="stock_actual" local="true" colstyle="display:none;" deshabilitado="true">
+				<label style="font-weight:bold;vertical-align:middle; padding:2px 2px 2px 2px;">Stock Actual</label>
+				<tipo>numeric</tipo>
+			</field>
+
+			<field id="costo_actual" local="true" colstyle="display:none;" deshabilitado="true">
+				<label style="font-weight:bold;vertical-align:middle; padding:2px 2px 2px 2px;" modpos="nobr">Costo Actual</label>
+				<tipo>numeric</tipo>
+			</field>
+
+			<field id="total_costo_actual" local="true" colstyle="display:none;" deshabilitado="true" noshow="true">
+				<label style="font-weight:bold;vertical-align:middle; padding:2px 2px 2px 2px;" modpos="nobr">Total Costo Actual</label>
+				<tipo>numeric</tipo>
+			</field>
+
+			<field id="costo_promedio" local="true" _colstyle="display:none;" deshabilitado="true" preventLoop="true">
+				<label style="font-weight:bold;vertical-align:middle; padding:2px 2px 2px 2px;">Costo Promedio U$S</label>
+				<tipo>numeric</tipo>
+			</field>
+
+			<field id="precio_total" local="true" noshow="true" deshabilitado="true">
+				<label style="font-weight:bold;vertical-align:middle; padding:2px 2px 2px 2px;">Costo Total U$S</label>
+				<if exp="true">
+					<true>nuevo_costo * cantidad</true>
+					<false>0</false>
+				</if>
+				<tipo>numeric</tipo>
+			</field>
+
+		      	<field id="stkunidad_id" local="true" deshabilitado="true" sincelda="true" noshow="true">
+				<label modpos="nobr" />
+				<helper type="combo" xml="unidad_qry.xml" dir="/ayudas" empty="true" />
+			</field>            
+
+			<field id="unidad_id" noshow="true" local="true" />
+			<field id="stkrubro_id" noshow="true" local="true" />
+			<field id="stkfamilia_id" noshow="true" local="true" />
+			<field id="genmoneda_origen_id" noshow="true" local="true" />
+
+			<field id="falta_cuenta" noshow="true" clasefila="true" local="true">	
+				<if exp="'cuenta_id' == ''">
+					<true>'resaltadoRojo'</true>
+					<false>''</false>
+				</if>
+			</field>
+
+			<field id="importe_asiento" suma="true" colstyle="display:none;">
+				<expression sql="true">select round((('[__nuevo_costo__]' * (GEN_FN_COTIZACION('[__genmoneda_origen_id__]',current_date()))) * '[__cantidad__]'),2)</expression>
+				<jseval campodestino="importe" total="true">importe_asiento</jseval>
+			</field>
+		</fieldGroup>
+
+		<fieldGroup id="contable" local="true" noshow="true">
+			<field id="cuenta_id" />
+
+			<field id="doh_detalle" valauto="true" setOriginalValue="true">
+				<valor default="true">0</valor>
+			</field>
+
+			<field id="habilita" valauto="true" setOriginalValue="true" activa="true">
+				<valor default="true">0</valor>
+			</field>
+		</fieldGroup>
+
+	</table>
+
+	<tempTable id="TEMPTABLENAME">
+		<row>
+        	        <field id="cuenta_id">cuenta_id</field>
+        	        <field id="doh">doh_detalle</field>
+        	        <field id="importe">importe_asiento</field>
+        	</row>
+        </tempTable>
+
+  </form>
+</histrix>

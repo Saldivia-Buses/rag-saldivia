@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <abm tipo="ficha" _conBusqueda="true">
+       <titulo>COTIZACION</titulo>
+        <obs></obs>
+               <consulta>
+					<tabla id="COTIZACION" label="?">
+						<campo id="idCotiz" autoinc="true" >
+							<label>Nro Cotiz.</label>
+
+							<help>Numero de Cotizacion</help>
+						</campo>
+						<campo id="fecha">
+							<label modpos="nobr">Fecha</label>
+							<help>Fecha de Cotización</help>
+							<valor>today</valor>
+						</campo>
+						<campo id="ctacod" required="false">
+							<label>Cliente </label>
+							<help>Codigo de Cuenta </help>
+							<ayuda_ex id="CCTCUENT" condes="true">
+								<campo id="ctacod"></campo>
+								<campo id="ctanom">
+									<detalle>ctanom</detalle>
+								</campo>
+								<campo id="ctatel">
+									<detalle>ctatel</detalle>
+								</campo>								
+								<campo id="ctadir">
+									<detalle>ctadir</detalle>
+								</campo>								
+								<campo id="ctanro">
+									<detalle>ctanro</detalle>
+								</campo>											
+								
+								<campo id="siscod" oculto="true">
+									<condicion operador="=">'02'</condicion>
+								</campo>
+								<clave>ctacod</clave>
+								<descripcion>ctanom</descripcion>
+							</ayuda_ex>
+						</campo>
+						<campo id="ctanom" required="true">
+							<label>Nombre</label>
+							<size>50</size>
+						</campo>
+						<campo id="ctatel">
+							<label modpos="nobr">Teléfono</label>
+							<size>50</size>
+						</campo>						
+						<campo id="ctadir">
+							<label >Dirección</label>
+							<size>50</size>
+						</campo>
+						<campo id="ctanro">
+							<label modpos="nobr">CUIT</label>
+						</campo>
+						<campo id="ctacon">
+							<label>Contacto</label>
+							<size>50</size>
+						</campo>
+						<campo id="ctamail">
+							<label modpos="nobr">e-mail</label>
+							<size>50</size>
+							
+						</campo>
+
+					</tabla>
+               </consulta>
+        </abm>

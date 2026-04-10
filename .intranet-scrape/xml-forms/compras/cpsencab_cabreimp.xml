@@ -1,0 +1,413 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" sololectura="true" autoprint="true"  PDFsincabecera="true">
+    <title>ORDEN DE COMPRA</title>
+    <obs></obs>
+    <form>
+
+            <pdf PDForientacion="P">
+            <code><![CDATA[
+
+		$pdf->SetDrawColor(0);
+		$pdf->SetXY(10,10);
+
+		$tp = 05;
+		$ap = $pdf->anchoPagina - 5;
+		$mp = ($ap / 2);
+		$lp = $pdf->largoPagina;
+
+		// Frame Principal
+		//$pdf->Rect(005, 005, $ap, $lp, 0.1);
+
+		// Nombre Empresa
+		//$pdf->Rect(005, 005, $mp, 045, 0.1);
+
+		$datapath = $_SESSION['datapath'];
+
+        $dataContainer = $pdf->Container;
+        
+        if (method_exists($dataContainer, 'getCampo') ){
+            $field = $dataContainer->getCampo('logo_pdf');
+            $filename = $field->getValor();
+          
+        } else {
+            $field = $dataContainer->getField('logo_pdf');
+            $filename = $field->getValue();
+        }
+        
+
+		$file = HTX_ROOT_DIR."/database/$datapath/img/$filename"; 
+
+		if (is_file($file))
+		{
+		    $posx = 1;
+		    $posy = 1;
+		    $width = 45;
+            $height = 10;
+		    $pdf->Image($file, $posx + $pdf->offsetX, $posy + $pdf->offsetY, 0, $height);
+		} else {
+            die($file);
+        }
+	
+		// Datos Comprobante
+		//$pdf->Rect($mp + 5, 005, $mp, 045, 0.1);
+		$pdf->RoundedRect($pdf->offsetX, 2 + $pdf->offsetY, $pdf->anchoPagina - 2, 15, 2);
+		
+		
+
+       
+
+        $pdf->SetFont($pdf->defaultFont, '', 9);
+        $fecha = utf8_decode( $pdf->i18n['printDate'].':' . date('d/m/Y'));
+        $anchoFecha = $pdf->GetStringWidth($fecha) + 3;
+        $anchorecuadro = $anchoFecha + 2;
+        $posRecuadro = $pdf->offsetX + $pdf->anchoPagina - $anchorecuadro;
+
+            $pdf->RoundedRect($posRecuadro, 3 + $pdf->offsetY, $anchoFecha, 8, 2);
+            $pdf->setXY($posRecuadro , 5 + $pdf->offsetY);
+            $pdf->Cell(0, 0, $fecha, 0, 0, 'L');
+
+        $nonum = (isset($pdf->sinNumero)) ? $pdf->sinNumero : 'false';
+        $hoja = '';
+        if ($nonum != 'true') {
+            $hoja = $pdf->i18n['page'] .': '. $pdf->PageNo() ;
+            if ($pdf->pageNumber == 0){
+                $hoja .= '/{nb}';
+            }
+            $pdf->setXY($posRecuadro + 1, 8 + $pdf->offsetY);
+            $pdf->Cell(0, 0, $hoja, 0, 0, 'L');
+        }
+
+
+
+		// DATOS EMPRESA
+		$pdf->SetFontSize(8);
+		
+
+            ]]></code>
+        </pdf>
+        <table id="CPSENCAB" label="ORDEN DE COMPRA" graba="false">
+    
+            <field id="logo_pdf" print="false">
+            <label posx="10" posy="1" PDFsize="16" ></label>
+                <expression>(case when CPSENCAB.empresa_id = 2 then 
+                            (select option_value from saldivia_sa.HTXOPTIONS where option_name = 'CONFIG::logo_pdf_1' limit 1) else 
+                            (select option_value from saldivia.HTXOPTIONS where option_name = 'CONFIG::logo_pdf_1' limit 1)
+                             end)</expression>
+                
+            </field>
+            
+
+            <field id="tit" _print="false" PDFbold="true">
+		<label posx="55" posy="5" PDFsize="16" ></label>
+        	<setvar>titulo_div</setvar>
+                <expression>concat('Orden de Compra ', ocpnro)</expression>
+            </field>
+	    <field id="nombre_empresa" posx="5" posY="20" PDFsize="7" PDFbold="true">
+		<label posx="5" posy="12"></label>
+		<expression>HTX_EMPRESAS.razon_social</expression>
+	    </field>
+	    <field id="dir_empresa"  PDFsize="7" _PDFbold="true">
+		<label posx="45" posy="12"></label>
+		<expression>concat(direccion, ' - email: ',email, ' - Tel: ', telefono, ' - CUIT: ', LEFT(cuit,2), '-', SUBSTR(cuit,3,8),'-',  RIGHT(cuit,1))</expression>
+	    </field>
+            <field id="ctacod"  deshabilitado="true" noshow="true" print="false">
+                <label size="23" posx="6" posy="15" PDFsize="11">Prv</label>
+                <help>Codigo de Cuenta</help>
+            </field>
+
+            <field id="ctanom" tabla="CCTCUENT" >
+                <expression>concat('(',CCTCUENT.ctacod, ') ',CCTCUENT.ctanom)</expression>
+                <label size="23" posx="6" posy="20" PDFsize="11" rowspan="2">Proveedor</label>
+                <help>Nombre del proveedor</help>
+                <tipo>varchar</tipo>
+            </field>
+           
+            <field id="calificacion" _local="true" >
+		<!-- <expression>calculoCalificacion(id_regcuenta, ocpfec, 12)</expression> -->
+		<expression>(select calificacion from REG_CUENTA_CALIFICACION where regcuenta_id = id_regcuenta and fecha_calificacion &lt;= ocpfec order by fecha_calificacion DESC limit 1)</expression>
+		
+<!--
+                <expression _sql="true">select if(
+                        ifnull(round(
+                        (select sum(peso) from MOVDEMERITO
+                                    left join DEMERITO on DEMERITO.coddem = MOVDEMERITO.coddem
+                                    where MOVDEMERITO.prvcod = CUENTA.ctacod
+                                    and MOVDEMERITO.demfec &gt;= '2014-02-03' 
+                                    and MOVDEMERITO.demfec &gt;= DATE_SUB(ocpfec, INTERVAL 6 MONTH)
+                                    and MOVDEMERITO.coddem != 0)
+                        /
+
+                                    (select  count(*)  from OCPRECIB
+                                    where OCPRECIB.ctacod  = CUENTA.ctacod
+                                    and OCPRECIB.fecrec &gt;= '2014-02-03' 
+                                    and OCPRECIB.fecrec &gt;= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)), 2), 0) 
+                                    &lt; 6, (IF (ifnull(round(
+                        (select sum(peso) from MOVDEMERITO
+                                    left join DEMERITO on DEMERITO.coddem = MOVDEMERITO.coddem
+                                    where MOVDEMERITO.prvcod = CUENTA.ctacod
+                                    and MOVDEMERITO.demfec &gt;= '2014-02-03' 
+                                    and MOVDEMERITO.demfec &gt;= DATE_SUB(ocpfec, INTERVAL 6 MONTH)
+                                    and MOVDEMERITO.coddem != 0)
+                        /
+
+                                    (select  count(*)  from OCPRECIB
+                                    where OCPRECIB.ctacod  = CUENTA.ctacod
+                                    and OCPRECIB.fecrec &gt;= '2014-02-03' 
+                                    and OCPRECIB.fecrec &gt;= DATE_SUB(ocpfec, INTERVAL 6 MONTH)), 2), 0) = 0, '-', (IF (ifnull(round(
+                        (select sum(peso) from MOVDEMERITO
+                                    left join DEMERITO on DEMERITO.coddem = MOVDEMERITO.coddem
+                                    where MOVDEMERITO.prvcod = CUENTA.ctacod
+                                    and MOVDEMERITO.demfec &gt;= '2014-02-03'  
+                                    and MOVDEMERITO.demfec &gt;= DATE_SUB(ocpfec, INTERVAL 6 MONTH)
+                                    and MOVDEMERITO.coddem != 0)
+                        /
+
+                                    (select  count(*)  from OCPRECIB
+                                    where OCPRECIB.ctacod  = CUENTA.ctacod
+                                    and OCPRECIB.fecrec &gt;= '2014-02-03' 
+                                    and OCPRECIB.fecrec &gt;= DATE_SUB(ocpfec, INTERVAL 6 MONTH)), 2), 0) &gt; 4, 'B', 'A')))), (IF (ifnull(round(
+                        (select sum(peso) from MOVDEMERITO
+                                    left join DEMERITO on DEMERITO.coddem = MOVDEMERITO.coddem
+                                    where MOVDEMERITO.prvcod = CUENTA.ctacod
+                                    and MOVDEMERITO.demfec &gt;= '2014-02-03'  
+                                    and MOVDEMERITO.demfec &gt;= DATE_SUB(ocpfec, INTERVAL 6 MONTH)
+                                    and MOVDEMERITO.coddem != 0)
+                        /
+
+                                    (select  count(*)  from OCPRECIB
+                                    where OCPRECIB.ctacod  = CUENTA.ctacod
+                                    and OCPRECIB.fecrec &gt;= '2014-02-03' 
+                                    and OCPRECIB.fecrec &gt;= DATE_SUB(ocpfec, INTERVAL 6 MONTH)), 2), 0) &gt; 8, 'X', 'C')))
+                                  
+                        as "calif"
+                         
+                        from CCTCUENT as CUENTA
+                        where  CUENTA.siscod = '01' and CUENTA.baja = 0 and CUENTA.ctacod = '[__ctacod__]'
+
+                </expression>
+-->
+                <label _size="23" posx="130" _posy="+1" PDFsize="11" _rowspan="2">Su calificación es:</label>
+                <help>Nombre del proveedor</help>
+                <tipo>varchar</tipo>
+            </field>
+
+
+            <field id="ocpnro" deshabilitado="true" print="false">
+                <label _size="27" _posx="130" _posy="+1"  _PDFsize="11">Numero O.C.</label>
+                <help>Numero de Orden de Compra</help>
+            </field>
+            <field id="subj" noshow="true" email="subject" print="false">
+                <expression>concat('Orden de Compra Nro ',CPSENCAB.ocpnro)</expression>
+            </field>
+
+            <field id="Body" noshow="true" email="body" print="false" local="true">
+                <expression><![CDATA[ concat(ifnull((select body_mail from GEN_MAILS where id_mail = 3), ''),
+                '<table border="1">
+<tr>
+
+<th >Nro.OC</th>
+<th >Fec.Req.</th>
+<th >Cod.</th>
+<th >Articulo</th>
+<th >Pendiente</th>
+<th >Unidad</th>
+<th >Nro.Fab</th>
+</tr>',
+
+
+
+(SELECT REPLACE(GROUP_CONCAT(CONCAT(
+			'<tr>', 
+			'<td>', cab.ocpnro, '</td>',
+			'<td>', date_format(CPSMOVIM.fecreq, "%d/%m/%Y"), '</td>',
+			'<td>', CPSMOVIM.artcod, '</td>',
+			'<td>', LEFT(CPSMOVIM.detalle, 20), '</td>',
+			'<td>', ROUND(CPSMOVIM.pencps, 2), '</td>',
+			'<td>', FSMUNIDS.uninom, '</td>',
+			'<td>', CPSMOVIM.nrocha, '</td>',
+			'</tr>'
+
+				)), ',', '')
+
+from CPSENCAB cab left JOIN CPSMOVIM on  
+( CPSMOVIM.siscod = cab.siscod )  and  ( CPSMOVIM.ocpnro = cab.ocpnro )  and  ( CPSMOVIM.movfec = cab.ocpfec )  
+left JOIN STKINSUM on  ( STKINSUM.siscod = '01' )  and  ( STKINSUM.artcod = CPSMOVIM.artcod ) LEFT JOIN FSMUNIDS ON (STKINSUM.unicps = FSMUNIDS.unicod)
+where ( ( cab.siscod = CPSENCAB.siscod ) ) and ( ( cab.ocpfec <= current_date() ) ) and ( ( cab.ctacod = CPSENCAB.ctacod ) ) and ( ( cab.ocpest = '1' ) ) and ((CPSMOVIM.pencps > 0)) order by ocpfec)
+
+
+
+, '</table>'
+                 , ifnull((select body_mail from GEN_MAILS where id_mail = 4), ''))]]></expression>
+
+            </field>
+
+
+            <field id="ctadir" tabla="CCTCUENT" deshabilitado="true">
+                <expression>concat(ctadir, ' - ', ctaloc)</expression>
+                <label size="23" posx="6" posy="+1" PDFsize="11">Domicilio</label>
+                <help>Direccion del proveedor</help>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="ocpfec" deshabilitado="true">
+                <label size="27" posx="130" posy="0"  PDFsize="11">Fecha O.C</label>
+                <help>Fecha O.C.</help>
+            </field>
+            <!--			<field id="ctaloc" tabla="CCTCUENT" deshabilitado="true">
+                                <label size="23" posx="6" posy="+1" PDFsize="11">localidad</label>
+                                <help>Localidad del proveedor</help>
+                                <tipo>varchar</tipo>
+                        </field> -->
+            <field id="ctatel" tabla="CCTCUENT" deshabilitado="true">
+                <label size="23" posx="6" posy="+1" PDFsize="11">Teléfono</label>
+                <help>Telefono del proveedor</help>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="ocpent" deshabilitado="true" noshow="true" print="false">
+                <label size="27" colspan="4" posx="130" posy="0" PDFsize="12">Entregar en</label>
+	        <helper type="combo"  xml="deposito.xml" />
+                <help>Lugar de Entrega</help>
+            </field>
+
+            -->
+
+            <field id="pdfcolor" noshow="true" print="false">
+            <expression>(case when ocpest != 0 then '009900' else '#FF0000' end)</expression>
+            </field>
+
+            <field id="ocpestADO"  >
+		<expression>ocpest</expression>
+		<attribute id="PDFcolor">pdfcolor</attribute>
+                <label size="43" colspan="4" posx="130" posy="0" PDFsize="12"></label>
+                <help>Estado Actual</help>
+                <options>
+                    <option valor="0">NO AUTORIZADA</option>
+                    <option valor="1">AUTORIZADA</option>
+		    <option valor="2">Cumplida</option>
+                    <option valor="3">Parcial</option>
+                    <option valor="4">Anulada</option>
+                </options>
+                
+<!--                 <condicion operador="=">0</condicion> -->
+
+
+            </field>
+
+
+
+           <field id="cpsformaenvio_id" >
+                   <label size="23" colspan="4" posx="6" posy="+1" PDFsize="11">F.Envío</label>
+                   <help>Forma de Envio</help>
+                   <helper type="combo" xml="cps_formaenvio_crud.xml" empty="true"/>-->
+           </field>
+
+            <field id="mail"  deshabilitado="true" email="to">
+                <expression>select mail from CCTCONTA where siscod = '01' and CCTCONTA.ctacod = CPSENCAB.ctacod order by principal DESC limit 1</expression>
+                <label  size="23" posx="6"  posy="+1" PDFsize="11">Email</label>
+                
+            </field>
+           <field id="fpago" >
+                   <label size="23" colspan="4" posx="6" posy="+1" PDFsize="11">F.Pago</label>
+                   <help>Forma de Pago</help>
+                  <helper type="combo" xml="HLPformapago_qry.xml" dir="/ayudas_local" empty="true"/>
+           </field>
+
+           <field id="carpeta" >
+                   <label size="23" colspan="4" posx="6" posy="+1" PDFsize="11">Importación</label>
+		    <expression>(select nro_carpeta from REG_CARPETA_IMPORTACION where REG_CARPETA_IMPORTACION.ocpnro = CPSENCAB.ocpnro limit 1)</expression>
+           </field>
+
+
+            <field id="numero" grafico="barcode" imageWidth="40" imageScale="3" imageHeigth="150" encode="I25">
+                <label  posx="129" posy="35" ></label>
+                <expression>ocpnro</expression>
+                <help>Codigo de Cuenta</help>
+                <tipo>grafico</tipo>
+                <size>10</size>
+            </field>
+
+
+
+            <field id="movimientos" local="true" obj="cpsmovim_reimp.xml">
+                <label colspan="4" posx="6" posy="+6" PDFsize="8"></label>
+                <help>Nombre del proveedor</help>
+                <paring destino="ocpnro">ocpnro</paring>
+                <paring destino="movfec">ocpfec</paring>
+            </field>
+
+            <!--		<field id="ocpfen"  deshabilitado="true">
+                                <label colspan="4" posx="6" posy="-1" PDFsize="12">Plazo de Entrega</label>
+                        </field>			-->
+
+
+
+            <field id="Normas" deshabilitado="true" local="true" obj="normainsumos_OC.xml">
+                <label colspan="4" posx="6" posy="+1" PDFsize="8" ></label>
+                <help>Normas</help>
+                <title>Deberá especificar en factura: "Los productos entregados cumplen con las normas............ certificados mediante ensayos Nro......... realizado por .......</title>
+            </field>
+            <field id="ocpobs" deshabilitado="true" pdfancho="20">
+                <label size="28" colspan="4" posx="6" posy="+1"  PDFsize="10" >Observaciones</label>
+                <help>Observaciones</help>
+                <tipo>varchar</tipo>
+                <pdfancho>170</pdfancho>
+                <expression>case when descFlete != '' then concat(ocpobs,'. Datos de Flete: ',descFlete) else ocpobs end</expression>
+                <!-- antes datos de flete era campo de texto y se dejo asi para no perder esa info-->
+            </field>
+            <field id="Leyenda" deshabilitado="true" local="true" obj="Observ_OC.xml">
+                <label colspan="4" posx="6" posy="+4" PDFsize="10" ></label>
+                <help>Leyenda</help>
+            </field>
+            <field id="citar" local="true" deshabilitado="true" _Styletbody="font-weight:700;">
+                <label colspan="4" posx="10" posy="+4" PDFsize="12" PDFnoborder="true"></label>
+                <help>Lugar de Entrega</help>
+                <expression>CONCAT('CITAR NUMERO DE ORDEN DE COMPRA TANTO EN EL REMITO COMO EN LA FACTURA', CHAR(10), CHAR(10), 'LA MERCADERÍA SE DEBERÁ ENTREGAR CON SU REMITO CORRESPONDIENTE SIN EXCEPCIÓN', CHAR(10), CHAR(10), 'CUANDO TENGA QUE ENVIAR CORREOS RELACIONADOS A LA ORDEN DE COMPRA EN CUESTIÓN, REFERENCIAR EL NÚMERO DE ORDEN DE COMPRA QUE PRESENTA LA MISMA')</expression>
+            </field>
+	    <field id="canrev" local="true" noshow="true" print="false">
+		<valor>2</valor>
+	    </field>
+	    <field id="revisiones" local="true" PDFnoborder="true" PDFnolabel="true">
+		<label posx="10" posy="232">Revisiones</label>
+		<helper type="object" xml="cps_movimientos_log_imp.xml">
+		    <parameter source="ocpnro" target="num"/>
+		    <parameter source="ocpfec" target="fec"/>
+		    <parameter source="canrev" target="limit"/>
+		</helper>
+	    </field>
+            <field id="estado">
+                <label posx="5" posy="130" PDFsize="52" PDFbold="true" PDFrotate="-10"></label>
+                <expression>(case when ocpest = 0 then 'ORDEN DE COMPRA\n\n\n\n   NO AUTORIZADA' when ocpest = 4 then 'ORDEN DE COMPRA\n\n\n\n   ANULADA' else '' end)</expression>
+            </field>
+
+            <field id="nota1" local="true">
+                <label colspan="4" posx="4" posy="+2" PDFsize="10">HORARIO DE ATENCIÓN: LUNES A JUEVES DE 6 A 15HS. Y VIERNES DE 6 A 13.30HS.</label>
+            </field>
+
+            <field id="nota2" local="true">
+                <label colspan="4" posx="4" posy="+1" PDFsize="10">HORARIO DE RECEPCIÓN DE MATERIALES: LUNES A JUEVES DE 07:00 A 14:00 HS. Y VIERNES DE 07:00 A 12:30 HS.</label>
+            </field>
+            
+        </table>
+        <join tipo="left">
+            <table id="CCTCUENT">
+                <field id="siscod" oculto="true">
+                    <label>CCTCUENT.siscod</label>
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="ctacod" oculto="true">
+                    <condicion operador="=">CPSENCAB.ctacod</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="HTX_EMPRESAS">
+                <field id="id_empresa">
+                    <condicion operador="=">CPSENCAB.empresa_id</condicion>
+                </field>
+
+            </table>
+        </join>
+
+    </form>
+</histrix>

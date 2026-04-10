@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" subtipo="vertical" modifica="false" borra="false" deleteRow="false" inserta="false" confirma="CERRAR PUESTO" form="false" tooltip="false" showcantidad="false" transaccional="true" log="false">
+    <title>Cierre de Puesto de Caja</title>
+    <obs></obs>
+    <form>
+        <table id="CAJ_DETALLES" label="Cierre de Puesto de Caja">
+
+            <movimientos cabecera="cierre_caja_cab.xml">
+
+                <!-- SI cajpuesto_superior_id ES = 0 -->
+                <relacion id="cierre_ctbmovimiento_ins.xml"></relacion>
+                <relacion id="cierre_ctbdetalle_ins.xml"></relacion>
+
+                <!-- SINO -->
+                <relacion id="cierre_cajmovimiento_ins.xml"></relacion>
+                <relacion id="cierre_cajdetalle_ins.xml"></relacion>
+
+                <!-- ULTIMO MARCO EL CIERRE -->
+                <relacion id="cierre_cajregistro_upd.xml"></relacion>
+            </movimientos>
+
+            <filters>
+                <field id="cajpuesto_id">
+                    <label>Puesto</label>
+                    <operador>=</operador>
+                </field>
+                <field id="cajpuesto_superior_id" deshabilitado="true">
+                    <label modpos="nobr">Puesto Superior</label>
+                    <operador>=</operador>
+                </field>
+                <field id="fecha_movimiento">
+                    <label>Fecha</label>
+                    <operador>=</operador>
+                </field>
+                <field id="cajregistro_id" deshabilitado="true" noshow="true" style="display:none;">
+                    <label modpos="nobr">Registro</label>
+                    <operador>=</operador>
+                </field>
+                <field id="importe_movimiento" deshabilitado="true" noshow="true" style="display:none;">
+                    <label modpos="nobr">Recontado</label>
+                </field>
+            </filters>
+
+            <!-- ************************************************************ -->
+            <!-- FILTROS **************************************************** -->
+            <!-- ************************************************************ -->
+
+            <fieldGroup local="true" noshow="true">
+                <field id="cajpuesto_id" esClave="true">
+                    <helper type="combo" xml="cajpuestousers_qry.xml" dir="/ayudas" empty="true" />
+                    <actualiza>
+                        <field id="fecha_movimiento" destino="cajpuesto_id" />
+                    </actualiza>
+                </field>
+
+                <field id="id_ejercicio" _noshow="false" esClave="true">
+                    <expression>id_ejercicio</expression>
+                    <label>ejercicio</label>
+                </field>
+
+                <field id="cajconcepto_cierre_id">
+                    <helper type="combo" id="CAJ_CONCEPTOS" empty="true">
+                        <field id="id_cajconcepto" />
+                        <field id="descripcion_concepto" />
+                        <field id="ejecuta_concepto" oculto="true">
+                            <expression>ifnull(ejecuta_concepto,'')</expression>
+                            <condicion operador="=">''</condicion>
+                        </field>
+                        <field id="alta_concepto" oculto="true">
+                            <expression>ifnull(alta_concepto,0)</expression>
+                            <condicion operador="=">0</condicion>
+                        </field>
+                        <field id="baja_concepto" oculto="true">
+                            <expression>ifnull(baja_concepto,0)</expression>
+                            <condicion operador="=">0</condicion>
+                        </field>
+                        <field id="modif_concepto" oculto="true">
+                            <expression>ifnull(modif_concepto,0)</expression>
+                            <condicion operador="=">0</condicion>
+                        </field>
+                    </helper>
+                </field>
+
+                <field id="cajpuesto_superior_id" esClave="true">
+                    <helper type="combo" id="CAJ_PUESTOS">
+                        <option value=""></option>
+                        <option value="0">-- CONTABILIDAD --</option>
+                        <field id="id_cajpuesto" />
+                        <field id="descripcion_puesto" />
+                    </helper>
+                </field>
+
+                <field id="cajregistro_id" noshow="true" esClave="true"/>
+
+                <field id="importe_movimiento" noshow="true"/>
+
+                <field id="usuario_id" local="true">
+                    <valor eval="true">$_SESSION['idUser']</valor>
+                </field>
+            </fieldGroup>
+
+            <!-- ************************************************************ -->
+            <!-- MUESTRA LA GRILLA DEL ASIENTO A INTEGRAR ******************* -->
+            <!-- ************************************************************ -->
+
+            <field id="id_cajdetalle" noshow="true" />
+
+            <field id="ctbcentro_id" tabla="CAJ_CONCEPTOS" noshow="true" />
+
+            <field id="doh" noshow="true" esClave="true" />
+
+            <field id="cuenta_id"  esClave="true" style="font-size:15px;">
+                <label>Cuenta</label>
+            </field>
+
+            <field id="nombre_cuenta" tabla="CTB_CUENTAS" style="font-size:15px;" >
+                <label>Nombre</label>
+            </field>
+
+            <field id="nombre_centro" tabla="CTB_CENTROS">
+                <label>Agrupador</label>
+            </field>
+
+            <field id="debe" noZero="true" suma="true"   style="font-size:15px;">
+                <expression>SUM(CASE WHEN CAJ_DETALLES.doh = 0 THEN CAJ_DETALLES.importe_detalle ELSE 0 END)</expression>
+                <label>Debe.</label>
+                <format>%0.2f</format>
+            </field>
+
+            <field id="haber" noZero="true" suma="true"  style="font-size:15px;">
+                <expression>SUM(CASE WHEN CAJ_DETALLES.doh != 0  THEN CAJ_DETALLES.importe_detalle ELSE 0 END)</expression>
+                <label>Haber.</label>
+                <format>%0.2f</format>
+            </field>
+
+            <field id="importe_detalle"  Formstyle="display:none;" colstyle="display:none;">
+                <expression>sum(importe_detalle)</expression>
+                <condicion operador="!=">0</condicion>
+            </field>
+
+            <field id="fecha_movimiento" noshow="false" tabla="CAJ_MOVIMIENTOS">
+                <label colstyle="display:none;" >Fecha</label>
+                <helper type="combo" xml="cierre_cajregistro_qry.xml" empty="true" />
+            </field>
+
+            <!-- ************************************************************ -->
+            <!-- CAMPOS DE VALIDACION *************************************** -->
+            <!-- ************************************************************ -->
+
+            <fieldGroup id="PARAMETROS" local="true" deshabilitado="true" Formstyle="display:none;"  noshow="true">
+                <field id="DEB" suma="true" acumula="true"  retroalimenta="true">
+                    <if exp="true">
+                        <true>debe</true>
+                        <false>0</false>
+                    </if>
+                </field>
+                <field id="HAB" suma="true" acumula="true" retroalimenta="true" >
+                    <if exp="true">
+                        <true>haber</true>
+                        <false>0</false>
+                    </if>
+                </field>
+                <field id="diferencia" colstyle="display:none;" acumula="true" >
+                    <if exp="true">
+                        <true>DEB - HAB</true>
+                        <false>0</false>
+                    </if>
+                </field>
+                <field id="balancea" validar="true">
+                    <if  exp="diferencia == 0 &amp;&amp; 'nombre_cuenta' != '' ">
+                        <true>'true'</true>
+                        <false>'false'</false>
+                    </if>
+                    <invalid>Asiento de Caja Desbalanceado</invalid>
+                </field>
+                <field id="referencia_movimiento"                 >
+                    <expression>concat('CIERRE DE CAJA | P:', cajpuesto_id,' | F: ',fecha_movimiento)</expression>
+                </field>
+                <field id="cierre_caja">
+                    <expression having="false">isnull(CAJ_MOVIMIENTOS.cierre_caja)</expression>
+                </field>
+                <field id="graba_caj" local="true">
+                    <if exp="cajpuesto_superior_id + 0 != 0">
+                        <true>1</true>
+                        <false>0</false>
+                    </if>
+                </field>
+                <field id="graba_ctb" local="true">
+                    <if exp="cajpuesto_superior_id + 0 == 0">
+                        <true>1</true>
+                        <false>0</false>
+                    </if>
+                </field>
+            </fieldGroup>
+
+            <order>
+                <field id="doh" />
+                <field id="cuenta_id" />
+                <field id="cajmovimiento_id" />
+            </order>
+
+            <group>
+                <field id="ctbcentro_id" />
+                <field id="doh" />
+                <field id="cuenta_id" />
+            </group>
+
+        </table>
+
+        <join>
+            <table id="CAJ_MOVIMIENTOS">
+                <field id="id_cajmovimiento">
+                    <condicion operador="=">cajmovimiento_id</condicion>
+                </field>
+                <field id="fecha_movimiento">
+                    <condicion operador="=">'[__fecha_movimiento__]'</condicion>
+                </field>
+                <field id="cajpuesto_id">
+                    <condicion operador="=">'[__cajpuesto_id__]'</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="CAJ_CONCEPTOS">
+                <field id="id_cajconcepto">
+                    <condicion operador="=">CAJ_MOVIMIENTOS.cajconcepto_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="CTB_CENTROS">
+                <field id="id_ctbcentro">
+                    <condicion operador="=">CAJ_CONCEPTOS.ctbcentro_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="CTB_EJERCICIOS">
+                <field id="comienza">
+                    <condicion operador="&lt;=">CAJ_MOVIMIENTOS.fecha_movimiento</condicion>
+                </field>
+                <field id="finaliza">
+                    <condicion operador="&gt;=">CAJ_MOVIMIENTOS.fecha_movimiento</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="CTB_CUENTAS">
+                <field id="id_cuenta">
+                    <condicion operador="=">CAJ_DETALLES.cuenta_id</condicion>
+                </field>
+                <field id="ejercicio_id">
+                    <condicion operador="=">CTB_EJERCICIOS.id_ejercicio</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="chart">
+    <title>Estadisticas Por seccion</title>
+    <obs></obs>
+    <form >
+        <table id="CATPERSONAL" label="ESTAD ACCIDENTES">
+            <grafico id="categoria" >
+                <ancho>400</ancho>
+                <tipo>P</tipo>
+
+                <etiquetas>descripcion</etiquetas>
+                <!--<serie>personal</serie>-->
+                <datos>personal</datos>
+                <title>Cantidad de Operarios</title>
+				<subtitulo>x Categoría</subtitulo>
+            </grafico>
+            <filters>
+				<field id="idSindicato">
+                	<label>Sindicato</label>
+					<operador>=</operador>
+				</field>
+            </filters>
+
+            <field id="idcateg" noshow="true">
+                <label>id</label>
+            </field>
+
+            <field id="idSindicato" _noshow="true">
+                <label>Sindicato</label>
+				<helper id="SINDICATO" type="combo" empty="true">
+                    <field id="idSindicato"></field>
+                    <field id="descripcion"></field>
+                    <order>
+                        <field id="idSindicato"></field>
+                    </order>
+                </helper>
+            </field>
+
+            <field id="descripcion">
+                <label>categoria</label>
+            </field>
+
+            <field id="personal" tipoOrden="DESC">
+                <expression>(SELECT count(*) FROM PERSONAL where idcateg = CATPERSONAL.idCateg and idSindicato = CATPERSONAL.IdSindicato and fechaEgreso = '0000-00-00')</expression>
+                <label>Cantidad</label>
+                <tipo>integer</tipo>
+               	<condicion operador="!=">0</condicion>
+            </field>
+
+            <group>
+                <field id="idCateg" tabla="CATPERSONAL"></field>
+                <field id="idSindicato" tabla="CATPERSONAL"></field>
+            </group>
+
+			<order>
+				<field id="personal" />
+			</order>
+
+        </table>
+
+    </form>
+</histrix>
+
+

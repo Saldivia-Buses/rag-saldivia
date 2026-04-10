@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" _PDFlineColor="255,255,255" PDFfontSize="9" PDForientation="L" sinFecha="true" pageNumber="numerator">
+  <title>Movimientos</title>
+  <obs/>
+  <form >
+    <table id="CTB_MOVIMIENTOS" label="Libro diario">
+      <filters>
+        <field id="ejercicio_id">
+          <label>Ejercicio</label>
+          <help>Ejercicio contable</help>
+          <operador>=</operador>
+        </field>
+        <field id="concepto_id">
+          <operador>=</operador>
+          <label modpos="nobr">Tipo de concepto</label>
+          <help>Concepto elegido</help>
+        </field>
+        <field id="fecha_movimiento" deshabilitado="false">
+          <valor>today</valor>
+          <operador>&gt;=</operador>
+          <label>Desde fecha</label>
+          <help>Fecha movimiento</help>
+        </field>
+        <field id="fecha_movimiento" deshabilitado="false">
+          <valor>today</valor>
+          <operador>&lt;=</operador>
+          <label modpos="nobr">Hasta fecha</label>
+          <help>Fecha movimiento</help>
+        </field>
+        <field id="numerator">
+          <label>Primer página</label>
+          <valor>1</valor>
+        </field>
+      </filters>
+      <field id="id_movimiento" noshow="true" print="false" break="true"/>
+      <field id="numerator" local="true" print="false" noshow="true"/>
+      <field id="fecha_movimiento" _noshow="true" _print="false" _norepeat="true">
+        <label>Fecha</label>
+        <help>Fecha movimiento</help>
+        <detalle>fecha_movimiento</detalle>
+        <tipo>date</tipo>
+      </field>
+      <field id="nro_minuta" _norepeat="true" colstyle="text-align:center;">
+        <label>Minuta</label>
+        <help>Numero de la minuta</help>
+        <detalle>nro_minuta</detalle>
+        <size>4</size>
+      </field>
+      <field id="descripcion" _norepeat="true">
+        <label>Descripcion</label>
+        <expression>CASE WHEN CTB_MOVIMIENTOS.concepto_id = 0 THEN 'MINUTA ANULADA' ELSE
+          CONCAT(CTB_MOVIMIENTOS.referencia , 
+          CASE WHEN REG_MOVIMIENTOS.id_regmovim IS NULL THEN '' ELSE
+          CONCAT((CASE WHEN CTB_MOVIMIENTOS.referencia = '' THEN '' ELSE ' - ' END), (CASE REG_MOVIMIENTOS.nombre_movimiento WHEN '' THEN REG_CUENTA.nombre_cuenta ELSE REG_MOVIMIENTOS.nombre_movimiento END) , ' (', REG_CUENTA.nro_cuenta, ') - ', CONCAT(REG_CONCEPTOS.abreviacion_concepto, ' ', REG_MOVIMIENTOS.letra_movimiento, ' ', LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,0), '-', LPAD(nro_movimiento, 8, 0) ) ) END)
+          END
+        </expression>
+      </field>
+      <field id="concepto_id" noshow="true" print="false" >
+        <helper type="combo" xml="ctbconcepto_qry.xml" dir="/ayudas" empty="true"/>
+        <label>Concepto</label>
+        <help>Código de concepto</help>
+        <detalle>concepto_id</detalle>
+      </field>
+      <field id="ejercicio_id" noshow="true" _print="false" >
+        <helper type="combo" xml="ctbejercicios_crud.xml" dir="/contabilidad/man/">
+          <field id="activo" tipoOrden="DESC"/>
+          <field id="fecha_mov1">
+            <expresion>DATE_FORMAT(comienza, '%d/%m/%Y')</expresion>
+            <tipo>date</tipo>
+            <detalle>ejercicio_id</detalle>
+          </field>
+          <field id="fecha_mov2">
+            <expresion>DATE_FORMAT(finaliza, '%d/%m/%Y')</expresion>
+            <tipo>date</tipo>
+          </field>
+          <field id="finaliza"></field>
+        </helper>
+        <label>Ejercicio</label>
+        <help>Ejercicio contable</help>
+        <detalle>ejercicio_id</detalle>
+      </field>
+      <field id="cuenta" PDFcolWidth="120px">
+        <expression>
+          CONCAT(CTB_CUENTAS.id_cuenta, ' ', CTB_CUENTAS.nombre_cuenta)
+        </expression>
+        <label>Cuenta</label>
+      </field>
+      <field id="debe" tdWidth="180" suma="true" PDFcolWidth="40px" _noZero="true">
+        <expresion>sum(case when doh = 0 then importe else 0 end)</expresion>
+        <label>Debe</label>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="haber" tdWidth="180" suma="true" PDFcolWidth="40px" _noZero="true">
+        <expresion>sum(case when doh = 1 then importe else 0 end)</expresion>
+        <label>Haber</label>
+        <tipo>numeric</tipo>
+      </field>
+      <group>
+        <field id="id_movimiento" />
+        <field id="id_detalle" />
+      </group>
+      <order>
+        <field id="nro_minuta" />
+      </order>
+    </table>
+    <join tipo="left">
+      <table id="CTB_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">concepto_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="CTB_DETALLES">
+        <field id="movimiento_id">
+          <condicion operador="=">(CASE WHEN CTB_MOVIMIENTOS.concepto_id = 0 THEN -1 ELSE id_movimiento END)</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="CTB_CUENTAS">
+        <field id="id_cuenta">
+          <condicion operador="=">CTB_DETALLES.cuenta_id</condicion>
+        </field>
+        <field id="ejercicio_id">
+          <condicion operador="=">CTB_MOVIMIENTOS.ejercicio_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_MOVIMIENTOS">
+        <field id="id_regmovim">
+          <condicion operador="=">CTB_MOVIMIENTOS.regmovim_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

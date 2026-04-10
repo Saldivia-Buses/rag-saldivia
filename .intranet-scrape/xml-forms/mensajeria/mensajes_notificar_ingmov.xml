@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="insert">
+	<title>Notificaciones</title>
+	<obs/>
+	<form >
+		<table id="HTXMESSAGES" label="Mensajes" idCampoCond="grabo">
+
+            <title>Notificaciones</title>
+			<field id="de" id_cab="de" />
+			<field id="para" id_temp="login" />
+			
+			<field id="mensaje" id_cab="contenido" />
+			<field id="fecha" id_cab="fecha" />			
+			<field id="hora" id_cab="hora" />			
+		</table>
+	</form>
+</histrix>

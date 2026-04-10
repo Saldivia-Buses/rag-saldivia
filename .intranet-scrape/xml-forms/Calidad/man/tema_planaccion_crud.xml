@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="abm-mini" borra="false">
+<title>Tema Plan Accion</title>
+<obs></obs>
+<eventos>
+    <event id="update">close</event>
+    <event id="delete">close</event>
+    <event id="insert">close</event>
+    <event id="update">reload</event>
+    <event id="delete">reload</event>
+    <event id="insert">reload</event>
+</eventos>
+<form>
+    <table id="CAL_PLAN_ACCION_TEMA" >
+    <title>Estados</title>
+        <field id="id_plan_accion_tema" autoinc="true" _noshow="true" deshabilitado="true">
+            <label>Cod</label>
+            <help>Codigo</help>
+        </field>
+        <field id="nombre_plan_accion_tema">
+            <label>Tema</label>
+            <help>Tema Plan Accion</help>
+        </field>
+
+        <field id="activo">
+            <label>Activo</label>
+            <help>Activo Tema Plan Accion</help>
+            <options>
+                <option valor="1">Si</option>
+                <option valor="0">No</option>
+            </options>
+        </field>
+
+        <order>
+            <field id="nombre_plan_accion_tema"/>
+        </order>
+</table>
+</form>           
+</histrix>

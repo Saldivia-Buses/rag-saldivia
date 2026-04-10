@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" imprime="false" path="fotos/puestos">
+	<title>Secciones de Trabajo</title>
+	<obs/>
+	<form>
+		<table id="SECCION">
+			<title>Secciones de Trabajo</title>
+			<field id="id_seccion" noshow="true">
+				<label>Codigo</label>
+				<help>Codigo de Seccion</help>
+			</field>
+			<field id="archivo" open="true" path="id_seccion">
+			    <label>Archivos</label>
+			    <tipo>file</tipo>
+			</field>
+
+		</table>
+	</form>
+	
+</histrix>

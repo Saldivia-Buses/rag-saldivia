@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm">
+	<title>Lugares Inventario</title>
+	<obs/>
+	<form>
+		<table id="LUGARESINV">
+			<title>Lugares Inventario</title>
+			<campo id="nroLugar">
+				<label>Número Lugar</label>
+				<help>Número Lugar</help>
+			</campo>
+			<campo id="nombreLugar">
+				<label>Nombre</label>
+				<help>Nombre</help>
+			</campo>
+		</table>
+	</form>
+</histrix>

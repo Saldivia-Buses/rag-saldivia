@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="consulta">
+	<title>Cuenta Corriente</title>
+	<obs></obs>
+	<form  detalle="carche_qry.xml">
+		<table id="REG_MOVIMIENTOS" label="Movimientos">
+
+			<field id="id_regmovim" noshow="true" />
+
+			<field id="subsistema_id" oculto="true">
+				<label>Cod.</label>
+				<help></help>
+			</field>
+
+			<field id="nro_cuenta">
+				<label>Cod.</label>
+				<help>Codigo de Cuenta</help>
+			</field>
+			<field id="puesto_movimiento">
+				<label>P.V.</label>
+				<help>Punto Venta</help>
+				<format>%04d</format>
+			</field>
+			<field id="nro_movimiento">
+				<label>Numero</label>
+				<help>Numero Comprobante</help>
+				<format>%12d</format>
+				<detalle>carrec</detalle>
+			</field>
+			<field id="concod">
+				<label>concep</label>
+				<condicion operador="=">4</condicion>
+			</field>
+
+			<field id="concepto">
+				<expression>condes</expression>
+				<label>Cod.Concepto</label>
+				<help></help>
+				<!--<tipo>string</tipo>
+			-->
+		</field>
+
+		<field id="fecha_movimiento">
+			<label>Fecha</label>
+			<help></help>
+		</field>
+
+		<field id="importe_movimiento" >
+			<label>Importe</label>
+			<help></help>
+		</field>
+
+		<field id="saldo_movimiento" suma="true">
+			<label>Saldo</label>
+			<help></help>
+		</field>
+		<filters>
+			<field id="nro_movimiento">
+				<label>Numero</label>
+				<help>Numero Comprobante</help>
+			</field>
+			<field id="fecha_movimiento"  >
+				<operador>>=</operador>
+				<label>Desde Fecha</label>
+				<valor>today</valor>
+
+			</field>
+			<field id="fecha_movimiento" >
+				<operador>&lt;=</operador>
+				<label>Hasta Fecha</label>
+				<valor>today</valor>
+			</field>
+		</filters>
+
+	</table>
+	<join tipo="left">
+		<table id="CCTCONCE">
+			<field id="siscod" oculto="true">
+				<condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+			</field>
+
+			<field id="concod" oculto="true">
+				<condicion operador="=">REG_MOVIMIENTOS.concod</condicion>
+			</field>
+
+			<field id="condes" oculto="true"></field>
+		</table>
+	</join>
+</form>
+</histrix>

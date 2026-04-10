@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="imputacion" imprime="false">
+	<title>ENTRADA SALIDA STOCK POR CODIGO</title>
+	<obs></obs>
+	<consulta>
+		<table id="STKINMOV" label="ENTRADA SALIDA STOCK" >
+			<movimientos >
+				<!-- Actualizar el saldo del movimiento Original -->
+				<relacion id="pos_stkinmov_update_saldos.xml" />
+
+				<!-- IMPUTACION -->
+				<relacion id="pos_stkimput_ingmov.xml" />
+
+				<!-- Grabar la salida del stock Firme -->
+				<relacion id="pos_stkinmovFC_ingmov.xml" />
+
+				<!--  fuerzo grabacion -->
+			<!--	<relacion id="pos_stkinmov_fuerzo_ingmov.xml" /> -->
+
+				<!-- Grabar la salida del stock Consignado -->
+			</movimientos>
+			<field id="siscod" esClave="true">
+				<condicion operador="=">'02'</condicion>
+				<label>siscod</label>
+			</field>
+			<field id="idMov" ></field>
+
+			<field id="artcod" esClave="true" id_temp="libro">
+			</field>
+			<field id="ctacod"></field>
+
+			<field id="movcant" ></field>
+
+			<field id="saldoPrevio" >
+				<expresion>movsal</expresion>
+			</field>
+			<field id="desc1"		id_temp="desc1" local="true"></field>
+			<field id="_tot"		id_temp="total" local="true"></field>
+			<field id="oldcant"		id_temp="cant"  local="true"></field>
+
+			<field id="movsal" >
+
+				<label>movsal</label>
+				<condicion operador="&gt;">0</condicion>
+			</field>
+<!--		<field id="contip1" esClave="true">
+				<expresion>STKCONCE.contip</expresion>
+				<condicion operador="=">1</condicion>
+			</field> -->
+			<field id="contip" tabla="TIPOSTOCK">
+			</field>
+			<field id="hora" ></field>
+
+			<field id="provcon" ></field>
+
+			<field id="diferencia" local="true">
+				<if exp="true">
+					<verdadero>saldoPrevio - movsal</verdadero>
+					<falso>0</falso>
+				</if>
+			</field>
+			<field id="idTipoStock">
+				<label>tipostock</label>
+			</field>
+			<field id="graboC" local="true">
+				<if exp="diferencia != 0">
+					<verdadero>'true'</verdadero>
+					<falso>'false'</falso>
+				</if>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="NOgrabo" local="true">
+				<if exp="diferencia != 0">
+					<verdadero>'false'</verdadero>
+					<falso>'true'</falso>
+				</if>
+				<tipo>varchar</tipo>
+			</field>
+			<orden>
+				<field id="contip" tabla="TIPOSTOCK"></field>
+				<field id="hora"></field>
+			</orden>
+
+		</table>
+		<join tipo="inner">
+			<table id="STKCONCE">
+				<field id="siscod">
+					<condicion operador="=">'06'</condicion>
+				</field>
+
+				<field id="movcod">
+					<condicion operador="=">STKINMOV.movcod</condicion>
+				</field>
+				<field id="contip">
+					<condicion operador="=">1</condicion>
+				</field>
+
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="TIPOSTOCK">
+				<field id="idTipoStock">
+					<condicion operador="=">STKINMOV.idTipoStock</condicion>
+				</field>
+			</table>
+
+		</join>
+
+	</consulta>
+</histrix>

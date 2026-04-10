@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="dashboard">
+
+        <titulo>Master Plan</titulo>
+
+        <widget id="calidad" width="16%" height="100%">
+            <title>Calidad</title>
+            <url><![CDATA[histrixLoader.php?xml=cal_master_plan_seccion_qry.xml&dir=calidad/qry&origen_planaccion=42&seccion_id=56]]></url>
+        </widget>
+
+        <widget id="ingenieriaprocesos" width="16%" height="100%">
+            <title>Ingeniería de Procesos</title>
+            <url><![CDATA[histrixLoader.php?xml=cal_master_plan_seccion_qry.xml&dir=calidad/qry&origen_planaccion=42&seccion_id=60]]></url>
+        </widget>
+
+        <widget id="ingenieriaplanta" width="15%" height="100%">
+            <title>Ingeniería de Planta</title>
+            <url><![CDATA[histrixLoader.php?xml=cal_master_plan_seccion_qry.xml&dir=calidad/qry&origen_planaccion=42&seccion_id=81]]></url>
+        </widget>
+
+        <widget id="pcp" width="15%" height="100%">
+            <title>PCP</title>
+            <url><![CDATA[histrixLoader.php?xml=cal_master_plan_seccion_qry.xml&dir=calidad/qry&origen_planaccion=42&seccion_id=82]]></url>
+        </widget>
+
+        <widget id="postventa" width="15%" height="100%">
+            <title>PostVenta</title>
+            <url><![CDATA[histrixLoader.php?xml=cal_master_plan_seccion_qry.xml&dir=calidad/qry&origen_planaccion=42&seccion_id=35]]></url>
+        </widget>
+
+        <widget id="medioambiente" width="15%" height="100%">
+            <title>Seguridad y Medio Ambiente</title>
+            <url><![CDATA[histrixLoader.php?xml=cal_master_plan_seccion_qry.xml&dir=calidad/qry&origen_planaccion=42&seccion_id=69]]></url>
+        </widget>
+
+</histrix>

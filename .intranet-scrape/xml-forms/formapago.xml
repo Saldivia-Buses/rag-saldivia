@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="abm">
+	<titulo>CONCEPTOS </titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="FORMAPAGO">
+			<titulo>Formas de Pago</titulo>
+			<campo id="formaPago">
+				<label>Cod.</label>
+				<help>Codigo de Concepto</help>
+			</campo>
+			<campo id="nombrePago">
+				<label>Nombre</label>
+				<help>Descripcion del Concepto</help>
+			</campo>
+	
+			<orden>
+				<campo id="formaPago"></campo>
+			</orden>
+		</tabla>
+	</consulta>
+</abm>

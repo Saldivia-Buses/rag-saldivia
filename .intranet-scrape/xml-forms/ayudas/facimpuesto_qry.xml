@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  Ayuda
+Tarea: Ayuda para la Tabla de Tarifas
+Autor: d!ego2k
+Fecha: 27/09/10
+*******************************************************************************
+-->
+<histrix tipo="consulta">
+	<title>Impuestos</title>
+	<obs></obs>
+	<consulta>
+		<table id="FAC_IMPUESTOS" label="Impuestos">
+
+		  <field id="id_facimpuesto" autoinc="true" noshow="true" />
+
+		  <field id="nombre_impuesto">
+			<label>Nombre</label>
+		  </field>
+
+		  <field id="facservicio_id" noshow="true" />
+   
+		</table>
+
+		<join>
+			<table id="FAC_SERVICIOS">
+				<field id="id_facservicio">
+					<condicion operador="=">FAC_IMPUESTOS.facservicio_id</condicion>
+				</field>
+			</table>
+		</join>
+
+	</consulta>
+</histrix>	

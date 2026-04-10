@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" sololectura="true" template="chequera.tpl" _printer="cheques" preFetch="true">
+    <title>Cheque</title>
+    <obs></obs>
+    <form  >
+        <table id="BCSMOVIM" label="Cheque">
+		
+	    <field id="printer" local="true">
+		<setvar>printer</setvar>
+	    </field>	
+            <field id="bcscta" noshow="true">
+            </field>
+			
+            <field id="siscod" oculto="true">
+            </field>
+            <field id="ctacod" noshow="true">
+            </field>
+            <field id="nropag" noshow="true">
+            </field>
+            <field id="id_bcsmovim" noshow="true">
+            </field>
+            <field id="bcsmov" noshow="true">
+            </field>
+            <field id="bcsnro" noshow="true">
+                <label>Número</label>
+                <help>Numero de Movimiento </help>
+                <format>%010d</format>
+				
+            </field>
+            <field id="bcsfec">
+                <label>Fecha</label>
+                <help>Fecha del Movimiento</help>
+            </field>
+            <field id="dia">
+				
+                <expression>DAYOFMONTH(bcsfec)</expression>
+            </field>
+            <field id="mes">
+                <expression>MONTH(bcsfec)</expression>
+                <options>
+                    <option valor="1">Enero</option>
+                    <option valor="2">Febrero</option>
+                    <option valor="3">Marzo</option>
+                    <option valor="4">Abril</option>
+                    <option valor="5">Mayo</option>
+                    <option valor="6">Junio</option>
+                    <option valor="7">Julio</option>
+                    <option valor="8">Agosto</option>
+                    <option valor="9">Septiembre</option>
+                    <option valor="10">Octubre</option>
+                    <option valor="11">Noviembre</option>
+                    <option valor="12">Diciembre</option>
+                </options>
+            </field>
+            <field id="year">
+                <expression>YEAR(bcsfec)</expression>
+            </field>
+
+            <field id="diav">
+                <expression>DAYOFMONTH(bcsfev)</expression>
+            </field>
+            <field id="mesv">
+                <expression>MONTH(bcsfev)</expression>
+                <options>
+                    <option valor="1">Enero</option>
+                    <option valor="2">Febrero</option>
+                    <option valor="3">Marzo</option>
+                    <option valor="4">Abril</option>
+                    <option valor="5">Mayo</option>
+                    <option valor="6">Junio</option>
+                    <option valor="7">Julio</option>
+                    <option valor="8">Agosto</option>
+                    <option valor="9">Septiembre</option>
+                    <option valor="10">Octubre</option>
+                    <option valor="11">Noviembre</option>
+                    <option valor="12">Diciembre</option>
+                </options>
+
+            </field>
+            <field id="yearv">
+                <expression>YEAR(bcsfev)</expression>
+            </field>
+
+            <field id="ctanom" >
+                <expression>(case when BCSMOVIM.tipo = 0 then ctanom
+                                when BCSMOVIM.tipo = 1 then CONCAT(ctanom, ' - NO A LA ORDEN -')
+                                when BCSMOVIM.tipo = 2 then ' '
+                                end)
+                                </expression>
+                <label>Nombre</label>
+                <tipo>varchar</tipo>
+                <size>80</size>
+            </field>
+
+            <field id="bcsimp">
+                <tipo>numeric</tipo>
+            </field>
+            <field id="Let1" local="true">
+                <tipo>varchar</tipo>
+            </field>
+            <field id="Let2" local="true">
+                <tipo>varchar</tipo>
+            </field>
+
+        </table>
+        <join>
+            <table id="CCTMOVIM">
+                <field id="siscod" oculto="true">
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="concod">
+                    <condicion>4</condicion>
+                </field>
+
+                <field id="movnro">
+                    <condicion>BCSMOVIM.nropag</condicion>
+                </field>
+                <field id="ctacod">
+                    <condicion>BCSMOVIM.ctacod</condicion>
+                </field>
+
+            </table>
+        </join>
+		
+    </form>
+</histrix>

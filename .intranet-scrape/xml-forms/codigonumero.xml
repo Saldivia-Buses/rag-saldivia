@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm">
+	<title>Codigo de Comprobantes</title>
+	<obs/>
+	<form >
+		<table id="CODIGONUMERO">
+			<title>Codigo Numero</title>
+			
+			<field id="codigoNumero">
+				<label>Cod.</label>
+				<help>Cod.Nro.</help>
+			</field>
+			<field id="nombre">
+				<label>Nombre</label>
+				<help>Nombre</help>
+			</field>
+			<field id="descripcion">
+				<label>Descripcion</label>
+				<help>Descripcion del Convenio</help>
+			</field>
+			<order>
+				<field id="codigoNumero"/>
+			</order>
+		</table>
+	</form>
+</histrix>

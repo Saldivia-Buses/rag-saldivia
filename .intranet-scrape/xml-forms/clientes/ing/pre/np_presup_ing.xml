@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" inserta="false" modifica="false" deleteRow="false" imprime="false" log="false" preloadData="false" procesa="true" export="false">
+  <title>Cta Ctes</title>
+  <obs/>
+  <form  _detalle="regpendientes_qry.xml" _inline="true" >
+    <tabla id="REG_MOVIMIENTOS">
+
+	<movimientos cabecera="facturar_pedidos_cab.xml">
+	    <relacion id="reg_movimientos_ins.xml" />  CREO REG_MOVIMIENTO
+	    <relacion id="reg_detalles_dup.xml" />    DUPLICO DETALLE E IMPUTO
+	    <relacion id="reg_movimientos_print.xml" />  CREO REG_MOVIMIENTO
+	    <relacion id="reg_movimientos_rem_ins.xml" />  	CREO REG_MOVIMIENTO
+	    <relacion id="reg_detalles_rem_dup.xml" />
+	    <relacion id="reg_movimientos_rem_print.xml" />  CREO REG_MOVIMIENTO
+	    <relacion id="actualizo_nro.xml" />        ACTUALIZO NUMERADOR
+	</movimientos>  
+
+	<filters>                                     
+
+		<field id="regzona_id" tabla="REG_CUENTA">
+			<label>Zona</label>
+			<operador>=</operador>
+        	</field>
+		<field id="nro_cuenta">
+			<operador>=</operador>
+			<label>Cliente</label>
+			<help>Cliente</help>
+		</field>
+		<field id="regcuentavendedor_id"> 
+			<label modpos="nobr">Vendedor</label>
+			<help>Vendedor</help>
+			<operador>=</operador>                  
+		</field> 
+		<field id="sinstock_id" local="true">
+			<label colspan="4" _modpos="nobr">Stock</label>
+			<help>Stock</help>
+			<valor>0</valor>
+		</field> 
+	</filters> 
+
+	<field id="regzona_id" tabla="REG_CUENTA" noshow="true">
+		<helper type="combo" xml="zonas_crud.xml" dir="/clientes/man" empty="true" />
+	</field>
+
+	<field id="sinstock_id" noshow="true" local="true">
+		<label colspan="4" _modpos="nobr">sinstock_id</label>
+		<helper type="combo" >
+			<option value="0">Todos</option>
+			<option value="1">Sin Stock</option>
+			<option value="2">Con Stock</option>
+		</helper>
+		<tipo>radio</tipo>
+		
+	</field>
+
+	<field id="id_regmovim" noshow="true" >
+		<detalle>regmovim_id</detalle>
+	</field>
+
+	<field id="nro_cuenta" tabla="REG_CUENTA">
+		<label>Cliente</label>
+		<helper type="external" xml="regcuenta_solamente_nro_qry.xml" dir="/ayudas">
+		    <field id="subsistema_id"></field>
+		    <order>
+		    <field id="nombre_cuenta"></field>
+		    </order>
+		</helper>
+	</field>
+
+	<field id="regcuenta_id" noshow="true">
+		<operador>=</operador>
+		<help>Cliente</help>
+	</field>
+
+	<field id="nombre_cuenta" tabla="REG_CUENTA ">
+		<label>Nombre Cuenta</label>
+	</field>
+
+	<field id="vencimiento_movimiento">
+		<label>Fecha Entrega</label>
+	</field>
+
+	<field id="subsistemave_id" local="true" noshow="true" valauto="true" />
+
+	<field id="subsistematr_id" local="true" noshow="true" valauto="true" />    
+                 
+	<field id="regcuentavendedor_id" _noshow="true">
+		<label>Vendedor</label>
+		<helper type="combo" xml="regcuenta_solamente_qry.xml" dir="/ayudas" empty="true">
+                    <field id="subsistema_id">
+                        <condicion operador="=" valorde="subsistemave_id">'[__subsistemave_id__]' </condicion>
+                    </field>
+                    <order>
+                    <field id="nombre_cuenta"></field>
+                    </order>
+                </helper>
+	</field> 
+
+	<field id="descripcion_concepto" tabla="REG_CONCEPTOS" >
+		<label>Concepto</label>
+	</field>
+
+	<field id="letra_aux" local="true" noshow="true">
+		<help>Este field se puede setear en la tabla HTXMENU y fuerza la letra del comprobante</help>
+	</field>
+
+	<field id="letra_movimiento" noshow="true">
+        	<expression>(CASE WHEN '[__letra_aux__]' = '' THEN GEN_IVA.letra ELSE '[__letra_aux__]' END)</expression>
+    	</field>
+	
+	<field id="letra_comprobante" noshow="true">
+	        <expression>GEN_IVA.letra</expression>
+	</field>
+	
+	<field id="puesto_det_movimiento"  local="true" noshow="true">
+	    <label>puesto</label>
+	    <if exp="true">
+    		<true>puesto_movimiento</true>
+    		<false>0</false>
+	    </if>
+	</field> 
+
+        <field id="nro_movimiento">
+        	<expresion>CONCAT(REG_MOVIMIENTOS.letra_movimiento,' ',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,'0'),'-',LPAD(REG_MOVIMIENTOS.nro_movimiento,8,'0'))</expresion>
+        <label>Numero</label>
+        <helper type="link" dir="/clientes/qry">
+	     <parameter source="id_regmovim" target="id_regmovim" />
+	    </helper>   
+	    <attribute id="linkint">imprime_concepto</attribute>
+    </field>
+
+    <field id="imprime_concepto" noshow="true">
+        <expresion>ifnull(ejecuta,'')</expresion>
+    </field>
+      
+
+
+	<field id="ctbcuenta_id" noshow="true">
+			<expresion>ifnull((SELECT cuenta_id 
+			                     FROM REG_CUENTA_IMPUTACION	
+			                    WHERE REG_CUENTA_IMPUTACION.regcuenta_id = REG_CUENTA.id_regcuenta	
+			                      AND REG_CUENTA_IMPUTACION.doh = 0 
+			                    LIMIT 1), GEN_SUBSISTEMAS.cuenta_debe_id) 
+			</expresion>
+	</field>
+
+	<field id="ctbcuenta_iva_id" noshow="true">
+			<expresion>(SELECT cuenta_debito_id FROM GEN_IVA_ALICUOTAS where GEN_IVA_ALICUOTAS.iva_id = REG_CUENTA.iva_id LIMIT 1)</expresion>
+	</field>
+
+	<field id="regcuentatransporte_id" noshow="true" />
+
+	<field id="_ORDEN" local="true" noshow="true" />
+	             
+    
+	<field id="Pedido" local="true" noshow="true" >
+		<label>Pedido</label>
+		<expresion>sum(ifnull(REG_DETALLES.cantidad_detalle,0) )</expresion>
+		<tipo>numeric</tipo>
+	</field>
+
+	<field id="Pendientes" noshow="true">
+		<label>Pendientes</label>
+		<expresion _having="false"> 	sum(ifnull(REG_DETALLES.cantidad_detalle,0) ) -
+				ifnull((select sum(cantidad_imputada) from REG_MOVIMIENTOS RM003
+				JOIN REG_DETALLES RD2 ON RM003.id_regmovim = RD2.regmovim_id  
+				JOIN REG_IMPUTACIONESDETALLES RI1 on RI1.regdetalleped_id = RD2.id_regdetalle
+				where RM003.id_regmovim = REG_MOVIMIENTOS.id_regmovim),0)
+		</expresion>
+
+		<tipo>numeric</tipo>
+		<condicion operador="&gt;">0</condicion>
+			
+	</field>
+	<field id="actual" noshow="true">
+		<label>actual</label>
+		<expresion>ifnull((SELECT sum(cantidad_stock) FROM STK_STOCKACTUAL SA WHERE SA.stkarticulo_id= REG_DETALLES.codigo_detalle), 0)</expresion>
+		<tipo>numeric</tipo>
+	</field>     
+
+	<field id="xxxx" noshow="true" >
+		<label>xxxx</label>
+		<expresion>1</expresion>
+		<condicion operador="=">1 and (Pendientes > 0 )  and ((actual > 0 and '[__sinstock_id__]'='2' ) or (actual = 0 and '[__sinstock_id__]'='1' ) or '[__sinstock_id__]'='0')</condicion> 
+	</field>
+	
+	<field id="codigo_detalle" tabla="REG_DETALLES" noshow="true" />
+
+	<field id="neto_movimiento" 			noshow="true" />
+	<field id="importe_iva" 				noshow="true" />
+	<field id="importe_movimiento" 			noshow="true" />
+	<field id="alicuota_iva" 				noshow="true" /> 	
+	<field id="mar_movimiento" 				noshow="true" />
+	<field id="importe_bon" 				noshow="true" />
+	<field id="regforma_id"					noshow="true" />
+
+	<field id="bonifMax" noshow="true">
+	  <label>MaxBon</label>
+	  <expresion>ifnull((select porcentaje_descuento0 from STK_DESCUENTOSVOLUMEN where sum(cantidad_detalle) >= desde_cantidad and sum(cantidad_detalle) &lt;= hasta_cantidad 
+	  and REG_MOVIMIENTOS.stklista_id = STK_DESCUENTOSVOLUMEN.stklista_id limit 1) ,0) </expresion>
+	  <tipo>numeric</tipo>
+	</field>
+
+
+	<field id="bonificaciones_movimiento" noshow="true">
+	  <label>Bonif</label>
+	</field>
+	
+	
+	<field id="desc0" noshow="true">
+	  <label>Desc</label>
+	  <expresion>max(REG_DETALLES.porcentaje_desc0)</expresion>
+	</field>                              
+
+	<field id="referencia_movimiento" editable="true">
+		<label>Observacion</label>
+		<size>100</size>
+	</field>
+
+	<field id="stklista_id" noshow="true" />
+	<field id="_afactur" local="true">
+	  <if exp="mar_movimiento == 1 ">
+		<true>'Facturable'</true>
+		<false>'AUTORIZAR'</false>
+	  </if>
+	</field>
+
+	<field id="color" local="true" clasefila="true" noshow="true">
+		<label>color</label>
+		<if exp="'_afactur' == 'AUTORIZAR'">
+			<true>'resaltadoRojo'</true>
+			<false>''</false>
+		</if>
+	</field>
+
+	
+		<field  id="xmlImpresion" local="true" noshow="true">
+			<label>imp</label>
+		    <expresion sql="true">select ejecuta from REG_NUMERADORES where puesto = '[__puesto_det_movimiento__]' and REG_NUMERADORES.letra = '[__letra_movimiento__]' and REG_NUMERADORES.regconcepto_id= (select HTXOPTIONS.option_value from HTXOPTIONS where option_name = 'ID_FACTURAS' LIMIT 1) limit 1</expresion>
+		</field>
+		<field  id="xmlImpresion_rem" local="true" noshow="true">
+			<label>imp rem</label>
+		    <expresion sql="true">select ejecuta from REG_NUMERADORES where puesto = '[__puesto_det_movimiento__]' and REG_NUMERADORES.letra = '[__letra_movimiento__]' and REG_NUMERADORES.regconcepto_id= (select HTXOPTIONS.option_value from HTXOPTIONS where option_name = 'ID_REMITOS' LIMIT 1) limit 1</expresion>
+		</field>
+		<field  id="printer" local="true" noshow="true">
+			<label>print</label>
+		    <expresion sql="true">select printer from REG_NUMERADORES where puesto = '[__puesto_det_movimiento__]' and REG_NUMERADORES.letra = '[__letra_movimiento__]' and REG_NUMERADORES.regconcepto_id= (select HTXOPTIONS.option_value from HTXOPTIONS where option_name = 'ID_FACTURAS' LIMIT 1) limit 1</expresion>
+		</field>
+
+        <field id="facturar" local="true" editable="true" refresh="true">
+    	    <tipo>check</tipo>
+    	    <valor>1</valor>
+        </field>
+        
+        <field id="grabar" local="true" noshow="true">
+	  	  <if exp="_afactur == 'Facturable' &amp;&amp; facturar == 1">
+	  		<true>'true'</true>
+			<false>'false'</false>
+		  </if>
+        </field>
+        <field id="emiteremito" local="true" noshow="true">
+        	<help>Este field sirve como parámetro para setear en la tabla HTXMENU con valor 0 o 1</help>
+        </field>
+        <field id="grabar_rem" local="true" noshow="true">
+	  	  <if exp="'emiteremito' == '1' &amp;&amp; facturar == 1">
+	  		<true>'true'</true>
+			<false>'false'</false>
+		  </if>
+		</field>     
+	    <group>
+		    <field id="id_regmovim" tabla="REG_MOVIMIENTOS"/>
+	    </group>
+    </tabla>
+
+    <join>
+      <table id="HTXOPTIONS">
+        <field id="option_name">
+          <condicion operador="=">'ID_NOTA_PEDIDOS' and REG_MOVIMIENTOS.concepto_id = option_value</condicion>
+        </field>
+      </table>
+    </join>
+    
+    <join>
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+    
+	<join tipo="left">
+	  <tabla id="GEN_SUBSISTEMAS">
+	    <field id="id_subsistema">
+		  <condicion operador="=">REG_CUENTA.subsistema_id</condicion>
+		</field>
+	  </tabla>
+	</join>
+	
+    <join tipo="left">
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id and REG_CONCEPTOS.informa_calculo = 1 </condicion>
+        </field>
+      </table>
+    </join>
+    
+    <join tipo="left">
+      <table id="REG_DETALLES">
+        <field id="regmovim_id">
+          <condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="REG_NUMERADORES">
+        <field id="subsistema_id">
+          <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+        </field>
+        <field id="regconcepto_id">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+        <field id="puesto">
+          <condicion operador="=">REG_MOVIMIENTOS.puesto_movimiento</condicion>
+        </field>
+        <field id="letra">
+          <condicion operador="=">REG_MOVIMIENTOS.letra_movimiento</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+        <table id="GEN_IVA">
+            <field id="id_iva">
+                <condicion operador="=">REG_CUENTA.iva_id</condicion>
+            </field>
+        </table>
+    </join>
+  </form>
+</histrix>
+

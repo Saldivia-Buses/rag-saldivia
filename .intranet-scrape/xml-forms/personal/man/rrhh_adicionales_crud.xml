@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" subtipo="vertical" tooltip="false" preloadData="false">
+	<title>ADICIONALES</title>
+	<obs/>
+	<form >
+		<table id="RRHH_ADICIONALES" label="Adicionales" styleTbody="height:10em;">
+			
+			<filters auto="true">
+		        <field id="legajo">
+		        <label modpos="nobr">Nombre</label>
+		          <operador>=</operador>
+		        </field>
+			</filters>
+        
+	        <field id="legajo">
+	            <label>Nombre</label>
+	            <help>Nombre</help>
+	            <helper type="combo" id="PERSONAL">
+	                <field id="legajo"/>
+	                <field id="nombres">
+	                    <expression>CONCAT(apellido,', ', Nombre)</expression>
+	                </field>
+	                <field id="fechaEgreso">
+	                    <condicion operador="=">'0000-00-00'</condicion>
+	                </field>
+	                <order>
+	                    <field id="nombres"/>
+	                </order>
+	            </helper>
+	        </field>
+
+
+			<field id="descripcion">
+				<label colspan="5">Descripción</label>
+				<help>Descripción del Adicional</help>
+				<size>60</size>
+			</field>
+			<field id="porcentaje">
+				<label>Porcentaje</label>
+				<help>Porcentaje</help>
+			</field>
+			<field id="fijo" >
+				<label modpos="nobr">Fijo</label>
+				<help>Importe Fijo</help>
+			</field>
+			<field id="maximo"  >
+				<label  modpos="nobr">Importe Máximo</label>
+				<help>Importe máximo</help>
+			</field>
+			
+			<field id="desdeFecha" _required="false">
+				<label>Desde Fecha</label>
+				<help>Desde Fecha</help>
+			</field>
+			<field id="hastaFecha">
+				<label modpos="nobr">Hasta Fecha</label>
+				<help>Hasta Fecha</help>
+			</field>
+		</table>
+
+	</form>
+</histrix>

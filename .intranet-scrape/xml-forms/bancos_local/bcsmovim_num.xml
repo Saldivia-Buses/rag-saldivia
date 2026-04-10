@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta">
+	<title>Movimientos Bancarios</title>
+	<obs></obs>
+	<form  detalle="ctbregis2.xml">
+		
+		<table id="BCSMOVIM" label="Movimientos Bancarios">
+			
+			<field id="bcscta">
+				<label>Codigo Cuenta</label>
+				<help>Codigo de Cuenta Bancaria </help>
+			</field>
+			
+			<field id="siscod" oculto="true">
+				<label>Codigo Sistema.</label>
+				<help>
+				</help>
+			</field>
+			
+			<field id="bcsfev">
+				<label>Fec.Acred</label>
+				<help>Fecha de Acreditacion</help>
+			</field>
+			
+			<field id="cnbabvE">
+				<expression>cnbabv</expression>
+				<label>Tipo</label>
+				<help>Codigo de tipo de Movimiento </help>
+				
+				<!--                      <tabla_ex id="BCSCONCE">
+				<field id="cnbcod"></field>
+				<field id="cnbabv"></field>
+				</tabla_ex>
+				-->
+				<tipo>string</tipo>
+				<size>20</size>
+				
+			</field>
+			
+			<field id="bcsnro">
+				<label>Numero</label>
+				<help>Numero de Movimiento </help>
+				<format>%010d</format>
+				
+			</field>
+			<field id="referencia">
+				<expression>bcsref__1</expression>
+				<tipo>char</tipo>
+				<label>Referencia</label>
+				<help>Referencia Adicional</help>
+				<size>60</size>
+			</field>
+			
+			<field id="debe" suma="true">
+				<expression>bcsimp * (case when cnbtip = '1' then 1 else 0 end)</expression>
+				
+				<label>Debe</label>
+				<help>Importe del Movimiento en el Debe</help>
+				<size>20</size>
+				
+			</field>
+			
+			<field id="haber" suma="true">
+				<expression>bcsimp * (case when cnbtip = '2' then 1 else 0 end)</expression>
+				
+				<label>Haber</label>
+				<help>Importe del Movimiento en el Haber</help>
+				<size>20</size>
+				
+			</field>
+			<!--
+			<field id="bcsimp">
+			<label>Importe              . </label>
+			<help>Importe total del movimiento </help>
+			</field>
+			-->
+			<field id="bcsfec">
+				<label>Fecha Mov.</label>
+				<help>Fecha del Movimiento</help>
+				<detalle>regfec</detalle>
+			</field>
+			
+			<field id="regmin">
+				<label>Asiento</label>
+				<help>Numero de Asiento</help>
+				<format>%010s</format>
+				<detalle>regmin</detalle>
+			</field>
+			
+			<!--
+			<field id="bcsfev">
+			<label>Fecha Vencimiento    . </label>
+			<help>Fecha de vencimiento del Movimiento </help>
+			</field>
+			<field id="bcsmar">
+			<label>Marca </label>
+			<help> </help>
+			</field>
+			<field id="bcspre">
+			<label>F.Presentado </label>
+			<help>Fecha de Presentacion. </help>
+			</field>
+			<field id="bcstil">
+			<label>Presentado </label>
+			<help>[ ] = Sin Presentar  |  [1] = Presentado. </help>
+			</field>
+			<field id="opecla">
+			<label>Firma Electronica </label>
+			<help>Firma Electronica </help>
+			</field>
+			<field id="presentado">
+			<label>Presentado </label>
+			<help>Indica si el Valor ya fue Presentado </help>
+			</field>
+			<field id="succod">
+			<label>Cod. Sucursal </label>
+			<help>Codigo de Sucursal </help>
+			</field>
+			
+			-->
+			<filters>
+				<field id="bcsnro">
+					<!-- Creo un modificador al operador que cambia 
+					la parte izquierda de las comparaciones
+					Aca Agrego right(valor, length(valor ingresado))
+					-->
+					<operador modificador="right">=</operador>
+					<label>Numero</label>
+					<valor>00000000</valor>
+				</field>
+			</filters>
+			
+			<order>
+				<field id="bcsfev"></field>
+			</order>
+			
+		</table>
+		
+		<join tipo="left">
+			<table id="BCSCONCE">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">BCSMOVIM.siscod</condicion>
+					
+				</field>
+				
+				<field id="cnbcod" oculto="true">
+					<condicion operador="=">BCSMOVIM.bcsmov</condicion>
+				</field>
+				<field id="cnbtip" oculto="true"></field>
+			</table>
+		</join>
+		
+	</form>
+</histrix>

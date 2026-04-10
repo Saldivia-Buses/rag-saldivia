@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>                     
+<histrix tipo="insert"  replaceInto="true">
+<title>Atributos</title>
+<obs></obs>
+<form >
+    <table id="HTX_TABLE_ATTRIBUTE">
+        <field id="record_id" id_temp="record_id">
+        </field>
+        <field id="table_name" id_temp="table_name">
+        </field>
+
+        <field id="attribute_id" id_temp="id_attribute">
+        </field>
+	<field id="attribute_value" id_temp="attribute_value">
+	</field>
+    </table>
+</form>	   
+</histrix>

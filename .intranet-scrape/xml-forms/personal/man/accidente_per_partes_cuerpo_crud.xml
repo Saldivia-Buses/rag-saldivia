@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="abm-mini" borra="false">
+<title>Partes Cuerpo Accidente</title>
+<obs></obs>
+<eventos>
+    <event id="update">close</event>
+    <event id="delete">close</event>
+    <event id="insert">close</event>
+    <event id="update">reload</event>
+    <event id="delete">reload</event>
+    <event id="insert">reload</event>
+</eventos>
+<form>
+    <table id="FRANCOS_CUERPO_PARTE" >
+    <title>Partes Cuerpo Accidente</title>
+    
+        <field id="id_cuerpo_parte" autoinc="true" noshow="true" deshabilitado="true">
+            <label>Cod</label>
+            <help>Codigo</help>
+        </field>
+        <field id="nombre_cuerpo_parte">
+            <label>Nombre</label>
+            <help>Nombre</help>
+        </field>
+        
+        <order>
+            <field id="nombre_cuerpo_parte"/>
+        </order>
+</table>
+</form>           
+</histrix>

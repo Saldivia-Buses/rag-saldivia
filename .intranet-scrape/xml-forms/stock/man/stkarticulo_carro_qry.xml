@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF8"?>
+<histrix tipo="consulta" inserta="false" modifica="false" imprime="false" deleteRow="false"   path="fotos/articulos">
+  <titulo>Artículo por Locación</titulo>
+  <obs/>
+  <form>
+    <table id="STK_ARTICULO_LOCACION">
+
+    <title>Artículo por locación </title>
+  	<filters>
+      <field id="codigo_locacion" tabla="STK_LOCACION" >
+      	<label>Código Locación</label>
+      	<operador>like</operador>
+      </field>
+     
+  	    
+  	</filters>
+      <field id="id_articulo_locacion" noshow="true" autoinc="true" />
+
+      <field id="stklocacion_id" noshow="true" _oculto="true" />
+      
+    <!--
+    <field id="subsistema_id" tabla="STK_ARTICULOS" >
+    </field> 
+  -->
+
+    <field id="codigo_locacion" tabla="STK_LOCACION" >
+	<label>Código Locación</label>
+    </field>
+    <field id="nombre_locacion" tabla="STK_LOCACION" >
+	<label>Locación</label>
+    </field>
+    <field id="stkarticulo_id">
+      <label>Artículo</label>
+      <helper id="STK_ARTICULOS" type="external">
+        <field id="id_stkarticulo">
+        </field>
+        <field id="nombre_articulo" >
+          <detalle>nombre_articulo</detalle>
+        </field>
+
+      </helper>
+    </field>
+
+    <field id="nombre_articulo" tabla="STK_ARTICULOS" deshabilitado="true">
+      <label>Nombre</label>
+	<size>40</size>
+
+    </field>
+
+    <field id="stock_minimo">
+      <label>Mínimo</label>
+    </field>
+
+    <field id="stock_maximo">
+      <label>Máximo</label>
+    </field>
+    <field id="etiqueta" local="true" Formstyle="display:none;">
+      <label>etiqueta</label>
+      <helper xml="stkarticulo_etiqueta_qr.xml" dir="/stock/qry/" type="link">
+        <parameter source="stkarticulo_id" target="id_stkarticulo" />
+        <parameter source="stklocacion_id" target="stklocacion_id" />
+        <parameter source="codigo_locacion" target="codigo_locacion" />
+      </helper>
+      <valor>'Imprimir Etiqueta'</valor>
+    </field>
+    <field id="etiqueta_zebra" local="true" Formstyle="display:none;" grafico="barcode" encode="QR" imageHeight="1">
+      <label>etiqueta Zebra</label>
+      <helper xml="articulo_locacion_qr.xml"  type="link">
+        <parameter source="stkarticulo_id" target="id_stkarticulo" />
+        <parameter source="stklocacion_id" target="stklocacion_id" />
+        <parameter source="codigo_locacion" target="codigo_locacion" />
+      </helper>
+	<expression>stkarticulo_id</expression>
+	<tipo>grafico</tipo>
+<!--      <valor>'Etiqueta Zebra'</valor> -->
+    </field>
+      <field id="fotopath" local="true" noshow="true">
+        <if exp="true">
+          <true>'stkarticulo_id/'</true>
+          <false>''</false>
+        </if>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="foto" path="fotopath" _open="true" print="false" download="false" _viewer="true" watermark="stkarticulo_id">
+          <expression>select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = stkarticulo_id and ARTICULO_FOTO.foto != '' order by revision desc limit 1</expression> 
+	        <label>Imagen</label>
+          <tipo Type="Image">file</tipo>
+          <size>40</size> 
+      </field>
+
+    <field id="stkcarro_id" noshow="true">
+    </field>
+<!--
+    <field id="standardpack_id">
+      <label>Standard Pack</label>
+      <helper xml="stk_standard_pack_qry.xml" type="combo" dir="/stock/man/">
+      </helper>
+
+    </field>
+-->
+    <order>
+	<field id="codigo_locacion" />
+    </order>
+    </table>
+    <join>
+      <table id="STK_LOCACION">
+        <field id="id_stklocacion">
+          <condicion operador="=">stklocacion_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join>
+      <table id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">stkarticulo_id</condicion>
+        </field>
+      </table>
+    </join>
+<!--
+    <join tipo="left">
+      <table id="STK_ARTICULOS" as="STKA">
+        <field id="id_stkarticulo">
+          <condicion operador="=">contenedor_stkarticulo_id</condicion>
+        </field>
+      </table>
+    </join>
+-->
+
+  </form>
+</histrix>

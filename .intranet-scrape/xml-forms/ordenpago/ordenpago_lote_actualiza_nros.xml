@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert">
+	<title>COMPROBANTES</title>
+	<obs/>
+	<form >
+		<table id="CAJCOMPR"  idCampoCond="pagar">
+
+    	    <sql>
+
+    	       update CAJPARAM set parent = parent + 1 where parcla = 'nropag';
+    	       update CTBNUMER set numapr = numapr + 1 where siscod = '10' /* and nummes = substring('[__movfec__]',4,2)*/ ; 
+    	       update CHEQUERAS set nroCheque = nroCheque + 1 where idChequera = [__chequera__];
+            </sql>
+
+
+			<field id="chequera" id_padre="chequera" local="true" />
+						
+
+
+			<field id="siscod" id_padre="sisprv" />
+			<field id="ctacod" id_temp="ctacod"  />
+			<field id="numfac" id_temp="numfac"  local="true"/>
+
+			<field id="movicc" id_padre="concod"></field>
+			<field id="movife" id_padre="movfec"></field>
+			<field id="movipv" id_padre="movnpv"></field>
+			
+<!--			<field id="regmin">
+				<valor>_NRO_MIN</valor>
+			</field> -->
+		</table>
+	</form>
+</histrix>

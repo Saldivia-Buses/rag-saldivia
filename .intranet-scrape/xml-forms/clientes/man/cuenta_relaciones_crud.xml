@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" subtipo="vertical">
+  <title>Vendedores</title>
+  <obs/>
+  <form>
+    <table id="REG_CUENTA_RELACIONES" label="Vendedores">
+      
+    <fieldGroup Formstyle="padding:2px 2px 2px 2px;vertical-align:middle;">
+
+      <field id="id_regcuentarelacion" noshow="true"/>
+      
+      <field id="regcuenta_id" noshow="true" valauto="true" />
+      
+
+
+      <field id="subsistemavendedor_id" local="true" noshow="true" valauto="true">
+        <label>Subsis V</label>
+      </field>
+
+      <field id="subsistemarelacionada_id" noshow="true" valauto="true">
+        <label>Subsistem</label>
+      </field>
+
+      <field id="fecha_vigencia">
+        <label>Desde Fecha</label>
+        <help>Fecha</help>
+        <valor>today</valor>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="regcuentarelacionada_id" modpos="nobr" required="true">
+        <helper type="combo" id="REG_CUENTA" _xml="regcuenta_cmb.xml" dir="/ayudas" empty="true">
+          <field id="id_regcuenta" autoinc="true" noshow="true" esClave="true">
+            <label>Numero Cuenta</label>
+          </field>
+          <field id="nombre_cuenta">
+            <label>Nombre</label>
+          </field>
+          <field id="subsistema2_id" noshow="true">
+            <expression having="false">subsistema_id</expression>
+            <condicion operador="=" valorde="subsistemavendedor_id"/>
+          </field>
+        </helper>
+        <label>Vendedor</label>
+        <help>Seleccione el Vendedor</help>
+      </field>
+
+      <field id="valor_aplicado" _noshow="true" modpos="nobr">
+        <label>Comision</label>
+        <help>Ingrese la comision</help>
+      </field>
+
+
+    </fieldGroup>
+
+    </table>
+  </form>
+</histrix>

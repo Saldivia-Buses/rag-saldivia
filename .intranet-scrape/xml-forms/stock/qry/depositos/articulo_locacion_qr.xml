@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"   ?>
+<histrix  template="etiqueta_locacion.tpl" sololectura="true" preFetch="true" tipo="ficha" _autoprint="true" path="fotos/articulos" printer="zebralocacion">
+    <title>Articulos</title>
+    <obs/>
+    <form>
+        <table id="STK_ARTICULOS" label="Articulos">
+            <fieldGroup style="text-align:center; padding:2px 2px 2px 2px; vertical-align:middle;">
+
+                <field PDFsize="24" id="id_stkarticulo" posX="50" posY="8"/>
+
+                <!-- <field PDFsize="12" id="Medios" local="true" posX="91" posY="8">
+                    <valor>'MEDIOS'</valor>
+                </field> -->
+
+                <field PDFsize="12" id="MIN" local="true" posX="91" posY="8">
+                    <valor>'MIN'</valor>
+                </field>
+
+                <!-- <field PDFsize="12" id="MAX" local="true" posX="101" posY="0">
+                    <valor>'MAX'</valor>
+                </field> -->
+                <field PDFsize="16" id="stock_minimo" _local="true" posX="91" posY="32" PDFnolabel="true" noZero="true" PDFalign="C" _PDFborder="1" pdfancho="20">
+                    <label>Minn</label>
+		    <!--<expression>CAST(STK_ARTICULO_LOCACION.stock_minimo AS unsigned)</expression>-->
+		    <tipo>varchar</tipo> 
+                </field>                
+
+                <!-- <field PDFsize="16" id="stock_maximo" _local="true" posX="101" posY="32" PDFnolabel="true" noZero="true"  PDFalign="C" _PDFborder="1" pdfancho="10">
+                    <label>Max</label>
+		    <expression>CAST(STK_ARTICULO_LOCACION.stock_maximo AS unsigned)</expression>
+-		    <tipo>varchar</tipo> 
+                </field> -->
+
+                <field PDFsize="12" id="nombre_articulo" posX="36" posY="16" pdfancho="57">
+		    <expression>left(nombre_articulo, 59)</expression>
+                    <detalle>descripcion_detalle</detalle>
+		    
+                    <size>10</size>
+                </field>
+                <field id="stklocacion_id" local="true" noshow="true" print="false"/>
+
+
+                <field id="codigo_locacion" local="true" print="false">
+                    <label>Locación</label>
+                </field>
+<!--
+                <field id="foto" foto="true" _path="fotopath" posX="3" posY="6" imageHeight="35" imageWidth="28" _cropImage="true" width="28" height="35">
+                    <expression>concat(id_stkarticulo, '/', ARTICULO_FOTO.foto)</expression>
+            	    <tipo Type="Image">file</tipo>
+                    <size>35</size>
+                </field>
+-->
+		</fieldGroup>
+		<fieldGroup>
+		<if>
+                 if (!class_exists('Archivo')) return true;
+	       </if>
+
+                <field encode="QR" grafico="barcode" id="barcode" imageHeight="175" imageWidth="35" posX="110" posY="6" local="true">
+		    <if exp="true">
+			<true>'stklocacion_id/id_stkarticulo'</true>
+			<false>''</false>
+		    </if>
+                    <tipo>grafico</tipo>
+                </field>
+
+
+            </fieldGroup>
+
+		<fieldGroup>
+		<if>
+                 if (class_exists('Archivo')) return true;
+	       </if>
+
+                <field encode="QR" grafico="barcode" id="barcode" imageHeight="170" imageWidth="23" posX="108" posY="10" local="true">
+		    <if exp="true">
+			<true>'stklocacion_id/id_stkarticulo'</true>
+			<false>''</false>
+		    </if>
+                    <tipo>grafico</tipo>
+                </field>
+
+
+            </fieldGroup>
+
+        </table>
+	<join tipo="left">
+	    <table id="STK_ARTICULO_LOCACION">
+		<field id="stkarticulo_id">
+		    <condicion operador="=">id_stkarticulo</condicion>
+		</field>
+		<field id="stklocacion_id">
+		    <condicion operador="=">'[__stklocacion_id__]'</condicion>
+		</field>
+	    </table>
+	</join>
+        <join tipo="left">
+            <table id="ARTICULO_FOTO">
+                <field id="idArticulo">
+                    <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

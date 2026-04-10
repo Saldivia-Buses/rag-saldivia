@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<histrix tipo="consulta" >
+	<title>Insumos</title>
+	<obs></obs>
+	<form  detalle="stkreluni.xml">
+		<table id="STKINSUM" >
+			<title>Insumos</title>
+			
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+				<detalle>siscod</detalle>
+
+			</field>
+			
+			<field id="artcod" >
+		
+				<label>Cod.</label>
+				<detalle>artcod</detalle>
+				
+			</field>
+			<field id="artdes" deshabilitado="true">
+				<label>Artículo</label>
+				<help>Descripción de Artículo (ENTER = Retorna a ingreso de código).
+					</help>
+			</field>
+    			
+			<field id="artctb">
+    			    <label>Cuenta Contable</label>
+				<help>Código Cuenta Contable </help>
+				<tabla_ex id="CTBCUENT">
+					<clave>ctbcod</clave>
+					<field id="ctbnom"></field>
+				</tabla_ex>
+			</field>
+		<!--
+				<filters>
+				<field id="artcod">
+					<operador>>=</operador>
+					<label>Desde Insumo</label>
+					<valor>0</valor>
+				</field>
+				<field id="artcod">
+				<operador>&lt;=</operador>
+					<label>Hasta Insumo</label>
+					<valor>0</valor>
+				</field>
+			</filters>
+						-->
+			
+		</table>
+	</form>
+</histrix>

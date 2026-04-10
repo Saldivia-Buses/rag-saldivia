@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" log="false" path="fotos/coches" logreference="ctafan" marginTabs="false" width="100" inserta="false" modifica="false"
+ imprime="false" processFirst="true" transaccional="true">
+  <title>FICHA DE VENTAS</title>
+  <obs/>
+  <eventos>
+        <event id="procesar">close</event>
+    </eventos>
+<form _formTbody="height:450px; overflow:auto;">
+
+
+    <table id="PEDCOTIZ" label="Ficha de Ventas">
+
+	<movimientos>
+	    <relacion id="configurador_ins.xml" />
+	    <relacion id="producto_ins.xml" />
+	</movimientos>
+
+
+      <field id="id" noshow="true" log="false" esClave="true" autoinc="true">
+      </field>
+      <field id="revfec" valauto="true" deshabilitado="true" noshow="true">
+        <label modpos="nobr">Ultima Modif.</label>
+        <help>Fecha de Pedido</help>
+        <valor>today</valor>
+      </field>
+
+      <field id="nrocha" esClave="true" deshabilitado="false" required="true">
+          <label >N.Fab.</label>
+          <help></help>
+        <helper type="combo" xml="combo_chasis_sin_ficha.xml">
+          <parameter source="homologacion_id" target="homologacion_id" />
+        </helper>
+      </field>
+
+      <field id="pedfec" _deshabilitado="true" _valauto="true">
+        <label modpos="nobr">Fecha</label>
+        <help>Fecha de Pedido</help>
+        <valor>today</valor>
+      </field>
+
+       <field id="homologacion_id" required="true" deshabilitado="true">
+        <label>Homolog.</label>
+        <helper type="combo" xml="combo_homologacion_modelo.xml" dir="/fabricacion" empty="true">
+          <field id="nrocar" oculto="true"/>
+        </helper>
+      </field>     
+
+       <field id="cotizacion_id" deshabilitado="true">
+        <label modpos="nobr">Cotiz.</label>
+      </field>        
+
+      <field id="ctacod" deshabilitado="true">
+        <label>Cliente</label>
+        <help>Codigo de Cuenta</help>
+        <tabla_ex condes="true" id="CCTCUENT">
+          <field id="ctacod"/>
+          <field id="ctafan2">
+            <expression>CCTCUENT.ctafan</expression>
+          </field>
+          <field id="siscod" oculto="true">
+            <condicion operador="=">'02'</condicion>
+          </field>
+          <field id="baja" oculto="true">
+            <condicion operador="=">0</condicion>
+          </field>
+          <order>
+            <field id="ctafan"/>
+          </order>
+        </tabla_ex>
+
+      </field>
+      <field id="login" _noshow="true" _valauto="true" deshabilitado="true" _colstyle="display:none;" oculto="true">
+        <valor eval="true">$_SESSION['login']</valor>
+      </field>
+      <field id="ctafan" tabla="CCTCUENT" noshow="true">
+        <label>ctafan</label>
+      </field>
+
+      <field id="filtro_atributos" noshow="true" local="true">
+        <valor>1</valor>
+      </field>    
+
+    <field id="atributos" local="true" colspan="6">
+	<label>Attributos</label>
+	<helper xml="configurador_atributos.xml" type="object">
+      <parameter source="cotizacion_id" target="cotizacion_id" />
+      <parameter source="filtro_atributos" target="activo_cotizacion" />
+	</helper>
+        <label colspan="2" colstyle="display:none;">Atributos</label>
+    </field>
+
+      
+      <order>
+        <field id="nrocha" tabla="PEDCOTIZ"/>
+      </order>
+    </table>
+    <join tipo="left">
+      <table id="CHASIS">
+        <field id="nrocha">
+          <condicion operador="=">PEDCOTIZ.nrocha</condicion>
+        </field>
+      </table>
+    </join>
+    <join>
+      <table id="CCTCUENT">
+        <field id="ctacod">
+          <condicion operador="=">PEDCOTIZ.ctacod</condicion>
+        </field>
+        <field id="siscod">
+          <condicion operador="=">'02'</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

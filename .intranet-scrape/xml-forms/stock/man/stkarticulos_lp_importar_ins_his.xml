@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<histrix tipo="insert" tipoInsert="IGNORE">
+    <title>Mantenimiento</title>
+    <obs></obs>
+    <form>
+        <table id="STK_HIST_COSTOS" label="Historico de costos" idCampoCond="importar">
+            
+            <field id="stkarticulo_id" id_temp="id_stkarticulo" />
+
+            <field id="costo_articulo" id_temp="precio_venta" />
+
+            <field id="ultima_fecha" id_cab="dto_fechadesde">
+                <tipo>date</tipo>
+            </field>
+
+        </table>
+    </form>
+</histrix>	

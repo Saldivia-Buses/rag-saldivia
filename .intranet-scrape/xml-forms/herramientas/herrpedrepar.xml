@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <abm tipo="abm">
+       <titulo>Pedidos de Reparación</titulo>
+        <obs></obs>
+               <consulta>
+                  <tabla id="HERRPEDREPAR" label="Pedidos de Reparacion">
+		  <filtro_ex>
+		    <label>Herramienta</label>
+		    <tabla_ex id="HERRAMIENTAS">
+			<!-- campos a agregar al contenedor Filtro-->
+			<campo id="id_herramienta"></campo>
+			<campo id="nomherr"></campo>
+			<campo id="grucod">
+			    <condicion operador="!=">2</condicion>
+			</campo>
+
+			<!-- Campo que se filtra (clave del filtro)-->
+			<filtra>id_herramienta</filtra>
+		    </tabla_ex>
+		  </filtro_ex>
+		
+                  <campo id="id_herramienta">
+                      <label>Herramienta </label>
+                      <help>Identificacion de la Herramienta </help>
+                  </campo>
+		
+                  <campo id="fecini">
+                      <label>Fecha Inicio </label>
+                      <help>Fecha de Inicio del Mantenimiento. </help>
+                  </campo>
+                  <campo id="frecuencia">
+                      <label>Dias Frecuencia</label>
+                      <help>Dias de Frecuencia del Mantenimiento. </help>
+                  </campo>
+                  <campo id="movher">
+                      <label>Codigo Movimiento </label>
+                      <help>Codigo de Movimiento de la Herramienta. </help>
+		      <tabla_ex id="CONCHERR">
+		        <campo id="movher"></campo>
+		        <campo id="movnom"></campo>
+		      </tabla_ex>
+
+                  </campo>
+                  <campo id="utiles">
+                      <label>Utiles </label>
+                      <help>Utiles necesarios para el mantenimiento. </help>
+                  </campo>
+	          <orden>
+	  	    <campo id="fecini"></campo>
+		  </orden>
+
+		  <filtros>
+			<campo id="fecini" >
+			    <operador>>=</operador>
+    			    <label>Desde Fecha</label>
+			</campo>  
+			<campo id="fecini" > 
+		    	    <operador>&lt;=</operador>
+			    <label>Hasta Fecha</label>
+			</campo>
+		  </filtros>
+
+                  </tabla>
+               </consulta>
+        </abm>

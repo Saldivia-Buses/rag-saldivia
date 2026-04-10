@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm graboasiento="true" transaccional="true" tipo="ing"  llenoTemporal="false"  importadatos="ordenpago_oblmovim_select.xml" imprime="false"  impresion="oblmovim_OP.xml">
+	<titulo>Orden de pago</titulo>
+	<obs/>
+	<consulta>
+		<tabla id="OBLMOVIM" label="ORDEN DE PAGO" idCampoCond="imputar" ajusteDebe="211100">
+			<confirmacion>
+				<![CDATA[¿ CONFIRMAR ORDEN DE PAGO ? ]]>
+			</confirmacion>
+			<importar xml="ordenpago_oblmovim_select.xml"  label="Seleccionar Facturas" titulo="Seleccione Facturas">
+				<campo id="ctacod">ctacod</campo>
+			</importar>
+			<movimientos cabecera="ordenpago_obl_cab.xml">
+				<relacion id="ordenpago_oblmovim_update_ingmov.xml"></relacion>
+				<relacion id="ordenpago_oblmovim_ingmov.xml"></relacion>
+			<!--<relacion id="ordenpago_retacumu_ingmov.xml"></relacion>
+				<relacion id="ordenpago_cajcompr_ingmov.xml"></relacion>
+				<relacion id="ordenpago_cctimput_ingmov.xml"></relacion>
+				<relacion id="ordenpago_ret1598_ingmov.xml"></relacion>
+				<relacion id="ordenpago_retparam_update.xml">	</relacion>  -->
+
+			</movimientos>
+
+			<campo id="_ORDEN" oculto="true">
+				<label>Orden</label>
+			</campo>
+			<campo id="retmas1" noshow="true">
+				<IF exp="true" operador="=">
+					<verdadero>nroret + 1</verdadero>
+					<falso></falso>
+				</IF>			</campo>
+			<campo id="concod"  deshabilitado="true" tabla="OBLCONCE" noshow="true">
+				<label>conc</label>
+				<help>Tipo de Comprobante</help>
+				<valor>1</valor>
+			</campo>
+			<campo id="condes" oculto="true" tabla="OBLCONCE">
+				<label>Tipo</label>
+				<help>Tipo de Comprobante</help>
+			</campo>
+			<campo id="movfec" deshabilitado="true">
+				<label modpos="nobr">Fecha</label>
+				<help></help>
+				<valor>today</valor>
+
+			</campo>
+
+			<campo id="movnpv" deshabilitado="true">
+				<label modpos="nobr">npv</label>
+				<help>Comprobante</help>
+				<formato>%04d</formato>
+
+
+			</campo>
+			<campo id="movnro" deshabilitado="true">
+				<label modpos="nobr"/>
+				<help>Numero</help>
+				<formato>%012d</formato>
+
+
+			</campo>
+<!--			<campo id="neto" suma="true">
+				<label >Neto Gravado</label>
+				<help></help>
+
+			</campo> -->
+			<campo id="movimp" deshabilitado="true">
+				<label PDFsize="12" posx="130" posy="+1">Total Pago</label>
+				<help></help>
+				<formato>%01.2f</formato>
+
+			</campo>
+
+			<campo id="movsal" suma="true"  ctbimporte="1" calcsuma="true">
+				<label>Imputado</label>
+				<help></help>
+				<valor>0</valor>
+				<condicion operador="!=">0</condicion>
+			</campo>
+			<campo id="impgra"  local="true" suma="true">
+				<label>Neto</label>
+			</campo>
+			<campo id="Impgraprop" local="true" deshabilitado="true"   suma="true">
+				<label>Neto.Prop</label>
+				<IF exp="movimp != 0" operador="=">
+					<verdadero>impgra * ( movsal / movimp)</verdadero>
+					<falso>impgra </falso>
+				</IF>
+				<tipo>numeric</tipo>
+			</campo>
+			<campo id="Impgrap2" local="true" deshabilitado="true"   suma="true" acumula="true" retroalimenta="true" noshow="true">
+				<label>NetoP2</label>
+				<IF exp="movimp != 0" operador="=">
+					<verdadero>impgra * ( movsal / movimp)</verdadero>
+					<falso>impgra</falso>
+				</IF>
+				<tipo>numeric</tipo>
+			</campo>
+
+			<campo id="sumanetos" local="true" deshabilitado="true"   >
+				<label>sumanetos</label>
+				<IF exp="true" operador="=">
+					<verdadero>Impgrap2 + netoacum</verdadero>
+					<falso>0</falso>
+				</IF>
+				<tipo>numeric</tipo>
+			</campo>
+			<campo id="RGctb" local="true" noshow="true">
+				<valor>215002</valor>
+				<IF exp="true" operador="=">
+					<verdadero>215002</verdadero>
+					<falso>215002</falso>
+				</IF>
+				<registro id="retencion ganancia" xml="ordenpago_cajmovim_ing.xml">
+					<destino>cajctb</destino>
+				</registro>
+				<tipo>varchar</tipo>
+			</campo>
+			<!-- Retenciones de Ganancias -->
+			<campo id="RGcajtip" local="true" noshow="true">
+				<valor>2</valor>
+				<IF exp="true" operador="=">
+					<verdadero>2</verdadero>
+					<falso></falso>
+				</IF>
+				<registro id="retencion ganancia" xml="ordenpago_cajmovim_ing.xml">
+					<destino>cajtip</destino>
+				</registro>
+			</campo>
+			<campo id="RGCon" local="true" noshow="true"   >
+				<label>RGCon</label>
+				<valor>29</valor>
+				<IF exp="true" operador="=">
+					<verdadero>29</verdadero>
+					<falso></falso>
+				</IF>
+				<!-- CREA UN REGISTRO EN ESE CONTENEDOR -->
+				<registro id="retencion ganancia" xml="ordenpago_cajmovim_ing.xml">
+					<destino>cajcod</destino>
+				</registro>
+
+			</campo>
+
+			<campo id="RR" local="true" deshabilitado="true"   >
+				<label>RR</label>
+				<IF exp="sumanetos &lt; 12000" operador="=">
+					<verdadero>0</verdadero>
+
+					<falso>(ctagan != 8 &amp;&amp; (round(((sumanetos - 12000 ) * 0.02 ) - acuret, 2)) &gt; 20 )?round(((sumanetos - 12000 ) * 0.02 ) - acuret, 2):0</falso>
+				</IF>
+				<tipo>numeric</tipo>
+				<!-- CREA UN REGISTRO EN ESE CONTENEDOR -->
+				<registro id="retencion ganancia" xml="ordenpago_cajmovim_ing.xml">
+					<destino>cajimp</destino>
+				</registro>
+			</campo>
+
+
+			<campo id="salant" local="true" noshow="true">
+				<label>salant</label>
+				<help></help>
+				<tipo>decimal</tipo>
+			</campo>
+			<campo id="newsaldo" local="true" deshabilitado="true">
+				<label>Saldo</label>
+				<IF exp="true" operador="=">
+					<verdadero>salant - movsal </verdadero>
+					<falso>0</falso>
+				</IF>
+				<tipo>numeric</tipo>
+			</campo>
+			<campo id="acum" local="true" noshow="true" suma="true" retroalimenta="true">
+				<label>acum</label>
+				<IF exp="true" operador="=">
+					<verdadero>movsal</verdadero>
+					<falso>0</falso>
+				</IF>
+				<tipo>numeric</tipo>
+			</campo>
+			<campo id="encero" local="true" deshabilitado="true" noshow="true">
+				<label>encero</label>
+				<IF exp="movimp == 0" operador="=">
+					<verdadero>movsal</verdadero>
+					<falso>0</falso>
+				</IF>
+			</campo>
+			<campo id="apagar" local="true" deshabilitado="true"  >
+				<label>apagar</label>
+				<IF exp="true" operador="=">
+					<verdadero>acum - (cajimp + 0) - encero</verdadero>
+					<falso>0</falso>
+				</IF>
+				<tipo>numeric</tipo>
+			</campo>
+			<!-- Retenciones de I.Brutos -->
+			<campo id="RIcajtip" local="true" noshow="true">
+				<valor>2</valor>
+				<IF exp="true" operador="=">
+					<verdadero>2</verdadero>
+					<falso></falso>
+				</IF>
+				<registro id="ib" xml="ordenpago_cajmovim_ing.xml">
+					<destino>cajtip</destino>
+				</registro>
+			</campo>
+			<campo id="RICon" local="true" noshow="true"   >
+				<label>RICon</label>
+				<valor>30</valor>
+				<IF exp="true" operador="=">
+					<verdadero>30</verdadero>
+					<falso></falso>
+				</IF>
+				<registro id="ib" xml="ordenpago_cajmovim_ing.xml">
+					<destino>cajcod</destino>
+				</registro>
+
+			</campo>
+			<campo id="RIctb" local="true" noshow="true">
+				<valor>215001</valor>
+				<IF exp="true" operador="=">
+					<verdadero>215001</verdadero>
+					<falso>2150011</falso>
+				</IF>
+				<registro id="ib" xml="ordenpago_cajmovim_ing.xml">
+					<destino>cajctb</destino>
+				</registro>
+				<tipo>varchar</tipo>
+			</campo>
+			<campo id="RI" local="true" deshabilitado="true"   suma="true" acumula="true">
+				<label>RI</label>
+				<IF exp="acum &lt;= 2000 " operador="=">
+					<verdadero>0</verdadero>
+					<falso>(por1598 > 0)? (round((Impgrap2 * por1598 / 100), 2)):0</falso>
+				</IF>
+				<registro id="ib" xml="ordenpago_cajmovim_ing.xml">
+					<destino>cajimp</destino>
+				</registro>
+				<tipo>decimal</tipo>
+
+			</campo>
+			<campo id="R_I2" local="true" deshabilitado="true"   noshow="true" >
+				<label>R_I2</label>
+				<IF exp="acum &lt;= 2000 " operador="=">
+					<verdadero>0</verdadero>
+					<falso>(por1598 > 0)? (round((Impgrap2 * por1598 / 100), 2)):0</falso>
+				</IF>
+				<tipo>numeric</tipo>
+			</campo>
+			<campo id="RIG" local="true" noshow="true"   >
+				<label>RICon</label>
+				<valor>30</valor>
+				<IF exp="RI != 0" operador="=">
+					<verdadero>1</verdadero>
+					<falso>0</falso>
+				</IF>
+				<registro id="ib" xml="ordenpago_cajmovim_ing.xml">
+					<destino>grIB</destino>
+				</registro>
+
+			</campo>
+
+			<campo id="movimp2" local="true"  deshabilitado="true"  >
+				<label>movimp2</label>
+				<IF exp="true" operador="=">
+					<verdadero>(cajimp + 0)</verdadero>
+					<falso>0</falso>
+				</IF>
+				<tipo>numeric</tipo>
+			</campo>
+
+
+			<campo id="imputar" local="true"  noshow="true">
+				<valor>1</valor>
+			</campo>
+			<campo id="movcta"  noshow="true">
+				<valor>0</valor>
+			</campo>
+			<campo id="movlet"  noshow="true">
+			</campo>
+
+			<campo id="movipv"  noshow="true">
+			</campo>
+			<campo id="movinc"  noshow="true">
+			</campo>
+			<campo id="zoncod"  noshow="true">
+			</campo>
+
+			<campo id="ref" local="true" noshow="true" ctbreferencia="1">
+				<label>referencia</label>
+				<IF exp="true" operador="=">
+					<verdadero>'O.P. movnroOP - ctanom'</verdadero>
+					<falso>0</falso>
+				</IF>
+				<tipo>varchar</tipo>
+			</campo>
+			<campo id="movref__3" local="true" noshow="true" >
+				<label>ref3</label>
+				<IF exp="apagar != 0" operador="=">
+					<verdadero>"El Saldo apagar sera imputado a cuenta"</verdadero>
+					<falso>""</falso>
+				</IF>
+				<tipo>varchar</tipo>
+			</campo>
+			<campo id="sisprv" local="true" noshow="true" >
+				<label>sis</label>
+				<help></help>
+				<tipo>varchar</tipo>
+				<valor>01</valor>
+			<!--	<condicion operador="=">'01'</condicion> -->
+			</campo>
+
+		</tabla>
+		<join tipo="left">
+			<tabla id="OBLCONCE">
+				<campo id="siscod" oculto="true">
+					<label>oblcuent.siscod</label>
+					<condicion operador="=">OBLMOVIM.siscod</condicion>
+				</campo>
+				<campo id="concod" oculto="true">
+					<condicion operador="=">OBLMOVIM.concod</condicion>
+				</campo>
+				<campo id="condes" oculto="true"></campo>
+			</tabla>
+		</join>
+		<join tipo="left">
+			<tabla id="OBLCUENT">
+				<campo id="siscod" oculto="true">
+					<label>oblcuent.siscod</label>
+					<condicion operador="=">OBLMOVIM.siscod</condicion>
+				</campo>
+				<campo id="ctacod" oculto="true">
+					<condicion operador="=">OBLMOVIM.ctacod</condicion>
+				</campo>
+			</tabla>
+		</join>
+
+	</consulta>
+</abm>

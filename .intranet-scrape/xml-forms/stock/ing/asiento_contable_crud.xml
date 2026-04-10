@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" imprime="false" procesa="false" showCantidad="false" tooltip="false" llenoTemporal="TEMPTABLENAME" importTempTable="TEMPTABLENAME">
+   <title>Movimientos</title>
+   <obs/>
+   <form>
+	<table id="CTB_DETALLES" label="cabecera" idCampoCond="grabar">
+
+		<movimientos>
+			<relacion id="ctbdetalle_ins.xml"/>
+		</movimientos>
+
+		<field id="id_detalle" noshow="true">
+			<condicion operador="=">-1</condicion>
+		</field>
+
+		<field id="cuenta_id">
+			<label modpos="nobr">Cuenta</label>
+			<helper type="combo" xml="cuentas_habilitadas_qry.xml" dir="/ayudas" />
+		</field>
+
+		<field id="doh" local="true" colstyle="display:none;">
+			<label modpos="nobr">Tipo</label>
+			<options>
+				<option valor="0">Debe</option>
+				<option valor="1">Haber</option>
+			</options>
+		</field>
+
+		<field id="_ORDEN" local="true" suma="true" colstyle="display:none;">
+			<label>Orden</label>
+		</field>
+
+		<field id="debe" noZero="true" local="true" suma="true" Formstyle="display:none;">
+			<label>Debe</label>
+			<if exp="doh == 0">
+				<true>importe</true>
+				<false>0</false>
+			</if>
+			<tipo>numeric</tipo>
+		</field>
+
+		<field id="haber" noZero="true" local="true" suma="true" Formstyle="display:none;">
+			<label>Haber</label>
+			<if exp="doh == 1">
+				<true>importe</true>
+				<false>0</false>
+			</if>
+			<tipo>numeric</tipo>
+		</field>
+
+		<field id="importe" colstyle="display:none;" local="true" validRow="true">
+			<tipo>numeric</tipo>
+		</field>
+
+		<field id="diferencia_asiento" colstyle="display:none;" Formstyle="display:none;" local="true" suma="true" acumula="true">
+			<if exp="true">
+				<true>debe - haber</true>
+				<false>0</false>
+			</if>
+			<tipo>numeric</tipo>
+			<jseval campodestino="difasiento" total="true">diferencia_asiento</jseval>
+			<detalle>difasiento</detalle>
+		</field>
+
+	</table>
+   </form>
+</histrix>

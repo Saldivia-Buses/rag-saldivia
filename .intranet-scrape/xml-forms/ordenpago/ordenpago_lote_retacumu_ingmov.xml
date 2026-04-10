@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="insert" tipoInsert="ignore" >
+       <title>ACUMULADO</title>
+        <obs></obs>
+               <form >
+					<table id="RETACUMU" label="FACTURAS" idCampoCond="pagar">
+						<field id="siscod" >
+							<valor>'10'</valor>
+						</field>
+						<field id="ctacod" id_temp="ctacod"></field>
+						<field id="acufec" id_padre="movfec"></field>
+						<field id="acupag" id_temp="saldo" ></field>
+
+						<field id="acuret" id_temp="retencion"></field>
+
+						<field id="year"   >
+							<valor>year(acufec)</valor>
+							<tipo>integer</tipo>
+						</field>
+						<field id="mes"    >
+							<valor>month(acufec)</valor>
+							<tipo>integer</tipo>
+						</field>
+						<field id="nropag" >
+								<valor>(select parent from CAJPARAM where parcla = 'nropag' limit 1)</valor>		
+								<tipo>integer</tipo>						
+						</field>
+					</table>
+               </form>
+        </histrix>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix  tipo="update" >
+    <title>MOVIMIENTOS DE orden compras</title>
+    <obs></obs>
+    <form >
+        <table id="PEDIDOINT" label="MOVIMIENTOS" idCampoCond="borrar">
+            <field id="idPed" id_temp="idPed" esClave="true"></field>
+			<field id="estado">
+				<valor>2</valor>
+				<tipo>integer</tipo>
+			</field>
+	    	<field id="confirmado">
+				<valor>1</valor>
+				<tipo>integer</tipo>
+			</field>        
+		</table>
+    </form>
+</histrix>

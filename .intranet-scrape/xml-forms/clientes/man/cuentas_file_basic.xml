@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" imprime="false" conBusqueda="true" accordion="false" path="cuentas">
+  <title>Ficha de Clientes</title>
+  <obs/>
+  <form>
+    <table id="REG_CUENTA" label="Ficha de Clientes">
+
+      <field id="id_regcuenta" noshow="true" esClave="true" autoinc="true">
+        <valor>0</valor>         
+      </field>
+
+      <field id="subsistema_id" noshow="true" valauto="true" />
+    
+      <field id="nro_documento" esClave="true" mask="99999999">
+        <label>Documento</label>
+        <jseval fielddestino="nro_cuenta">nro_documento</jseval>
+      </field>
+
+      <field id="nro_cuenta" noshow="true" />
+          
+      <field id="nombre_cuenta" required="true">
+        <label>Nombre</label>
+        <help>Nombre de la cuenta</help>
+        <size>60</size>
+      </field>
+      
+      <field id="email_cuenta">
+        <label>email</label>
+        <help>email de la cuenta</help>
+        <size>60</size>
+        <jsfunction event="onblur"><![CDATA[ var RE=/^[^\s@]+@[^\s@]+\.[^\s@]+$/; if(this.value != '' &amp;&amp; !RE.test(this.value)) alert('E-mail No Válido');]]></jsfunction>
+      </field>
+
+      <field id="tel_cuenta" required="true">
+        <label>Teléfono</label>
+        <size>60</size>
+      </field>
+
+      <field id="imagen_cuenta" path="id_regcuenta">
+        <label>Foto</label>
+        <tipo>file</tipo>
+      </field>
+      	  
+    </table>
+
+  </form>
+</histrix>

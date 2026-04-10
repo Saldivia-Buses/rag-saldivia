@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="update" grabafinal="true">
+	<title>CIERRA ORDEN DE COMPRA</title>
+	<obs></obs>
+	<form  >
+		<table id="CPSENCAB" label="ORDENES DE COMPRA"  idCampoCond="cerrar" _CondExp="== 0">
+			<field id="ocpfec" id_cab="ocpfec">
+				<tipo>date</tipo>
+			</field>
+			<field id="ocpnro" id_cab="ocpnro">
+			</field>
+			<field id="ocpest" id_cab="dos">
+			</field>
+		</table>
+	</form>
+</histrix>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" _grabafinal="true">
+    <title>Evaluación</title>
+    <obs></obs>
+    <form>
+        <table id="RH_EVALUACIONES">
+
+            <field id="rhpersona_id"		id_temp="rhpersona_id" />
+            <field id="fec_evaluacion"		id_temp="fec_evaluacion" />
+            <field id="desempenio"		id_temp="aporte_acumulado" />
+            <field id="puntos_fuertes"		id_temp="puntos_fuertes" />
+            <field id="puntos_a_mejorar"	id_temp="puntos_a_mejorar" />
+            <field id="conclusiones"		id_temp="conclusiones" />
+            <field id="descargo_evaluado"	id_temp="descargo_evaluado" />
+            <field id="evaluador_id"		id_temp="evaluador_id" />
+            <field id="revisor_id"		id_temp="revisor_id" />
+
+        </table>
+    </form>
+</histrix>

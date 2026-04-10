@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="crud"  subtipo="vertical"  preloadData="false">
+	<titulo>Calificacion</titulo>
+	<obs/>
+	<form _detalle="prod_control_homolog.xml" _inline="true">
+		<table id="PROD_CONTROLES">
+			<titulo>Controles</titulo>
+			<filters auto="true">
+
+				<field id="linea_id" colstyle="display:none;">
+	                <label modpos="nobr" >Línea</label>
+	                <valor>1</valor>
+		        </field>
+
+				<field id="seccion_id">
+					<label modpos="nobr">Sección</label>
+					<operador>=</operador>
+				</field>
+
+				<field id="habilitado">
+					<label modpos="nobr">Habili</label>
+					<operador>=</operador>
+	                <valor>0</valor>
+				</field>
+			<field id="critico" >
+				<label>Crítico</label>
+				<options>
+				    <option valor=""></option>
+				    <option valor="1">Si</option>
+				    <option valor="0">No</option>
+                </options>
+                <tipo>radio</tipo>
+			</field>
+
+			</filters>
+
+			<field id="id_prodcontrol" esClave="true" autoinc="true" noshow="true">
+				<detalle>prodcontrol_id</detalle>
+			</field>
+
+			<field id="modelo_control"  >
+				<label>Mod</label>
+				<size>10</size>
+			</field>
+
+			<field id="orden_control"  >
+				<label>Orden</label>
+				<size>3</size>
+			</field>
+
+			<field id="linea_id" colstyle="display:none;" local="true" noshow="true">
+                <helper type="combo" xml="lineas.xml" dir="/produccion" empty="true"/>
+                <label >Linea</label>
+			    <actualiza>
+				<field id="seccion_id" destino="linea_id" /> 
+			    </actualiza>
+            </field>
+
+			<field id="seccion_id" >
+				<label>Sección</label>
+					<helper id="MOMENTO" type="combo" empty="true">
+                    <field id="idMomento" />
+                    <field id="descripcion" />
+					<field id="linea_id" oculto="true">
+                		<condicion operador="=">1</condicion>
+                	</field>
+					</helper>
+			</field>
+			<!--
+			<field id="tipo_control" >
+				<label>Tipo</label>
+				<options>
+				    <option valor="0"></option>
+				    <option valor="1">Externa</option>
+				    <option valor="2">Interna</option>
+                                </options>
+			</field>-->
+
+			<field id="habilitado" >
+				<label>Habilitado</label>
+				<options>
+				    <option valor="0">Si</option>
+				    <option valor="1">No</option>
+                </options>
+                <tipo>radio</tipo>
+			</field>
+
+			<field id="critico" >
+				<label>Crítico</label>
+				<options>
+				    <option valor="1">Si</option>
+				    <option valor="0">No</option>
+                </options>
+                <tipo>radio</tipo>
+			</field>
+
+			<field id="accionable" >
+				<label>Accionable</label>
+				<help>Se grafica y se toman acciones</help>
+				<options>
+				    <option valor="1">Si</option>
+				    <option valor="0">No</option>
+                </options>
+                <tipo>radio</tipo>
+			</field>
+
+			<field id="legajo_defecto">
+				<label>Personal</label>
+				<help>Personal por defecto</help>
+				<helper type="external" xml="HLPpersonal.xml" dir="/ayudas_local">
+				    <field id="nombres">
+					<expression>CONCAT(apellido,', ', Nombre)</expression>
+					<detalle>nombres</detalle>
+				    </field>
+				</helper>
+			</field>
+
+			<field id="nombres" colstyle="display:none;">
+			    <expression>CONCAT(PERSONAL.apellido, ', ', PERSONAL.Nombre)</expression>
+			    <label modpos="nobr" />
+			    <size>50</size>
+			</field>
+
+			<field id="usuario_habilitado">
+			    <label>Usuario Habiliado</label>
+			    <helper id="HTXUSERS" type="combo" empty="true">
+				<field id="Id_usuario" />
+				<field id="nombre">
+				    <expression>concat(Nombre, ' ', apellido)</expression>
+				</field>
+			    </helper>
+			</field>
+
+			<field id="nombre_control"  >
+				<label>Control</label>
+				<size>30</size>
+			</field>
+
+			<field id="ver_ft"  >
+				<label>Ver en Ficha T.</label>
+				<help>Ver el control en la ficha técnica</help>
+				<tipo>check</tipo>
+			</field>
+
+			<field id="obs_control"  >
+				<label>Observación</label>
+				<size>30</size>
+			</field>
+			<field id="notificaciones" >
+				<label>Notif</label>
+				<expression>(select count(*) from PROD_CONTROL_NOTIF where prodcontrol_id = id_prodcontrol)</expression>
+				<helper type="link" xml="prod_control_notif.xml" width="50%">
+					<parameter source="id_prodcontrol" target="prodcontrol_id" />
+				</helper>
+			</field>
+
+			<field id="homologaciones" >
+				<label>Homolog</label>
+				<expression>(select count(*) from PROD_CONTROL_HOMOLOG where prodcontrol_id = id_prodcontrol)</expression>
+				<helper type="link" xml="prod_control_homolog.xml" width="90%">
+					<parameter source="id_prodcontrol" target="prodcontrol_id" />
+				</helper>
+			</field>
+
+			<order>
+				<field id="modelo_control" />
+				<field id="orden_control" />
+			</order>
+
+		</table>
+
+		<join tipo="left">
+		    <table id="PERSONAL">
+				<field id="legajo">
+				    <condicion operador="=">PROD_CONTROLES.legajo_defecto</condicion>	
+				</field>
+		    </table>
+		</join>
+	</form>
+</histrix>

@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" width="40" imprimetanda="true" pageBreak="false" _PDFsincabecera="true">
+  <title>Movimientos</title>
+  <obs></obs>
+  <form  detalle="detalles_grid.xml" _inline="true">
+    <table id="CTB_MOVIMIENTOS" label="Libro diario">
+
+ <filters>
+<field id="base"  colspan="4">
+<label>Sociedad</label>
+<operador>=</operador>
+</field>
+
+        <field id="ejercicio_id">..
+          <label>Ejercicio</label>
+          <help>Ejercicio contable</help>
+          <operador>=</operador>
+        </field>
+        <field id="concepto_id">
+          <operador>=</operador>
+          <label modpos="nobr">Tipo de concepto</label>
+          <help>Concepto elegido</help>
+        </field>.
+        <field id="fecha_mov1" deshabilitado="false">
+          <valor>today</valor>
+          <operador>&gt;=</operador>
+          <label>Desde Fecha</label>
+          <help>Fecha movimiento</help>
+        </field>
+        <field id="fecha_mov2" deshabilitado="false">
+          <valor>today</valor>
+          <operador>&lt;=</operador>
+          <label modpos="nobr">hasta Fecha</label>
+          <help>Fecha movimiento</help>
+        </field>
+
+<field id="nro_referencia" deshabilitado="false">
+          <valor></valor>
+          <operador>=</operador>
+          <label>Nro minuta</label>
+          <help>Ingrese desde que minuta buscar</help>
+        </field>........
+</filters>
+      <field id="base" >
+        <label>Base</label>
+      <helper id="PRY_SOCIEDADES" type="combo" empty="true">
+        <field id="base" />
+        <field id="nom" >
+            <expression>base</expression>
+        </field>
+      </helper>
+        <help>Base de origen</help>
+      <tipo>varchar</tipo>
+      </field>
+            <field id="nro_referencia" >
+              <attribute id="linkdes">nro_referencia</attribute>
+              <helper xml="detalles_qry.xml" dir="/pry/reportes/" type="link">
+                <parameter source="id_movimiento" target="movimiento_id"/>
+                <parameter source="ejercicio_id" target="ejercicio_id"/>
+                <parameter source="base" target="base"/>
+                
+              </helper>
+              <label>Nro minuta</label>
+              <help>Numero de la minuta</help>
+            </field>
+              
+      <field id="nro_minuta" noshow="true">
+        <label>minuta</label>
+        <help>Numero de la minuta</help>
+  <detalle>nro_minuta</detalle>
+  <size>4</size>
+      </field>
+ <field id="id_movimiento" noshow="true" >
+        <label>Codigo</label>
+        <help>Código de movimiento</help>
+  <detalle>movimiento_id</detalle>
+      </field>
+      <field id="concepto_id" noshow="true" >
+        <helper type="combo" xml="ctbconceptos_crud.xml" empty="true" dir="/contabilidad/man">
+        </helper>
+        <label>Concepto</label>
+        <help>Código de concepto</help>
+  <detalle>concepto_id</detalle>
+      </field>
+      <field id="fecha_movimiento">
+        <label>Fecha</label>
+        <help>Fecha movimiento</help>
+<detalle>fecha_movimiento</detalle>
+      </field>
+      <field id="referencia">
+        <label>referencia</label>
+        <help>Referencia del movimiento</help>
+        <detalle>referencia1</detalle>
+      </field>
+      <field id="debe" >
+        <expresion>sum(case when doh = 0 then importe else 0 end)</expresion>
+        <label>Debe</label>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="haber" >
+        <expresion>sum(case when doh = 1 then importe else 0 end)</expresion>
+        <label>Haber</label>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="diferencia" noZero="true">.
+        <expresion>sum( round(importe, 2) * (case when doh = 1 then 1 else -1 end))</expresion>
+        <label>Diferencia</label>
+        <tipo>numeric</tipo>
+      </field>
+ <field id="resaltado" clasefila="true" noshow="true">
+        <label>res</label>
+        <expresion>case when abs(sum( round(importe, 2) * (case when doh = 1 then 1 else -1 end))) != 0 then 'resaltado' else '' end</expresion>
+      </field>
+      <field id="ejercicio_id" noshow="true">
+        <tabla_ex xml="ctbejercicios_crud.xml" dir="/contabilidad/man">
+          <field id="activo" tipoOrden="DESC"/>
+          <!--  <field id="comienza"/>
+            <field id="finaliza"/>-->
+        </tabla_ex>
+        <label>Ejercicio</label>
+        <help>Ejercicio contable</help>
+        <detalle>ejercicio_id</detalle>
+      </field>
+      <field id="abreviacion_concepto" tabla="CTB_CONCEPTOS" colstyle="Display:none;" print="false">
+        <label>Concepto</label>
+        <help>Codigo de concepto</help>
+      </field>
+  
+  <field id="fecha_mov1" noshow="true">
+    <expresion having="false">fecha_movimiento</expresion>
+    <help>Fecha movimiento</help>
+    <tipo>date</tipo>
+  </field>
+  <field id="fecha_mov2" noshow="true">
+      <expresion having="false">fecha_movimiento</expresion>
+      <help>Fecha movimiento</help>
+      <tipo>date</tipo>
+    </field>
+
+     <order><field id="fecha_movimiento"></field></order>
+
+      <group>
+        <field id="id_movimiento"></field>
+      </group>
+
+    </table>
+
+    <join tipo="inner">
+      <table id="CTB_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">concepto_id</condicion>
+        </field>
+        <field id="integrado">
+          <condicion operador="=">1</condicion>
+        </field>
+          
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="CTB_DETALLES">
+        <field id="movimiento_id">
+          <condicion operador="=">id_movimiento</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

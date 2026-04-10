@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="chart">
+	<title>ESTADISTICAS DE ANTIGUEDAD</title>
+	<obs></obs>
+	<form >
+		<table id="PERSONAL" label="ESTAD ANTIGUEDAD">
+		   <grafico id="Antiguedades" >
+			   <ancho>400</ancho>
+			   <tipo>L</tipo>
+			   <etiquetas>antiguedades</etiquetas>
+			   <serie>cant</serie>
+			   <title>Cantidad de Operarios x Antigüedad (Años)</title>
+		   </grafico>				
+                  
+			<field id="fechaEgreso">
+				<condicion operador="=">'0000-00-00'</condicion>
+			</field>
+			
+		      <field id="fecing">
+			<label>Fecha Ingreso</label>
+		      </field>
+		<field id="cant">
+			<expression>count(*)</expression>
+			<label>Cantidad</label>
+		</field>
+	  	    <field id="antiguedades">
+			<expression>IF((YEAR(CURDATE()) - YEAR(fecing)) &gt; 0, (YEAR(CURDATE()) - YEAR(fecing)) - (MID(CURDATE(), 6, 5) &lt; MID(fecing, 6, 5)), IF((YEAR(CURDATE()) - YEAR(fecing)) &lt; 0, (YEAR(CURDATE()) - YEAR(fecing)) + (MID(fecing, 6, 5) &lt; MID(CURDATE(), 6, 5)), (YEAR(CURDATE()) - YEAR(fecing))))</expression>
+			<label>antiguedades</label>
+			<help></help>
+			<tipo>integer</tipo>
+		    </field>
+		    <group>
+			<field id="antiguedades"/>
+		    </group>
+
+	 	    <order>
+				<field id="antiguedades"/>
+		    </order>
+		</table>
+		
+
+	</form>
+</histrix>

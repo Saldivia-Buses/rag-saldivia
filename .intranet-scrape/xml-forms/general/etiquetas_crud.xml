@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix filter="true" tipo="crud" _confirma="Borrar Seleccionados">
+  <title>Etiquetas</title>
+  <obs/>
+  <form>
+    <table id="HTX_TAGS" label="Etiquetas">
+      <!--
+      <movimientos>
+        <relacion id="etiquetas_delete.xml" />
+      </movimientos>
+    -->
+      <filters>
+        <field deshabilitado="false" id="ocurrencias">
+          <label>Ocurrencias</label>
+          <operador>=</operador>
+        </field>
+      </filters>
+      <field autoinc="true" id="id_htxtag" noshow="true">
+        <label>ID</label>
+      </field>
+      <field id="tagname">
+        <label>Etiqueta</label>
+        <size>25</size>
+      </field>
+      <field id="ocurrencias">
+        <label>Ocurrencias</label>
+        <expression>round((select count(*) from HTX_TABLE_TAGS where htxtag_id= id_htxtag),0)</expression>
+        <tipo>custom_numeric</tipo>
+      </field>
+      <field id="dist">
+        <label>Distribucion</label>
+        <expression>select count(*) from HTX_TABLE_TAGS where htxtag_id= id_htxtag</expression>
+        <tipo>grafico</tipo>
+      </field>
+      <field id="borrar" local="true" Formstyle="display:none;" refresh="true">
+        <label>Borrar</label>
+        <tipo>check</tipo>
+      </field>
+
+    </table>
+  </form>
+</histrix>

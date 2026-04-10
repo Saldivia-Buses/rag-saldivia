@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix imprime="false" inserta="no" log="false" preFetch="true" tipo="ficha" borra="false">
+    <title>Corte</title>
+    <obs/>
+        <eventos>
+          <event id="update">refresh</event>
+          <event id="update">close</event>
+
+          <event id="procesar">refresh</event>
+          <event id="procesar">close</event>
+       </eventos>
+    <form>
+        <table id="MRP_DETALLE_REGISTRO" label="Corte">
+            <movimientos>
+                <relacion id="marco_cumplida.xml" />
+            </movimientos>
+
+             <field id="id_mrpordendetalle" noshow="true">
+                <expression>mrpordendetalle_id</expression>
+             </field>
+
+            <field id="fecha_ingreso" >
+                <label>Fecha</label>
+		<tipo>date</tipo>
+            </field>
+
+            <field id="mrpordendetalle_id" noshow="true"/>
+
+            <field id="mrpseccion_id" noshow="true">
+                <actualiza>
+                    <field id="mrpcontrol_id" destino="mrpseccion_id" />
+                </actualiza>
+            </field>
+<!--
+            <field id="id_mrporden" noshow="true"/>
+-->
+            <field id="id_detalle_reg" noshow="true"/>
+
+
+            <field id="mrpconcepto_id" >
+                <label>Concepto</label>
+        		<helper xml="mrp_conceptos_crud.xml" dir="/mrp/man/" type="combo">
+        		</helper>
+                <tipo>radio</tipo>
+            </field>
+
+            <field id="cantidad" >
+                <label>Cantidad</label>
+            </field>
+
+            <field id="mrpcontrol_id" >
+                <label>Motivo Rechazo</label>
+                <helper id="MRP_CONTROLES" type="combo">
+                    <field id="id_mrpcontrol"/>
+                    <field id="nombre_control"/>
+                    <field id="mrpseccion_id" oculto="true">
+                        <condicion operador="=" valorde="mrpseccion_id"/>
+                    </field>
+                </helper>
+            </field>
+
+            <field id="observacion">
+                <label>Observaciones</label>
+                <size>40</size>
+            </field>
+
+
+        </table>
+<!--
+        <join tipo="left">
+            <table id="MRP_ORDEN_DETALLE">
+                <field id="mrporden_id">
+                    <condicion operador="=">MRP_ORDEN_PRODUCCION.id_mrporden</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="inner">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">MRP_ORDEN_DETALLE.stkarticulo_id</condicion>
+                </field>
+            </table>
+        </join>
+-->
+    </form>
+</histrix>

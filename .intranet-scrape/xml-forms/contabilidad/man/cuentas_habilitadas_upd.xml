@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="update" evento="update">
+  <title>Cuentas Habilitadas</title>
+  <obs></obs>
+  <form>
+    <table id="CTB_CUENTAS" label="Cuentas Habilitadas">
+
+        <sql>
+            UPDATE CTB_CUENTAS CC
+
+                LEFT JOIN CTB_CUENTAS ON CTB_CUENTAS.cuenta_superior_id = CC.id_cuenta
+
+            SET CC.habilitada = IF(CTB_CUENTAS.id_cuenta IS NULL, 1, 0)
+
+                WHERE CC.ejercicio_id = '[__ejercicio_id__]';
+
+        </sql>
+
+        <field id="ejercicio_id" id_temp="ejercicio_id" local="true" />
+
+    </table>
+  </form>
+</histrix>

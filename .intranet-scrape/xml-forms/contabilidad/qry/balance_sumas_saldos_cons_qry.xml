@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" width="60%" preloadData="false">
+  <title>Balance Sumas y Saldos </title>
+  <obs/>
+  <form detalle="movimientos_lib_mayor_cons_qry.xml">
+    <table id="CTB_MOVIMIENTOS" label="cuentas">
+
+      <filters>
+
+        <!--   <field id="ejercicio_id">
+          <label>Ejercicio</label>
+          <help>Ejercicio contable</help>
+          <operador>=</operador>
+        </field>-->
+
+      <field id="base" >
+        <label>Base</label>
+        <help>Base de origen</help>
+        <operador>in</operador>
+      </field>
+
+        <!--  <field id="cuenta_id" dehabilitado="false">
+          <operador>&gt;=</operador>
+          <label>Desde cuenta</label>
+        </field> -->
+        
+        <field id="id_cuenta" deshabilitado="false">
+          <operador>=</operador>
+          <label modpos="nobr">Cuenta</label>
+        </field>
+
+        <field id="fecha_minima" deshabilitado="false" _copia="fechamin">
+          <label>Desde Fecha</label>
+          <operador>&gt;=</operador>
+          <valor>today</valor>
+        </field>
+
+        <field id="fecha_movimiento" deshabilitado="false">
+          <label modpos="nobr">hasta Fecha</label>
+          <operador>&lt;=</operador>
+          <valor>today</valor>
+        </field>
+
+      </filters>
+
+    <field id="base" _local="true" tabla="CTB_MOVIMIENTOS" noshow="true" multiple="true" export="true">
+        <label>Base</label>
+          <detalle>base</detalle>
+        <helper id="PRY_SOCIEDADES" type="combo" empty="true">
+          <field id="base" />
+          <field id="nom" >
+              <expression>abrev_sociedad</expression>
+          </field>
+        </helper>
+        <help>Base de origen</help>
+      <tipo>varchar</tipo>
+      </field>
+
+      <field id="cuenta_superior_id" noshow="true"  _tdWidth="6em" tabla="CTB_CUENTAS" export="true">
+         <label>Cod.Sup</label>
+      </field>
+
+      <field id="cuenta_superior"   _tdWidth="6em" tabla="CTB_CUENTAS">
+        <label>Cuenta superior</label>
+        <expression>select CT.nombre_cuenta from CTB_CUENTAS CT where CT.id_cuenta = CTB_CUENTAS.cuenta_superior_id and CT.ejercicio_id = CTB_CUENTAS.ejercicio_id limit 1</expression>
+      </field>
+
+      <field id="id_cuenta" autoinc="true" noshow="false"  tdWidth="6em" tabla="CTB_CUENTAS">
+        <label>Cuenta</label>
+        <helper type="external" xml="cuentas_inhabilitadas_qry.xml" dir="/ayudas" />.
+        <detalle>cuenta_id</detalle>
+      </field>
+
+
+
+
+      <!--      <field id="fecha_movimiento" noshow="true"  tabla="CTB_MOVIMIENTOS">
+        <expression having="false">fecha_movimiento</expression>
+        <help>Fecha movimiento</help>
+        <tipo>date</tipo>
+      </field> -->
+
+      <field id="fecha_minima" noshow="true"  local="true">
+        <tipo>date</tipo>
+        <detalle>fecha_minima</detalle>
+      </field>
+      
+      <field id="fecha_movimiento" noshow="true" tabla="CTB_MOVIMIENTOS">
+        <tipo>date</tipo>
+      </field>
+      
+      <field id="fecha_maxima" noshow="true" tabla="CTB_MOVIMIENTOS">
+        <tipo>date</tipo>
+         <expression>max(fecha_movimiento)</expression>
+        <detalle>fecha_maxima</detalle>
+      </field>
+
+      <!--  <field id="fechamin" deshabilitado="false" noshow="true" local="true"  tabla="CTB_MOVIMIENTOS">
+          <tipo>date</tipo>
+            </field> -->
+
+      <field id="nombre_cuenta" _tdWidth="30em" tabla="CTB_CUENTAS">
+        <label>Descripción</label>
+      </field>
+
+     <field id="monedabase" >
+        <label>M.B.</label>
+        <expression>abreviatura_moneda</expression>.
+     </field>
+
+    <field id="habilitada" noshow="true" tabla="CTB_CUENTAS">
+        <!--<condicion operador="=">1</condicion> -->
+    </field>
+
+
+      <!-- <field id="sal1" noshow="true">
+      <expression>@salini:=0</expression>
+      </field>-->
+
+      <field id="Saldo_ant">
+          <label>Saldo Inicial</label>
+          <expression>sum(case when fecha_movimiento &lt; STR_TO_DATE('[__fecha_minima__]' , '%d/%m/%Y') then importe_base *
+       (case when doh = 0 then 1 else -1 end) else 0  end)</expression>
+              <tipo>enclosed_numeric</tipo>
+      </field>
+
+      <field id="Saldo_antUS" style="color:green;">
+          <label>Sal.Ini U$S</label>
+          <expression>sum(case when fecha_movimiento &lt; STR_TO_DATE('[__fecha_minima__]' , '%d/%m/%Y') then.
+      importeDolares(importe_original, importe_base, importe, fecha_movimiento, CTB_DETALLES.genmoneda_id, PRY_SOCIEDADES.moneda_id, integrado)
+       * (case when doh = 0 then 1 else -1 end) else 0  end)</expression>
+              <tipo>enclosed_numeric</tipo>
+      </field>
+              
+      <field id="debe" suma="true" _noZero="true" >
+        <expression>sum( case when fecha_movimiento &gt;= STR_TO_DATE('[__fecha_minima__]' , '%d/%m/%Y') then importe_base *
+                      (case when doh = 0 then 1 else 0 end) else 0 end)</expression>
+        <!--        <expression>sum(case when doh = 0 then ifnull(importe_base,0) else 0 end)</expression> -->
+        <label>Debe</label>
+        <tipo>enclosed_numeric</tipo>
+      </field>
+
+
+      <field id="haber" suma="true" _noZero="true" >
+          <expression>sum( case when fecha_movimiento &gt;= STR_TO_DATE('[__fecha_minima__]' , '%d/%m/%Y') then importe_base *
+                    (case when doh = 1 then 1 else 0 end) else 0 end)</expression>
+<!--        <expression>sum(case when doh = 1 then ifnull(importe_base,0) else 0 end)</expression> -->
+        <label>Haber</label>
+        <tipo>enclosed_numeric</tipo>
+      </field>
+
+      <field id="debeUS" suma="true" _noZero="true"  style="color:green;">
+          <expression>sum( case when fecha_movimiento &gt;= STR_TO_DATE('[__fecha_minima__]' , '%d/%m/%Y') then 
+          importeDolares(importe_original, importe_base, importe, fecha_movimiento, CTB_DETALLES.genmoneda_id, PRY_SOCIEDADES.moneda_id, integrado)
+          * (case when doh = 0 then 1 else 0 end) else 0 end)</expression>
+        <label>Debe U$S</label>
+        <tipo>enclosed_numeric</tipo>
+      </field>
+
+      <field id="haberUS" suma="true" _noZero="true" style="color:green;">
+        <expression>sum( case when fecha_movimiento &gt;= STR_TO_DATE('[__fecha_minima__]' , '%d/%m/%Y') then
+        importeDolares(importe_original, importe_base, importe, fecha_movimiento, CTB_DETALLES.genmoneda_id, PRY_SOCIEDADES.moneda_id, integrado)
+        * (case when doh = 1 then 1 else 0 end) else 0 end)</expression>
+        <label>Haber U$S</label>
+        <tipo>enclosed_numeric</tipo>
+      </field>
+
+      <field id="Sal" noshow="true">
+          <label>Total</label>
+          <expression>abs(sum(case when fecha_movimiento &lt; STR_TO_DATE('[__fecha_movimiento__]' , '%d/%m/%Y') then importe_base *
+       (case when doh = 0 then 1 else -1 end) else 0  end)).
+      + sum( case when fecha_movimiento &gt;= STR_TO_DATE('[__fecha_minima__]' , '%d/%m/%Y') then importe_base * (case when doh = 0 then 1 else 0 end)
+       else 0 end).
+      + sum( case when fecha_movimiento &gt;= STR_TO_DATE('[__fecha_minima__]' , '%d/%m/%Y') then importe_base * (case when doh = 1 then 1 else 0 end)
+       else 0 end)</expression>
+              <tipo>enclosed_numeric</tipo>
+       <condicion operador="!=">0</condicion>
+      </field>
+
+<!--
+      <field id="Sal" noshow="true">
+        <label>test</label>
+        <expression _having="false">abs(ifnull((select sum(round(CD.importe_base, 2) * (case when CD.doh = 0 then 1 else -1 end))
+        from CTB_DETALLES CD join CTB_MOVIMIENTOS CM on CM.id_movimiento = CD.movimiento_id.
+         join CTB_CONCEPTOS CC on CC.id_concepto = CM.concepto_id  and
+          CC.integrado = 1
+          where CM.fecha_movimiento &lt; STR_TO_DATE('[__fecha_minima__]' , '%d/%m/%Y').
+          and   CD.cuenta_id = CTB_CUENTAS.id_cuenta
+     and  CM.base = '[__base__]' and CM.ejercicio_id &gt; 0),0)) + sum(ifnull(importe_base,0))</expression>
+     <condicion operador="!=">0</condicion>
+    </field>
+-->
+
+
+ <field id="Saldo" local="true">
+        <label style="font-weight:bold;">Saldo Final</label>
+<if exp="true">
+    <true> (Saldo_ant + debe - haber) + 0</true>
+    <false>0</false>
+</if>
+        <tipo>enclosed_numeric</tipo>
+
+      </field>
+
+      <field id="SaldoUS" local="true">
+        <label style="color:green;font-weight:bold;">S.Final U$S</label>
+<if exp="true">
+    <true> (Saldo_antUS + debeUS - haberUS) + 0</true>
+    <false>0</false>
+</if>
+        <tipo>enclosed_numeric</tipo>
+
+      </field>
+
+      
+      <field id="ejercicio_id" noshow="true"  tabla="CTB_CUENTAS">
+        <helper type="combo" xml="ctbejercicios_crud.xml" dir="/contabilidad/man/">
+          <field id="activo" tipoOrden="DESC"/>
+          <field id="fecha_minima">
+          <expression>DATE_FORMAT(comienza, '%d/%m/%Y')</expression>
+          <tipo>date</tipo>
+                <detalle>ejercicio_id</detalle>
+            </field>
+            <field id="fecha_movimiento">
+                <expression>DATE_FORMAT(finaliza, '%d/%m/%Y')</expression>
+                <tipo>date</tipo>
+            </field>
+            <field id="finaliza">
+            </field>
+        </helper>
+    <label>Ejercicio</label>
+    <!--    <detalle>ejercicio_id</detalle> -->
+    <condicion operador="&gt;">0</condicion>
+      </field>
+
+      <group>
+        <field id="id_cuenta"/>
+        <field id="base"/>.
+      </group>
+
+    </table>
+
+    <join tipo="inner">
+      <table id="CTB_DETALLES">
+<!--        <field id="cuenta_id">
+          <condicion operador="=">CTB_CUENTAS.id_cuenta</condicion>
+        </field>-->
+
+    <field id="movimiento_id">
+          <condicion operador="=">CTB_MOVIMIENTOS.id_movimiento</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="inner">
+      <table id="CTB_CUENTAS">
+        <field id="id_cuenta">
+          <condicion operador="=">cuenta_id</condicion>
+        </field>
+
+        <field id="ejercicio_id">
+          <condicion operador="=">CTB_MOVIMIENTOS.ejercicio_id</condicion>
+        </field>
+
+
+<!--
+        <field id="ejercicio_id">
+          <condicion operador="=">CTB_CUENTAS.ejercicio_id</condicion>
+        </field>
+
+        <field id="fecha_movimiento">
+          <condicion operador="between">STR_TO_DATE('[__fecha_minima__]' , '%d/%m/%Y') and STR_TO_DATE('[__fecha_maxima__]' , '%d/%m/%Y')</condicion>
+        </field>
+        <field id="base">
+          <condicion operador="=">'[__base__]'</condicion>
+        </field> -->
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="PRY_SOCIEDADES">
+        <field id="base">
+          <condicion operador="=">CTB_MOVIMIENTOS.base</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="GEN_MONEDAS">
+        <field id="id_moneda">
+          <condicion operador="=">PRY_SOCIEDADES.moneda_id</condicion>
+        </field>
+      </table>
+    </join>
+ <join tipo="left">
+      <table id="CTB_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">concepto_id</condicion>
+        </field>
+        <field id="integrado">
+          <condicion operador="=">1</condicion>
+        </field>
+
+      </table>
+    </join>
+
+  </form>
+</histrix>

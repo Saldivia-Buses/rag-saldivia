@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="insert"   >
+        <title>Ingreso de No Conformidad</title>
+        <obs></obs>
+        <form >
+                <table id="CAL_NOCONFORMIDADES" >
+                    <title>Estados</title>
+                        <field id="origennconf_id" id_temp="origennconf_id"/>
+                        <field id="tiponconf_id" id_temp="tiponconf_id"/>
+                        <field id="login_id"        id_temp="login_id"/>
+                        <field id="estadonconf_id" id_temp="estadonconf_id"/>
+                        <field id="rhseccion_id"   id_temp="rhseccion_id"	     />
+                        <field id="fecha_nconf"    id_temp="fecha_nconf"  />
+                        <field id="regcuenta_id"    id_temp="regcuenta_id"  />                        
+                        <field id="subsistema_id"    id_temp="subsistema_id"  />                        
+                        <field id="stkarticulo_id"    id_temp="stkarticulo_id"  />
+                        <field id="descripcion_nconf" id_temp="descripcion_nconf" />
+                        <field id="contencion_nconf" id_temp="contencion_nconf" >
+                            <tipo>varchar</tipo>
+                        </field>
+                        <field id="causa_nconf" id_temp="causa_nconf" >
+                            <tipo>varchar</tipo>
+                        </field>
+						<field id="login_id" id_temp="login" />
+						<field id="auditoriaobs_id" id_temp="auditoriaobs_id"/>
+                        <field id="responsable_nconf"    id_temp="resp_rhpersonal_id"  />
+			<field id="unidad_id" id_temp="unidad_id" />
+                </table>
+        </form>           
+</histrix>

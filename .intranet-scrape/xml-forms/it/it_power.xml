@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Inventario IT</title>
+  <obs></obs>
+  <form>
+    <table id="ITINVENTARY" label="INVENTARIO IT">
+      
+ 
+      <field id="id_itinventary" autoinc="true" noshow="true">
+        <label>ID</label>
+      </field> 
+      
+
+      <field id="device">
+        <label>Dispositivo</label>
+      </field>
+
+      <field id="planta" bloquearfila="true">
+
+        <label>Ubicacion</label>
+      <field id="planta" bloquearfila="true">
+
+        <label>Ubicacion</label>
+      </field>
+
+    </field>  
+
+        
+
+      
+      <field id="itdevicetype_id">
+        <label>Tipo</label> 
+        <helper type="combo" id="ITDEVICETYPE" empty="true">           
+          <field id="id_itdevicetype" />
+          <field id="nombre_devicetype" />        
+        </helper>      
+      </field>
+    
+
+       <field id="usuario" >
+	    <expression>user</expression>
+        <label>Usuario</label>
+        <size>24</size>
+      </field> 
+
+          
+      
+      
+      <field id="user_admin">
+	<label>User_Admin</label>
+      </field>
+     <field id="PWD">
+	<expression>pass_admin</expression>
+      <label>Password</label>
+      <size>24</size>
+     </field>
+
+     <field id="ip">
+      <label>ip</label>
+      <size>24</size>
+     </field>  
+      
+      <field id="mac">
+      <label>Mac</label>
+      <size>24</size>
+	<condicion operador="!=">''</condicion>
+     </field>   
+     
+     <field id="os">
+      <label>Sistema Operativo</label>
+      <size>24</size>
+     </field>
+
+
+     <field id="up_time">
+      <label>Encendido</label>
+	<condicion operador="!=">'00:00:00'</condicion>
+
+     </field>  
+
+     <field id="down_time">
+      <label>Apagado</label>
+	<condicion operador="!=">'00:00:00'</condicion>
+
+     </field>  
+
+       <field id="isup" local="true" _deshabilitado="true" _noshow="true" _clasefila="true">
+               <if exp="'up_time' &lt; date('H:i:s',time()) &amp;&amp; 'down_time' &gt; date('H:i:s',time())">
+                <true><![CDATA[(exec('wakeonlan mac > /tmp/poweup.log && echo 1'))?'Prender':'Apagar']]></true>
+                <false>'no encender'</false>
+               </if>
+     </field>
+
+
+       <field id="isdown" local="true" deshabilitado="true" _noshow="true" _clasefila="true">
+               <if exp="'down_time' &lt; date('H:i:s',time())">
+
+<true>
+<![CDATA[function(){
+
+  if ('os'=='windows') {
+       exec('net rpc SHUTDOWN -I ip -f -U user_admin%PWD');
+    }
+  else {
+@$conectar=ssh2_connect('ip',22);
+$autenticar=ssh2_auth_password($conectar, 'user_admin', 'PWD'); 
+ssh2_exec($conectar, 'init 0'); 
+}
+}
+]]>
+</true>
+                
+
+<false>'no apagar'</false>
+               </if>
+
+	     </field>
+                     
+
+ 
+  
+      
+      
+      <field id="planta">
+      <label>Ubicacion</label>
+      </field>
+      
+
+
+
+
+      <order>
+      <field id="itdevicetype_id">
+        <label>Tipo</label>
+        
+        <helper type="combo" id="ITDEVICETYPE">
+           
+          <field id="id_itdevicetype" />
+          <field id="nombre_devicetype" />
+        
+        </helper>
+      
+      </field>
+      </order>
+
+
+
+          </table>
+  </form>
+</histrix>  

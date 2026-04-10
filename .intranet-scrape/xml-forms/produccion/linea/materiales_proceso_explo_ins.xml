@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert">
+    <titulo>Atributos</titulo>
+    <obs/>
+    <form>
+        <table id="STK_ARTICULO_PROCESO_HIST_DETALLE">
+
+            <field id="artproceso_hist_id"	lastId="materiales_proceso_explo_cab.xml" />
+            <field id="proceso1"		id_temp="proceso1" />
+            <field id="proceso2"		id_temp="proceso2" />
+            <field id="proceso3"		id_temp="proceso3" />
+            <field id="proceso4"		id_temp="proceso4" />
+            <field id="artcod"			id_temp="artcod" />
+            <field id="artdes"			id_temp="artdes" />
+            <field id="multiplo"		id_temp="multiplo" />
+            <field id="cantidad"		id_temp="cantidad" />
+            <field id="artuni"			id_temp="artuni" />
+            <field id="costo_reposicion"	id_temp="costo" />
+
+            <field id="parcial_reposicion"	id_temp="parcial" />
+            <field id="costo_reposicion_desc"	id_temp="costo_final_func_cdesc" />
+            <field id="parcial_reposicion_desc" id_temp="parcialRCD" />
+            <field id="ctbcod"			id_temp="ctbcod" />
+            <field id="ctbnom"          id_temp="ctbnom" />
+            <field id="parcial_con_recargo"          id_temp="parcial_con_recargo" />
+
+	    <field id="porcentaje_region"	id_temp="porcentaje_region" />
+
+            <field id="parcial_clog"          	 id_temp="parcial_clog" />
+            <field id="parcial_recargo_log"      id_temp="parcial_recargo_log" />
+            <field id="costo_logistico"          id_temp="costo_logistico" />
+
+        </table>
+
+    </form>
+</histrix>

@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" inserta="false" borra="false" modifica="false" imprime="false" log="false" transaccional="true" tooltip="false" confirma="CONTINUAR" preFetch="false" preloadData="false">
+  <title>Movimiento Bancario</title>
+  <obs/>
+  <form>
+    <table id="REG_MOVIMIENTOS" label="Movimiento Bancario">
+      <validation>
+        <condition><![CDATA[nro_cuenta == 0]]></condition>
+        <message>Debe ingresar un numero de cuenta</message>
+      </validation>
+      <validation>
+        <condition><![CDATA[importe_movimiento + 0 == 0]]></condition>
+        <message>Debe Ingresar un Importe de Movimiento</message>
+      </validation>
+      <validation>
+        <condition><![CDATA[ 'fecha_movimiento' == '0' ;]]></condition>
+        <message>Debe Ingresar una fecha de movimiento</message>
+      </validation>
+      <cierraproceso id="asiento_contable_header.xml" condition="modulocontable">
+        <paring destino="fecha_movimiento">fecha_movimiento</paring>
+        <paring destino="numero">nro_movimiento</paring>
+        <paring destino="nombre">regcuenta_nombre</paring>
+        <paring destino="referencia">referencia_movimiento</paring>
+      </cierraproceso>
+      <movimientos>
+        <relacion id="regmovimientos_ins.xml"/>
+        <relacion id="regdetalles_ins.xml"/>
+        <relacion id="ctbmovimiento_upd.xml"/>
+      </movimientos>
+      <field id="id_regmovim" noshow="true">
+        <condicion operador="=">-1</condicion>
+      </field>
+      <field id="subsistema_id" noshow="true"/>
+      <fieldGroup>
+        <field id="regcuenta_id" noshow="true"/>
+        <field id="nro_cuenta">
+          <label>Cuenta</label>
+          <helper type="external" xml="regcuenta_nro_cmb.xml" dir="/ayudas" empty="true">
+            <field id="moneda_id" noshow="true">
+              <detalle>moneda_id</detalle>
+            </field>
+            <field id="subsistema_id" oculto="true">
+              <condicion operador="=">'04'</condicion>
+            </field>
+            <field id="ctbcuenta_concepto_id" noshow="true">
+              <expression>ifnull((SELECT cuenta_id 
+						FROM REG_CUENTA_IMPUTACION
+						WHERE REG_CUENTA_IMPUTACION.regcuenta_id = REG_CUENTA.id_regcuenta
+			                              AND REG_CUENTA_IMPUTACION.doh = 0
+		                                LIMIT 1), GEN_SUBSISTEMAS.cuenta_debe_id)</expression>
+              <label>Debe</label>
+              <detalle>ctbcuenta_concepto_id</detalle>
+            </field>
+            <field id="ctbcuenta_reg_id" noshow="true">
+              <expression>ifnull((SELECT cuenta_id 
+						FROM REG_CUENTA_IMPUTACION
+                            			WHERE REG_CUENTA_IMPUTACION.regcuenta_id = REG_CUENTA.id_regcuenta
+							AND REG_CUENTA_IMPUTACION.doh = (CASE WHEN '0' = 0 THEN 1 ELSE 0 END)
+						LIMIT 1) , GEN_SUBSISTEMAS.cuenta_haber_id)</expression>
+              <label>Haber</label>
+              <detalle>ctbcuenta_reg_id</detalle>
+            </field>
+          </helper>
+        </field>
+        <field id="regcuenta_nombre" local="true" deshabilitado="true" copia="nombre_movimiento" sincelda="true">
+          <label modpos="nobr" colspan="4"/>
+          <size>60</size>
+        </field>
+        <field id="moneda_id" noshow="true">
+          <helper type="combo" xml="moneda_qry.xml" dir="/ayudas" empty="true"/>
+        </field>
+        <field id="nro_movimiento">
+          <label>Nº Referencia</label>
+          <valor>0</valor>
+        </field>
+        <field id="referencia_movimiento">
+          <label>Referencia</label>
+          <tipo>varchar</tipo>
+          <size>144</size>
+        </field>
+        
+        <field id="fecha_movimiento">
+            <label>Fecha de Movimiento</label>
+            <tipo>date</tipo>
+            <valor>today</valor>
+        </field>
+
+        <field id="reg_fecha" sincelda="true">
+            <label modpos="nobr">Fecha Registracion</label>
+            <tipo>date</tipo>
+            <valor>today</valor>
+        </field>
+
+        <field id="vencimiento_movimiento">
+          <label>Fecha de Acreditacion</label>
+          <valor>today</valor>
+        </field>
+        
+        <field id="regconcepto_id" local="true">
+          <label>Concepto</label>
+          <helper type="combo" xml="regconcepto_qry.xml" dir="/ayudas" empty="true">
+            <field id="ctbcuenta_concepto_id">
+              <expresion>ctbcuenta_id</expresion>
+              <detalle>ctbcuenta_concepto_id</detalle>
+            </field>
+          </helper>
+        </field>
+        <field id="importe_concepto" local="true" noshow="true">
+          <label>Importe Concepto</label>
+          <tipo>numeric</tipo>
+          <size>10</size>
+        </field>
+      </fieldGroup>
+      <fieldGroup>
+        <if>if (strpos($_SESSION['properties']['modulos'],'iva') == false) return true; </if>
+        <field id="importe_exento">
+          <label>Importe Exento</label>
+          <tipo>numeric</tipo>
+          <size>10</size>
+          <jseval campodestino="importe_movimiento">importe_exento</jseval>
+          <jseval campodestino="importe_concepto">importe_exento</jseval>
+        </field>
+      </fieldGroup>
+      <fieldGroup>
+        <if>if (strpos($_SESSION['properties']['modulos'],'iva') != false) return true; </if>
+        <!-- DETALLE CALCULO DE IVA -->
+        <field id="importe_exento">
+          <label>Importe Exento</label>
+          <tipo>numeric</tipo>
+          <size>10</size>
+          <jseval campodestino="importe_movimiento">neto_movimiento + importe_iva + importe_exento</jseval>
+          <jseval campodestino="importe_concepto">neto_movimiento + importe_exento</jseval>
+        </field>
+        <field id="neto_movimiento">
+          <label>Importe Neto</label>
+          <tipo>numeric</tipo>
+          <size>10</size>
+          <jseval campodestino="importe_iva">neto_movimiento * (alicuota_iva / 100) </jseval>
+          <jseval campodestino="importe_movimiento">neto_movimiento + importe_iva + importe_exento</jseval>
+          <jseval campodestino="importe_concepto">neto_movimiento + importe_exento</jseval>
+        </field>
+        <field id="alicuota_iva">
+          <helper type="combo" xml="genalicuotas_qry.xml" dir="/ayudas" empty="true"/>
+          <label>Alicuota</label>
+          <tipo>numeric</tipo>
+          <jseval campodestino="importe_iva">neto_movimiento * (alicuota_iva / 100)</jseval>
+          <jseval campodestino="importe_movimiento">neto_movimiento + importe_iva + importe_exento</jseval>
+          <jseval campodestino="importe_concepto">neto_movimiento + importe_exento</jseval>
+        </field>
+        <field id="importe_iva" preventLoop="true">
+          <label>Iva</label>
+          <tipo>numeric</tipo>
+          <size>10</size>
+          <jseval campodestino="importe_movimiento">neto_movimiento + importe_iva + importe_exento</jseval>
+          <jseval campodestino="importe_concepto">neto_movimiento + importe_exento</jseval>
+        </field>
+        <!-- FIN CALCULO DE IVA -->
+      </fieldGroup>
+      <fieldGroup>
+        <field id="importe_movimiento" deshabilitado="true">
+          <label style="font-size: xx-large;">Total</label>
+          <tipo>numeric</tipo>
+          <size>10</size>
+        </field>
+      </fieldGroup>
+      <field id="imputado" local="true" noshow="true">
+        <valor>1</valor>
+      </field>
+      <field id="muestracheck" local="true" noshow="true">
+        <if exp="tipoimpre_concepto != 2">
+          <true>'display:none;'</true>
+          <false>''</false>
+        </if>
+      </field>
+      <field id="CHKimprime" local="true">
+        <attribute id="style">muestracheck</attribute>
+        <label style="font-size: medium; align: right;" _modpos="nobr">Imprime Comprobante</label>
+        <tipo>check</tipo>
+      </field>
+      <field id="impresion" local="true" noshow="true" deshabilitado="true">
+        <setvar>xmlImpresion</setvar>
+        <label>Programa de Impresion</label>
+        <if exp="CHKimprime=='1' || tipoimpre_concepto=='1'">
+          <true>'imprime_concepto'</true>
+          <false>''</false>
+        </if>
+      </field>
+      <fieldGroup noshow="true">
+        <field id="ctbcuenta_id" local="true">
+          <label>Cuenta Contable Asociada</label>
+          <actualiza>
+            <field id="ctbcuenta_reg_id"/>
+          </actualiza>
+        </field>
+        <!-- CONTABILIZACION DEL CONCEPTO -->
+        <field id="ctbcuenta_concepto_id" local="true">
+          <label>Cuenta Concepto</label>
+        </field>
+        <field id="ctbcuenta_concepto_doh" local="true">
+          <if exp="imputacion_concepto + 0 == 1">
+            <true>1</true>
+            <false>0</false>
+          </if>
+        </field>
+        <!-- CONTABILIZACION DEL IVA -->
+        <field id="ctbcuenta_iva_id" local="true">
+          <label>Cuenta Contable Iva</label>
+        </field>
+        <field id="ctbcuenta_iva_doh" local="true">
+          <if exp="imputacion_concepto + 0 == 1">
+            <true>1</true>
+            <false>0</false>
+          </if>
+        </field>
+        <!-- CONTABILIZACION DEL MOVIMIENTO -->
+        <field id="ctbcuenta_reg_id" local="true">
+          <if exp="true">
+            <true>'ctbcuenta_id'</true>
+            <false>''</false>
+          </if>
+        </field>
+        <field id="ctbcuenta_reg_doh" local="true">
+          <if exp="imputacion_concepto + 0 == 0">
+            <true>0</true>
+            <false>1</false>
+          </if>
+        </field>
+        <field id="Importe_Movimiento_debe">
+          <if exp="'ctbcuenta_concepto_doh'=='1'">
+            <true>'importe_movimiento'</true>
+            <false>''</false>
+          </if>
+        </field>
+        <field id="Importe_Movimiento_haber">
+          <if exp="'ctbcuenta_concepto_doh'=='0'">
+            <true>'importe_movimiento'</true>
+            <false>''</false>
+          </if>
+        </field>
+        <field id="Importe_Iva_debe">
+          <if exp="'ctbcuenta_iva_doh'=='0'">
+            <true>'importe_iva'</true>
+            <false>''</false>
+          </if>
+        </field>
+        <field id="Importe_Iva_haber">
+          <if exp="'ctbcuenta_iva_doh'=='1'">
+            <true>'importe_iva'</true>
+            <false>''</false>
+          </if>
+        </field>
+        <field id="Importe_Concepto_debe">
+          <if exp="'ctbcuenta_concepto_doh'=='0'">
+            <true>'importe_concepto'</true>
+            <false>''</false>
+          </if>
+        </field>
+        <field id="Importe_Concepto_haber">
+          <if exp="'ctbcuenta_concepto_doh'=='1'">
+            <true>'importe_concepto'</true>
+            <false>''</false>
+          </if>
+        </field>
+      </fieldGroup>
+      <field id="modulocontable" local="true" noshow="true">
+        <valor eval="true">(strpos($_SESSION['properties']['modulos'],'contabilidad') != false ? 1 : 0  )</valor>
+      </field>
+      <field id="grabaContable" local="true" noshow="true">
+        <if exp="modulocontable == 0">
+          <true>'false'</true>
+          <false>'true'</false>
+        </if>
+      </field>
+    </table>
+    <tempTable id="TEMPTABLENAME">
+      <row>
+        <field id="cuenta_id">ctbcuenta_concepto_id</field>
+        <field id="doh">ctbcuenta_concepto_doh</field>
+        <field id="debe">Importe_Concepto_debe</field>
+        <field id="haber">Importe_Concepto_haber</field>
+      </row>
+      <row>
+        <field id="cuenta_id">ctbcuenta_iva_id</field>
+        <field id="doh">ctbcuenta_iva_doh</field>
+        <field id="debe">Importe_Iva_debe</field>
+        <field id="haber">Importe_Iva_haber</field>
+      </row>
+      <row>
+        <field id="cuenta_id">ctbcuenta_reg_id</field>
+        <field id="doh">imputacion_concepto</field>
+        <field id="debe">Importe_Movimiento_debe</field>
+        <field id="haber">Importe_Movimiento_haber</field>
+      </row>
+    </tempTable>
+  </form>
+</histrix>

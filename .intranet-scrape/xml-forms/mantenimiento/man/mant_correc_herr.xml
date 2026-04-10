@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" _subtipo="vertical" _inserta="false">
+    <title>Mantenimiento</title>
+    <obs></obs>
+    <form>
+          <table id="MANT_PLAN">
+
+                <filters>
+    	        	<field id="fecha_accion" >
+						<label>Desde Fecha</label>
+						<help>Fecha de la acción</help>
+						<tipo>date</tipo>
+						<operador>&gt;=</operador>
+    				</field>
+                </filters>
+
+		<field id="id_plan" noshow="true" />
+                    
+    		   	<field id="rrule" noshow="true" >
+    		   	    <expression>''</expression>
+    		   	</field>
+
+              	<field id="equipo_id" noshow="true" valauto="true">
+              	<!--	<expression having="false">equipo_id</expression>-->
+             	</field>
+    
+    			<field id="nombre_equipo" > 
+                    <label>Nombre Equipo</label>
+    		    	<expression>MANT_EQUIPOS.nombre_equipo</expression>
+    			</field>
+    
+	            <field id="fecha_accion" valauto="true">
+    				<label>Fecha Ingreso Reclamo</label>
+    			    <help>Fecha de la acción</help>
+    				<tipo>date</tipo>
+					<valor>today</valor>
+    			</field>
+
+		    <field id="hora_accion">
+			<label modpos="nobr">Hora Reclamo</label>
+			<tipo>time</tipo>
+			<valor eval="true">date('H:i:s')</valor>
+		    </field>
+
+	            <field id="fecha_iniciotarea" valauto="true">
+    				<label>Inicio Tarea</label>
+    			    <help>Fecha de la acción</help>
+    				<tipo>date</tipo>
+					<valor>today</valor>
+    			</field>
+
+		    <field id="hora_iniciotarea">
+			<label modpos="nobr">Hora Inicio Tarea</label>
+			<tipo>time</tipo>
+			<valor eval="true">date('H:i:s')</valor>
+		    </field>
+
+	            <field id="fecha_terminacion" valauto="true">
+    			<label>Fin Tarea</label>
+    			<tipo>date</tipo>
+    		    </field>
+
+		    <field id="hora_terminacion">
+			<label modpos="nobr">Hora Fin Tarea</label>
+			<tipo>time</tipo>
+		    </field>
+	            <field id="fecha_salida" valauto="true">
+    			<label>Fecha Terminación</label>
+    			<tipo>date</tipo>
+		    </field>
+
+		    <field id="hora_salida">
+			<label modpos="nobr">Hora Terminación</label>
+			<tipo>time</tipo>
+		    </field>
+
+    			<field id="deposito_id" tabla="MANT_EQUIPOS" noshow="true">
+    				<label>Dep..sito</label>
+    				<helper type="combo" id="DEPOSITO" empty="true">
+    					<field id="idDeposito">
+    						<label>Cod</label>
+    						<help>Codigo</help>
+    					</field>
+    					<field id="direccion">
+    						<label>Direccion</label>
+    						<help>Direccion</help>
+    					</field>
+    				</helper>
+    			</field>
+
+    			<field id="tipoequipo_id" tabla="MANT_EQUIPOS" noshow="true">
+    				<helper type="combo" id="MANT_TIPO_EQUIPO" empty="true">
+    					<field id="id_tipo_equipo"/>
+    					<field id="nombre_tipoequipo"/>
+    				</helper>
+    				<label>Tipo</label>
+    			</field>
+    
+              <field id="accion_id" valauto="true" noshow="true">
+      	    </field>
+
+			<field id="nombre_accion" local="true" deshabilitado="true" valauto="true">
+				<valor>Mantenimiento Correctivo</valor>
+				<label colspan="4">Tarea</label>
+				<size>70</size>
+			</field>
+
+			<field id="observaciones">
+				<label colspan="4">Observaciones</label>
+				<size>100</size>
+			</field>
+
+			<field id="login" valauto="true" noshow="true">
+				<valor eval="true">$_SESSION['usuario']</valor>
+			</field>
+    
+          	</table>
+    
+		    <join tipo="left">
+			    <table id="MANT_EQUIPOS">
+		          	    <field id="id_equipo">
+		              	<condicion operador="=">equipo_id</condicion>
+                	</field>
+		    	</table>
+         	</join>
+      </form>
+
+
+</histrix>	

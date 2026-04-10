@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" __modifica="false">
+	<title>RECLAMOPAGOS</title>
+	<obs/>
+	<form >
+		<table id="RECLAMOPAGOS" label="Accidentes">
+			<filters>
+			<field id="marca" _deshabilitado="true">
+				<label>Leido</label>
+				<options>
+					<option valor="0">Pendiente</option>
+					<option valor="1">Cumplida</option>					
+				</options>
+				<operador>=</operador>
+				<valor>0</valor>
+			</field>
+			</filters>
+			<field id="idReclamo" autoinc="true" noshow="true">
+				<label>Cod.</label>
+				<help>Codigo de reclamo</help>
+			</field>
+			
+			<field id="fecha">
+				<label>fecha</label>
+				<help>Fecha del Reclamo</help>
+				<valor>today</valor>
+			</field>
+			<field id="ctacod">
+				<label>Proveedor</label>
+				<help>Codigo de Cuenta </help>
+				<ayuda_ex id="CCTCUENT">
+					<field id="ctacod">
+					    <label>Codigo</label>
+					</field>
+                    <field id="NOM">
+                        <expression having="false">CONCAT(CCTCUENT.ctafan, ' (',  CCTCUENT.ctanom,')')</expression>
+                        <label>Nombre</label>
+                        <detalle>ctanom</detalle>
+                    </field>
+					<field id="baja" oculto="true">
+						<condicion operador="=">0</condicion>
+					</field>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'01'</condicion>
+					</field>
+					
+					<order>
+						<field id="ctanom"></field>
+					</order>
+					
+				</ayuda_ex>
+				<clave>ctacod</clave>
+				<descripcion>ctanom</descripcion>
+			</field>
+			<field id="ctanom"  deshabilitado="true">
+				<expression>CONCAT(CCTCUENT.ctafan, ' (',  CCTCUENT.ctanom,')')</expression>
+				<label>Nombre</label>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="observacion">
+				<label>Observaciones</label>
+				<help>Ingrese el texto de las Observaciones</help>
+				<size>300</size>
+			</field>
+			<field id="marca" deshabilitado="true">
+				<label>Leido</label>
+				<options>
+					<option valor="0">Pendiente</option>
+					<option valor="1">Cumplida</option>					
+				</options>
+			</field>
+			<field id="pend"  clasefila="true" noshow="true" local="true" >
+				<if exp="'marca'=='0'"> 
+					<true>'resaltado'</true>
+					<false>'0'</false>
+				</if>
+				<tipo>varchar</tipo>
+
+			</field>
+						
+			<field id="login"   noselect="true" noshow="true">
+				<valor eval="true">$_SESSION['usuario']</valor>
+				<tipo>varchar</tipo>
+			</field>			
+			
+		</table>
+		<join tipo="left">
+			<table id="CCTCUENT">
+				<field id="siscod" >
+					<condicion operador="=">'01'</condicion>
+				</field>
+				<field id="ctacod" >
+					<condicion operador="=">RECLAMOPAGOS.ctacod</condicion>
+				</field>
+			</table>
+		</join>				
+	</form>
+</histrix>

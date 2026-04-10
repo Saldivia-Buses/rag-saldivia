@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud">
+  <title>IVA Alicuota</title>
+  <obs/>
+  <form >
+
+    <table id="GEN_IVA_ALICUOTAS" label="IVA Alicuota">
+
+      <field id="id_iva_alicuota" autoinc="true" noshow="true">
+        <label>Código</label>
+        <help>Código de alicuota</help>
+      </field>
+
+      <fieldGroup>
+        <field id="iva_id">
+          <helper type="combo" xml="iva_crud.xml" vacio="true" />
+          <label>Categoria</label>
+          <help>Categoria de IVA</help>
+        </field>
+        <field id="iva_regimen_id">
+          <tabla_ex xml="iva_regimenes_crud.xml" />
+          <label>Cód. régimen</label>
+          <help>Código del régimen de IVA</help>
+        </field>
+        <field id="alicuota">
+          <label>Alícuota</label>
+          <help>Alícuota registrada</help>
+          <size>10</size>
+          <helper type="combo" empty="true">
+          	<option value="2.5">2.5%</option>
+            <option value="10.50">10.50%</option>
+            <option value="21.00">21.00%</option>
+            <option value="27.00">27.00%</option>
+          </helper>
+        </field>
+        <field id="sobretasa">
+          <label>Sobretasa</label>
+          <help>Sobretasa aplicada</help>
+          <tipo>check</tipo>
+        </field>
+
+        <field id="alicuota_percepcion">
+          <label>Alic. Perc. IVA</label>
+          <help>Alicuota percepción IVA</help>
+          <tipo>numeric</tipo>
+          <size>10</size>
+        </field>
+
+      </fieldGroup>
+
+      <!-- DATOS CONTABLES ************************************************* -->
+
+      <fieldGroup>
+        <if> if (strpos($_SESSION['properties']['modulos'],'contabilidad') != false) return true; </if>
+        <field id="cuenta_haber_id" colstyle="display:none;">
+          <ayuda_ex xml="cuentas_habilitadas_qry.xml" dir="/ayudas"/>
+          <label>Cta. Ctb. IVA Crédito</label>
+          <help>Cuenta Contable IVA Crédito Fiscal</help>
+          <size>12</size>
+        </field>
+        <field id="cuenta_debito_id" colstyle="display:none;">
+          <ayuda_ex xml="cuentas_habilitadas_qry.xml" dir="/ayudas"/>
+          <label>Cta. Ctb. IVA Débito</label>
+          <help>Cuenta Contable IVA Débito Fiscal</help>
+          <size>12</size>
+        </field>
+        <field id="cuenta_percepcion_iva_id" colstyle="display:none;">
+          <ayuda_ex xml="cuentas_habilitadas_qry.xml" dir="/ayudas"/>
+          <label>Cta. Ctb. IVA Percepción</label>
+          <help>Cuenta Contable de Percepción IVA</help>
+          <size>12</size>
+        </field>
+      </fieldGroup>
+
+    </table>
+  </form>
+</histrix>

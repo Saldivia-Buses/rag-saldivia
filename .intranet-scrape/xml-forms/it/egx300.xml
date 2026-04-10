@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--Comentario-->
+<histrix tipo="consulta" paginar="50">
+  <title>Tableros electricos</title>
+  <obs></obs>
+  <form>
+    <table id="EGX300EPE" label="Tableros Electricos" limit="1">
+      
+       
+      <filters>
+                  <field id="date_time"> 
+                  <label>Feha</label>
+                  <help>Fecha</help>
+                  <operador>=</operador>                  
+                  </field>
+      </filters>       
+      
+      
+      
+      
+     
+       <field id="id_nave" _true="true">
+        <label  style="text-align:center;color:red;">MaxAmpere</label>
+        <size>1</size>
+         <expression> SUM( GREATEST( demanda_intensidad1, demanda_intensidad2, demanda_intensidad3 ) ) </expression>
+      </field>  
+
+
+     <field id="date_time">
+      <label style="text-align:center;">Fecha y hora</label>
+       
+      <size>24</size>
+      <tipo>varchar</tipo>
+     </field>
+      
+       <field id="por_fase" local="true" >
+        <helper type="link" xml="egx_300_xfase.xml" dir="/it" width="600" height="250"  title="Estado Fases">
+          <parameter source="date_time" target="date_time"  />
+        </helper>
+        <label>Intensidad</label>
+        <valor>Fases</valor>
+         <tipo>varchar</tipo>
+      </field> 
+      
+      <group>
+		<field id="date_time">
+		</field>
+	  </group>
+   
+     <order>
+       <field id="date_time" tipoOrden="desc"></field>
+      </order>
+      
+ 
+          </table>
+  </form>
+</histrix>  
+
+

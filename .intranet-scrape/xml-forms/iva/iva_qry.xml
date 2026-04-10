@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" margintabs="true" imprime="true">
+  <title>IVA COMPRAS</title>
+  <obs/>
+  <consulta>
+    <table id="REG_MOVIMIENTOS" label="Total por alicuota" styleTbody="height:300px;overflow-x:hidden;">
+	 <filters>
+		 <field id="fecha_mov1" deshabilitado="false">
+		        <valor>today</valor>
+		        <operador>&gt;=</operador>
+		    <label>Desde Fecha</label>
+		    <help>Fecha movimiento</help>
+		  </field>
+		  <field id="fecha_mov2" deshabilitado="false">
+		    <valor>today</valor>
+		        <operador>&lt;=</operador>
+		    <label modpos="nobr">hasta Fecha</label>
+		    <help>Fecha movimiento</help>
+		  </field>
+          </filters>
+	
+          
+        <field id="fecha_mov1" noshow="true" local="true">
+          <help>Fecha movimiento</help>
+          <tipo>date</tipo>
+          <detalle>desde</detalle>
+          
+        </field>
+        <field id="fecha_mov2" noshow="true" local="true">
+          <help>Fecha movimiento</help>
+          <tipo>date</tipo>
+                <detalle>hasta</detalle>
+        </field>
+      <field id="reg_fecha" noshow="true">
+        <label>Fecha</label>
+	<tipo>date</tipo>
+         <condicion operador="&gt;=">STR_TO_DATE('[__fecha_mov1__]', '%d/%m/%Y') and  reg_fecha  &lt;= STR_TO_DATE('[__fecha_mov2__]' ,'%d/%m/%Y')</condicion>
+      </field>
+       <field id="subsistema_id" noshow="true">
+	<label>subsistema</label>
+	<condicion operador="=">'01'</condicion>
+      </field>
+    
+      <field id="alicuota" obj="iva_x_alicuota_qry.xml"   local="true">
+	<paring destino="reg_fecha">fecha_mov1</paring>
+	<paring destino="reg_fecha">fecha_mov2</paring>
+	<label></label>
+      </field>
+      <field id="categoria" obj="iva_x_categoria_qry.xml" local="true">
+	<paring destino="reg_fecha">reg_fecha</paring>
+	<label></label>
+      </field>
+    
+     
+    </table>
+  
+         <join tipo="left">
+	   <tabla id="REG_CONCEPTOS">
+	      <field id="id_concepto">
+		<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+	      </field>
+	   </tabla>
+	</join>
+		
+
+	
+	
+        <join tipo="left">
+	   <tabla id="REG_CUENTA">
+	      <field id="id_regcuenta">
+		<condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+	      </field>
+	   </tabla>
+          </join>
+	 <join>
+	   <tabla id="REG_DETALLES">
+	      <field id="regmovim_id">
+		<condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion>
+	      </field>
+	   </tabla>
+	</join>
+   
+  </consulta>
+</histrix>

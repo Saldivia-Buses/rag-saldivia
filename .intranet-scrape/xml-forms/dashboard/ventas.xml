@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="dashboard">
+
+        <titulo>Primer Panel de control</titulo>
+        
+        <widget id="relacion_C_V"  width="48%" height="350px">
+            <title>Iva Ventas vs Iva Compras - Mensual</title>
+	    <url><![CDATA[histrixLoader.php?xml=evolutivo_ventas_compras.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="relacion_V_OP"  width="48%" height="350px">
+            <title>Iva Ventas vs Ordenes de Pago - Mensual</title>
+        <url><![CDATA[histrixLoader.php?xml=costos_ivaventas_ordenespago.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="evolutivo_V_OP"  width="99%" height="400px">
+            <title>Evolutivo Iva Ventas vs Ordenes de Pago </title>
+        <url><![CDATA[histrixLoader.php?xml=costos_ivaventas_ordenespago_evolutivo.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="gastos"  width="48%"  height="300px">
+            <title>Gastos</title>
+	    <url><![CDATA[histrixLoader.php?xml=evolutivo_ctbregis_grupo.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="efect"  width="48%"  height="300px">
+            <title>Eficiencia</title>
+	    <url><![CDATA[histrixLoader.php?xml=evolutivo_gastos_coche.xml&dir=estadisticas]]></url>
+        </widget>
+<!--         <widget id="costos"  width="400px" height="266px"  >
+            <title>Costo</title>
+	    <url><![CDATA[histrixLoader.php?xml=evolutivo_costo.xml&dir=estadisticas]]></url>
+        </widget>
+ -->       
+        
+        
+</histrix>
+
+

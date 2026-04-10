@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="grid" _PDFsincabecera="true" PDFfontSize="10" >
+  <title>Movimiento de stock</title>
+  <obs></obs>
+  <form >
+    <table id="STK_INVENTARIO_DETALLES" label="Movimiento de stock">
+      <field id="id_stkinventariodet" print="false" />
+      <field id="stkinventario_id" print="false" />
+      <field id="_ORDEN" local="true" _noshow="true" PDFcolWidth="8">
+        <label>#</label>
+      </field>
+      <field id="stkarticulo_id" PDFcolWidth="22">
+        <label >Cod.</label>
+      </field>
+      <field id="nombre_articulo" tabla="STK_ARTICULOS" PDFcolWidth="80">
+        <label>Descripción</label>
+      </field>
+      <field id="stock_real1" PDFcolWidth="20">
+        <label>Recuento 1</label>
+      </field>
+      <field id="stock_real2" PDFcolWidth="20">
+        <label>Recuento 2</label>
+      </field>
+      <field id="stock_real3" PDFcolWidth="20">
+        <label>Recuento 3</label>
+      </field>
+      <field id="att_print" print="false">
+        <expression>
+          (SELECT CASE WHEN cerrado = 1 THEN 'true' ELSE 'false' END FROM STK_INVENTARIOS WHERE id_stkinventario = STK_INVENTARIO_DETALLES.stkinventario_id LIMIT 1)
+        </expression>
+      </field>
+      <field id="diferencia" PDFcolWidth="20">
+        <attribute id="print">att_print</attribute>
+        <label>Diferencia</label>
+      </field>
+      <field id="stock" tabla="STK_INVENTARIO_DETALLES" PDFcolWidth="20">
+        <attribute id="print">att_print</attribute>
+        <label>Teorico</label>
+      </field>
+      <field id="ajuste" tabla="STK_INVENTARIO_DETALLES" PDFcolWidth="20">
+        <attribute id="print">att_print</attribute>
+        <label>Ajuste</label>
+        <expression>CASE ajuste WHEN 1 THEN 'SI' ELSE 'NO' END</expression>
+      </field>
+      <field id="monto" noZero="true" suma="true" PDFcolWidth="20">
+        <attribute id="print">att_print</attribute>
+        <label>Monto</label>
+      </field>
+      <field id="observaciones" tabla="STK_INVENTARIO_DETALLES">
+        <label>Obs.</label>
+      </field>
+    </table>
+    <join tipo="left">
+      <table id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">STK_INVENTARIO_DETALLES.stkarticulo_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

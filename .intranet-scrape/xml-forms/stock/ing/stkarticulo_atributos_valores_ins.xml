@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>                     
+<histrix tipo="insert"  replaceInto="true">
+<title>Atributos</title>
+<obs></obs>
+<form >
+    <table id="STK_ATRIBUTO_VALORES">
+
+        <field id="stkarticulo_id" 		id_temp="stkarticulo_id"/>
+        <field id="stkatributo_id" 		id_temp="id_stkatributo"/>
+		<field id="valor_atributo" 		id_temp="valor_atributo"/>
+		
+    </table>
+</form>	   
+</histrix>

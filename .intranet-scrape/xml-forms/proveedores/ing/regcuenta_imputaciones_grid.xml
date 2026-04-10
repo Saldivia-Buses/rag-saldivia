@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="grid" transaccional="true" imprime="false" inserta="false" deleteRow="false" llenoTemporal="true" importTempTable="TEMPTABLENAME" procesa="false" export="false">
+    <title>Detalle</title>
+    <obs></obs>
+    <form>
+        <table id="REG_CUENTA_IMPUTACION" label="movimientos">
+
+            <field id="id_regcuentaimputacion" esClave="true" noshow="true"/>
+
+            <field id="regcuenta_id">
+                <condicion operador="=">-1</condicion>
+            </field>
+
+            <field id="cuenta_id">
+                <label>CodCuenta</label>
+            </field>
+
+            <field id="ctbcentro_id">
+                <label>Centro</label>
+            </field>
+
+            <field id="porcentaje" suma="true">
+                <label>Porc. Imputacion</label>
+                <jseval campodestino="porcentaje_ctbimputacion" total="true">porcentaje.toFixed(2)</jseval>
+            </field>
+
+            <field id="centro_haber_doh">
+                <label>DoH</label>
+                <expression>REG_CUENTA_IMPUTACION.doh</expression>
+            </field>
+
+            <field id="importe_x_centro" local="true">
+                <label>Importe</label>
+            </field>
+
+            <field id="importe_total_centro" local="true">
+                <label>Importe Asiento</label>
+                <if exp="true">
+                    <true>((importe_x_centro * porcentaje) / 100)</true>
+                    <false>0</false>
+                </if>
+                
+            </field>
+
+            <group>
+                <field id="cuenta_id" />
+                <field id="ctbcentro_id" />
+            </group>
+
+        </table>
+
+        <tempTable id="TEMPTABLENAME">
+            <row>
+                <field id="cuenta_id">cuenta_id</field>
+                <field id="ctbcentro_id">ctbcentro_id</field>
+                <field id="doh">centro_haber_doh</field>
+                <field id="importe">importe_total_centro</field>
+                <field id="debe">importe_total_centro</field>
+                <field id="haber">importe_total_centro</field>
+                <field id="_ORDEN">90</field>                
+            </row>
+        </tempTable>
+
+    </form>
+</histrix>

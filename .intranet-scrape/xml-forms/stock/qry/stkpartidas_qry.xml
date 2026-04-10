@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" imprime="false" subtipo="vertical">
+	<title>Partidas</title>
+	<obs></obs>
+	<form detalle="stkpartidas_detalle_qry.xml" _inline="true">
+		<table id="STK_PARTIDAS" label="Partidas">
+			<field id="id_stkpartida" noshow="true" >
+				<detalle>stkpartida_id</detalle>
+			</field>
+			<field id="nro_partida" >
+				<label>Nro. Partida</label>
+			</field>
+			<field id="fecha_partida">
+				<label>Fecha</label>
+				<tipo>date</tipo>
+			</field>
+			<field id="origen_partida">
+				<label>Origen</label>
+			</field>
+			<field id="aduana_partida">
+				<label>Aduana</label>
+			</field>
+			<field id="activa">
+				<label>Activa</label>
+				<tipo>check</tipo>
+			</field>
+		</table>
+	</form>
+</histrix>

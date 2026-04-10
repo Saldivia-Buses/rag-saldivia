@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  Ayuda
+Tarea: Ayuda para la Tabla de Servicios
+Autor: d!ego2k
+Fecha: 27/08/10
+*******************************************************************************
+-->
+<histrix tipo="consulta">
+	<title>Servicios</title>
+	<obs></obs>
+	<form >	    
+		<table id="FAC_USUARIOS_SER" label="Servicios">
+
+			<field id="facususer_id" />
+
+
+			<field id="servicios" local="true">
+				<expresion>
+					
+<!-- Calles tipificadas
+					concat(FAC_SERVICIOS.nombre_servicio,' ', 
+					case when isnull(GEN_CALLES.nombre_calle) THEN 'Sin Calle' 
+										   ELSE GEN_CALLES.nombre_calle END,' ', 
+					case when isnull(nro_direccion)  THEN 'Sin Nro' ELSE nro_direccion END )
+-->
+					
+					concat(FAC_SERVICIOS.nombre_servicio,' ', 
+					case when isnull(nombre_calle) THEN 'Sin Calle' 
+						   ELSE nombre_calle END,' ', 
+					case when isnull(nro_direccion)  THEN 'Sin Nro' ELSE nro_direccion END )
+					
+				</expresion>
+			</field>
+		
+			<field id="regcuenta_id" _noshow="true" _esClave="true">
+			</field>
+			<field id="servicio_articulos" noshow="true" tabla="FAC_SERVICIOS">
+			</field>
+
+		</table>
+	<join>
+		<table id="FAC_SERVICIOS">
+			<field id="id_facservicio">
+				<condicion operador="=">FAC_USUARIOS_SER.facservicio_id</condicion>
+			</field>
+		</table>
+	</join>
+<!--
+	<join tipo="LEFT">
+		<table id="GEN_CALLES">
+			<field id="id_calle">
+				<condicion operador="=">FAC_USUARIOS_SER.calle_id</condicion>
+			</field>
+		</table>
+	</join>
+-->
+	</form>
+</histrix>	

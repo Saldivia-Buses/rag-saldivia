@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="chart">
+	<title>COCHES</title>
+	<obs></obs>
+	<form >
+		<table id="PEDCOTIZ" >
+			<title>PPM Promedio</title>
+	 
+		   <grafico id="ppmdefectos" >
+			   <ancho>400</ancho>
+			   <tipo>C</tipo>
+			   
+			   <etiquetas>mesano</etiquetas> 
+			   <serie>defectos</serie>
+			   
+			   <title>PPM Promedio</title>
+			   <subtitulo></subtitulo>
+		   </grafico>
+		
+		    <filters>
+			    <field id="fecha_control">
+				    <label>Desde</label>
+				    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-4 month')) , 1, date("Y") -  1 ))</valor>
+				    <operador>&gt;=</operador>
+			    </field>
+			    <field id="fecha_control">
+                                    <label>Hasta</label>
+				    <valor eval="true">date('d/m/Y', strtotime('-1 second', strtotime(date('Y-m-01'))))</valor>
+				    <operador>&lt;=</operador>
+			    </field>
+		    </filters> 
+
+			<field id="mes">
+				<expression>month(PROD_CONTROL_MOVIM.fecha_control)</expression>
+				<label>Mes</label>
+				<options>
+					<option valor="1">Ene</option>
+					<option valor="2">Feb</option>
+					<option valor="3">Mar</option>
+					<option valor="4">Abr</option>
+					<option valor="5">May</option>
+					<option valor="6">Jun</option>
+					<option valor="7">Jul</option>
+					<option valor="8">Ago</option>
+					<option valor="9">Sep</option>
+					<option valor="10">Oct</option>
+					<option valor="11">Nov</option>
+					<option valor="12">Dic</option>
+
+				</options>
+       				<tipo>varchar</tipo>
+			</field>
+			<field id="mesano">
+			    <expression>UPPER(CONCAT((CASE MONTH(PROD_CONTROL_MOVIM.fecha_control)
+			    WHEN 1 THEN 'Ene' WHEN 2 THEN 'Feb' WHEN 3 THEN 'Mar' WHEN 4 THEN 'Abr' WHEN 5 THEN 'May' WHEN 6 THEN 'Jun' WHEN 7 THEN 'Jul'
+			    WHEN 8 THEN 'Ago' WHEN 9 THEN 'Sep' WHEN 10 THEN 'Oct' WHEN 11 THEN 'Nov' WHEN 12 THEN 'Dic' END), "'", RIGHT(year(fecha_control), 2)))
+			    </expression>
+			</field>
+                    <field id="fecha_control" tabla="PROD_CONTROL_MOVIM" oculto="true">
+			<tipo>date</tipo>
+                    </field>
+                    <field id="year" oculto="true">
+                        <expression>year(PROD_CONTROL_MOVIM.fecha_control)</expression>
+
+                    </field>
+			<field id="defectos">
+                             <expression><![CDATA[(10000*
+				AVG(no_conforme)
+                                )]]></expression>
+				<label>PPM Defectos</label>
+                                <tipo>numeric</tipo>
+			</field>
+
+			<group>
+                                <field id="year"></field>
+				<field id="mes"></field>
+			</group>
+		</table>
+		<join>
+		    <table id="PROD_CONTROL_MOVIM">
+			<field id="nrofab_id">
+			    <condicion operador="=">PEDCOTIZ.nrocha</condicion>
+			</field>
+		    </table>
+		</join>>
+	</form>	   
+</histrix> 

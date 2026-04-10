@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" limit="100">
+	<title>ACCIDENTES POR PERSONAL</title>
+	<obs/>
+	<form >
+		<table id="FRANCOS_PER" styleTbody="height:10em;">
+			<title>Accidentes</title>
+		           <field id="tipo" deshabilitado="true" oculto="true" esClave="true">
+				<label>tipo</label>
+                                <valor>1</valor>
+				<condicion operador="=">1</condicion>
+			  </field>
+			<field id="id" esClave="true" autoinc="true" noshow="true">
+			</field>
+			
+			<field id="legajo" oculto="true">
+				<label>Legajo</label>
+				<help>Legajo Personal</help>
+			</field> 
+
+			<field id="idfranco">
+				<helper type="combo" id="FRANCOS_CAT">
+					<field id="idfranco"/>
+					<field id="nombre"/>
+					<field id="tipo">
+					    <condicion operador="=">1</condicion>
+					</field>
+					<field id="franco_categoria" noshow="true">
+					    <expression>id_francocat</expression>
+					    <detalle>franco_categoria</detalle>
+					</field>
+				</helper>
+				<label>Cod.</label>
+				<help>Codigo de Licencia</help>
+
+ 			</field>
+
+			<field id="franco_categoria" local="true" noshow="true">
+				<actualiza>
+				<field id="franco_tipo_id" destino="id_francocat" />
+				</actualiza>
+			</field>
+
+			<field id="franco_tipo_id">
+        		<helper xml="accidente_per_tipo_crud.xml" type="combo" dir="/personal/man/"/>
+				<label>Tipo</label>
+				<help>Tipo de Licencia</help>
+			</field>
+
+			<field id="cuerpo_parte_id">
+        		<helper xml="accidente_per_partes_cuerpo_crud.xml" type="combo" dir="/personal/man/"/>
+				<label>Parte Afec</label>
+				<help>Parte del cuerpo afectada</help>
+			</field>
+
+			<field id="seccion_id">
+				<tabla_ex id="SECCION">
+					<field id="id_seccion"/>
+					<field id="nombre">
+						<expression>LEFT(nombre,15)</expression>
+					</field>
+					<field id="activa">
+						<condicion operador="=">1</condicion>
+					</field>
+					<order>
+						<field id="nombre" />
+					</order>
+				</tabla_ex>
+				<label>Seccion</label>
+				<help>Seccion donde ocurrio el accidente</help>
+			</field>
+
+			<field id="fechainicio">
+				<label>Fecha Inicio</label>
+				<help>Fecha Inicio</help>
+			</field>
+			<field id="fechafin">
+				<label>Fecha Fin</label>
+				<help>Fecha Fin</help>
+			</field>
+			<field id="observaciones">
+				<label>Observaciones</label>
+				<help>Observaciones</help>
+				<size>100</size>
+			</field>
+
+
+			<field id="IdPersona" deshabilitado="true" oculto="true">
+				<label>Pers</label>
+				<condicion operador="=">0</condicion>
+				
+			</field>
+			
+		</table>
+	</form>
+</histrix>

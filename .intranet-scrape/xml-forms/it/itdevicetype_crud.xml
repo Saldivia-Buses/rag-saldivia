@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm">
+  <title>Inventario IT</title>
+  <obs></obs>
+  <form>
+    <table id="ITDEVICETYPE" label="TIPOS DE DISPOSITIVOS IT">
+      
+      <field id="id_itdevicetype" noshow="true"/>
+
+      <field id="nombre_devicetype">
+        <label>Nombre</label>
+      </field>
+
+    </table>
+  </form>
+</histrix>  

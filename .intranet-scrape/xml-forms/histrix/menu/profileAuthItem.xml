@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="abm-mini" subtipo="vertical" imprime="false">
+	<title>Permisos por Perfil</title>
+	<obs></obs>
+	<form >
+		<table id="HTXPROFILE_AUTH" label="Permisos por Perfil">
+			<field id="menuId" oculto="true" esClave="true" deshabilitado="true" valauto="true">
+			</field>
+			<field id="Id_perfil" _editable="true" esClave="true">
+				<label>Perfil Habilitado </label>
+				<help>
+				</help>
+				<tabla_ex id="HTXPROFILES">
+					<!-- campos a agregar al contenedor Filtro-->
+					<field id="Id_perfil"></field>
+					<field id="nombre"></field>
+					
+					<!-- Campo que se filtra (clave del filtro)-->
+					<filtra>Id_perfil</filtra>
+				    <order>
+            			<field id="nombre" tipoOrden="DESC" />
+          			</order>
+				</tabla_ex>
+				
+			</field>
+		</table>
+	</form>
+</histrix>

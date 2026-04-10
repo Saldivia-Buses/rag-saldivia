@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<histrix tipo="consulta"  PDForientacion="L" >
+  
+  <title>EVENTOS MANTENIMIENTO</title>
+  <obs/>
+  
+  <form>
+    <table id="MANT_PLAN_EVENTOS"  label="Planilla de Mantenimiento">
+
+    <fieldGroup noshow="true">
+
+          <field id="plan_id" />
+
+          <field id="equipo_id" >
+              <label>Equipo</label>
+          </field>
+
+          <field id="login" >
+            <label>Login</label>
+          </field>
+
+          <field id="id_planevento" />
+
+    </fieldGroup>
+ 
+    <fieldGroup style="padding:2px 2px 2px 2px;"> 
+
+        <!-- PONER COMO UNA CABECERA EN EL PROGRAMA VER DONDE PUEDE ESTAR HECHO PARECIDO        -->
+
+            <field id="equipo" local="true" repeat="false">
+              <expression>equipo_id</expression>
+                <label>Equipo</label>
+                <helper type="combo" id="MANT_EQUIPOS">
+                    <field id="id_equipo"/>
+                    <field id="nombre_equipo"/>
+                </helper>
+            </field>
+
+
+            <field id="fecha_accion" break="true" >
+              <label>Fecha</label>
+            </field>
+
+            <field id="accion_id" deshabilitado="true">
+                  <label>Acción</label>
+                  <helper type="combo" id="MANT_ACCIONES" empty="true">
+                      <field id="id_accion"/>
+                      <field id="nombre_accion"/>
+                  </helper>
+            </field>
+
+            <field id="observaciones">
+                <label>Observaciones</label>
+            </field>
+
+            <!--  <field id="repuestos" local="true" showObjTabla="true" Formstyle="true">
+                <label modpos="nobr" rowspan="4">Repuestos</label>
+                <helper xml="man_articulos_stk_qry.xml" type="object"  >
+                    <parameter source="id_planevento" target="movnro" />
+                    <parameter source="equipo_id" target="equipo_id" />
+                </helper>
+            </field>  -->
+
+    </fieldGroup>
+
+    <order>
+        <field id="fecha_accion" />
+    </order>
+
+    </table>
+
+
+      <join tipo="left">
+            <table id="MANT_ACCIONES">
+                <field id="id_accion">
+                    <condicion operador="=">MANT_PLAN_EVENTOS.accion_id</condicion>
+                </field>
+            </table>
+      </join> 
+
+
+</form>
+    
+</histrix>

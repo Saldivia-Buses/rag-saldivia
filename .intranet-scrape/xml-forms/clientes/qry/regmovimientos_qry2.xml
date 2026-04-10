@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" >
+  <title>Cta Ctes</title>
+  <obs/>
+  <form  detalle="regdetalles_qry.xml" idCampoCond="omitir">
+
+    <table id="REG_CUENTA" label="Cta Cte Proveedores">
+      <filters>
+
+        <field id="fecha_movimiento">
+    	    <label>Desde</label>
+	        <operador>&gt;=</operador>
+        </field>
+  
+        <field id="fecha_movimiento">
+    	    <label>Hasta</label>
+	        <operador>&lt;=</operador>
+	        <valor>today</valor>
+        </field>
+
+		<field id="id_regcuenta" colstyle="display: none;">
+		    <label>Cuenta</label>
+        </field>
+
+        <field id="tipo" deshabilitado="false">
+          <operador>=</operador>
+          <label>Tipo</label>
+          <valor>2</valor>
+        </field>
+        
+        <field id="omitir">
+          <label>Omitir Valores en Cero</label>
+          <valor>0</valor>
+		</field>	
+      </filters>
+      
+      <!-- CONSULTA -->
+      
+      <field id="id_regcuenta" noshow="true">
+		<helper type="external" xml="regcuenta_solamente_qry.xml" dir="/ayudas" empty="true" />
+		<detalle>regcuenta_id</detalle>
+      </field>
+     
+      <field id="fecha_movimiento" tabla="REG_MOVIMIENTOS" noshow="true">
+        <tipo>date</tipo>
+      </field>
+
+      <field id="tipo" local="true" noshow="true">
+        <helper type="combo">
+          <option value="1">Pendientes</option>
+          <option value="2">Debe-Haber</option>
+        </helper>
+        <detalle>pendiente</detalle>
+	    <detalle>tipo</detalle>
+      </field>
+      
+      <field id="subsistema_id" oculto="true">
+        <detalle>subsistema_id</detalle>
+      </field>
+            
+      <field id="nombre_cuenta">
+        <label>Nombre Cuenta</label>
+      </field>
+      
+      <field id="debe" noshow="true">
+		<expresion>SUM(CASE WHEN REG_CONCEPTOS.imputacion_concepto = 0 then REG_MOVIMIENTOS.importe_movimiento else 0 END)</expresion>
+	  </field>
+
+	  <field id="haber" noshow="true">
+		<expresion>SUM(CASE WHEN REG_CONCEPTOS.imputacion_concepto = 1 then REG_MOVIMIENTOS.importe_movimiento else 0 END)</expresion>
+	  </field>
+      
+      <field id="acumulado" suma="true" local="true">
+    	<label>Acumulado</label>
+    	<if exp="true">
+      	  <true>debe - haber</true>
+          <false>0</false>
+        </if>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="saldo_movimiento" suma="true">
+        <label>Pendiente</label>
+        <expresion> SUM(REG_MOVIMIENTOS.saldo_movimiento)</expresion>
+        <tipo>numeric</tipo>
+      </field>
+
+     <field id="filtro" noshow="true">
+     <expresion>
+     (case when [__omitir__] = 1 and
+        (CASE WHEN [__tipo__] = 2 THEN 
+          (SUM(CASE WHEN REG_CONCEPTOS.imputacion_concepto = 0  then REG_MOVIMIENTOS.importe_movimiento else 0 END) -
+           SUM(CASE WHEN REG_CONCEPTOS.imputacion_concepto = 1  then REG_MOVIMIENTOS.importe_movimiento else 0 END))
+        ELSE 
+           SUM(REG_MOVIMIENTOS.saldo_movimiento)
+        END)
+     
+     
+     = 0 then 0 else 1 end)</expresion>
+		<condicion operador="=">1</condicion>
+     </field>
+
+      <field id="color" local="true" clasefila="true" noshow="true">
+        <label>color</label>
+        <if exp="saldo &lt; 0">
+          <true>'resaltadoRojo'</true>
+          <false>''</false>
+        </if>
+      </field>
+      
+      <field id="fecha_mov1" noshow="true">
+        <expresion>min(REG_MOVIMIENTOS.fecha_movimiento)</expresion>
+        <detalle>desde</detalle>
+      </field>
+      
+      <field id="fecha_mov2" noshow="true">
+        <expresion>max(REG_MOVIMIENTOS.fecha_movimiento)</expresion>
+        <detalle>hasta</detalle>
+      </field>
+      
+      <field id="omitir" noshow="true" local="true">
+        <tipo>check</tipo>
+        <valor>0</valor>
+      </field>
+
+
+      <group>
+        <field id="id_regcuenta"/>
+      </group>
+      <order>
+        <field id="nombre_cuenta"/>
+      </order>
+
+    </table>
+
+    <join tipo="left">
+      <table id="REG_MOVIMIENTOS">
+        <field id="subsistema_id">
+          <condicion operador="=">REG_CUENTA.subsistema_id</condicion>
+        </field>
+        <field id="regcuenta_id">
+          <condicion operador="=">REG_CUENTA.id_regcuenta</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <!--
+    <join tipo="left">
+      <table id="REG_IMPUTACIONES">
+        <field id="regmovim0_id">
+          <condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion>
+        </field>
+        <field id="subsistema0_id">
+          <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion> 
+        </field>
+      </table>
+    </join>
+    -->
+    
+  </form>
+</histrix>

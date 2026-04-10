@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+	<histrix tipo="liveGrid" imprime="false" deleteRow="false" inserta="false" delete="false">
+		<title>Preferencias</title>
+		<obs></obs>
+		<form detalle="htxplugins_options.xml" inline="true" hasDetail="options">
+			<table id="HTXOPTIONS" label="OPCIONES" >
+				<field id="id_option" deshabilitado="true"  noshow="true" autoinc="true">
+				</field>
+				<field id="option_name" _editable="true" noshow="true" >
+					<label>Nombre</label>
+					<help>Nombre de la opcion</help>
+					<condicion operador="like">'PLUGIN::%enable'</condicion>
+				</field>
+
+				<field id="option_description" _Class="boton"
+				style="font-size:15px; padding:5px;">
+					<label>Plugin</label>
+					
+				</field>
+
+				<field id="option_value" editable="true">
+					<label>Estado</label>
+					<size>50</size>
+					<options>
+					    <option valor="true">Activado</option>
+					    <option valor="false">Desactivado</option>
+					</options>
+				</field>
+
+                                               
+				<field id="basename" noshow="true">
+				    <expression>@basename:= substr(substr(HTXOPTIONS.option_name, 9), 1, locate('::', substr(HTXOPTIONS.option_name, 9)) - 1)</expression>
+				    <detalle>basename</detalle>
+				</field>
+				             
+				
+				<field id="options" noshow="true">
+				    <expression>select count(*) - 1 from HTXOPTIONS HT where substr(substr(HT.option_name, 9), 1, locate('::', substr(HT.option_name, 9)) - 1)  = substr(substr(HTXOPTIONS.option_name, 9), 1, locate('::', substr(HTXOPTIONS.option_name, 9)) - 1) </expression>
+				</field>
+				    
+				<order>
+				    <field id="option_description"/>
+				</order>
+			</table>                 
+		</form>
+	</histrix>

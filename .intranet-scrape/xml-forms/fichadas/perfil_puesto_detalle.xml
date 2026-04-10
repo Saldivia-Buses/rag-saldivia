@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="fichaing" _autoprint="true" preFetch="true"  sololectura="true" procesa="false" inserta="false" modifica="false">
+    <title>Perfil de Puesto</title>
+    <obs></obs>
+    <form>
+        <table id="RH_PERFIL_PUESTO" >
+            <title>Perfil de Puesto</title>
+                        
+			<field id="id_perfilpuesto" oculto="true"/>
+                
+		    <field id="nombre_perfilpuesto" >
+                <label>Nombre del puesto:</label>	
+                <size>80</size>
+		    </field>
+
+			<field id="seccion_perfilpuesto" noshow="true">
+			    <label>Sección:</label>
+			</field>
+
+			<field id="puestosup_perfilpuesto" noshow="true">
+			    <label >Puesto Reporta:</label>
+			</field>
+
+		    <field id="mision_perfilpuesto" >
+				<label >Misión del puesto:</label>
+				<size>300</size>
+		    </field>
+
+		    <field id="requisitos_perfilpuesto">
+				<label>Requisitos del puesto:</label>
+				<size>90</size>
+		    </field>
+
+		    <field id="formacion_perfilpuesto">
+				<label>Formación Requerida:</label>
+				<size>150</size>
+		    </field>
+
+		    <field id="idiomas_perfilpuesto">
+				<label>Idiomas necesarios:</label>
+				<size>80</size>
+		    </field>
+
+		    <field id="software_perfilpuesto">
+				<label>Manejo de Software:</label>
+				<size>200</size>
+		    </field>
+
+		    <field id="conocimientos_perfilpuesto">
+				<label>Conocimientos específicos:</label>
+				<size>300</size>
+		    </field>
+
+		    <field id="experiencia_perfilpuesto">
+				<label>Experiencia Laboral:</label>
+				<size>150</size>
+		    </field>
+
+		    <field id="condiciones_perfilpuesto">
+				<label>Condiciones de Trabajo:</label>
+				<size>150</size>
+		    </field>
+         	
+		</table>
+
+    </form>
+</histrix>

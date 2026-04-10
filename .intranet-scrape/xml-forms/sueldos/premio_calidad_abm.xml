@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>PREMIO CALIDAD</title>
+	<obs></obs>
+	<form >
+		<table id="PREMIO_CALIDAD" >
+			<title>Tabla de Premios Calidad</title>
+			<field id="id_premiocalidad" esClave="true" noshow="true">
+			</field>
+			<field id="cantidad_premiocalidad">
+				<label>Cantidad Unidades</label>
+				<help>Cantidad de Unidades</help>
+			</field>
+
+			<field id="monto_premiocalidad">
+				<label>Monto Premio</label>
+				<help>Monto Premio</help>
+			</field>
+
+			<order>
+				<field id="cantidad_premiocalidad" />
+			</order>
+						
+		</table>
+	</form>	   
+</histrix> 

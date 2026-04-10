@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" subtipo="vertical">
+  <title>Vendedores</title>
+  <obs/>
+  <form>
+    <table id="REG_CUENTA_RELACIONES" label="Transportistas">
+      <field id="id_regcuentarelacion" noshow="true"/>
+      <field id="regcuenta_id" noshow="true" valauto="true" />
+      <field id="fecha_vigencia"> 
+        <label>Desde Fecha</label>
+        <help>Fecha</help>
+        <valor>today</valor>
+        <tipo>date</tipo>
+      </field>
+      <field id="subsistemarelacionada_id" oculto="true">
+        <label>Subsistem</label>
+        <valor>'TR'</valor>
+        <condicion operador="=">'TR'</condicion>
+      </field>
+      <field id="regcuentarelacionada_id">
+        <condicion operador="!=">0</condicion>
+        <helper type="combo" id="REG_CUENTA" _dir="/ayudas" empty="true">
+          <field id="id_regcuenta" noshow="true" esClave="true">
+            <label>Numero Cuenta</label>
+          </field>
+          <field id="nombre_cuenta">
+            <label>Nombre</label>
+          </field>
+          <field id="subsistema_id" oculto="true">
+            <condicion operador="=">'TR'</condicion>
+          </field>
+        </helper>
+        <label>Transporte</label>
+        <help>Seleccione el Transporte</help>
+      </field>
+      <field id="valor_aplicado">
+        <label>Comision</label>
+        <help>Ingrese la comision</help>
+      </field>
+    </table>
+  </form>
+</histrix>

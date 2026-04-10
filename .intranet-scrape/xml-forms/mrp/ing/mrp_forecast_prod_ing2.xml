@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ing" inserta="false" modifica="false">
+    <title>Cálculo Pronóstico de Producción</title>
+    <obs></obs>
+    <form >
+        <table id="MRP_FORECAST" label="Cálculo Pronóstico de Producción">
+            <filters>
+                <field id="year_forecast">
+                    <label>año</label>
+                    <operador>=</operador>
+                    <valor eval="true">date("Y")</valor>
+                </field>
+                <field id="mes_forecast" >
+                    <label>Mes</label>
+                    <operador>=</operador>
+		    <valor eval="true">date('m')</valor>
+                </field>
+                <field id="stkarticulo_id" deshabilitado="false">
+                    <label modpos="nobr">Cod Articulo</label>
+                    <help>Codigo de Articulo</help>
+                    <operador>=</operador>
+                </field>
+                <field id="nombre" deshabilitado="false">
+                    <expression>nombre_articulo</expression>
+                    <label modpos="nobr">Descripcion Art</label>
+                    <help>Codigo de Articulo</help>
+                    <operador>like</operador>
+                </field>
+                <field id="calculado" local="true">
+            	    <label modpos="nobr">Tipo Calculo</label>
+            	    <options>
+            		<option valor="0">Calculo</option>
+            		<option valor="1">Traslado</option>
+            	    </options>
+            	    <operador>=</operador>
+                </field>
+                <field id="fecha_calc" local="true">
+            	    <label modpos="nobr">Fecha Calculo</label>
+            	    <tipo>date</tipo>
+            	    <valor>today</valor>
+                </field>
+                
+    
+            </filters>
+	    <movimientos>
+		<relacion id="mrp_forecast_mes_insert.xml" />
+	    </movimientos>		
+            <fieldGroup>
+
+                <field id="fecha_calc" local="true">
+            	    <label modpos="nobr">Fecha Calculo</label>
+            	    <tipo>date</tipo>
+                </field>
+
+                <field id="stkarticulo_id" esClave="true"  deshabilitado="true">
+                    <label>Código</label>
+                    <help>Codigo de Articulo</help>
+                </field>
+                <field id="calculado" local="true" noshow="true">
+            	    <label>Tipo Calculo</label>
+            	    <options>
+            		<option valor="0">Calculo</option>
+            		<option valor="1">Traslado</option>
+            	    </options>
+                </field>
+               <field id="stock_minimo" noshow="true" tabla="STK_ARTICULOS">
+
+                </field>
+                <field id="nombre" deshabilitado="true">
+                    <expression>nombre_articulo</expression>
+                    <label>Articulo</label>
+                    <help>Codigo de Articulo</help>
+                </field>
+<!--                <field id="total" noZero="false" tipoOrden="DESC" local="true">
+                    <label>Total</label>
+                    <if exp="true">
+                        <true>Enero + Febrero + Marzo +  Abril + Mayo + Junio + Julio + Agosto + Septiembre + Octubre + Noviembre + Diciembre</true>
+                        <false>0</false>
+                    </if>
+                    <tipo>grafico</tipo>
+                </field>
+                -->
+				
+                <field id="year_forecast" noshow="true" incdec="true">
+                    <label>año</label>
+                </field>
+
+                <field id="mes_forecast" noshow="true" colstyle="display:none;">
+                <label modpos="nobr">Mes</label>
+                <options>
+                    <option valor="1">Enero</option>
+                    <option valor="2">Febrero</option>
+                    <option valor="3">Marzo</option>
+                    <option valor="4">Abril</option>                                        
+                    <option valor="5">Mayo</option>
+                    <option valor="6">Junio</option>
+                    <option valor="7">Julio</option>
+                    <option valor="8">Agosto</option>                                        
+                    <option valor="9">Septiembre</option>
+                    <option valor="10">Octubre</option>
+                    <option valor="11">Noviembre</option>
+                    <option valor="12">Diciembre</option>                                    
+                </options>                            
+            </field>
+				   
+            </fieldGroup>
+	    <fieldGroup noZero="true">
+
+		<field id="ventas1">
+		    <label>Venta mes actual</label>
+                    <expression><![CDATA[round((select sum(MRPF.cantidad_forecast) from MRP_FORECAST AS MRPF where 
+                    MRPF.tipo_forecast = 1 and
+                    MRPF.mes_forecast = MRP_FORECAST.mes_forecast and 
+                    MRPF.year_forecast = MRP_FORECAST.year_forecast and
+                    MRPF.stkarticulo_id = MRP_FORECAST.stkarticulo_id ) ,0)  ]]></expression>
+		
+		</field>
+		
+		<field id="pendiente">
+		    <label>Pendiente</label>
+		    <expression><![CDATA[
+		    ifnull((SELECT sum(REG_DETALLES.cantidad_pendiente)
+		    from REG_MOVIMIENTOS  
+		    JOIN REG_CONCEPTOS on  ( REG_CONCEPTOS.id_concepto = REG_MOVIMIENTOS.concepto_id )  
+		    and  ( REG_CONCEPTOS.informa_calculo = 1 )   
+		    JOIN REG_DETALLES on  ( REG_DETALLES.regmovim_id = REG_MOVIMIENTOS.id_regmovim )  
+		    
+		    where ( ( codigo_detalle = MRP_FORECAST.stkarticulo_id ) ) 
+		    and ( ( REG_DETALLES.cantidad_pendiente > 0 ) )
+		    and ( ( 1 = 1 or (REG_DETALLES.cantidad_pendiente) > ifnull((
+		    SELECT sum(cantidad_stock) FROM STK_STOCKACTUAL SA WHERE 
+		    SA.stkarticulo_id= REG_DETALLES.codigo_detalle), 0)      ) ) 
+		    and ( ( REG_MOVIMIENTOS.concepto_id = (select option_value from HTXOPTIONS 
+		    where HTXOPTIONS.option_name = 'ID_NOTA_PEDIDOS' limit 1) ) )), 0) + 
+		     
+		    ifnull((SELECT sum(insumas_tz.REG_DETALLES.cantidad_pendiente)
+		    from insumas_tz.REG_MOVIMIENTOS  
+		    JOIN insumas_tz.REG_CONCEPTOS on  ( insumas_tz.REG_CONCEPTOS.id_concepto = insumas_tz.REG_MOVIMIENTOS.concepto_id )  
+		    and  ( insumas_tz.REG_CONCEPTOS.informa_calculo = 1 )   
+		    JOIN insumas_tz.REG_DETALLES on  ( insumas_tz.REG_DETALLES.regmovim_id = insumas_tz.REG_MOVIMIENTOS.id_regmovim )  
+		    
+		    where ( (codigo_detalle = MRP_FORECAST.stkarticulo_id ) ) 
+		    and ( ( insumas_tz.REG_DETALLES.cantidad_pendiente > 0 ) )
+		    and ( ( 1 = 1 or (insumas_tz.REG_DETALLES.cantidad_pendiente) > ifnull((
+		    SELECT sum(cantidad_stock) FROM insumas_tz.STK_STOCKACTUAL SA WHERE 
+		    SA.stkarticulo_id= insumas_tz.REG_DETALLES.codigo_detalle), 0)      ) ) 
+		    and ( ( insumas_tz.REG_MOVIMIENTOS.concepto_id = (select option_value from insumas_tz.HTXOPTIONS 
+		    where insumas_tz.HTXOPTIONS.option_name = 'ID_NOTA_PEDIDOS' limit 1) ) )), 0)
+		     
+		    
+		    ]]></expression>
+		</field>
+
+	        <field id="stock" _noshow="true">
+	    	    <label>Stock Actual</label>
+
+                    <expression><![CDATA[( SELECT round(sum( (CASE WHEN STK_CONCEPTOS.tipo_concepto = 0  
+                    THEN abs(STK_MOVIMIENTOS.cantidad) ELSE -1 *  abs(STK_MOVIMIENTOS.cantidad) END)), 2)  
+                	from STK_MOVIMIENTOS
+                             LEFT JOIN STK_CONCEPTOS 
+                             on STK_CONCEPTOS.id_stkconcepto = STK_MOVIMIENTOS.stkconcepto_id
+                             where  STK_MOVIMIENTOS.stkarticulo_id  = MRP_FORECAST.stkarticulo_id  
+                             and
+                            	    STK_MOVIMIENTOS.stkdeposito_id = 2 
+                    and STK_MOVIMIENTOS.fecha_movimiento <= str_to_date('[__fecha_calc__]', '%d/%m/%Y') ) ]]>
+                    </expression>
+                            	    
+<!--			<expression><![CDATA[(round(  ifnull( (SELECT sum(CASE WHEN STK_CONCEPTOS.tipo_concepto = 0 THEN 
+				STK_MOVIMIENTOS.cantidad ELSE -(STK_MOVIMIENTOS.cantidad) END) from STK_MOVIMIENTOS
+                             inner JOIN STK_CONCEPTOS on STK_CONCEPTOS.id_stkconcepto = STK_MOVIMIENTOS.stkconcepto_id
+                              where  STK_MOVIMIENTOS.stkarticulo_id  = MRP_FORECAST.stkarticulo_id  and
+		            STK_MOVIMIENTOS.fecha_movimiento <= last_day(concat(MRP_FORECAST.year_forecast ,'-',MRP_FORECAST.mes_forecast,'-' ,'01'))) ,0)  ) )  ]]>
+			</expression> -->
+                </field>		
+
+		<field id="ventas2">
+		    <label>Venta proximo mes</label>
+                    <expression><![CDATA[round((select sum(MRPF.cantidad_forecast) from MRP_FORECAST AS MRPF where 
+                    MRPF.tipo_forecast = 1 and
+                    MRPF.mes_forecast = (case when MRP_FORECAST.mes_forecast = 12 then 1 else MRP_FORECAST.mes_forecast + 1 end ) and 
+                    MRPF.year_forecast = (case when MRP_FORECAST.mes_forecast = 12 then MRP_FORECAST.year_forecast + 1 else MRP_FORECAST.year_forecast  end ) and 
+                    MRPF.stkarticulo_id = MRP_FORECAST.stkarticulo_id ) ,0)  ]]></expression>
+		
+		</field>
+
+		
+	        <field id="minimo" _noshow="true" noZero="true">
+	    	    <label>Minimo</label>
+                    <expression>stock_minimo</expression>
+                    <tipo>integer</tipo>
+                </field>                 <!--
+                <field id="difstk" local="true">
+        	    <label>DIf.Stock</label>
+                    <if exp="(ventas1 + 0) &gt; (stock + 0)">
+                        <true>((ventas1 + 0) -  (stock + 0))</true>
+                        <false>0</false>
+                    </if>
+		    <help>Venta del mes actual - stock actual (no muestra negativo)</help>
+            	    <tipo>decimal</tipo>
+                </field>
+
+
+	        <field id="Calc_" _noshow="true">
+                    <expression><![CDATA[round(
+                    (select sum(MRPF.cantidad_forecast) from MRP_FORECAST AS MRPF where 
+
+                    MRPF.tipo_forecast = 1 and
+MRPF.mes_forecast = (case when MRP_FORECAST.mes_forecast = 12 then 1 
+else MRP_FORECAST.mes_forecast + 1 end ) and 
+MRPF.year_forecast = (case when MRP_FORECAST.mes_forecast = 12 
+then MRP_FORECAST.year_forecast + 1 else MRP_FORECAST.year_forecast  end ) and 
+                    MRPF.stkarticulo_id = MRP_FORECAST.stkarticulo_id 
+                    ) + 
+                    STK_ARTICULOS.stock_minimo - 
+                    round( 
+                    ifnull(( SELECT sum((CASE WHEN STK_CONCEPTOS.tipo_concepto = 0 THEN abs(STK_MOVIMIENTOS.cantidad) ELSE -1 * abs(STK_MOVIMIENTOS.cantidad) END)) as "Stock" from STK_MOVIMIENTOS 
+                    inner join STK_CONCEPTOS on STK_CONCEPTOS.id_stkconcepto = STK_MOVIMIENTOS.stkconcepto_id
+
+                             where  STK_MOVIMIENTOS.stkarticulo_id  = MRP_FORECAST.stkarticulo_id  and 
+                            	    STK_MOVIMIENTOS.stkdeposito_id = 2 and
+            	    STK_MOVIMIENTOS.fecha_movimiento <= str_to_date('[__fecha_calc__]', '%d/%m/%Y')) ,0) )) 
+            	    ]]></expression>             -->
+
+                                                                                 <!--
+                    <expression><![CDATA[( SELECT round(sum( (CASE WHEN STK_CONCEPTOS.tipo_concepto = 0  THEN abs(STK_MOVIMIENTOS.cantidad) ELSE -1 *  abs(STK_MOVIMIENTOS.cantidad) END)), 2)  
+                	from STK_MOVIMIENTOS
+                             LEFT JOIN STK_CONCEPTOS on STK_CONCEPTOS.id_stkconcepto = STK_MOVIMIENTOS.stkconcepto_id
+                             where  STK_MOVIMIENTOS.stkarticulo_id  = MRP_FORECAST.stkarticulo_id  and
+                            	    STK_MOVIMIENTOS.stkdeposito_id = 2 and STK_MOVIMIENTOS.fecha_movimiento <= str_to_date('[__fecha_calc__]', '%d/%m/%Y') ) ]]></expression>
+                            	                                                     -->
+                                              <!--
+                    <tipo>integer</tipo>
+            	    <help>venta proximo mes + stock minimo - stock actual</help>
+                    <label>calc</label>
+                </field>
+	        <field id="CALC" local="true" noshow="true">
+                <if exp="Calc_  + 0 &gt; 0">
+            	    <true>Calc_ + difstk</true>
+            	    <false>Calc_ + difstk</false>
+                </if>
+		<help>venta proximo mes + stock minimo - stock actual + dif.stock</help>
+                <label>calcc</label>
+		</field>              -->
+		<field id="CALC" local="true" noshow="true">
+		    <if exp="true">
+			<true>ventas1 + pendiente - stock + ventas2 + minimo</true>
+			<false>ventas1 + pendiente - stock + ventas2 + minimo</false>
+		    </if>
+		</field>
+	        <field id="traslado" noshow="true">
+                    <expression><![CDATA[round((select sum(MRPF.cantidad_forecast) 
+                    from MRP_FORECAST AS MRPF where 
+                    MRPF.tipo_forecast = 1 and
+		    MRPF.mes_forecast = (case when MRP_FORECAST.mes_forecast = 12 then 1 else MRP_FORECAST.mes_forecast + 1 end ) and 
+		    MRPF.year_forecast = (case when MRP_FORECAST.mes_forecast = 12 then MRP_FORECAST.year_forecast + 1 else MRP_FORECAST.year_forecast  end ) and
+                    MRPF.stkarticulo_id = MRP_FORECAST.stkarticulo_id ), 0) 
+                    ]]></expression>
+                    
+                    <tipo>integer</tipo>
+                </field>   
+	        <field id="Calculo" local="true" style="font-weight:bold;text-align:right;">
+                    <label>Calculo</label>
+                <help>ventas proximo mes + stock Minimo - Stock Actual + diferencia de Stock</help>
+                <if exp=" calculado + 0 == 0">
+            	    <true>CALC</true>
+            	    <false>traslado</false>
+                </if>
+		</field>
+		
+		<field id="ordenproducion">
+		    <label>O.Prod.</label>
+		    <expression>SELECT sum(objetivo_ordendetalle) FROM MRP_ORDEN_PRODUCCION
+		    LEFT JOIN MRP_ORDEN_DETALLE 
+		    ON MRP_ORDEN_PRODUCCION.id_mrporden = MRP_ORDEN_DETALLE.mrporden_id 
+		    WHERE MRP_ORDEN_DETALLE.stkarticulo_id = MRP_FORECAST.stkarticulo_id
+		    AND MRP_ORDEN_PRODUCCION.mrpestado_id = 0
+		    </expression>
+		</field>
+
+
+	    </fieldGroup>			
+
+            <group>
+                <field id="stkarticulo_id"></field>
+            </group>
+			
+
+        </table>
+        <join tipo="left">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">stkarticulo_id</condicion>
+                </field>
+            </table>
+        </join>
+			
+    </form>
+</histrix>

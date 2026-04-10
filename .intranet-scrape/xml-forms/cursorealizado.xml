@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" subtipo="vertical">
+        <title>Cursos Realizados</title>
+        <obs></obs>
+        <form>
+        <table id="RH_CURSO_REALIZADO" >
+            <title>Cursos Realizados</title>
+            
+            <field id="id_curso_realizado" colstyle="display:none;" Formstyle="display:none;" esClave="true"/>
+
+            <field id="IdPersona" noshow="true"/>
+			
+            <field id="persona" deshabilitado="false" autocompletar="true">
+				<expression>CONCAT(apellido,', ', Nombre)</expression>
+                                <label>Asistente</label>
+                                <help>Asistente</help>
+				    <helper type="external" id="PERSONAL" _xml="HLPpersonal_ope.xml" _dir="/help_local">
+					<field id="IdPersona" noshow="true">
+					    <detalle>IdPersona</detalle>
+					</field>
+					<field id="descripcion">
+    			            	    <expression>CONCAT('(', legajo, ') ', apellido,', ', Nombre)</expression>
+					</field>
+					<field id="persona" noshow="true">
+    			            	    <expression>CONCAT(apellido,', ', Nombre)</expression>
+					    <detalle>persona</detalle>
+					</field>
+					<field id="fechaEgreso" noshow="true">
+					    <condicion operador="=">'0000-00-00'</condicion>
+					</field>
+		    		</helper>
+				<size>40</size>
+                        </field>
+                        <field id="Id_centro" noshow="true">
+                                <label modpos="nobr">Centro</label>
+                                <help>Codigo del Centro Educativo</help>
+                                <tabla_ex id="RH_CENTROEDUC">
+                                	<field id="id_centro" />
+                                	<field id="descripcion" />
+
+                                </tabla_ex>
+                        </field>
+                                               <field id="Id_curso" oculto="true">
+
+                                <label>Curso</label>
+                                <help>Codigo del Curso</help>
+                                <valor>-1</valor>
+                                <!--
+                                <tabla_ex id="RH_CURSOS">
+                                        <field id="Id_curso" />
+                                        <field id="descripcion" />
+
+                                </tabla_ex>                                -->
+                        </field>
+                        <field id="Id_curso" oculto="true">
+
+                                <label>Curso</label>
+                                <help>Codigo del Curso</help>
+                                <valor>-1</valor>
+                                <!--
+                                <tabla_ex id="RH_CURSOS">
+                                        <field id="Id_curso" />
+                                        <field id="descripcion" />
+
+                                </tabla_ex>                                -->
+                        </field>
+ 
+			<field id="presente" noshow="true">
+                                <label modpos="nobr">Presente</label>
+                                <help>Presente</help>
+                                <valor>1</valor>
+                                <tipo>check</tipo>
+                        </field>
+                        
+			<field id="calificacion" noshow="true">
+                <label modpos="nobr">calificacion</label>
+                <help>calificacion</help>
+                <valor>0</valor>
+            </field>
+                        
+			<field id="calif_curso" noshow="true">
+                <label modpos="nobr">Calif. Curso</label>
+                <help>Calificacion del Curso</help>
+                <valor>0</valor>
+            </field>
+
+            <field id="firma" local="true" colstyle="display:none;" FormStyle="display:none;">
+                <label modpos="nobr">Firma</label>
+                <help>Firma</help>
+            </field>
+
+            </table>
+	    <join tipo="left">
+		<table id="PERSONAL">
+		    <field id="IdPersona">
+			<condicion operador="=">RH_CURSO_REALIZADO.IdPersona</condicion>
+		    </field>
+		</table>
+	    </join>
+        </form>           
+</histrix>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Detalle Contable</title>
+  <obs/>
+  <form >
+    <table id="CTB_DETALLES">
+    
+      <field id="id_detalle" noshow="true" />
+
+      <field id="movimiento_id" oculto="true" />
+      
+      <field id="cuenta_id">
+        <helper type="external" xml="ctbcuenta_qry.xml" dir="/ayudas"></helper>
+        <label>Cuenta</label>
+        <size>20</size>
+      </field>
+    
+      <field id="nombre_cuenta" local="true" deshabilitado="true">
+        <label>Nombre</label>
+        <expression sql="true">select nombre_cuenta from CTB_CUENTAS where id_cuenta = '[__cuenta_id__]'</expression>
+        <size>25</size>
+      </field>
+      
+      <field id="doh" colstyle="display:none;">
+        <label>Tipo</label>
+        <options type="combo">
+          <option valor="0">Debe</option>
+          <option valor="1">Haber</option>
+        </options>
+        <tipo>radio</tipo>
+        <jseval campodestino="debe">(doh == \'0\' ?  importe : 0)</jseval>
+        <jseval campodestino="haber">(doh == \'0\' ?  0 : importe)</jseval>
+      </field>
+
+      <field id="importe" noZero="true" deshabilitado="false" colstyle="display:none;">
+        <label>Importe</label>
+        <tipo>numeric</tipo>
+        <size>20</size>
+        <jseval campodestino="debe">(tipo == \'0\' ?  importe : 0)</jseval>
+        <jseval campodestino="haber">(tipo == \'0\' ?  0 : importe)</jseval>
+      </field>
+
+      <field id="debe" suma="true" noZero="true" deshabilitado="false" Formstyle="display:none;" local="true">
+        <expression>case when doh = 0 then importe end</expression>
+        <label modpos="nobr" colspan="18">Debe</label>
+        <tipo>numeric</tipo>
+        <size>30</size>
+      </field>
+
+      <field id="haber" suma="true" noZero="true" deshabilitado="false" Formstyle="display:none;" local="true">
+        <expression>case when doh = 1 then importe end</expression>
+        <label modpos="nobr" colspan="18">Haber</label>
+        <tipo>numeric</tipo>
+        <size>30</size>
+      </field>
+      
+      <order>
+        <field id="doh" />
+        <field id="cuenta_id" />
+      </order>
+    </table>
+    
+  </form>
+</histrix>

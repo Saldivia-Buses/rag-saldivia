@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <abm tipo="update">
+       <titulo>MOVIMIENTOS DE STOCK</titulo>
+        <obs></obs>
+               <consulta>
+					<tabla id="STKINMOV" label="MOVIMIENTOS" idCampoCond="selec">
+						<campo id="siscod" id_temp="siscod" esClave="true">
+						</campo>
+						<campo id="artcod" id_temp="artcod" esClave="true">
+						</campo>						
+						<campo id="movfec" id_temp="movfec" esClave="true">
+						</campo>
+						<campo id="movnro" id_temp="movnro" esClave="true">
+						</campo>
+							
+						<campo id="movimp" id_temp="total">
+						</campo>
+					</tabla>
+               </consulta>
+        </abm>

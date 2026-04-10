@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="utf-8" ?>
+	<histrix tipo="consulta">
+		<title>IVA VENTAS</title>
+		<obs></obs>
+		<form>
+			<table id="CCTMOVIM" label="IVA VENTAS">
+
+				<filters>
+<!--					<field id="feciva">
+						<operador>>=</operador>
+						<label>Desde Fecha</label>
+						<valor>today</valor>
+					</field>
+					<field id="feciva">
+						<operador>&lt;=</operador>
+						<label>Hasta Fecha</label>
+						<valor>today</valor>
+						
+					</field> -->
+					<field id="movfec">
+						<operador>&gt;=</operador>
+						<label>Desde Fecha</label>
+						<valor>today</valor>
+					</field>
+					<field id="movfec">
+						<operador>&lt;=</operador>
+						<label>Hasta Fecha</label>
+						<valor>today</valor>
+					</field> 
+				</filters>
+
+				<field id="movfec">
+					<label>Fec.</label>
+				</field>
+				
+				<field id="concod" noshow="true">
+				    <condicion operador="=">16</condicion>
+				</field>
+
+				<field id="conabv" tabla="CCTCONCE">
+					<label>Conc</label>
+					<tipo>varchar</tipo>
+				</field>
+
+				<field id="movnpv">
+					<label>Npv</label>
+					<format>%04d</format>
+				</field>
+				<field id="regmin" tabla="CCTMOVIM" noshow="true">
+					<label>regmin</label>
+					<tipo>integer</tipo>
+					<valor>0</valor>
+				</field>
+
+				<field id="regfec" noshow="true"/>
+								
+				<field id="movnro" linkint="ctbregis2.xml" linkdir="ctb_old">
+					<label>Número</label>
+				<!--	<format>%010d</format> -->
+					<paring destino="regnro">movnro</paring>					
+					<paring destino="regmin">regmin</paring>
+					<paring destino="regfec">regfec</paring>
+					
+				</field>
+				
+				<field id="ctacod" oculto="true">
+					<label>Cuenta</label>
+				</field>
+				<field id="ctanom">
+					<label>Cliente</label>
+				</field>
+<!--			<field id="tipdoc">
+					<label>Doc</label>
+					<help>Codigo de Documento</help>
+						<tabla_ex id="FSMDOCUM">
+							<field id="doccod"></field>
+							<field id="docnom"></field>
+						</tabla_ex>					
+					
+				</field>
+				-->
+<!--				<field id="nrodoc">
+					<label>CUIT</label>
+				</field>-->
+<!--				<field id="ivacod">
+					<label>Categoria I.V.A. </label>
+					<help>
+					</help>
+					<tabla_ex id="FSMCTIVA">
+						<field id="ivacod"></field>
+						<field id="ivanom"></field>
+					</tabla_ex>
+				</field>-->
+
+<!--				<field id="rnicom">
+					<label>R.N.I.</label>
+				</field>
+-->
+<!--				<field id="gravado" suma="true">
+			      <expression>impgra * (case when conimp = 1 then 1 else -1 end)</expression>
+					<label>Gravado</label>
+					<tipo>numeric</tipo>					
+				</field>				-->
+					
+<!--  				<field id="impcod" tabla="IVAIMPORTES">
+					<label>Impuesto</label>
+					<tabla_ex id="IVAIMPUESTOS">
+						<field id="impcod"></field>
+						<field id="impnom"></field>
+					</tabla_ex>
+					  <tipo>varchar</tipo>
+				</field>-->
+				<!--
+  				<field id="impimp" tabla="IVAIMPORTES">
+					<label>Importe</label>
+				</field>
+	-->
+<!--				<field id="Importe"  suma="true">
+			      <expression>impimp * (case when conimp = 1 then 1 else -1 end)</expression>
+					<label>Importe</label>
+					<tipo>numeric</tipo>
+				</field>				
+				<field id="execom" norepeat="true" suma="true">
+					<label>Exento</label>
+					<tipo>numeric</tipo>
+					
+				</field>
+                                                                        
+				<field id="NOG" norepeat="true" suma="true">
+					<label>No Grav.</label>
+				        <expression>nogcom * (case when conimp = 1 then 1 else -1 end)</expression>
+					<tipo>numeric</tipo>
+				</field>                                -->
+	<!--			
+				<field id="totcom" norepeat="true" suma="true">
+					<label>Total</label>
+				</field>				
+				-->
+				<field id="Total" _norepeat="true" suma="true">
+			      <expression>CCTMOVIM.movimp * (case when conimp = 1 then 1 else -1 end)</expression>
+					<tipo>numeric</tipo>
+			      
+					<label>Total</label>
+				</field>
+				<field id="concod2" >
+			      <expression>CCTIMPUT.movicc</expression>
+					<label>Cod.</label>
+					<tabla_ex id="CCTCONCE">
+						<field id="concod"></field>
+						<field id="conabv"></field>
+						<field id="siscod">
+						<condicion operador="=">02</condicion>
+						</field>
+					</tabla_ex>
+				</field>				
+								
+				<field id="movnro2" >
+			    	    <expression>CCTIMPUT.movinc</expression>
+					<label>Nro</label>
+				</field>				
+
+				<field id="imputado" >
+			    	    <expression>CCTIMPUT.movimp</expression>
+					<label>Imputado</label>
+					<tipo>numeric</tipo>
+					
+				</field>								
+				<field id="incfec" >
+			    	<expression>REG_MOVIMIENTOS.fecha_movimiento</expression>
+					<label>Imput</label>
+					<tipo>date</tipo>
+				</field>				
+
+				<field id="movimp2" >
+				      <expression>SELECT CCT.movimp from CCTMOVIM as CCT where 
+				    				CCT.siscod = CCTIMPUT.siscod and 
+				    				CCT.movnro = CCTIMPUT.movinc and 
+				    				CCT.ctacod = CCTIMPUT.ctacod and 
+				    				CCT.movnpv = CCTIMPUT.movipv and 
+				    				CCT.concod = CCTIMPUT.movicc limit 1</expression>
+					<label>Importe</label>
+					<tipo>numeric</tipo>
+				</field>				
+							
+<!--				<group>
+					<field id="codcom" tabla="IVAVENTAS"></field>
+					<field id="codlet" tabla="IVAVENTAS"></field>
+					<field id="nronpv" tabla="IVAVENTAS"></field>
+					<field id="nrocom" tabla="IVAVENTAS"></field>
+					<field id="ctacod" tabla="IVAVENTAS"></field>
+					
+				</group> -->
+				<order>
+					<field id="IVAVENTAS.ivafec"></field>
+					<field id="IVAVENTAS.concod"></field>
+					<field id="IVAVENTAS.nronpv"></field>
+					<field id="IVAVENTAS.nrocom"></field>
+					
+				</order>
+			</table>
+		<join tipo="left">
+
+			<table id="CCTCONCE">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">"02"</condicion>
+				</field>				
+				<field id="concod" >
+					<condicion operador="=">CCTMOVIM.concod</condicion>
+				</field>
+			</table>
+		</join>				
+		
+		<join tipo="left">
+
+			<table id="CCTIMPUT">
+				<field id="siscod" >
+					<condicion operador="=">"02"</condicion>
+				</field>				
+				<field id="concod" >
+					<condicion operador="=">CCTMOVIM.concod</condicion>
+				</field>
+				<field id="ctacod" >
+					<condicion operador="=">CCTMOVIM.ctacod</condicion>
+				</field>
+				<field id="movnro" >
+					<condicion operador="=">CCTMOVIM.movnro</condicion>
+				</field>
+				<field id="movnpv" >
+					<condicion operador="=">CCTMOVIM.movnpv</condicion>
+				</field>
+
+			</table>
+		</join>			
+		<join tipo="left">
+			<table id="REG_MOVIMIENTOS">
+				<field id="subsistema_id" >
+					<condicion operador="=">CCTIMPUT.siscod</condicion>
+				</field>
+				<field id="nro_cuenta" >
+					<condicion operador="=">CCTIMPUT.ctacod</condicion>
+				</field>
+				<field id="nro_movimiento" >
+					<condicion operador="=">CCTIMPUT.movinc</condicion>
+				</field>
+				<field id="puesto_movimiento" >
+					<condicion operador="=">CCTIMPUT.movipv</condicion>
+				</field>
+			</table>
+		</join>								
+	</form>
+</histrix>

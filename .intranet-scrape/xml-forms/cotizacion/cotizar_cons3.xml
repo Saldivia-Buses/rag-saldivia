@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="consulta"   >
+	<titulo>PRECIOS POR MODELO</titulo>
+	<obs/>
+	<consulta>
+		<tabla id="GRUPOPRECIOS" >
+			<titulo>Precios por modelo</titulo>
+			<campo id="nrocar" noshow="true">
+			    <tipo>integer</tipo>
+			</campo>		
+					
+			<campo id="desabv">
+				<expresion>concat(MARCHASIS.desabv,' ', MODCHASIS.moddes)</expresion>
+				<label colstyle="width:100px;">Chasis</label>
+				<tipo>varchar</tipo>
+			</campo>			
+			<campo id="idGrupo" noshow="true">
+				<tipo>integer</tipo>
+			</campo>			
+<!--			<campo id="cons3" obj="preciomodelo_cons4.xml" showObjTabla="true"   local="true" dir="/precios">
+				<paring destino="idLista" operador="=">idLista</paring>
+				<paring destino="nrocar" operador="=">nrocar</paring>
+			</campo>						-->
+
+		</tabla>
+		<join>
+			<tabla id="MARCHASIS">
+				<campo id="marcod">
+					<condicion operador="=">GRUPOPRECIOS.marcod</condicion>
+				</campo>
+			</tabla>
+		</join>	
+		<join>
+			<tabla id="MODCHASIS">
+				<campo id="marcod">
+					<condicion operador="=">GRUPOPRECIOS.marcod</condicion>
+				</campo>
+				<campo id="modcha">
+					<condicion operador="=">GRUPOPRECIOS.modcha</condicion>
+				</campo>
+				
+			</tabla>
+		</join>	
+
+		
+	</consulta>
+</abm>

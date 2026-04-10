@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="insert" >
+    <title>Token</title>
+    <obs/>
+    <form >
+        <table id="HTX_ACCESS_TOKEN" idCampoCond="emitir">
+
+            <field id="login"     id_temp="para"    ></field>
+            <field id="token"     id_temp="TOKEN"    ></field>
+            <field id="expires"   id_temp="expires"    >
+	    <tipo>varchar</tipo>
+	    </field>
+            <field id="resource"  id_temp="resource"    ></field>
+
+        </table>
+    </form>
+</histrix>

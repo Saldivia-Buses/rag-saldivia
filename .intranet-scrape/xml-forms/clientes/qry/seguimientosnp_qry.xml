@@ -1,0 +1,101 @@
+<?xml version="1.0"  encoding="UTF-8" ?>
+   <histrix tipo="consulta" imprime="false" preloadData="false">
+       <title>MOVIMIENTOS</title>
+        <obs></obs>
+                  <form detalle="facturapedidos_qry.xml" inline="true">
+                  <table id="REG_MOVIMIENTOS" label="Nota Pedido">
+
+            <filters>
+		<field id="fecha_movimiento" >
+			<label>Desde Fecha</label>
+			<valor eval="true">date('d/m/Y', mktime(0, 0
+			, 0, date("m" ) , 1, date("Y") ))</valor>
+			<operador>&gt;=</operador>
+		</field>
+		<field id="fecha_movimiento" >
+			<label>Hasta Fecha</label>
+			<valor>today</valor>
+			<operador>&lt;=</operador>
+		</field>
+		<field id="regcuenta_id">
+			<label modpos="nobr">Nombre de Cuenta</label>
+			<operador>=</operador>
+		</field>  
+		<field id="Nro_movimiento" >
+			<label modpos="nobr">Nro.Comp.</label>
+			<operador>=</operador>
+		</field>  
+            </filters>
+		<field id="Nro_movimiento"  noshow="true">
+			<label modpos="nobr">Nro.Comp.</label>
+			<expresion>nro_movimiento</expresion>
+		</field>  
+            
+            <field id="id_regmovim"  noshow="false" esClave="true" >
+                 <label>Codigo</label>
+                 <help>Codigo de movimiento</help>
+                 <detalle>regmovim_id</detalle>
+            </field>
+            <field id="regcuenta_id" noshow="true">
+                  <label>Cuenta</label>                  
+		<helper type="combo" id="REG_CUENTA" empty="true">
+			<field id="id_regcuenta"/>
+			<field id="nombre_cuenta"/>
+			<field id="subsistema_id" noshow="true" />
+
+			<order>
+				<field id="nombre_cuenta"/>
+			</order>
+		</helper>           
+	 </field>
+           <field id="nombre_cuenta"  tabla="REG_CUENTA">
+                <label>NombreCuenta</label>
+            </field>
+
+            <field id="fecha_movimiento">
+                <label>Fecha</label>
+            </field>
+            <field id="nro_movimiento">
+                <label>Nº</label>
+                <expresion>CONCAT(descripcion_concepto, ' ',LPAD(puesto_movimiento,4,'0'),'-',LPAD(nro_movimiento,8,'0'))</expresion>
+            </field>
+
+
+            
+    	<group>
+		    <field id="nro_movimiento"/>
+        </group>
+                  </table>
+                  
+        <join >
+            
+            <table id="REG_CONCEPTOS">
+                <field id="id_concepto">
+                <condicion operador="=">REG_MOVIMIENTOS.concepto_id and 
+                 REG_CONCEPTOS.id_concepto in (select option_value from HTXOPTIONS where option_name = 'ID_NOTA_PEDIDOS')</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="REG_CUENTA">
+                <field id="id_regcuenta">
+                <condicion operador="=">regcuenta_id</condicion>
+                </field>
+            </table>
+        </join> 
+        <join tipo="left">
+            <table id="REG_DETALLES">
+                <field id="regmovim_id">
+                <condicion operador="=">id_regmovim</condicion>
+                </field>
+            </table>
+        </join>     
+        <join tipo="left">
+            <table id="REG_IMPUTACIONESDETALLES">
+             <field id="regdetalleped_id">
+             <condicion operador="=">REG_DETALLES.id_regdetalle</condicion>
+             </field>
+            </table>
+        </join>                
+               </form>
+        </histrix>

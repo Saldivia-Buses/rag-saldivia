@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" modifica="false" inserta="false" transaccional="true" confirma="APLICAR">
+	<title>Cuenta Corriente</title>
+	<obs/>
+	<confirmacion><![CDATA[¿Confirma la operación?]]></confirmacion>
+	<form>
+	
+		<table id="REG_CUENTA" label="Movimientos">
+		
+			<!-- BEGIN VALIDACIONES -->
+			<validation>
+				<condition><![CDATA[totalImputado + 0 == 0 ]]></condition>
+				<message>Debe imputar un comprobante</message>
+			</validation>
+			<validation>
+				<condition><![CDATA[saldoFinal + 0 < 0 ]]></condition>
+				<message>No puede imputar un monto mayor al saldo a imputar.</message>
+			</validation>
+			<validation>
+				<condition><![CDATA[test_imputaciones + 0 != 0 ]]></condition>
+				<message>Error en las imputaciones</message>
+			</validation>
+			<!-- FIN VALIDACIONES -->
+			
+			<movimientos>
+				<relacion id="imputacion_rec_update_ingmov.xml"/>
+			</movimientos>
+			
+			<field id="subsistema_id" oculto="true" />
+			
+			<field id="regmovim_id" deshabilitado="true" local="true" noshow="true" />
+			
+			<field id="id_regcuenta" deshabilitado="true">
+				<label>Cuenta</label>
+				<helper type="combo" xml="regcuenta_c_saldo_pos2.xml">
+					<field id="subsistema_id" oculto="true">
+						<condicion operador="=">'01'</condicion>
+					</field>
+					<field id="baja" oculto="true">
+						<expression>REG_CUENTA.baja</expression>
+						<condicion operador="=">0</condicion>
+					</field>
+					<order>
+						<field id="REG_CUENTA.nombre_cuenta" />
+					</order>
+				</helper>
+			</field>
+			
+			<field id="movnpvOP" local="true" deshabilitado="true">
+				<label>Numero</label>
+				<format>%04d</format>
+			</field>
+			
+			<field id="movnroOP" local="true" deshabilitado="true" sincelda="true">
+				<label modpos="nobr">-</label>
+				<format>%08d</format>
+			</field>
+			
+			<field id="concodOP" local="true" deshabilitado="true" noshow="true" />
+			
+			<!-- Grilla de Imputacion -->
+			
+			<field id="imputaciones" local="true" >
+				<helper type="object" xml="imputacion_rec_ing.xml">
+					<paremeter source="id_regcuenta" target="regcuenta_id" />
+				</helper>
+				<label colspan="6"/>
+			</field>
+			
+			<field id="saldoOP" local="true" deshabilitado="true">
+				<label style="color:green; font-size:16px;">A Imputar</label>
+				<tipo>numeric</tipo>
+			</field>
+			
+			<field id="totalImputado" local="true" deshabilitado="true">
+				<label style="color:blue; font-size:16px;">Total Imputado</label>
+				<jseval campodestino="saldoFinal">(saldoOP  - totalImputado).toFixed(2)</jseval>
+				<tipo>numeric</tipo>
+			</field>
+			
+			<field id="saldoFinal" local="true" deshabilitado="true">
+				<label style="color:green; font-size:16px;">Saldo Final</label>
+				<tipo>numeric</tipo>
+			</field>
+			
+			<field id="test_imputaciones" local="true" noshow="true">
+				<label>Test Imputaciones</label>
+			</field>
+		</table>
+	</form>
+</histrix>

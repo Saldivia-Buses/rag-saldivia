@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+	<histrix tipo="card" path="fotos/articulos" inserta="false">
+		<title>Fotos por Artículo</title>
+		<obs></obs>
+		<form >
+			<table id="ARTICULO_FOTO" label="Articulo Fotos">
+			<field id="idFoto" autoinc="true" noshow="true">
+    		        </field>
+
+			<field id="idArticulo" oculto="true">
+				<label>Articulo</label>
+				<help>Codigo de Articulo</help>
+			</field>
+                <field  id="foto" foto="true" path="idArticulo">
+                    <label>Foto</label>
+                    <help>Foto del Articulo</help>
+                    <tipo Type="Image">file</tipo>
+                    <size>300</size>
+                </field>
+			</table>
+		</form>
+	</histrix>

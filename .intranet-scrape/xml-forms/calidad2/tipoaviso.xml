@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+        <title>TIPOS DE AVISO</title>
+        <obs></obs>
+        <form >
+                <table id="TIPOAVISO" >
+                    <title>Tipos de Aviso</title>
+                                        
+                        <field id="id_aviso">
+                                <label>Tipo</label>
+                                <help>Codigo de Aviso</help>
+                        </field>
+                        
+                        <field id="nombre">
+                                <label>Descripcion</label>
+                                <help>Descripcion de Aviso</help>
+                        </field>
+                        
+                                    
+                </table>
+        </form>           
+</histrix>

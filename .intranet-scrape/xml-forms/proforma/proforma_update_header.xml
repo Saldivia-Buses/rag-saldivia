@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix llenoTemporal="false" tipo="cabecera"   transaccional="true"  >
+    <title>Punto de Venta</title>
+    <obs/>
+    <form>
+        <table id="CCTMOVIM" label="Emision de Facturas Proforma"
+			styleTbody="height:150px;overflow-x:hidden;">
+            <field id="siscod" local="true" noshow="true" >
+                <valor>03</valor>
+            </field>
+            <field id="concod" noshow="true" >
+            </field>
+            <field id="movlet"  noshow="true">
+            </field>
+
+            <field id="ctacod" required="true"  >
+                <label xml="cctcuent.xml" >Cliente</label>
+                <help>Código de Proveedor </help>
+                <tipo>integer</tipo>
+            </field>
+            <field id="ctanom"  >
+                <label modpos="nobr" colspan="3">Nombre</label>
+                <size>30</size>
+                <valor></valor>
+            </field>
+
+            <field id="movref__1" >
+                <label >Ref:</label>
+                <size>30</size>
+            </field>
+
+            <field id="movnpv" deshabilitado="true">
+                <label modpos="nobr">Número</label>
+                <format>%04d</format>
+                <valor>1</valor>
+            </field>
+            <field id="movnro" ctbregnro="1" deshabilitado="true" sincelda="true" >
+                <label modpos="nobr" >- </label>
+                <format>%08d</format>
+                <detalle>movnro</detalle>
+                <detalle>carrec</detalle>
+                <detalle>cajnro</detalle>
+                <detalle>movinc</detalle>
+
+            </field>
+
+            <field id="movfec" deshabilitado="true">
+                <label modpos="nobr">Fecha</label>
+                <help>Fecha de Emisión </help>
+                <valor>today</valor>
+                <detalle>movfec</detalle>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="ctacte" deshabilitado="true" noshow="true" local="true">
+                <detalle>ctacte</detalle>
+            </field>
+
+
+            <!--<field id="cotizacion_id"  deshabilitado="false">
+                <label style="font-size:12px;color:red;">Nro Cotizacion</label>
+                <help>Numero de cotización</help>
+            </field>-->
+
+            <field id="nrofab"  deshabilitado="false">
+                <label>Nro Fabricación</label>
+                <help>Número de Fabricación</help>
+            </field>
+
+            <field id="movref__2" >
+                <label modpos="nobr">Condición de Venta</label>
+                <help>Forma de Pago</help>
+                <valor>Contado</valor>
+                <tipo>varchar</tipo>
+            </field>
+       <field id="moneda_id" _noshow="true">
+        <tabla_ex xml="monedas_qry.xml" dir="/ayudas"></tabla_ex>
+        <label>Moneda</label>
+      </field>
+
+        </table>
+	
+    </form>
+</histrix>

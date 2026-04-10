@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" inserta="false" modifica="false" >
+  <title>HOMOLOGACION POR MODELO</title>
+  <obs/>
+  <form >
+    <table id="HOMOLOGMOD">
+      <title>Homologaciones por modelo</title>
+      
+      <field id="id_homologacion" esClave="true" oculto="true">
+      </field>
+      
+      <field id="homologacion_copia" local="true">
+        <helper type="combo" xml="homologmod_con_procesos.xml" dir="/help_local" empty="true"/>
+        <label>Homologación de Origen</label>
+        <actualiza>
+          <field id="procesos" destino="homologacion_id" />
+          <field id="articulos" destino="homologacion_id" />
+
+        </actualiza>
+      </field>
+      <field id="id_homolnew" local="true" noshow="true">
+      </field>
+      <field id="procesos" local="true" >
+        <helper type="object" xml="prd_procesos_dup_grid.xml">
+          <parameter source="id_homolnew" target="new_homologacion_id" />
+        </helper>
+        <label colspan="4" />
+      </field>
+      <field id="articulos" local="true" noshow="true">
+        <helper type="object" xml="prd_articulos_dup_grid.xml">
+          <parameter source="id_homolnew" target="new_homologacion_id" />
+        </helper>
+        <label colspan="4" />
+      </field>      
+    </table>
+  </form>
+</histrix>

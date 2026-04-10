@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud">
+  <title>Tarjetas</title>
+  <obs/>
+  <form>
+    <table id="TJT_TARJETAS" label="Tarjetas">
+      <field id="id_tjttarjeta" autoinc="true" noshow="true">
+        <label>Código de concepto</label>
+        <help>Código de concepto</help>
+      </field>
+      <field id="nombre_tarjeta">
+        <label>Nombre</label>
+        <help>Nombre de la tarjeta</help>
+      </field>
+      <field id="abreviatura_tarjeta">
+        <label>Abreviacion</label>
+        <help>Abreviacion de la tarjeta</help>
+      </field>
+      <field id="retencion_tarjeta">
+        <label>Retencion</label>
+        <help>Retencion de la tarjeta</help>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="ctbcuenta_id">
+        <label>Cuenta Contable</label>
+        <helper type="external" xml="cuentas_habilitadas_qry.xml" dir="/ayudas"/>
+      </field>
+      <field id="nombre_cuenta" local="true" deshabilitado="true">
+        <label modpos="nobr"/>
+        <help>Nombre de la tarjeta</help>
+      </field>
+
+      <field id="regcuenta_id" >
+        <label>Cuenta Corriente</label>
+        <help>Nombre de la tarjeta</help>
+        <helper type="combo" xml="regcuenta_cmb.xml" dir="/ayudas" empty="true">
+        	<field id="subsistema_id">
+        		<condicion operador="=">'04'</condicion>
+        	</field>
+        </helper>
+      </field>
+      
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert"  impresion="cheque.xml">
+    <title>CHEQUES PROPIOS</title>
+    <obs/>
+    <form >
+        <table id="BCSMOVIM" label="MOVIMIENTOS">
+            <field id="siscod" id_temp="sisbcs">
+            </field>
+            <field id="bcscta" id_temp="bcscta">
+                <detalle>bcscta</detalle>
+            </field>
+            <field id="ctacod" id_temp="ctacod">
+                <detalle>ctacod</detalle>
+            </field>
+            <field id="bcsmov" id_temp="bcsmov">
+                <detalle>bcsmov</detalle>
+            </field>
+            <field id="bcsnro" id_temp="bcsnro">
+                <detalle>bcsnro</detalle>
+            </field>
+            <field id="printer" local="true" id_temp="printer">
+                <detalle>printer</detalle>
+            </field>
+
+            <field id="bcsfec" id_temp="bcsfec"></field>
+            <field id="bcsfev" id_temp="bcsfev"></field>
+            <field id="tipo"   id_temp="tipo"></field>
+
+
+            <field id="dia">
+
+                <expression>DAYOFMONTH(bcsfec)</expression>
+            </field>
+            <field id="mes">
+                <expression>MONTH(bcsfec)</expression>
+                <options>
+                    <option valor="1">Enero</option>
+                    <option valor="2">Febrero</option>
+                    <option valor="3">Marzo</option>
+                    <option valor="4">Abril</option>
+                    <option valor="5">Mayo</option>
+                    <option valor="6">Junio</option>
+                    <option valor="7">Julio</option>
+                    <option valor="8">Agosto</option>
+                    <option valor="9">Septiembre</option>
+                    <option valor="10">Octubre</option>
+                    <option valor="11">Noviembre</option>
+                    <option valor="12">Diciembre</option>
+                </options>
+            </field>
+            <field id="year">
+                <expression>YEAR(bcsfec)</expression>
+            </field>
+
+            <field id="diav">
+                <expression>DAYOFMONTH(bcsfev)</expression>
+            </field>
+            <field id="mesv">
+                <expression>MONTH(bcsfev)</expression>
+                <options>
+                    <option valor="1">Enero</option>
+                    <option valor="2">Febrero</option>
+                    <option valor="3">Marzo</option>
+                    <option valor="4">Abril</option>
+                    <option valor="5">Mayo</option>
+                    <option valor="6">Junio</option>
+                    <option valor="7">Julio</option>
+                    <option valor="8">Agosto</option>
+                    <option valor="9">Septiembre</option>
+                    <option valor="10">Octubre</option>
+                    <option valor="11">Noviembre</option>
+                    <option valor="12">Diciembre</option>
+                </options>
+
+            </field>
+            <field id="yearv">
+                <expression>YEAR(bcsfev)</expression>
+            </field>
+
+            <field id="bcsimp" id_temp="bcsimp">
+            </field>
+            <field id="Let1" local="true" id_temp="Let1">
+                <detalle>Let1</detalle>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="Let2" local="true" id_temp="Let2">
+                <tipo>varchar</tipo>
+                <detalle>Let2</detalle>
+            </field>
+            <field id="opecla" id_temp="opecla"></field>
+<!--			<field id="nropag" id_temp="movnroOP"></field>  -->
+<!--
+	metodo nuevo para numerar  -->
+            <field id="nropag" >
+                <valor>[__movnroOP__]</valor>
+            </field>
+
+
+            <field id="regmin" >
+                <valor>_NRO_MIN</valor>
+            </field>
+            <field id="bcsref__1" id_temp="referencia"></field>
+        </table>
+
+    </form>
+</histrix>

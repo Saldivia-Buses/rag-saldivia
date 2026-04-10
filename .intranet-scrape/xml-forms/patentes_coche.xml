@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" _subtipo="vertical" class="consultaancha" imprime="false" _modifica="false">
+	<title>Patentes por Coche</title>
+	<obs/>
+	<form >
+		<table id="PATENTE">
+			<title>Placas Prov. por Coche</title>
+			<field id="nrofab" oculto="true">
+				<label>Nro de Fabricación</label>
+				<help>Número de Fabricación</help>
+			</field>
+			<field id="letras" deshabilitado="true">
+				<label>Letras</label>
+				<parametro id="fsmparam_parent.xml" retorna="paralf">
+					<field id="parcla" oculto="true">
+						<condicion operador="=">'letpat'</condicion>
+						<valor>'letpat'</valor>
+					</field>
+					<field id="paralf">
+					</field>
+				</parametro>
+				<help>Letras</help>
+			</field>
+			<field id="numero" _deshabilitado="true">
+				<label>Número</label>
+				<help>Número de Placa Provisoria</help>
+				<tipo>integer</tipo>
+			<!--	<format>%05d</format> -->
+			</field>
+
+			<field id="proxnro" local="true" _deshabilitado="true" noshow="true">
+				<label>Proximo Numero Disponible</label>
+<!--				<expression>select  1 from PATENTE where PATENTE.id_patente = (select MAX(PAT.id_patente) from PATENTE AS PAT ) limit 1</expression> -->
+				<tabla_ex id="PATENTE">
+					
+					<field id="numero1">
+						<expression>max(numero) + 1</expression>
+					</field>
+					<field id="numero2">
+						<expression>max(numero) + 1</expression>
+						
+					</field>
+					<field id="letras">
+					    <condicion operador="=" >(select paralf from FSMPARAM where parcla = 'letpat' limit 1)</condicion>
+					
+					</field>
+					
+<!--					
+					<field id="id_patente">
+					    <condicion operador="=">(select MAX(PAT.id_patente) from PATENTE AS PAT ) </condicion>
+					</field>
+-->
+
+				</tabla_ex> 
+				
+				<tipo>integer</tipo>
+			</field> 
+			<field id="desdeFecha" deshabilitado="true">
+				<label>Desde Fecha</label>
+				<help>Valida desde</help>
+				<valor>today</valor>
+			</field>
+			<field id="validez" _deshabilitado="true" jsExec="true">
+				<label>Validez en Días</label>
+				<help>Validez Placa Provisoria</help>
+				<jseval campodestino="numero">proxnro</jseval>
+				<parametro id="fsmparam_parent.xml" retorna="parent">
+					<field id="parcla" oculto="true">
+						<condicion operador="=">'valpat'</condicion>
+						<valor>'valpat'</valor>
+					</field>
+					<field id="parent">
+					</field>
+				</parametro>
+			</field>
+			<field id="folio" _deshabilitado="true">
+				<label>Folio</label>
+				<help>Folio Placa Provisoria</help>
+				<tipo>varchar</tipo>
+<!--				<tabla_ex id="">
+					<field id="a">
+						<expression >floor(16 +( ((SELECT (max(numero) + 1) from PATENTE) - 2000) / 31)) </expression>
+					</field>
+					<field id="b">
+						<expression   >floor(16 +( ((SELECT (max(numero) + 1) from PATENTE) - 2000) / 31)) </expression>
+					</field>
+					
+				</tabla_ex> -->
+<!--				<if exp="true">
+					<true></true>
+					<false>0</false>
+				</if> -->
+				<!--
+				<parametro id="fsmparam_parent.xml" retorna="parent">
+					<field id="parcla" oculto="true">
+						<condicion operador="=">'folpat'</condicion>
+						<valor>'folpat'</valor>
+					</field>
+					<field id="parent">
+					</field>
+				</parametro>
+					-->
+			</field>
+		</table>
+
+	</form>
+</histrix>

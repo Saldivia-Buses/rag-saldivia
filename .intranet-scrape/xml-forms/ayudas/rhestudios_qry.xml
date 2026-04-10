@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Estudios</title>
+  <obs></obs>
+  <consulta>
+    <table id="RH_ESTUDIOS" label="Estudios">
+      <field id="id_rhestudio" autoinc="true" noshow="true">
+      </field>
+      <field id="descripcion_estudio">
+        <label>Estudios</label>
+        <help>Estudios</help>
+      </field>
+    </table>
+  </consulta>
+</histrix>  

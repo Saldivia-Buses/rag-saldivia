@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm">
+  <title>Marcas de Alarmas</title>
+  <obs></obs>
+  <consulta>
+    <table id="ALA_MARCAS">
+      <field id="id_alamarca" autoinc="true" noshow="true">
+        <label>Codigo</label>
+      </field>
+      <field id="alamarca_nombre">
+        <label>Marca</label>
+      </field>
+    </table>
+  </consulta>
+</histrix>  

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<abm tipo="consulta">
+	<titulo>DETALLE</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="FACDETAL" label="Detalle">
+
+
+			<campo id="artcod" >
+				<label>Art</label>
+				<size>13</size>
+			</campo>
+			<campo id="artdes" tabla="STKINSUM">
+				<tipo>varchar</tipo>
+				<label>Descripcion</label>
+				<size>70</size>
+			</campo>
+			<campo id="artcan">
+				<label>Cant.</label>
+				<size>3</size>
+
+			</campo>
+
+			<campo id="unit" local="true">
+				<label>Unit.</label>
+				<expresion>artnet / artcan</expresion>
+				<tipo>numeric</tipo>
+			</campo>
+			<campo id="artnet" suma="true">
+				<label>Importe</label>
+				<size>6</size>
+			</campo>
+
+<!-- 			<campo id="descuentoUno">
+				<label>Desc</label>
+				<expresion>concat('-%',descuentoUno)</expresion>
+				<tipo>varchar</tipo>
+
+			</campo>
+			<campo id="artcom">
+				<label>Importe</label>
+			</campo>-->
+			<campo id="nropue" oculto="true">
+				<label>Puesto</label>
+			</campo>
+			<campo id="nrofac" oculto="true">
+				<label>Nro</label>
+			</campo>
+			<campo id="ctacod" oculto="true">
+				<label>Nro</label>
+			</campo>
+<!-- 		<campo id="movlet" oculto="true">
+				<label>let</label>
+			</campo>-->
+
+		</tabla>
+		<join tipo="left">
+			<tabla id="STKINSUM">
+				<campo id="artcod" oculto="true">
+					<condicion operador="=">FACDETAL.artcod</condicion>
+
+				</campo>
+			</tabla>
+		</join>
+
+	</consulta>
+</abm>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="insert">
+       <title>Mov Bancario</title>
+        <obs></obs>
+               <form >
+					<table id="REG_MOVIMIENTOS" label="MOVIMIENTOS">
+						<field id="subsistema_id" id_cab="siscod">
+						</field>
+						<field id="nro_cuenta" id_cab="bcscta">
+						</field>
+						<field id="fecha_movimiento" id_temp="bcsfec">
+						</field>
+						<field id="vencimiento_movimiento" id_temp="vencimiento">
+						</field>
+						<field id="concod" id_temp="bcsmov">
+						</field>
+						<field id="nro_movimiento" id_temp="bcsnro">
+						</field>
+						<field id="importe_movimiento" id_temp="bcsimp">
+						</field>
+						<field id="presentado" id_temp="presentado">
+						</field>
+						<field id="numero_cae" esNroMinuta="true">
+						</field>
+						<field id="fpv_movimiento" id_temp="vencimiento">
+						</field>
+						<field id="moneda_id" id_cab="moneda_id">
+						</field>
+
+						<field id="referencia_movimiento" id_cab="bcsref__1">
+						</field>
+					</table>
+               </form>
+        </histrix>

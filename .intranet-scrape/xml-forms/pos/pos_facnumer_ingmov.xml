@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="update" grabafinal="true">
+	<title>NUMERADORES</title>
+	<obs></obs>
+	<consulta>
+		<table id="FACNUMER" >
+						<field id="nrotip" id_cab="concod" esclave="true">
+						</field>
+						<field id="nropue" id_cab="movnpv" esclave="true">
+						</field>
+						<field id="nronro" id_cab="movnro">
+							<valor>nronro + 1</valor>
+						</field>
+						<field id="nrolet" id_cab="movlet" esclave="true">
+						</field>
+		</table>
+	</consulta>	   
+</histrix>

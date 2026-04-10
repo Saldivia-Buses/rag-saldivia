@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini">
+  <title>Formas de Embalaje</title>
+  <obs/>
+  <form >
+    <table id="STK_FORMAS_EMB" label="Formas de embalaje">
+      <field id="id_stkformaemb" noshow="true" />
+      <field id="descripcion_formaemb">
+        <label>Descripción</label>
+        <size>150</size>
+      </field>
+    </table>
+  </form>
+</histrix>

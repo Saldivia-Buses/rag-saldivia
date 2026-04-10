@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="cabecera">
+	<title>Seriales</title>
+	<obs></obs>
+	<form>
+		<table id="STK_SERIALES" label="Seriales">
+			<field id="codigo_barra" tabla="STK_ARTICULOS" local="true" required="true">
+				<label>Codigo de Barra</label>
+				<help>Articulo a buscar</help>
+				<helper type="external" xml="stkarticulo_pos.xml" dir="/ayudas">
+					<field id="wstklista_id" local="true">
+						<valor>1</valor>
+					</field>
+					<field id="id_stkarticulo2" noshow="true">
+						<expression>id_stkarticulo</expression>
+						<detalle>stkarticulo_id</detalle>
+					</field>
+				</helper>                
+			</field>
+			<field id="nombre_articulo" deshabilitado="true" local="true">
+				<label modpos="nobr"/>
+				<size>40</size>
+			</field>
+			<field id="stkarticulo_id" local="true" noshow="true" />
+		</table>
+	</form>
+</histrix>

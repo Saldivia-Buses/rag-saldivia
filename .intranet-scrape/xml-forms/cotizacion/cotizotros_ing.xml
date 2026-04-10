@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<abm tipo="ing" imprime="false" procesa="false" llenoTemporal="false">
+		<titulo>OTROS</titulo>
+		<obs></obs>
+		<consulta>
+			<tabla id="COTIZOTROS"	styleTbody="height:50px;">
+	
+				<titulo>OTROS</titulo>
+				<movimientos>
+					<relacion id="cotizotros_ingmov.xml"></relacion>
+				</movimientos>
+				<campo id="idSeccion2" _deshabilitado="true" >
+					<tabla_ex id="COTIZSECCION">
+						<campo id="idSeccion" ></campo>
+						<campo id="nombre" ></campo>						
+					</tabla_ex>
+					<tipo>varchar</tipo>
+					<label >Seccion</label>
+					<valor>22</valor>
+				</campo>
+				<campo id="descripcion2" forceSize="true" >
+					<label>Descripción</label>
+					<size>50</size>
+
+				</campo>
+			</tabla>
+		</consulta>
+	</abm>

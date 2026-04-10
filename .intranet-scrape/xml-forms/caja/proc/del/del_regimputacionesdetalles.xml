@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" >
+	<title>Eliminacion de Movimientos</title>
+	<obs></obs>
+	<form>
+		<table id="REG_IMPUTACIONES">
+			<sql>
+		
+				
+				DROP TABLE IF EXISTS DETALLES;
+				create TEMPORARY TABLE DETALLES
+					select * from REG_DETALLES where regmovim_id = '[__id_regmovimheader__]';
+
+delete REG_IMPUTACIONESDETALLES.* from REG_IMPUTACIONESDETALLES join  DETALLES on id_regdetalle = regdetallefac_id and regmovim_id = '[__id_regmovimheader__]';
+
+
+					
+			</sql>			
+		    <field id="regmovim_id"         esClave="true"  id_temp="id_regmovimheader"    />
+		</table>
+	</form>
+</histrix>  
+
+

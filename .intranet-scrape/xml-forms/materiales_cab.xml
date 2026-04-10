@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="cabecera" graba="true" chkdup="true">
+       <title>REMITO</title>
+        <obs></obs>
+               <form >
+					<table id="FACREMIT" label="REMITO">
+						<field id="siscod" oculto="true" local="true">
+							<label>siscod</label>
+							<parametro id="fsmparam_paralf.xml" retorna="paralf">
+								<field id="parcla">
+									<condicion operador="=">'sisstk'</condicion>
+								</field>
+							</parametro>
+						</field>
+						<field id="sisprv" oculto="true" local="true">
+							<label>Cod prov</label>
+							<parametro id="fsmparam_paralf.xml" retorna="paralf">
+								<field id="parcla">
+									<condicion operador="=">'sispro'</condicion>
+								</field>
+							</parametro>
+							<tipo>char</tipo>
+						</field>				
+						<field id="remfec" deshabilitado="true">
+							<label >Fecha</label>
+							<tipo>date</tipo>
+							<valor>today</valor>
+						</field>						
+						<field id="movfec__1" oculto="true">
+							<label >Fecha</label>
+							<tipo>date</tipo>
+							
+							<valor>today</valor>
+						</field>						
+						
+						<field id="ctacod">
+							<label>Proveedor</label>
+							<help>Cuenta</help>
+							<ayuda_ex id="CCTCUENT" xml="HLPcctcuent.xml" dir="/help_local">
+								<field id="ctacod"></field>
+								<field id="ctanom">
+									<detalle>ctanom</detalle>
+								</field>
+								
+								<field id="siscod" oculto="true">
+									<condicion operador="=">'01'</condicion>
+								</field>
+								<clave>ctacod</clave>
+								<descripcion>ctanom</descripcion>
+								
+							</ayuda_ex>
+						</field>		
+						<field id="ctanom" deshabilitado="true" local="true">
+							<label modpos="nobr">Nombre</label>
+							<tipo>char</tipo>
+						</field>						
+						
+						<field id="uno" oculto="true" local="true">
+							<valor>1</valor>
+						</field>						
+						
+						<field id="remnpv">
+							<label >Remito</label>
+						</field>						
+						<field id="remnro">
+							<label modpos="nobr">-</label>
+						</field>						
+						
+						
+					
+					</table>
+               </form>
+        </histrix>

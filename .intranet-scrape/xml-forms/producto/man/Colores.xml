@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+	<title>COLORES</title>
+	<obs></obs>
+	<form>
+		<table id="FSMCOLOR" >
+			<title>Colores</title>
+			<campo id="colcod">
+				<label>Código</label>
+				<help>Código de Color</help>
+			</campo>
+			<campo id="coldes">
+				<label>Color</label>
+				<help>Descripción del Color</help>
+			</campo>
+    			<order>
+				<campo id="colcod"></campo>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

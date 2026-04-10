@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta" paginar="500">
+	<title>Inspeccion de Recepcion</title>
+	<obs></obs>
+	<form  detalle="herrarepa.xml">
+		<table id="TIPOHERR" label="Tipos de Reparacion">
+			<filters>
+				<field id="tipoherr" deshabilitado="false">
+					<ayuda_ex id="TIPOHERR">
+						<clave>tipoherr</clave>
+						<descripcion>nomtipo</descripcion>
+					</ayuda_ex>
+					<valor></valor>
+					<label>Cod.</label>
+					<operador  modificador="left">=</operador>					
+				</field>			
+				<field id="nomtipo" >
+					<label>Nombre tipo</label>
+					<help>Tipo de Herramienta. (ENTER = Retorna a ingreso de codigo).
+						</help>
+					<operador>like</operador>
+				</field>
+			</filters>			
+			<field id="tipoherr">
+				<label>Articulo</label>
+				<help>Codigo de Articulo</help>
+				<detalle>tipoherr</detalle>
+				<condicion operador="!=">''</condicion>
+			</field>
+			<field id="nomtipo">
+				<label>Descripcion</label>
+				<help>Descripcion</help>
+			</field>
+			<group>
+				<field id="tipoherr" tabla="TIPOHERR"></field>
+			</group>
+		</table>
+		<join tipo="left">
+			<table id="HERRAREPA">
+				<field id="tipoherr">
+					<condicion operador="=">TIPOHERR.tipoherr</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

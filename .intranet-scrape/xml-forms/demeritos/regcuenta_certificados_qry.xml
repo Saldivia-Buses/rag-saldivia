@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta" path="fotos/proveedores/">
+  <title>ABM CERTIFICADOS</title>
+  <obs></obs>
+  <form >
+    <table id="REG_CUENTA_CERTIFICADOS">
+	<field id="id_regcuentacert" noshow="true"/>
+	<field id="regcuenta_id" noshow="true"/>
+	<field id="nro_cuenta" tabla="REG_CUENTA">
+	    <label>Cta</label>
+	</field>
+	<field id="nombre_cuenta" tabla="REG_CUENTA">
+	    <label>Nombre</label>
+	</field>
+	<field id="fecha_vencimiento">
+	    <label>Vencimiento</label>
+	    <tipo>date</tipo>
+	</field>
+	<field id="certpath" noshow="true">
+	    <expression>CONCAT(regcuenta_id, '/certificados')</expression>
+	</field>
+	<field id="archivo" path="certpath">
+	    <label>Archivo</label>
+	    <tipo>file</tipo>
+	    <size>30</size>
+	</field>
+    </table>
+    <join tipo="left">
+	<table id="REG_CUENTA">
+	    <field id="id_regcuenta">
+		<condicion operador="=">REG_CUENTA_CERTIFICADOS.regcuenta_id</condicion>
+	    </field>
+	</table>
+    </join>
+  </form>
+</histrix>

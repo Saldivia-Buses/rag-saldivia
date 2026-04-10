@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="insert">
+	<title>Control Calidad</title>
+	<obs/>
+	<form>
+	    <table id="PROD_CONTROL_RETRABAJO" idCampoCond="realizado">
+		<field id="controlmovim_id" 	id_temp="id_controlmovim" />
+		<field id="user_id" >
+		    <valor eval="true">$_SESSION['idUser']</valor>
+		</field>
+<!--		<field id="hora_retrabajo" 	id_temp="hora_retrabajo" /> -->
+		<field id="obs_retrabajo" 	id_temp="obs_retrabajo" />
+<!--
+		<field id="aprobado" 		id_temp="aprobado" />
+		<field id="hora_aprobacion" 	id_temp="hora_aprobacion" />
+		<field id="supervisor_id" 	id_temp="supervisor_id" />
+-->
+	    </table>
+
+	</form>
+</histrix>

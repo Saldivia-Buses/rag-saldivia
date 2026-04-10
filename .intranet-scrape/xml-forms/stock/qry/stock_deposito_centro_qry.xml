@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<histrix tipo="consulta" log="false">
+    <title>Consulta Por deposito</title>
+    <obs></obs>
+    <form>
+        <table id="STK_STOCKACTUAL" >
+            <field id="stkdeposito_id" noshow="true" />
+                    
+            <field id="stkarticulo_id" >
+                <label>Código</label>
+            </field>
+            <field id="nombre_articulo" tabla="STK_ARTICULOS">
+                <label>Artículo</label>
+            </field>
+
+            <field id="cantidad_stock" suma="true" >
+                <label>Cantidad</label>
+                  <attribute id="tooltip">nombre_deposito</attribute>                       
+                <tipo>numeric</tipo>
+                <attribute id="linkdes">nombre_articulo</attribute>
+                <helper xml="fichakardex_art.xml" type="link" width="90%">
+                    <parameter source="stkarticulo_id" target="stkarticulo_id" />
+                    <parameter source="stkdeposito_id" target="stkdeposito_id" />
+                </helper>
+            </field>
+        </table>
+
+        <join tipo="left">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">STK_STOCKACTUAL.stkarticulo_id</condicion>
+                </field>
+        
+            </table>
+        </join>       
+<!--        
+        <join tipo="left">
+            <table id="STK_DEPOSITOS">
+                <field id="id_stkdeposito">
+                    <condicion operador="=">STK_MOVIMIENTOS.stkdeposito_id</condicion>
+                </field>
+        
+            </table>
+        </join>
+    -->
+
+    </form>
+</histrix>

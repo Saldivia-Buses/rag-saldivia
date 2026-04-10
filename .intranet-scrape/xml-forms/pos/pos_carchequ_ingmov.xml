@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="abm">
+       <title>Mov CHEQUES</title>
+        <obs></obs>
+               <consulta>
+					<table id="CARCHEQU" label="CHEQUES">
+						<field id="siscod" id_temp="siscar">
+						</field>
+						<field id="carint" id_temp="carint2">
+						</field>
+						<field id="carfec" id_temp="carfec">
+						</field>
+						<field id="carcui" id_temp="ctanro">
+						</field>
+						<field id="succod">
+							<valor>1</valor>
+						</field>
+						<field id="carbco" id_temp="carbco">
+						</field>
+						<field id="carnro" id_temp="carnro">
+						</field>
+						<field id="carimp" id_temp="carimp">
+						</field>
+<!--					<field id="carobv" id_temp="carobv">
+						</field>  -->						
+						<field id="ctacod" id_temp="ctacod">
+						</field>
+						<field id="caralt" id_temp="caralt">
+						</field>
+						<field id="ccbcod" id_temp="ccbcod">
+						</field>
+						<field id="cartip" >
+							<valor>1</valor>
+						</field>
+						<field id="carpla" id_temp="carpla">
+						</field>
+						<field id="carrec" id_temp="movnroOP">
+						</field>
+
+						<field id="opecla" id_temp="opecla">
+						</field>
+						
+					</table>
+               </consulta>
+        </histrix>

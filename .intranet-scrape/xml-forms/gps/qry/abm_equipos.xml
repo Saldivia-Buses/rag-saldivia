@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <histrix tipo="abm" limit="50">
+   <title>Resumen GPS</title>
+  
+ <form>
+ <table id="gps_equipos">
+
+
+<field id="device_id">
+<label>Id Equipo</label>
+
+
+</field>
+
+<field id="nrofab_id">
+    <label>Coche</label>
+    <help>Numero de Fabricación</help>        
+    <helper type="external" xml="HLPchasis_service.xml" dir="/help_local"></helper>        
+</field>
+
+
+
+<field id="chip_pin">
+<label>Pin </label>
+</field>
+
+<field id="chip_puk">
+<label>Puk</label>
+</field>
+
+
+<field id="chip_imei">
+<size>30</size>
+<label>Imei</label>
+
+</field>
+   
+<field id="chip_empresa" tipo="varchar">
+	<label>Empresa-Cel</label>
+    <size>15</size>
+    <tipo>varchar</tipo>
+  <options>
+    <option valor="0">Claro</option>
+    <option valor="1">Personal</option>
+	<option valor="2">Movistar</option>
+  </options>
+
+</field>
+
+
+<field id="chip_nro_cel">
+<label>Nro Cel - Chip</label>
+</field>
+
+<field id="comentarios">
+  <label>Comentario</label>
+  <size>200</size>
+	   
+</field>   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</table>
+</form>
+</histrix>
+  

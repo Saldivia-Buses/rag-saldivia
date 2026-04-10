@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" >
+    <title>Fichadas</title>
+    <obs/>
+    <form>
+        <table id="FICHADAS" label="Fichadas del Reloj" _styleTbody="height:300px;overflow-x:hidden;">
+
+            <movimientos cabecera="fichadas_upd_cab.xml">
+                <relacion id="fichadas_upd_update.xml"></relacion> 
+            </movimientos>
+            <filters>
+                <field id="fecha">
+                    <operador>&gt;=</operador>
+                    <label>Desde Fecha</label>
+                    <valor>today</valor>
+                </field>
+                <field id="fecha">
+                    <operador>&lt;=</operador>
+                    <label>Hasta Fecha</label>
+                    <valor>today</valor>
+                </field>
+                <field id="crc">
+                    <operador>&gt;=</operador>
+                    <label>Desde Hora</label>
+                    
+                </field>
+                <field id="crc">
+                    <operador>&lt;=</operador>
+                    <label>Hasta Hora</label>
+                </field>
+            </filters>
+            <field id="legajo" _tabla="PERSONAL">
+                <expression>PERSONAL.legajo</expression>
+                <label>legajo</label>
+            </field>
+            <field id="insertkey" deshabilitado="true" noshow="true">
+                <label>key</label>
+            </field>
+
+            <field id="tarjeta" deshabilitado="true">
+                <label>tarjeta</label>
+            </field>
+            <field id="apellido" tabla="PERSONAL">
+                <expression>apellido</expression>
+                <label>Apellido</label>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="nombre" tabla="PERSONAL">
+                <expression>nombre</expression>
+                <label>Nombre</label>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="fecha"  deshabilitado="true">
+                <label>Fecha</label>
+                <help>Fecha</help>
+            </field>
+            <field id="crc" _noshow="true" deshabilitado="true">
+                <label>Reloj</label>
+            
+                <tipo>time</tipo>
+
+            </field>
+            <field id="h_CRC" local="true" >
+                <label style="color:red;">Nuevo Crc</label>
+                <if exp="'h_CRC' != ''">
+                    <true>'h_CRC'</true>
+                    <false>('newCRC' == '')?'crc':'newCRC'</false>
+                    
+                </if>
+                <tipo>time</tipo>
+            </field>
+            
+            <field id="hora" deshabilitado="true">
+                <label>Hora</label>
+                <tipo>varchar</tipo>
+                <help>Hora</help>
+            </field>
+            <field id="h_nueva" local="true" >
+                <label style="color:red;">Nueva Hora</label>
+                <if exp="'h_nueva' != ''">
+                    <true>'h_nueva'</true>
+                    <false>('newtime' == '')?'hora':'newtime'</false>
+                </if>
+                <tipo>time</tipo>
+            </field>
+        </table>
+        <join tipo="left">
+            <table id="PERSONAL">
+                <field id="tarjeta">
+                    <condicion operador="=">FICHADAS.tarjeta</condicion>
+                </field>
+                <field id="fechaEgreso">
+                    <condicion operador="&gt;">FICHADAS.fecha or fechaEgreso = '0000-00-00'</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

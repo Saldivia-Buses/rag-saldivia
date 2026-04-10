@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="crud">
+	<title>CONCEPTOS BANCARIOS</title>
+	<obs></obs>
+	<form >
+		<table id="REG_CONCEPTOS" >
+		    <title>Conceptos</title>
+			<field id="subsistema_id" noshow="true" _oculto="true" valauto="true">
+				<label>Cod</label>
+				<valor>'04'</valor>
+				<condicion operador="=">04</condicion>    
+			</field>
+			
+			<field id="cod_concepto">
+				<label>Cod.</label>
+				<help>Codigo de Concepto</help>
+			</field>
+			
+			<field id="descripcion_concepto">
+				<label>Descripcion</label>
+				<help>Descripcion del Concepto</help>
+			</field>
+			
+			<field id="abreviacion_concepto">
+				<label>Abrev.</label>
+				<help>Abreviatura a Utilizar</help>
+				<size>10</size>
+			</field>
+			
+			<field id="imputacion_concepto">
+				<label>Imputacion</label>
+				<help>Imputacion Debo o Haber</help>
+				<options>
+				    <option valor="0">Debe </option>
+				    <option valor="1">Haber</option>
+				</options>
+				
+			</field>
+<!--			
+			<field id="ctbcod">
+				<label> Cuentas</label>
+				<help>Cuentas contables a Imputar</help>
+			</field> 
+-->	    
+
+			<field id="ctbcuenta_id">
+				<label>Debe</label>
+				<help>Debe</help>
+			</field>
+<!--
+			<field id="ctbcod__2">
+				<label>Haber</label>
+				<help>Haber</help>
+			</field>
+-->		
+	    		<order>
+				<field id="cod_concepto"></field>
+			</order>
+			
+		</table>
+	</form>	   
+</histrix>

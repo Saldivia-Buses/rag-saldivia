@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <abm tipo="update" >
+       <titulo>COMPROBANTES</titulo>
+        <obs></obs>
+               <consulta>
+					<tabla id="RETPARAM" label="PARAMETRO" idCampoCond="RI" CondExp=" &gt; 0">
+					<campo id="parcla" oculto="true">
+						<condicion operador="=">'ib1598'</condicion>
+						<valor>ib1598</valor>
+					</campo>
+					<campo id="parent" id_temp="retmas1">
+					</campo>
+						
+					</tabla>
+	              </consulta>
+        </abm>

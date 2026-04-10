@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="nosql" impresion="cheque.xml">
+    <titulo>Cheque</titulo>
+    <obs></obs>
+    <consulta >
+        <tabla id="BCSMOVIM" label="Cheque">
+            <campo id="siscod" id_temp="siscod">
+            </campo>
+            <campo id="bcscta" id_temp="bcscta">
+                <detalle>bcscta</detalle>
+            </campo>
+            <campo id="bcsmov" id_temp="bcsmov">
+                <detalle>bcsmov</detalle>
+            </campo>
+            <campo id="bcsnro" id_temp="bcsnro">
+                <detalle>bcsnro</detalle>
+            </campo>
+            <campo id="printer">
+                <detalle>printer</detalle>
+                <valor>cheques</valor>
+            </campo>
+
+            <campo id="bcsfec">
+            </campo>
+            <campo id="dia">
+				
+                <expresion>DAYOFMONTH(bcsfec)</expresion>
+            </campo>
+            <campo id="mes">
+                <expresion>MONTH(bcsfec)</expresion>
+                <opciones>
+                    <opcion valor="1">Enero</opcion>
+                    <opcion valor="2">Febrero</opcion>
+                    <opcion valor="3">Marzo</opcion>
+                    <opcion valor="4">Abril</opcion>
+                    <opcion valor="5">Mayo</opcion>
+                    <opcion valor="6">Junio</opcion>
+                    <opcion valor="7">Julio</opcion>
+                    <opcion valor="8">Agosto</opcion>
+                    <opcion valor="9">Septiembre</opcion>
+                    <opcion valor="10">Octubre</opcion>
+                    <opcion valor="11">Noviembre</opcion>
+                    <opcion valor="12">Diciembre</opcion>
+                </opciones>
+            </campo>
+            <campo id="year">
+                <expresion>YEAR(bcsfec)</expresion>
+            </campo>
+
+            <campo id="diav">
+                <expresion>DAYOFMONTH(bcsfev)</expresion>
+            </campo>
+            <campo id="mesv">
+                <expresion>MONTH(bcsfev)</expresion>
+                <opciones>
+                    <opcion valor="1">Enero</opcion>
+                    <opcion valor="2">Febrero</opcion>
+                    <opcion valor="3">Marzo</opcion>
+                    <opcion valor="4">Abril</opcion>
+                    <opcion valor="5">Mayo</opcion>
+                    <opcion valor="6">Junio</opcion>
+                    <opcion valor="7">Julio</opcion>
+                    <opcion valor="8">Agosto</opcion>
+                    <opcion valor="9">Septiembre</opcion>
+                    <opcion valor="10">Octubre</opcion>
+                    <opcion valor="11">Noviembre</opcion>
+                    <opcion valor="12">Diciembre</opcion>
+                </opciones>
+
+            </campo>
+            <campo id="yearv">
+                <expresion>YEAR(bcsfev)</expresion>
+            </campo>
+
+            <campo id="ctanom" tabla="CCTMOVIM">
+                <label>Nombre</label>
+                <tipo>varchar</tipo>
+                <size>80</size>
+            </campo>
+
+            <campo id="bcsimp" id_temp="bcsimp">
+            </campo>
+            <campo id="Let1" local="true" id_temp="Let1">
+                <detalle>Let1</detalle>
+                <tipo>varchar</tipo>
+            </campo>
+            <campo id="Let2" local="true" id_temp="Let2">
+                <tipo>varchar</tipo>
+                <detalle>Let2</detalle>
+            </campo>
+
+        </tabla>
+        <join>
+            <table id="CCTMOVIM">
+                <campo id="siscod" oculto="true">
+                    <condicion operador="=">'01'</condicion>
+                </campo>
+                <campo id="concod">
+                    <condicion>4</condicion>
+                </campo>
+
+                <campo id="movnro">
+                    <condicion>BCSMOVIM.nropag</condicion>
+                </campo>
+            </table>
+        </join>
+		
+    </consulta>
+</abm>

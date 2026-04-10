@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix   tipo="abm-mini" subtipo="vertical"  width="55" path="fotos/accesorios">
+  <title>ACCESORIOS</title>
+  <obs/>
+  <form  detalle="listapreciosdet_abm2.xml" dir="/precios">
+    <table id="STKINSUM" label="Insumos">
+
+      <field id="artrub">
+        <label>Seccion</label>
+        <help>Seccion del Articulo</help>
+        <tabla_ex id="PRODUCTO_SECCION">
+          <field id="id_prdseccion"/>
+          <field id="nombre_seccion">
+          </field>
+          <field id="activa_seccion">
+            <condicion operador="=">0</condicion>
+          </field>
+        </tabla_ex>
+      </field>
+
+      <field  clave="true" id="artcod" required="true">
+        <label>Codigo Articulo</label>
+        <help>Codigo de Articulo</help>
+        <detalle>idArticulo</detalle>
+      </field>
+
+      <field id="artcodpro" local="true" style="color:red;" colstyle="display:none;" >
+        <label modpos="nobr">Codigo Sugerido</label>
+        <expression sql="true">SELECT STKINSUM.artcod+1 FROM STKINSUM where siscod = '02' order by STKINSUM.artcod DESC limit 1</expression>
+        <format>%03d</format>
+      </field>
+
+      <field id="artdes">
+        <size> 70 </size>  
+        <label colspan="10">Descripcion</label>
+        <help>Descripcion de Articulo</help>
+      </field>
+
+      <field id="siscod" oculto="true">
+        <label>Codigo Sistema</label>
+      </field>      
+
+      <field id="fotopath" local="true" noshow="true">
+          <if exp="true">
+              <true>'artcod/'</true>
+              <false>''</false>
+          </if>
+          <tipo>varchar</tipo>
+      </field>
+
+      <field id="foto" path="fotopath" download="true">
+          <expression>select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = STKINSUM.artcod and ARTICULO_FOTO.foto != '' order by revision desc limit 1</expression> 
+          <label>Imagen</label>
+          <tipo >file</tipo>
+          <size>40</size>
+      </field>      
+
+       <field id="cargar" linkint="accesorios_foto.xml" linkdir="/produccion/man/" linkdes="fotos" local="true" Formstyle="display:none;">
+         <label>Cargar Foto</label>
+         <expression>'Carga foto'</expression>
+         <paring destino="idArticulo">artcod</paring>
+       </field>      
+
+      <field  id="artsup">
+
+        <ayuda_ex id="STKINSUM" >
+          <field id="artcod2" >
+	           <expression having="false">artcod</expression>
+            <label>Cod</label>
+          </field>
+          <field id="artdes" >
+            <label>Nombre</label>
+          </field>
+          <field id="siscod" oculto="true">
+            <condicion operador="=">'01'</condicion>
+          </field>          
+      
+        </ayuda_ex>
+	
+        <label>Codigo Articulo Interno</label>
+        <help>Codigo de Articulo Interno</help>
+      </field>
+
+      <order>
+        <field id="artcod" tipoOrden="DESC" />
+      </order>
+
+    </table>
+  </form>
+</histrix>

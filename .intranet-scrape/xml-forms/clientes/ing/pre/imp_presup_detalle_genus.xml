@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" exportasuma="true" path="/fotos/">
+	<title />
+	<obs />
+	<form>
+		<table id="REG_DETALLES" label="Detalle de Movimientos" _styleTbody="height:150px;overflow-x:hidden;" PDFnoborder="true" >
+
+			<field id="muestra_iva" noshow="true" local="true" print="false" valauto="true" />
+
+			<field id="NoMuestra_iva" noshow="true" local="true" print="false">
+				<if exp="muestra_iva">
+				<true>'false'</true>
+				<false>'true'</false>
+				</if>		
+			</field>				
+
+			<field id="regmovim_id" noshow="true" />
+
+			<field id="orden" noshow="true" />
+
+			<fieldGroup>
+			
+
+				<field id="codigo_detalle" PDFcolWidth="15">
+					<label size="35">Codigo</label>
+				</field>
+
+				<field id="descripcion_detalle">
+					<label size="120">Descripcion</label>
+				</field>			
+
+				<field id="cantidad_detalle" PDFcolWidth="12" PDFalign="R">
+					<label size="35">Cant</label>
+					<tipo>numeric</tipo>
+				</field>
+
+				<field id="precio_venta" PDFcolWidth="17">
+					<label size="15">Precio U.</label>
+					<expresion having="false">
+						case when '[__muestra_iva__]' = 'true' THEN
+							precio_venta
+						else
+							precio_venta * ( 1 + (alicuota_iva / 100) )
+						end
+					</expresion>
+					<tipo>numeric</tipo>
+				</field>
+				
+				<field id="alicuota_iva" PDFcolWidth="15">
+					<label size="30" >Alicuota</label>
+					<tipo>numeric</tipo>
+					<attribute id="noshow">NoMuestra_iva</attribute>
+				</field>
+
+				<field id="neto_detalle" PDFcolWidth="17" total="true">
+					<label size="15">Subtotal</label>
+					<tipo>numeric</tipo>
+					<detalle>SubTotal</detalle>
+					<expresion having="false">IF('[__muestra_iva__]' = 'true', neto_detalle,  total_detalle)</expresion>
+				</field>
+
+<!--				<field id="nro_partida" path="/articulos/" PDFcolWidth="30">
+					<label>Foto</label>
+					<tipo Type="Image">file</tipo>
+					<size>200</size>
+				</field>-->
+
+			</fieldGroup>
+			
+			<order>
+				<field id="orden"/>
+			</order>
+			
+			<group>
+			  <field id="id_regdetalle" />
+			</group>
+		</table>
+	</form>
+</histrix>	

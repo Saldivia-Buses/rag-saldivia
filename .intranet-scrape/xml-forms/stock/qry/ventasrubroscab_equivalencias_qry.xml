@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" preloadData="false">
+<title>Ventas por Periodo</title>
+<obs/>
+
+<form>
+
+ 	<table id="STK_MOVIMIENTOS" label="Articulos">
+
+		<filters>
+
+			<field id="fecha_movimiento">
+				<label>Desde Fecha</label>
+				<valor>today</valor>
+				<operador>&gt;=</operador>
+			</field>
+
+			<field id="fecha_movimiento">
+				<label modpos="nobr">Hasta Fecha</label>
+				<valor>today</valor>
+				<operador>&lt;=</operador>
+			</field>
+
+			<field id="stkdeposito_id" tabla="STK_MOVIMIENTOS">
+				<label modpos="nobr">Deposito</label>
+				<operador>=</operador>
+			</field>
+
+			<!--<field id="tipo_costo" local="true">
+				<label modpos="nobr">Costo</label>
+			</field>-->
+
+			<field id="moneda_id">
+				<operador>=</operador>
+				<label modpos="nobr">Moneda</label>
+				<valor>1</valor>
+			</field>
+
+		    <field id="stkfamilia_id" tabla="STK_FAMILIA">
+				<label>Familia</label>
+				<operador>=</operador>
+			</field>
+
+			<field id="stkrubro_id" tabla="STK_ARTICULOS">
+				<label modpos="nobr">Rubro</label>
+				<operador>=</operador>
+			</field>
+
+			<field id="stksubrubro_id" table="STK_ARTICULOS" >
+				<label modpos="nobr">SubRubro</label>
+				<operador>=</operador>
+			</field>
+
+			<!--<field id="stkmarca_id">
+				<label modpos="nobr">Marca</label>
+				<operador>=</operador>
+			</field>-->
+
+			<!--<field id="filtro_agrupador" local="true">
+				<label modpos="nobr">Agrupar Por</label>
+			</field>-->
+
+		</filters>
+
+
+		<field id="id_stkmovimiento" noshow="true" ></field>
+       
+       <field id="baseparam" local="true" noshow="true" >
+			<valor eval="true">$_SESSION['db']</valor>
+		</field>
+
+ 
+		<field id="base" noshow="true" >
+         <condicion operador="=">'[__baseparam__]'</condicion>
+		</field>
+
+		<field id="concepto_id" tabla="REG_MOVIMIENTOS" noshow="true"/>
+	
+
+		<field id="stkdeposito_id" tabla="STK_MOVIMIENTOS" noshow="true">
+			<helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" empty="true" />
+		</field>
+	
+	
+
+		<field id="ordena" noshow="true">
+			<expression>case when '[__filtro_agrupador__]' = 0 then STK_RUBROS.nombre_rubro
+					 when '[__filtro_agrupador__]' = 1 then STK_FAMILIAS.nombre_familia
+				     end</expression>
+		</field>
+
+        
+		<field id="stkfamilia_id" tabla="STK_ARTICULOS" noshow="true">
+			<label>Familia</label>
+			<helper type="combo" xml="stkfamilia_qry.xml" dir="/ayudas" empty="true" />
+		</field>
+
+		<field id="stkrubro_id" tabla="STK_ARTICULOS" multiple="true">
+			<label>Rubro</label>
+			<helper type="combo" id="STK_RUBROS" empty="true" >
+				<field id="id_stkrubro" esClave="true" noshow="true"/>
+				<field id="nombre_rubro"/>
+			</helper>
+		</field>
+
+		<field id="stksubrubro_id" multiple="true" tabla="STK_ARTICULOS" >
+			<label>Subrubro</label>
+			<actualiza>
+                  <field id="stkrubro_id" destino="stkrubro_id"/>
+             </actualiza>
+			
+			<helper type="combo" xml="stksubrubro_qry.xml" dir="/ayudas" empty="true" />
+		</field>
+
+
+		<!--<field id="stkmarca_id" tabla="STK_ARTICULOS" multiple="true" noshow="true">
+			<label>Marca</label>
+			<helper type="combo" xml="stkmarca_qry.xml" dir="/ayudas" empty="true" />
+		</field>-->
+      
+
+      	<field id="fecha_movimiento" >
+			<label>Fecha</label>
+			<tipo>date</tipo>
+		</field>
+
+		<field id="comprobante" >
+			<label>Nro.Comp</label>
+			<expresion>CONCAT( REG_MOVIMIENTOS.letra_movimiento, ' ', LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,'0'), '-', LPAD(REG_MOVIMIENTOS.nro_movimiento  ,8,'0'))</expresion>
+		</field>
+
+
+
+		<field id="nombre_rubro" tabla="STK_RUBROS" noshow="true" />
+
+
+		<field id="id_stkarticulo" tabla="STK_ARTICULOS" break="true">
+			<label>Codigo</label>
+		</field>
+
+		<field id="nombre_articulo" tabla="STK_ARTICULOS">
+			<label>Articulo</label>
+		</field>
+
+
+		<field id="cantidad" suma="true">
+			<label>Cantidad</label>
+			<expresion>(case when STK_CONCEPTOS.tipo_concepto = 1 then 1 else -1 end)  * STK_MOVIMIENTOS.cantidad</expresion>
+			<tipo>integer</tipo>
+			<formato>%d</formato>
+		</field>
+
+	
+
+
+		<field id="total_detalle" suma="true">
+			<label>Total</label>
+			<expresion>(case when STK_CONCEPTOS.tipo_concepto = 1 then 1 else -1 end) * STK_MOVIMIENTOS.precio_total *
+		IF([__moneda_id__] = 1, 1, (1 / GEN_FN_COTIZACION([__moneda_id__],STK_MOVIMIENTOS.fecha_movimiento)))</expresion>
+			<tipo>numeric</tipo>
+		</field>
+
+		<field id="CantxFactor" suma="true" local= "true" >
+			<label>CantxConvert</label>
+			<expresion>(case when STK_CONCEPTOS.tipo_concepto = 1 then 1 else -1 end)  * STK_MOVIMIENTOS.cantidad * STK_ARTICULOS.art_factor</expresion>
+			<tipo>numeric</tipo>
+		
+		</field>
+
+		<field id="Cants/Densidad" suma="true" local= "true" >
+			<label>CantxDensidad</label>
+			<expresion>(case when STK_CONCEPTOS.tipo_concepto = 1 then 1 else -1 end)  * STK_MOVIMIENTOS.cantidad * STK_ARTICULOS.art_densid</expresion>
+			<tipo>numeric</tipo>		
+		</field>
+
+		<field id="Promedio"  local= "true" >
+			<label>Pr.Promedio </label>
+			<expresion>((case when STK_CONCEPTOS.tipo_concepto = 1 then 1 else -1 end) * STK_MOVIMIENTOS.precio_total *
+		IF([__moneda_id__] = 1, 1, (1 / GEN_FN_COTIZACION([__moneda_id__],STK_MOVIMIENTOS.fecha_movimiento)))) /STK_MOVIMIENTOS.cantidad</expresion>
+			<tipo>numeric</tipo>		
+		</field>
+
+		<field id="diferencia" suma="true" local="true" noshow="true">
+			<label>Diferencia</label>
+			<if exp="true">
+				<true>(total_detalle + 0) - (total_costo + 0)</true>
+				<false>0</false>
+			</if>
+			<tipo>numeric</tipo>
+		</field>
+
+		<field id="stklista_id" noshow="true">
+			
+		</field>
+
+		<field id="moneda_id" local="true" noshow="true">
+			<helper type="combo" xml="monedas_qry.xml" dir="/ayudas" />
+			<label>MonedaFiltro</label>
+		</field>
+
+		<field id="tipo_costo" local="true" noshow="true">
+			<helper type="combo">
+				<option value="0">Actual</option>
+				<option value="1">Historico</option>
+			</helper>
+		</field>
+
+    	<order>	     	
+			<field id="stksubrubro_id" tabla="STK_ARTICULOS"/>
+			<field id="stkrubro_id" tabla="STK_ARTICULOS"/>
+			<field id="id_stkarticulo" tabla="STK_ARTICULOS"/>
+			<field id="fecha_movimiento"/>
+		</order>
+
+		
+	</table>
+
+	<join>
+		<table id="STK_CONCEPTOS">
+			<field id="id_stkconcepto">
+				<condicion operador="=">STK_MOVIMIENTOS.stkconcepto_id</condicion>
+			</field>
+		<!--	<field id="tipo_concepto">
+				<condicion operador="=">1</condicion>
+			</field>-->
+		</table>
+	</join>
+
+	
+
+	<join>
+		<table id="STK_ARTICULOS">
+			<field id="id_stkarticulo">
+				<condicion operador="=">STK_MOVIMIENTOS.stkarticulo_id</condicion>
+			</field>
+		</table>
+	</join>
+
+
+	<!--<join tipo="left">
+		<table id="STK_LISTAS">
+			<field id="id_stklista">
+				<condicion operador="=">STK_MOVIMIENTOS.stklista_id</condicion>
+			</field>
+		</table>
+	</join>-->
+
+	<join tipo="left">
+		<table id="STK_FAMILIAS">
+			<field id="id_stkfamilia">
+				<condicion operador="=">STK_ARTICULOS.stkfamilia_id</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join>
+		<table id="STK_RUBROS">
+			<field id="id_stkrubro">
+				<condicion operador="=">STK_ARTICULOS.stkrubro_id</condicion>
+			</field>
+		</table>
+	</join>
+
+
+	<join tipo="left">
+		<table id="STK_SUBRUBROS">
+			<field id="id_stksubrubro">
+				<condicion operador="=">STK_ARTICULOS.stksubrubro_id</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join>
+		<table id="REG_MOVIMIENTOS">
+			<field id="id_regmovim">
+				<condicion operador="=">STK_MOVIMIENTOS.regmovimiento_id</condicion>
+		 	</field>
+		</table>
+	</join>
+
+
+   </form>
+</histrix>
+

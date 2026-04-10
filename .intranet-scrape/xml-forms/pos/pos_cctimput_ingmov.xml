@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="insert" grabafinal="true" postGrabacion="true">
+       <title>COMPROBANTES</title>
+        <obs></obs>
+               <consulta>
+					<table id="CCTIMPUT" label="FACTURAS" idCampoCond="grabar" _idCampoCond="imputado">
+
+						<field id="siscod" id_padre="siscli">
+							<valor>'02'</valor>
+						</field>
+						<field id="succod" >
+							<valor>1</valor>
+						</field>
+
+
+						<field id="movnpv" id_padre="movnpv"></field>
+						<field id="movnro" id_padre="movnro">
+							<valor>[__movnro__]</valor>
+						</field>
+						<field id="movimp" id_temp="imputado"></field>
+						<field id="concod" id_padre="concod"></field>
+					<!--	<field id="opecla" id_padre="opecla"></field> -->
+						<field id="ctacod" id_padre="ctacod"></field>
+<!--						<field id="ctanom" id_padre="ctanom"></field> -->
+						<field id="movfec" id_padre="movfec"></field>
+						<field id="movlet" id_padre="movlet"></field>
+
+
+						<field id="movsal" id_temp="newsaldo">
+						</field>
+
+						<field id="movicc" id_padre="conpag">
+						</field>
+						<field id="movife" id_padre="fecha">
+						</field>
+
+						<field id="movipv" id_padre="npvrec">
+						</field>
+						<field id="movinc" id_padre="nrorec">
+						</field>
+<!--						<field id="regmin" >
+						</field>
+
+						-->
+
+					</table>
+               </consulta>
+        </histrix>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+	<title>DESCUENTO</title>
+	<obs></obs>
+	<form >
+		<table id="RHDESCUENTOS" idCampoCond="grabar">
+		    <title>Descuentos</title>
+			<field id="legajo" id_temp="legajo"></field>
+			<field id="fecha" id_cab="fecha"></field>
+			<field id="IdMotivoDesc" id_cab="IdMotivoDesc"></field>
+			<field id="Importe" id_cab="Importe"></field>
+                        <field id="sobre_extras" id_cab="sobre_extras"></field>
+			
+		</table>
+	</form>	   
+</histrix>

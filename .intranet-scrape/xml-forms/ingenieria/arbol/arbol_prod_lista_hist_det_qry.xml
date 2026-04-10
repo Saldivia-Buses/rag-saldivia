@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" _preloadData="false" export="true" _imprime="false">
+    <title>Histórico Arbol Producto</title>
+    <obs></obs>
+    <form >
+        <table id="STK_BOM_HIST" label="Histórico Materia prima">
+<!--
+            <filters>
+
+                <field id="bom_variacion_id">
+                    <label>Homologación</label>
+                    <operador>=</operador>
+                </field>
+
+                <field id="fecha_costo">
+                    <label modpos="nobr">Fecha</label>
+                    <operador>=</operador>
+                </field>
+
+            </filters>
+-->
+            <field id="id_stkbomhist" noshow="true" />
+
+            <field id="bom_variacion_id" noshow="true" required="true">
+                <label>Hom.</label>
+                <actualiza>
+                    <field destino="bom_variacion_id" id="fecha_costo"/>
+                </actualiza>
+            </field>
+
+            <field id="fecha_costo" required="true" _noshow="true">
+                <helper type="combo" xml="arbol_prod_hist_fechas_qry.xml">
+                    <field id="fecha_costo"/>
+                </helper>
+		<tipo>varchar</tipo>
+                <label>Fecha</label>
+                <detalle>fecha_costo</detalle>
+            </field>
+            
+            <field id="pieza_id" noshow="true" />
+
+            <field id="nrocar" tabla="HOMOLOGMOD">
+                <label>Carr.</label>
+                <helper empty="true" id="CARROCERIA" type="combo">
+                  <field id="nrocar"/>
+                  <field id="desabv"/>
+                  <field id="nrocar">
+                    <condicion operador="!=">0</condicion>
+                  </field>
+                  <order>
+                    <field id="modcar"/>
+                  </order>
+                </helper>
+            </field>
+
+            <field id="marcod" tabla="HOMOLOGMOD">
+                <label>MC</label>
+                <helper empty="true" id="MARCHASIS" type="combo">
+                  <field id="marcod"/>
+                  <field id="desabv"/>
+                  <field id="marcod">
+                    <condicion operador="!=">0</condicion>
+                  </field>
+                  <order>
+                    <field id="marcod"/>
+                  </order>
+                </helper>
+            </field>
+
+            <field id="modelo_id" tabla="HOMOLOGMOD">
+                <label modpos="nobr">Modelo</label>
+                <help>Modelo del Chasis</help>
+                <helper empty="true" id="MODCHASIS" type="combo">
+                  <field id="id_modelo"/>
+                  <field id="moddes"/>
+                  <field id="marcod" noshow="true"/>
+                </helper>
+            </field>
+
+            <field id="artcod_id" tabla="HOMOLOGMOD">
+                <label>Art</label>
+            </field>
+
+            <field id="asientos" tabla="HOMOLOGMOD">
+                <label modpos="nobr">Asientos</label>
+                <help>Cantidad de Asientos</help>
+            </field>
+
+            <field id="banbar" tabla="HOMOLOGMOD">
+                <label>B/b</label>
+                <options>
+                    <option valor="0">No</option>
+                    <option valor="1">Si</option>
+                </options>
+            </field>
+
+            <field  id="stkarticulohijo_id" noshow="true" _arbol="hijo"/>
+       
+            <field  id="stkarticulohijo_string" _arbol="hijo" style="color:red;font-family: monospace;white-space:nowrap; width:100%; text-align:left;">
+		<expression>(case when trim(stkarticulohijo_string) != '' then stkarticulohijo_string else  stkarticulohijo_id end)</expression>
+                <label>Artículo</label>
+                <help>Artículo Hijo</help>
+                <size>12</size>
+            </field>
+
+            <field  id="nombre_articulo" style="width:17em;" >
+                <label>Nombre</label>
+                <help>Artículo Hijo</help>
+                <expression>select nombre_articulo from STK_ARTICULOS WHERE id_stkarticulo = stkarticulohijo_id limit 1</expression>
+            </field>
+
+            <field  id="posicionfab_id">
+                <label>Pos.Fab</label>
+                <expression>select nombre from POSICIONESFAB where id_posicionfab = posicionfab_id</expression>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="tipocalculo_costo" _noshow="true">
+                <label>Fab.</label>
+        		<help>Fabricación</help>
+        		<helper type="combo">
+        		    <option value="0">Propia</option>
+        		    <option value="1">Compra</option>
+        		</helper>
+            </field>
+
+            <field id="id_ejercicio" noshow="true">
+                <expression>select id_ejercicio from CTB_EJERCICIOS where 
+                    fecha_costo between comienza and finaliza</expression>
+            </field>
+            
+            <field id="regcuenta_id" noshow="true"/>
+
+    	    <field id="nombre_cuenta_prov">
+    		  <label>Prov.</label>
+              <expression>select nombre_cuenta from REG_CUENTA WHERE id_regcuenta = regcuenta_id</expression>
+    	    </field>
+
+            <field id="cuenta_id">
+               <label>Nro Cta</label>
+               <tipo>varchar</tipo>
+            </field>
+
+            <field id="nombre_cuenta_ctb">
+               <label>CtaCtb</label>
+               <expression>select nombre_cuenta from CTB_CUENTAS WHERE id_cuenta = cuenta_id and ejercicio_id = id_ejercicio</expression>
+               <tipo>varchar</tipo>
+            </field>
+         
+            <field id="cantidad">
+                <label>Cant.</label>
+                <help>Cantidad</help>
+            </field>
+
+            <field id="unidad_compra">
+              <label modpos="nobr">Uso</label>
+              <help>Unidad de Stock</help>
+            </field>
+
+            <field id="unidad_uso">
+              <label modpos="nobr">U.cps</label>
+	       </field>
+
+            <field id="multiplo">
+                <label>Múltiplo</label>
+            </field>
+
+            <field id="unitario" style="color:blue;" noZero="true">
+                <label>Unitario</label>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="recargo" noZero="true">
+                <label>% Rec</label>
+            </field>
+
+            <field id="porcentaje_region" noZero="true">
+                <label>% Log</label>
+            </field>            
+
+            <field id="multiplo" style="text-align:right;">
+                <label>Múltiplo</label>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="sumaitems" noZero="true">
+                <label>Total</label>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="sumaitems_clog" suma="true" noZero="true">
+                <label>Total c/Log</label>
+                <tipo>custom_numeric</tipo>
+            </field>            
+
+            <field id="level_0" suma="true"  noZero="true">
+                <label>Conjuntos</label>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="level_1" noZero="true" >
+                <label>Level 1</label>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="level_2" noZero="true">
+                <label>Level 2</label>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="level_3" noZero="true">
+                <label>Level 3</label>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="level_4"  noZero="true">
+                <label>Level 4</label>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="level_5" noZero="true">
+                <label>Level 5</label>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="level_6" noZero="true">
+                <label>Level 6</label>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="level_7" noZero="true">
+                <label>Level 7</label>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+    	    <field id="piezas" suma="true">
+                <label>piezas</label>
+                <tipo>custom_numeric</tipo>
+    	    </field>
+
+        </table>
+
+        <join>
+            <table id="HOMOLOGMOD">
+                <field id="id_homologacion">
+                    <condicion operador="=">STK_BOM_HIST.bom_variacion_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

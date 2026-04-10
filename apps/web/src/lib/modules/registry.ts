@@ -141,11 +141,13 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
       "/administracion/facturacion",
       "/administracion/pagos",
       "/administracion/contable",
+      "/administracion/sugerencias",
     ],
     subnav: [
       { path: "/administracion/facturacion", label: "Facturación" },
       { path: "/administracion/pagos", label: "Pagos" },
       { path: "/administracion/contable", label: "Contabilidad" },
+      { path: "/administracion/sugerencias", label: "Sugerencias" },
     ],
   },
   rrhh: {

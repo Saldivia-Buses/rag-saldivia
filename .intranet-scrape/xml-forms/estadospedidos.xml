@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm">
+	<title>Estados de Pedidos</title>
+	<obs/>
+	<form >
+		<table id="ESTADOSPEDIDOS">
+			<title>Estado</title>
+			<field id="idEstado" esclave="true" autoinc="true" deshabilitado="true" noshow="true">
+				<label>Codigo</label>
+				<help>Codigo</help>
+			</field>
+			<field id="nombre">
+				<label>Nombre</label>
+				<help>Nombre de la Editorial</help>
+			</field>
+			<field id="descripcion">
+				<label>Descripcion</label>
+				<help>Descripcion</help>
+			</field>
+		</table>
+	</form>
+</histrix>

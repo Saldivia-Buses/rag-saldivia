@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" PDForientacion="L" margintabs="true">
+  <title>IVA VENTAS</title>
+  <obs/>
+  <form>
+    <table id="REG_MOVIMIENTOS" label="IVA VENTAS">
+
+      <field id="id_regmovim" noshow="true" esClave="true"/>
+
+      <field id="reg_fecha" oculto="true" />
+
+      <field id="subsistema_id" noshow="true">
+      </field>
+
+      <field id="regcuenta_id" noshow="true" />
+
+      <field id="tipo_registro" local="true">
+        <label>Tipo Reg</label>
+        <valor>1</valor>
+      </field>
+
+      <field id="fecha_movimiento" noshow="true">
+        <label>Fecha</label>
+      </field>
+
+       <field id="fecha_comp">
+        <label>Fecha comp.</label>
+        <expresion>REPLACE(REG_MOVIMIENTOS.fecha_movimiento, '-', '')</expresion>
+      </field>
+
+      <field id="letra_movimiento" oculto="true" />
+      
+      <field id="concepto_id" noshow="true">
+        <label>Comprobante</label>
+        <tabla_ex id="REG_CONCEPTOS" vacio="true">
+          <field id="id_concepto"/>
+          <field id="descripcion_concepto"/>
+          <field id="subsistema_id" oculto="true">
+            <condicion operador="=">'02'</condicion>
+          </field>
+          <field id="tipo_concepto" oculto="true">
+            <condicion operador="=">1</condicion>
+          </field>
+        </tabla_ex>
+      </field>
+
+      <field id="tipo_concepto" noshow="true" tabla="REG_CONCEPTOS">
+        <condicion operador="=">1</condicion>
+      </field>
+
+      <field id="regconcepto_afip" tabla="REG_NUMERADORES">
+        <label>Tipo comp.</label>
+        <expression>LPAD(REG_NUMERADORES.regconcepto_afip, 2, 0)</expression>
+      </field>
+
+      <field id="puesto_movimiento">
+        <label>P.Vta.</label>
+        <expression>LPAD(REG_MOVIMIENTOS.puesto_movimiento, 5, 0)</expression>
+      </field>
+
+      <field id="nro_movimiento">
+        <label>Nro Comprobant</label>
+        <expression>LPAD(REG_MOVIMIENTOS.nro_movimiento, 20, 0)</expression>
+      </field>
+      
+      <field id="nro_movimiento_hta">
+        <label>Nro Comp. hasta</label>
+        <expression>LPAD(REG_MOVIMIENTOS.nro_movimiento, 20, 0)</expression>
+      </field>
+
+      <field id="imprime_concepto" noshow="true" print="false">
+        <expresion>ifnull(ejecuta,'')</expresion>
+      </field>
+
+      <!--
+      <field id="iva_id" tabla="REG_CUENTA">
+        <label>Categoria</label>
+        <tabla_ex id="GEN_IVA">
+          <field id="id_iva"/>
+          <field id="abreviacion_iva"/>
+        </tabla_ex>
+      </field>
+      -->
+      <field id="tipo_documento_id" _tabla="REG_CUENTA" local="true">
+        <label>Cod documento</label>
+      <!--  <expresion>LPAD(REG_CUENTA.tipo_documento_id, 2, 0)</expresion> -->
+        <valor>80</valor>
+      </field>
+
+      <field id="cuit_cuenta" tabla="REG_CUENTA">
+        <label>CUIT</label>
+        <expression>LPAD(REPLACE(IF(cuit_movimiento != '',cuit_movimiento,cuit_cuenta), '-', ''), 11, 0)</expression>
+        <tipo>integer</tipo>
+      </field>
+
+      <field id="nombre_cuenta">
+        <expression>RPAD(REPLACE(IF(nombre_movimiento != '',nombre_movimiento,nombre_cuenta),'Ñ', 'N'), 30, ' ')</expression>
+        <label>Razon Social</label>
+      </field>
+
+      <field id="importe_movimiento" suma="true">
+        <expresion>LPAD(round(importe_movimiento * 100, 0), 15, '0')</expresion>
+        <label>Total</label>
+        <tipo>integer</tipo>
+      </field>
+      
+      <field id="no_neto" local="true">
+        <label>No neto</label>
+        <valor>000000000000000</valor>
+      <!--  <tipo>integer</tipo> -->
+
+      </field>
+     
+      <field id="neto_movimiento" suma="true">
+        <label>Imp. Gravado</label>
+        <expresion>LPAD(round(neto_movimiento * 100, 0), 15, '0')</expresion>
+        <tipo>integer</tipo>
+      </field>
+
+      <field id="alicuota_iva" local="true">
+        <label>Alicuota</label>
+      <!--  <expression>LPAD(REPLACE(REG_MOVIMIENTOS.alicuota_iva, '.', ''), 4, 0)</expression>
+        -->
+        <expresion>LPAD(REPLACE((SELECT distinct(REG_DETALLES.alicuota_iva) FROM REG_DETALLES where REG_DETALLES.regmovim_id = REG_MOVIMIENTOS.id_regmovim group by REG_DETALLES.regmovim_id order by REG_DETALLES.regmovim_id desc limit 1), '.', ''), 4, 0)</expresion>
+
+        <tipo>integer</tipo>
+      </field>
+
+      <field id="importe_iva" local="true" suma="true">
+        <label>IVA</label>
+        <expresion>LPAD(round(importe_iva * 100, 0), 15, '0')</expresion>
+        <tipo>integer</tipo>
+      </field>
+
+      <field id="noinf0">
+        <label>no informa0</label>
+        <expresion>LPAD(0, 15, '0')</expresion>
+      </field>
+
+      <field id="importe_exento" norepeat="true" suma="true">
+        <expresion>LPAD(round(importe_exento * 100, 0), 15, '0')</expresion>
+        <label>Exento</label>
+        <tipo>integer</tipo>
+      </field>
+
+      <field id="noinf1">
+        <label>no informa1</label>
+        <expresion>LPAD(0, 75, '0')</expresion>
+      </field>
+
+      <field id="cantidad_alic">
+        <label>Cant. alicuota</label>
+        <expresion>SELECT count(distinct(REG_DETALLES.alicuota_iva)) FROM REG_DETALLES where REG_DETALLES.regmovim_id = REG_MOVIMIENTOS.id_regmovim</expresion>
+        <tipo>integer</tipo>
+      </field>
+
+      <field id="noinf2">
+        <label>no informa2</label>
+        <expresion>LPAD(0, 106, '0')</expresion>
+      </field>
+
+      <field id="fecha_percepcion" local="true">
+        <label>Fecha percep</label>
+        <valor>00000000</valor>
+      </field>
+
+      <field id="importe_percepcion" local="true" suma="true">
+        <label>Percepcion</label>
+        <expresion>LPAD(round(importe_percepcion * 100, 0), 15, '0')</expresion>
+        <label>Exento</label>
+        <tipo>integer</tipo>
+      </field>
+     
+      <!--
+      <field _colstyle="display:none;" id="provincia_id" tabla="REG_CUENTA">
+        <label>Provincia</label>
+        <helper dir="/ayudas" empty="true" type="combo" xml="provincia_qry.xml"/>
+        <tipo>varchar</tipo>
+      </field>
+
+      -->
+
+      <field id="titulo" local="true" oculto="true" print="false">
+        <valor>Libro IVA Ventas</valor>
+        <setvar>titulo_div</setvar>
+      </field>
+
+      <group>
+        <field id="id_regmovim"/>
+      </group>
+
+      <order>
+        <field id="fecha_movimiento"/>
+        <field id="letra_movimiento"/>
+        <field id="puesto_movimiento"/>
+        <field id="nro_movimiento"/>
+      </order>
+
+      <filters>
+        <field id="fecha_movimiento">
+          <operador>&gt;=</operador>
+          <label>Desde Fecha</label>
+          <valor>today</valor>
+        </field>
+        <field id="fecha_movimiento">
+          <operador>&lt;=</operador>
+          <label modpos="nobr">Hasta Fecha</label>
+          <valor>today</valor>
+        </field>
+        <!--
+        <field id="puesto_movimiento">
+          <operador>&gt;=</operador>
+          <label>Desde Puesto</label>
+        </field>
+        <field id="puesto_movimiento">
+          <operador>&lt;=</operador>
+          <label modpos="nobr">Hasta Puesto</label>
+        </field>
+      -->
+        <field id="concepto_id">
+          <operador>=</operador>
+          <label>Comprobante</label>
+        </field>
+        <!--
+        <field id="provincia_id">
+          <operador>=</operador>
+          <label modpos="nobr">Provincia</label>
+        </field>
+      -->
+      </filters>
+    </table>
+
+    <join>
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+     <table id="REG_NUMERADORES">
+       <field id="subsistema_id">
+         <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+       </field>
+       <field id="regconcepto_id">
+         <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+       </field>
+       <field id="puesto">
+         <condicion operador="=">REG_MOVIMIENTOS.puesto_movimiento</condicion>
+       </field>
+       <field id="letra">
+         <condicion operador="=">REG_MOVIMIENTOS.letra_movimiento</condicion>
+       </field>
+     </table>
+    </join>
+    <join>
+      <table id="GEN_SUBSISTEMAS">
+        <field id="id_subsistema">
+          <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+        </field>
+        <field id="iva_subsistema">
+          <condicion operador="=">1</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

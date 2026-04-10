@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="abm">
+  <title>MOTIVOS DE DESCUENTO</title>
+  <obs></obs>
+  <form >
+    <table id="RHMOTIVODESC" >
+        <title>Motivos de Descuentos</title>
+      <field id="IdMotivoDesc" autoinc="true" noshow="true">
+        <label>id</label>
+      </field>
+      
+      <field id="motivo">
+        <label>Descripción</label>
+        <help>Descripción del Motivo</help>
+      </field>
+      <field id="imputacion">
+        <label>Suma/Resto</label>
+                <options>
+                    <option valor="-1">Resta</option>
+                    <option valor="1">Suma</option>
+                </options>
+        <help>Descripción del Motivo</help>
+      </field>
+      
+    </table>
+  </form>     
+</histrix>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="insert" grabafinal="true">
+       <title>IVAVENTAS</title>
+        <obs></obs>
+               <form >	
+					<table id="IVAVENTAS" label="IVAVENTAS">
+				                <sql>
+				                UPDATE `IVAVENTAS`
+				                SET regmovim_id = (SELECT id_regmovim FROM REG_MOVIMIENTOS rm WHERE rm.nro_cuenta = IVAVENTAS.ctacod and rm.puesto_movimiento = IVAVENTAS.nronpv and rm.nro_movimiento = IVAVENTAS.nrocom and rm.fecha_movimiento = IVAVENTAS.feciva and rm.concod = IVAVENTAS.codcom and rm.letra_movimiento = IVAVENTAS.codlet limit 1)
+				                </sql>
+					</table>
+               </form>
+        </histrix>

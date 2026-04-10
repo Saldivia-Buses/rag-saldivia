@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+    <title/>
+    <obs/>
+    <form>
+        <table id="REG_IMPUTACIONES" idCampoCond="imputado">
+          <field id="regmovim_id"           lastId="regmovimientos_consaldo_ins.xml" />
+          <field id="regmovim0_id"          id_temp="id_regmovim" />
+          <field id="subsistema0_id"          id_temp="subsistema_id" />
+          <field id="movimiento_imputacion" id_temp="imputado" />
+        </table>
+    </form>
+</histrix>	

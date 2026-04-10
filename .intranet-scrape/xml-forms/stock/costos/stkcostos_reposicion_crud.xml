@@ -1,0 +1,502 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" preloadData="false">
+    <title>Articulos</title>
+    <obs></obs>
+    <form detalle="stkcostos_reposicion_hist.xml" inline="true">
+        <table id="STK_COSTO_REPOSICION" label="Articulos" >
+        
+	        <filters>
+	            <field id="filtro_articulo" deshabilitado="false">
+	                <label>Código Artículo</label>
+	                <operador>=</operador>
+	            </field>
+
+	            <field id="filtro_nombre_articulo" _sincelda="true" colspan="7" deshabilitado="false">
+	                <label modpos="nobr">Nombre</label>
+	                <operador>like</operador>
+	            </field>
+		    
+                <field id="ctbnom" deshabilitado="false"  _sincelda="true">
+                    <label modpos="nobr">CtaCtb</label>
+                    <operador>=</operador>
+                </field>
+		<field id="moneda_id" deshabilitado="false">
+	                <label modpos="nobr">Moneda</label>
+	    	        <operador>=</operador>
+	        </field>
+                <field id="fecha" deshabilitado="false">
+                    <label _modpos="nobr">Modif desde</label>
+                    <operador>&gt;=</operador>
+                </field>
+
+                <field id="fecha" deshabilitado="false">
+                    <label modpos="nobr">Modif hasta</label>
+                    <operador>&lt;=</operador>
+                </field>
+
+	            <field id="regcuenta_id">
+	                <label modpos="nobr">Proveedor</label>
+	                <operador>=</operador>
+	            </field>
+
+                <field id="tipo_pieza" deshabilitado="false">
+                    <operador>=</operador>
+                    <label modpos="nobr">Pieza</label>
+                </field>                
+
+                <field id="fabricacion_propia" deshabilitado="false">
+                    <operador>=</operador>
+                    <label modpos="nobr">Fab.Propia</label>
+                </field>
+                <field id="origen">
+                    <label modpos="nobr">Origen</label>
+                    <operador>=</operador>
+                    <help>Origen</help>
+                </field>
+
+                <field id="tipocalculo_costo" deshabilitado="false">
+                    <label modpos="nobr">Tipo de costo</label>
+                    <operador>=</operador>
+                </field> 
+
+	        </filters>
+
+            <fieldGroup>
+                <field id="id_costoreposicion" noshow="true">
+                	<detalle>costoreposicion_id</detalle>
+                </field>        
+
+                <field id="filtro_articulo" noshow="true">
+                    <expression>stkarticulo_id</expression>
+                    <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+                        <field id="subsistema_id">
+                            <condicion operador="=">'01'</condicion>
+                        </field>
+                    </helper>
+                </field>
+
+                <field id="filtro_nombre_articulo" noshow="true">
+                    <expression>STK_ARTICULOS.nombre_articulo</expression>
+                    <size>65</size>
+                </field>
+
+                <field id="stkarticulo_id" esClave="true">
+                    <label>Artículo</label>
+                    <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+                    	<field id="subsistema_id">
+                        	<condicion operador="=">'01'</condicion>
+                        </field>
+                    </helper>
+                </field>
+
+
+                <field id="nombre_articulo" tabla="STK_ARTICULOS" deshabilitado="true" colspan="3" _sincelda="true">
+                    <label modpos="nobr">Nombre</label>
+                    <size>65</size>
+                </field>
+
+                <field id="codigo_articulo" noshow="true">
+                    <expression>stkarticulo_id</expression>
+                    <actualiza>
+                        <field id="costo_final" destino="articulo_cr" />
+                        <field id="costo_final_desc" destino="articulo_cr" />
+                    </actualiza>
+                </field>
+                  <field id="ctbnom" tabla="CTBCUENT" autocompletar="true" _deshabilitado="false" colspan="4" _sincelda="true">
+                    <label modpos="nobr">Cta Ctb</label>
+                    <help>Código Cuenta Contable</help>
+                    <helper type="external" id="CTBCUENT" vacio="true">
+                      <field id="ctbcod" noshow="true">
+                        <detalle>artctb</detalle>
+                      </field>
+                      <field id="ctbnom">
+                        <expression>CONCAT(ctbnom, ' (', CTBCUENT.ctbcod, ')')</expression>
+                      </field>          
+                      <field id="ctbhab" noshow="true">
+                        <condicion operador="=">1</condicion>
+                      </field>
+                      <order>
+                        <field id="ctbnom" tabla="CTBCUENT"/>
+                      </order>
+                    </helper>
+                    <expression>CONCAT(ctbnom, ' (', CTBCUENT.ctbcod, ')')</expression>
+                    <size>40</size>
+                  </field>
+
+                  <field id="regcuenta_id" colstyle="display:none;" colspan="4" export="false">
+                    <label modpos="nobr">Proveedor</label>
+                    <helper type="combo" id="REG_CUENTA" empty="true">
+                        <field id="id_regcuenta"/>
+                        <field id="nombre_cuenta">
+                            <detalle>nombre_cuenta</detalle>
+                        </field>
+                        <field id="subsistema_id">
+                           <condicion operador="=">'01'</condicion>
+                        </field>
+                        <field id="baja">
+                           <condicion operador="=">0</condicion>
+                        </field>                    
+                        <order>
+                            <field id="nombre_cuenta"/>
+                        </order>
+                    </helper>
+                </field>
+
+                <field id="stkrubro_id" tabla="STK_ARTICULOS" _deshabilitado="true" Formstyle="display:none;" colstyle="display:none;">
+                    <label>Rubro</label>
+                    <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true" />
+                    <actualiza>
+                        <field destino="stkrubro_id" id="stksubrubro_id"/>
+                        <field destino="stkrubro_id" id="filtro_subrubro"/>
+                    </actualiza>
+                </field>
+
+                <field id="stksubrubro_id" tabla="STK_ARTICULOS" _deshabilitado="true" Formstyle="display:none;" colstyle="display:none;">
+                    <label modpos="nobr">SubRubro</label>
+                    <helper type="combo" xml="stksubrubro_qry.xml" dir="/ayudas" empty="true" />
+                </field>
+
+                <field id="nombre_cuenta" tabla="REG_CUENTA" deshabilitado="true" Formstyle="display:none;">
+                	<label modpos="nobr">Proveedor</label>
+                </field>
+
+                <!-- Precios -->
+                <field id="moneda_id">
+                    <label>Moneda</label>
+                    <helper type="combo" xml="moneda_qry.xml" dir="/ayudas" empty="true" />
+	                <actualiza>
+	                    <field id="costo_final" destino="moneda_cr" />
+	                    <field id="costo_final_desc" destino="moneda_cr" />
+	                </actualiza>
+                </field>
+
+                <field id="origen">
+                    <label modpos="nobr">Origen</label>
+                    <help>Origen</help>
+                    <helper type="combo" empty="true">
+                        <option value=""></option>
+                        <option value="N">Nacional</option>
+                        <option value="I">Importado</option>
+                    </helper>
+                </field>
+
+                <field id="incoterm_id" colstyle="display:none">
+                    <label modpos="nobr">Incoterm</label>
+                    <helper type="combo" xml="stkincoterm_crud.xml" dir="/stock/man/" empty="true" />
+                </field>
+
+                <field id="tipocalculo_costo" tabla="STK_ARTICULOS">
+                    <label>Tipo costo</label>
+                    <options>
+                        <option valor=""></option>
+                        <option valor="1">Manual</option>
+                        <option valor="0">Automático</option>
+                    </options>
+<!--                     <expression>IF(tipocalculo_costo=1,'Manual', 'Automático')</expression>
+ -->                </field>
+
+                <field id="cotizacion" _sincelda="true" modpos="nobr">
+                    <label>Cotización</label>
+                    <expression>@cotiz:=(select cotizacion_genmonedahis from GEN_MONEDA_HIS where GEN_MONEDA_HIS.moneda_id = STK_COSTO_REPOSICION.moneda_id order by fecha_genmonedahis DESC limit 1)</expression>
+                </field>
+
+                <field id="costo_proveedor" >
+                    <label modpos="nobr">Costo Proveedor</label>
+                    <help>Precio de Costo</help>
+	                <actualiza>
+	                    <field id="costo_final" destino="costo_proveedor_cr" />
+	                    <field id="costo_final_desc" destino="costo_proveedor_cr" />
+	                </actualiza>
+                </field>
+
+                <field id="descuento_1">
+                    <label>Descuento 1</label>
+                    <help>1er Descuento del proveedor</help>
+	                <actualiza>
+	                    <field id="costo_final_desc" destino="desc_1_cr" />
+	                </actualiza>
+                </field>
+
+                <field id="descuento_2">
+                    <label modpos="nobr">Descuento 2</label>
+                    <help>2do Descuento del proveedor</help>
+	                <actualiza>
+	                    <field id="costo_final_desc" destino="desc_2_cr" />
+	                </actualiza>
+                </field>
+
+                <field id="unidad_compra_id" tabla="STK_ARTICULOS" deshabilitado="true" colspan="3" sincelda="true">
+                    <label modpos="nobr">Unidad de Compra</label>
+                    <help>Unidad de Compra</help>
+                    <helper type="combo" xml="unidad_qry.xml" dir="/ayudas" empty="true" />
+                </field>            
+
+                
+
+                
+
+                <field id="incoterm_id2" Formstyle="display:none;">
+                    <label >Incoterm</label>
+                    <expression>incoterm_id</expression>                    
+                </field>
+
+<!--
+                <field id="gasto_importacion">
+                    <label>% Costo Logìstico</label>
+                    <help>% Gasto de Imporacion</help>
+                    <actualiza>
+	                    <field id="costo_final" destino="gasto_importacion_cr" />
+	                    <field id="costo_final_desc" destino="gasto_importacion_cr" />
+	                </actualiza>
+                </field>
+-->
+                <field id="gasto_importacion_region">
+                    <label>% Gastos Región</label>
+		    <expression>(select round(porcentaje_region, 2) from REG_CUENTA  join LOG_REGION on id_logregion = logregion_id where id_regcuenta = STK_COSTO_REPOSICION.regcuenta_id)</expression>
+		</field>
+<!--
+                <field id="flete_local_ars">
+                    <label>Flete local AR$</label>
+                    <help>Flete local en AR$</help>
+                    <tipo>numeric</tipo>
+	                <actualiza>
+	                    <field id="costo_final" destino="flete_local_ars_cr" />
+	                    <field id="costo_final_desc" destino="flete_local_ars_cr" />
+	                </actualiza>
+                </field>
+
+                <field id="flete_local_mon_item">
+                    <label>Flete Mon.Item</label>
+                    <help>Flete local en Moneda Item</help>
+                    <expression>round((flete_local_ars / @cotiz), 2)</expression>
+                    <tipo>numeric</tipo>
+                </field>
+-->
+                <field id="costo_final_moneda_item" style="font-weigth:bold;color:blue;">
+                    <label>Costo Final Mon.Item</label>
+                    <expression>round(costo_proveedor + (costo_proveedor / 100 * gasto_importacion)  + (flete_local_ars / @cotiz), 2)</expression>
+                    <tipo>numeric</tipo>
+                </field>
+
+		<field id="costo_logistico">
+		    <label>Costo Logístico</label>
+		    <expression>round((select  porcentaje_region / 100 from REG_CUENTA  join LOG_REGION on id_logregion = logregion_id where id_regcuenta = STK_COSTO_REPOSICION.regcuenta_id) *  costo_proveedor, 2)</expression>
+                    <tipo>numeric</tipo>
+		</field>
+                <field id="costo_final_item" style="font-weigth:bold;color:blue;" modpos="nobr">
+                    <label>Final c/Log</label>
+                    <expression>round((costo_proveedor + (costo_proveedor / 100 * gasto_importacion))  + (flete_local_ars / @cotiz ) + ((select  porcentaje_region / 100 from REG_CUENTA  join LOG_REGION on id_logregion = logregion_id where id_regcuenta = STK_COSTO_REPOSICION.regcuenta_id) *  costo_proveedor) , 2)</expression>
+                    <tipo>numeric</tipo>
+                </field>
+                <field id="costo_final_moneda_local" style="font-weigth:bold;color:blue;" modpos="nobr">
+                    <label>Costo Final AR$</label>
+                    <expression>round(@cotiz * (costo_proveedor + (costo_proveedor / 100 * gasto_importacion))  + (flete_local_ars / @cotiz), 2)</expression>
+                    <tipo>numeric</tipo>
+                </field>
+                <field id="costo_final_item_ars" style="font-weigth:bold;color:blue;" modpos="nobr">
+                    <label>Final c/Log AR$</label>
+                    <expression>round(@cotiz * (costo_proveedor + (costo_proveedor / 100 * gasto_importacion))  + (flete_local_ars / @cotiz) + ((select  porcentaje_region / 100 from REG_CUENTA  join LOG_REGION on id_logregion = logregion_id where id_regcuenta = STK_COSTO_REPOSICION.regcuenta_id) *  costo_proveedor) * @cotiz, 2)</expression>
+                    <tipo>numeric</tipo>
+                </field>
+				<!--  COSTO REPOSICON FINAL  -->
+
+		<field id="costo_final" style="font-weigth:bold;color:blue;" local="true" noshow="true">
+	                <label>Costo Repo Final S/Desc</label>
+	                <helper type="combo" id="GEN_MONEDAS">
+	                    <field id="calculo_costo">
+	                        <expression>(SELECT test_costo_repo('[__articulo_cr__]', '[__moneda_cr__]', '[__costo_proveedor_cr__]', '[__gasto_importacion_cr__]', '[__flete_local_ars_cr__]', 0, 0))</expression>
+	                    </field>
+	                    <field id="calculo_costo2">
+	                        <expression>(SELECT test_costo_repo('[__articulo_cr__]', '[__moneda_cr__]', '[__costo_proveedor_cr__]', '[__gasto_importacion_cr__]', '[__flete_local_ars_cr__]', 0, 0))</expression>
+	                    </field>
+	                    <field id="costo_proveedor_cr" local="true" oculto="true" />
+	                    <field id="gasto_importacion_cr" local="true" oculto="true" />
+	                    <field id="flete_local_ars_cr" local="true" oculto="true" />
+	                    <field id="articulo_cr" local="true" oculto="true" />                        
+	                    <field id="moneda_cr" local="true" oculto="true" />
+	                </helper>
+	            </field>
+
+	            <field id="costo_final_desc" style="font-weigth:bold;color:blue;" local="true" noshow="true">
+	                <label>Costo Repo Final C/Desc</label>
+	                <helper type="combo" id="GEN_MONEDAS">
+	                    <field id="calculo_costo_desc">
+	                        <expression>(SELECT test_costo_repo('[__articulo_cr__]', '[__moneda_cr__]', '[__costo_proveedor_cr__]', '[__gasto_importacion_cr__]', '[__flete_local_ars_cr__]', '[__desc_1_cr__]', '[__desc_2_cr__]'))</expression>
+	                    </field>
+	                    <field id="calculo_costo_desc2">
+	                        <expression>(SELECT test_costo_repo('[__articulo_cr__]', '[__moneda_cr__]', '[__costo_proveedor_cr__]', '[__gasto_importacion_cr__]', '[__flete_local_ars_cr__]', '[__desc_1_cr__]', '[__desc_2_cr__]'))</expression>
+	                    </field>
+	                    <field id="costo_proveedor_cr" local="true" oculto="true" />
+	                    <field id="gasto_importacion_cr" local="true" oculto="true" />
+	                    <field id="flete_local_ars_cr" local="true" oculto="true" />
+	                    <field id="articulo_cr" local="true" oculto="true" />                        
+	                    <field id="moneda_cr" local="true" oculto="true" />
+	                    <field id="desc_1_cr" local="true" oculto="true" />                        
+	                    <field id="desc_2_cr" local="true" oculto="true" />
+	                </helper>                
+	            </field>
+
+				<!-- FIN COSTO REPOSICION FINAL -->
+
+                <field id="costo_ant" noshow="true">
+                    <label>Costo Anterior</label>
+                    <expression>@costo_ant:=(select costo_proveedor from STK_COSTO_REPOSICION_HIST where costoreposicion_id = id_costoreposicion order by modificado DESC limit 1, 1)</expression>
+                </field>
+                
+                <field id="costo_final_desc2" style="font-weigth:bold;color:green;">
+                    <label>Costo Desc</label>
+                    <expression>@costofinal_desc:=(round(((costo_proveedor + (costo_proveedor / 100 * gasto_importacion)) 
+                        - (costo_proveedor / 100 * descuento_1)) - (((costo_proveedor + (costo_proveedor / 100 * gasto_importacion)) 
+                        - (costo_proveedor / 100 * descuento_1)) / 100 * descuento_2)  + flete_local_ars, 2))</expression>
+                    <tipo>numeric</tipo>
+                </field>
+
+
+                <field id="costo_final_moneda_local_desc2" style="font-weigth:bold;color:green;" modpos="nobr">
+                    <label>Costo AR$ Desc</label>
+
+                    <expression>@costofinal_local_desc:=(round(@cotiz * (
+                        ((costo_proveedor + (costo_proveedor / 100 * gasto_importacion)) 
+                        - (costo_proveedor / 100 * descuento_1)) - (((costo_proveedor + (costo_proveedor / 100 * gasto_importacion)) 
+                        - (costo_proveedor / 100 * descuento_1)) / 100 * descuento_2))  + (flete_local_ars / @cotiz), 2))</expression>
+                    <tipo>numeric</tipo>
+                </field>
+
+
+                <field id="costo_final_desc2log" style="font-weigth:bold;color:green;">
+                    <label>Costo Desc + log</label>
+                    <expression>@costofinal_desc + ((select  porcentaje_region / 100 from REG_CUENTA  join LOG_REGION on id_logregion = logregion_id where id_regcuenta = STK_COSTO_REPOSICION.regcuenta_id) *  costo_proveedor)</expression>
+                    <tipo>numeric</tipo>
+                </field>
+
+
+                <field id="costo_final_moneda_local_desc2log" style="font-weigth:bold;color:green;" modpos="nobr">
+                    <label>Costo AR$ Desc log</label>
+
+                    <expression>@costofinal_local_desc + (((select  porcentaje_region / 100 from REG_CUENTA  join LOG_REGION on id_logregion = logregion_id where id_regcuenta = STK_COSTO_REPOSICION.regcuenta_id) *  costo_proveedor) * @cotiz)</expression>
+                    <tipo>numeric</tipo>
+                </field>
+
+
+
+                <field id="variacion_costo_desc" noshow="true">
+                    <label>% Var Cotiz Des</label>
+                    <expression>round(  (@costofinal_desc - @costo_ant) / @costo_ant * 100,2)</expression>
+                    <tipo>decimal</tipo>
+                </field>
+
+                <field id="costo_final_ant" noshow="true">
+                    <label>Costo Anterior fin</label>
+<!--                    <expression>@costofinal_ant:=(SELECT (round( cotizacion * (((costo_proveedor + (costo_proveedor / 100 * gasto_importacion)) - (costo_proveedor / 100 * descuento_1)) - (((costo_proveedor + (costo_proveedor / 100 * gasto_importacion)) - (costo_proveedor / 100 * descuento_1)) / 100 * descuento_2))  + (flete_local_ars / cotizacion), 2))
+                                                    FROM STK_COSTO_REPOSICION_HIST SH
+                                                    WHERE SH.costoreposicion_id = STK_COSTO_REPOSICION.id_costoreposicion
+                                                      AND SH.id_costoreposicion_hist != STK_COSTO_REPOSICION_HIST.id_costoreposicion_hist
+                                                      AND SH.modificado &lt; STK_COSTO_REPOSICION_HIST.modificado
+                                                    ORDER BY SH.modificado DESC LIMIT 1)</expression>-->
+                    <expression>@costofinal_ant:=(SELECT (ROUND(@cotiz * (((costo_proveedor + (costo_proveedor / 100 * gasto_importacion)) - (costo_proveedor / 100 * descuento_1)) - (((costo_proveedor + (costo_proveedor / 100 * gasto_importacion)) - (costo_proveedor / 100 * descuento_1)) / 100 * descuento_2))  + (flete_local_ars / @cotiz), 2))
+                                                    FROM STK_COSTO_REPOSICION_HIST 
+                                                    WHERE costoreposicion_id = id_costoreposicion 
+                                                    ORDER BY modificado DESC LIMIT 1, 1)</expression>
+                </field>
+
+	            <field id="variacion_costo" noshow="true">
+		            <label>% Variación Cotiz.</label>
+		            <expression>round(  (costo_proveedor - @costo_ant) / @costo_ant * 100,2)</expression>
+		            <tipo>decimal</tipo>
+	            </field>
+
+	            <field id="variacion_costo_fin">
+		            <label>% Var Cotiz. Final</label>
+		            <expression>round( ( @costofinal_local_desc - @costofinal_ant) / @costofinal_ant * 100,2)</expression>
+		            <tipo>decimal</tipo>
+	            </field>
+
+	            <field id="fecha">
+	                <label>Modificado</label>
+	                <expression>ultimo_cambio</expression>
+	                <tipo>date</tipo>
+	            </field>
+
+	            <field id="ultimo_cambio" deshabilitado="true" valauto="true" colstyle="display:none;" modpos="nobr">
+	                <label>Hora de Cambio</label>
+	                <valor eval="true">date('Y-m-d H:i:s')</valor>
+                    <tipo>varchar</tipo>
+	                <size>40</size>
+	            </field>
+
+	            <field id="dias_vigencia" colstyle="display:none;">
+	                <label modpos="nobr">Vigencia (días)</label>
+	                <help>Días de Vigencia</help>
+	            </field>
+
+	            <field id="vencim" _colstyle="display:none;" >
+	                <label>Vencimiento</label>
+	                <expression>case when dias_vigencia != 0 then ADDDATE(date_format(ultimo_cambio,'%Y-%m-%d'),INTERVAL dias_vigencia DAY) end</expression>
+	                <tipo>date</tipo>
+	            </field>
+
+	            <field id="observaciones" _colstyle="display:none;">
+	                <label modpos="nobr">Observaciones</label>
+	                <size>100</size>
+	            </field>
+
+	            <field id="t_pieza" noshow="true" tabla="STK_ARTICULOS">
+	                <label>t_pieza</label>
+	            </field>
+
+	            <field id="tipo_pieza" noshow="true">
+	                <expression>t_pieza</expression>
+	                <options>
+	                    <option valor=""></option>
+	                    <option valor="1">Si</option>
+	                    <option valor="0">No</option>
+	                </options>
+	            </field>
+
+                <field id="fabricacion_propia" noshow="true" tabla="STK_ARTICULOS">
+                    <options>
+                        <option valor=""></option>
+                        <option valor="1">Si</option>
+                        <option valor="0">No</option>
+                    </options>
+                </field>
+
+	            <field id="colores" noshow="true" clasefila="true">
+	                <expression>case when dias_vigencia != 0 and DATE_ADD(ultimo_cambio,INTERVAL dias_vigencia DAY) &lt; now() or (costo_proveedor = 0) then 'error' end</expression>
+	            </field>
+	        </fieldGroup>
+        
+        </table>
+
+        <join>
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">stkarticulo_id</condicion>
+                </field>
+                <field id="subsistema_id">
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="baja_articulo">
+                    <condicion operador="=">0</condicion>
+                </field>                
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="REG_CUENTA">
+                <field id="id_regcuenta">
+                    <condicion operador="=">STK_COSTO_REPOSICION.regcuenta_id and STK_COSTO_REPOSICION.regcuenta_id != 0 </condicion>
+                </field>
+            </table>
+        </join>
+        
+        <join tipo="left">
+            <table id="CTBCUENT">
+                <field id="ctbcod" >
+                    <condicion operador="=">STK_ARTICULOS.cuentadebe_id</condicion>
+                </field>
+            </table>
+        </join> 
+
+    </form>
+</histrix>  

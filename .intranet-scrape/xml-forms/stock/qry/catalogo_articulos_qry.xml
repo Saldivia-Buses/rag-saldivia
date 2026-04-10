@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud" inserta="false" borra="false" path="fotos/articulos" preloadData="false" XMLrow="item" XMLroot="catablog_items" paginar="250">
+  <title>Insumos</title>
+  <obs/>
+  <form>
+    <table id="STK_ARTICULOS" styleTbody="height:500px;overflow-x:hidden;">
+      
+      <title>Catalogo de Articulos</title>
+
+      <filters>
+
+        <field id="stkrubro_id">
+          <label modpos="nobr">Rubro</label>
+        </field>
+        
+        <field id="separador" modpos="nobr" deshabilitado="true" editable="false" />
+
+        <field id="id_stkarticulo" modpos="nobr">
+          <label>Cod.</label>
+        </field>
+
+        <field id="separador" modpos="nobr" deshabilitado="true" editable="false" />
+        
+        <field id="nombre_articulo" fullSearch="true" modpos="nobr">
+          <label>Articulo</label>
+          <help>Descripcion de Articulo</help>
+          <operador>like</operador>
+        </field>
+        
+        <field id="tipo_articulo">
+          <label>Tipo Articulo</label>
+        </field>
+        
+        <field id="publica_web">
+          <label>Publicar</label>
+        </field>
+
+        
+      </filters>
+      
+      <field id="separador" local="true" deshabilitado="true" noshow="true">
+          <size>1</size>
+      </field>
+
+      <field id="id_stkarticulo" deshabilitado="true" PDFcolor="000000" esClave="true" colstyle="text-align:center;" style="font-weight:bold;" xmlField="id">
+        <ayuda_ex id="STK_ARTICULOS">
+          <field id="id_stkarticulo">
+            <label>Cod</label>
+          </field>
+          <field id="nombre_articulo">
+            <label>Nombre</label>
+            <detalle>nombre_articulo</detalle>
+          </field>
+          <!-- <field id="subsistema_id" oculto="true">
+            <condicion operador="=">'01'</condicion>
+          </field> -->
+        </ayuda_ex>
+        <label>Cod.</label>
+        <detalle>id_stkarticulo</detalle>
+      </field>
+
+      <field id="nombre_articulo" deshabilitado="true" fullSearch="true" xmlField="title">
+        <label>Articulo</label>
+      </field>
+
+      <field id="referencia" xmlField="description" colstyle="display: none;">
+        <label>Referencia</label>
+        <tipo>varchar</tipo>
+        <size>255</size>
+      </field>
+
+      <field id="fecha" xmlField="date" noshow="true">
+        <expresion>now()</expresion>
+      </field>
+
+      <field id="fecha_salida2" Formstyle="display:none;">
+        <label>Fecha Salida</label>
+        <expresion>IF( IFNULL(fecha_salida,'0000-00-00') != '0000-00-00',  fecha_salida, '')</expresion>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="fecha_salida" colstyle="display:none;">
+        <label>Fecha Salida </label>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="totalstk" export="false" _noZero="true" colstyle="text-align:center;">
+        <label>Stock</label>
+        <expression>IFNULL(sum(STK_STOCKACTUAL.cantidad_stock),0)</expression>
+      </field>
+
+      <field id="precio" export="false" colstyle="text-align:center;">
+        <label>Precio</label>
+<!--         <expresion>ROUND(STK_LISTADETALLE.stklistadetalle_precioventa, 2)</expresion> -->
+        <tipo>numeric</tipo>
+        <expression>ROUND(
+        CASE WHEN STK_LISTAS.moneda_idvta = STK_ARTICULOS.genmoneda_venta_id THEN IFNULL(STK_LISTADETALLE.stklistadetalle_precioventa,0)
+        ELSE
+        (CASE WHEN STK_ARTICULOS.genmoneda_venta_id = 1 THEN
+                GEN_FN_COTIZACION(STK_LISTAS.moneda_idvta,current_date()) * IFNULL(STK_LISTADETALLE.stklistadetalle_precioventa,0)
+             ELSE
+                IFNULL(STK_LISTADETALLE.stklistadetalle_precioventa,0) / GEN_FN_COTIZACION(STK_LISTAS.moneda_idvta,current_date())
+             END)
+        END)
+        </expression>
+      </field>
+
+      <field id="descart1" export="false" noshow="true">
+        <expression>LEFT( nombre_articulo, LOCATE( ' ', nombre_articulo, 14 ) )</expression>
+      </field>
+
+      <field id="descart2" export="false" noshow="true">
+        <expression>SUBSTRING(nombre_articulo, (LOCATE( ' ', nombre_articulo, 14 ) + 1))</expression>
+      </field>
+
+      <field id="codigo_barra" xmlField="product_code" grafico="barcode" tdWidth="100px">
+        <label>codigo barras</label>
+        <tipo>grafico</tipo>
+        <helper xml="stketiqueta_tpl.xml" type="link">
+          <parameter source="id_stkarticulo" target="stkarticulo_id"/>
+          <parameter source="nombre_articulo" target="nombre_articulo"/>
+          <parameter source="codigo_barra" target="codigo_barra"/>
+          <parameter source="zebra" target="printer"/>
+          <parameter source="true" target="autoprint"/>
+          <parameter source="cantidad" target="cantidad"/>
+        </helper>
+      </field>
+
+      <field id="stkarticulo_foto" xmlField="image" path="id_stkarticulo">
+        <label>Foto</label>
+        <tipo Type="Image">file</tipo>
+        <size>60</size>
+      </field>
+
+      <field id="stkarticulo_url" export="false">
+        <label>URL Youtube</label>
+        <jsfunction event="onblur"><![CDATA[ var RE=/^(?:https?:\/\/)?(?:www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})(?:\S+)?$/ if(this.value != '' &amp;&amp; !RE.test(this.value)) alert('URL No Valids'); ]]></jsfunction>
+        <size>60</size>
+      </field>
+
+      <field id="tipo_articulo">
+        <label>Tipo Articulo</label>
+        <helper type="combo">
+          <option value=""/>
+          <option value="1">NOVEDAD</option>
+          <option value="2">PRE-ORDER</option>
+        </helper>
+      </field>
+
+      <field id="publica_web" export="false">
+        <label>Publicar</label>
+        <helper type="combo" empty="true">
+          <option value=""></option>
+          <option value="0">NO</option>
+          <option value="1">SI</option>
+        </helper>
+      </field>
+  
+
+      <fieldGroup noshow="true" export="false">
+        <field id="stkrubro_id">
+          <label>Rubro</label>
+          <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true"/>
+        </field>
+        <field id="nombre_rubro">
+          <expression>nombre_rubro</expression>
+        </field>
+        <field id="Rubro" local="true">
+          <if exp="true">
+            <true><![CDATA['<category>nombre_rubro</category>']]></true>
+            <false>''</false>
+          </if>
+        </field>
+        <field id="Novedad" local="true">
+          <if exp="tipo_articulo == 1">
+            <true><![CDATA['<category>NOVEDAD</category>']]></true>
+            <false>''</false>
+          </if>
+        </field>
+        <field id="Destacado" local="true">
+          <if exp="tipo_articulo == 2">
+            <true><![CDATA['<category>PRE-ORDER</category>']]></true>
+            <false>''</false>
+          </if>
+        </field>
+        <field id="categorias" local="true" xmlCdata="false" xmlField="categories">
+          <if exp="true">
+            <true><![CDATA['Rubro Novedad Destacado']]></true>
+            <false>''</false>
+          </if>
+        </field>
+        <field id="error" local="true" clasefila="true">
+          <if exp="'fotos' == '' &amp;&amp; 'publica_web' == '1' ">
+            <true>'resaltadoRojo'</true>
+            <false>''</false>
+          </if>
+        </field>
+        <field id="baja_articulo" oculto="true">
+          <condicion operador="!=">1</condicion>
+        </field>
+        <field id="stklista_id" oculto="true" tabla="STK_LISTADETALLE">
+          <expression having="false">IFNULL(STK_LISTADETALLE.stklista_id,1)</expression>
+          <condicion operador="=">1</condicion>
+        </field>
+      </fieldGroup>
+
+      <group>
+        <field id="id_stkarticulo"/>
+      </group>
+
+      <order>
+        <field id="nombre_articulo"/>
+      </order>
+
+    </table>
+
+    <join tipo="left">
+      <table id="STK_RUBROS">
+        <field id="id_stkrubro">
+          <condicion operador="=">stkrubro_id</condicion>
+        </field>
+      </table>
+    </join>
+
+
+    <join tipo="left">
+      <table id="STK_LISTADETALLE">
+        <field id="stkarticulo_id">
+          <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="STK_STOCKACTUAL">
+        <field id="stkarticulo_id">
+          <condicion operador="=">STK_LISTADETALLE.stkarticulo_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="STK_LISTAS">
+        <field id="id_stklista">
+          <condicion operador="=">STK_LISTADETALLE.stklista_id</condicion>
+        </field>
+      </table>
+    </join>
+    
+    
+    
+  </form>
+</histrix>

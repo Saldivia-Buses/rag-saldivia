@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" preFetch="true" sololectura="true" inserta="false" modifica="false">
+    <title>Desintegración contable</title>
+    <obs></obs>
+    <form>
+        <table id="CAJ_MOVIMIENTOS" label="Desintegración contable">
+
+        <field id="id_cajmovimiento" noshow="true" _esClave="true" />
+        <field id="cajconcepto_id" >
+            <helper type="combo" id="CAJ_CONCEPTOS" >
+                <field id="id_cajconcepto" />
+                <field id="descripcion_concepto" />
+                <field id="ejecuta_concepto" oculto="true">
+                    <expresion>ifnull(ejecuta_concepto,'')</expresion>
+                    <condicion operador="=">''</condicion>
+                </field>
+                <field id="alta_concepto" oculto="true">
+                    <expresion>ifnull(alta_concepto,0)</expresion>
+                    <condicion operador="=">0</condicion>
+                </field>
+                <field id="baja_concepto" oculto="true">
+                    <expresion>ifnull(baja_concepto,0)</expresion>
+                    <condicion operador="=">0</condicion>
+                </field>
+                <field id="modif_concepto" oculto="true">
+                    <expresion>ifnull(modif_concepto,0)</expresion>
+                    <condicion operador="=">0</condicion>
+                </field>
+            </helper>
+            <label>Concepto</label>
+        </field>
+
+        <field id="fecha_movimiento">
+            <label>Fecha</label>
+        </field>
+        <field id="cajpuesto_id">
+            <helper type="combo" xml="cajpuestousers_qry.xml" dir="/ayudas" empty="true" />
+            <label>Puesto</label>
+        </field>
+        <field id="referencia_movimiento">
+            <label>Referencia</label>
+        </field>
+
+    </table>
+    <join>
+        <table id="CAJ_CONCEPTOS">
+            <field id="id_cajconcepto">
+                <condicion operador="=">CAJ_MOVIMIENTOS.cajconcepto_id</condicion>
+            </field>
+        </table>
+    </join>
+    <!--
+        <join tipo="left">
+    <table id="CTB_EJERCICIOS">
+        <field id="comienza">
+            <condicion operador="&lt;=">fecha_movimiento</condicion>
+        </field>
+        <field id="finaliza">
+            <condicion operador="&gt;=">fecha_movimiento</condicion>
+        </field>
+    </table>
+</join>
+<join tipo="left">
+    <table id="CTB_CUENTAS">
+        <field id="id_cuenta">
+            <condicion operador="=">cuenta_id</condicion>
+        </field>
+        <field id="ejercicio_id">
+            <condicion operador="=">id_ejercicio</condicion>
+        </field>
+    </table>
+</join>
+<join tipo="left">
+    <table id="CAJ_REGISTROS">
+        <field id="id_cajregistro">
+            <condicion operador="=">CAJ_MOVIMIENTOS.cajregistro_id</condicion>
+        </field>
+    </table>
+</join>
+-->
+</form>
+</histrix>

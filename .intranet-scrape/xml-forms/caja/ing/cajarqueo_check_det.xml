@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert">
+    <title/>
+    <obs/>
+    <form>
+        <table id="CAJ_VALORES" idCampoCond="confirmar">
+            <field id="cajmovimiento_id" lastId="cajarqueo_check_ins.xml" />
+            <field id="cajformapago_id" id_temp="cajformapagodif_id" />
+            <field id="pago_valor"      id_temp="importe_movimiento"  />
+        </table>
+    </form>
+</histrix>

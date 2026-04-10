@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" tipoInsert="IGNORE" log="false">
+    <title>ORDENES DE PRODUCCION</title>
+    <obs></obs>
+    <form  >
+	        
+	<table id="MRP_DETALLE_REGISTRO" label="Registro de produccion" idCampoCond="cantidad">
+
+
+
+            <field id="mrpordendetalle_id" id_temp="id_mrpordendetalle" />
+
+            <field id="cantidad"           id_temp="cantidad" />
+
+            <field id="mrpconcepto_id" id_padre="mrpconcepto_id" />
+            
+            <field id="ingreso"  id_padre="ingreso"  >
+		      <tipo>time</tipo>
+	        </field>
+            <field id="salida"   id_padre="salida"  >
+	    		<tipo>time</tipo>
+	        </field>
+            <field id="mrpseccion_id"   >
+		<valor>3</valor>
+	    </field>
+            <field id="productpath_id" id_padre="productpath_id"  />
+
+            <field id="mesa_1" id_padre="mesa_1"  >
+                <tipo>varchar</tipo>
+            </field>
+            <field id="mesa_2" id_padre="mesa_2"  >
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="observacion" id_padre="observacion" />
+
+            <field id="codigo_pvb" id_temp="codigo_pvb" />
+
+            <field id="paquete_id"   id_temp="paquete_id" />
+
+            <field id="fecha_ingreso"   _id_padre="fecha_ingreso" >
+		<tipo>integer</tipo>
+		<valor>now()</valor>
+	    </field>
+	        <field id="login">
+    		  <valor eval="true">$_SESSION["usuario"]</valor>
+	        </field>
+        </table>
+    </form>
+</histrix>

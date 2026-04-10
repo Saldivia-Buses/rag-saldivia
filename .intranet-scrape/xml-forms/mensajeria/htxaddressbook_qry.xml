@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+	<title>Agenda</title>
+	<obs/>
+	<form  >
+		<table id="HTXADDRESSBOOK" >
+			<field id="name1" >
+                                <label>Nombre</label>
+                                <expresion>concat(first_name, ' ', last_name)</expresion>
+                        </field>
+			<field id="value" >
+                               <label>email</label>
+                                
+                        </field>
+                        <field id="vcard_type" noshow="true">
+                            <condicion operador="like">'%EMAIL%'</condicion>
+                        </field>
+			<order>
+				<field id="name"></field>
+			</order>
+		</table>
+	</form>
+</histrix>

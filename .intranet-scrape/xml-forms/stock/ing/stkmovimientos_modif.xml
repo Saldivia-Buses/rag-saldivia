@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud" subtipo="vertical" preloadData="false" log="false">
+    <title>Modificación de Stock</title>
+    <obs/>
+    <form >
+        <table id="STK_MOVIMIENTOS" label="Modificación de Stock">
+
+            <filters>
+                <field id="stkarticulo_id" >
+            	    <label>Articulo</label>
+                    <operador>like</operador>
+                </field>
+    	        <field id="nombre_articulo" local="true">
+                    <operador>like</operador>                    
+    	        </field>
+
+                  <field id="stkdeposito_id" >
+                    <label>Deposito</label>
+                    <operador>=</operador>                    
+                  </field>
+                
+ 
+                <field  id="fecha_movimiento">
+                    <label>Desde Fecha</label>
+                    <operador>&gt;=</operador>
+                    <valor>today</valor>
+                </field>
+                <field  id="fecha_movimiento">
+                    <label>Hasta Fecha</label>
+                    <operador>&lt;=</operador>
+                    <valor>today</valor>
+                </field>
+
+            </filters>
+
+            <field id="id_stkmovimiento" noshow="true" autoinc="true"/>
+            
+            <field  id="fecha_movimiento">
+                <label>Fecha</label>
+                <help>Fecha del Movimiento</help>
+                <valor>today</valor>
+            </field>
+            <field id="stkarticulo_id" >
+        	<helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas" />
+                <label>Codigo Articulo</label>
+                <help>Codigo de Articulo.</help>
+                <preparam operador="=">true</preparam>
+            </field>
+            <field id="nombre_articulo" >
+                <expression>nombre_articulo</expression>
+                <label modpos="nobr">Articulo</label>
+	        <size>60</size>
+
+            </field>
+            
+            
+            <field id="referencia">
+                <label _modpos="nobr">Referencia</label>
+                <help></help>
+                <format>%10s</format>
+            </field>
+                  <field id="stkdeposito_id" >
+                    <label>Deposito</label>
+        	    <helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" />
+              </field>
+
+            <field id="stkconcepto_id">
+            
+                <helper type="combo" xml="stkconcepto_qry.xml" dir="/ayudas" />
+                <label modpos="nobr">Concepto</label>
+                <help>Tipo de movimiento</help>
+            </field>
+            <field id="cantidad">
+                <label _modpos="nobr">Cantidad</label>
+            </field>
+            <field id="Entrada" suma="true" noZero="true">
+                <expression>cantidad * (case when tipo_concepto = '0' then 1 else 0 end)</expression>
+                <label >Entrada</label>
+                <help></help>
+            </field>
+            <field id="Salida" suma="true" noZero="true">
+                <expression>cantidad * (case when tipo_concepto = '1' then 1 else 0 end)</expression>
+                <label modpos="nobr">Salida</label>
+                <help></help>
+            </field>
+            <!--			<field id="opecodEx">
+                                <expression>CONCAT(PERSONAL.apellido, ', ', PERSONAL.Nombre)</expression>
+                                <label>Operador</label>
+                                <help></help>
+                                <tipo>string</tipo>
+                        </field>
+ -->
+            <field acumula="true" id="EntSal" suma="true">
+                <expression>cantidad * (case when tipo_concepto = '0' then 1 else -1 end)</expression>
+                <label _modpos="nobr">Acumulado</label>
+                <help></help>
+            </field>
+
+            <order>
+                <field id="fecha_movimiento" />
+            </order>
+        </table>
+
+        <join tipo="left">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo" >
+                    <condicion operador="=">STK_MOVIMIENTOS.stkarticulo_id</condicion>
+                </field>
+           
+             </table>
+        </join>
+
+        <join tipo="left">
+            <table id="STK_CONCEPTOS">
+                <field id="id_stkconcepto" >
+                    <condicion operador="=">STK_MOVIMIENTOS.stkconcepto_id</condicion>
+                </field>
+           
+             </table>
+        </join>
+    </form>
+</histrix>

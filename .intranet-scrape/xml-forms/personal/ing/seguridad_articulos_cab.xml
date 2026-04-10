@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="cabecera" inserta="false" modifica="false" imprime="false" limit="1">
+	<title>Elementos de seguridad</title>
+	<form>
+		<table id="PERSONAL" label="Secciones">
+
+
+			<field id="IdPersona" noshow="true" _valauto="true">
+				<detalle>IdPersona</detalle>
+			</field>
+
+			<field id="opecod" noshow="true" />
+
+			<field id="movfec" local="true" noshow="true">
+				<valor>today</valor>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="movcod" noshow="true" local="true">
+				<helper type="parameter" id="SIS::01:stock_codigo_concepto_utilizacion">
+					<label>Codigo de Concepto Stock para Utilizacion de materiales</label>
+					<defaultValue>31</defaultValue>
+				</helper>
+			</field>
+
+			<field id="movref" local="true">
+				<label>Observaciones</label>
+				<size>70</size>
+			</field>
+
+
+		</table>
+	</form>
+</histrix>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha" imprime="false" inserta="false" modifica="true" borra="false">
+    <title>Entrar fecha ingreso a línea</title>
+    <obs></obs>
+    <eventos>
+      <event id="update">close</event>
+    </eventos>
+    <form>
+        <table id="PEDCOTIZ" >
+            <title>Entrar fecha ingreso a línea</title>
+
+            <field id="nrocha" noshow="true" esClave="true"/>
+
+            <field id="ingresoLinea">
+              <label>Fecha Ingreso a Línea</label>
+              <tipo>date</tipo>
+              <valor>today</valor>
+            </field>
+
+        </table>
+
+    </form>
+</histrix> 

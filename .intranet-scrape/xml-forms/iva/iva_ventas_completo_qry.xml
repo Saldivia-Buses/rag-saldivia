@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" limit="1" sololectura="true" imprime="true" inserta="false" modifica="false" borra="false" tooltip="false">
+  <title>IVA VENTAS</title>
+  
+  <form >
+    <table id="REG_MOVIMIENTOS" label="IVA VENTAS" _styleTbody="height:300px;overflow-x:hidden;">
+            <fieldGroup id="DEBUG" noshow="true" local="true" print="false">
+                <field id="fecha_desde" />
+                <field id="fecha_hasta" />
+                <!--<field id="puesto_desde" />
+                <field id="puesto_hasta" />-->
+                <field id="puesto_mov" />
+            </fieldGroup>
+
+            <field id="detalle" local="true" posX="10" posY="+10">
+                <helper type="object" xml="iva_ventas_grid.xml">
+                    <parameter source="fecha_desde" target="fecha_movimiento" operator="&gt;="/>
+                    <parameter source="fecha_hasta" target="fecha_movimiento2" operator="&lt;="/>
+                    <!--<parameter source="puesto_desde" target="puesto_movimiento" operator="&gt;="/>
+                    <parameter source="puesto_hasta" target="puesto_movimiento2" operator="&lt;="/> -->
+                    <parameter source="puesto_mov" target="puesto_movimiento" operator="="/>
+                </helper>
+            </field>
+
+	        <field id="separador1" local="true">
+                <label style="display: block; height: 20px; background-color: #999999;"/>
+            </field>
+
+	        <field id="detalle2" local="true" posX="10" posY="+10">
+                <helper type="object" xml="iva_ventas_xprov_grid.xml">
+                    <parameter source="fecha_desde" target="fecha_movimiento" operator="&gt;="/>
+                    <parameter source="fecha_hasta" target="fecha_movimiento2" operator="&lt;="/>
+                </helper>
+            </field>
+
+	        <field id="separador2" local="true">
+                <label style="display: block; height: 20px; background-color: #999999;"/>
+            </field>
+
+            <field id="detalle3" local="true" posX="10" posY="+10">
+                <helper type="object" xml="iva_ventas_xcativa_grid.xml">
+                    <parameter source="fecha_desde" target="fecha_movimiento" operator="&gt;="/>
+                    <parameter source="fecha_hasta" target="fecha_movimiento2" operator="&lt;="/>
+                </helper>
+            </field>
+
+
+	
+	</table>
+  </form>
+</histrix>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" inserta="false" modifica="false">
+	<title>Newsletters</title>
+	<obs/>
+	<form  >
+<!--		<table id="NEWSLETTER" label="Newsletters">
+-->
+	    <table id="ENCUESTA_CLIENTE">
+	    <movimientos>
+		<relacion id="encuesta_ins.xml" />
+	    </movimientos>
+		<field id="ctacod" noshow="true">
+		</field>
+        	<field id="numero" autoInc="true" noshow="true">
+        	    <label>Numero</label>
+        	    <condicion operador="=">0</condicion>
+			</field>
+		
+		<field id="fecha">
+		    	<label modpos="nobr">Fecha</label>
+				<help>Fecha</help>
+				<valor>today</valor>
+				<tipo>date</tipo>
+		</field>
+	
+		<field id="idEncuesta" deshabilitado="false">
+		    <label modpos="nobr">Envia Encuesta</label>
+		    <help></help>
+			<tabla_ex id="ENCUESTA" _vacio="true" >
+					
+					<field id="idEncuesta" >
+					</field>
+	
+					<field id="descripcion" ></field>
+					<field id="fecha2" tipoOrden="DESC">
+					<expression>fecha</expression>
+					    <tipo>date</tipo>
+					</field>
+					<order>
+						<field id="fecha" />
+					</order>
+			</tabla_ex>
+			<expression sql="true">select MAX(idEncuesta) from ENCUESTA</expression>
+			<actualiza>
+			    <field id="encuesta_items" destino="idEncuesta" />
+			</actualiza>
+		</field>
+		  		 
+
+<!--		    
+		    <field id="contenido" oculto="true" obj="encuesta_get.xml" >
+		    
+				<label>Contenido</label>
+				<valor>contenido</valor>
+		    </field >
+		    <field id="__mail" noshow="true">
+				<label modpos="nobr">mail</label>
+			<valor>contenido</valor>
+			<tipo>varchar</tipo>
+		    </field>
+		    <field id="clave" noshow="true">
+				<label modpos="nobr">clave</label> 
+				<valor>idEncuesta</valor>
+				<tipo>varchar</tipo>
+		    </field>
+-->		    
+		    <field id="sugerencia">
+			<label colspan="4">Sugerencia</label>
+			<size>300</size>
+		    </field>
+		    
+		    <field id="comentario">
+			<label colspan="4">Comentario</label>
+			<size>300</size>
+		    </field>
+		    
+		    <field id="encuesta_items" local="true">
+			<label colspan="4"/>
+			<helper type="object" xml="encuesta_cliente_item.xml"/>
+		    </field>
+		</table>
+	</form>
+</histrix>

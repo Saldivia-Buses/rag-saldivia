@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" subtipo="vertical"  path="fotos/homologaciones/" PDFfontSize="8.8"  PDForientacion="L" PDFlineColor="0,0,0">
+  <title>LISTA DE PRECIOS</title>
+  <obs/>
+     <pie size="14" align="C" style="B" color="#ff0000">[__pie__]</pie>
+
+  <form >
+
+  
+    <table id="HOMOLOGMOD">
+      <title>Homologaciones por modelo</title>
+
+      <filters auto="true">
+        <field id="idLista" PDFsize="10">
+        
+          <label modpos="nobr">Lista</label>
+          <help>Lista</help>
+          <operador>=</operador>
+          <tipo>integer</tipo>
+  
+        </field>
+       <field id="haspl" local="true" deshabilitado="false">
+        <label modpos="nobr">Con</label>
+          <operador>=</operador>
+      </field> 
+
+      </filters>
+
+      <field id="id_homologacion" noshow="true" autoinc="true">
+
+      </field>
+    <field id="homologacion_id" noshow="true">
+	<expression>group_concat(id_homologacion)</expression>
+    </field>
+      <field id="nroc2" noshow="true">
+        <expression>HOMOLOGMOD.nrocar</expression>
+        <tipo>integer</tipo>
+      </field>
+      <field id="modc2" noshow="true">
+        <expression>HOMOLOGMOD.modcha</expression>
+      </field>
+      <field id="baja" noshow="true">
+        <label modpos="nobr">Homolog</label>
+        <options>
+          <option valor="0">Act</option>
+          <option valor="1">No.Act</option>          
+        </options>
+         <condicion operador="=">0</condicion> 
+      </field>
+      
+      <field id="nrocar" _break="true"  noshow="true">
+      </field>
+      
+          <field id="modcar" tabla="CARROCERIA" break="true" norepeat="true">
+            <label >Modelo</label>
+          </field>          
+
+      <field id="asientos" noshow="true">
+    
+      </field>
+
+      <field id="capacidad" >
+        <expression>concat(HOMOLOGMOD.asientos + ifnull(asientos_plantabaja, 0) + acompañante, (case when HOMOLOGMOD.banbar = 1 then ' B.B.' else '' end), ' ', case when HOMOLOGMOD.tipserv != 2 then TIPOSERVICIO.servdes else '' end)</expression>
+        <label modpos="nobr">Capacidad</label>
+        <label>Cantidad de Asientos</label>
+        
+      </field>
+      
+      <field id="tipserv" noshow="true">
+      </field>
+
+       <field id="banbar" noshow="true">
+        <label >B/B</label>
+        <help>Bar y Baño</help>
+        <options>
+            <option valor="0">No</option>
+            <option valor="1">Si</option>
+        </options>
+      </field>
+    
+      <field id="marcod" noshow="true">
+        <label modpos="nobr" >Marca</label>
+        <help>Marca del Chasis</help>
+        <tabla_ex id="MARCHASIS" vacio="true">
+          <field id="marcod" clave="true">
+            <label>Codigo</label>
+            <help>Codigo de Chasis</help>
+          </field>
+          <field id="mardes">
+          </field>          
+        </tabla_ex>
+        <actualiza>
+          <field destino="marcod" id="modcha"/>
+        </actualiza>
+      </field>
+
+      <field id="moddes" local="true" tabla="MODCHASIS" >
+         <expression>group_concat(distinct MARCHASIS.desabv, '-', MODCHASIS.desabv ORDER BY MARCHASIS.desabv SEPARATOR '  ')</expression>
+          
+<!--           <expression><![CDATA[IFNULL((SELECT CONCAT(MARCHASIS.desabv,' ',MODCHASIS.desabv)
+          FROM HOMOLOGMOD H
+          LEFT JOIN MODCHASIS ON MODCHASIS.id_modelo = HOMOLOGMOD.modelo_id
+          LEFT JOIN MARCHASIS ON MARCHASIS.marcod = MODCHASIS.marcod
+          LEFT JOIN PRECIOMODELO ON PRECIOMODELO.nrocar = HOMOLOGMOD.nrocar
+          WHERE H.id_homologacion = HOMOLOGMOD.id_homologacion),'')]]>
+          </expression> -->    
+
+          <label Formstyle="display:none;" modpos="nobr">Modelo de Chasis</label>
+        <tipo>varchar</tipo>
+      </field>
+
+       <field id="haspl" _local="true" deshabilitado="true" noshow="true">
+        <label>Con</label>
+        <options>
+          <option valor=""></option>
+          <option valor="0">No</option>
+          <option valor="1">Si</option>          
+        </options>          
+        <expression>case when plano != '' then 1 else 0 end</expression>
+      </field> 
+
+      <field id="plano" noshow="true">
+        <label modpos="nobr">Plano Nro</label>
+        <help>Numero de Plano</help>
+      </field>
+
+      <field id="largo" noZero="true">
+        <label modpos="nobr">Largo</label>
+        <help>Largo en metros</help>
+      </field>
+
+      <field id="idLargo" colstyle="text-align:right;">
+	<label>Largo (int)</label>
+	<helper type="combo" id="TIPOLARGO">
+	    <field id="idLargo" />
+	    <field id="desc">
+		<expression>CONCAT(desde, '-', hasta)</expression>
+	    </field>
+	</helper>
+      </field>
+
+      <field id="bodega" _noZero="true">
+        <label modpos="nobr">Bodega</label>
+        <help>Capacidad de bodega en m3</help>
+      </field>
+      
+      <field id="margen_1" noshow="true" tabla="PRECIOMODELO">
+        <expression>max(margen_1)</expression>
+        <label>% Rec 1</label>
+        <help>Recargo precio al público</help>
+      </field> 
+      <field id="precio_1"  tabla="PRECIOMODELO" print="false">
+        <label modpos="nobr" style="color:red; font-size:16px;">Concesionario </label>
+        <help>Precio</help>
+        <tipo>custom_numeric</tipo>        
+      </field>
+
+      <field id="margen_2" noshow="true" tabla="PRECIOMODELO">
+        <expression>max(margen_2)</expression>
+        <label>% Rec 2</label>
+        <help>Recargo precio al público</help>
+      </field> 
+
+      <field id="margen_3" noshow="true" tabla="PRECIOMODELO">
+        <expression>max(margen_3)</expression>
+        <label>% Rec 3</label>
+        <help>Recargo precio al público</help>
+      </field> 
+
+			<field id="precio" tabla="PRECIOMODELO" PDFcolor="0000ff" print="false">
+				<label modpos="nobr" style="color:green; font-size:16px;">Concesionario </label>
+				<help>Precio</help>
+				<tipo>custom_numeric</tipo>				 
+				
+				
+			</field>
+      <field id="precio_2"  tabla="PRECIOMODELO" _noshow="true">
+        <label modpos="nobr" style="color:navy; font-size:16px;">Concesionario </label>
+        <help>Precio</help>
+        <tipo>custom_numeric</tipo>        
+      </field>
+<!--
+      <field id="precio_3"  tabla="PRECIOMODELO" _noshow="true">
+        <label modpos="nobr" style="color:red; font-size:16px;">Concesionario</label>
+        <help>Precio</help>
+        <tipo>custom_numeric</tipo>        
+      </field>
+
+-->
+			<field id="margen" noshow="true" tabla="PRECIOMODELO">
+				<expression>max(margen)</expression>
+				<label>% Rec</label>
+				<help>Recargo precio al público</help>
+			</field> 
+			<field id="precio_publico"  tabla="PRECIOMODELO">
+				<expression>max(precio_publico)</expression>
+				<label modpos="nobr" style="color:red; font-size:16px;">Público</label>
+				<help>Precio</help>
+				<tipo>custom_numeric</tipo>				 
+			</field>
+
+            <field id="difAs" noshow="true">
+                <label >dif</label>
+                <expression>select difAsiento from LISTAPRECIOMODELO where LISTAPRECIOMODELO.idLista = PRECIOMODELO.idLista limit 1</expression>
+				<tipo>custom_numeric</tipo>				 
+
+            </field>
+
+	    <field id="$_asientos" noshow="true">
+		<label>$ x Asiento</label>
+		<expression>(case when HOMOLOGMOD.tipserv != 2 then asiento_semicama else asiento_propio end)</expression>
+	    </field>
+
+	    <field id="prec_asientos" noshow="true">
+	
+                <expression>(case when HOMOLOGMOD.tipserv != 2 then asiento_semicama else asiento_propio end) * (HOMOLOGMOD.asientos + 1) </expression>
+				<tipo>custom_numeric</tipo>				 
+	    </field>
+            <field id="sin_asiento_otros1" noshow="true" local="true" style="color:green; font-size:16px;">
+                <label >Sin Asiento Conces.</label>
+		<if exp="true">
+		    <true>precio - prec_asientos</true>
+		    <false>0</false>
+		</if>
+				<tipo>custom_numeric</tipo>				 
+            </field>
+            <field id="asiento_otros2" noshow="true" local="true" style="color:red; font-size:16px;">
+                <label >Sin Asientos Público</label>
+		<if exp="true">
+		    <true>pubPrecio - prec_asientos</true>
+		    <false>0</false>
+		</if>
+				<tipo>custom_numeric</tipo>				 
+
+            </field>
+
+      <field id="idLista" noshow="true" PDFsize="10" tabla="PRECIOMODELO">
+        <tabla_ex id="LISTAPRECIOMODELO">
+          <field id="idLista" >
+          </field>
+          <field id="nom" >
+            <expression>concat('Nro ',idLista,' - Vigencia Desde: ' , DATE_FORMAT(fecha, '%d/%m/%Y'))</expression>
+          </field>
+          <field id="fecha" orden="true" tipoOrden="DESC">
+          </field>
+          
+          <order>
+            <field id="fecha" orderType="DESC"></field>
+          </order>
+
+        </tabla_ex>        
+        <label modpos="nobr">Lista</label>
+        <help>Lista</help>
+      </field>
+      
+      <field id="crearn" _noshow="true" deshabilitado="true" autoinc="true" local="true">
+          <label>Coti</label>
+          <valor>'>>>>'</valor>
+          <helper xml="cotizar_cons4.xml" type="link" dir="/cotizacion" >
+          <parameter source="homologacion_id" target="homologacion_id" />
+          <parameter source="nrocar" target="nrocar" />
+          <parameter source="asientos" target="asientos" />
+          <parameter source="idLista" target="idLista" />
+      </helper>
+      </field>
+
+      <field id="pie" tabla="LISTAPRECIOMODELO" noshow="true">
+      </field>      
+	<field id="idPrecio" noshow="true">
+	<expression>idPrecio</expression>
+	</field>
+    <!--
+	<field id="grupo">
+	<expression>group_concat(idPrecio)</expression>
+	</field>
+-->
+      <group>
+        <field id="modcar" tabla="CARROCERIA"></field>     
+        <field id="asientos" tabla="HOMOLOGMOD"></field>
+        <field id="banbar"  tabla="HOMOLOGMOD"></field>
+<!--        <field id="tipserv"  tabla="HOMOLOGMOD"></field>  -->
+        <field id="idLargo"  tabla="HOMOLOGMOD"></field> 
+      
+      </group>
+      
+      <order>
+        <field id="modcar" tabla="CARROCERIA"></field>
+        <field id="asientos" ></field>
+
+        <field id="marcod" tabla="HOMOLOGMOD"></field>
+
+
+      </order>
+    </table>
+    <join tipo="left">
+       <table id="CARROCERIA">
+          <field id="nrocar">
+                 <condicion operador="=">HOMOLOGMOD.nrocar</condicion>
+          </field>
+        </table>    
+    </join>    
+    <join tipo="left">
+      <table id="MARCHASIS">
+        <field id="marcod">
+          <condicion operador="=">HOMOLOGMOD.marcod</condicion>
+        </field>
+      </table>
+    </join>    
+    <join tipo="left">
+      <table id="TIPOSERVICIO">
+        <field id="tipserv">
+          <condicion operador="=">HOMOLOGMOD.tipserv</condicion>
+        </field>
+      </table>
+    </join>    
+
+    <join tipo="left">
+      <table id="PRECIOMODELO">
+        <field id="banbar">
+          <condicion operador="=">HOMOLOGMOD.banbar</condicion>
+        </field>
+        <field id="nrocar">
+          <condicion operador="=">HOMOLOGMOD.nrocar</condicion>
+        </field>
+        <field id="asientos">
+          <condicion operador="=">(HOMOLOGMOD.asientos  + ifnull(asientos_plantabaja, 0)  )</condicion>
+        </field>
+        <field id="idLargo">
+          <condicion operador="=">HOMOLOGMOD.idLargo</condicion>
+        </field>
+
+      </table>
+    </join>    
+    <join tipo="left">
+      <table id="LISTAPRECIOMODELO">
+        <field id="idLista">
+          <condicion operador="=">PRECIOMODELO.idLista</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="MODCHASIS">
+        <field id="modcha">
+          <condicion operador="=">HOMOLOGMOD.modcha</condicion>
+        </field>
+        <field id="marcod">
+          <condicion operador="=">HOMOLOGMOD.marcod</condicion>
+        </field>
+        <field id="id_modelo">
+          <condicion operador="=">HOMOLOGMOD.modelo_id</condicion>
+        </field>
+        <field id="chasis_activo">
+          <condicion operador="=">'0'</condicion>
+        </field>
+      </table>
+    </join>
+    
+  </form>
+</histrix>

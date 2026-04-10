@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix deleteRow="false" tipo="grid">
+  <title>Ajuste de Stock</title>
+  <obs/>
+  <form>
+    <table id="STK_MOVIMIENTOS" idCampoCond="grabar" label="Ajuste de Stock">
+      <movimientos>
+        <relacion id="stkinventario_ajuste_ins.xml"/>
+      </movimientos>
+
+      <field esClave="true" id="id_stkarticulo">
+        <label>Código de Artículo</label>
+        <helper dir="/ayudas" type="external" xml="stkarticulo_qry.xml"/>
+      </field>
+
+      <field id="nombre_deposito" tabla="STK_DEPOSITOS">
+        <label>depósito</label>
+      </field>
+      <field noshow="true" esClave="true" id="stkdeposito_id" >
+        <expression>ifnull(STK_MOVIMIENTOS.stkdeposito_id, 0)</expression>
+        <label>depósito</label>
+        
+      </field>
+
+      <field id="subsistema_id" oculto="true">
+            <condicion operador="=">'01'</condicion>
+      </field>
+
+      <field id="stklocacion_id" noshow="true"/>
+      
+      <field id="locacion" >
+        <label>Locación</label>
+        <expression>codigo_locacion</expression>
+      </field>
+
+      <field _noZero="true" deshabilitado="true" editable="true" id="stock" suma="true">
+        <label>stock Actual</label>
+        <expression>sum(cantidad * (case when tipo_concepto = 0 then 1 else -1 end))</expression>
+        <tipo>custom_numeric</tipo>
+      </field>
+
+      <field local="true" deshabilitado="true" editable="true" id="negativo" _noshow="true">
+        <if exp="stock &lt; 0">
+            <true>1</true>
+            <false>0</false>
+        </if>
+        <tipo>custom_numeric</tipo>
+      </field>
+
+      <field _refresh="true" editable="true" id="cantidad" local="true" preventLoop="true" deshabilitado="true">
+        <label>Ajuste</label>
+        <tipo>decimal</tipo>
+
+        <jseval campodestino="cantnueva">Math.abs(stock) * ((negativo==1)?-1:1) + cantidad</jseval>
+        <jseval campodestino="absnueva">Math.abs(cantidad)</jseval>
+        <jseval campodestino="concepnuevo">(cantidad &gt;= 0)?7:8</jseval>
+      
+      </field>
+
+      <field id="fecha_movimiento" local="true" noshow="true">
+        <label>fecha</label>
+        <valor>today</valor>
+        <tipo>date</tipo>
+      </field>
+      <field id="valor_uso"     tabla="STK_ARTICULOS"></field>
+      <field id="valor_compra"  tabla="STK_ARTICULOS"></field>
+
+      <field _noshow="true" deshabilitado="false" editable="true" id="cantnueva" local="true" preventLoop="true" suma="true" style="width:6em;">
+        <label>Nuevo Stock (u.Uso)</label>
+        <expression>sum(cantidad * (case when tipo_concepto = 0 then 1 else -1 end))</expression>
+        <jseval campodestino="concepnuevo">(cantidad &gt;= 0)?7:8</jseval>
+        <jseval campodestino="cantidad">cantnueva - Math.abs(stock) * ((negativo==1)?-1:1)</jseval>
+        
+        <jseval campodestino="absnueva">Math.abs(cantidad)</jseval>
+
+        <jseval campodestino="cantnueva_cps">(valor_uso == 1)?(cantnueva * valor_compra):(cantnueva / valor_uso)</jseval>
+        <!--
+        <if exp="cantidad + 0 != 0"><true>stock - cantidad</true><false>0</false></if>-->
+        <tipo>numeric</tipo>
+      </field>
+      <field id="unidad_uso_id" deshabilitado="true" tabla="STK_ARTICULOS" >
+          <label modpos="nobr" >U.uso</label>
+          <help>Unidad de Uso</help>
+          <tabla_ex id="FSMUNIDS">
+              <field id="unicod" clave="true"></field>
+              <field id="uninom"></field>
+          </tabla_ex>
+          <tipo>integer</tipo>
+      </field>
+
+      <field _noshow="true" deshabilitado="false" editable="true" id="cantnueva_cps" local="true" preventLoop="true" suma="true" style="width:6em;">
+        <label>Nuevo Stock (u.Compra)</label>
+        <expression>round((case when valor_uso = 1 then sum(cantidad * (case when tipo_concepto = 0 then 1 else -1 end)) * valor_compra else  
+        sum(cantidad * (case when tipo_concepto = 0 then 1 else -1 end)) / valor_uso end), 4)
+        </expression>
+        <jseval campodestino="cantnueva">(valor_compra == 1)?(cantnueva_cps * valor_uso):(cantnueva_cps / valor_compra)</jseval>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="unidad_compra_id" deshabilitado="true" tabla="STK_ARTICULOS">
+          <label modpos="nobr">U.Compra</label>
+          <help>Unidad de Compra</help>
+          <tabla_ex id="FSMUNIDS">
+              <field id="unicod" clave="true"></field>
+              <field id="uninom"></field>
+          </tabla_ex>
+          <tipo>integer</tipo>
+      </field>
+
+      <field _noshow="true" deshabilitado="true" editable="true" id="concepnuevo" local="true">
+        <label>Concepto</label>
+        <helper _empty="true" id="STK_CONCEPTOS" type="combo">
+          <field id="id_stkconcepto"/>
+          <field id="nombre_concepto">
+            <!--    <condicion operador="LIKE">'AJUSTE'</condicion>-->
+          </field>
+        </helper>
+      </field>
+
+      <field deshabilitado="true" editable="true" id="absnueva" local="true" _noshow="true">
+        <label>Cantidad</label>
+        <if exp="true">
+          <true>abs(cantidad)</true>
+          <false>0</false>
+        </if>
+        <tipo>decimal</tipo>
+      </field>
+
+      <field id="referencia" local="true"  editable="true">
+        <label>Observaciones</label>
+        <size>80</size>}
+        <help>observaciones</help>
+	    </field>
+      <field id="stkfamilia_id" noshow="true"  tabla="STK_ARTICULOS"/>
+      <field id="stksector_id" noshow="true"  tabla="STK_ARTICULOS"/>
+      <field id="unidad_id" noshow="true"  tabla="STK_ARTICULOS"/>
+      <field id="precio_costo" noshow="true"  tabla="STK_ARTICULOS"/>
+      <field id="precio_lista" noshow="true"  tabla="STK_ARTICULOS"/>
+      <field id="precio_venta" noshow="true"  tabla="STK_ARTICULOS"/>
+      <field id="precio_promedio" noshow="true"  tabla="STK_ARTICULOS"/>
+      <field id="id_stkarticulo" noshow="true" tabla="STK_ARTICULOS"/>
+
+      <field esClave="true" id="locacion">
+        <label>Locación</label>
+        <expression>codigo_locacion</expression>
+      </field>
+        
+      <group>
+        <field id="stkdeposito_id"/>
+        <field id="stklocacion_id"/>
+      </group>
+
+      <order>
+        <field id="nombre_articulo"/>
+        <field id="stkdeposito_id"/>
+      </order>
+
+    </table>
+    <join>
+      <table id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">stkarticulo_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join>
+      <table id="STK_CONCEPTOS">
+        <field id="id_stkconcepto">
+          <condicion operador="=">stkconcepto_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join _tipo="left">
+      <table id="STK_DEPOSITOS">
+        <field id="id_stkdeposito">
+          <condicion operador="=">STK_MOVIMIENTOS.stkdeposito_id</condicion>
+        </field>
+	    <field id="suma_total">
+		<condicion operador="=">1</condicion>
+	    </field>
+
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="STK_LOCACION">
+        <field id="stkdeposito_id">
+          <condicion operador="=">STK_MOVIMIENTOS.stkdeposito_id</condicion>
+        </field>        
+        <field id="id_stklocacion">
+          <condicion operador="=">STK_MOVIMIENTOS.stklocacion_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    
+  
+
+  </form>
+</histrix>

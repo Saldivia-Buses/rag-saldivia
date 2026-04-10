@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF8"?>
+<histrix tipo="crud" _borra="false">
+  <titulo>Locación</titulo>
+  <obs/>
+  <form>
+    <table id="STK_LOCACION">
+      <title>Depósitos</title>
+      <field id="id_stklocacion" noshow="true" autoinc="true" />
+
+      <field id="stkdeposito_id" oculto="true" />
+      
+      <field id="codigo_locacion">
+        <label>Código Locación</label>
+	<size>60</size>
+      </field>
+      
+      <field id="nombre_locacion">
+        <label>Nombre Locación</label>
+      </field>
+<!--
+	<field id="movil" >
+	    <label>Es Movil(carro)</label>
+	    <tipo>check</tipo>
+	</field>
+-->
+
+      
+      <field id="articulos" style="width:200px; text-align:left;padding-left:25%;">
+        <label>Articulos</label>
+        <attribute id="linkdes">nombre_locacion</attribute>
+        <helper xml="stkarticulo_locacion_crud.xml" type="link" width="90%">
+          <parameter source="id_stklocacion" target="stklocacion_id" />
+        </helper>
+        <expression>(case when (select count(*) from STK_ARTICULO_LOCACION WHERE stklocacion_id = id_stklocacion) > 3 
+			then concat((select count(*) from STK_ARTICULO_LOCACION WHERE stklocacion_id = id_stklocacion) , ' Articulos')
+		else ifnull((select group_concat(concat( stkarticulo_id, ':   ' , stock_actual) separator '&lt;br&gt;') from STK_ARTICULO_LOCACION where stklocacion_id = id_stklocacion and stock_actual != 0),'+ Agregar') end)</expression>
+      </field>
+	<order>
+      <field id="codigo_locacion" />
+	
+	</order>
+    </table>
+  </form>
+</histrix>

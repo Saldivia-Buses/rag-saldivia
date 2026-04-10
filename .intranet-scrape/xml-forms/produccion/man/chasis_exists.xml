@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="consulta" >
+    <title>CHASIS</title>
+    <obs/>
+    <form>
+        <table id="CHASIS" label="chasis" >
+            <field id="chasis">
+                <label>Número de Chasis</label>
+                <help>Número de Serie del chasis</help>
+            </field>
+            <field id="mensaje" >
+                
+                <expression>chasis</expression>
+                <label>Número de Chasis</label>
+                <help>Numero de Serie del chasis</help>
+            </field>
+        </table>
+    </form>
+</histrix>

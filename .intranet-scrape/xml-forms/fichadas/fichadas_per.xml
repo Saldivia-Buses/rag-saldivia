@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+	<title>FICHADADIA</title>
+	<obs/>
+	<form>
+
+			<table id="FICHADADIA" label="FICHADADIA del Reloj" styleTbody="height:300px;overflow-x:hidden;">
+			<!--
+			<preconsultas>
+				<xmlfile id="FICHADAS_francos_pre.xml"/>
+					
+			</preconsultas>
+			-->
+
+			<filters>
+				<field id="legajo">
+					<operador>=</operador>
+					<label>Legajo</label>	
+				</field>
+				<field id="tarjeta" deshabilitado="true">
+					<label modpos="nobr">Tarjeta</label>
+					<operador>=</operador>
+				</field>				
+				<field id="apellido" deshabilitado="true">
+					<label modpos="nobr">Apellido</label>
+					<operador>=</operador>
+				</field>				
+				
+				<field id="fecha" _copia="fecha2" noshow="true">
+					<operador>&gt;=</operador>
+					<label>Desde Fecha</label>
+					<valor>today</valor>
+					<preparam campo="fechainicio" operador="&gt;=">true</preparam>
+					
+				</field>
+				<field id="fecha">
+					<operador>&lt;=</operador>
+					<label modpos="nobr">Hasta Fecha</label>
+					<valor>today</valor>					
+					<preparam campo="fechainicio" operador="&lt;=">true</preparam>
+				</field>
+				<!-- <field id="fecha2" local="true" deshabilitado="true">
+					<label>Fecha2</label>
+	                <preparam campo="fechainicio" operador="&gt;=">true</preparam>
+				</field> -->
+				
+			</filters>			
+
+			<field id="tarjeta">
+				<label>Tarjeta</label>
+			</field>
+			
+			<field id="apellido" tabla="PERSONAL">
+				<label>Apellido</label>
+				<tipo>varchar</tipo>
+			</field>						
+			<field id="nombre" tabla="PERSONAL">
+				<label>Nombre</label>
+				<tipo>varchar</tipo>
+			</field>
+			<!-- <field id="fecha2" local="true" deshabilitado="true" noshow="true">
+				<label>Fecha2</label>
+			</field> -->
+
+			<field id="fecha" _copia="fecha2">
+				<label>Fecha</label>
+
+			</field>
+			<field id="referencia" local="true">
+				<label>Referencia</label>
+				<tipo>varchar</tipo>
+			</field>
+				
+<!--			<field id="Hora" >
+				<label>Hora</label>
+				<tipo>varchar</tipo>
+			</field> -->
+			<field id="h1">
+				<label>Hora Ent</label>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="h2">
+				<label>Hora Sal</label>
+				<tipo>varchar</tipo>
+				<expression>CASE WHEN h1 = h2 THEN h3 ELSE h2 END</expression>
+			</field>
+			<field id="h3">
+				<label>Hora Ent 2</label>
+				<tipo>varchar</tipo>
+				<expression>CASE WHEN h1 = h2 THEN h4 ELSE h3 END</expression>
+			</field>
+
+			<field id="h4">
+				<label>Hora Sal 2</label>
+				<tipo>varchar</tipo>
+			</field>
+			
+			
+			<field id="Horas" suma="true">
+				<!-- 
+                                  <expression>(SEC_TO_TIME(ifnull(TIME_TO_SEC(TIMEDIFF(h2, h1)),0) +  ifnull(TIME_TO_SEC(TIMEDIFF(h4, h3)),0)))</expression>
+                                   -->
+				<expression>(CASE WHEN FICHADADIA.h1 = FICHADADIA.h2 THEN (SEC_TO_TIME(ifnull(TIME_TO_SEC(TIMEDIFF(h3, h2)),0) +  ifnull(TIME_TO_SEC(TIMEDIFF(h4, h3)),0))) ELSE (SEC_TO_TIME(ifnull(TIME_TO_SEC(TIMEDIFF(h2, h1)),0) +  ifnull(TIME_TO_SEC(TIMEDIFF(h4, h3)),0))) END)</expression>
+				<label>Horas Trabajadas</label>
+				<tipo>time</tipo>
+				
+			</field>
+			<field id="horaslic" local="true" suma="true">
+				<label>No Trabajadas</label>
+			</field>
+			<!--
+			<field id="reloj">
+				<label>Reloj</label>
+			</field>
+			<field id="codigo">
+				<label>Codigo</label>
+			</field> -->
+			<field id="legajo" tabla="PERSONAL">
+					<ayuda_ex id="PERSONAL">
+						<field id="legajo" >
+							<label>Legajo</label>
+						</field>
+						<field id="nom" >
+							<expression>apellido</expression>
+							<tipo>varchar</tipo>
+							<detalle>apellido</detalle>
+							<label>Apellido</label>
+						</field>		
+						<field id="tarjeta">
+							<detalle>tarjeta</detalle>
+							<label>Tarjeta</label>
+						</field>				
+					</ayuda_ex>			
+				<label>Legajo</label>
+				<preparam campo="legajo" operador="=">true</preparam>
+			</field>
+			
+			<field id="eventual" tabla="PERSONAL" noshow="true">
+                <condicion operador="=">'0'</condicion>
+            </field>
+
+            <order ordenaTemporal="true">
+				<field id="fecha" />
+			</order>
+		</table>
+		<join tipo="left">
+			<table id="PERSONAL">
+				<field id="tarjeta">
+					<condicion operador="=">FICHADADIA.tarjeta</condicion>
+				</field>
+				
+			</table>
+		</join>
+	</form>
+</histrix>

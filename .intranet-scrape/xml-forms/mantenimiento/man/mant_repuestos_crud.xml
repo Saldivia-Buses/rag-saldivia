@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+    <title>Repuestos</title>
+    <obs></obs>
+    <form>
+        <table id="MANT_REPUESTOS" label="Repuestos">
+	    <field id="id_repuesto" noshow="true" />
+	    <field id="equipo_id" noshow="true" valauto="true" />
+	    <field id="articulo_id" table="MANT_REPUESTOS">
+		<label>Artículo</label>
+		<help>Codigo de Articulo</help>
+		<helper id="STK_ARTICULOS" type="external">
+		    <field id="id_stkarticulo" >
+			<label>Cod.</label>
+		    </field>
+		    <field id="desc_art">
+			<expression>STK_ARTICULOS.nombre_articulo</expression>
+			<label>Insumo</label>
+			<detalle>desc_art</detalle>
+		    </field>
+		    <field id="subsistema_id">
+			<condicion operador="=">'01'</condicion>
+		    </field>
+		</helper>
+	    </field>
+	    <field id="desc_art">
+		<expression>STK_ARTICULOS.nombre_articulo</expression>
+		<label modpos="nobr">Descripcion</label>
+		<size>50</size>
+	    </field>
+
+	    <field id="critico">
+		<label>Critico</label>
+		<helper type="combo">
+		    <option value="0">No</option>
+		    <option value="1">Si</option>
+		</helper>
+		<tipo>radio</tipo>
+	    </field>
+	</table>
+        <join tipo="left">
+    	     <table id="STK_ARTICULOS">
+    	        <field id="id_stkarticulo">
+    	    	    <condicion operador="=">articulo_id</condicion>
+    	        </field>
+    	        <field id="subsistema_id">
+    	    	    <condicion operador="=">'01'</condicion>
+    	        </field>
+    	     </table>
+        </join>
+    </form>
+</histrix>	

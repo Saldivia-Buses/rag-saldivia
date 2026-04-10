@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="dashboard">
+        <titulo>Histrix Control Center</titulo>
+	<widget id="Users"  width="400px" height="300px">
+            <title>Users</title>
+	    <url><![CDATA[histrixLoader.php?xml=users.xml&dir=histrix/dashboard]]></url>
+        </widget> 
+        
+        
+</histrix>
+
+

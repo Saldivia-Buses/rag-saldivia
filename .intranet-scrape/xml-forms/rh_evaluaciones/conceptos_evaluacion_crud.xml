@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm" >
+	<title>Conceptos de la encuesta</title>
+	<obs></obs>
+	<form >
+		<table id="RH_EVALUACION_GRUPOS">
+			<title>Conceptos de la encuesta</title>
+			<field id="id_rhevaluaciongrupo" autoinc="true" esClave="true" noshow="true">
+			</field>
+			
+			<field id="nombre_grupo">
+                <label>Concepto</label>
+            </field>
+			
+			<field id="peso">
+                <label>Peso</label>
+            </field>
+		
+			<field id="orden_grupo" colstyle="display:none;" noshow="true">
+				<expression>id_rhevaluaciongrupo</expression>
+				<label>Orden</label>
+			</field>
+
+			<field id="tipo_evaluacion">
+                <label>Tipo</label>
+                <options>
+                    <option valor="1">Evaluacion</option>
+                    <option valor="2">Sondeo</option>
+                </options>                
+            </field>
+
+			<order>
+				<field id="orden"></field>
+			</order>						
+
+		</table>
+	</form>	   
+</histrix> 

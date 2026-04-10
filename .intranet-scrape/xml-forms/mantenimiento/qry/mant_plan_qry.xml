@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  Calendar
+Tarea: PLAN DE MANTENIMIENTO
+Autor: Lmm
+Fecha: 17/08/11
+*******************************************************************************
+-->
+<histrix tipo="consulta" calendarAspectRatio="2.3" sidePanel="false" imprime="true">
+    <title>Mantenimiento</title>
+    <obs></obs>
+    <form>
+	
+        <table id="MANT_PLAN" label="Plan de mantenimiento" >
+        
+    	    <filters>
+                <field id="titulo" local="true" >
+            	    <label>Equipo</label>
+            	</field>
+                
+    		
+    	    </filters>
+        
+        
+            <field id="id_plan" calendarId="true" autoinc="true"  noshow="true">
+            </field>
+            <field id="fecha_accion" calendarStartDate="true">
+        	<label>Fecha</label>
+                <tipo>date</tipo>
+            </field>
+            <field id="edit" calendarEditable="true" local="true" noshow="true">
+        	<valor>1</valor>
+            </field>
+        
+            <field id="equipo_id" noshow="true" oculto="true" autoing="true">
+            </field>
+            <field id="titulo" noshow="true" local="true" style="display:none;">
+	    </field>
+                                                                                                        				
+            <field id="accion_id" noshow="true">
+        	<condicion operador="!=">52</condicion>
+            </field>
+            
+            <field id="nombre_accion" autocompletar="true" calendarSubject="true" deshabilitado="false" searchRecord="false">
+        	<expression>nombre_accion</expression>
+        	<helper type="external" id="MANT_ACCIONES" empty="true">
+
+		    <field id="id_accion" noshow="true">
+			<detalle>accion_id</detalle>
+		    </field>
+		    <field id="nombre_accion">
+			<detalle>nombre_accion</detalle>
+		    </field>
+
+		</helper>
+		<label>Acción</label>
+		<size>50</size>
+            </field>
+            <field id="rrule" calendarRecurringRule="true">
+        	<label>Repetir</label>
+        	<tipo>rrule</tipo>
+            </field>
+                                                                      
+
+        </table>
+        <join tipo="left">
+		<table id="MANT_ACCIONES">
+		    <field id="id_accion" >
+			<condicion operador="=">accion_id</condicion>
+		    </field>
+        	</table>
+        </join>
+    </form>
+</histrix>	

@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" subtipo="vertical"  path="fotos/homologaciones/">
+  <title>HOMOLOGACION POR MODELO</title>
+  <obs/>
+  <consulta>
+    <table id="HOMOLOGMOD">
+      <title>Homologaciones por modelo</title>
+      <field id="id_homologacion" _noshow="true" autoinc="true">
+
+      </field>
+      
+      <field id="Descripcion">
+        <label>Descripcion</label>
+        <expresion>CONCAT(CARROCERIA.modcar,' ',MARCHASIS.mardes, ' ',MODCHASIS.moddes, ' ',HOMOLOGMOD.asientos + acompañante,' Asientos ',(CASE WHEN banbar = 1 THEN 'BB' ELSE ' ' END) ,'- Largo:', largo)</expresion>
+      </field>
+      
+      <field id="nrocar">
+        <label>Carroceria</label>
+        <tabla_ex id="CARROCERIA">
+          <field id="nrocar">
+            <label>Codigo</label>
+          </field>
+          <field id="modcar">
+            <label>Modelo</label>
+          </field>          
+        </tabla_ex>
+      </field>
+      <field id="modcod">
+        <expresion having="false">HOMOLOGMOD.modcha</expresion>
+      </field>
+    
+      <field id="marcod">
+        <label modpos="nobr" >Marca</label>
+        <help>Marca del Chasis</help>
+      </field>
+      <field id="modcha" >
+        <label modpos="nobr" colstyle="display:none;">Modelo</label>
+        <help>Modelo del Chasis</help>
+      </field>    
+      <field id="moddes" tabla="MODCHASIS" >
+        <expresion>MODCHASIS.moddes</expresion>
+        <label Formstyle="display:none;" modpos="nobr">ModeloChasis</label>
+        <tipo>varchar</tipo>
+      </field>
+      <field id="asientos">
+        <label modpos="nobr">Asientos</label>
+        <label>Cantidad de Asientos</label>
+      </field>
+      <field id="cantasi">
+        <expresion>asientos + acompañante</expresion>
+        <detalle>cantasi</detalle>
+      </field>
+      <field id="tipserv" >
+    	<detalle>tipserv</detalle>
+      </field>
+      
+      
+<!--       <field id="banbar">
+        <help>Bar y Baño</help>
+        <options>
+            <option valor="0">No</option>
+            <option valor="1">Si</option>
+        </options>
+      </field>
+      <field id="plano">
+        <label modpos="nobr">Plano Nro</label>
+        <help>Numero de Plano</help>
+      </field>  
+      <field id="expte">
+        <label modpos="nobr" >Expte Nro</label>
+        <help>Numero de Expediente</help>
+      </field>
+      <field id="dispos">
+        <label _modpos="nobr">Disposición</label>
+        <help>Disposición</help>
+      </field>
+      <field id="fechaAprob">
+        <label modpos="nobr">Fecha Aprob.</label>
+        <help>Fecha de Aprobación</help>
+      </field>
+      <field id="tara">
+        <label modpos="nobr">Tara</label>
+        <help>Tara</help>
+      </field>
+      <field id="bruto">
+        <label modpos="nobr">Peso Bruto</label>
+        <help>Peso Bruto</help>
+      </field>
+      <field id="admisible">
+        <label modpos="nobr">Peso Adm (Ton)</label>
+        <help>Peso Máximo Admisible en toneladas</help>
+        <size>2</size>
+      </field>
+      <field id="inti">
+        <label >Expte. I.N.T.I.</label>
+        <help>Número de Expediente del I.N.T.I.</help>        
+      </field>
+      <field id="industria">
+        <label modpos="nobr">Expte. Industria</label>
+        <help>Número de Expediente de Secretaría de Industria</help>
+      </field>
+      <field id="lcm"  linkdes="Fotos">
+          <attribute id="linkint">hasLCM</attribute>
+        <label modpos="nobr">L.C.M. Nro</label>
+        <help>Número de Licencia de Configuración de Modelo</help>
+        <paring destino="homologacion_id" >id_homologacion</paring>
+      </field>
+      -->
+<!--      <field id="wmi" local="true">
+        <valor>'8A9'</valor>
+        <tipo>varchar</tipo>
+      </field> -->
+<!--      <field id="largo">
+        <label modpos="nobr">Largo</label>
+        <help>Largo en metros</help>
+      </field>
+      <field id="bodega">
+        <label modpos="nobr">Bodega</label>
+        <help>Capacidad de bodega en m3</help>
+      </field>
+      <field id="vds" local="true">
+        <label >vds</label>
+        <expresion>concat('8A9',MODCHASIS.codigo , CARROCERIA.codvds , admisible)</expresion>
+        <tipo>varchar</tipo>
+      </field> -->
+<!--      <field id="vin">
+        <label modpos="nobr">Nro VIN</label>
+        <help>Número de VIN</help>
+      </field> -->
+      <order>
+        <field id="baja"></field>
+        <field id="nrocar" tabla="HOMOLOGMOD"></field>
+        <field id="moddes" tabla="MODCHASIS"></field>
+        <field id="asientos" ></field>
+      </order>
+    </table>
+    <join tipo="left">
+               <table id="CARROCERIA">
+          <field id="nrocar">
+                 <condicion operador="=">HOMOLOGMOD.nrocar</condicion>
+          </field>
+        </table>
+    </join>
+    <join tipo="left">
+      <table id="MARCHASIS">
+        <field id="marcod">
+          <condicion operador="=">HOMOLOGMOD.marcod</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="MODCHASIS">
+        <field id="modcha">
+          <condicion operador="=">HOMOLOGMOD.modcha</condicion>
+        </field>
+        <field id="marcod">
+          <condicion operador="=">HOMOLOGMOD.marcod</condicion>
+        </field>
+      </table>
+    </join>
+  </consulta>
+</histrix>

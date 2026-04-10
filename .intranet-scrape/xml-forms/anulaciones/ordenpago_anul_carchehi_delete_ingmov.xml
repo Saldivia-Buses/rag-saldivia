@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="delete" limit="99">
+       <title>HISTORICA</title>
+        <obs></obs>
+               <form >
+					<table id="CARCHEHI" label="ANULACION ORDEN DE PAGO" >
+						<field id="carpag" id_temp="movinc" esClave="true">
+						</field>
+<!--            <field id="siscod" esClave="true">
+              <valor>'05'</valor>
+            </field>-->
+
+					</table>
+               </form>
+        </histrix>

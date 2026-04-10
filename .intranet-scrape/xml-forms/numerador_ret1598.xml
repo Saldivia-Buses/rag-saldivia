@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<abm tipo="consulta">
+	<titulo>NUMERADOR</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="RET1598" label="NUMERADOR">
+			<campo id="parent">
+				<expresion>max(nroret) + 1 </expresion>
+				<label>Entero</label>
+				<help>Valor Entero</help>
+			</campo>
+		</tabla>
+	</consulta>	   
+</abm> 

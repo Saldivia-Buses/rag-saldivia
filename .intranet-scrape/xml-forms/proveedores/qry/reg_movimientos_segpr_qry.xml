@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="consulta" preloadData="false" paginar="200">
+       <title>Consulta de Vencimientos</title>
+        <obs></obs>
+<!--           <form _detalle="regmovimientoobs_crud.xml" _dir="/ayudas"> -->
+	<form  _inline="true">
+		<table id="REG_MOVIMIENTOS" label="Consulta de Vencimientos">
+		      <filters>
+			<field id="vencimiento_movimiento">
+				<label>Desde Fecha</label>
+				<valor eval="true">date('d/m/Y', mktime(0, 0
+				, 0, date("m" ) - 3 , 1, date("Y") ))</valor>
+				<operador>&gt;=</operador>
+			</field>
+			<field id="vencimiento_movimiento" >
+				<label>Hasta Fecha</label>
+				<valor>today</valor>
+				<operador>&lt;=</operador>
+			</field>
+			<field id="nro_cuenta" tabla="REG_CUENTA">
+			    <label>Cuenta</label>
+			</field> 
+
+			<field id="nro_movimiento" >
+				<label modpos="nobr">Nro.Comp.</label>
+				<operador>=</operador>
+			</field>  
+
+		      </filters>
+
+			            <field id="deuda" linkdes="Cuenta Corriente" local="true">
+                <label>Deuda</label>
+                <helper type="link" xml="regdetalles_all_qry.xml" dir="/clientes/qry" modal="true">
+                    <parameter source="regcuenta_id" target="regcuenta_id" operator="="/>
+                    <parameter source="subsistema_id" target="subsistema_id" operator="="/>
+                </helper>
+                <valor>'+'</valor>
+            </field>
+
+			<field id="nro_movimiento" noshow="true">
+				<label modpos="nobr">Nro.Comp.</label>
+			</field>  
+			<field id="letra_movimiento" noshow="true">
+				<label modpos="nobr">letra</label>
+			</field>  
+
+			<field id="id_regmovim" noshow="true">
+				<label>Cod</label>
+				<help>Codigo de Movimiento</help>
+				<detalle>regmovim_id</detalle>
+			</field>
+
+			<field id="concepto_id" noshow="true">
+				<label>Concepto</label>
+			</field>
+			<field id="nro_cuenta" tabla="REG_CUENTA">
+
+				<label>Cuenta</label>
+				<helper type="external" xml="regcuenta_relacionescmb_nro.xml" dir="/ayudas" _empty="true" >
+				</helper>				
+			</field>
+
+			<field id="nombre_cuenta" tabla="REG_CUENTA" >
+				<label>Nombre</label>
+			</field>
+
+<!--            
+            <field id="telefono" >
+                            <label >Telefono</label>
+                            <expresion>SELECT group_concat(valor, '&lt;br>') FROM REG_CUENTAS_CONTACTOS
+                                                                    JOIN GEN_TIPO_CONTACTOS on ( GEN_TIPO_CONTACTOS.id_contacto = REG_CUENTAS_CONTACTOS.contacto_id  )
+                                                                where regcuenta_id = REG_MOVIMIENTOS.regcuenta_id and vcard_type like 'TEL%' LIMIT 1
+                                    </expresion>
+	    </field>
+    -->                                                                                                                    
+
+			
+			<field id="regcuenta_id" noshow="true">
+			</field> 
+			<field id="subsistema_id" noshow="true">
+			</field> 
+			<field id="fecha_movimiento">
+				<label>Fecha</label>
+				<help>Fecha del movimiento</help>
+			</field>
+			<field id="vencimiento_movimiento">
+				<label>Vencimiento</label>
+				<help>Fecha de vencimiento</help>
+			</field>
+
+			<field id="imprime_concepto1"  noshow="true">
+			      <label>imprim_con</label>
+			      <expresion>REG_NUMERADORES.ejecuta</expresion>
+			</field>
+			<field id="comprobantes" local="true"  linkdes="Facturas" linkdir="/caja/qry">
+				<label>Comprobante</label>
+				<expresion>concat(descripcion_concepto,' ',letra_movimiento, ' ' , lpad(puesto_movimiento,4,0),' ', lpad(nro_movimiento,8,'0') )</expresion>
+				<paring destino="id_regmovim">id_regmovim</paring>
+				<attribute id="linkint">imprime_concepto1</attribute>
+		        </field>
+			<field id="importe_movimiento" suma="true">
+			       <label>Importe</label>		      
+			</field>
+			<field id="saldo_movimiento" _noshow="true" suma="true">
+			       <label>Saldo</label>		      
+
+			     <condicion operador="!=">0</condicion>
+			</field>
+
+			<field id="dias_demora">
+				<label style="text-align:center;">demora</label>
+				<expresion>datediff(curdate(), fecha_movimiento)</expresion>
+		   	</field>
+			<field id="dias_demora_grafico">
+				<label></label>
+				<expresion>datediff(curdate(), fecha_movimiento)</expresion>
+				<tipo>grafico</tipo>
+			</field>
+				
+			<field id="observaciones" local="true"  linkint="regmovim_obs_qry.xml" linkdes="Observaciones" linkdir="/clientes/qry" showValor="true" >
+				<valor>'Observaciones'</valor>
+				<tipo>varchar</tipo>
+				<paring destino="regmovim_id">id_regmovim</paring>
+				<paring destino="tabla_origen">REG_MOVIMIENTOS</paring>
+			</field>    
+			<field id="tablaorigen" noshow="true">
+				<label>Tabla Orgien</label>
+				<expresion>'REG_MOVIMIENTOS'</expresion>
+				<detalle>tabla_origen</detalle>
+			</field>
+			<order>
+				<field id="fecha_movimiento"/>
+				<field id="comprobantes"  	 >
+					<label>Comprobante</label>
+					<expresion>concat(descripcion_concepto,' ',letra_movimiento, ' ' , lpad(puesto_movimiento,4,0),' ', lpad(nro_movimiento,8,'0') 
+					)</expresion>
+	
+		        </field>
+			</order>
+		</table>
+
+		<join>
+			<table id="REG_CUENTA">
+				<field id="id_regcuenta">
+				  <condicion operador="=">regcuenta_id</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join>
+			<table id="REG_CONCEPTOS">
+				<field id="tipo_concepto">
+				  <condicion operador="=">1</condicion>
+				</field>
+			
+				<field id="id_concepto">
+				  <condicion operador="=">concepto_id </condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="REG_NUMERADORES">
+				<field id="regconcepto_id">
+				  <condicion operador="=">REG_CONCEPTOS.id_concepto</condicion>
+				</field>
+				<field id="letra">
+				  <condicion operador="=">REG_MOVIMIENTOS.letra_movimiento</condicion>
+				</field>
+				<field id="puesto">
+				  <condicion operador="=">REG_MOVIMIENTOS.puesto_movimiento</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+        </histrix>

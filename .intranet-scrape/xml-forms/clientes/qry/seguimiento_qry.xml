@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+	<title>Entregas</title>
+	<obs/>
+	<form>
+		<table id="REG_MOVIMIENTO_OBS" _label="OBSERVACIONES">	
+			<field id="fec_observacion" noshow="true">
+				<help>Fecha de la observación</help>
+				<tipo>date</tipo>
+				<valor>today</valor>
+			</field>
+
+				<field id="fecha_obs" local="true">
+ 					<label getStyle="fec_style"></label>
+		            <if exp="'fec_observacion' == 'today'">
+		              <true>'HOY'</true>
+		              <false>('fec_observacion'=='ayer')?'Ayer': (('fec_observacion' != '')?date('d/m', strtotime('fec_observacion')):'')</false>
+		            </if>                
+		        </field>
+
+
+			<field id="hora_observacion">
+				<help>Hora de la observación</help>
+				<tipo>hora</tipo>
+				<valor eval="true">date("H:i:s")</valor>
+			</field>
+			<!--
+			<field id="gencontacto_id">
+				<helper type="combo" id="GEN_TIPO_CONTACTOS" empty="true">
+					<field id="id_contacto"/>
+					<field id="tipo_contacto"/>
+				</helper>
+				<label>Tipo Contacto</label>
+			</field> 
+			-->
+			<field id="observacion">
+				<help>Observación</help>
+				<size>300</size>
+			</field>
+			<field id="regmovim_id" noshow="true"/>
+			<field id="tabla_origen" noshow="true"/>
+
+
+
+		        <field id="fec_style" local="true" noshow="true" print="false">
+		            <label>1</label>
+		            <if exp="'fec_observacion' == 'today'">
+		              <true>'font-size:15px;color:red;font-weight:bold;text-decoration: blink;'</true>
+		              <false>('fec_observacion'=='ayer')?'font-size:15px;color:blue;font-weight:bold;':'font-size:11px;color:green;font-weight:bold;'</false>
+		            </if>
+		            <tipo>varchar</tipo>
+		        </field>
+
+		        <field id="today" noshow="true">
+		      		<expresion>DATE(NOW())</expresion>
+		        </field>
+		        <field id="ayer"  noshow="true">
+		     		<expresion>DATE_SUB(curdate(), INTERVAL 1 DAY)</expresion>
+		        </field>
+			<field id="login">
+			</field>
+
+
+		</table>
+	</form>
+</histrix>

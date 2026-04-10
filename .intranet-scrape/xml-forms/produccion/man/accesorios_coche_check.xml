@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" subtipo="vertical">
+    <title>Accesorios por coche</title>
+    <obs/>
+    <form >
+        <table id="ACCESORIOS_COCHE" label="Accesorios Estandar y Observaciones" style__Tbody="height:100px;overflow-x:hidden;">
+            <field id="id_accesorio" noshow="true" esClave="true" autoinc="true" deshabilitado="true">
+            </field>
+            <field id="nrofab" oculto="true" esClave="true">
+                <label>Num</label>
+            </field>
+		        <field id="prdseccion_id" noshow="true" >
+		        </field>
+
+            <field id="fecha" log="false">
+            <label>fecha</label> 
+                <tipo>date</tipo>
+                <valor>today</valor>
+            </field>
+            <field id="ficha_id" oculto="true" log="false">
+-          
+		 
+            </field>
+
+            <field id="artcod" _deshabilitado="true" noshow="true">
+        	<size>3</size>
+        	<valor></valor>
+                <tipo>varchar</tipo>
+                <label>cod</label>
+            </field>
+			 
+            <field id="artdes" autocompletar="true" >
+        	<expression>case when ACCESORIOS_COCHE.artcod != '' then concat(ACCESORIOS_COCHE.artcod,': ',ACCESORIOS_COCHE.artdes, (case when cantidad &gt; 1 then  concat(' Cant: ', cantidad) else '' end ) ) else ACCESORIOS_COCHE.artdes end</expression>
+        	<label modpos="nobr">Adicionales</label> 
+                <size>40</size>
+            </field>
+            <!--
+            <field id="cantidad" _noZero="true" _noEmpty="true" deshabilitado="false">
+        	<label modpos="nobr">Cant</label>
+        	<size>2</size>
+        	<valor>1</valor>
+            </field>  -->
+        <field id="check" local="true">
+		<label>chequeo</label>
+		<tipo>check</tipo>
+            </field>
+
+
+            <field id="estado" noshow="true">
+        	<condicion operador="!=">2</condicion>
+            </field>
+<!--             <field id="showprecios" noshow="true" _oculto="true" local="true">
+            </field>
+
+            <field id="hidePrecios" local="true" noshow="true">
+                <if exp="showprecios + 0 &gt;= 1">
+                    <true>'false'</true>
+                    <false>'true'</false>
+                </if>
+            </field>
+           
+            
+            <field id="precio_unitario" noZero="true" _suma="true" _noEmpty="true">
+        	<label>P.Unit</label>
+            
+                <attribute id="noshow">hidePrecios</attribute>
+                <tipo>numeric</tipo>
+            </field>
+            <field id="precio_adicional" noZero="true" suma="true"  _noEmpty="true" _Formstyle="display:none;" _deshabilitado="true">
+        	<label colstyle="display:none;">Sub Total</label>
+                <attribute id="noshow">hidePrecios</attribute>
+                <tipo>decimal</tipo>
+            </field>
+
+            <field id="precio_2adicional" noZero="true" suma="true"  _noEmpty="true" Formstyle="display:none;" deshabilitado="true">
+        	<label>Sub Total</label>
+        	<expression>case when estado != 2 then precio_adicional end</expression>
+               <attribute id="noshow">hidePrecios</attribute> 
+                <tipo>decimal</tipo>
+            </field>
+-->
+            <order>
+        	<field id="fecha"></field>
+            </order>
+			 
+        </table>
+        <join tipo="left">
+            <table id="STKINSUM">
+                <field id="artcod">
+                    <condicion operador="=">ACCESORIOS_COCHE.artcod</condicion>
+                </field>
+                <field id="siscod">
+                    <condicion operador="=">'02'</condicion>
+                </field>
+	    	    
+            </table>
+        </join>
+    </form>
+</histrix>

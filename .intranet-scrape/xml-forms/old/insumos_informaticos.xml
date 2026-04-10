@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="abm">
+       <title>Insumos Informaticos</title>
+        <obs>Abm Insumos informaticos.</obs>
+               <form >
+                  <table id="INSUMOS_IT" label="INSUMOS">
+                  
+                  <field id="id_insumosit" >
+                     
+                      <label>Grupo</label>
+                      
+                      <options>
+                        <option valor="0">C87</option>
+                        <option valor="1">C</option>
+                        <option valor="2">HP Tonner</option
+                        <option valor="3">HP Tonner</option
+                      </options>
+
+                  </field>
+                  
+                  <field id="descripcion" autoinc="true" noshow="true">
+                  
+                      <label>id</label>
+                      <help> </help>
+                  
+                  </field>
+                  
+                  <field id="id_componente" autoinc="true" noshow="true">
+                  
+                      <label>id</label>
+                      <help> </help>
+                  
+                  </field>
+                  
+                  <field id="nombre" >
+                  
+                      <label>Componentes</label>
+                      <help>Componente a Verificar</help>
+                  
+                  </field>
+                  
+                  </table>
+               
+               </form>
+        
+        </histrix>​

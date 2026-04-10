@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<abm tipo="grid" llenoTemporal="false" procesa="false" borra="true">
+		<titulo>Adicionales</titulo>
+		<obs></obs>
+		<consulta>
+			<tabla id="LISTAPRECIOSDET"	styleTbody="height:120px; _overflow-x:hidden;">
+		
+				<titulo>ADICIONALES</titulo>
+
+				<movimientos >
+					<relacion id="cotizacion_cotizadic_ingmov.xml"/>
+				</movimientos>
+				
+				<campo id="idLista" noshow="true" required="false">
+					<condicion operador="=">(select max(idLista) from LISTAPRECIOSCAB)</condicion>
+				</campo>
+				<campo id="artcod" tabla="STKINSUM" esClave="true" required="false" valid="true">
+					<label>Cod.</label>
+					<tipo>varchar</tipo>
+					<ayuda_ex id="LISTAPRECIOSDET" xml="HLPadicionales.xml" dir="/help_local">
+						<campo id="artcod" tabla="STKINSUM" esClave="true">
+							<tipo>varchar</tipo>
+						</campo>
+						<campo id="artdes" tabla="STKINSUM" deshabilitado="true">
+							<label>Nombre</label>
+							<tipo>varchar</tipo>
+							<detalle>artdes</detalle>
+						</campo>
+						<campo id="precio1" deshabilitado="true">
+							<label>Precio</label>
+							<tipo>decimal</tipo>
+							<detalle>precio1</detalle>
+						</campo>						
+					</ayuda_ex>
+					<help>Seleccione los Adicionales a incorporar</help>
+				</campo>
+				<campo id="artdes" tabla="STKINSUM" deshabilitado="true">
+					<label>Nombre</label>
+					<tipo>varchar</tipo>
+					<size>80</size>
+				</campo>
+				<campo id="cantidad" local="true">
+					<label >Cantidad</label>
+					<valor >1</valor>
+					<help>Cantidad</help>
+				</campo>
+				<campo id="precio1" deshabilitado="true">
+					<label>Precio</label>
+					<tipo>decimal</tipo>
+					<valor>10</valor>
+
+				</campo>
+				<campo id="Tot" local="true" deshabilitado="true" suma="true" editable="true">
+					<label style="width:100%">Total</label>
+					<if exp="true">
+						<verdadero>cantidad * precio1</verdadero>
+						<falso>0</falso>
+					</if>
+                     <jseval campodestino="TAdicion" total="true">Tot</jseval>^                                                
+ 					<tipo>decimal</tipo>
+				</campo>
+				<orden>
+					<campo id="artdes"></campo>
+				</orden>
+			</tabla>
+			<join tipo="left">
+				<tabla id="STKINSUM">
+					<campo id="siscod" oculto="true">
+						<condicion operador="=">'02'</condicion>
+					</campo>
+					<campo id="artcod">
+						<condicion operador="=">
+							LISTAPRECIOSDET.idArticulo</condicion>
+					</campo>
+				</tabla>
+			</join>
+		</consulta>
+	</abm>

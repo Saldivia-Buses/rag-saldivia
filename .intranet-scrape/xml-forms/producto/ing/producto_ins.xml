@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" tipoInsert="IGNORE">
+<title>Productos</title>
+<obs></obs>
+<form >
+    <table id="PRODUCTOS">
+        <title>Productos</title>
+
+        <field id="id_producto"  lastId="configurador_ins.xml">
+        </field>
+
+        <field id="descripcion_producto" id_temp="nrocha">
+        </field>
+    </table>
+</form>	   
+</histrix>

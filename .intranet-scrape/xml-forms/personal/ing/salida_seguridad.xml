@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+    <title>FICHA PERSONAL</title>
+    <obs/>
+    <form detalle="seguridad_articulos.xml">
+        <table id="PERSONAL" label="Ficha Personal">
+        	<filters>
+
+                <field id="legajo">
+                    <label>Legajo</label>
+                    <operador>=</operador>
+                </field>
+
+                <field id="Nombre" _deshabilitado="false">
+                    <label>Nombre</label>
+                    <operador>like</operador>
+                </field>
+
+                <field id="apellido">
+                    <label _modpos="nobr">Apellido</label>
+                    <help>Apellido</help>
+                    <operador>like</operador>
+                </field>
+
+        	</filters>
+
+            <field id="legajo">
+                <label>Legajo</label>
+                <help>Número de Legajo</help>
+            </field>
+            
+            <field id="IdPersona" noshow="true">
+                <label>Cuenta</label>
+                <help>Código de Cuenta</help>
+                <detalle>IdPersona</detalle>
+            </field>
+            
+            <field id="Nombre" tabla="PERSONAL">
+                <label>Nombre</label>
+                <help>Nombre</help>
+                <size>20</size>
+            </field>
+
+            <field id="apellido">
+                <label _modpos="nobr">Apellido</label>
+                <help>Apellido</help>
+                <size>20</size>
+            </field>
+
+            <!-- <field id="nomape" noshow="true" deshabilitado="false">
+                <expression>concat(PERSONAL.Nombre, ' ', PERSONAL.apellido)</expression>
+                <size>30</size>
+            </field> -->
+           
+    		<field id="desc_secc">
+				<expression>SECCION.nombre</expression>
+				<label>Sección</label>
+    		</field>
+            <field id="sexo" noshow="true">
+                <label modpos="nobr">Sexo</label>
+                <help>Sexo</help>
+                <options>
+                    <option valor="1">Masculino</option>
+                    <option valor="2">Femenino</option>
+                </options>    
+            </field>
+            <field id="fechaEgreso" noshow="true">
+                <label modpos="nobr">Fecha de Egreso</label>
+                <condicion operador="=">'0000-00-00'</condicion>
+            </field>
+            <field id="id_seccion" noshow="true" />            
+
+    	    <order>
+                <field id="Nombre" />
+    	    </order>
+        </table>
+        
+        <join tipo="left">
+            <table id="SECCION">
+                <field id="id_seccion">
+                    <condicion operador="=">PERSONAL.id_seccion</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

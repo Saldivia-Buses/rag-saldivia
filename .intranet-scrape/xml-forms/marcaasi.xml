@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>MARCAS DE ASIENTOS</title>
+	<obs></obs>
+	<form >
+		<table id="MARCAASI" label="Marcas Asientos">
+
+			<field id="marasi">
+				<label>Codigo</label>
+				<help>Codigo de Asiento</help>
+			</field>
+			<field id="asides">
+				<label>Marca</label>
+				<help>Marca de Asiento</help>
+                <expression>LEFT(MARCAASI.asides, 4)</expression>
+			</field>
+			<field id="siscod" oculto="true">
+				<label>Cod</label>
+			</field>			
+    			<order>
+				<field id="asides"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

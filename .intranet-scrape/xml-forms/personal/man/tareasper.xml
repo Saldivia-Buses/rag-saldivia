@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="abm">
+	<title>TAREAS DEL PERSONAL</title>
+	<obs></obs>
+	<form >
+		<table id="TAREASPER" >
+			<title>Tarea</title>
+			<field id="idTarea">
+				<label>Código</label>
+				<help>Código de Tarea</help>
+
+			</field>
+			<field id="nombre">
+				<label>Nombre Tarea</label>
+				<help>Nombre de Tarea</help>
+			</field>
+			<field id="descripcion">
+				<label>Descripción Tarea</label>
+				<help>Descripción de Tarea</help>
+				<size>200</size>
+			</field>
+
+    			<order>
+				<field id="idTarea"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

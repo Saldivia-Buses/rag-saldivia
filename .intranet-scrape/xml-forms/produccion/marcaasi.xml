@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="crud">
+	<title>MARCAS DE ASIENTOS</title>
+	<obs></obs>
+	<form >
+		<table id="MARCAASI" label="Marcas Asientos">
+			<field id="marasi">
+				<label>Codigo</label>
+				<help>Codigo de Asiento</help>
+			</field>
+			<field id="asides">
+				<label>Marca</label>
+				<help>Marca de Asiento</help>
+			</field>
+			<field id="propio">
+				<label>Marca Propia</label>
+				<help>Marca Propia</help>
+				<tipo>check</tipo>
+			</field>				
+			<field id="siscod" oculto="true">
+				<label>Cod</label>
+			</field>
+
+			<!-- CTA PROVEEDORES  POR EMPRESA DE ASIENTOS-->
+			<field id="ctacod" autocompletar="true">
+				<label>Proveedor</label>
+				<help>Codigo de Cuenta PROVEEDOR. </help>
+				<tabla_ex id="CCTCUENT" vacio="true">
+					
+					<field id="ctacod" clave="true" muestra="false"></field>
+					<field id="ctafan" tipoOrden="ASC"></field>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'01'</condicion>
+					</field>
+					<field id="baja">
+						<condicion operador="!=">1</condicion>
+					</field>
+					<order>
+						<field id="ctafan"></field>
+					</order>
+					
+				</tabla_ex>
+				</field>
+					
+    			<order>
+				<field id="marasi"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 
+
+  

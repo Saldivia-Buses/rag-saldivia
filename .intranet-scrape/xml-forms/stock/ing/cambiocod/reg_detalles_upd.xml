@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="update">
+	<title>Ingreso Movimiento</title>
+	 <obs></obs>
+		<form >
+		    <table id="REG_DETALLES"  		>
+			<sql>
+				update REG_DETALLES set codigo_detalle= '[__stkarticulo_destino_id__]' where codigo_detalle = '[__id_stkarticulo__]'	    
+			</sql>
+			<field id="stkarticulo_id"         id_temp="id_stkarticulo"/>
+			<field id="stkarticulo_destino_id" id_temp="stkarticulo_destino_id"/>
+
+		    </table>
+		</form>
+    </histrix>	
+
+

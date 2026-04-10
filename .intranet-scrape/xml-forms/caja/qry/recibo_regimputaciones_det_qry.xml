@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<histrix tipo="consulta">
+  <title>Imputaciones</title>
+  <obs></obs>
+
+	  <form >
+		
+			<table id="REG_IMPUTACIONES">
+
+				<field id="regmovim_id" esClave="true" noshow="true">
+				<condicion operador="!=">''</condicion>
+				</field>	
+				
+
+				<field id="descripcion_concepto" tabla="REG_CONCEPTOS">
+					<label>Comprobante</label>
+				</field>    	
+
+			<!--
+				<field id="numero_movimiento" >
+					<expression>concat(letra_movimiento,' ' ,lpad(puesto_movimiento,4,'0') ,' ',lpad(nro_movimiento,8,'0') ,' ',lpad(cuota_movimiento,3,'0'))</expression>
+					<label>Numero</label>
+					 
+				</field>
+			-->
+            	<field id="fecha_movimiento" tabla="REG_MOVIMIENTOS">
+					<label>Fecha</label>
+					<tipo>date</tipo>
+				</field> 
+			  	
+				<field id="importe_movimiento" tabla="REG_MOVIMIENTOS">
+					<label>Importe Original</label>
+					<tipo>numeric</tipo>
+				</field>
+		
+				<field id="movimiento_imputacion" suma="true">
+					<label>Imputado</label>
+					<tipo>numeric</tipo>
+				</field>
+
+					
+
+			</table>
+			 <join>
+				<table id="REG_MOVIMIENTOS">
+					<field id="id_regmovim">
+						<condicion operador="=">REG_IMPUTACIONES.regmovim0_id</condicion>
+	   			    </field>
+				</table>
+			</join>
+			
+			<join>
+				<table id="REG_CONCEPTOS">
+					<field id="id_concepto">
+						<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+	   			    </field>
+				</table>
+			</join>
+
+	</form>
+	
+</histrix>

@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix llenoTemporal="false" tipo="cabecera"   transaccional="true"  >
+    <title>Punto de Venta</title>
+    <obs/>
+    <form>
+        <table id="CCTMOVIM" label="Emision de Facturas Proforma" _styleTbody="height:150px;overflow-x:hidden;">
+            <field id="siscod" local="true" noshow="true" >
+                <valor>03</valor>
+            </field>
+            <field id="ctacod" required="true"  deshabilitado="true">
+                <label >Cliente:</label>
+                <help>Código de Cliente</help>
+                <tipo>integer</tipo>
+                <detalle>ctacod</detalle>
+                <size>3</size>
+
+            </field>
+               <field id="ctanom" required="true" autocompletar="true" searchRecord="false">
+               <label _colspan="2" >Nombre 1</label>
+               <ayuda_ex id="CCTCUENT" _condes="true" xml="HLPcctcuent_conta_cot.xml" dir="/help_local">
+                   <field id="ctacod" noshow="true" >
+                       <detalle>ctacod</detalle>
+                   </field>
+
+                   <field id="ctanom2">
+                       <expression having="false">CCTCUENT.ctanom</expression>
+                       <tipo>varchar</tipo>
+                   </field>
+                   <field id="siscod" oculto="true" >
+                       <condicion operador="=">'02'</condicion>
+                   </field>
+                   <field id="ctatel" class="informal" noshow="true">
+                       <detalle>ctatel</detalle>
+                   </field>
+                    <field id="Dmicilio" noshow="true">
+                        <expression>CONCAT(ctadir, ' ', ctaloc)</expression>
+                        <label>Domicilio</label>
+                        <detalle>domicilio</detalle>
+                    </field>
+                    <field id="ivacod" noshow="true">
+                        <detalle>ivacod</detalle>
+                    </field>
+                    <field id="ivacod2" noshow="true">
+                        <expression>(case when ivacod = 1 or ivacod = 2 then 'A' else 'B' end)</expression>
+                        <detalle>movlet</detalle>
+                    </field>
+                    <field id="doccod" noshow="true">
+                        <detalle>doccod</detalle>
+                    </field>
+                    <field id="ctanro" noshow="true">
+                        <detalle>ctanro</detalle>
+                    </field>
+
+
+                   <clave>ctanom</clave>
+                   <descripcion>ctanom</descripcion>
+                   <order>
+                       <field id="ctanom"></field>
+                   </order>
+               </ayuda_ex>
+
+               <size>40</size>
+           </field>
+
+<!--
+            <field id="ctanom" deshabilitado="true" sincelda="true">
+                <label colspan="3" modpos="nobr" ></label>
+                <help></help>
+                <tipo>varchar</tipo>
+
+            </field> -->
+            <field id="domicilio" deshabilitado="true" >
+                <label _colspan="2" modpos="nobr" >Domicilio:</label>
+                <help></help>
+                <tipo>varchar</tipo>
+                <size>30</size>
+            </field>
+            <field id="movfec" >
+                <label modpos="nobr">Fecha</label>
+                <help>Fecha de Emisión </help>
+                <valor>today</valor>
+                <detalle>movfec</detalle>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="cta2" required="false" _autocompletar="true" _searchRecord="false">
+                <label _colspan="3" >Nombre 2</label>
+   <!--             <ayuda_ex id="CCTCUENT" condes="true" _xml="HLPcctcuent_conta_cot.xml" dir="/help_local">
+                    <field id="ctacod2" noshow="true">
+                	<expression>ctacod</expression>
+                    </field>
+
+                    <field id="ctanom2">
+                        <expression having="false">ctanom</expression>
+                        <tipo>varchar</tipo>
+                    </field>
+                    <field id="siscod" oculto="true" >
+                        <condicion operador="=">'02'</condicion>
+                    </field>
+                    <order>
+                        <field id="ctanom"></field>
+                    </order>
+                </ayuda_ex>
+-->
+                <size>40</size>
+            </field>
+            
+            <field id="cta_nom2" deshabilitado="true" noshow="true">
+                <label  modpos="nobr" ></label>
+                <help></help>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="doccod" deshabilitado="true"  noshow="true">
+                <label modpos="nobr">Doc</label>
+            </field>
+            <field id="ctanro" deshabilitado="true">
+                <label modpos="nobr">Cuit</label>
+            </field>
+            <field id="movlet" deshabilitado="true" _sincelda="true" style="width:2em" noshow="true">
+                <label modpos="nobr" ></label>
+                <valor>X</valor>
+
+            </field>
+
+            <field id="concod" >
+                <label _modpos="nobr" _colspan="3">Tipo</label>
+                <help>Tipo Comprobante </help>
+                <tabla_ex id="CCTCONCE">
+                    <field id="concod"></field>
+                    <field id="condes"></field>
+                    <field id="siscod">
+                        <condicion operador="=">'02'</condicion>
+                    </field>
+                    <field id="conimp">
+                        <condicion operador="=">1</condicion>
+                    </field>
+                    <order>
+                        <field id="concod"></field>
+                    </order>
+                </tabla_ex>
+                <valor>1</valor>
+                <detalle>concod</detalle>
+            </field>
+
+<!--
+
+            <field id="facturanro" copia="movnro" _noshow="true" deshabilitado="true">
+                 <label modpos="nobr" ></label>
+                <parametro id="numeradorfac.xml" retorna="num">
+                    <field id="siscod" oculto="true" noselect="true">
+                        <condicion operador="=">'03'</condicion>
+                        <tipo>varchar</tipo>
+                        <valor>'03'</valor>
+                    </field>
+                    <field id="concod" oculto="true" noselect="true">
+                        <condicion operador="=" >1</condicion>
+                    </field>
+                    <field id="num">
+                        <expression>max(movnro) + 1</expression>
+                    </field>
+                </parametro>
+					<actualiza id="movnro"></actualiza> 
+
+            </field>
+-->
+
+            <field id="movnpv" _deshabilitado="true" _sincelda="true" style="width:4em;white-space:nowrap;">
+                <label modpos="nobr">Número</label>
+                <format>%04d</format>
+		<size>4</size>
+                <valor>1</valor>
+            </field>
+            <field id="movnro" ctbregnro="1" deshabilitado="false" sincelda="true" style="width:8em;">
+                <label modpos="nobr" >- </label>
+                <expression sql="true">select max(movnro) + 1 from CCTMOVIM where siscod = '03'</expression>
+                <!--<parametro id="numeradorfac.xml" retorna="num">
+                    <field id="siscod" oculto="true" noselect="true">
+                        <condicion operador="=">'03'</condicion>
+                        <tipo>varchar</tipo>
+                        <valor>'03'</valor>
+                    </field>
+                    <field id="concod" oculto="true" noselect="true">
+                        <condicion operador="=" >1</condicion>
+                    </field>
+                    <field id="num">
+                        <expression>max(movnro) + 1</expression>
+                    </field>
+                </parametro> -->
+                <format>%08d</format>
+                <detalle>movnro</detalle>
+                <detalle>carrec</detalle>
+                <detalle>cajnro</detalle>
+                <detalle>movinc</detalle>
+
+            </field>
+
+
+            <field id="ctacte" deshabilitado="true" noshow="true">
+                <detalle>ctacte</detalle>
+            </field>
+
+
+            <!--<field id="cotizacion_id"  deshabilitado="false">
+                <label style="font-size:12px;color:red;">Nro Cotizacion</label>
+                <help>Numero de cotización</help>
+            </field>-->
+
+            <field id="nrofab"  deshabilitado="false">
+                <label>Nro Fabricación</label>
+                <help>Número de Fabricación</help>
+                <field id="referencia_unidad" oculto="true">
+                    <expression>CONCAT('1')</expression>
+                    <detalle>referencia_unidad</detalle>
+                </field>
+                <actualiza >
+                    <field destino="referencia_unidad" id="referencia_unidad"></field>
+                </actualiza>            
+            </field>
+
+<!--             <field id="referencia_unidad" deshabilitado="true">
+                <label modpos="nobr"></label>
+                <help></help>
+            </field> -->
+
+            <field id="movref__2"  >
+                <label modpos="nobr" colspan="4">Condición de Venta</label>
+                <help>Forma de Pago</help>
+                <valor>Contado</valor>
+                <tipo>varchar</tipo>
+		<size>30</size>
+            </field>
+       <field id="moneda_id" _noshow="true">
+        <tabla_ex xml="monedas_qry.xml" dir="/ayudas"></tabla_ex>
+        <label>Moneda</label>
+      </field>
+
+
+        </table>
+	
+    </form>
+</histrix>

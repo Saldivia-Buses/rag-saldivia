@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="liveGrid"  inserta="false" modifica="false" deleteRow="false" imprime="false" log="false" _transaccional="true" _procesa="true" _llenoreferente="true"
+ _exportasuma="true" _resume="true">
+	<title>Cta Ctes</title>
+	<obs/>
+	<form >
+		<table id="REG_DETALLES">
+		<movimientos>
+			<relacion id="upd_np_detalle.xml"/>
+		</movimientos>
+
+		<field id="id_regdetalle" noshow="true" />
+		<field id="regmovim_id" noshow="true" >
+		<!--	<condicion operador="=">[__id_regmovim__]</condicion> -->
+		</field>
+<!--
+		<field id="id_regmovim" local="true" noshow="true">
+			<detalle>id_regmovim</detalle>
+		</field> -->
+		<field id="codigo_detalle">
+			<label>Código</label>
+		</field>
+		<field id="descripcion_detalle" style="font-size:9px">
+			<label>Descripción</label>
+		</field>
+		<field id="cantidad_detalle">
+			<label>Cant</label>
+			<tipo>integer</tipo>
+		</field>
+		<field id="precio_venta" noshow="true">
+			<label>Precio Venta</label>
+		</field>
+		<field id="porcentaje_desc0" editable="true">
+			<label>%1</label>
+			<size>8</size>
+		</field>
+		<field id="porcentaje_desc1" editable="true">
+			<label>%2</label>
+			<size>8</size>
+		</field>
+
+		<field id="neto_detalle" noshow="true">
+			<label>Neto</label>
+		</field>
+		<field id="alicuota_iva" noshow="true">
+			<label>Alic. IVA</label>
+		</field>
+		<field id="total_detalle">
+			<label>Total</label>
+		</field>
+	</table>
+</form>
+</histrix>

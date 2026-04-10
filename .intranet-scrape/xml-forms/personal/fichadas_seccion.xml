@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" _class="consulta2">
+  <title>Fichadas</title>
+  <obs/>
+  <form>
+      <table id="PERSONAL" label="Fichadas del Reloj" _styleTbody="height:300px;overflow-x:hidden;">
+
+        <filters>
+
+          <field id="fecha_filtro">
+            <operador>=</operador>
+            <label>Fecha</label>
+            <valor>today</valor>
+          </field>
+
+        </filters>
+
+        <field id="fecha_filtro" local="true" noshow="true">
+          <tipo>date</tipo>
+        </field>
+
+        <field id="id_seccion" noshow="true">
+          <label>Seccion</label>
+        </field>
+                             
+        <field id="apellido">
+          <label>Apellido</label>
+          <tipo>varchar</tipo>
+        </field>  
+
+        <field id="nombre" >
+          <label>Nombre</label>
+          <tipo>varchar</tipo>
+        </field>
+        
+        <field id="categ" >
+          <expression>select CATPERSONAL.descripcion from CATEGHISTORIA
+             left join CATPERSONAL on CATPERSONAL.idSindicato = CATEGHISTORIA.idSindicato and CATPERSONAL.idCateg = CATEGHISTORIA.IdCateg
+             where CATEGHISTORIA.IdPersona = PERSONAL.IdPersona
+            and CATEGHISTORIA.fechaDesde &lt;= str_to_date('[__fech2__]', '%d/%m/%Y')
+             order by CATEGHISTORIA.fechaDesde desc limit 1</expression>
+-        <expression>SECCION.nombre</expression>
+          <label>Categoría</label>
+          <tipo>varchar</tipo>
+        </field>
+
+        <field id="legajo" >
+          <label>Legajo</label>
+          <tipo>integer</tipo>
+          <detalle>legajo</detalle>
+        </field>
+
+        <field id="fecing" >
+          <label>Ingreso</label>
+          <tipo>date</tipo>
+        </field>
+
+        <field id="tarjeta" _noshow="true">
+          <label>tarjeta</label>
+          <detalle>tarjeta</detalle>
+        </field>
+      
+        <field id="fech2" tabla="FICHADADIA" oplogico="or" noshow="true" local="true"/>
+            
+        <field id="fecha" tabla="FICHADADIA" _oplogico="or" noshow="true">
+          <label>Fecha</label>
+          <tipo>date</tipo>
+        </field>
+
+        <field id="currentDate" noshow="true">
+          <expression>max(FICHADADIA.fecha)</expression>
+          <tipo>date</tipo>
+          <detalle>fecha</detalle>
+        </field>
+      
+        <field id="h1" tabla="FICHADADIA">
+         <!--  <expression>FICHADADIA.h1</expression> -->
+          <label>Hora Ent 1</label>
+          <tipo>varchar</tipo>
+        </field>
+
+        <field id="Hora2">
+          <expression>FICHADADIA.h2</expression>
+          <label>Hora Sal 1</label>
+          <tipo>varchar</tipo>
+        </field>
+        
+        <field id="Hora3">
+          <expression>FICHADADIA.h3</expression>
+          <label>Hora Ent 2</label>
+          <tipo>varchar</tipo>
+         </field>
+
+        <field id="Hora4">
+          <expression>FICHADADIA.h4</expression>
+          <label>Hora Sal 2</label>
+          <tipo>varchar</tipo>
+        </field>
+
+        <field id="alert" clasefila="true" local="true" noshow="true">
+          <if exp="Cant % 2 != 0">
+              <true>'resaltado'</true>
+              <false>''</false>
+          </if>
+          <tipo>integer</tipo>
+        </field>
+
+        <field id="fechaEgreso" noshow="true">
+          <label>Egreso</label>
+          <detalle>fechaEgreso</detalle>
+          <condicion operador="=">'0000-00-00' or fechaEgreso is null</condicion>
+        </field> 
+
+        <field id="eventual" noshow="true">
+          <condicion operador="=">0</condicion>
+        </field>
+      
+        <group>
+          <field id="idPersona" />
+        </group>
+
+        <order>
+          <field id="apellido"/>
+        </order>
+
+    </table>
+
+    <join tipo="left">
+      <table id="FICHADADIA">
+        <field id="tarjeta">
+          <condicion operador="=">PERSONAL.tarjeta and fecha= str_to_date('[__fecha_filtro__]', '%d/%m/%Y')</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>
+
+<!-- CV.egreso_valor != '0000-00-00' -->

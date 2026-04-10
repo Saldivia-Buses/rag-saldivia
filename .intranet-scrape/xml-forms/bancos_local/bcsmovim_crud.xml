@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="ficha" inserta="false" borra="false" preFetch="true" imprime="false" cancel="false">
+	<title>Movimientos Bancarios</title>
+	<obs></obs>
+    <eventos>
+        <event id="update">close</event>
+        <event id="update">$('.searchButton', '#FFormbcsmovim_conci_xml').click();</event>
+    </eventos>
+	<form >
+		<table id="BCSMOVIM" label="Movimientos Bancarios" >
+
+			<field id="id_bcsmovim"  esClave="true" noshow="true">
+			</field>
+			<field id="acreditado" >
+			    <label>Fecha Real de Acreditacion</label>
+			    <tipo>date</tipo>
+			</field>
+
+			<field id="bcsnro" deshabilitado="true"  >
+				<label>Nro Movimiento</label>
+			</field>
+
+			<field id="bcsref__1" deshabilitado="true" >
+			    <label>Referencia</label>
+			</field>
+			<field id="bcsimp" deshabilitado="true" >
+			    <label>importe</label>
+			</field>
+			
+			
+		</table>
+	</form>
+</histrix>

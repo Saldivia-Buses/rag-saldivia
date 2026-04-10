@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="delete">
+  <title>VIAJANTES</title>
+  <obs></obs>
+  <form >
+    <table id="REG_CUENTA" label="VIAJANTES">
+
+      <field id="id_regcuenta" id_temp="id_regcuenta" esClave="true">
+      </field>
+
+  
+  </table>
+  </form>
+</histrix>  

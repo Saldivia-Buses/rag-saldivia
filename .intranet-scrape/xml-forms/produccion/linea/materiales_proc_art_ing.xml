@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ing" imprime="false" subtipo="vertical">
+  <title>ARTICULOS POR SECTOR</title>
+  <obs></obs>
+  <eventos>
+    <event id="procesar">close</event>
+    <event id="procesar">refresh</event>
+  </eventos>
+  <form detalle="materiales_comp_qry.xml" inline="true" hasDetail="tienehijos">
+    <table id="STK_ARTICULO_PROCESO" label="Rubros" >
+      <importar xml="stkinsum_select.xml"  label="Cargar Materiales" titulo="Seleccionar Materiales"></importar>
+
+      <movimientos>
+        <relacion id="materiales_proceso_ins.xml" />
+        <relacion id="materiales_proceso_del.xml" />
+      </movimientos>
+
+      <field id="id_artproceso" noshow="true" />
+
+      <field id="proceso_id"  oculto="true">
+        <label>Cod.</label>
+      </field>
+
+      <field id="homologacion_id" oculto="true">
+        <label>Homol</label>
+      </field>
+      <field id="stkarticulo_id" esClave="true" colspan="4">
+        <label>Art.</label>
+        <help>Codigo de Articulo</help>
+        <ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/ayudas_local" >
+          <field id="artcod" >
+            <label>Cod.</label>
+          </field>
+          <field id="artdes">
+            <label>Insumo</label>
+            <detalle>artdes</detalle>
+          </field>
+          <field id="artuni">
+            <tabla_ex id="FSMUNIDS">
+              <field id="unicod" clave="true"></field>
+              <field id="uninom"></field>
+            </tabla_ex>
+
+            <label>unidad</label>
+            <detalle>artuni</detalle>
+          </field>
+        </ayuda_ex>
+        <detalle>idPadre</detalle>
+        <size>12</size>
+      </field>
+
+      <field id="artdes" sincelda="true">
+        <expression>artdes</expression>
+        <label modpos="nobr">Descripcion</label>
+      </field>
+
+      <field id="cantidad" required="true" deshabilitado="false" suma="true">
+        <label>Cantidad</label>
+        <expression>SUM(cantidad)</expression>
+      </field>
+
+      <field id="artuni" deshabilitado="true" _local="true" tabla="STKINSUM">
+        <label modpos="nobr" >Unidad</label>
+        <help>Unidad de Stock</help>
+        <tabla_ex id="FSMUNIDS">
+          <field id="unicod" clave="true"></field>
+          <field id="uninom"></field>
+        </tabla_ex>
+        <tipo>integer</tipo>
+      </field>
+
+	<field id="tienehijos" noshow="true">
+	    <expression> ifnull((select 1 from STKPIEZA s where s.idPadre = STK_ARTICULO_PROCESO.stkarticulo_id limit 1), 0)
+	    </expression>
+	</field>
+
+      <field id="borrarchk" local="true" _editable="true" refresh="true">
+        <label Formstyle="display:none;">Borrar</label>
+        <tipo>check</tipo>
+        <valor>0</valor>
+      </field>
+
+      <field id="deleteCond" local="true" noshow="true">
+        <if exp="true">
+          <true>(borrarchk == 1)?1:0</true>
+          <false>(borrarchk == 1)?1:0</false>
+        </if>
+      </field>
+
+      <field id="insertCond" local="true" noshow="true">
+        <if exp="true">
+          <true>(borrarchk == 1)?0:1</true>
+          <false>(borrarchk == 1)?0:1</false>
+        </if>
+      </field>
+
+      <group>
+        <field id="stkarticulo_id" />
+      </group>
+
+    </table>
+    <join tipo="left">
+      <table id="STKINSUM">
+        <field id="artcod">
+          <condicion operador="=">stkarticulo_id</condicion>
+        </field>
+        <field id="siscod">
+          <condicion operador="=">'01'</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

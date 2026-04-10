@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" inserta="false" borra="false" modifica="false" imprime="false" tooltip="false" confirma="GRABAR" transaccional="true" preFetch="true">
+    <title>Detalle de Valores</title>
+    <obs/>
+    <form>
+
+        <table id="CAJ_REGISTROS" label="Arqueo y Cierre">
+
+            <validation>                            
+                <condition><![CDATA['cierre_caja' == 1]]></condition>
+                <message>CAJA CERRADA</message>
+            </validation>
+
+
+            <movimientos>
+                <relacion id="cajarqueo_ins.xml"/>
+                <relacion id="cajarqueo_upd.xml"/>
+                <relacion id="cajarqueo_msg.xml"/>
+                
+                <!-- Grabacion Movimientos de Caja -->
+                <relacion id="cajmovimientos_ins.xml"/>
+                <relacion id="cajvalores_ins.xml"/>
+                <relacion id="cajdetalle_det_ins.xml"/>
+                <relacion id="cajdetalle_con_ins.xml"/>
+            </movimientos>      
+
+            <field id="caja_arqueo" local="true" style="background-color:#000;color:#fff;padding-top:5px;padding-bottom:5px;text-align:center;" deshabilitado="true" colspan="12" noshow="true">
+                <attribute id="noshow">oculta_titulos</attribute>
+                  <valor>Arqueo de caja</valor>
+                  <size>40</size>
+            </field>
+
+            <field id="oculta_titulos" local="true" noshow="true">
+                <helper type="parameter" id="SIS::02::oculta_titulos">
+                    <label>Oculta titulos identificadores en programas de caja</label>
+                    <defaultValue>false</defaultValue>
+                </helper>
+            </field>
+
+            <field id="id_cajregistro" deshabilitado="true">
+                <label>ID Registro</label>
+                <condicion operador="=" valorde="cajregistro_id"/>
+                <detalle>id_cajregistro</detalle>
+            </field>        
+
+            <fieldGroup id="parametros_ingreso" local="true" noshow="true">                    
+                <field id="moneda_id"/>
+                <field id="cajpuesto_id"/>
+                <field id="cajconcepto_id"/>
+                <field id="imputacion_concepto"/>
+                <field id="fecha_movimiento"/>
+                <field id="cajregistro_id" />
+                <field id="printer_fiscal_pos" />
+                <field id="cierrez" />
+                <field id="hidebtns">
+                   <if exp="'cierrez' != '1'">
+                      <true>'true'</true>
+                      <false>'false'</false>
+                   </if>
+                </field>
+            </fieldGroup>
+
+            <field id="turno_registro" deshabilitado="true">
+                <label>Turno</label>
+                <helper type="combo">
+                    <option value="1">Mañana</option>
+                    <option value="2">Tarde</option>
+                    <option value="3">Noche</option>
+                </helper>
+            </field>
+
+            <field id="esadmin" local="true" noshow="true" deshabilitado="true">
+                <valor eval="true">$_SESSION['administrator'] == 1 ? 'false' : 'true'</valor>
+            </field>
+
+            <field id="operador_nombre" deshabilitado="true">
+                <label>Operador</label>
+            </field>
+
+            <field id="apertura_recuento" noshow="true" deshabilitado="true">
+                <label style="width:200px;">Apertura</label>
+                <format>%-0.2f</format>
+                <attribute id="noshow">esadmin</attribute>
+                <size>30</size>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="registrado_arqueo" noshow="true">
+                <label style="width:200px;">Registrado</label>
+                <expression>SELECT sum(importe_registrado) from CAJ_VALREG where CAJ_VALREG.cajregistro_id = '[__cajregistro_id__]' group by CAJ_VALREG.cajregistro_id </expression>
+                <jseval campodestino="total_arqueo">apertura_recuento + registrado_arqueo + 0</jseval>
+                <format>%-0.2f</format>
+                <attribute id="noshow">esadmin</attribute>
+                <size>30</size>
+                <tipo>numeric</tipo>
+
+            </field>
+
+            <field id="total_arqueo" local="true" deshabilitado="true" noshow="true">
+                <label style="color:blue;font-size:large;width:200px;">Total</label>
+                <if exp="true">
+                    <true>apertura_recuento + registrado_arqueo + 0</true>
+                    <false>0</false>
+                </if>
+                <format>%-0.2f</format>
+                <attribute id="noshow">esadmin</attribute>
+                <size>30</size>
+                <tipo>numeric</tipo>
+
+            </field>
+
+      <!--- DATOS PARA TABLA ARQUEO -->
+
+            <field id="Conteo" local="true">
+                <label colspan="2"/>
+                <helper type="object" xml="cajarqueoconteo_grid.xml">
+                    <parameter target="cajpuesto_id" source="cajpuesto_id"/>
+                    <parameter target="cajregistro_id" source="cajregistro_id"/>
+                </helper>
+            </field>
+
+                <field id="referencia_movimiento" deshabilitado="false">
+                    <label>Vales</label>
+                    <expresion>SELECT option_description FROM HTXOPTIONS where option_name = 'SIS::03::referencia_arqueo'</expresion>
+            	    <size>255</size>
+                </field>
+                
+
+            <field id="conteo_arqueo" local="true" deshabilitado="true">
+                <label style="color:green;font-size:large;;width:200px">Recuento</label>
+                <tipo>custom_numeric</tipo>
+                <jseval campodestino="total_arqueo">apertura_recuento + registrado_arqueo + 0</jseval>
+                <jseval campodestino="diferencia_arqueo">((conteo_arqueo - total_arqueo) + 0)</jseval>
+                <jseval campodestino="cajimporte_destino">((total_arqueo - apertura_recuento) + 0)</jseval>
+                <formato>%-0.2f</formato>
+                <attribute id="noshow">esadmin</attribute>
+                <size>30</size>
+
+            </field>
+
+            <field id="diferencia_arqueo" local="true" deshabilitado="true" noshow="true">
+                <label style="color:red;font-size:large;width:200px">Diferencia</label>
+                <tipo>custom_numeric</tipo>
+                <format>%-0.2f</format>
+                <attribute id="noshow">esadmin</attribute>
+                <size>30</size>
+
+            </field>
+
+      <!-- CAMPOS PARA MOVIMIENTO DE CIERRE -->
+
+            <fieldGroup noshow="true">
+
+                <!-- Arma Partida Contable Forma de Pago -->
+
+                <field id="ctbcuenta_concepto_id">
+                    <expression>SELECT ifnull(ctbcuenta_forma_id,'') FROM CAJ_FORMAS_PAGO where CAJ_FORMAS_PAGO.id_cajformapago = CAJ_PUESTOS.cajformapagodif_id LIMIT 1</expression>
+                </field>
+
+                <field id="ctbcuenta_concepto_doh" local="true">
+                    <if exp="diferencia_arqueo &lt; 0">
+                        <true>'1'</true>
+                        <false>'0'</false>
+                    </if>
+                </field>
+
+                <field id="importe_concepto" local="true">
+                    <if exp="true">
+                        <true>abs(diferencia_arqueo)</true>
+                        <false>0</false>
+                    </if>
+                </field>
+
+                <!-- Arma Partida Contable Diferencia de Caja -->
+
+                <field id="ctbcuenta_detalle">
+                    <expression>CAJ_PUESTOS.ctbcuentadif_id</expression>
+                </field>
+
+                <field id="doh_detalle" local="true">
+                    <if exp="diferencia_arqueo &lt; 0">
+                        <true>'0'</true>
+                        <false>'1'</false>
+                    </if>
+                </field>
+
+                <field id="importe_detalle" local="true">
+                    <if exp="true">
+                        <true>abs(diferencia_arqueo)</true>
+                        <false>0</false>
+                    </if>
+                </field>
+
+                <!-- Para la Grabación del CAJ_VALORES -->
+
+                <field id="cajformapago_id">
+                    <expression>CAJ_PUESTOS.cajformapagodif_id</expression>
+                </field>
+
+                <field id="pago_valor" local="true">
+                    <if exp="true">
+                        <true>diferencia_arqueo</true>
+                        <false>0</false>
+                    </if>
+                </field>
+
+                <!--Importe CAJMOVIMIENTO -->
+
+                <field id="importe_movimiento" local="true">
+                    <if exp="true">
+                        <true>abs(diferencia_arqueo)</true>
+                        <false>0</false>
+                    </if>
+                </field>
+
+                <field id="grabar" local="true" noshow="true">
+                    <valor>1</valor>
+                </field>
+                
+                
+                <field id="id_referencia" noshow="true">
+                     <expresion>'SIS::03::referencia_arqueo'</expresion>
+                </field>
+                
+
+            </fieldGroup>
+
+            <!-- FIN -->
+    
+            <field id="cierre_caja" deshabilitado="true" noshow="true" />
+
+            <field id="nuevo_estado" deshabilitado="true" local="true" noshow="true">
+                <valor>1</valor>
+            </field>
+
+            <!-- IMPRESION -->
+            <field id="imprime_concepto" tabla="CAJ_CONCEPTOS" noshow="true" />
+            
+            <field id="tipoimpre_concepto" tabla="CAJ_CONCEPTOS" noshow="true" />
+            
+			<field id="muestracheck" noshow="true">
+				<expression>CASE WHEN tipoimpre_concepto != 2 THEN 'display: none;' ELSE '' END</expression>
+				<label>MuestraChk</label>
+			</field>
+
+			<field id="CHKimprime" local="true">
+				<attribute id="style">muestracheck</attribute>
+				<label style="font-size: medium; align: right;">Imprime Comprobante</label>
+				<tipo>check</tipo>
+			</field>
+
+			<field id="impresion" local="true" noshow="true" deshabilitado="true">
+				<label>Programa de Impresion</label>
+				<if exp="CHKimprime=='1' || tipoimpre_concepto=='1'">
+				  <true>'imprime_concepto'</true>
+				  <false>''</false>
+				</if>
+				<setvar>xmlImpresion</setvar>
+			</field>
+			
+			<!-- FIN IMPRESION -->
+
+
+            <fieldGroup id="TRASPASO" noshow="true">
+            
+              <field id="cajpuestodestino_id">
+                <expresion>ifnull(CAJ_PUESTOS.cajpuesto_id,0)</expresion>
+              </field>
+              
+              <field id="cajregistrodestino_id">
+                <expresion>SELECT ifnull(id_cajregistro,0)
+                             FROM CAJ_REGISTROS CR 
+                            where CR.cajpuesto_id = CAJ_PUESTOS.cajpuesto_id 
+                              and CR.fecha_registro = CAJ_REGISTROS.fecha_registro
+                              and CR.cierre_caja = 0 
+                            LIMIT 1
+                </expresion>
+              </field>
+              
+              <field id="cajimporte_destino" local="true" />
+              
+              <field id="cajconceptodestino_id">
+                <expresion>21</expresion>
+              </field>
+              
+              <field id="cajformapagodestino_id">
+                <expresion>CAJ_PUESTOS.cajformapagodif_id</expresion>
+              </field>
+              
+              <field id="cajreferencia_destino">
+                <expresion>CONCAT('Cierre de Caja ', CAJ_PUESTOS.descripcion_puesto)</expresion>
+              </field>
+
+              <field id="grabaTrans">
+                <expresion>IF(CAJ_PUESTOS.cajpuesto_id != 0, 'true', 'false')</expresion>
+              </field>
+            
+            </fieldGroup>
+
+
+            <!-- CONTROLA ESTADO CONTROLADORA FISCAL -->
+
+            <field id="acciones" local="true" deshabilitado="true">
+               <label>Acciones:</label>
+               <size>1</size>
+               <tipo>varchar</tipo>
+               <attribute id="noshow">hidebtns</attribute>
+            </field>
+
+            <field id="cierrex" local="true" sincelda="true" >
+              <label modpos="nobr" />
+              <helper type="link" xml="ticket_cierrex_imp.xml" ventint="true">
+                <parameter source="printer_fiscal_pos" target="printer_fiscal_pos" />
+              </helper>
+              <valor>CIERREX</valor>
+            </field>
+
+            <field id="zcierre" local="true" sincelda="true" >
+              <label modpos="nobr" />
+              <helper type="link" xml="ticket_cierrez_imp.xml" ventint="true">
+                <parameter source="printer_fiscal_pos" target="printer_fiscal_pos" />
+              </helper>
+              <valor>CIERREZ</valor>
+            </field>
+
+            <field id="anula" local="true" sincelda="true" >
+              <label modpos="nobr" />
+              <helper type="link" xml="ticket_anula_imp.xml" ventint="true">
+                 <parameter source="printer_fiscal_pos" target="printer_fiscal_pos" />
+              </helper>
+              <valor>ANULAR</valor>
+            </field>
+
+            <field id="evatest" local="true" sincelda="true" deshabilitado="true">
+                <label modpos="nobr" />
+                <valor eval="true">(function(){
+                        ob_start();
+                        $printer = '[__printer_fiscal_pos__]';
+                        if( $printer != '' ) 
+                        {
+                             $calculo = new EmiteFiscal();
+                             $calculo->setPrinter($printer);
+                             if (! $calculo->status() )
+                                 echo $calculo->getErrorMessage();
+                             else
+                                 echo 'Preparada';
+                             $salida = ob_get_contents();
+                        }
+                        ob_end_clean();
+                        return $salida;
+
+                    })
+                </valor>
+                <size>90</size>
+            </field>
+
+        </table>
+
+        <join>
+            <table id="CAJ_CONCEPTOS">
+                <field id="id_cajconcepto">
+                    <condicion operador="=">'[__cajconcepto_id__]'</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="CAJ_PUESTOS">
+                <field id="id_cajpuesto">
+                    <condicion operador="=">'[__cajpuesto_id__]'</condicion>
+                </field>
+            </table>
+        </join>
+
+
+    </form>
+</histrix>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF8"?>
+<histrix tipo="crud" >
+  <titulo>Depositos</titulo>
+  <obs/>
+  <form>
+    <table id="STK_DEPOSITOS">
+      <title>Depósitos</title>
+      <field id="id_stkdeposito" noshow="true" />
+      
+      <field id="nombre_deposito" required="true">
+        <label>Nombre</label>
+      </field>
+      
+      <field id="direccion_deposito">
+        <label>Ubicación</label>
+      </field>
+
+      <field id="suma_total">
+        <label>Suma en Total</label>
+	<tipo>check</tipo>
+      </field>
+
+      <field id="locaciones" style="width:200px;">
+        <label>Locaciones</label>
+        <attribute id="linkdes">nombre_deposito</attribute>
+        <helper xml="stklocacion_crud.xml" type="link" width="90%">
+          <parameter source="id_stkdeposito" target="stkdeposito_id" />
+        </helper>
+        <expression>select count(*) from STK_LOCACION where stkdeposito_id = id_stkdeposito</expression>
+      </field>
+
+      <!--
+
+      <field id="barcode2" grafico="barcode" encode="QR" imageHeight="100" style="text-align:center;">
+        <label>Ubicación</label>
+        <expression>concat('DEP',id_stkdeposito)</expression>
+        <tipo>grafico</tipo>
+      </field>
+
+      <field id="barcode" grafico="barcode" _encode="QR" _imageHeight="1" style="text-align:center;">
+        <label>Ubicación</label>
+        <expression>concat('DEP',id_stkdeposito)</expression>
+        <tipo>grafico</tipo>
+      </field>      
+    -->
+    
+    </table>
+  </form>
+</histrix>

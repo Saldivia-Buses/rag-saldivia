@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<histrix tipo="horizontalGrid" log="false">
+    <title>Consulta Por deposito</title>
+    <obs></obs>
+    <form>
+        <table id="STK_MOVIMIENTOS" >
+
+	    <field id="codigo_locacion" tabla="STK_LOCACION"  style="text-align:center;">
+	    </field>
+
+  	    <field id="permiso" local="true" noshow="true"> 
+	            <valor eval="true">$_SESSION['administrator']</valor>
+            </field>
+            
+            <field id="cantidades" noshow="true">
+                <expresion>round(sum( case when tipo_concepto = 0 then 1 else -1 end * cantidad), 2)</expresion>        
+		<attribute id="tooltip">nombre_deposito</attribute>		                
+                <tipo>numeric</tipo>  
+            </field>
+            <!--
+            <field id="cantidad_procesada" local="true" noshow="true">
+            	<if exp="cantidades != 0">
+            		<true>'SI'</true>
+            		<false>'0'</false>
+            	</if>
+            </field>
+            
+            <field id="cantidad_display" local="true" style="font-weight:bold; font-size:12px; text-align:right;" _noZero="true" tdWidth="80px">
+            	<if exp="permiso == 1">
+            		<true>cantidades</true>
+            		<false>cantidad_procesada</false>
+            	</if>
+            	<attribute id="tooltip">nombre_deposito</attribute>
+            </field>
+            -->
+            
+            <field id="stkarticulo_id" oculto="true" />
+            <field id="stkdeposito_id" oculto="true" />
+	    
+
+            <group>
+                <field id="id_stkdeposito" tabla="STK_DEPOSITOS" />
+            </group>
+         
+        </table>
+       
+        <join >
+            <table id="STK_DEPOSITOS">
+                <field id="id_stkdeposito">
+                    <condicion operador="=">STK_MOVIMIENTOS.stkdeposito_id</condicion>
+                </field>
+        
+            </table>
+        </join>
+    
+       
+        <join >
+            <table id="STK_LOCACION">
+                <field id="id_stklocacion">
+                    <condicion operador="=">STK_MOVIMIENTOS.stklocacion_id</condicion>
+                </field>
+        
+            </table>
+        </join>
+    
+        <join >
+            <table id="STK_CONCEPTOS">
+                <field id="id_stkconcepto">
+                    <condicion operador="=">STK_MOVIMIENTOS.stkconcepto_id</condicion>
+                </field>
+        
+            </table>
+        </join>
+    </form>
+</histrix>

@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="crud" borrar="no">
+       <title>CARTERA DE CHEQUES</title>
+        <obs></obs>
+               <form >
+                  <table id="CARCHEQU" label="CARTERA DE CHEQUES">
+                  <field id="siscod" oculto="true">
+                      <label>Codigo Sistema </label>
+                      <help> </help>
+                  </field>
+
+                  <field id="carint">
+                      <label>Nro.Interno</label>
+                      <help> </help>
+					<parametro id="carnuche.xml" retorna="carint">
+						<field id="siscod" >
+							<condicion operador="=">'05'</condicion>
+						</field>
+					</parametro>						  
+                  </field>
+                  <field id="carnro">
+                      <label>Nro. Cheque</label>
+                      <help>Numero de Cheque</help>
+                  </field>
+<!--                  <field id="cartip">
+                      <label>Tipo Cheque          . </label>
+                      <help>[1/Enter] = Al Portador   *   [2] = A la orden </help>
+                  </field>
+		  -->
+ 			<field id="ctacod">
+				<label>Cuenta</label>
+				<help>Clientes</help>
+				<ayuda_ex id="CCTCUENT" xml="HLPcctcuent.xml" dir="/help_local">
+					<field id="ctacod"></field>
+					<field id="ctanom">
+					</field>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'02'</condicion>
+					</field>
+					
+				</ayuda_ex>
+				<tipo>integer</tipo>
+			</field>
+					<field id="ctanom" tabla="CCTCUENT" deshabilitado="true">
+						<label>nombre</label>
+						<tipo>char</tipo>
+					</field> 
+                  <field id="carcui">
+                      <label>CUIT</label>
+                      <help>C.U.I.T. del Librador</help>
+                  </field>					  
+                  <field id="caralt">
+                      <label>Fec.Alta.Cheque</label>
+                      <help>Fecha del cheque ingresado. </help>
+                  </field>
+                  
+                  <field id="carfec">
+                      <label>Fec.Cheque</label>
+                      <help>Fecha del cheque ingresado. </help>
+                  </field>
+				<field id="ccbcod">
+					<label>Banco</label>
+					<help>Cuenta Bancaria</help>
+					<ayuda_ex id="BCSCUENT" xml="HLPbcscuent.xml" dir="/help_local">
+						<field id="ccbcod"></field>
+						<field id="ccbnom">
+						<detalle>carbco</detalle>
+						</field>
+					</ayuda_ex>
+					<tipo>integer</tipo>
+				</field>					  
+                  <field id="carbco">
+                      <label>Nombre Banco</label>
+                      <help>Nombre de Banco de Procedencia. </help>
+                  </field>
+                  <field id="cajpla">
+                      <label>Plaza Bancaria</label>
+                      <help>Plaza Bancaria</help>
+                  </field>
+		  <field id="cartera_id">
+		    <label>Cartera</label>
+		    <helper type="combo" id="REG_CARTERAS_CHEQ" empty="true">
+			<field id="id_cartera" />
+			<field id="nombre_cartera" />
+		    </helper>
+		  </field>
+                  <field id="carimp" suma="true">
+                      <label>Importe</label>
+                      <help>Importe del cheque. </help>
+                  </field>
+
+<!--
+                  <field id="bcsnro">
+                      <label>Bol.Deposito </label>
+                      <help>Boleta de Deposito. </help>
+                  </field>
+                  <field id="caracr">
+                      <label>F.Acreditacion </label>
+                      <help>Fecha de Acreditacion </help>
+                  </field>
+                  <field id="carccb">
+                      <label>Codigo del Banco </label>
+                      <help> </help>
+                  </field>
+
+                  <field id="cardes">
+                      <label>Plaza                . </label>
+                      <help>Nombre de la plaza bancaria. </help>
+                  </field>
+                  <field id="carmar">
+                      <label>Marca </label>
+                      <help> </help>
+                  </field>
+
+                  <field id="carobv">
+                      <label>Plaza Bancaria </label>
+                      <help>Plaza Bancaria. </help>
+                  </field>
+                  <field id="carpla">
+                      <label>Cod.Plaza            . </label>
+                      <help>Codigo de Plaza Bancaria. (Enter : No Ingresa Plaza.) </help>
+                  </field>
+                  <field id="carrec">
+                      <label>Nro Recibo </label>
+                      <help> </help>
+                  </field>
+                  <field id="ccbcod">
+                      <label>Codigo Cuenta        . </label>
+                      <help>Codigo de Cuenta Bancaria </help>
+                  </field>
+                  <field id="circod">
+                      <label>Cod. Circulo </label>
+                      <help> </help>
+                  </field>
+                  <field id="concod">
+                      <label>Codigo  Concepto </label>
+                      <help> </help>
+                  </field>
+                  <field id="movnpv">
+                      <label>Nro. Punto Venta </label>
+                      <help> </help>
+                  </field>
+                  <field id="movnro">
+                      <label>Nro. Comprobante </label>
+                      <help> </help>
+                  </field>
+                  <field id="opecla">
+                      <label>Firma Electronica </label>
+                      <help>Firma Electronica </help>
+                  </field>
+                  <field id="opecod">
+                      <label>Cod.Operador </label>
+                      <help> </help>
+                  </field>
+                  <field id="regmin">
+                      <label>Numero Asiento       . </label>
+                      <help>Numero de Asiento . </help>
+                  </field>
+                  <field id="succod">
+                      <label>Cod. Sucursal </label>
+                      <help>Codigo de Sucursal </help>
+                  </field>
+-->		  <order>
+		    <field id="carint"></field>
+		  </order>
+                  </table>
+
+		  <join tipo="left">
+		    <table id="CCTCUENT">
+			<field id="siscod" oculto="true">
+			    <label>cctcuent.siscoc</label>
+			    <condicion operador="=">'02'</condicion>
+
+			</field>
+
+			<field id="ctacod" oculto="true">
+			    <condicion operador="=">CARCHEQU.ctacod</condicion>
+			</field>
+
+			<field id="ctanom" oculto="true">
+			</field>
+		    </table>
+		  </join>
+		  
+		  
+               </form>
+        </histrix>

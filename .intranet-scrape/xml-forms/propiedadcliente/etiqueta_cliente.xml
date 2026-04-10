@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" template="etiqueta_cliente.tpl" sololectura="true" printer="zebra">
+	<title>ingreso de  trazables en la recepcion</title>
+	<obs></obs>
+	<form >
+		<table id="HERRAMIENTAS" label="recepcion de trazables" >
+
+			<field id="nrofab"  >
+			</field>
+			<field id="ctacod"   ></field>
+			<field id="ctanom" >
+                            <expresion>ctanom</expresion>
+			</field>
+			<field id="ocpnro"  ></field>
+			<field id="remfec"  ></field>
+			<field id="remnpv"  ></field>
+			<field id="remnro"  ></field>
+			<field id="observacion" >
+				<expresion>LEFT(observacion, 35)</expresion>			
+			</field>
+			<field id="artcod" ></field>
+			<field id="nomherr" >
+				<expresion>LEFT(nomherr, 30)</expresion>			
+			</field>
+			<field id="id_herramienta"></field>
+		</table>
+                <join tipo="left">
+                    <table id="CCTCUENT">
+                            <field id="siscod">
+                                <condicion operador="=">'02'</condicion>
+                            </field>
+                            <field id="ctacod">
+                                <condicion operador="=">HERRAMIENTAS.ctacod</condicion>
+                            </field>
+                    </table>
+                </join>
+	</form>
+</histrix>

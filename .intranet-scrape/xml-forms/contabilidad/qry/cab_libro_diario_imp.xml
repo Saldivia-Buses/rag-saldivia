@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" sololectura="true" autoprint="true" preFetch="true" preloadData="true" PDFsincabecera="true" PDForientation="P" PDFpageSize="Legal" PDFsize="10">
+  <title>Movimientos</title>
+  <obs />
+  <form>
+    <pdf PDForientation="P">
+      <code><![CDATA[
+        $pdf->SetDrawColor(0);
+        $pdf->SetXY(10,10);
+     
+        $tp = 05;
+        $ap = $pdf->anchoPagina - 2;
+        $mp = ($ap / 2);
+        $lp = $pdf->largoPagina;
+     
+        // Cliente
+        $pdf->Rect(005, 003, $ap, 011, 0.1);
+     
+      ]]></code>
+    </pdf>
+    <table id="CTB_MOVIMIENTOS" label="Enviar">
+
+      <fieldGroup>
+        <field id="titulo" local="true" PDFsize="12" PDFbold="true">
+          <label posx="55" posy="1" />
+          <expression>concat('Diario de movimientos del ','[__desde_fecha__]', ' al ','[__hasta_fecha__]') </expression>
+        </field>
+
+        <field id="ejercicio_id" noshow="true" print="false">
+          <label>Ejercicio</label>
+        </field>
+
+        <field id="nroprox_hoja" local="true" noshow="true" print="false" />
+
+        <field id="concepto_id" noshow="true" print="false">
+          <label>Concepto</label>
+        </field>
+
+        <field id="desde_fecha" noshow="true" local="true" print="false">
+          <label>Desde</label>
+          <tipo>date</tipo>
+        </field>
+
+        <field id="hasta_fecha" noshow="true" local="true" print="false">
+          <label>Hasta</label>
+          <tipo>date</tipo>
+        </field>
+
+        <field id="oculta_referencia" local="true" print="false" noshow="true">
+          <helper type="parameter" id="SIS::ocultaref_impcontable">
+              <label>Oculta titulos identificadores en impresion contable agrupada</label>
+              <defaultValue>false</defaultValue>
+          </helper>
+        </field>
+      </fieldGroup>
+
+      <fieldGroup id="cuerpo" pdfwidth="206">
+
+        <field id="minutas" local="true">
+          <label posx="5" posy="+3" PDFsize="8" />
+          <helper xml="minutas_imp.xml" type="object">
+            <parameter source="fecha_desde"  target="fecha_desde" />
+            <parameter source="fecha_hasta"  target="fecha_hasta" />
+            <parameter source="concepto_id"  target="concepto_id" />
+            <parameter source="ejercicio_id" target="ejercicio_id" />
+            <parameter source="nroprox_hoja" target="nroprox_hoja" />
+            <parameter source="oculta_referencia" target="oculta_referencia" />
+          </helper>
+        </field>
+
+        <field id="compras" local="true">
+          <label posx="5" posy="+2" PDFsize="8" />
+          <helper xml="minutas_compras_imp.xml" type="object">
+            <parameter source="fecha_desde"  target="fecha_desde" />
+            <parameter source="fecha_hasta"  target="fecha_hasta" />
+            <parameter source="concepto_id"  target="concepto_id" />
+            <parameter source="ejercicio_id" target="ejercicio_id" />
+            <parameter source="nroprox_hoja" target="nroprox_hoja" />
+            <parameter source="oculta_referencia" target="oculta_referencia" />
+          </helper>
+        </field>
+
+        <field id="ventas" local="true">
+          <label posx="5" posy="+2" PDFsize="8" />
+          <helper xml="minutas_ventas_imp.xml" type="object">
+            <parameter source="fecha_desde"  target="fecha_desde" />
+            <parameter source="fecha_hasta"  target="fecha_hasta" />
+            <parameter source="concepto_id"  target="concepto_id" />
+            <parameter source="ejercicio_id" target="ejercicio_id" />
+            <parameter source="nroprox_hoja" target="nroprox_hoja" />
+            <parameter source="oculta_referencia" target="oculta_referencia" />
+          </helper>
+        </field>
+
+        <field id="arqueos" local="true">
+          <label posx="5" posy="+2" PDFsize="8" />
+          <helper xml="minutas_arqueos_imp.xml" type="object">
+            <parameter source="fecha_desde"  target="fecha_desde" />
+            <parameter source="fecha_hasta"  target="fecha_hasta" />
+            <parameter source="concepto_id"  target="concepto_id" />
+            <parameter source="ejercicio_id" target="ejercicio_id" />
+            <parameter source="nroprox_hoja" target="nroprox_hoja" />
+            <parameter source="oculta_referencia" target="oculta_referencia" />
+          </helper>
+        </field>
+
+        <field id="refundicion" local="true">
+          <label posx="5" posy="+2" PDFsize="8" />
+          <helper xml="minutas_refundicion_imp.xml" type="object">
+            <parameter source="fecha_desde"  target="fecha_desde" />
+            <parameter source="fecha_hasta"  target="fecha_hasta" />
+            <parameter source="concepto_id"  target="concepto_id" />
+            <parameter source="ejercicio_id" target="ejercicio_id" />
+            <parameter source="nroprox_hoja" target="nroprox_hoja" />
+            <parameter source="oculta_referencia" target="oculta_referencia" />
+          </helper>
+        </field>
+
+        <field id="cierre" local="true">
+          <label posx="5" posy="+2" PDFsize="8" />
+          <helper xml="minutas_cierre_imp.xml" type="object">
+            <parameter source="fecha_desde"  target="fecha_desde" />
+            <parameter source="fecha_hasta"  target="fecha_hasta" />
+            <parameter source="concepto_id"  target="concepto_id" />
+            <parameter source="ejercicio_id" target="ejercicio_id" />
+            <parameter source="nroprox_hoja" target="nroprox_hoja" />
+            <parameter source="oculta_referencia" target="oculta_referencia" />
+          </helper>
+        </field>
+      </fieldGroup>
+
+    </table>
+  </form>
+</histrix>

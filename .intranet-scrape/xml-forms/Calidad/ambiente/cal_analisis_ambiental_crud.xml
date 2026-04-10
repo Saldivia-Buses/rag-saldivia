@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud">
+        <title>ANALISIS AMBIENTAL</title>
+        <obs/>
+        <form>
+                <table id="CAL_ANALISIS_AMBIENTAL">
+                        <title>Analisis Ambiental</title>
+
+                        
+
+                        <field id="id_analisisambiental" esClave="true" autoinc="true" _noshow="true">
+                        </field>
+                        <field id="proceso_id">
+                    	    <helper xml="procesos_qry.xml" type="combo">
+                    	    </helper>
+                    	    <label>Procesos</label>
+                            <help>Procesos</help>
+                        </field>
+                        <field id="aspecto_ambiental">
+                    	    <label>Aspecto</label>
+                            <help>Aspecto ambiental</help>
+                        </field>
+
+                        <field id="impacto_id">
+                    	    <helper xml="cal_impacto_ambiental_crud.xml" type="combo">
+                    	    </helper>
+                    	    <label>Impacto</label>
+                            <help>Impacto ambiental</help>
+                        </field>
+                        <field id="leyes_aplicadas" refresh="true">
+                    	    <label>Leyes Aplicadas</label>
+                    	    <tipo>check</tipo>
+                        </field>
+<!--
+                         <field id="leyes" local="true" _showObjTabla="true" formstyle="display:none;">
+                            <label colspan="3">Leyes</label>
+                            <helper xml="cal_analisis_leyes_crud.xml" type="link" dir="/calidad/ambiente/">
+                            <parameter source="id_analisisambiental" target="id_analisisambiental"/> 
+                            <parameter source="leyes_aplicadas" target="leyes_aplicadas"/> 
+                            </helper>
+                            <valor>'ley'</valor>
+                        </field>
+-->                    
+                        <field id="reclamos">
+                    	    <label>Reclamos Realizados</label>
+                    	    <tipo>check</tipo>
+                        </field>
+                        
+                        <field id="evaluacion" local="true" showObjTabla="true" formstyle="display:none;">
+                            <label colspan="3">Evaluación</label>
+                    	    <helper xml="cal_analisis_valores_crud.xml" type="object" dir="/calidad/ambiente/">
+                    		<parameter source="id_analisisambiental" target="analisis_id"/> 
+                    	    </helper>
+                    	    
+                        </field>
+
+                        
+                        
+                        <field id="significancia"  deshabilitado="true" local="true" >
+                    	    <label>Significancia</label>
+                    	    <expresion>select sum(significancia * peso_aspecto) from CAL_ANALISIS_VALORES left join 
+                    				CAL_IMPACTO_VALORES ON impactovalores_id = id_impactovalores
+                    				join CAL_ASPECTO_AMBIENTAL on id_aspectoambiental = CAL_ANALISIS_VALORES.aspectoambiental_id
+                    			where CAL_ANALISIS_VALORES.analisisambiental_id = id_analisisambiental</expresion>
+                        </field>
+
+                        <field id="bloqueo"  deshabilitado="true" local="true" >
+                    	    <label>Significativo?</label>
+                    	    <expresion>select descripcion_bloqueo from CAL_ACCIONES_BLOQUEO where (select sum(significancia * peso_aspecto) from CAL_ANALISIS_VALORES left join 
+                    				CAL_IMPACTO_VALORES ON impactovalores_id = id_impactovalores
+                    				join CAL_ASPECTO_AMBIENTAL on id_aspectoambiental = CAL_ANALISIS_VALORES.aspectoambiental_id
+                    			where CAL_ANALISIS_VALORES.analisisambiental_id = id_analisisambiental) between desde_significancia  and hasta_significancia limit 1</expresion>
+                        </field>
+                </table>
+                
+        </form>
+</histrix>
+
+
+
+

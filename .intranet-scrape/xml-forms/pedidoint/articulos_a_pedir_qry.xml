@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" _imprime="false" deleteRow="false" procesa="true" inserta="false" export="true" _limit="10">
+	<title>Insumos</title>
+	<obs></obs>
+	<form >
+		<table id="STK_ARTICULOS">
+			<title>Insumos</title>
+			<movimientos>
+				<relacion id="pedidoint_automatico_insert.xml"></relacion>
+				<relacion id="actualizo_numero_pedido.xml"></relacion>				
+			</movimientos>
+			<filters>
+				<field id="pedido_automatico">
+					<label>Pedido automático</label>
+					<operador>=</operador>
+					<valor>1</valor>
+				</field>
+			<field id="id_stkarticulo" >
+					<operador>=</operador>
+				
+				<label>Cod.</label>
+				
+			</field>				
+			</filters>
+			<field id="id_stkarticulo" >
+				<ayuda_ex id="STKINSUM">
+					<clave>artcod</clave>
+					<descripcion>artdes</descripcion>
+				</ayuda_ex>
+				
+				<label>Cod.</label>
+				
+			</field>
+			<field id="nombre_articulo" >
+				<label>Artículo</label>
+				<help>Descripción de Artículo</help>
+			</field>
+			<field id="nro_cuenta" tabla="REG_CUENTA" noshow="true" />
+			<field id="nombre_cuenta" tabla="REG_CUENTA" >
+				<label>Proveedor</label>
+			</field>
+
+	    <field id="stock">
+    		<label>Stock</label>
+    		<expression>sum(cantidad_stock) </expression>
+    		<helper xml="stock_deposito_actual.xml" dir="/stock/qry/" type="link" title="Stock Actual">
+  		    <parameter source="id_stkarticulo" target="stkarticulo_id"/>
+    		</helper>
+    		<tipo>decimal</tipo>
+	    </field>
+    		
+		<field id="pedido_automatico" noshow="true">
+			<help>Pedido automático</help>
+		    <!--   <condicion operador="=">1</condicion>  -->
+		    <tipo>check</tipo>
+		</field>
+			<field id="stock_minimo" >
+				<label>Stock Mínimo</label>
+				<tipo>custom_numeric</tipo>
+				<help></help>
+			</field>
+<!--
+	<field id="stock_acopio" local="true" deshabilitado="true" modpos="nobr">
+	    <label>Stock Acopio</label>
+	    <expression>dem_diaria * dias_acopio</expression>
+	</field>
+-->
+			
+			<field id="stock_reposicion" >
+				<expression>stock_reposicion </expression>
+				<label>Punto de Pedido</label>
+				
+				<condicion operador="&gt;">0</condicion>
+				<tipo>custom_numeric</tipo>
+				<help></help>
+			</field>
+
+			<field id="valor_compra" noshow="true">
+				<label>val compra</label>
+			</field>
+			<field id="unidad_compra_id" noshow="true">
+				<label>U.compra</label>
+				<helper type="combo" xml="unidad_qry.xml" dir="/ayudas" empty="true" />
+			</field>
+
+			<field id="valor_uso" noshow="true">
+				<label>val uso</label>
+			</field>
+
+			<field id="unidad_uso_id" noshow="true">
+				<label>U.uso</label>
+				<helper type="combo" xml="unidad_qry.xml" dir="/ayudas" empty="true" />				
+			</field>
+<!--
+            <field id="centrocostos_id" modpos="nobr" required="true">
+                <label>Centro de costos</label>
+                <helper id="CTB_CENTROS"  type="combo" empty="true">
+                    <field id="id_ctbcentro" />
+                    <field id="centro">
+                        <expression>concat(referencia_centro,' ', nombre_centro)</expression>
+                    </field> 
+                </helper>
+            </field>
+-->
+			<field id="dem_diaria" noshow="true">
+				<label>Demanda Diaria</label>
+			</field>
+			<field id="demprov"  style="text-align:right;" noshow="true">
+				<label>Lead Time</label>
+			</field>
+			<field id="lote_optimo" >
+			    <label>Lote Óptimo</label>
+   				<condicion operador="&gt;">0</condicion>
+			</field>
+			<field id="lote_compra" style="text-align:right; color:green; font-weight:bold;">
+				<label>Lote Óptimo (cps)</label>
+				<expression>round(lote_optimo / valor_uso * valor_compra, 2)</expression>
+			</field>
+			<field id="cant" tabla="PEDIDOINT" noZero="true" style="color:red;">
+
+				<label>Pedidos actuales</label>
+				<tipo>decimal</tipo>
+			</field>
+			<field id="comprado" noZero="true" style="color:red;">
+				<label>Comprado</label>
+				<expression>select sum(pencps) from CPSMOVIM join CPSENCAB on CPSENCAB.ocpnro = CPSMOVIM.ocpnro where ocpest &lt;= 1 and CPSMOVIM.artcod = id_stkarticulo and pencps &gt; 0 and cumplido = 0</expression>
+				<tipo>decimal</tipo>
+			</field>
+
+			<field id="fecreq" >
+			    <label>Pedido</label>
+			    <expression>SUMARWORKDAYSAFECHA(demprov)</expression>
+ 			    <tipo>date</tipo>
+			</field>
+		<field id="feriado" noshow="true">
+		    <expression>count(idFeriado)</expression>
+		</field>
+		<!--
+		<field id="debug" local="true">
+				<if exp="true">
+					<true>'cant + 0 == 0 &amp;&amp; (stock_reposicion )>= stock + (comprado + 0 )&amp;&amp; feriado == 0'</true>
+					<false>0</false>
+				</if>		
+		</field>
+		-->
+			
+			<field id="pedir" local="true" editable="true">
+				<label>Pedir</label>
+				<help>Pedir</help>
+				<if exp="cant + 0  == 0 &amp;&amp; (stock_reposicion )>= stock + (comprado /valor_compra * valor_uso + 0) &amp;&amp; feriado == 0">
+					<true>1</true>
+					<false>0</false>
+				</if>
+				<tipo>check</tipo>
+			</field>	
+<!--	
+			<field id="pedirold" local="true" editable="true">
+				<label>Pedir</label>
+				<help>Generar Pedido</help>
+				<if exp="cant + 0 + comprado + 0== 0 &amp;&amp; (stock_reposicion )>= stock &amp;&amp; feriado == 0">
+					<true>1</true>
+					<false>0</false>
+				</if>
+				<tipo>check</tipo>
+			</field>
+-->
+			<field id="color" clasefila="true" local="true" noshow="true">
+				<if exp="pedir + 0">
+					<true>'resaltado'</true>
+					<false>''</false>
+				</if>
+			</field>
+
+
+			<group>
+				<field id="id_stkarticulo" />
+    
+			</group>
+		
+		</table>
+		<join tipo="left">
+		    <table id="FERIADOS">
+			<field id="idFeriado" >
+			    <condicion operador="=">date(now())</condicion>
+		    </field>
+		    </table>
+		</join>
+
+		<join >
+		    <table id="STK_STOCKACTUAL">
+			    <field id="stkarticulo_id">
+				<condicion operador="=">id_stkarticulo</condicion>
+			    </field>
+		    </table>
+		</join>
+		<join >
+		    <table id="STK_DEPOSITOS">
+			<field id="id_stkdeposito">
+				<condicion operador="=">stkdeposito_id</condicion>
+			</field>
+			<field id="suma_total">
+				<condicion operador="=">1</condicion>
+			</field>
+		    </table>
+		</join>
+		<join tipo="left">
+		    <table id="STK_COSTO_REPOSICION">
+			<field id="stkarticulo_id">
+				<condicion operador="=">id_stkarticulo</condicion>
+			</field>
+		    </table>	    
+		</join>	
+	    	<join tipo="left">
+		    <table id="REG_CUENTA">
+			<field id="id_regcuenta">
+				<condicion operador="=">STK_COSTO_REPOSICION.regcuenta_id</condicion>
+			</field>
+		    </table>	    
+		</join>
+		<join tipo="left">
+			<table id="PEDIDOINT">
+				<field id="artcod">
+					<condicion operador="=">id_stkarticulo</condicion>
+				</field>
+				<field id="estado">
+					<condicion operador="=">0</condicion>
+				</field>
+			</table>
+		</join>
+	
+	
+	</form>
+</histrix>

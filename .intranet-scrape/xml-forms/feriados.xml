@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>FERIADOS</title>
+	<obs></obs>
+	<form >
+		<table id="FERIADOS" >
+			<title>Tabla de Feriados</title>
+			<field id="idFeriado">
+				<label>Fecha</label>
+				<help>Fecha Feriado</help>
+			</field>
+			<field id="descripcion">
+				<label>Descripcion</label>
+				<help>Descripcion</help>
+			</field>
+			<field id="horas">
+				<label>Horas</label>
+				<help>Horas</help>
+			</field>			
+			<order>
+				<field id="idFeriado"/>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

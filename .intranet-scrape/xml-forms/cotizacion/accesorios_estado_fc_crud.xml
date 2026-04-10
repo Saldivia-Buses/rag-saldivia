@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" borra="no">
+  <title>ACCESORIOS_ESTADO_FC</title>
+  <obs></obs>
+  <form>
+    <table id="ACCESORIOS_ESTADO_FC" label="ACCESORIOS_ESTADO_FC">
+
+      <field id="id_acc_estado_fc" noshow="true">
+        <label>Codigo</label>
+        <help>Código del Estado</help>
+      </field>
+
+      <field id="nombre_estado_acc_fc">
+        <label>Nombre </label>
+        <help>Nombre Estado</help>
+        <size>30</size>
+      </field>
+
+      <field id="adeuda">
+        <label>Adeuda </label>
+        <help>Adeuda</help>
+        <options>
+          <option valor="1">Adeuda</option>
+          <option valor="0">No Adeuda</option>
+      </options>      
+    </field>
+    </table>
+  </form>
+</histrix>  

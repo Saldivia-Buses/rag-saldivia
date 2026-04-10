@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini">
+	<title>Riesgos Laborales</title>
+	<form >
+		<table id="RIESGO_PERSONAL" label="Secciones">
+
+			<field id="persona_id" oculto="true">
+				<label>Persona</label>
+				<help>Persona </help>
+			</field>
+			
+			<field id="riesgo_id" >
+				<label>Riesgo</label>
+				<ayuda_ex id="RIESGOS" xml="riesgos.xml" dir="/personal/man/">
+					<field id="idRiesgo"></field>
+					<field id="agente">
+						<detalle>agente</detalle>
+					</field>	
+				</ayuda_ex>
+				<help>Codigo de Riesgo</help>
+			</field>
+			
+			<field id="agente">
+				<label>Agente</label>
+				<help>Agente de riesgo</help>
+				<expression>Select agente from RIESGOS where RIESGOS.idRiesgo = riesgo_id</expression>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="fecha_desde" >
+				<label>Desde</label>
+				<help>Fecha Desde</help>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="fecha_hasta" >
+				<label>Hasta</label>
+				<help>Fecha Hasta</help>
+				<tipo>date</tipo>
+			</field>
+
+			<order>
+				<field id="fecha_desde" tabla="RIESGO_PERSONAL"></field>
+			</order>
+
+		</table>	
+	</form>
+</histrix>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" _subtipo="vertical" imprime="false">
+    <title>Mantenimiento</title>
+    <obs></obs>
+    <form detalle="mant_correc_herr_det.xml">
+        
+          <table id="MANT_PLAN">
+        
+       
+                <field id="id_plan" noshow="true">
+                    <label>IDPLAN</label>
+                    <detalle>plan_id</detalle>
+                </field>
+
+                <field id="equipo_id" noshow="true">
+                    <label>Equipo ID</label>
+                    <detalle>equipo_id</detalle>
+                </field>
+
+        <fieldGroup  colstyle="text-align:center;padding:2px 2px 2px 2px;">
+            
+                <field id="fecha_accion">
+                    <label>Fecha Carga</label>
+                    <tipo>date</tipo>
+                </field>
+
+                <field id="accion_id" >
+                    <helper type="combo" id="MANT_ACCIONES" empty="true">
+                        <field id="id_accion"/>
+                        <field id="nombre_accion"/>
+                    </helper>
+                    <label>Acción</label>
+                    <!-- <detalle>accion_id</detalle> -->
+                </field>
+
+            <field id="observaciones" colstyle="text-align:left;padding:2px 2px 2px 2px;">
+                <label>Detalle</label>
+                <size>100</size>
+            </field>
+
+            <field id="estado" noshow="true" >
+                <label>Estado</label>
+                <condicion operador="=">3</condicion>
+                    <helper type="combo" id="MANTENIMIENTO_ESTADOS" empty="true">
+                        <field id="id_estado" />
+                        <field id="estado"/>
+                        <field id="tipo_estado" >
+                            <condicion operador="=">1</condicion>
+                        </field>
+                    </helper>
+            </field>
+
+
+
+
+                <!-- <field id="rrule" calendarRecurringRule="true">
+                    <label>Repetir</label>
+                    <tipo>rrule</tipo>
+                </field> -->
+        
+        </fieldGroup>
+
+    </table>
+
+    </form>
+</histrix>  

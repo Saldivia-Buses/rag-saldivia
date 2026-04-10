@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix imprime="false" subtipo="vertical" tipo="consulta" width="25">
+  <title>HOMOLOGACION POR MODELO</title>
+  <obs/>
+  <form detalle="arbol_producto_tree.xml" >
+    <table id="HOMOLOGMOD">
+      <title>Homologaciones por modelo</title>
+      <filters auto="true">
+        <field id="nrocar">
+          <label>Mod.Car.</label>
+          <operador>=</operador>
+        </field>
+
+        <field deshabilitado="false" id="fecha_costo">
+          <label>Fecha</label>
+          <valor>today</valor>
+        </field>
+      </filters>
+
+      <field id="fecha_costo" local="true" noshow="true">
+        <detalle>fecha_costo</detalle>
+        <label>fecha</label>
+        <tipo>date</tipo>
+      </field>
+      <field _noshow="true" autoinc="true" id="id_homologacion">
+        <label>Hom.</label>
+        <detalle>homologacion_id</detalle> 
+      </field>
+
+      <field id="nrocar">
+        <helper empty="true" id="CARROCERIA" type="combo">
+          <field id="nrocar"/>
+          <field id="desabv"/>
+          <field id="nrocar">
+            <condicion operador="!=">0</condicion>
+          </field>
+          <order>
+            <field id="modcar"/>
+          </order>
+        </helper>
+        <label>Carr</label>
+      </field>
+
+      <field id="marcod">
+        <helper empty="true" id="MARCHASIS" type="combo">
+          <field id="marcod"/>
+          <field id="desabv"/>
+          <field id="marcod">
+            <condicion operador="!=">0</condicion>
+          </field>
+          <order>
+            <field id="marcod"/>
+          </order>
+        </helper>
+        <label>MC</label>
+        <actualiza>
+          <field destino="marcod" id="modelo_id"/>
+        </actualiza>
+      </field>
+
+      <field id="modelo_id">
+        <helper empty="true" id="MODCHASIS" type="combo">
+          <field id="id_modelo"/>
+          <field id="moddes"/>
+          <field id="marcod" noshow="true"/>
+        </helper>
+        <label modpos="nobr">Modelo</label>
+        <help>Modelo del Chasis</help>
+      </field>
+      <field id="artcod_id">
+        <label>Art</label>
+        <condicion operador="!=">''</condicion>
+        <detalle>stkarticulopadre_id</detalle>
+      </field>
+
+      <field id="asientos">
+        <label modpos="nobr">Asientos</label>
+        <label>Cantidad de Asientos</label>
+      </field>
+
+      <field id="banbar">
+        <label>B/b</label>
+        <options>
+          <option valor="0">No</option>
+          <option valor="1">Si</option>
+        </options>
+      </field>
+
+      <field id="baja" oculto="true">
+       <!-- <condicion operador="=">0</condicion> -->
+      </field>
+      <field clasefila="true" id="hi" noshow="true" tipoOrden="DESC">
+        <expression>(SELECT 'resaltadoVioleta' FROM PROD_PROCESOS WHERE homologacion_id = HOMOLOGMOD.id_homologacion LIMIT 1)</expression>
+      </field>
+      <order>
+        <field id="hi" orderType="DESC"/>
+        <field id="modcar" noshow="true" tabla="CARROCERIA"/>
+        <field id="mardes"/>
+        <field id="moddes" tabla="MODCHASIS"/>
+        <field id="asientos"/>
+        <field id="banbar"/>
+      </order>
+    </table>
+  </form>
+</histrix>

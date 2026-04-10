@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="dashboard">
+        <titulo>Medidores de Calidad</titulo>
+
+        <widget id="Evolucion2"  width="98%" height="400px">
+           <title>Observaciones Chaperia</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_calidad_chaperia.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="Evolucion2_top"  width="65%" height="400px">
+           <title>Chaperia Top 10 Evolutivo</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_calidad_chaperia_top.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="Evolucion2_top_causas"  width="32%" height="400px">
+           <title>Chaperia Top 10 Causas</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_calidad_chaperia_top_causas.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+</histrix>

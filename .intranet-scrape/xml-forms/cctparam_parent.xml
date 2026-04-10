@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="consulta">
+	<title>PARAMETRO</title>
+	<obs></obs>
+	<form >
+		<table id="CCTPARAM" label="PARAMETRO">
+			<field id="parent">
+				<label>Entero</label>
+				<help>Valor Entero</help>
+			</field>
+		</table>
+	</form>	   
+</histrix> 

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<histrix tipo="abm-mini" path="/fotos/archivo/Sugerencias/">
+  <title>Sugerencias</title>
+  <form >
+    <table id="SUGERENCIAS">
+      <title>Sugerencias</title>
+      
+      
+      <field id="idSugerencia" deshabilitado="true" autoinc="true"  tipoOrden="DESC" _noshow="true">
+      </field>
+
+      <field id="login" deshabilitado="true">
+        <label>Usuario </label>
+        <help>Usuario que hace el pedido</help>
+        <tabla_ex id="HTXUSERS">
+          <field id="login"></field>
+          <field id="nombre"></field>
+          <order>
+            <field id="nombre"></field>
+          </order>
+        </tabla_ex>
+        <valor eval="true">$_SESSION['usuario']</valor>
+      </field>
+
+      <field id="yo" local="true"  noshow="true">
+      
+        <valor eval="true">"'".$_SESSION['usuario']."'"</valor>
+        <tipo>varchar</tipo>
+      </field> 
+
+      <field id="editable" local="true" bloqueafila="true" noshow="true" >
+        <label>Editable</label>        
+        <if exp="'yo'=='login'">
+          <true>"0"</true>
+          <false>"1"</false>
+        </if>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="leida" deshabilitado="true" noshow="true">
+        <options>
+          <option valor="0">No</option>
+          <option valor="1">Si</option>
+        </options>
+      </field>
+
+      <field id="fecha" deshabilitado="true" esclave="true" valauto="true">
+        <label>Fecha</label>
+        <help>Fecha</help>
+        <valor>today</valor>
+      </field>
+      <field id="origen" _deshabilitado="true">
+        <label >Origen</label>
+        <help>Origen de la Sugerencia</help>
+        <size>40</size>
+      </field>
+
+      <field id="sugerencia" _deshabilitado="true">
+        <label >Sugerencia</label>
+        <help>Descripcion </help>
+        <size>200</size>
+        
+      </field>
+      <field id="respuesta" obj="sugeresp_cons.xml" showObjTabla="true"  showValor="true" linkint="sugeresp.xml" local="true" >
+        <label Formstyle="display:none;">Respuesta</label>
+        <paring destino="idSugerencia">idSugerencia</paring>
+        <valor>'Respuesta'</valor>
+      </field>
+      <field id="fotos" _local="true" imageWidth="165" watermark="chasis"  path="idSugerencia">
+                <expresion>CONCAT('/fotos/archivo/Sugerencias/',idSugerencia,'/')  </expresion>
+                <label modpos="nobr" posX="5" posY="+2" formStyle="display:none;">Dir</label>
+
+                <tipo>dir</tipo>
+      </field>
+
+      <field id="cantRest" clasefila="true" noshow="true">
+      
+      
+        <expresion>select case when count(*) = 0 then 'resaltado' end from SUGERESP where SUGERESP.idSugerencia = SUGERENCIAS.idSugerencia</expresion>
+      </field>
+
+    
+      <order>
+        <field id="idSugerencia" ></field>
+      </order>
+
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,477 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix graboasiento="true" transaccional="true" tipo="ing"  llenoTemporal="false"
+ log="false" subtipo="vertical"
+         importadatos="ordenpago_cctmovim_select.xml" imprime="false"  impresion="cctmovim_OP.xml">
+	<title>Orden de pago</title>
+	<obs/>
+	<form>
+		<table id="CCTMOVIM" label="ORDEN DE PAGO" idCampoCond="imputar" ajusteDebe="211100">
+			<confirmacion>
+				<![CDATA[¿ CONFIRMAR ORDEN DE PAGO ? ]]>
+			</confirmacion>
+			<importar xml="ordenpago_cctmovim_select.xml"  
+                      label="Seleccionar Facturas"
+                      titulo="Seleccione Facturas">
+				<field id="ctacod">ctacod</field>
+			</importar>
+			<movimientos cabecera="ordenpago_cab.xml"> 
+				<relacion id="ordenpago_cctmovim_update_ingmov.xml"></relacion>  
+				<relacion id="ordenpago_cctmovim_ingmov.xml"></relacion>  
+				<relacion id="ordenpago_retacumu_ingmov.xml"></relacion>  
+				<relacion id="ordenpago_cajcompr_ingmov.xml"></relacion> 
+				<relacion id="ordenpago_cctimput_ingmov.xml"></relacion>  
+				<relacion id="ordenpago_ret1598_ingmov.xml" ></relacion>
+
+				<relacion id="ordenpago_retimpgan_ingmov.xml"></relacion>
+				<relacion id="ordenpago_retimpiva_ingmov.xml"></relacion>
+
+			<!--	<relacion id="ordenpago_retparam_update.xml">	</relacion>  -->
+
+			</movimientos> 
+			
+			<field id="_ORDEN" oculto="true">
+				<label>Orden</label>
+			</field>
+			<field id="retmas1" noshow="true">
+				<if exp="true" operador="=">
+					<true>nroret + 1</true>
+					<false></false>
+				</if>			
+			</field>
+			<field id="concod"  deshabilitado="true" tabla="CCTCONCE" noshow="true">
+				<label>conc</label>
+				<help>Tipo de Comprobante</help>
+				<valor>1</valor>
+			</field>
+			<field id="condes" oculto="true" tabla="CCTCONCE">
+				<label>Tipo</label>
+				<help>Tipo de Comprobante</help>
+			</field>
+			<field id="movfec" deshabilitado="true">
+				<label modpos="nobr">Fecha</label>
+				<help></help>
+				<valor>today</valor>
+			</field>
+
+			<field id="movnpv" deshabilitado="true">
+				<label modpos="nobr">npv</label>
+				<help>Comprobante</help>
+				<format>%04d</format>
+			</field>
+			<field id="movnro" deshabilitado="true">
+				<label modpos="nobr">Nro</label>
+				<help>Numero</help>
+				<format>%012d</format>
+			</field>
+  
+            <field id="codigoNumero" deshabilitado="true">
+              <label modpos="nobr">CodNro</label>
+              <helper type="combo" id="CODIGONUMERO" empty="true">
+                <field id="codigoNumero" />
+                <field id="nombre" />
+              </helper>
+            </field>
+
+            <field id="graba_acuret" local="true" refresh="true" noshow="true">
+              <label>Graba AcuRet</label>
+              <if exp="codigoNumero == '51'">
+                <true>'0'</true>
+                <false>'1'</false>
+              </if>
+            </field>
+
+
+<!--			<field id="neto" suma="true">
+				<label >Neto Gravado</label>
+				<help></help>
+				
+			</field> -->
+			<field id="movimp" deshabilitado="true">
+				<label >Total Pago</label>
+				<help></help>
+				<format>%01.2f</format>
+				
+			</field>
+
+			<field id="movsal" suma="true"  ctbimporte="1" calcsuma="true">
+				<label  modpos="nobr">Imputado</label>
+				<help></help>
+				<valor>0</valor>				
+				<condicion operador="!=">0</condicion>
+				<tipo>decimal</tipo>
+				
+			</field>
+<!--			<field id="SALDO" suma="true"  ctbimporte="1" acumula="true">
+                <label>SALDO</label>
+				<if exp="true" operador="=">
+					<true>movsal + 0</true>
+					<false>movsal + 0</false>
+				</if>
+			</field> -->
+			<field id="impgra"  local="true" suma="true">
+				<label modpos="nobr">Neto</label>
+			</field>			
+			<field id="Impgraprop" local="true" deshabilitado="true" suma="true">
+				<label modpos="nobr">Neto.Prop</label>
+				<if exp="movimp != 0" operador="=">
+					<true>(impgra + 0) * ( movsal / movimp)</true>
+					<false>impgra + 0</false>
+				</if>
+	<!--			<tipo>numeric</tipo>-->
+			</field>			
+			<field id="Impgrap2" local="true" deshabilitado="true"   suma="true"
+                    acumula="true" retroalimenta="true" noshow="true">
+				<label>NetoP2</label>
+				<if exp="movimp != 0" operador="=">
+					<true>impgra * ( movsal / movimp)</true>
+					<false>impgra</false>
+				</if>
+		<!--		<tipo>numeric</tipo>-->
+			</field>		
+					
+			<field id="sumanetos" local="true" deshabilitado="true"   >
+				<label>sumanetos</label>
+				<if exp="true" operador="=">
+					<true>netoacum + Impgrap2</true>
+					<false>0</false>
+				</if>
+<!--				<tipo>numeric</tipo>-->
+			</field>	
+
+			<field id="RGctbIva" local="true" noshow="true">
+				<valor>215003</valor>
+				<if exp="true" operador="=">
+					<true>215003</true>
+					<false>215003</false>
+				</if>				
+				<registro id="retencion iva" xml="ordenpago_cajmovim_ing.xml">
+					<destino>caj_ctb</destino>
+				</registro>
+				<tipo>varchar</tipo>
+			</field>						
+
+			<field id="RGctb" local="true" noshow="true">
+				<valor>215002</valor>
+				<if exp="true" operador="=">
+					<true>215002</true>
+					<false>215002</false>
+				</if>				
+				<registro id="retencion ganancia" xml="ordenpago_cajmovim_ing.xml">
+					<destino>caj_ctb</destino>
+				</registro>
+				<tipo>varchar</tipo>
+			</field>						
+			<!-- Retenciones de Ganancias -->
+
+			<field id="RGcajtipIva" local="true" noshow="true">
+				<valor>2</valor>
+				<if exp="true" operador="=">
+					<true>2</true>
+					<false></false>
+				</if>						
+				<registro id="retencion iva" xml="ordenpago_cajmovim_ing.xml">
+					<destino>cajtip</destino>
+				</registro>
+			</field>	
+
+			<field id="RGcajtip" local="true" noshow="true">
+				<valor>2</valor>
+				<if exp="true" operador="=">
+					<true>2</true>
+					<false></false>
+				</if>						
+				<registro id="retencion ganancia" xml="ordenpago_cajmovim_ing.xml">
+					<destino>cajtip</destino>
+				</registro>
+			</field>	
+
+			<field id="RGConIva" local="true" noshow="true">
+				<label  modpos="nobr">RGConIva</label>
+				<valor>36</valor>
+				<if exp="true" operador="=">
+					<true>36</true>
+					<false></false>
+				</if>
+				<registro id="retencion iva" xml="ordenpago_cajmovim_ing.xml">
+					<destino>cajcod</destino>
+				</registro>
+			</field>
+
+			<field id="RGCon" local="true" noshow="true"   >
+				<label  modpos="nobr">RGCon</label>
+				<valor>29</valor>
+				<if exp="true" operador="=">
+					<true>29</true>
+					<false></false>
+				</if>						
+				<!-- CREA UN REGISTRO EN ESE CONTENEDOR -->
+				<registro id="retencion ganancia" xml="ordenpago_cajmovim_ing.xml">
+					<destino>cajcod</destino>
+				</registro>
+				
+			</field>	
+
+			<field id="escala" noshow="true">
+				<label>escala</label>
+				<expression sql="true">select escpor / 100 from RETTABLA join RETESCAL on RETTABLA.id_rettabla = RETESCAL.rettabla_id where RETTABLA.ctagan = '[__ctagan__]' and RETTABLA.retcod = '[__catganancias_id__]' and ([__sumanetos__] - [__minimoret__]  + 0) &gt; escmin and ([__sumanetos__] - [__minimoret__]  + 0) &lt;= escmax limit 1</expression>
+			</field>		
+
+			<field id="fijo" noshow="true">
+				<label>fijo</label>
+				<expression sql="true">select escfij from RETTABLA join RETESCAL on RETTABLA.id_rettabla = RETESCAL.rettabla_id where RETTABLA.ctagan = '[__ctagan__]' and RETTABLA.retcod = '[__catganancias_id__]' and ([__sumanetos__] - [__minimoret__]  + 0) &gt; escmin and ([__sumanetos__] - [__minimoret__]  + 0) &lt;= escmax limit 1</expression>
+			</field>	
+			<field id="minimo" noshow="true">
+				<label>minimo</label>
+				<expression sql="true">select escmin from RETTABLA join RETESCAL on RETTABLA.id_rettabla = RETESCAL.rettabla_id where RETTABLA.ctagan = '[__ctagan__]' and RETTABLA.retcod = '[__catganancias_id__]' and ([__sumanetos__] - [__minimoret__]  + 0) &gt; escmin and ([__sumanetos__] - [__minimoret__]  + 0) &lt;= escmax limit 1</expression>
+			</field>				
+
+
+          <field id="impimp" local="true" suma="true" noshow="true">
+            <label>IVA</label>
+          </field>
+
+            <field id="impimp2" local="true" deshabilitado="true" suma="true" acumula="true" retroalimenta="true" noshow="true">
+				<label>NetoP2</label>
+				<if exp="impimp != 0" operador="=">
+					<true>impimp</true>
+					<false>0</false>
+				</if>
+			</field>	
+
+          <field id="ganpor" local="true" deshabilitado="true" noshow="true">
+            <label  modpos="nobr">Ganancia porcentaje</label>
+            <if exp="codigoNumero + 0 == '51'" operador="=">
+              <true>3</true>
+              <false>2</false>
+            </if>
+            <tipo>numeric</tipo>
+          </field>
+
+          <field id="catgan" local="true" deshabilitado="true" noshow="true">
+            <label  modpos="nobr">Ganancia regimen</label>
+            <if exp="codigoNumero + 0 == '51'" operador="=">
+              <true>99</true>
+              <false>217</false>
+            </if>
+            <tipo>numeric</tipo>
+          </field>
+
+          <field id="ivapor" local="true" deshabilitado="true" noshow="true">
+            <label  modpos="nobr">Iva Porcentaje</label>
+            <if exp="codigoNumero + 0 == '51'" operador="=">
+              <true>21</true>
+              <false>0</false>
+            </if>
+            <tipo>numeric</tipo>
+          </field>
+
+          <field id="cativa" local="true" deshabilitado="true" noshow="true">
+            <label  modpos="nobr">Iva regimen</label>
+            <if exp="codigoNumero + 0 == '51'" operador="=">
+              <true>499</true>
+              <false>0</false>
+            </if>
+            <tipo>numeric</tipo>
+          </field>
+
+          <field id="RR_IVA" local="true" deshabilitado="true">
+            <label  modpos="nobr">RIva</label>
+            <if exp="codigoNumero + 0 == '51'" operador="=">
+              <true>impimp2</true>
+              <false>0</false>
+            </if>
+            <tipo>numeric</tipo>
+            <registro id="retencion iva" xml="ordenpago_cajmovim_ing.xml">
+                <destino>cajimp</destino>
+            </registro>
+          </field>
+
+			<field id="RR" local="true" deshabilitado="true">
+				<label  modpos="nobr">RGan</label>
+				<if exp="codigoNumero + 0 == '51'" operador="=">
+					<true>round(((sumanetos * 3) / 100), 2)</true>
+                    <false>(sumanetos &gt;= ( minimoret + 0) &amp;&amp; ctagan != 8 &amp;&amp; (round((fijo + (sumanetos - ( minimoret + 0 )-  (minimo + 0) ) * ((escala + 0) + (porretgan + 0) ) ) - (acuret + 0), 2)) &gt; 20 )? round((fijo + (sumanetos - ( minimoret + 0 )-  (minimo + 0) ) * ((escala + 0) + (porretgan + 0) ) ) - (acuret + 0), 2):0</false>
+				</if>
+				<tipo>numeric</tipo> 
+				CREA UN REGISTRO EN ESE CONTENEDOR 
+				<registro id="retencion ganancia" xml="ordenpago_cajmovim_ing.xml">
+					<destino>cajimp</destino>
+				</registro>
+			</field>
+
+			<field id="salant" local="true" noshow="true">
+				<label>salant</label>
+				<help></help>
+				<tipo>decimal</tipo>
+			</field>
+			<field id="newsaldo" local="true" deshabilitado="true">
+				<label>Saldo</label>
+				<if exp="true" operador="=">
+					<true>salant - movsal </true>
+					<false>0</false>
+				</if>
+				<tipo>numeric</tipo>
+			</field>			
+			<field id="acumulado" local="true" noshow="true" suma="true" retroalimenta="true">
+				<label>acumulado</label>
+				<help>acum</help>
+				<if exp="movnro != 0" operador="=">
+					<true>movsal + 0</true>
+					<false>movsal + 0</false>
+				</if>
+				<tipo>numeric</tipo>
+			</field>	
+			<field id="encero" local="true" deshabilitado="true" noshow="true">
+				<label>encero</label>
+				<if exp="movimp == 0" operador="=">
+					<true>0</true>
+					<false>0</false>
+				</if>
+			</field>   
+			<field id="apagar" local="true" deshabilitado="true" style="color:red;">
+				<label modpos="nobr">apagar</label>
+				<if exp="true">
+					<false>acumulado - (cajimp + 0) - encero</false>
+					<true>(newsaldo &lt; 0)?newsaldo:0 </true>
+				</if>
+				<tipo>numeric</tipo>
+			</field>			
+			<!-- Retenciones de I.Brutos -->
+			<field id="RIcajtip" local="true" noshow="true" modpos="nobr">
+				<valor>2</valor>
+				<if exp="true" operador="=">
+					<true>2</true>
+					<false></false>
+				</if>						
+				<registro id="ib" xml="ordenpago_cajmovim_ing.xml">
+					<destino>cajtip</destino>
+				</registro>
+			</field>	
+			<field id="RICon" local="true" noshow="true"   >
+				<label modpos="nobr">RICon</label>
+				<valor>30</valor>
+				<if exp="true" operador="=">
+					<true>30</true>
+					<false></false>
+				</if>						
+				<registro id="ib" xml="ordenpago_cajmovim_ing.xml">
+					<destino>cajcod</destino>
+				</registro>
+				
+			</field>				
+			<field id="RIctb" local="true" noshow="true">
+				<valor>215001</valor>
+				<if exp="true" operador="=">
+					<true>215001</true>
+					<false>2150011</false>
+				</if>				
+				<registro id="ib" xml="ordenpago_cajmovim_ing.xml">
+					<destino>caj_ctb</destino>
+				</registro>
+				<tipo>varchar</tipo>
+			</field>	
+			<field id="RI" local="true" deshabilitado="true"   suma="true" acumula="true">
+				<label modpos="nobr">RIB</label>
+				<if exp="acumulado &lt;= 5000 " operador="=">
+					<true>0</true>
+					<false>(por1598 > 0)? (round((Impgrap2 * por1598 / 100), 2)):0</false> 
+				</if>
+				<registro id="ib" xml="ordenpago_cajmovim_ing.xml">
+					<destino>cajimp</destino>
+				</registro>
+				<tipo>decimal</tipo>
+				
+			</field>	
+			<field id="R_I2" local="true" deshabilitado="true"   noshow="true" >
+				<label modpos="nobr">R_I2</label>
+				<if exp="acumulado &lt;= 5000 " operador="=">
+					<true>0</true>
+					<false>(por1598 > 0)? (round((Impgrap2 * por1598 / 100), 2)):0</false> 
+				</if>
+				<tipo>numeric</tipo>
+			</field>						
+			<field id="RIG" local="true" noshow="true"   >
+				<label modpos="nobr">RICon</label>
+				<valor>30</valor>
+				<if exp="RI != 0" operador="=">
+					<true>1</true>
+					<false>0</false>
+				</if>						
+				<registro id="ib" xml="ordenpago_cajmovim_ing.xml">
+					<destino>grIB</destino>
+				</registro>
+				
+			</field>									
+			
+			<field id="movimp2" local="true"  deshabilitado="true"  >
+				<label modpos="nobr">movimp2</label>
+				<if exp="true" operador="=">
+					<true>(cajimp + 0)</true>
+					<false>0</false>
+				</if>
+				<tipo>numeric</tipo>
+			</field>			
+
+
+			<field id="imputar" local="true"  noshow="true">
+				<valor>1</valor>
+			</field>				
+			<field id="movcta"  noshow="true">
+				<valor>0</valor>
+			</field>			
+			<field id="movlet"  noshow="true"></field>			
+			<field id="movipv"  noshow="true"></field>			
+			<field id="movinc"  noshow="true"></field>			
+			<field id="zoncod"  noshow="true"></field>			
+
+			<field id="ref" local="true" noshow="true" ctbreferencia="1">
+				<label>referencia</label>
+				<if exp="true" operador="=">
+					<true>'O.P. movnroOP - ctanom'</true>
+					<false>0</false>
+				</if>
+				<tipo>varchar</tipo>
+			</field>	
+			<field id="movref__3" local="true" noshow="true" >
+				<label>ref3</label>
+				<if exp="apagar != 0" operador="=">
+					<true>"El Saldo apagar sera imputado a cuenta"</true>
+					<false>"."</false>
+				</if>
+				<tipo>varchar</tipo>
+			</field>				
+			<field id="sisprv" local="true" noshow="true" >
+				<label>sis</label>
+				<help></help>
+				<tipo>varchar</tipo>
+				<valor>01</valor>
+			<!--	<condicion operador="=">'01'</condicion> -->
+			</field>
+			
+		</table>
+		<join tipo="left">
+			<table id="CCTCONCE">
+				<field id="siscod" oculto="true">
+					<label>cctcuent.siscod</label>
+					<condicion operador="=">CCTMOVIM.siscod</condicion>
+				</field>
+				<field id="concod" oculto="true">
+					<condicion operador="=">CCTMOVIM.concod</condicion>
+				</field>
+				<field id="condes" oculto="true"></field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CCTCUENT">
+				<field id="siscod" oculto="true">
+					<label>cctcuent.siscod</label>
+					<condicion operador="=">CCTMOVIM.siscod</condicion>
+				</field>
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">CCTMOVIM.ctacod</condicion>
+				</field>
+			</table>
+		</join>
+
+	</form>
+</histrix>

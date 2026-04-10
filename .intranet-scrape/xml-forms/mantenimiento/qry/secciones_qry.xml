@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+<title>Secciones</title>
+<obs></obs>
+  <form >
+    <table id="MANT_SECCIONES">
+      
+      <field id="id_mantseccion" esClave="true" noshow="true" />
+
+      <field id="nombre_seccion">
+        <label>Sección</label>
+      </field>
+
+      <order>
+        <field id="nombre_seccion" />
+      </order>
+
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix borra="no" conBusqueda="true" tipo="ficha" logReference="artdes">
+	<title>Insumos</title>
+	<obs/>
+	<form >
+		<table id="STKINSUM" label="Insumos">
+			<field id="siscod" oculto="true">
+				<label>Codigo Sistema</label>
+				<valor>'01'</valor>
+			</field>
+
+
+			<field id="artrub" deshabilitado="false">
+				<label>Rubro</label>
+				<help>Rubro del Artículo</help>
+				<helper type="combo" id="STKRUBRO">
+					<field id="artrub">
+						<condicion operador="=">4</condicion>
+					</field>
+					<field id="rubnom">
+						<expression>CONCAT(artrub, '-', rubnom)</expression>
+					</field>
+				</helper>
+				<actualiza>
+					<field destino="artrub" id="artcodpro"/>
+					<field destino="artrub" id="artsub"/><!--si comento esto no se bloquean los radio -->
+				</actualiza>
+<!-- 				<valor>4</valor>
+ -->			</field>
+
+			<field id="artsub">
+				<label modpos="nobr">SubRubro</label>
+				<tabla_ex id="STKSUBRU">
+					<field id="artsub">
+					    <condicion operador="IN">(6, 8, 9)</condicion>
+					</field>
+					<field id="subnom">
+						<expression>CONCAT(artsub, '-', subnom)</expression>
+					</field>
+
+					<field id="artrub" oculto="true">
+						<condicion operador="=">4</condicion>
+					</field>
+				</tabla_ex>
+				<actualiza>
+					<!--						<field destino="subnro" id="artcod" />						-->
+					<field destino="artsub" id="artcodpro"/>
+				</actualiza>
+				<help>Grupo del Articulo</help>
+				<tipo>radio</tipo>
+			</field>
+			<field id="baja" noshow="true">
+				<label modpos="nobr" style="color:red;">Condicion</label>
+				<help>Baja</help>
+				<options>
+					<option valor="0">Activo</option>
+					<option valor="1">Baja</option>
+				</options>
+				<valor>0</valor>
+				<tipo>integer</tipo>
+			</field>
+			<field deshabilitado="true" id="artcodpro" local="true" _noshow="true" valauto="true">
+				<label style="color:red">Código Sugerido</label>
+				<helper id="STKSUBRU">
+					<field id="subnro">
+						<expression>SELECT max(STKINSUM.artcod) + 1   FROM STKINSUM where substring(STKINSUM.artcod, 1, 1) = STKSUBRU.artrub and substring(STKINSUM.artcod, 2, 2) = LPAD(STKSUBRU.artsub, 2, '0')</expression>
+					</field>
+					<field id="subnro2">
+						<expression>SELECT max(STKINSUM.artcod) + 1  FROM STKINSUM where substring(STKINSUM.artcod, 1, 1) = STKSUBRU.artrub and substring(STKINSUM.artcod, 2, 2) = LPAD(STKSUBRU.artsub, 2, '0')</expression>
+					</field>
+					<!--
+					<field id="subnro2">
+						<expression>CONCAT(artrub, LPAD(artsub, 2, '0') , LPAD((subnro + 1), 3, '0'))</expression>
+					</field> -->
+					<field id="artsub" />
+					<field id="artrub">
+						<condicion operador="=">4</condicion>
+					</field>
+				</helper>
+				<actualiza>
+					<field destino="artcodSug" id="artcodSug"/>
+				</actualiza>
+			</field>
+			<field  clave="true" id="artcod" required="true">
+				<label>Código Artículo</label>
+				<help>Código de Artículo</help>
+<!--				<ayuda_ex id="STKINSUM">
+					<field id="artcd"/>
+					<field id="artdes"/>
+					<clave>artcod</clave>
+					<descripcion>artdes</descripcion>
+				</ayuda_ex>  -->
+				<detalle>artcod</detalle>
+			</field>
+			<field id="artdes">
+				<label colspan="10" modpos="nobr">Descripción</label>
+				<help>Descripción de Artículo</help>
+			</field>
+<!--			<field id="artcos">
+				<label>Precio Costo</label>
+				<help>Precio de Costo</help>
+			</field>
+			<field id="artpor">
+				<label modpos="nobr">Descuento</label>
+				<help>Porcentaje de Descuento</help>
+			</field> -->
+			<field id="valcps" noshow="true">
+				<label>Val.Compra</label>
+				<help>Valor de Compra</help>
+			</field>
+			<field id="unicps" noshow="true">
+				<label modpos="nobr">U. Compra</label>
+				<help>Unidad de Compra</help>
+				<tabla_ex id="FSMUNIDS">
+					<field id="unicod"/>
+					<field id="uninom"/>
+				</tabla_ex>
+			</field>
+
+			<field id="valuso" noshow="true">
+				<label>Val.Uso</label>
+				<help>Valor de Uso</help>
+			</field>
+			<field id="artuni" noshow="true">
+				<label modpos="nobr">U.Uso</label>
+				<tabla_ex id="FSMUNIDS">
+					<field id="unicod"/>
+					<field id="uninom"/>
+				</tabla_ex>
+				<help>Codigo Unidad de Medida de Uso</help>
+			</field>
+     <!--
+			<field id="artmin">
+				<label>Stock Critico</label>
+				<help>Stock critico en deposito.</help>
+			</field>
+			<field id="artrep">
+				<label modpos="nobr">Stock de Repos</label>
+				<help>Stock de Reposicion.</help>
+			</field>
+			<field id="cantxuni">
+				<label>Cant.x Un.</label>
+				<help>Cantidad por unidad (en unidad de uso)</help>
+			</field>           -->
+			<field id="creado" deshabilitado="true" noshow="true">
+				<label modpos="nobr">Fecha de Creación</label>
+				<help>Fecha de Creación del artículo</help>
+			</field>
+
+		<fieldGroup noshow="true">
+			<field id="artiva">
+				<label>Situacion IVA</label>
+				<help>Situacion I.V.A.</help>
+				<options>
+					<option valor="0">No Gravado</option>
+					<option valor="1">Alicuota Total</option>
+					<option valor="2">Alicuota PArcial</option>
+				</options>
+				<valor>1</valor>
+			</field>
+			<field id="artctb">
+				<label colspan="4">Cuenta Contable</label>
+				<help>Código Cuenta Contable</help>
+				<tabla_ex id="CTBCUENT">
+					<field id="ctbcod" >
+						<condicion operador="like">'51%' or ctbcod like '56%' or ctbcod like '71%'</condicion>
+					</field>
+					<field id="ctbnom2" >
+						<expression>CONCAT(CTBCUENT.ctbnom, ' - ', CTBCUENT.ctbcod)</expression>
+					</field>
+					<field id="ctbnom" >
+					</field>
+<!--
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'10'</condicion>
+					</field>
+-->
+					<field id="ctbhab">
+						<condicion operador="=">1</condicion>
+					</field>
+					<order>
+						<field id="ctbnom" tabla="CTBCUENT"/>
+					</order>
+				</tabla_ex>
+				<valor>561104</valor>
+			</field>
+			<field id="tipocalculo_costo">
+			    <label modpos="nobr" colspan="3">Tipo de Cálculo Costo</label>
+			    <options> 
+				<option valor="0">Automático</option>
+				<option valor="1">Manual</option>
+			    </options>
+			</field>
+			<field id="plaubi">
+				<label colspan="10">Ubic.Plano</label>
+				<help></help>
+			</field>
+			<field id="norcod">
+				<label>Cod.Norma</label>
+				<help>Código de Norma</help>
+				<tabla_ex id="INSNORMA">
+					<field id="norcod"/>
+					<field id="norabv"/>
+				</tabla_ex>
+			</field>
+			<field id="t_pieza">
+				<label modpos="nobr">t_pieza</label>
+				<help>t-pieza</help>
+				<options>
+					<option valor="0">No</option>
+					<option valor="1">Si</option>
+				</options>
+				<valor>1</valor>
+			</field>
+			<field id="t_plano">
+				<label modpos="nobr">t_plano</label>
+				<help>t-plano</help>
+				<options>
+					<option valor="0">No</option>
+					<option valor="1">Si</option>
+				</options>
+			</field>
+			<field id="t_dispo">
+				<label modpos="nobr">t_dispo</label>
+				<help>t-dispo</help>
+				<options>
+					<option valor="0">No</option>
+					<option valor="1">Si</option>
+				</options>
+			</field>
+			<field id="trazable">
+				<label>Trazabilidad</label>
+				<help>Indica si el insumo es o No Trazable</help>
+				<options>
+					<option valor="0">No Trazable</option>
+					<option valor="1">Trazable</option>
+				</options>
+			</field>
+			<field id="recLote">
+				<label modpos="nobr">Recepción por Lote</label>
+				<options>
+					<option valor="0">No</option>
+					<option valor="1">Si</option>
+				</options>
+
+			</field>
+			<field id="stock">
+				<label modpos="nobr">Control Stock</label>
+				<options>
+					<option valor="0">No</option>
+					<option valor="1">Si</option>
+				</options>
+
+			</field>
+		</fieldGroup>
+
+			<!-- <field id="norma" local="true" obj="normainsumos.xml" oculto="true">
+				<paring destino="artcod">artcod</paring>
+			</field>
+			<field id="ultimocosto" local="true" obj="ultimocosto_cons.xml" oculto="true">
+				<paring destino="artcod">artcod</paring>
+			</field>
+			<field id="Fotos" local="true" obj="articulo_foto.xml" oculto="true">
+				<paring destino="idArticulo">artcod</paring>
+			</field>
+                        <field id="Proveedor" local="true" obj="articulo_proveedor.xml" oculto="true">
+				<paring destino="stkarticulo_id">artcod</paring>
+			</field> -->
+
+            <field id="Composicion" local="true" obj="stkpieza_pintura_crud.xml">
+				<paring destino="idPadre">artcod</paring>
+			</field>
+
+		</table>
+	</form>
+</histrix>

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="ing" imprime="false" llenoreferente="true"  style="height:100%" modifica="false" inserta="false"> 
+		<title>DETALLE</title>
+        <obs></obs>
+				<form >
+					<table id="CPSMOVIM" label="Piezas" idCampoCond="selec">
+					
+						<field id="artcod">
+							<label>Cod.</label>
+							<help>Código del Articulo</help>
+							<detalle>idPadre</detalle>
+						</field>
+
+						<field id="ocpnro" noshow="true"/>
+					
+						<field id="nrocha" noshow="true"/>
+
+						<field id="ocpren" noshow="true"/>
+
+						<field id="detalle" deshabilitado="true">
+							<label>Articulo </label>
+							<tipo>varchar</tipo>
+							<detalle>artdes</detalle>
+						</field>
+
+						<field id="movuso" deshabilitado="true">
+							<label>Cantidad</label>
+							<detalle>cant</detalle>
+						</field>
+						<field id="movcps" deshabilitado="true">
+							<label>Conv</label>
+						<!--	<detalle>cant</detalle> -->
+						</field>
+						
+						<field id="ctanom" noshow="true" >
+						    <expression>select CCTCUENT.ctanom FROM CCTCUENT where siscod = '01' and ctacod = ([__codprv__] + 0 ) LIMIT 1</expression>
+						    <detalle>ctanom</detalle>
+						</field>
+						
+					<field id="unicps" noshow="true" tabla="STKINSUM">
+						<detalle>unicps</detalle>
+						<tabla_ex id="FSMUNIDS">
+						  <field id="unicod"></field>
+						  <field id="uniabv"></field>
+						</tabla_ex>
+					</field>
+					<field id="artuni" noshow="true" tabla="STKINSUM">
+						<detalle>artuni</detalle>
+						<tabla_ex id="FSMUNIDS">
+						  <field id="unicod"></field>
+						  <field id="uniabv"></field>
+						</tabla_ex>
+					</field>
+					<field id="artcos" noshow="true" tabla="STKINSUM"> 
+						<detalle>artcos</detalle>
+					</field>
+					<field id="artrub" noshow="true" tabla="STKINSUM">
+						<detalle>artrub</detalle>
+					</field>
+					<field id="unidef" noshow="true" tabla="STKINSUM">
+						<detalle>unidef</detalle>
+					</field>
+					<field id="valcps" noshow="true" tabla="STKINSUM">
+						<detalle>valcps</detalle>
+					</field>
+					<field id="valuso" noshow="true" tabla="STKINSUM">
+						<detalle>valuso</detalle>
+					</field>							
+			
+						<field id="fecreq" noshow="true" local="true">
+						    <detalle>fecreq</detalle>
+							<tipo>date</tipo>
+						</field>
+						<field id="codprv" noshow="true" local="true">
+						<label>ctacod</label>
+						    <detalle>codprv</detalle>
+						</field>
+					<field id="selec" local="true" refresh="true">
+							<label Formstyle="display:none;">Selec.</label>
+							<help>Seleccion</help>
+							<tipo>check</tipo>
+							<valor>1</valor>
+						</field>				
+					</table>
+					<join tipo="left">
+						<table id="STKINSUM">
+							<field id="siscod" >
+								<condicion operador="=">'01'</condicion>
+							</field>
+							<field id="artcod">
+								<condicion operador="=">CPSMOVIM.artcod</condicion>
+							</field>
+							
+						</table>
+					</join>
+				</form>
+        </histrix>

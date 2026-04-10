@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="chart">
+    <title>Estadisticas Por seccion</title>
+    <obs></obs>
+    <form >
+        <table id="SECCION" label="ESTAD ACCIDENTES">
+     		<grafico id="seccion" >
+                <ancho>400</ancho>
+                <tipo>P</tipo>
+                 <etiquetas>nombre</etiquetas>
+                <datos>personal</datos>
+                <title>Cantidad de Operarios</title>
+				<subtitulo>x Sección</subtitulo>
+            </grafico>
+
+			<field id="id_seccion" noshow="true"/>
+
+            <field id="activa" noshow="true">
+                <label>Activa</label>
+                <condicion operador="=">1</condicion>
+            </field>
+
+			<field id="nombre">
+				<label>Seccion</label>
+                <expression>LEFT(SECCION.abreviacion_seccion, 15)</expression>                
+				<condicion operador="!=">''</condicion>
+			</field>
+
+            <field id="personal" tipoOrden="DESC">
+                <expression>(SELECT count(*) FROM PERSONAL  where id_seccion = SECCION.id_seccion and fechaEgreso = '0000-00-00')</expression>
+                <label>Cantidad</label>
+                <tipo>integer</tipo>
+<!--                <condicion operador="!=">0</condicion>-->
+            </field>
+
+			<group>
+                <field id="id_seccion"></field>
+			</group>
+
+			<order>
+				<field id="personal"/>
+			</order>
+
+        </table>
+      
+    </form>
+</histrix>

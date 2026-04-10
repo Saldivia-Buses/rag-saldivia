@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" inserta="no" width="18">
+    <title>REIMPRESION DE ORDENES DE PRODUCCION</title>
+    <obs></obs>
+    <form  detalle="mrp_cerrarorden_ficha.xml">
+        
+        <table id="MRP_ORDEN_PRODUCCION" label="ORDENES DE COMPRA" style="text-align:center;">
+            
+            <filters>
+                    <field id="mrpestado_id" >
+                        <label>Estado </label>
+                        <operador>=</operador>
+                        <valor>0</valor>
+                    </field>
+
+                    <field id="id_mrporden" >
+                        <label>Nro</label>
+                        <operador>=</operador>
+                    </field>
+            </filters>
+
+    <fieldGroup style="padding:2px 2px 2px 2px;">
+
+            <field id="id_mrporden" Formstyle="width:150px;">
+                <label>Nro</label>
+                <help>Numero de Orden</help>
+                <detalle>id_mrporden</detalle>
+                <detalle>mrporden_id</detalle>
+            </field>
+
+            <field id="fecha_orden">
+                <label>Fecha</label>
+                <help>Fecha de Orden de Fabricación</help>
+            </field>
+            
+            <field id="rhpersonal_nombre"  tabla="RH_PERSONAL" >
+                <label modpos="nobr">Empleado</label>
+        		<expresion>concat(nombre_personal," ",apellido_personal)</expresion>
+            </field>
+                
+            <field id="mrpestado_id" noshow="true">
+                <label>Estado </label>
+                <options>
+                    <option valor="0">Pendiente</option>
+                    <option valor="1">Cumplida</option>
+                    <option valor="2">Anulada</option>
+                </options>
+                <!-- <operador>=</operador> -->
+            </field>
+
+    </fieldGroup>
+
+            <order>
+                <field id="fecha_orden"></field>
+            </order>
+            
+        </table>
+            
+	<join>
+	    <table id="RH_PERSONAL">
+    		<field id="id_rhpersonal">
+    		    <condicion operador="=">rhpersonal_id</condicion>
+    		</field>
+	    </table>
+	</join>
+        
+
+    </form>
+</histrix>

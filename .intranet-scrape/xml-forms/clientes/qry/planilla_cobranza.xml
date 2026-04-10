@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" subtipo="vertical" inserta="false" modifica="false" deleteRow="false" preloadData="false">
+  <title>Planilla de Cobranza</title>
+  <obs/>
+  <form >
+    <table id="REG_MOVIMIENTOS" label="Planilla de Cobranza">
+
+      <validation>
+        <condition><![CDATA[nro_cuenta == 0]]></condition>
+        <message>Debe ingresar un numero de cuenta</message>
+      </validation>
+
+      <validation>
+        <condition><![CDATA[graba == 0]]></condition>
+        <message>Debe seleccionar al menos un comprobante</message>
+      </validation>
+
+
+      <movimientos cabecera="planilla_cobranza_cab.xml">
+        <relacion id="planilla_cobranza_obs.xml"/>
+      </movimientos>
+
+      <filters>
+        <field id="nro_cuenta">
+          <label>Cliente</label>
+          <operador>=</operador>
+        </field>
+        <field id="regcuenta_nombre" deshabilitado="true">
+          <label modpos="nobr"/>
+        </field>
+      </filters>
+
+      <field id="id_regmovim" noshow="true" />
+
+      <field id="subsistema_id" valauto="true" noshow="true">
+        <detalle>subsistema_id</detalle>
+      </field>
+
+      <field id="leyenda_comprobante" clasefila="true" noshow="true">
+        <expression>IF(REG_NUMERADORES.fiscal = 1 AND REG_NUMERADORES.printer = 'WSAFIP' AND IFNULL(REG_MOVIMIENTOS.numero_cae + 0, 0) = 0, 'resaltadoRojo', '')</expression>
+      </field>
+
+      <field id="regcuenta_id" noshow="true" />
+
+      <field id="nro_cuenta" tabla="REG_CUENTA" _break="true">
+        <label>Cuenta</label>
+        <helper type="external" xml="regcuenta_nro_cmb.xml" dir="/ayudas" empty="true" />
+        <size>11</size>
+      </field>
+
+      <field id="regcuenta_nombre" deshabilitado="true" local="true" noshow="true">
+        <size>50</size>
+      </field>
+
+      <field id="nombre_cuenta">
+        <expresion>REG_CUENTA.nombre_cuenta</expresion>
+        <label Formstyle="display:none;">Cliente</label>
+      </field>
+
+      <field id="fecha_movimiento">
+        <label>Fec.Mov.</label>
+        <help>Fecha movimiento</help>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="descripcion_concepto" tabla="REG_CONCEPTOS" noshow="true">
+        <label modpos="nobr">Comprobante</label>
+      </field>
+
+      <field id="nro_movimiento">
+        <label Formstyle="display:none;">Nro. Comp.</label>
+        <expresion>CONCAT((IF(REG_NUMERADORES.fiscal = 1 AND REG_NUMERADORES.printer = 'WSAFIP' AND IFNULL(REG_MOVIMIENTOS.numero_cae + 0, 0) = 0, ' NO AUTORIZADA: ', '')), REG_CONCEPTOS.abreviacion_concepto, ' ', REG_MOVIMIENTOS.letra_movimiento, ' ', LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,'0'), '-', LPAD(REG_MOVIMIENTOS.nro_movimiento  ,8,'0'))</expresion>
+      </field>
+
+      <field id="importe_movimiento">
+        <label Formstyle="display:none;">Imp. Comp.</label>
+      </field>
+
+      <field id="saldo_movimiento" _noshow="true" suma="true">
+        <label>Saldo</label>
+        <condicion operador="!=">0</condicion>
+        <tipo>numeric</tipo>
+      </field>
+      
+      <field id="movimiento" noZero="true">
+        <label Formstyle="display:none;">Imp. Cancelado</label>
+        <expresion>SUM(REG_IMPUTACIONES.movimiento_imputacion)</expresion>
+        <tipo>numeric</tipo>
+      </field>
+
+      <!--
+	  <field id="efectivo" suma="true">
+		<expresion>SELECT pago_valor FROM CAJ_VALORES cj WHERE cj.id_cajvalor = REG_MOVIMIENTOS.cajvalor_id and cajformapago_id IN (1, 4)</expresion>
+		<label Formstyle="display:none;">Efectivo</label>
+	  </field>
+
+	  <field id="cheques" suma="true">
+		<expresion>SELECT pago_valor FROM CAJ_VALORES cj WHERE cj.id_cajvalor = REG_MOVIMIENTOS.cajvalor_id and cajformapago_id IN (2, 6)</expresion>
+		<label Formstyle="display:none;">Cheques</label>
+	  </field>
+
+	  <field id="retenc" suma="true">
+		<expresion>SELECT pago_valor FROM CAJ_VALORES cj WHERE cj.id_cajvalor = REG_MOVIMIENTOS.cajvalor_id and cajformapago_id IN (8, 9)</expresion>
+		<label Formstyle="display:none;">Retenc.</label>
+	  </field>
+	  -->
+      <field id="detalles" local="true" obj="seguimiento.xml" objdir="/clientes/qry/" showObjTabla="true">
+        <tipo>varchar</tipo>
+        <paring destino="regmovim_id">id_regmovim</paring>
+        <paring destino="tabla_origen">REG_MOVIMIENTOS</paring>
+        <label Formstyle="display:none;">Observaciones</label>
+      </field>
+
+      <field id="imputacion_concepto" tabla="REG_CONCEPTOS" noshow="true">
+        <condicion operador="=">0</condicion>
+      </field>
+
+      <field id="canc_val" deshabilitado="true" >
+        <label Formstyle="display:none;">C/Valores</label>
+        <expresion>IF(REG_CUENTA.solo_efectivo = 1,'NO ACEPTAR VALORES','')</expresion>
+      </field>
+
+      <field id="tieneObs" local="true" refresh="true">
+        <tipo>check</tipo>
+      </field>
+
+      <field id="graba" local="true" noshow="true" suma="true">
+        <if exp="tieneObs == 1">
+          <true>1</true>
+          <false>0</false>
+        </if>
+      </field>
+
+      <group>
+        <field id="id_regmovim"/>
+      </group>
+      
+      <order>
+        <field id="nombre_cuenta" />
+        <field id="fecha_movimiento" />
+      </order>
+      
+    </table>
+
+    <join>
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id and informa_calculo = 0</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_IMPUTACIONES">
+        <field id="regmovim_id">
+          <condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="CAJ_VALORES">
+        <field id="id_cajvalor">
+          <condicion operador="=">REG_MOVIMIENTOS.cajvalor_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="CAJ_FORMAS_PAGO">
+        <field id="id_cajformapago">
+          <condicion operador="=">CAJ_VALORES.cajformapago_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="REG_NUMERADORES">
+        <field id="subsistema_id">
+          <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+        </field>
+        <field id="regconcepto_id">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+        <field id="puesto">
+          <condicion operador="=">REG_MOVIMIENTOS.puesto_movimiento</condicion>
+        </field>
+        <field id="letra">
+          <condicion operador="=">REG_MOVIMIENTOS.letra_movimiento</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

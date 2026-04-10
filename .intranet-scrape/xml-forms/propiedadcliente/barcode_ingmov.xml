@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" impresion="etiqueta_cliente.xml" directprint="zebra">
+	<title>ingreso de  trazables en la recepcion</title>
+	<obs></obs>
+	<form >
+		<table id="HERRAMIENTAS" label="recepcion de trazables" idCampoCant="ingresan" _idCampoCond="grabo_herr" >
+			<!-- codigo que se ejecuta en cada grabacion -->
+                        <!--
+			<ejecuta>
+				<![CDATA[
+					if ($this->Etiquetas ==''){
+						$this->Etiquetas = new BarcodeEtiq("codest", "artcod", "nomherr", "ctacod", "ctanom", "ocpnro", "ocpfec","id_herramienta", "remfec","remnro","remnpv","recLote");					
+					    $this->Etiquetas->setFormato= true;
+					}
+					else {
+					    $this->Etiquetas->setFormato= false;
+						$this->Etiquetas->addEtiqueta("codest", "artcod", "nomherr", "ctacod", "ctanom", "ocpnro", "ocpfec","id_herramienta", "remfec","remnro","remnpv","recLote");
+					}
+					$y = 2;
+			    		$this->Etiquetas->addRenglon("\n");
+					$this->Etiquetas->addRenglon('N'."\n");
+			    		$this->Etiquetas->addRenglon('D10'."\n"); // Density 10
+					$this->Etiquetas->addRenglon('ZB'."\n");
+					if ($this->Etiquetas->setFormato != false){
+						$this->Etiquetas->setFormatoEtiqueta();
+					}
+
+                                        $this->Etiquetas->addRenglon('A3,'.$y.',0,2,2,1,N,"Propiedad "'."\n");
+                                        $this->Etiquetas->addRenglon('A300,'.$y.',0,2,2,2,R,"unidad"'."\n");
+
+                                        $y += 23;
+                                        $this->Etiquetas->addRenglon('A3,'.$y.',0,2,2,1,N,"Cliente "'."\n");
+                                        $y += 15;
+                                        $this->Etiquetas->addRenglon('LO1,'.$y.',345,2'."\n");
+                                        $y += 6;
+                                        $this->Etiquetas->addRenglon('A3,'.$y.',0,1,1,2,N,"artcod nomherr"'."\n");
+                                        $y += 26;
+                                        $this->Etiquetas->addRenglon('A3,'.$y.',0,1,1,2,N,"(ctacod) ctanom"'."\n");
+                                        $y += 28;
+                                        $this->Etiquetas->addRenglon('A3,'.$y.',0,1,1,1,N,"Fecha: '.date('d/m/Y').'"'."\n");
+                                        $y += 12;
+                                        $this->Etiquetas->addRenglon('A3,'.$y.',0,1,1,1,N,"Recibo  : remnro  Fec: remfec"'."\n");
+                                        $y += 12;
+                                        $this->Etiquetas->addRenglon('A3,'.$y.',0,1,1,1,N,"Obs: observacion"'."\n");
+
+                                        $this->Etiquetas->addRenglon('B4,149,0,1,2,7,50,B,"'.$this->Etiquetas->codigounico.'"'."\n");
+
+                                        $y = 2;
+                                        $this->Etiquetas->addRenglon('A428,'.$y.',0,2,2,1,R,"RECIBO Unid:unidad"'."\n");
+                                        $y += 23;
+                                        $this->Etiquetas->addRenglon('LO426,'.$y.',345,2'."\n");
+                                        $y += 6;
+                                        $this->Etiquetas->addRenglon('A428,'.$y.',0,1,1,2,N,"artcod nomherr"'."\n");
+                                        $y += 26;
+                                        $this->Etiquetas->addRenglon('A428,'.$y.',0,1,1,2,N,"(ctacod) ctanom"'."\n");
+                                        $y += 28;
+                                        $this->Etiquetas->addRenglon('A428,'.$y.',0,1,1,1,N,"Fecha: '.date('d/m/Y').'"'."\n");
+                                        $y += 12;
+                                        $this->Etiquetas->addRenglon('A428,'.$y.',0,1,1,1,N,"Recibo  : remnro  Fecha: remfec"'."\n");
+                                        $y += 12;
+                                        $this->Etiquetas->addRenglon('A428,'.$y.',0,1,1,1,N,"Obs: observacion"'."\n");
+
+
+                                        $this->Etiquetas->addRenglon('B429,149,0,1,2,7,50,B,"'.$this->Etiquetas->codigounico.'"'."\n");
+
+                                        $this->Etiquetas->addRenglon('P1'."\n");
+                                        $this->Etiquetas->addRenglon('N'."\n");
+                   
+				]]>
+			</ejecuta>
+                        -->
+			<field id="codest"  id_temp="codest" param="numerador">
+			</field>
+			<field id="nrofab"  id_temp="unidad">
+                            <detalle>unidad</detalle>
+			</field>
+
+			<field id="ctacod"  id_cab="ctacod" >
+                            <detalle>ctacod</detalle>
+			</field>
+			<field id="cliente"  id_temp="cliente" param="numerador" local="true">
+			</field>
+			<field id="ctanom" local="true" id_cab="ctanom">
+			</field>
+			<field id="recLote" local="true" id_temp="recLote">
+			</field>			
+			<field id="ocpnro"  id_cab="ocpnro">
+			</field>
+			<field id="ocpfec"  id_cab="ocpfec">
+			</field>
+			<field id="remfec"  id_cab="remfec">
+			</field>
+			<field id="remnpv"  id_cab="remnpv">
+			</field>
+			
+			<field id="remnro"  id_cab="remnro">
+			</field>
+			<field id="observacion" id_temp="observacion">
+                        </field>
+
+			<field id="artcod" id_temp="artcod" param="numerador">
+			</field>
+			<field id="nomherr" id_temp="detalle">
+				<tipo>varchar</tipo>
+			</field>
+			
+			<field id="idtrazable1" local="true" id_temp="id_traza1">
+			</field>
+			<field id="numerador" local="true">
+				<label>Herramienta1</label>
+				<parametro id="trazabilidad_nro.xml" retorna="HERRAMIENTA">
+-					<field id="grucod" oculto="true">
+						<condicion operador="=">0</condicion>
+						
+					</field>
+					<field id="artcod" oculto="true">
+						<condicion operador="=">''</condicion>
+						
+					</field>
+					<field id="codest" oculto="true">
+						<condicion operador="=">''</condicion>
+						
+					</field>					
+					<field id="cliente">
+                                                <expression having="false">ctacod</expression>
+						<condicion operador="=">''</condicion>
+					</field>
+					
+				</parametro>				
+			</field>
+			<field id="id_herramienta">
+                                <detalle>id_herramienta</detalle>
+				<if exp="true">
+					<true>	'idtrazable1'.sprintf('%09s' , 'numerador' )</true>
+					<false>''</false>
+				</if>				
+			</field>
+			<field id="pendiente_oc"  id_temp="pencps">
+			</field>
+		</table>
+	</form>
+</histrix>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" >
+  <titulo>Abastecimiento</titulo>
+  <obs/>
+  <form>
+    <table id="STK_ARTICULO_USO">
+      <title>Abastecimiento</title>
+      
+      <field id="id_articulouso" noshow="true" autoinc="true" />
+
+    <field id="stkarticulo_id" oculto="true">
+    </field>
+
+        <field id="stkdeposito_id" _noshow="true" >
+            <label>Depósito</label>
+            <helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" empty="true" />
+        </field>
+
+      <field id="stklocacion_id">
+	<label>Locación</label>
+        <helper id="STK_LOCACION" type="combo" empty="true">
+          <field id="id_stklocacion" />
+          <field id="locacion" >
+            <expression>concat(codigo_locacion, ' ', nombre_locacion)</expression>
+          </field>
+        </helper>
+
+      </field>
+      
+      <field id="abastecimiento_id">
+        <helper id="STK_ABASTECIMIENTO" type="combo" empty="true">
+          <field id="id_abastecimiento" />
+          <field id="forma_abastecimiento" >
+          </field>
+        </helper>
+
+      </field>
+      
+
+<!--
+    <field id="codigo_locacion" noshow="true">
+      <expression>codigo_locacion</expression>
+    </field>    
+-->
+
+    </table>
+<!--
+    <join>
+      <table id="STK_LOCACION">
+        <field id="id_stklocacion">
+          <condicion operador="=">stklocacion_id</condicion>
+        </field>
+      </table>
+    </join>
+-->
+  </form>
+</histrix>

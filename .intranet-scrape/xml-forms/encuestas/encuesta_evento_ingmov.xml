@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="insert" barraDrag="true">
+	<titulo>evento</titulo>
+	<obs/>
+	<consulta >
+		<tabla id="PARTEVENTO" label="Eventos">
+
+			<campo id="concod" id_temp="concod">
+			</campo>
+
+
+			<campo id="IdEvento" id_cab="IdEvento">
+			</campo>
+
+			<campo id="idlocal" id_cab="idlocal">
+			</campo>
+			<campo id="fecha" id_cab="fechanews" >
+			</campo>
+			
+			
+
+
+		</tabla>
+	</consulta>
+</abm>

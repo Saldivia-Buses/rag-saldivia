@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" imprime="false">
+    <title>Pronostico Articulo</title>
+    <obs></obs>
+    <form >
+        <table id="MRP_FORECAST" label="Forecast">
+
+            <field id="id_mrpforecast"  deshabilitado="true" autoinc="true" noshow="true">
+            </field>
+
+            <field id="stkarticulo_id" oculto="true" valauto="true" _esClave="true" _deshabilitado="true">
+                <label>Código</label>
+                <help>Codigo de Articulo</help>
+            </field>
+
+            <field id="nombre" >
+                <expresion>nombre_articulo</expresion>
+                <label>Articulo</label>
+                <help>Codigo de Articulo</help>
+            </field>
+            <field id="year_forecast" oculto="true" _esClave="true">
+                <label>año</label>     
+            </field>
+
+            <field id="tipo_forecast" oculto="true">
+            </field>
+			
+			
+            <field id="mes_forecast" esClave="true">
+                <label>Enero</label>
+                <options>
+                    <option valor="1">Enero</option>
+                    <option valor="2">Febrero</option>
+                    <option valor="3">Marzo</option>
+                    <option valor="4">Abril</option>                                        
+                    <option valor="5">Mayo</option>
+                    <option valor="6">Junio</option>
+                    <option valor="7">Julio</option>
+                    <option valor="8">Agosto</option>                                        
+                    <option valor="9">Septiembre</option>
+                    <option valor="10">Octubre</option>
+                    <option valor="11">Noviembre</option>
+                    <option valor="12">Diciembre</option>                                    
+                </options>                            
+            </field>
+            <field id="cantidad_forecast" >
+                <label>Cantidad</label>
+            </field>
+	    <order>
+		<field id="mes_forecast"/>
+	    </order>
+        </table>
+        <join tipo="left">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">stkarticulo_id</condicion>
+                </field>
+            </table>
+        </join>
+			
+    </form>
+</histrix>

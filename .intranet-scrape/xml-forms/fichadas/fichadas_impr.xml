@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" sqlhardcoded="true">
+	<title>Fichadas del Reloj</title>
+	<obs/>
+	<form >
+         <table id="GEN_CALENDAR" label="Fichadas del Reloj" styleTbody="height:300px;overflow-x:hidden;">
+			<field id="dia">
+				<expression>CASE DAYOFWEEK(GEN_CALENDAR.fecha)
+					WHEN 1 THEN 'Domingo'
+					WHEN 2 THEN 'Lunes'
+					WHEN 3 THEN 'Martes'
+					WHEN 4 THEN 'Miércoles'
+					WHEN 5 THEN 'Jueves'
+					WHEN 6 THEN 'Viernes'
+					WHEN 7 THEN 'Sábado' END
+				</expression>
+				<label>Dia</label>
+			</field>
+			<field id="day_nro" noshow="true">
+				<expression>DAYOFWEEK(GEN_CALENDAR.fecha)</expression>
+				<condicion operador="NOT IN">(7, 1)</condicion>
+			</field>
+			<field id="tarjeta" local="true" oculto="true">
+				<label>tarjeta</label>
+
+			</field> 
+			 <field id="idPersona" local="true" oculto="true">
+				 </field>
+				 
+			<field id="desdefecha" local="true" oculto="true">
+				<label>desdefecha</label>
+				<tipo>date</tipo>
+			</field>
+			<field id="hastafecha" local="true" oculto="true">
+				<label>hastafecha</label>
+				<tipo>date</tipo>
+
+			</field>
+<!--			<field id="fecha">
+				<label>fecha</label>
+			 </field> -->
+			<field id="fecha">
+				<label>fecha</label>
+				<condicion operador="&gt;=" valorde="desdefecha"></condicion>
+				<condicion operador="&lt;=" valorde="hastafecha"></condicion>
+
+			</field>
+			<field id="mitjt" noshow="true">
+				<expression sql="true">select PERSONAL_TARJETA.tarjeta FROM PERSONAL_TARJETA where PERSONAL_TARJETA.idPersona = [__idPersona__] and '[__fecha__]' >= PERSONAL_TARJETA.fechaDesde order by PERSONAL_TARJETA.fechaDesde DESC limit 1 </expression>
+				<label >Tarjeta</label>
+				<help>Tarjeta</help>
+				<detalle>tarjeta</detalle>
+				<tipo>varchar</tipo>
+			</field>
+
+<!--			<field id="fecha2" oculto="true">
+				<label>fecha2</label>
+
+				<expression>GEN_CALENDAR.fecha</expression>
+				<condicion operador="&lt;=" valorde="hastafecha">hastafecha</condicion>
+
+			</field>-->
+<!--			<field id="Hora1">
+				<expression sql="true">select min(FIC.hora) from FICHADAS as FIC where FIC.fecha = '[__fecha__]' and FIC.tarjeta = '[__mitjt__]' and borrado = 0</expression>
+				<label>Hora Ent</label>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="idJornada" local="true" oculto="true">
+				<label>aca</label>
+			</field>
+
+			<field id="Hora2">
+				<expression sql="true">select case when '[__idJornada__]' = 5 then max(FIC.crc) else max(FIC.hora) end from FICHADAS as FIC where FIC.fecha = '[__fecha__]' and FIC.tarjeta = '[__mitjt__]' and borrado = 0</expression>
+				
+				<label>Hora Sal</label>
+				<tipo>varchar</tipo>
+			</field>
+-->
+   			<field id="Hora1" noshow="true">
+				<expression sql="true">(select FIC.hora from FICHADAS as FIC where FIC.tarjeta = '[__mitjt__]' and FIC.borrado = 0 and FIC.fecha ='[__fecha__]'   order by crc limit 0, 1)</expression>
+				<tipo>varchar</tipo>
+				
+			</field>
+			<field id="h1cond" local="true">
+				<label>Hora Ent 1</label>
+			
+			    <if exp="'hIngreso' == 'hEgreso'">
+				<true>''</true>
+				<false>'Hora1'</false>
+			    </if>
+			</field>
+
+			<field id="Hora2" noshow="true">
+				<expression sql="true">(select FIC.hora from FICHADAS as FIC where FIC.tarjeta =  '[__mitjt__]' and FIC.borrado = 0 and FIC.fecha ='[__fecha__]'  order by crc limit 1, 1)</expression>
+
+				<tipo>varchar</tipo>
+			</field>
+			<field id="h2cond" local="true">
+				<label>Hora Sal 1</label>
+			
+			    <if exp="'hIngreso' == 'hEgreso'">
+				<true>''</true>
+				<false>'Hora2'</false>
+			    </if>
+			</field>
+			
+			<field id="Hora3">
+				<expression sql="true">(select FIC.hora from FICHADAS as FIC where FIC.tarjeta =  '[__mitjt__]' and FIC.borrado = 0 and FIC.fecha = '[__fecha__]'  order by crc limit 2, 1)</expression>
+				<label>Hora Ent 2</label>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="Hora4">
+				<expression sql="true">(select FIC.hora from FICHADAS as FIC where FIC.tarjeta =  '[__mitjt__]' and FIC.borrado = 0 and FIC.fecha = '[__fecha__]'   order by crc limit 3, 1)</expression>
+				<label>Hora Sal 2</label>
+				<tipo>varchar</tipo>
+			</field>
+
+<!--			<field id="hora2fix" noshow="true">
+				<expression>case when max(hora) &gt; '17:00:00' and DAYOFWEEK(GEN_CALENDAR.fecha) != 7 then '17:00:00' when max(hora) &gt; '12:00:00' and DAYOFWEEK(GEN_CALENDAR.fecha) = 7 then '12:00:00' else max(hora) end</expression>
+				<label>hora2fix</label>
+				<tipo>varchar</tipo>
+			</field>			  -->
+
+            <field id="hIngreso" noshow="true">
+                <expression><![CDATA[ select H.ingreso from HORARIOHIST as H where H.desdeFecha <= GEN_CALENDAR.fecha and H.dia = DAYOFWEEK(GEN_CALENDAR.fecha) order by H.desdeFecha DESC limit 1 ]]></expression>
+            </field> 
+            <field id="hEgreso" noshow="true">
+                <expression><![CDATA[ select H.egreso from HORARIOHIST as H where H.desdeFecha <= GEN_CALENDAR.fecha and H.dia = DAYOFWEEK(GEN_CALENDAR.fecha) order by H.desdeFecha DESC limit 1 ]]></expression>
+            </field>
+
+<!--			<field id="maxhor1" local="true" noshow="true">
+				<if exp="0idJornada==5">
+					<true>'16:00:00'</true>
+					<false>'16:00:00'</false>
+				</if>
+			</field>
+			<field id="maxhor2" local="true" noshow="true">
+				<if exp="0idJornada==5">
+					<true>'11:00:00'</true>
+					<false>'11:00:00'</false>
+				</if>
+			</field> -->
+			<field id="H2" noshow="true">
+				<label>H2</label>
+<!--				<expression sql="true">select case when '[__Hora2__]' &gt; '[__maxhor1__]' and DAYOFWEEK('[__fecha__]') != 7 then '[__maxhor1__]'
+					  		    when '[__Hora2__]' &gt; '[__maxhor2__]' and DAYOFWEEK('[__fecha__]')  = 7  then '[__maxhor2__]'
+						   else '[__Hora2__]' end</expression> -->
+
+                <expression sql="true">select case when '[__Hora2__]' &gt; '[__hEgreso__]' then '[__hEgreso__]' else '[__Hora2__]' end</expression>
+		
+			</field>
+			 
+			<field id="H1" noshow="true">
+                <label>H1</label>
+				<expression sql="true">select case when '[__Hora1__]' &lt; '[__hIngreso__]' then '[__hIngreso__]' else '[__Hora1__]' end</expression>
+			</field>
+			<field id="H4" noshow="true">
+				<label>H4</label>
+
+                <expression sql="true">select case when '[__Hora4__]' &gt; '[__hEgreso__]' then '[__hEgreso__]' else '[__Hora4__]' end</expression>
+		
+			</field>
+			 
+			<field id="H3" noshow="true">
+			<label>H3</label>
+				<expression sql="true">select case when '[__Hora3__]' &lt; '[__hIngreso__]' then '[__hIngreso__]' else '[__Hora3__]' end</expression>
+			</field>
+
+ 			<field id="Horas" suma="true" noshow="true">
+<!--
+<expression>TIMEDIFF(case when max(hora) &gt; '17:00:00' and DAYOFWEEK(GEN_CALENDAR.fecha) != 7 then '17:00:00' 
+			 when max(hora) &gt; '12:00:00' and DAYOFWEEK(GEN_CALENDAR.fecha) = 7  then '12:00:00' else 
+			    max(hora) end, case when min(hora) &lt; '07:00:00' then '07:00:00' else (min(hora)) end)</expression>
+
+
++ ifnull( time_to_sec(TIMEDIFF(  '[__H4__]' , '[__H3__]')), 0)
+-->
+			    <expression sql="true">select  sec_to_time(time_to_sec(TIMEDIFF(  '[__H2__]' , '[__H1__]')) + ifnull( time_to_sec(TIMEDIFF(  '[__H4__]' , '[__H3__]')), 0)) </expression>
+<!-- <expression sql="true">select TIMEDIFF(case when '[__Hora2__]' &gt; '17:00:00' and (DAYOFWEEK( STR_TO_DATE( '[__fecha__]' , '%Y-%m-%d')) != 7) then '17:00:00' when '[__Hora2__]' &gt; '12:00:00' and (DAYOFWEEK( STR_TO_DATE( '[__fecha__]' , '%Y-%m-%d'))  = 7) then '12:00:00'  else '[__Hora2__]' end, case when '[__Hora1__]' &lt; '07:00:00' then '07:00:00' else '[__Hora1__]' end)</expression>  -->
+				<tipo>time</tipo>
+
+			</field>
+			<field id="totales" suma="true" local="true">
+			<label>Horas Trabajadas</label>
+			
+			    <if exp="'Horas' &gt; '00:00:00'">
+				<true>'Horas'</true>
+				<false>''</false>
+			    </if>
+				<tipo>time</tipo>
+			    
+			</field>
+<!--			<field id="nhor">
+				<label>N</label>
+				<expression sql="true" >SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(t))) from (select 
+(select count(*) + 1 from FICHADAS as F2 where F2.tarjeta =  F1.tarjeta and F2.fecha = F1.fecha and F2.crc &gt; F1.crc ) AS N,
+TIMEDIFF( F1.hora , (select FIC.hora  from FICHADAS as FIC where FIC.tarjeta =  F1.tarjeta and FIC.fecha = F1.fecha and FIC.crc &lt; F1.crc order by FIC.hora DESC limit 1)) AS t from FICHADAS as F1 where F1.tarjeta =  	25404430 and F1.fecha = [__fecha__] GROUP BY N having N%2 != 0 order by F1.hora DESC) as TIEMPOS</expression>
+				<tipo>time</tipo>
+			</field> -->
+			<group>
+				<field id="GEN_CALENDAR.fecha" />
+
+			</group>
+			<order>
+				<field id="fecha" tabla="GEN_CALENDAR"/>
+
+				<field id="hora" />
+			</order>
+		</table>
+		<join tipo="left">
+			<table id="FICHADAS">
+
+				<field id="tarjeta">
+					<condicion operador="=" valorde="tarjeta">tarjeta</condicion>
+				</field>
+				<field id="fecha">
+					<condicion operador="=">GEN_CALENDAR.fecha</condicion>
+				</field>
+				<field id="borrado">
+					<condicion operador="=">0</condicion>
+				</field>				
+				
+			</table>
+
+
+		</join> 
+	</form>
+</histrix>

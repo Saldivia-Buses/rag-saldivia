@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="insert" log="false">
+	<title>Ingreso Movimiento</title>
+	 <obs></obs>
+		<form>
+		    <table id="STK_MOVIMIENTOS" idCampoCond="grabar">
+
+			<field id="stkarticulo_id" >
+				<valor>124006</valor>
+			</field>
+
+			<field id="stkdeposito_id" >
+				<valor>35</valor>
+			</field>
+
+			<field id="stklocacion_id" >
+				<valor>1515</valor>
+			</field>
+
+			<field id="stkconcepto_id" >
+				<valor>31</valor>
+			</field>
+
+			<field id="nrocha" 	   	   id_temp="nrofab_id"/>
+			
+			<field id="cantidad" 	           id_temp="egreso_litros" />
+
+			<field id="opecod"  	  			id_temp="usuario"/>
+
+			<field id="fecha_movimiento" 	   id_temp="fecha"/>
+			
+			<field id="user_id">
+				<valor eval="true">$_SESSION['idUser']</valor>
+			</field>
+
+		    </table>
+		</form>
+    </histrix>	

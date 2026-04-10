@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" inserta="false" borra="false" modifica="false" imprime="false" log="false" transaccional="true" tooltip="false" >
+
+	<title>Recibo</title>
+	<obs/>
+	<form>
+		<table id="REG_MOVIMIENTOS" label="Imputaciones">
+			<validation>
+				<condition>
+					<![CDATA['regcuenta_nombre' + 0 == 0]]>
+				</condition>
+				<message>Debe Ingresar una Cuenta</message>
+			</validation>
+			<validation>
+				<condition>
+					<![CDATA[fecha_movimiento == '']]>
+				</condition>
+				<message>Debe colocar una fecha de imputacion</message>
+			</validation>
+			<validation>
+				<condition>
+					<![CDATA[validar != 0]]>
+				</condition>
+				<message>
+					El importe imputado debe ser igual a la suma de los comprobantes pendiente a imputar
+				</message>
+			</validation>
+			<movimientos>
+				<relacion id="regmovimiento_up.xml" />
+			</movimientos>
+			<field id="moneda_id" local="true" noshow="true" valauto="true">
+				<valor>1</valor>
+			</field>
+
+			<field id="id_regmovim" noshow="true">
+				<condicion operador="=">-1</condicion>
+			</field>
+			<field id="imputacion_concepto" noshow="true">
+				<valor>0</valor>
+			</field>
+
+			<field id="subsistema_id" valauto="true" noshow="true"/>
+
+			<field id="nro_cuenta" local="true">
+				<label _modpos="nobr" >Cod.Cuenta</label>
+				<!--                <ayuda_ex xml="regcuenta_relacionescmb_nro.xml" dir="/ayudas"></ayuda_ex>
+			-->
+			<helper type="external" xml="regcuenta_relacionescmb_nro.xml" dir="/ayudas"  ></helper>
+
+			<size>6</size>
+		</field>
+		<field id="regcuenta_id" noshow="true">
+			<label modpos="nobr">Cuenta</label>
+			<helper type="external" xml="regcuenta_cmb.xml" dir="/ayudas" empty="true" />
+			<size>6</size>
+			<actualiza>
+				<field id="imputacionesfac" destino="regcuenta_id"/>
+				<field id="imputacionescaj" destino="regcuenta_id"/>
+			</actualiza>
+		</field>
+		<field id="regcuenta_nombre" local="true" deshabilitado="true">
+			<label  modpos="nobr">Nombre</label>
+			<size>60</size>
+		</field>
+
+		<field id="xsaldo_movimiento" noshow="true" local="true" >
+			<label style="font-size: xx-large; text-align: right;">Saldo Recibo</label>
+			<tipo>numeric</tipo>
+			<valor>0</valor>
+		</field>
+		<field id="validar" deshabilitado="true" noshow="true" local="true"/>
+
+		<!--	<field id="nro_movimiento" noshow="true">
+		<label>Nº Recibo</label>
+		<valor>1</valor>
+	</field>
+	-->
+	<field id="fecha_movimiento" local="true">
+		<label  >Fecha Imputacion</label>
+		<valor>today</valor>
+		<tipo>date</tipo>
+	</field>
+	<field id="imputacionescaj" local="true">
+		<label modpos="nobr">Comprobante de Caja</label>
+		<helper type="combo"   xml="regimputacionescaj_cmb.xml" empty="true"  ></helper>
+		<actualiza>
+			<field id="imputacionesfac" destino="imputacionescaj"/>
+		</actualiza>
+	</field>
+
+	<field id="imputacionesfac" local="true">
+		<label colspan="4" />
+		<helper type="object" xml="regimputacionesfac_grid.xml" >
+			<parameter source="imputacion_concepto" 	target="imputacion_concepto_comprobante_llama" />
+			<parameter source="imputacionescaj" 		target="imputacionescaj" />
+		</helper>
+	</field>
+	<field id="importe_movimiento" deshabilitado="true">
+		<label style="font-size: xx-large; text-align: right;">Total Imputado</label>
+		<tipo>numeric</tipo>
+		<jseval campodestino="validar">importe_movimiento - saldo_aimputar</jseval>
+	</field>
+	<field id="saldo_aimputar" deshabilitado="true" editable="true" local="true">
+		<label style="font-size: xx-large; text-align: right;">Total a Imputar</label>
+		<tipo>numeric</tipo>
+		<jseval campodestino="validar">importe_movimiento - saldo_aimputar</jseval>
+	</field>
+
+</table>
+</form>
+</histrix>

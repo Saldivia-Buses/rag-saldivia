@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+
+*******************************************************************************
+-->
+<histrix tipo="consulta" subtipo="vertical" imprime="false">
+    <title>Descuentos por volumen de venta</title>
+    <obs></obs>
+    <form >
+
+        <table id="STK_DESCUENTOSVOLUMEN" label="Tabla de descuentos por volumen">
+            <field id="stklista_id" noshow="true">
+            </field>
+
+            <field id="id_descuentovolumen" autoinc="true" esClave="true" noshow="true" >	    
+            </field>
+
+            
+            <field id="desde_cantidad">
+                <label>Desde</label>
+                <size>5</size>
+				<tipo>integer</tipo>
+            </field>
+            <field id="hasta_cantidad">
+                <label modpos="nobr">Hasta</label>
+                <size>5</size>
+				<tipo>integer</tipo>
+            </field>
+        <!--    
+            <field id="porcentaje_descuento0">
+                <label modpos="nobr">Descuento 1 (%)</label>
+				<size>5</size>
+            </field>
+  -->
+
+			<field id="precio_vta" local="true" oculto="true" >
+                <tipo>custom_numeric</tipo>
+            </field>
+						
+			<field id="resultado">
+                <label modpos="nobr">Imp con dto</label>
+				<expresion> 
+							ROUND (
+
+                            CONVERT(REPLACE(REPLACE('[__precio_vta__]', '.', ''), ',', '.'), DECIMAL(10,2)) 
+
+
+                            * (1 - STK_DESCUENTOSVOLUMEN.porcentaje_descuento0 / 100), 2) 
+
+				</expresion>
+				<tipo>numeric</tipo>
+            </field>
+			
+
+                                    <!--
+            <field id="porcentaje_descuento1">
+                <label modpos="nobr">Descuento 2 (%)</label>
+            </field>
+            -->
+
+        </table>
+    </form>
+</histrix>
+

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="insert">
+	<title>MOVIMIENTOS DE STOCK</title>
+	<obs></obs>
+	<form >
+		<table id="STKINMOV" label="MOVIMIENTOS" idCampoCond="graba_stk">
+			<field id="siscod" id_temp="sisprv"/>
+			<field id="artcod" id_temp="artcod"/>
+			<field id="movcod" id_temp="stk_movcod"/>
+			<field id="movnpv" id_temp="puesto_remito"/>
+			<field id="movnro" id_temp="nro_remito"/>
+			<field id="movalt" id_temp="fecha_recdev"/>
+			<field id="movfec" id_temp="fecha_recdev"/>
+			<field id="ctacod" id_temp="nro_cuenta"/>
+			<field id="movcant" id_temp="cantidad_recdev"/>
+			<field id="movpen" id_temp="cantidad_recdev"/>
+			<field id="movuso" id_temp="cantidad_recdev"/>
+			<field id="movcps" id_temp="cantidad_recdev"/>
+			<field id="descripcion" id_temp="nombre_articulo"/>
+			<field id="movref" id_temp="movref"/>
+            <field id="depcod"  id_temp="stkdeposito_id" />
+
+            <field id="stklocacion_id" id_temp="stklocacion_id" />
+
+		</table>
+	</form>
+</histrix>

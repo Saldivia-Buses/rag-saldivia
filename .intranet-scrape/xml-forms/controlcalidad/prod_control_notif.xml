@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="crud"  >
+	<title>Notificaciones</title>
+	<obs/>
+        
+	<form>
+		<table id="PROD_CONTROL_NOTIF">
+
+	      <field id="prodcontrol_id"   oculto="true">
+
+	      </field>
+
+        <field id="user_id">
+            <helper type="combo" id="HTXUSERS" empty="true">
+                <field id="Id_usuario" />
+                <field id="nombre_user">
+                    <expression>concat(ifnull(Nombre,''),' ',ifnull(apellido,''))</expression>
+                </field>
+                <field id="baja">
+                    <condicion operador="=">0</condicion>
+                </field>
+                <!--
+                <field id="Id_perfil">
+                    <condicion operador="!=">1</condicion>
+                </field>
+              -->
+                <order>
+                    <field id="nombre_user" />
+                </order>
+            </helper>
+        </field>
+			   
+    </table>
+	
+	</form>
+</histrix>

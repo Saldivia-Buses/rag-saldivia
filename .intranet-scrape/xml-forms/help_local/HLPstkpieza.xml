@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <abm tipo="consulta">
+		<titulo>FORMACION DE PRODUCTO</titulo>
+        <obs></obs>
+               <consulta>
+                  <tabla id="STKPIEZA" label="Piezas">
+
+                  <campo id="articulo_hijo"  >
+                      <label>Codigo de Pieza</label>
+                      <help>Codigo del Articulo</help>
+                  </campo>
+				<campo id="artdes" tabla="STKINSUM">
+					<label>Insumo</label>
+					<detalle>artdes</detalle>
+				</campo>
+		  
+                  </tabla>
+				   <join tipo="left">
+					   <tabla id="STKINSUM">
+						   <campo id="siscod" oculto="true">
+							   <condicion operador="=">'01'</condicion>
+						   </campo>
+						   <campo id="artcod">
+							   <condicion operador="=">STKPIEZA.artcod</condicion>
+						   </campo>
+						   
+					   </tabla>
+				   </join> 
+               </consulta>
+        </abm>

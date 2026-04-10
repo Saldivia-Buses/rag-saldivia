@@ -44,6 +44,7 @@ import {
 import {
   ArrowUpIcon,
   ChevronDownIcon,
+  MessageSquareIcon,
   PlusIcon,
   SquareIcon,
   Trash2Icon,
@@ -82,6 +83,34 @@ interface ApiMessage {
   created_at: string;
 }
 
+// --- Session Grouping ---
+
+function groupSessionsByDate(sessions: ApiSession[]): { label: string; sessions: ApiSession[] }[] {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today.getTime() - 86400000);
+  const weekAgo = new Date(today.getTime() - 7 * 86400000);
+
+  const groups: Record<string, ApiSession[]> = {
+    Hoy: [],
+    Ayer: [],
+    "Esta semana": [],
+    Anteriores: [],
+  };
+
+  for (const session of sessions) {
+    const date = new Date(session.updated_at || session.created_at);
+    if (date >= today) groups["Hoy"].push(session);
+    else if (date >= yesterday) groups["Ayer"].push(session);
+    else if (date >= weekAgo) groups["Esta semana"].push(session);
+    else groups["Anteriores"].push(session);
+  }
+
+  return Object.entries(groups)
+    .filter(([, s]) => s.length > 0)
+    .map(([label, s]) => ({ label, sessions: s }));
+}
+
 // --- Chat Sessions Sidebar ---
 
 function ChatSidebar({
@@ -99,25 +128,26 @@ function ChatSidebar({
   onNewSession: () => void;
   onDeleteSession: (id: string) => void;
 }) {
+  const grouped = groupSessionsByDate(sessions);
+
   return (
-    <div className="hidden md:flex w-72 flex-col min-h-0 absolute left-0 top-0 bottom-0 z-10 bg-background">
+    <div className="hidden md:flex w-72 flex-col min-h-0 absolute left-0 top-0 bottom-0 z-10 bg-background border-r border-border/40">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3">
-        <h2 className="font-semibold text-lg">Chats</h2>
+        <h2 className="font-semibold text-sm">Chats</h2>
         <Button
           onClick={onNewSession}
-          variant="outline"
-          size="sm"
-          className="gap-1.5"
+          variant="ghost"
+          size="icon-sm"
+          className="text-muted-foreground hover:text-foreground"
         >
-          <PlusIcon className="size-3.5" />
-          Nuevo chat
+          <PlusIcon className="size-4" />
         </Button>
       </div>
 
-      {/* List */}
+      {/* List with groups */}
       <ScrollArea className="flex-1">
-        <div className="flex flex-col">
+        <div className="flex flex-col pb-4">
           {sessionsLoading && (
             <div className="px-4 py-12 text-sm text-center text-muted-foreground">
               Cargando...
@@ -125,35 +155,37 @@ function ChatSidebar({
           )}
           {!sessionsLoading && sessions.length === 0 && (
             <p className="px-4 py-12 text-sm text-center text-muted-foreground">
-              Tus conversaciones apareceran aca
+              Tus conversaciones aparecerán acá
             </p>
           )}
-          {sessions.map((session) => (
-            <div
-              key={session.id}
-              className={cn(
-                "group flex items-start justify-between gap-2 px-3 py-2.5 cursor-pointer transition-colors rounded-md mx-2",
-                activeSessionId === session.id
-                  ? "bg-accent/60"
-                  : "hover:bg-muted",
-              )}
-              onClick={() => onSelectSession(session.id)}
-            >
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{session.title}</p>
-                <p className="text-[13px] text-muted-foreground mt-0.5">
-                  {formatRelativeDate(session.created_at)}
-                </p>
-              </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDeleteSession(session.id);
-                }}
-                className="size-6 shrink-0 mt-0.5 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-all"
-              >
-                <Trash2Icon className="size-3.5" />
-              </button>
+          {grouped.map((group) => (
+            <div key={group.label}>
+              <p className="px-4 pt-4 pb-1.5 text-[11px] text-muted-foreground uppercase tracking-wider font-medium">
+                {group.label}
+              </p>
+              {group.sessions.map((session) => (
+                <div
+                  key={session.id}
+                  className={cn(
+                    "group flex items-center justify-between gap-2 px-3 py-2 cursor-pointer transition-colors rounded-lg mx-2",
+                    activeSessionId === session.id
+                      ? "bg-white/[0.06] text-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-white/[0.04]",
+                  )}
+                  onClick={() => onSelectSession(session.id)}
+                >
+                  <p className="text-sm truncate flex-1">{session.title}</p>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteSession(session.id);
+                    }}
+                    className="size-6 shrink-0 flex items-center justify-center rounded-md opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-all"
+                  >
+                    <Trash2Icon className="size-3.5" />
+                  </button>
+                </div>
+              ))}
             </div>
           ))}
         </div>
@@ -400,13 +432,15 @@ export default function ChatPage() {
           <ChatContainerContent className="max-w-4xl mx-auto w-full px-6 py-6 gap-6">
             {displayMessages.length === 0 && !isStreaming && (
               <div className="flex flex-1 items-center justify-center">
-                <div className="text-center">
-                  <h2 className="text-lg font-semibold">
-                    En que puedo ayudarte?
+                <div className="text-center max-w-md">
+                  <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 mx-auto mb-4">
+                    <MessageSquareIcon className="size-6 text-primary" />
+                  </div>
+                  <h2 className="text-base font-medium">
+                    En qué puedo ayudarte?
                   </h2>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Pregunta sobre tus documentos o cualquier tema de tu
-                    empresa.
+                  <p className="text-sm text-muted-foreground mt-1.5">
+                    Preguntá sobre tus documentos o cualquier tema de tu empresa.
                   </p>
                 </div>
               </div>
@@ -424,7 +458,7 @@ export default function ChatPage() {
                   className={cn(
                     "max-w-[80%] text-sm",
                     message.role === "user"
-                      ? "rounded-2xl bg-muted px-4 py-2.5 whitespace-pre-wrap"
+                      ? "rounded-xl bg-card border border-border/40 px-4 py-2.5 whitespace-pre-wrap"
                       : "text-foreground leading-relaxed prose prose-sm dark:prose-invert prose-p:my-1 prose-headings:my-2 prose-pre:my-2 prose-ul:my-1 prose-ol:my-1 max-w-none",
                   )}
                 >
@@ -474,7 +508,7 @@ export default function ChatPage() {
 
             {isStreaming && !streamingContent && !thinkingContent && (
               <div className="flex justify-start">
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm text-primary">
                   <span className="inline-flex gap-1">
                     <span className="size-1.5 rounded-full bg-current animate-bounce [animation-delay:-0.3s]" />
                     <span className="size-1.5 rounded-full bg-current animate-bounce [animation-delay:-0.15s]" />

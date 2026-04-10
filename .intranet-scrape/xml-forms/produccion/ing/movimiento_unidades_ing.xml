@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" inserta="false" procesa="true" modifica="false" borra="false" confirma="AVANZA SECCION" deleteRow="false" path="/fotos/coches" preloadData="false">
+    <title>Movimiento de unidades por seccion</title>
+    <form>
+        <table id="PROD_PATH_REGISTRO" label="Pedido de Fabricacion">
+
+            <filters auto="true">
+                <field id="idMomento">
+                    <label>Seccion</label>
+                    <operador>=</operador>
+                </field>
+            </filters>
+
+            <movimientos>
+                <relacion id="movimiento_unidades_upd.xml" />
+                <relacion id="movimiento_unidades_ins.xml" />
+            </movimientos>
+
+            <field id="id_path_registro" noshow="true" esClave="true">
+                <label>Id</label>
+            </field>
+
+            <field id="usuario_id" local="true" noshow="true">
+                <valor eval="true">$_SESSION['idUser']</valor>
+                <label>Usuario</label>
+            </field>
+
+<!--             <field id="unidad_espera_ingreso" editable="true" local="true" style="font-weight: bold; font-size: 17px; text-align: center;">
+                <label>Coche Espera</label>
+                <helper type="combo" xml="unidades_espera_ingreso_qry.xml" dir="/produccion/qry" empty="true">
+                    <parameter target="momento_seccion" source="idMomento" />
+                </helper>
+                <attribute id="editable">anterior_seccion</attribute>
+            </field>
+ -->
+            <field id="productpath_id" noshow="true" />
+
+            <field id="parent_productpath_id" noshow="true" tabla="PROD_PRODUCT_PATH" />
+
+            <field id="hora_registro" noshow="true" />
+            <field id="hora_salida" noshow="true">
+                <condicion operador="=">'0000-00-00 00:00:00'</condicion>
+            </field>
+            <field id="orden" tabla="MOMENTO" noshow="true" />
+            <field id="idPosicion" tabla="POSICIONESFAB" noshow="true" />
+
+            <field id="anterior_seccion" noshow="true">
+                <label>Anterior Seccion</label>
+                <expression>CASE WHEN POSICIONESFAB.idPosicion = 1 THEN 'true' ELSE 'false' END</expression>
+            </field>
+
+            <field id="idMomento" tabla="POSICIONESFAB" noshow="true">
+                <label>Seccion Actual</label>
+                <helper type="combo" id="MOMENTO" empty="true">
+                    <field id="idMomento" />
+                    <field id="descripcion" />
+                    <field id="linea_id">
+                        <condicion operador="=">1</condicion>
+                    </field>
+                    <field id="reportar">
+                        <condicion operador="=">1</condicion>
+                    </field>
+                    <order>
+                        <field id="orden" />
+                    </order>
+                </helper>
+            </field>
+
+            <field id="ficha_id" noshow="true">
+                <expression>PEDCOTIZ.id</expression>
+            </field>
+
+            <field id="nrofab_id" style="font-weight: bold; font-size: 17px; text-align: center;">
+                <label>Nro.Fab</label>
+<!--                 <helper type="link" xml="ficha_producto1_qry.xml" dir="/producto" title="Ficha Técnica">
+                    <parameter source="ficha_id" target="id" />
+                    <parameter source="ficha_id" target="producto_id" />
+                    <parameter source="nrofab_id" target="nrofab" />
+                </helper>
+ -->            </field>
+
+            <field id="corpath" local="true" noshow="true">
+                <if exp="true">
+                    <true>'nrofab_id/corte'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="cortePint"  path="corpath" open="true" print="false" tabla="PEDCOTIZ">
+                <expression>select valor_atributo from PRODUCTO_ATRIB_VALORES where producto_id = id and prdatributo_id = 7</expression>
+            <label>Corte</label>
+            <tipo>file</tipo>
+            <size>100</size>
+            </field>
+
+            <field id="nombre" tabla="POSICIONESFAB" style="font-weight: bold; font-size: 17px; text-align: center;">
+                <label>Seccion</label>
+            </field>
+
+<!--             <field id="proxima_seccion" style="font-weight: bold; font-size: 17px; text-align: center; color: blue;">
+                <label>Proxima Seccion</label>
+                <expression><![CDATA[SELECT IF(PF.idMomento != POSICIONESFAB.idMomento, '', IFNULL(PF.nombre, 0)) FROM PROD_PRODUCT_PATH PPP
+                                        JOIN POSICIONESFAB PF ON PF.id_posicionfab = PPP.posicionfab_id 
+                                        WHERE PPP.linea_id = 1 AND PPP.parent_productpath_id = PROD_PRODUCT_PATH.id_productpath ORDER BY PPP.parent_productpath_id ASC LIMIT 1
+                ]]></expression>
+            </field> -->
+
+            <field id="parent_seccion_prox" noshow="true">
+                <label>Proxima Seccion</label>
+                <expression><![CDATA[SELECT IF(PF.idMomento != POSICIONESFAB.idMomento, '', IFNULL(PPP.id_productpath, 0)) FROM PROD_PRODUCT_PATH PPP
+                                        JOIN POSICIONESFAB PF ON PF.id_posicionfab = PPP.posicionfab_id 
+                                        WHERE PPP.linea_id = 1 AND PPP.parent_productpath_id = PROD_PRODUCT_PATH.id_productpath ORDER BY PPP.parent_productpath_id ASC LIMIT 1
+                ]]></expression>
+            </field>
+
+            <field id="posicion_seccion_prox" noshow="true">
+                <label>Proxima Seccion</label>
+                <expression>@pos_prox_seccion:= (SELECT IF(PF.idMomento != POSICIONESFAB.idMomento, '', IFNULL(PF.id_posicionfab, 0)) FROM PROD_PRODUCT_PATH PPP
+                                        JOIN POSICIONESFAB PF ON PF.id_posicionfab = PPP.posicionfab_id 
+                                        WHERE PPP.linea_id = 1 AND PPP.parent_productpath_id = PROD_PRODUCT_PATH.id_productpath ORDER BY PPP.parent_productpath_id ASC LIMIT 1)
+                </expression>
+            </field>
+
+            <field id="avanzar" local="true" refresh="true">
+                <label>Avanza</label>
+                <tipo>check</tipo>
+            </field>
+
+            <field id="inserta_seccion" local="true" noshow="true">
+                <if exp="avanzar == 1 &amp;&amp; parent_seccion_prox + 0 != 0">
+                    <true>'1'</true>
+                    <false>'0'</false>
+                </if>
+            </field>
+
+             <field id="homologacion_id" tabla="PEDCOTIZ" noshow="true">
+                <label>Homol</label>
+<!--                 <helper type="combo" xml="combo_homologacion_modelo.xml" dir="/fabricacion" empty="true">
+                </helper>
+ -->            </field>
+
+            <field id="ficha_id" noshow="true">
+                <expression>@ficha_id:= (PEDCOTIZ.id)</expression>
+            </field>
+
+    <!--<field id="pedidos" _noshow="true">
+        <expression><![CDATA[CASE WHEN @pos_prox_seccion + 0 = 0 THEN '' ELSE (SELECT GROUP_CONCAT(artcod) FROM PRD_CARPETA_PLANOS PCP
+
+            JOIN STKINSUM INS ON PCP.stkarticulo_id = INS.artcod
+            LEFT JOIN PRODUCTO_ATRIB_VALORES PAV ON PAV.prdatributo_id = PCP.prdatributo_id AND PAV.producto_id = @ficha_id
+
+            WHERE PCP.posicionfab_alarma_id = @pos_prox_seccion
+
+                AND (CASE WHEN IFNULL(PCP.prdatributo_id, 0) != 0 AND IFNULL(PAV.valor_atributo, 0) = 0 THEN 0 ELSE 1 END) != 0
+
+                AND (PCP.homologacion_id = HOMOLOGMOD.id_homologacion 
+                    OR PCP.nrocar_id = HOMOLOGMOD.nrocar
+                    OR PCP.modelo_lcm_id = HOMOLOGMOD.modelo_lcm_id)) END]]>
+        </expression>
+        <label>Pedidos</label>
+    </field>-->
+
+    <field id="generar_pedidos" local="true" _showTabla="true" showObjTabla="true" _noshow="true">
+        <label>Pedidos</label>
+        <helper type="object" xml="mrp_pedido_produccion_ing.xml">
+            <parameter target="posicionfab_alarma_id" source="posicion_seccion_prox" />
+            <parameter target="ficha" source="ficha_id" />
+            <parameter target="nrofab" source="nrofab_id" />
+            <parameter target="homologacion" source="homologacion_id" />
+            <parameter target="modelo_lcm" source="modelo_lcm_id" />
+            <parameter target="nrocar" source="nrocar" />
+        </helper>
+    </field>
+
+            <field id="modelo_lcm_id" tabla="HOMOLOGMOD" noshow="true"/>
+            <field id="nrocar" tabla="HOMOLOGMOD" noshow="true"/>
+
+            <order>
+                <field id="orden" />
+                <field id="idPosicion" />
+                <field id="hora_salida" tipoOrden="DESC" />                
+            </order>
+
+        </table>
+
+        <join>
+            <table id="PROD_PRODUCT_PATH">
+                <field id="id_productpath">
+                    <condicion operador="=">PROD_PATH_REGISTRO.productpath_id</condicion>
+                </field>
+                <field id="linea_id">
+                    <condicion operador="=">1</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="POSICIONESFAB">
+                <field id="id_posicionfab">
+                    <condicion operador="=">PROD_PRODUCT_PATH.posicionfab_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="MOMENTO">
+                <field id="idMomento">
+                    <condicion operador="=">POSICIONESFAB.idMomento</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="PEDCOTIZ">
+                <field id="nrocha">
+                    <condicion operador="=">PROD_PATH_REGISTRO.nrofab_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="HOMOLOGMOD">
+                <field id="id_homologacion">
+                    <condicion operador="=">PEDCOTIZ.homologacion_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

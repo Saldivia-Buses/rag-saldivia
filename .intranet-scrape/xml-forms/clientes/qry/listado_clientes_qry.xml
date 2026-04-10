@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" paginar="200">
+    <title>Clientes</title>
+    <obs></obs>
+    <form>
+        <table id="REG_CUENTA">
+	    
+		<filters>
+		    <field id="administraciones">
+			<label>Administracion</label>
+			<condicion>=</condicion>
+		    </field>
+		</filters>
+                        
+        	<field id="id_regcuenta" noshow="true"/>
+            
+               	<field id="nro_cuenta">
+                	<label>Nro Cuenta</label>   	 
+	        </field>
+		
+		<field id="subsistema_id" noshow="true" />
+	
+                <field id="nombre">
+                	<label>Nombre</label>   	 
+			<expression>concat(REG_CUENTA.nombre_cuenta,' ',REG_CUENTA.apellido_cuenta)</expression>
+                </field>
+
+		<field id="cod_direccion">
+                	<label>Direccion</label>   	 
+                </field>
+	
+		<field id="nombre_localidad" tabla="GEN_LOCALIDADES">
+			<label>Localidad</label>
+		</field>
+
+		<field id="nombre_provincia" tabla="GEN_PROVINCIAS">
+			<label>Provincia</label>
+		</field>		
+
+		<field id="abreviacion_iva" tabla="GEN_IVA">
+			<label>Cond Fiscal</label>
+		</field>
+
+		<field id="tel_cuenta">
+			<label>Teléfono</label>
+		</field>
+		
+		<field id="tel_cuenta">
+			<label>Teléfono</label>
+		</field>
+		
+		<field id="administracion_id" noshow="true">
+			<condicion operador="!=">1</condicion>
+		</field>
+		
+		<field id="baja_cuenta" noshow="true">
+			<label>Baja</label>
+			<tipo>date</tipo>
+			<condicion operador="=">'0000-00-00'</condicion>
+		</field>
+
+		<field id="cuit_cuenta">
+			<label>Cuit</label>
+		</field>
+
+		<field id="entrega_direccion">
+			<label>Domicilio Servicio</label>
+		</field>
+
+		<field id="direccion_cobro">
+			<label>Domicilio Cobro</label>
+		</field>
+		
+		<field id="contacto_cuenta">
+			<label>Contacto</label>
+		</field>
+
+		<field id="contacto_cuenta">
+			<label>Contacto</label>
+		</field>
+
+		<field id="administraicon">
+			<label>Administracion</label>
+			<expression>ADMINISTRACION.nombre_cuenta</expression>
+		</field>
+
+	    	<field id="id_administraicon" noshow="true">
+			<label>Administracion</label>
+			<expression>ADMINISTRACION.id_regcuenta</expression>
+			<condicion operador="=">(case when '[__administraciones__]' != '' then '[__administraciones__]' else ADMINISTRACION.id_regcuenta end)</condicion>
+		</field>
+
+		<field id="administraciones" local="true" noshow="true">
+		    <label>Administracion</label>
+		    <helper type="combo" id="REG_CUENTA" empty="true">
+			<field id="cuenta_adm">
+			    <expression>id_regcuenta</expression>
+			</field>
+			<field id="nombre_cuenta" />
+			<field id="administracion_id">
+			    <condicion operador="=">1</condicion>
+			</field>
+		    </helper>
+		</field>
+
+	    <order>
+                <field id="nro_cuenta" />
+            </order> 
+
+            <group>
+                <field id="id_regcuenta" />		
+            </group> 
+           
+        </table>   
+
+	<join tipo="left">
+		<table id="GEN_LOCALIDADES">
+			<field id="id_localidad">
+				<condicion operador="=">REG_CUENTA.localidad_id</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join tipo="left">
+		<table id="GEN_PROVINCIAS">
+			<field id="id_provincia">
+				<condicion operador="=">REG_CUENTA.provincia_id</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join tipo="left">
+		<table id="GEN_IVA">
+			<field id="id_iva">
+				<condicion operador="=">REG_CUENTA.iva_id</condicion>
+			</field>
+		</table>
+	</join>
+	
+	<join tipo="left">
+		<table id="REG_CUENTA_RELACIONES">
+			<field id="regcuenta_id">
+				<condicion operador="=">REG_CUENTA.id_regcuenta</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join tipo="left">
+		<table id="REG_CUENTA" as="ADMINISTRACION">
+			<field id="id_regcuenta">
+				<condicion operador="=">REG_CUENTA_RELACIONES.regcuentarelacionada_id</condicion>
+			</field>
+		</table>
+	</join>
+
+    </form>
+</histrix>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  Ayuda
+Tarea: Ayuda para la Tabla de Sectores de Articulos
+Autor: d!ego2k
+Fecha: 13/10/10
+*******************************************************************************
+-->
+    <histrix tipo="consulta">
+	<title>Sectores</title>
+	 <obs></obs>
+		<form >
+		    <table id="STK_SECTORES" label="Sectores">
+				<field id="id_stksector" esClave="true" noshow="true" />
+
+				<field id="nombre_sector">
+					<label>Nombre</label>
+					<detalle>nombre_sector</detalle>
+				</field>
+
+		    </table>
+		</form>
+    </histrix>	

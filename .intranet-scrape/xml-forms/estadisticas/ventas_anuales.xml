@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<abm tipo="consulta">
+	<titulo>VENTAS ANUALES</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="IVAVENTAS" >
+			<titulo>Ventas Anuales</titulo>
+
+<!--		
+		   <grafico id="Grafico_1" >
+			   <ancho>400</ancho>
+			   <tipo>P</tipo>
+			   
+			   <etiquetas>mes</etiquetas> 
+			
+			   <serie>cinco</serie> 
+			   <serie>seis</serie> 
+			   <serie>siete</serie> 
+
+			   <titulo>Ventas</titulo>
+			   <subtitulo>comparacion</subtitulo>
+		   </grafico>
+		   <grafico id="Grafico_2" >
+			   <ancho>400</ancho>
+			   <tipo>L</tipo>
+			   
+			   <etiquetas>mes</etiquetas> 
+			
+			   <serie>cinco</serie> 
+			   <serie>seis</serie> 
+			   <serie>siete</serie> 
+
+			   <titulo>Ventas</titulo>
+			   <subtitulo>comparacion</subtitulo>
+		   </grafico>
+-->
+		   
+		   <grafico id="Ventas" >
+			   <ancho>500</ancho>
+			   <tipo>BC</tipo>
+			   
+			   <etiquetas>mes</etiquetas> 
+			   <serie>cinco</serie>
+			   <serie>seis</serie> 
+			   <serie>siete</serie> 
+   			   <serie>ocho</serie>
+   			   <serie>nueve</serie>   			   
+			   
+			   
+			   <titulo>Ventas</titulo>
+			   <subtitulo>comparacion</subtitulo>
+		   </grafico>		
+		   
+	<!--		<campo id="siscod" noselect="true">
+				<label>Cod.</label>
+				<condicion operador='='>'02'</condicion>
+			</campo> 			 
+			<campo id="concod" oculto="true" noselect="true">
+				<label>comp</label>
+				<condicion operador="!=">4</condicion>
+			</campo> 		
+		-->
+			<campo id="mes">
+				<expresion>month(feciva)</expresion>
+				<label>Mes</label>	
+				<opciones>
+					<opcion valor="1">Enero</opcion>
+					<opcion valor="2">Febrero</opcion>
+					<opcion valor="3">Marzo</opcion>
+					<opcion valor="4">Abril</opcion>
+					<opcion valor="5">Mayo</opcion>
+					<opcion valor="6">Junio</opcion>
+					<opcion valor="7">Julio</opcion>
+					<opcion valor="8">Agosto</opcion>
+					<opcion valor="9">Septiembre</opcion>
+					<opcion valor="10">Octubre</opcion>
+					<opcion valor="11">Noviembre</opcion>
+					<opcion valor="12">Diciembre</opcion>
+					
+				</opciones>
+       				<tipo>integer</tipo>
+			</campo>
+			<campo id="cinco">
+				<expresion>sum(case when year(feciva) = 2005 then totcom * (case when conimp = 1 then 1 else -1 end) else 0 end)</expresion>
+				<label>2005</label>	
+			</campo>
+			<campo id="seis">
+				<expresion>sum(case when year(feciva) = 2006 then totcom * (case when conimp = 1 then 1 else -1 end)  else 0 end)</expresion>
+				<label>2006</label>	
+			</campo>
+			<campo id="siete">
+				<expresion>sum(case when year(feciva) = 2007 then totcom * (case when conimp = 1 then 1 else -1 end)  else 0 end)</expresion>
+				<label>2007</label>	
+			</campo>
+			<campo id="ocho">
+				<expresion>sum(case when year(feciva) = 2008 then totcom * (case when conimp = 1 then 1 else -1 end)  else 0 end)</expresion>
+				<label>2008</label>	
+			</campo>
+			<campo id="nueve">
+				<expresion>sum(case when year(feciva) = 2009 then totcom * (case when conimp = 1 then 1 else -1 end)  else 0 end)</expresion>
+				<label>2009</label>	
+			</campo>			
+			<group>
+				<campo id="mes">
+					<expresion>month(feciva)</expresion>
+				</campo>
+			</group>
+    			<orden>
+				<campo id="colcod"></campo>
+			</orden>
+		</tabla>
+		<join tipo="left">
+
+			<tabla id="CCTCONCE">
+				<campo id="siscod" oculto="true">
+					<condicion operador="=">'02'</condicion>
+				</campo>				
+				<campo id="concod" >
+					<condicion operador="=">IVAVENTAS.codcom</condicion>
+				</campo>
+			</tabla>
+		</join>				
+	</consulta>	   
+</abm> 

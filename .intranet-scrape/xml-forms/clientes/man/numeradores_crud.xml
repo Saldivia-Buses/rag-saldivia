@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" borra="false">
+	<title>Numeradores</title>
+	<obs/>
+	<form>
+		<table id="REG_NUMERADORES" label="Numeradores">
+
+			<filters>
+				<field id="regconcepto_id">
+					<label>Concepto</label>
+					<operador>=</operador>
+				</field>
+			</filters>
+
+			<fieldGroup>
+				<field id="id_regnumerador" esClave="true" noshow="true" />
+
+				<field id="subsistema_id" esClave="true" noshow="true" />
+
+				<field id="puesto">
+					<label>Punto de Venta</label>
+					<formato>%04d</formato>
+				</field>
+
+				<field id="regconcepto_id">
+					<helper type="combo" xml="regconcepto_qry.xml" dir="/ayudas" empty="true">
+						<field id="subsistema_id">
+							<condicion operador="=">'[__subsistema_id__]'</condicion>
+						</field>
+					</helper>
+					<label>Concepto</label>
+				</field>
+
+				<field id="letra">
+					<label>Letra</label>
+					<helper type="combo" empty="true">
+						<option value="A">A</option>
+						<option value="B">B</option>
+						<option value="C">C</option>
+						<option value="E">E</option>
+						<option value="R">R</option>
+						<option value="X">X</option>
+					</helper>
+					<tipo>varchar</tipo>
+				</field>
+
+				<field id="numero">
+					<label>Numero</label>
+					<size>8</size>
+					<formato>%08d</formato>
+				</field>
+
+				<field id="limite">
+					<label>Limite Superior del Numerador</label>
+					<size>8</size>
+					<formato>%08d</formato>
+				</field>
+			</fieldGroup>
+
+			<fieldGroup>
+				<if>if ($_SESSION['administrator'] == 1) return true;</if>
+
+				<field id="fiscal">
+					<label>Fiscal</label>
+					<tipo>check</tipo>
+				</field>
+				
+				<field id="regconcepto_afip" _colstyle="display: none;">
+					<helper type="combo" id="GEN_COMPROBANTES" empty="true" >
+						<field id="id_codigo" />
+						<field id="descripcion"/>
+					</helper>
+					<label>Comprobante AFIP</label>
+				</field>	
+
+				<field id="ejecuta">
+					<label>Ejecuta</label>
+					<size>60</size>
+					<tipo>varchar</tipo>
+				</field>
+
+				<field id="key_file" colstyle="display: none;">
+					<label>Clave privada (KEY)</label>
+					<size>120</size>
+					<tipo>varchar</tipo>
+				</field>
+
+				<field id="value_file" colstyle="display: none;">
+					<label>Firma del Certificado (CRT)</label>
+					<size>120</size>
+					<tipo>varchar</tipo>
+				</field>
+			</fieldGroup>
+
+			<fieldGroup>
+				<field id="printer">
+					<label>Printer</label>
+					<helper xml="htxprinters_qry.xml" dir="/ayudas/" type="combo" empty="true"/>
+				</field>
+			</fieldGroup>
+
+			<fieldGroup>
+				<if> if (strpos($_SESSION['properties']['modulos'],'contabilidad') != false) return true; </if>
+
+				<field id="ctbcentro_id">
+					<label>Centro</label>
+					<helper type="combo" xml="ctbcentro_qry.xml" dir="/ayudas" empty="true" />
+				</field>
+			</fieldGroup>
+
+			<order>
+				<field id="puesto" />
+				<field id="regconcepto_id" />
+				<field id="letra" />
+			</order>
+
+		</table>
+	</form>
+</histrix>

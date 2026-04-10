@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update">
+  <title>Ingreso Movimiento</title>
+  <obs/>
+  <form>
+    <table id="STK_MOVIMIENTOS">
+      
+      <field id="id_stkmovimiento"  id_temp="id_stkmovimiento"    esClave="true" />
+      <field id="stktransaccion_id" id_temp="stktransaccion_id"   esClave="true" />
+      <field id="puesto_movimiento"     id_padre="puesto_movimiento"/>
+
+      <field id="referencia"            id_temp="referencia"/>
+      <field id="alta_movimiento"       id_temp="alta_movimiento"/>
+      <field id="cantidad"              id_temp="cantidad" />
+
+      
+      <field id="pendiente">
+        <valor>0</valor>
+        <tipo>integer</tipo>
+      </field>
+
+      <field id="user_id">
+          <valor eval="true">$_SESSION['idUser']</valor>
+      </field>
+
+      <field id="base">
+          <valor eval="true">$_SESSION['db']</valor>
+      </field>
+
+
+      
+    </table>
+  </form>
+</histrix>

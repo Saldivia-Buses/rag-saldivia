@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix _modifica="false"  tabindex="1000" tipo="abm-mini" _borra="false" subtipo="vertical" imprime="false">
+	<title>Entregas</title>
+	<obs/>
+	<eventos>
+		<event id="insert">close</event>
+	</eventos>
+	<form >
+		<table id="ENTREGASCOCHES">
+			<title>Placas Prov. por Coche</title>
+			<field id="nrofab" deshabilitado="true">
+				<label style="color:red;font-size:12px;">Nro de Fabricación</label>
+				<help>Número de Fabricación</help>
+			</field>
+
+			<field id="entrega" >
+				<label>Fecha</label>
+				<valor>today</valor>
+			</field>
+			<field id="hora" >
+				<label>Hora</label>
+				<help>Hora</help>
+				<tipo>varchar</tipo>
+			</field>			
+			<field id="nombre" >
+				<label>Nombre y Apellido</label>
+				<help>Nombre y Apellido</help>
+				<size>50</size>
+			</field>
+			<field id="recibepor" >
+				<label>Recibo Por</label>
+				<help>Recibo por</help>
+				<size>50</size>
+				
+			</field>
+			<field id="domicilio" >
+				<label>Domicilio</label>
+				<help>Domicilio</help>
+				<size>50</size>
+				
+			</field>
+			<field id="dni" >
+				<label>D.N.I.</label>
+				<help>D.N.I.</help>
+			</field>
+			
+
+		</table>
+
+	</form>
+</histrix>

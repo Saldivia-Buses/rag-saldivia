@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ayuda" >
+    <title>Articulos</title>
+    <obs></obs>
+    <form >
+        <table id="STK_ARTICULOS" label="Articulos" >
+
+			<field id="id_stkarticulo"  noshow="true" >
+				<label>Codigo auto de Articulo</label>
+				<detalle>stkarticulo_id</detalle>
+			</field>
+			<field id="nombre_articulo">
+				<label>Nombre</label>
+				<detalle>nombre_articulo</detalle>
+			</field>
+			<order>
+			<field id="nombre_articulo"/>
+			</order>
+			
+
+                       <COMENTADO>
+                       
+			<field id="stkrubro_id">
+				<label>Rubro</label>
+				<helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true" />
+				<detalle>stkrubro_id</detalle>
+			</field>
+
+			<field id="stkfamilia_id">
+				<label>Familia</label>
+				<helper type="combo" xml="stkfamilia_qry.xml" dir="/ayudas" empty="true" />
+				<detalle>stkfamilia_id</detalle>
+			</field>
+
+
+			<!-- Precios -->
+
+			<field id="precio_costo">
+				<label>Costo</label>
+				<help>Precio de Costo</help>
+				<detalle>precio_costo</detalle>
+			</field>
+
+			<field id="precio_lista">
+				<label>Lista</label>
+				<help>Precio de Lista</help>
+			</field>
+
+			<field id="precio_venta">
+				<label>Venta</label>
+				<help>Precio de Venta</help>
+				<detalle>precio_venta</detalle>
+			</field>
+
+			<field id="precio_promedio">
+				<label>PPP</label>
+				<help>Precio Promedio Ponderado</help>
+				<detalle>precio_promedio</detalle>
+			</field>
+			<field id="unidad_id">
+				<detalle>unidad_id</detalle>
+			</field>
+			<field id="cuentadebe_id">
+				<detalle>cuenta_id</detalle>
+			</field>
+			</COMENTADO>
+		</table>
+    </form>
+</histrix>  

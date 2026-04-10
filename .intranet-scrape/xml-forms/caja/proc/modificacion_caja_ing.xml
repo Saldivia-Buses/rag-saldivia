@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix    
+    tipo="fichaing"
+    inserta="false"
+    borra="false"
+    imprime="false"
+    modifica="false"
+    form="false"
+    tooltip="false"
+    preFetch="true"
+    close="true">
+    <title>Modificación Arqueo y Registro</title>
+    <obs/>
+    <consulta>
+        <table id="CAJ_REGISTROS">
+
+            <movimientos>
+                <relacion id="modificacion_caja_upd.xml" />
+            </movimientos>
+
+			<field id="id_cajregistro" noshow="true" />
+
+			<field id="cajpuesto_id" deshabilitado="true">
+				<label>Puesto</label>
+				<helper type="combo" xml="cajpuestousers_qry.xml" dir="/ayudas" _empty="true" />
+				<detalle>WCAJ_PUESTO</detalle>
+			</field>
+
+			<field id="fecha_registro" deshabilitado="true" tipOrden="DESC">
+				<label>Fecha</label>
+				<help>Fecha de la Caja</help>
+				<tipo>date</tipo>       
+			</field>
+
+			<field id="apertura_caja">
+				<label>Hora</label>
+				<tipo>time</tipo>
+				<valor eval="true">date("G:H:s")</valor>
+			</field>
+
+			<field id="operador_nombre" deshabilitado="true">
+				<label>Operador</label>
+				<valor eval="true">$_SESSION['usuario']</valor>
+			</field>
+
+			<field id="turno_registro">
+				<label>Turno</label>
+				<helper type="combo">
+				   <option value="1">Mañana</option>
+				   <option value="2">Tarde</option>
+				   <option value="3">Noche</option>
+				</helper>
+			</field>
+
+		    <field id="apertura_recuento">
+		        <label>Saldo de Apertura</label>
+		        <tipo>numeric</tipo>
+		        <valor>0</valor>
+		        <size>20</size>
+		    </field>
+            
+        </table>
+
+    </consulta>
+</histrix>

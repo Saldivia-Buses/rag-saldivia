@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF8"?>
+<histrix tipo="consula" >
+  <titulo>Standard Pack</titulo>
+  <obs/>
+  <form>
+    <table id="STK_STANDARD_PACK">
+      <title>Standard Pack </title>
+      
+      <field id="id_standardpack" noshow="true" autoinc="true" />
+
+      <field id="nombre_articulo" >
+	<expression>nombre_articulo</expression>
+	</field>
+      <field id="contenedor_stkarticulo_id">
+      </field>
+
+      <field id="stkarticulo_id" oculto="true">
+      </field>
+      
+    </table>
+    <join>
+	<table id="STK_ARTICULOS">
+	    <field id="id_stkarticulo" >
+		<condicion operador="=">contenedor_stkarticulo_id</condicion>
+	    </field>
+	</table>
+    </join>
+  </form>
+</histrix>

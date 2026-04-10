@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="cabecera" graba="true">
+	<title>REMITO INTERNO</title>
+	<obs></obs>
+	<form >
+		<table id="REMITOINT" label="REMITO INTERNO" graba="true">
+
+			<field id="idRemito" deshabilitado="true">
+				<label modpos="nobr" >Numero</label>
+				<help>Numero de Remito</help>
+				<tabla_ex id="REMITOINT" >
+					<field id="nro">
+						<expression>max(idRemito) + 1</expression>
+					</field>
+					<field id="nro2">
+						<expression>max(idRemito) + 1</expression>						
+					</field>
+				</tabla_ex>
+				<detalle>idRemito</detalle>
+			</field>			
+			<field id="fecha" deshabilitado="true">
+				<label modpos="nobr" >Fecha</label>
+				<valor>today</valor>				
+			</field>
+			<field id="idDepositoOrig">
+				<label>Origen</label>
+				<tabla_ex id="DEPOSITO">
+					<field id="idDeposito">
+					</field>
+					<field id="direccion">
+					</field>
+				</tabla_ex>							
+				<valor>1</valor>
+				
+			</field>
+			<field id="idDepositoDest">
+				<label>Destino</label>
+				<tabla_ex id="DEPOSITO">
+					<field id="idDeposito">
+					</field>
+					<field id="direccion">
+					</field>
+				</tabla_ex>	
+				<valor>2</valor>
+										
+			</field>
+			<field id="login" deshabilitado="true" oculto="true">
+				<valor eval="true">$_SESSION['usuario']</valor>
+			</field>
+		</table>
+	</form>
+</histrix>

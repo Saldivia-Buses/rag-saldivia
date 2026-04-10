@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" inserta="no" preloadData="false">
+    <title>Anular recepción Orden de compra</title>
+    <obs></obs>
+    <form  detalle="ocprecib_anul.xml">
+        <table id="CPSENCAB" label="Anular recepción Orden de compra">
+            <filters>
+              <field id="ctacod" _noshow="true">
+                <operador>=</operador>
+                <label>Proveedor</label>
+              </field>
+              <field id="ocpnro">
+                <label>Nro</label>
+                <help>Numero de Orden de Compra. </help>
+                <operador>=</operador>
+              </field>
+              <field id="ocpest" >
+                <label>Estado </label>
+                <help>Estado Actual</help>
+                <operador>=</operador>
+                <valor>2</valor>
+              </field>
+                
+            </filters>
+            
+            <field id="siscod" oculto="true">
+                <label>Codigo Sistema.. </label>
+                <help>
+                </help>
+            </field>
+
+            <field id="ocpfec">
+                <label>Fecha</label>
+                <help>Fecha de Orden de Compra. </help>
+            </field>
+            <field id="ocpnro">
+                <label>Nro</label>
+                <help>Numero de Orden de Compra. </help>
+                <detalle>ocpnro</detalle>
+            </field>
+
+          <field id="ctacod" noshow="true">
+            <label>Proveedor</label>
+                <ayuda_ex id="CCTCUENT" _xml="HLPcctcuent.xml" dir="/help_local">
+                    
+                    <field id="ctacod">
+                        <label>cod</label>
+                        <detalle>codprv</detalle>
+                    </field>
+                    <field id="ctanom" _noshow="true">
+                        <expression having="false">CONCAT(ctanom,'-', ctafan)</expression>
+                        <size>60</size>
+                        <detalle>ctanom</detalle>
+        
+                    </field>
+                    <field id="baja" noshow="true">
+                        <label>baja</label>
+                        <condicion operador="!=">1</condicion>
+                    </field>
+                    <field id="siscod" oculto="true">
+                        <label>siscod</label>
+                        <condicion operador="=">'01'</condicion>
+                    </field>
+                    <clave>ctacod</clave>
+                    <descripcion>ctanom</descripcion>
+                    
+                </ayuda_ex>
+            <detalle>ctacod</detalle>
+          </field>
+          
+      <field id="nombre" >
+          <label>Prov</label>
+          <expression>nombre_cuenta</expression>
+      </field>
+      <field id="nombre_cuenta" autocompletar="true" tabla="REG_CUENTA" local="true" noshow="true">
+    <size>20</size>
+                <ayuda_ex id="REG_CUENTA" _xml="cctcuent_c_ordencompra.xml" empty="true">
+                    <field id="id_regcuenta" noshow="true">
+                    </field>
+
+                    <field id="nombre_cuenta"></field>
+                    <field id="subsistema_id" oculto="true">
+                        <condicion operador="=">'01'</condicion>
+                    </field>
+
+                    <field id="baja" noshow="true">
+                        <condicion operador="=">0</condicion>
+                    </field>
+                    <order>
+                        <field id="nombre_cuenta"></field>
+                    </order>
+
+
+                </ayuda_ex>
+
+      </field>
+
+            <field id="ocpfen">
+                <label>Entrega</label>
+                <help>Fecha de Entrega </help>
+            </field>
+                                            
+            <field id="ocpest" _noshow="true">
+                <label>Estado </label>
+                <help>Estado Actual</help>
+                         <options>
+                               <option valor="1">Pendiente</option>
+                                 <option valor="2">Cumplida</option>
+                               <option valor="3">Parcial</option>
+                                 <option valor="4">Anulada</option>
+                                                     
+                             </options>
+                                         <condicion operador="!=">2 and ocpest != 4</condicion>
+            </field>
+                                                 
+
+            <order>
+                <field id="ocpfec" orderType="DESC"></field>
+            </order>
+        </table>
+
+
+        <join tipo="left">
+
+            <table id="REG_CUENTA">
+                <field id="subsistema_id" oculto="true">
+                    <label>cctcuent.siscoc</label>
+                    <condicion operador="=">'01'</condicion>
+
+                </field>
+
+                <field id="nro_cuenta" oculto="true">
+                    <condicion operador="=">CPSENCAB.ctacod</condicion>
+                </field>
+
+                <field id="nombre_cuenta" oculto="true">
+                </field>
+            </table>
+        </join>
+
+
+    </form>
+</histrix>

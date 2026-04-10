@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" >
+    <title>Encuesta</title>
+    <obs></obs>
+    <form >
+        <table id="ENCUESTA_CLIENTE_ITEM" >
+            <title>Encuesta</title>
+		<field id="numero" noshow="true" />
+			
+		<field id="idPregunta" noshow="true">
+		    <label>Punto</label>
+		</field>
+
+		<field id="pregunta" tabla="ENCUESTA_PREGUNTA">
+		    <label>Pregunta</label>
+		</field>
+                <field id="valor" noZero="true">
+		    <options>
+		    	<option valor=""></option>
+			<option valor="5">Excelente</option>
+			<option valor="4">Muy Bueno</option>
+			<option valor="3">Bueno</option>
+                	<option valor="2">Regular</option>
+                	<option valor="1">Malo</option>
+            	    </options>
+            	    <label>Valor</label>
+        	</field>
+		
+        	<order>
+		    <field id="idPregunta" tabla="ENCUESTA_PREGUNTA"/>
+		</order>
+	
+            </table>
+		<join tipo="left">
+			<table id="ENCUESTA_PREGUNTA">
+                <field id="idPregunta">
+                    <condicion operador="=">ENCUESTA_CLIENTE_ITEM.idPregunta</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix> 

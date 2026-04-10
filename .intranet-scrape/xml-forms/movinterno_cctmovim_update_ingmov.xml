@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update">
+	<title>COMPROBANTES</title>
+	<obs/>
+	<form >
+		<table id="CCTMOVIM" label="FACTURAS">
+			<field id="siscod" id_cab="siscli" esClave="true"></field>
+			<field id="ctacod" id_cab="ctacod" esClave="true"></field>
+			<field id="ctanom" id_cab="ctanom"></field>
+
+			<field id="movfec" id_temp="movfec"></field>
+			<field id="concod" id_temp="concod" esClave="true"></field>
+			<field id="movnpv" id_temp="movnpv" esClave="true"></field>
+			<field id="movnro" id_temp="movnro" esClave="true"></field>
+			<field id="movsal" id_cab="cero"></field>
+			<field id="movicc" id_temp="concod"></field>
+			<field id="movipv" id_temp="movnpv"></field>
+			<field id="movinc" id_temp="movnro"></field>
+
+		</table>
+	</form>
+</histrix>

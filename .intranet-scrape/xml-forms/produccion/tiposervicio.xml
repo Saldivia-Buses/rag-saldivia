@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+        <title>TIPOS DE SERVICIO</title>
+        <obs></obs>
+        <form >
+                <table id="TIPOSERVICIO" >
+                    <title>Tipos de Servicio</title>
+                                        
+                        <field id="tipserv" autoinc="true" noshow="true">
+                                <label>Tipo</label>
+                                <help>Codigo </help>
+                        </field>
+                        
+                        <field id="servdes">
+                                <label>Descripcion</label>
+                                <help>Descripcion del servicio</help>
+                        </field>
+                        
+                        <order>
+                        	<field id="tiposerv" />
+                        </order> 
+                </table>
+        </form>           
+</histrix>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <abm tipo="abm">
+       <titulo>Mov CHEQUES</titulo>
+        <obs></obs>
+               <consulta>
+					<tabla id="CARCHEQU" label="CHEQUES">
+						<campo id="siscod" id_temp="siscar">
+						</campo>
+						<campo id="carint" id_temp="carint2">
+						</campo>
+						<campo id="carfec" id_temp="carfec">
+						</campo>
+						<campo id="carcui" id_temp="carcui">
+						</campo>
+						<campo id="succod">
+							<valor>1</valor>
+						</campo>
+<!--						<campo id="carbco" id_temp="carbco">
+						</campo> -->
+						<campo id="carnro" id_temp="carnro">
+						</campo>
+
+
+						<campo id="carimp" id_temp="carimp">
+						</campo>
+<!--					<campo id="carobv" id_temp="carobv">
+						</campo>  -->						
+						<campo id="ctacod" id_temp="ctacod">
+						</campo>
+						<campo id="caralt" id_temp="caralt">
+						</campo>
+<!--						<campo id="ccbcod" id_temp="ccbcod">
+						</campo> -->
+						<campo id="cartip" >
+							<valor>1</valor>
+						</campo>
+<!--						<campo id="carpla" id_temp="carpla">
+						</campo> -->
+						<campo id="carrec" id_temp="movnroOP">
+						</campo>
+
+						<campo id="opecla" id_temp="opecla">
+						</campo>
+						
+					</tabla>
+               </consulta>
+        </abm>

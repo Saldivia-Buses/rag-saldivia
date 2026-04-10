@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" log="false">
+	<title>Renumeración de Minutas</title>
+	<obs></obs>
+	<form >
+		<table id="CTB_MOVIMIENTOS" label="Renumeración de Minutas" idCampoCond="graba">
+			<field id="id_movimiento" id_temp="id_movimiento" esClave="true" />
+			<field id="nro_minuta"	  id_temp="_ORDEN" />
+		</table>
+	</form>
+</histrix>

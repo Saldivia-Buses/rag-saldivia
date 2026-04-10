@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="ficha" autoprint="true" preFetch="true">
+    <title>Plan Accion Total</title>
+    <obs></obs>
+    <form>
+        <table id="CAL_PLAN_ACCION_TOTAL" label="Plan Accion Total">
+
+<!--             <fieldGroup>
+                <field id="marcacopnocontr" local="true" PDFbold="true" PDFitalic="true" PDFrotate="-8">
+                    <expression>'COPIA NO \n\nCONTROLADA'</expression>
+                    <label posx="35" posy="260" PDFcolor="#FF2222" PDFsize="25" size="400" PDFrestorePosition="true"/>
+                    <size>150</size>
+                </field>
+            </fieldGroup> -->
+
+            <fieldGroup  PDFsize="11">
+
+    <field id="id_plan_accion" esClave="true" Formstyle="display:none;">
+        <label posy="17" posx="5">Nro</label>
+        <helper type="link" xml="cal_plan_accion_total_ficha.xml" dir="/calidad/qry">
+            <parameter source="id_plan_accion" target="id_plan_accion" />
+        </helper>
+        <detalle>plan_accion_id</detalle>
+    </field>
+
+    <field id="origen_planaccion" noZero="true">
+        <helper xml="calorigennconf_crud.xml" type="combo" dir="/calidad/man/" empty="true">
+            <field id="activo">
+                <condicion operador="=">1</condicion>
+            </field>
+            <field id="origen_nconf">
+                <expression>LEFT(origen_nconf,15)</expression>
+            </field>            
+        </helper>
+        <label posx="90">Origen</label>
+        <help>Origen del Plan Accion</help>
+    </field>
+
+    <field id="plan_accion_tema_id" noZero="true">
+        <helper xml="tema_planaccion_crud.xml" type="combo" dir="/calidad/man/" empty="true">
+            <field id="activo">
+                <condicion operador="=">1</condicion>
+            </field>
+            <field id="nombre_plan_accion_tema">
+                <expression>LEFT(nombre_plan_accion_tema,15)</expression>
+            </field>            
+        </helper>
+        <label posx="150">Tema</label>
+        <help>Tema del Plan Accion</help>
+    </field>
+
+    <field id="responsable_planaccion">
+        <label posy="+1" posx="5">Resp.</label>
+        <help>Responsable del Plan de Acción</help>
+        <helper type="combo" id="HTXUSERS" empty="true">
+            <field id="id_usuario"/>
+            <field id="nombre">
+                <expression>CONCAT(Nombre, ' ', apellido)</expression>
+            </field>
+            <field id="baja">
+                <condicion operador="=">0</condicion>
+            </field>
+            <field id="Id_perfil">
+                <condicion operador="!=">14</condicion>
+            </field>
+            <order>
+                <field id="nombre"/>
+            </order>
+        </helper>
+    </field>
+
+    <field id="seccion_id">
+        <helper xml="rhseccion_qry.xml" type="combo" dir="/ayudas" empty="true">
+            <field id="id_rhseccion" />
+            <field id="nombre_seccion">
+                <expression>LEFT(nombre_seccion,18)</expression>
+            </field>
+            <field id="linea_id">
+                <condicion operador="=">1</condicion>
+            </field>
+            <field id="activa">
+                <condicion operador="=">1</condicion>
+            </field>
+        </helper>
+        <label posx="90">Seccion Impacto</label>
+        <help>Seccion Impacto del Plan de Acción</help>
+    </field>
+
+    <field id="inicio_planaccion">
+        <label posy="+1" posx="5">Fecha Inicio</label>
+        <help>Inicio</help>
+        <tipo>date</tipo>
+    </field>
+
+    <field id="objetivo_planaccion">
+        <label posx="90">Fecha Obj.</label>
+        <help>Objetivo</help>
+        <tipo>date</tipo>
+    </field>
+
+    <field id="cierre_planaccion" noZero="true">
+        <label posx="150">Fecha Cierre</label>
+        <help>Cierre</help>
+        <expression>case when cierre_planaccion = '0000-00-00' then '' else cierre_planaccion end</expression>
+        <tipo>date</tipo>
+    </field>                                                  
+
+    <field id="dat1" local="true">
+        <label  size="195" posx="5" posy="+6" _PDFsize="14" pdffill="195">Asunto</label>
+    </field>
+
+    <field id="descripcion_planaccion">
+        <label posx="5" posy="+1" ></label>
+        <help>Asunto Plan Accion</help>
+    </field>
+
+    <field id="dat2" local="true">
+        <label  size="195" posx="5" posy="+4" pdffill="195">Acciones</label>
+    </field>
+
+
+    <field id="pasos_documento" local="true" PDFwidth="195" PDFlineas="true">
+        <label posx="9" posy="+4" />
+        <helper type="object" xml="cal_plan_accion_acciones_crud.xml" dir="/calidad/ing" >
+            <parameter source="id_plan_accion" target="plan_accion_id" />
+        </helper>
+    </field>
+
+            </fieldGroup>
+
+
+        </table>
+    </form>
+</histrix>

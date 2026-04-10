@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini">
+  <title>Grupos de reportes</title>
+  <obs></obs>
+  <consulta detalle="ctbcuenta_grupo.xml">
+    <table id="CTB_GRUPO_REPORTE" label="tipos">
+      <field id="id_ctbgrupo" autoinc="true" noshow="true">
+        <label>id_grupo</label>
+	<detalle>ctbgrupo_id</detalle>
+        <help>Código de tipo de cuenta</help>
+      </field>
+      <field id="nombre_grupo_reporte">
+        <label>Nombre Grupo</label>
+        <help>Nombre Grupo reporte</help>
+      </field>
+    </table>
+  </consulta>
+</histrix>  

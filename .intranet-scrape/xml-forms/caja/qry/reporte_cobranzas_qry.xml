@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" preloadData="false">
+  <title>Facturacion por Cta Ctes </title>
+	<obs></obs>
+	<form  detalle="recibo_regimputaciones_det_qry.xml" inline="true" >
+		<table id="REG_CUENTA" label="Cta Cte Clientes">
+			<filters>
+				<field id="fecha_movimiento" tabla="REG_MOVIMIENTOS">
+					<label>Desde Fecha</label>
+					<operador>&gt;=</operador>
+				</field>
+				<field id="fecha_movimiento" tabla="REG_MOVIMIENTOS">
+					<label>Hasta Fecha</label>
+				        <operador>&lt;=</operador>
+			    		<valor>today</valor>
+				</field>
+				<!--
+				<field id="nro_cuenta">
+				    <label>Cuenta</label>
+				        <operador>=</operador>
+				    
+				</field>
+			-->
+				<field id="regcuenta_idv"  deshabilitado="false">
+					<label>Vendedor</label>
+				    <operador>=</operador>
+					
+				</field>
+			
+				<field id="cajpuesto_id">
+          			<label>Puesto</label>
+          			<operador>=</operador>          
+        		</field>
+
+			</filters>
+			<fieldGroup>
+
+			<field id="subsistema_idv" local="true" noshow="true">
+				<label>ss</label>
+							
+			</field>
+
+			<field id="fecha_movimiento" tabla="REG_MOVIMIENTOS" _noshow="true">
+				<label>Fecha</label>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="cajpuesto_id" _noshow="true" tabla="CAJ_MOVIMIENTOS">
+        		<helper type="combo" xml="cajpuestousers_qry.xml" dir="/ayudas" empty="true" />
+        		<label>Puesto</label>
+     		</field>
+			</fieldGroup>
+			<fieldGroup>
+			<if> if ($_SESSION['administrator'] != 1) return true; </if>
+
+			<field id="regcuenta_idv"  deshabilitado="true">
+				<label>Vendedor</label>
+				
+				<helper type="combo" xml="regcuenta_solamente_qry.xml" dir="/ayudas" _empty="true" >
+					<field id="subsistema_id"  >
+						<condicion operador="=" valorde="subsistema_idv">'[__subsistema_idv__]'</condicion>
+					</field>
+				    <field id="login" local="true" noshow="true">
+			    	    <label>login</label>
+		            	    <valor eval="true">$_SESSION['idUser']</valor>
+        			</field>
+	    				  // FILTRO LOS CLIENTES DEL VENDEDOR QUE USA EL PROGRAMA
+					<field id="usuario_vendedor" noshow="true">
+						<eval> if ($_SESSION['administrator'] != 1) return true; </eval>
+
+						<expression having="false">ifnull((select usuario_id from  REG_CUENTA_USERS RCU where RCU.regcuenta_id =  REG_CUENTA.id_regcuenta  limit 1), 0 )</expression>
+    			  	    <condicion operador="=">[__login__]</condicion>
+					</field>   
+					
+				</helper> 
+				
+				<expression having="false">(select regcuentarelacionada_id from REG_CUENTA_RELACIONES where REG_CUENTA_RELACIONES.subsistemarelacionada_id = '[__subsistema_idv__]' and REG_CUENTA_RELACIONES.regcuenta_id = REG_MOVIMIENTOS.regcuenta_id limit 1)</expression>
+			</field>                
+			</fieldGroup>
+
+			<fieldGroup>
+			<if> if ($_SESSION['administrator'] == 1) return true; </if>
+
+			<field id="regcuenta_idv"  deshabilitado="false">
+				<label>Vendedor</label>
+				
+				<helper type="combo" xml="regcuenta_solamente_qry.xml" dir="/ayudas" empty="true" >
+					<field id="subsistema_id"  >
+						<condicion operador="=" valorde="subsistema_idv">'[__subsistema_idv__]'</condicion>
+					</field>
+				    <field id="login" local="true" noshow="true">
+			    	    <label>login</label>
+		            		<valor eval="true">$_SESSION['idUser']</valor>
+        			</field>
+	    				  // FILTRO LOS CLIENTES DEL VENDEDOR QUE USA EL PROGRAMA
+					<field id="usuario_vendedor" noshow="true">
+						<eval> if ($_SESSION['administrator'] != 1) return true; </eval>
+
+						<expression having="false">ifnull((select usuario_id from  REG_CUENTA_USERS RCU where RCU.regcuenta_id =  REG_CUENTA.id_regcuenta  limit 1), 0 )</expression>
+    			  	    <condicion operador="=">[__login__]</condicion>
+					</field>   
+					
+				</helper> 
+				
+				<expression having="false">(select regcuentarelacionada_id from REG_CUENTA_RELACIONES where REG_CUENTA_RELACIONES.subsistemarelacionada_id = '[__subsistema_idv__]' and REG_CUENTA_RELACIONES.regcuenta_id = REG_MOVIMIENTOS.regcuenta_id limit 1)</expression>
+			</field>                
+			</fieldGroup>
+
+
+			<fieldGroup>
+
+			<field id="nro_cuenta" style="color:#B32600;font-weight:bold;">
+				<helper type="external" xml="regcuenta_solamente_nro_qry.xml" dir="/ayudas" empty="true" />
+				<detalle>regcuenta_id</detalle>
+			</field>
+
+			<field id="id_regcuenta" noshow="true">
+				<detalle>regcuenta_id</detalle>
+			</field>
+			<field id="subsistema_id" oculto="true" valauto="true">
+				<detalle>subsistema_id</detalle>
+			</field>
+			<field id="nombre_cuenta" >
+				<label>Nombre Cuenta</label>
+			</field>
+
+			<field id="id_regmovim" tabla="REG_MOVIMIENTOS" noshow="true">
+				<label>Mov</label>
+				<detalle>regmovim_id</detalle>
+			</field>
+
+
+			<field id="id_cajmovimiento" tabla="CAJ_MOVIMIENTOS" _noshow="true" />
+<!--
+			<field id="nro_comp" tdWidth="200px" PDFcolWidth="100" linkdes="Detalle de Comprobante">
+        		<expression>CONCAT(' 0000-',lpad(CAJ_MOVIMIENTOS.nro_movimiento,8,'0'))</expression>
+        		<helper type="link" dir="/caja/proc/del" xml="cajmovimiento_facturas.xml" >
+          			<parameter source="id_cajmovimiento" target="id_cajmovimiento" operador="="/>
+        		</helper>
+      		</field>
+-->
+      		<field id="nrocomp" >
+				<label modpos="nobr">Recibo</label>
+				<expression>concat(ifnull(letra_movimiento,' '), ' ' ,
+						          LPAD(ifnull(puesto_movimiento,0),4,'0'),'-',
+						          LPAD(CAJ_MOVIMIENTOS.nro_movimiento,8,'0'))
+				</expression>
+			</field>
+
+			<field id="importe_movimiento" suma="true" noZero="true">
+        		<expression>CASE WHEN CAJ_CONCEPTOS.imputacion_concepto = 0 THEN CAJ_MOVIMIENTOS.importe_movimiento ELSE - CAJ_MOVIMIENTOS.importe_movimiento END</expression>
+        		<label>Importe</label>
+        		<tipo>numeric</tipo>
+        		<condicion operador="!=">''</condicion>
+      		</field>    
+                <!--
+      		<field id="cajformapago_id" tabla="CAJ_VALORES">
+      			<label>formapago</label>
+      		</field>
+                -->
+               
+                <field id="misvalores" local="true">
+                    <label>Forma pago</label> 
+                    <valor>ver</valor>
+                    <helper type="link" xml="recibo_cajvalores_imp.xml" dir="/caja/qry/" >
+                	<parameter source="id_cajmovimiento" target="cajmovimiento_id" operator="=" />
+            	    </helper>
+                </field>
+                 
+      		<!-- EFECTIVO   	--> 
+
+      		<field id="efe_egr" suma="true" noZero="true">
+        		<expression>SUM(CASE WHEN CAJ_VALORES.cajformapago_id = 1 THEN (IFNULL((CAJ_VALORES.pago_valor - CAJ_VALORES.pago_vuelto), 0)) ELSE 0 END)</expression>
+        		<label>Efectivo</label>
+        		<tipo>numeric</tipo>
+      		</field> 
+		      		 
+
+      		<!--VALORES --> 
+			<field id="che_egr" suma="true" noZero="true">
+        		<expression>SUM(CASE WHEN CAJ_VALORES.cajformapago_id = 2 THEN (IFNULL((CAJ_VALORES.pago_valor - CAJ_VALORES.pago_vuelto), 0)) ELSE 0 END)</expression>
+        		<label>Valores</label>
+        		<tipo>numeric</tipo>
+      		</field>       
+      		 		
+
+      		<!-- TRANSFERENCIA  -->  
+      		<field id="tra_egr" suma="true" noZero="true">
+        		<expression>SUM(CASE WHEN CAJ_VALORES.cajformapago_id = 3 THEN (IFNULL((CAJ_VALORES.pago_valor - CAJ_VALORES.pago_vuelto), 0)) ELSE 0 END)</expression>
+        		<label>Transf</label>
+        		<tipo>numeric</tipo>
+      		</field>
+			
+
+			<field id="con" noshow="true">
+			    <expression>abreviacion_concepto</expression>
+			    <label>Con</label>
+			</field>
+<!--
+			<field id="nro_movimiento" tabla="REG_MOVIMIENTOS" >
+			    <label>nro</label>
+			</field>
+			
+-->
+			<field id="regconcepto_id" noshow="true">
+				<expression>id_concepto</expression>
+				
+				<label>Id concepto</label>
+			    
+			</field>
+
+			</fieldGroup>
+
+			<order>
+				<field id="fecha_movimiento" tabla="REG_MOVIMIENTOS"/>	
+				<field id="regcuenta_idv" />			
+				<field id="nombre_cuenta" tabla="REG_CUENTA"/>			
+				
+			</order>
+		
+			<group>
+			    <field id="id_regmovim" />
+			</group>
+			
+		</table>
+		<join tipo="left">
+			<table id="REG_MOVIMIENTOS">
+				<field id="regcuenta_id">
+					<condicion operador="=">REG_CUENTA.id_regcuenta</condicion>
+				</field> 
+				<field id="concepto_id">
+					<condicion operador="=">16</condicion>
+				</field>
+			</table>
+		</join>
+		
+		<!--
+		<join _tipo="left">
+			<table id="REG_DETALLES">
+				<field id="regmovim_id">
+					<condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion>
+				</field>
+			</table>
+		</join>
+		-->
+		
+		<join tipo="left">
+			<table id="CAJ_MOVIMIENTOS">
+				<field id="id_cajmovimiento">
+					<condicion operador="=">REG_MOVIMIENTOS.cajmovimiento_id</condicion>
+				</field>
+				
+				<field id="cajconcepto_id">
+					<condicion operador="=">5 or cajconcepto_id = 21</condicion>
+				</field>
+			
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="CAJ_PUESTOS">
+				<field id="id_cajpuesto">
+					<condicion operador="=">CAJ_MOVIMIENTOS.cajpuesto_id</condicion>
+				</field>
+			</table>
+		</join>
+		
+		<join tipo="left">
+		    <table id="CAJ_CONCEPTOS">
+			<field id="id_cajconcepto">
+			    <condicion operador="=">CAJ_MOVIMIENTOS.cajconcepto_id</condicion>
+			</field>
+		  </table>
+		</join>
+
+		<join tipo="left">
+			<table id="CAJ_VALORES">
+				<field id="cajmovimiento_id">
+					<condicion operador="=">CAJ_MOVIMIENTOS.id_cajmovimiento</condicion>
+				</field>
+			</table>
+		</join>
+
+			
+		<join tipo="left">
+			<table id="REG_CONCEPTOS">
+			<!--
+				<field id="tipo_concepto">
+                    <condicion operador="=">1</condicion>
+                </field> 
+                --> 		
+				<field id="id_concepto">
+					<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+				</field>
+				
+			</table>
+		</join> 
+		
+	</form>
+</histrix>

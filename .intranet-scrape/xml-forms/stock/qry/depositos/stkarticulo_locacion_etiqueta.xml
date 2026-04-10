@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF8"?>
+<histrix tipo="ficha" sololectura="true" autoprint="true" PDFsincabecera="true" >
+  <titulo>Artículo por Locación</titulo>
+  <obs/>
+  <form>
+       <pdf>
+          <code><![CDATA[
+
+            if (!isset($pdf->lineCounter)) {
+              $pdf->lineCounter = 0;
+            }
+
+            if ($pdf->lineCounter == 6){
+                $pdf->AliasNbPages();
+                $pdf->AddPage();
+                $this->lineCounter=0;
+                $pdf->SetXY(10,10);
+                //$pdf->maxY=15;
+            }
+            
+            $pdf->SetDrawColor(0, 0, 0);
+            $pdf->SetLineWidth(3);
+            $height = 50;
+            $pdf->Rect(5,$pdf->getY(),$pdf->anchoPagina , $height, 4);
+            $pdf->SetY($pdf->getY() + $height );
+            $pdf->lineCounter++;
+          ]]></code>
+      </pdf>    
+    <table id="STK_ARTICULO_LOCACION">
+      <title>Artículo por locación </title>
+    	
+
+
+    <field id="stkarticulo_id" posY="+20" posX="10" PDFsize="50" PDFnolabel="true">
+      <label>Artículo</label>
+      <helper id="STK_ARTICULOS" type="external">
+        <field id="id_stkarticulo">
+        </field>
+        <field id="nombre_articulo" >
+          <detalle>nombre_articulo</detalle>
+        </field>
+      </helper>
+    </field>
+
+    <field id="nombre_articulo" tabla="STK_ARTICULOS" deshabilitado="true" posY="+10" posX="10" PDFsize="30" pdfancho="197" PDFnolabel="true" >
+      <label>Nombre</label>
+      <expression>left(nombre_articulo, 28)</expression>
+    </field>
+
+    <field id="nombre_articulo2" tabla="STK_ARTICULOS" deshabilitado="true" posY="+8" posX="10" PDFsize="30" pdfancho="197" PDFnolabel="true" >
+      <label>Nombre</label>
+      <expression>substring(nombre_articulo, 29, 80)</expression>
+    </field>
+   <field id="nombre_articulo3" tabla="STK_ARTICULOS" deshabilitado="true" posY="+5" posX="10" PDFsize="30" pdfancho="197" PDFnolabel="true" >
+      <label>Nombre</label>
+      <expression>''</expression>
+    </field>
+
+      <field id="id_articulo_locacion" noshow="true" autoinc="true" print="false" />
+
+      <field id="stklocacion_id" noshow="true" _oculto="true" print="false"/>
+      
+    </table>
+    <join>
+      <table id="STK_LOCACION">
+        <field id="id_stklocacion">
+          <condicion operador="=">stklocacion_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join>
+      <table id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">stkarticulo_id</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

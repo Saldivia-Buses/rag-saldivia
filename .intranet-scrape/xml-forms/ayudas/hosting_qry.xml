@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+	<title>Hosting</title>
+	<obs></obs>
+	<form>	    
+		  <table id="STK_LISTAS" label="hosting">
+		  <field id="id_hosting" _autoinc="true" noshow="true" local="true">
+	           <label>Código</label>
+		  </field>
+		  <field id="domain" local="true">
+			<label>Dominio</label>
+		  </field>
+          <field id="hd_quota" local="true">
+			<label>Cuota Disco</label>
+		  </field>
+          <field id="traffic_quota" local="true">
+			<label>Cuota Trafico</label>
+		  </field>
+          <field id="quota" local="true">
+			<label>Cuota E-mail</label>
+		  </field>
+		</table>
+	</form>
+</histrix>	

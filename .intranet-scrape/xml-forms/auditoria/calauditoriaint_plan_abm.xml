@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" subtipo="vertical" PDForientacion="L" PDFfontSize="8">
+    <title>Plan de Auditoría Interna</title>
+    <obs/>
+    <form >
+        <table id="CAL_DOCUMENTOS" label="Auditoría Interna">
+			
+			<field id="id_documento" _noshow="true">
+				<label modpos="nobr">id</label>
+			</field>
+
+			<field id="codigo_documento">
+				<label modpos="nobr">Codigo</label>
+			</field>
+
+			<field id="nombre_documento">
+				<label modpos="nobr">Procedimiento</label>
+				<size>90</size>
+			</field>
+ 
+			<field id="tipodocumento_id" noshow="true">
+				<label>Tipo</label>
+				<condicion operador="=">1</condicion>
+			</field>
+
+			<!-- <field id="puntaje_promedio" local="true">
+				<label>Punt.Promedio</label>
+				<expression>@puntaje_promedio:=(select round(avg(puntaje), 2) from CAL_AUDITORIA_INT
+					inner join CAL_AUDITORIA_PUNTUACION on CAL_AUDITORIA_PUNTUACION.id_auditoriaintpunt = CAL_AUDITORIA_INT.auditoriaintpunt_id
+					where CAL_AUDITORIA_INT.documento_id = id_documento
+					order by fecha_auditoriaint DESC limit 1)</expression>
+			</field> -->
+          
+            <field id="puntaje_promedio" local="true">
+				<label>Punt.Promedio</label>
+				<expression>@puntaje_promedio:=(select puntaje from CAL_AUDITORIA_INT
+					inner join CAL_AUDITORIA_PUNTUACION on CAL_AUDITORIA_PUNTUACION.id_auditoriaintpunt = CAL_AUDITORIA_INT.auditoriaintpunt_id
+					where CAL_AUDITORIA_INT.documento_id = id_documento
+					order by fecha_auditoriaint DESC limit 1)</expression>
+			</field>
+
+			<field id="ultima_aud" local="true">
+				<label>Ultima.Audi</label>
+				<expression>@ultima_aud:=(select fecha_auditoriaint from CAL_AUDITORIA_INT
+					inner join CAL_AUDITORIA_PUNTUACION on CAL_AUDITORIA_PUNTUACION.id_auditoriaintpunt = CAL_AUDITORIA_INT.auditoriaintpunt_id
+					where CAL_AUDITORIA_INT.documento_id = id_documento
+					order by fecha_auditoriaint DESC limit 1)</expression>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="fecha_proxima_aud" local="true">
+				<label>Proxima</label>
+				<expression>@fecha_proxima_aud:=(case when @puntaje_promedio &gt; 75 then DATE_ADD(@ultima_aud, INTERVAL 1 YEAR)
+							when @puntaje_promedio &gt; 50 and @puntaje_promedio &lt;= 75 then DATE_ADD(@ultima_aud, INTERVAL 9 MONTH) 
+							when @puntaje_promedio &gt; 30 and @puntaje_promedio &lt;= 50 then DATE_ADD(@ultima_aud, INTERVAL 6 MONTH)
+							when @puntaje_promedio &lt;= 30 then DATE_ADD(@ultima_aud, INTERVAL 3 MONTH) end)</expression>
+				<tipo>date</tipo>
+			</field>
+
+	        <field id="auditoria_atrasada" clasefila="true" local="true" noshow="true">
+	     	    <expression>case when @fecha_proxima_aud &lt;= CURDATE() then 'resaltadoRojo' else '' end</expression>
+	            <label>auditoria atrasada</label>
+	        </field>			
+
+			<field id="crear_proxima_aud" local="true"> 
+				<label>Crear</label>
+				<helper type="link" xml="calauditoriaint_plan_ing.xml" >
+		    		<parameter source="id_documento" target="documento_id" />
+ 				</helper>
+				<valor>'Crear'</valor>
+			</field>
+
+			<order>
+				<field id="codigo_documento"/>
+			</order>
+       </table>
+
+    </form>
+</histrix>

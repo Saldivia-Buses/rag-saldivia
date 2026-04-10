@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha" _inserta="false" _modifica="false" _borra="false" PDFfontSize="10" _autoprint="true">
+    <title>Evaluación</title>
+    <obs></obs>
+    <form>
+        <table id="RH_EVALUACIONES" >
+            <title>Evaluación de desempeño</title>
+
+            <field id="id_rhevaluacion" autoinc="true" noshow="true" print="false"/>
+
+            <field id="rhpersona_id" noshow="true" print="false"/>
+
+            <field id="evaluado">
+                <expression>CONCAT(PERSONAL.apellido, ' ', PERSONAL.Nombre)</expression>
+                <label colspan="2" posX="+5" posY="+1" size="18">Evaluado</label>
+            </field>
+
+            <field id="legajo" tabla="PERSONAL" deshabilitado="true" >
+                <label modpos="nobr" posX="+100" posY="0" size="18">Legajo</label>
+            </field>
+
+            <field id="id_seccion" tabla="PERSONAL" deshabilitado="true">
+                <helper type="combo" id="SECCION">
+                    <field id="id_seccion"/>
+                    <field id="nombre"/>
+                </helper>
+                <label posX="+5" posY="+2" size="18">Puesto</label>
+            </field>
+
+            <field id="antig_puesto">
+                <expression>CONCAT(IF((YEAR(CURDATE()) - YEAR(MAX(fechaDesde))) &gt; 0, (YEAR(CURDATE()) - YEAR(MAX(fechaDesde))) - (MID(CURDATE(), 6, 5) &lt; MID(MAX(fechaDesde), 6, 5)), IF((YEAR(CURDATE()) - YEAR(MAX(fechaDesde))) &lt; 0, (YEAR(CURDATE()) - YEAR(MAX(fechaDesde))) + (MID(MAX(fechaDesde), 6, 5) &lt; MID(CURDATE(), 6, 5)), (YEAR(CURDATE()) - YEAR(MAX(fechaDesde))))), ' años')</expression>
+                <label posX="100" posY="0" size="42">Antigüedad en el puesto</label>
+                <help></help>
+                <tipo>integer</tipo>
+            </field>
+
+            <field id="fec_evaluacion" deshabilitado="true">
+                <label posX="100" posY="+2" size="18">Fecha   </label>
+            </field>
+
+            <field id="resultados" local="true" showObjTabla="true">
+                <helper type="object" xml="evaluaciones_res_crud.xml">
+                    <parameter source="id_rhevaluacion" target="rhevaluacion_id"/>
+                </helper>
+                <label posX="+5" posY="+8" PDFwidth="185"></label>
+            </field>
+
+            <field id="desempenio" deshabilitado="true">
+                <expression>CONCAT(desempenio, ' / ',(select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion),' = ', (desempenio / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion)))</expression>
+                <label posX="+60" posY="+1" PDFsize="12" PDFbold="true" size="25">Desempeño</label>
+            </field>
+
+            <field id="puntos_fuertes">
+                <label colspan="2" posX="+5" posY="+10" PDFancho="160" size="35">Puntos fuertes</label>
+            </field>
+
+            <field id="puntos_a_mejorar">
+                <label colspan="2" posX="+5" posY="+2" PDFancho="160" size="35">Puntos a mejorar</label>
+            </field>
+
+            <field id="conclusiones">
+                <label colspan="2" posX="+5" posY="+2" PDFancho="160" size="35">Conclusiones</label>
+            </field>
+
+            <field id="descargo_evaluado">
+                <label colspan="2" posX="+5" posY="+2" PDFancho="160" size="35">Descargo evaluado</label>
+            </field>
+			
+			<field id="evaluado2">
+                <expression>CONCAT(PERSONAL.apellido, ' ', PERSONAL.Nombre)</expression>
+                <label posX="+5" posY="+60" size="18">Evaluado </label>
+            </field>
+
+			<field id="firmaevaluado" local="true">
+				<expression>CONCAT('.............................................')</expression>
+				<label modpos="nobr" posX="+95" posY="0" size="12">Firma</label>
+			</field>
+
+			<field id="fecha1" local="true">
+				<expression>CONCAT('..../..../....')</expression>
+				<label modpos="nobr" posX="+160" posY="0" size="12">Fecha</label>
+			</field>
+
+			<field id="evaluador_id">
+				<helper type="combo" id="PERSONAL" empty="true">
+					<field id="idPersona"/>
+					<field id="nombre">
+						<expression>CONCAT(apellido, ' ', Nombre)</expression>
+					</field>
+				</helper>
+				<label posX="+5" posY="+5" size="18">Evaluador</label>
+			</field>
+
+			<field id="firmaevaluador" local="true">
+				<expression>CONCAT('.............................................')</expression>
+				<label modpos="nobr" posX="+95" posY="0" size="12">Firma </label>
+			</field>
+
+			<field id="fecha2" local="true">
+				<expression>CONCAT('..../..../....')</expression>
+				<label modpos="nobr" posX="+160" posY="0" size="12">Fecha </label>
+			</field>
+
+			<field id="revisor_id">
+				<helper type="combo" id="PERSONAL" empty="true">
+					<field id="idPersona"/>
+					<field id="nombre">
+						<expression>CASE WHEN idPersona != 0 THEN CONCAT(apellido, ' ', Nombre) ELSE '' END</expression>
+					</field>
+				</helper>
+				<label posX="+5" posY="+5" size="18">Revisor</label>
+			</field>
+
+			<field id="firmarevisor" local="true">
+				<expression>CONCAT('.............................................')</expression>
+				<label modpos="nobr" posX="+95" posY="0" size="12">Firma  </label>
+			</field>
+
+			<field id="fecha3" local="true">
+				<expression>CONCAT('..../..../....')</expression>
+				<label modpos="nobr" posX="+160" posY="0" size="12">Fecha  </label>
+			</field>
+
+        </table>
+        <join tipo="left">
+            <table id="PERSONAL">
+                <field id="idPersona">
+                    <condicion operador="=">RH_EVALUACIONES.rhpersona_id</condicion>
+                </field>
+            </table>
+        </join>
+	
+        <join tipo="left">
+            <table id="RH_EVALUACION_RESPUESTAS">
+                <field id="rhevaluacion_id">
+                    <condicion operador="=">RH_EVALUACIONES.id_rhevaluacion</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="SECCIONHISTORIA">
+                <field id="idPersona">
+                    <condicion operador="=">PERSONAL.idPersona</condicion>
+                </field>
+                <field id="id_seccion">
+                    <condicion operador="=">PERSONAL.id_seccion</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix> 

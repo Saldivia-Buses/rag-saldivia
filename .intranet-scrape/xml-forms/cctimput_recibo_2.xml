@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta">
+	<title>Comprobantes Imputados</title>
+	<obs></obs>
+	<form >
+		<table id="CCTIMPUT" label="Comp.Imputados">
+<!--			<field id="ctacoddes" oculto="true">
+				<label>codigo </label>
+			</field>			
+-->
+			<field id="movfec2">
+				<expression>CCT.movfec</expression>				
+				<label>Fecha</label>
+				<tipo>date</tipo>
+			</field>
+			<field id="ctanom" tabla="CCTCUENT">
+				<label>Por cuenta y orden de</label>
+				<tipo>varchar</tipo>
+			</field>			
+			<!--
+			<field id="condes" tabla="CCTCONCE">
+				<label>Tipo</label>
+				<tipo>character</tipo>
+			</field>
+			-->
+			<field id="movlet">
+				<label>Letra</label>
+			</field>
+
+			<field id="movnpv2">
+				<expression>CCT.movnpv</expression>				
+				<label>Npvssss</label>
+				<tipo>decimal</tipo>				
+				<format>%04d</format>
+			</field>
+
+			<field id="movipv" noshow="true">
+				<expression>CCT.movipv</expression>				
+				<label>Npv</label>
+				<tipo>decimal</tipo>				
+				<format>%04d</format>
+			</field>
+
+			<field id="movnroex">
+				<expression>CCT.movnro</expression>
+				<label>Nro</label>
+				<tipo>decimal</tipo>				
+				<format>%010d</format>
+			</field>
+
+
+			<field id="movimp" tabla="CCT">
+				<label>Imputado</label>
+			</field>
+				
+			<field id="movinc" oculto="true">
+				<label>Movimiento</label>
+			</field> 
+						<field id="siscod" oculto="true">
+				<label>Codigo Sistema.</label>
+				<help>
+				</help>
+			</field>
+			<field id="ctacoddes" oculto="true">
+				<condicion operador="!=">0</condicion>
+				
+			</field>
+			<order>
+				<field id="movinc" tabla="CCTIMPUT"></field>
+			</order>
+			
+		</table>
+		<join tipo="inner">
+			<table id="CCTIMPUT" as="CCT">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">CCTIMPUT.siscod</condicion>
+					
+				</field>
+				<field id="ctacoddes" oculto="true">
+					<condicion operador="=">CCTIMPUT.ctacod</condicion>
+				</field>
+				<field id="movipv" oculto="true">
+					<condicion operador="=">CCTIMPUT.movnpv</condicion>
+				</field>
+				<field id="movinc" oculto="true">
+					<condicion operador="=">CCTIMPUT.movnro</condicion>
+				</field>
+				
+			</table>
+		</join>		
+		<join tipo="inner">
+			<table id="CCTCUENT">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">CCT.siscod</condicion>
+					
+				</field>
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">CCT.ctacod</condicion>
+				</field>
+			</table>
+		</join>		
+		
+	</form>
+</histrix>

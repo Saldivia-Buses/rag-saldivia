@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update">
+    <title>Stock Minimo</title>
+    <obs></obs>
+    <form>
+        <table id="STK_ARTICULOS" label="Stock Minimo">
+
+            <field id="id_stkarticulo" id_temp="id_stkarticulo" esClave="true"/>
+            <field id="stock_minimo"   id_temp="stock_minimo" />
+
+        </table>
+    </form>
+</histrix>

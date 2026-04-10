@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="ficha" sololectura="true"  autoprint="true" PDFsincabecera="true" PDFconpie="true" bottomMargin="-30" >
+       <title></title>
+        <obs></obs>
+    <pie></pie>
+     
+               <form>
+           <pdf>
+            <code><![CDATA[
+//            $pdf->DashedRect(23,264,($pdf->anchoPagina ),264, 0.1, 70);           
+/*            
+            $pdf->DashedRect(5,260,$pdf->anchoPagina,260, 0.1, 70);
+            */
+            
+//            $pdf->RoundedRect(20,35,47,5, 2);
+            
+            
+//            $pdf->DashedRect(40,222,100,222, 0.1, 40);
+ //           $pdf->DashedRect(120,222,180,222, 0.1, 40);
+            
+                                                      
+        //    $pdf->DashedRect(40,232,100,232, 0.1, 40);
+
+//            $pdf->DashedRect(40,242,100,242, 0.1, 40);
+                                                                                      
+
+            
+            ]]></code>
+          </pdf>
+
+                <table id="HOMOLOGMOD" label="CERTIFICADO">
+
+        <field id="id_homologacion" noshow="true" print="false"/>
+
+        <field id="fechaCert" local="true">
+                     <label size="13" posx="162 " posy="10" PDFsize="10" PDFnoborder="true">Fecha:</label>
+          <tipo>date</tipo>
+          <valor>today</valor>
+        </field>            
+        <field id="cabe2" local="true">
+          <label size="117" posx="18" posy="+6" PDFsize="12"></label>
+          <valor>'Sres. Secretaria de Planeamiento Estrategico Industrial'</valor>
+        </field>
+         
+          <field id="insc" local="true">
+          <label size="180" posx="18" posy="+3" PDFnolabel="true" PDFsize="12"></label>
+          <valor>'Me dirijo a usted en mi carácter de PRESIDENTE/REPRESENTANTE LEGAL (sólo escribir en la nota de presentación aquella opción que corresponde) de RAZÓN SOCIAL/NOMBRE  a fin de solicitarle que incluya a nuestra empresa en el listado de Fabricantes de camión/semirremolque/vehículos para transporte de pasajeros de media distancia/vehículos para transporte de pasajeros de larga distancia/ maquinaría agrícola no autopropulsada/maquinaria agrícola autopropulsada/tractores agrícolas/equipamiento agrícola /equipos de riego/maquinaria vial autopropulsada/maquinaria vial de arrastre/ aviones para uso agrícola nacionales (sólo escribir en la nota de presentación aquella opción que corresponde),  en el marco del Decreto N° 494/2012 y sus modificatorias.  '</valor>
+          <tipo>varchar</tipo>
+        </field>
+        
+        <field id="mcm" local="true">
+          <label size="300" posx="18" posy="+3" PDFnolabel="true" PDFsize="12"></label>
+          <valor>'Nombre de la empresa: MARIA CARMEN MURABITO'</valor>
+          <tipo>varchar</tipo>
+        </field>   
+
+        <field id="mcmcuit" local="true">
+          <label size="300" posx="18" posy="+1" PDFnolabel="true" PDFsize="12"></label>
+          <valor>'C.U.I.T.: 27-06508092-9'</valor>
+          <tipo>varchar</tipo>
+        </field>   
+
+
+        <field id="insc2" local="true">
+          <label size="180" posx="18" posy="+3" PDFnolabel="true" PDFsize="12"></label>
+          <valor>'Asimismo, solicito que se incluyan los siguientes equipos de producción nacional en el listado de unidades a ser financiadas por el PROGRAMA DE FINANCIAMIENTO PARA LA AMPLIACION Y RENOVACION DE FLOTA.'</valor>
+          <tipo>varchar</tipo>
+        </field>
+
+        <field id="modelo" local="true">
+          <label size="50" posx="18" posy="+3" PDFsize="12">Marca de los equipos: </label>
+          <tipo>varchar</tipo>
+          <valor>'Carrocerias Saldivia'</valor>
+        </field>   
+
+        <field id="nrocar" tabla="HOMOLOGMOD">
+          <label size="50" posx="18" posy="+3" PDFsize="12">Modelo: </label>
+          <tipo>varchar</tipo>
+          <tabla_ex id="CARROCERIA">
+              <field id="nrocar">
+              </field>
+              <field id="desabv">
+              </field>
+          </tabla_ex>
+        </field>   
+
+        <field id="nrocar2">
+          <label size="60" posx="18" posy="+3" PDFsize="12">Denominacion Comercial: </label>
+          <tipo>varchar</tipo>
+          <tabla_ex id="CARROCERIA">
+              <field id="nrocar">
+              </field>
+              <field id="desabv">
+              </field>
+          </tabla_ex>
+          <expression>HOMOLOGMOD.nrocar</expression>
+        </field>
+
+        <field id="vds_chasis" tabla="MODCHASIS">
+          <label size="50" posx="18" posy="+3" PDFsize="12">VIN: </label>
+          <tipo>varchar</tipo>
+        </field>
+
+        <field id="plano" tabla="HOMOLOGMOD">
+          <label size="50" posx="18" posy="+3" PDFsize="12">Plano C.N.R.T.: </label>
+          <tipo>varchar</tipo>
+        </field>    
+
+        <field id="insc3" local="true">
+          <label size="180" posx="18" posy="+3" PDFnolabel="true" PDFsize="12"></label>
+          <valor>'Los datos de las unidades corresponden a camión/semirremolque/vehículos para transporte de pasajeros de media distancia/vehículos para transporte de pasajeros de larga distancia/ maquinaría agrícola no autopropulsada/maquinaria agrícola autopropulsada/tractores agrícolas/equipamiento agrícola /equipos de riego/maquinaria vial autopropulsada/maquinaria vial de arrastre/ aviones para uso agrícola nacionales (sólo escribir en la nota de presentación aquella opción que corresponde) y toda la información que se presenta es bajo carácter de declaración jurada.'</valor>
+          <tipo>varchar</tipo>
+        </field>
+
+        <field id="insc4" local="true">
+          <label size="180" posx="18" posy="+3" PDFnolabel="true" PDFsize="12"></label>
+          <valor>'Asimismo, a efectos de posibles notificaciones determinamos domicilio en Ruta 21 Km 7 Lote 00-04, CP2126, Alvear, Santa Fe.'</valor>
+          <tipo>varchar</tipo>
+        </field>
+
+        <field id="insc5" local="true">
+          <label size="180" posx="18" posy="+3" PDFnolabel="true" PDFsize="12"></label>
+          <valor>'Se adjuntan fotografías de las unidades, especificaciones técnicas y demás documentación de similar índole como por ejemplo, folletos.'</valor>
+          <tipo>varchar</tipo>
+        </field>
+
+        <field id="insc6" local="true">
+          <label size="180" posx="18" posy="+3" PDFnolabel="true" PDFsize="12"></label>
+          <valor>'Sin otro particular, me despido muy atentamente.'</valor>
+          <tipo>varchar</tipo>
+        </field>
+
+                                                                                                                  
+</table>
+  
+    <join tipo="left">
+      <table id="MODCHASIS">
+        <field id="id_modelo">
+          <condicion operador="=">HOMOLOGMOD.modelo_id</condicion>
+        </field>
+      </table>
+    </join>
+</form>
+</histrix>

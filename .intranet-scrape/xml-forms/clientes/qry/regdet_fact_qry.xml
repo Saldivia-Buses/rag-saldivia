@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" showCantidad="false" tooltip="false">
+  <title/>
+  <obs/>
+  <form >
+    <table id="REG_DETALLES">
+
+        <fieldGroup colstyle="text-align:center; vertical-align:middle; padding:2px 2px 2px 2px;">
+
+          <field id="id_regdetalle" noshow="true" />
+          
+          <field id="regmovim_id" noshow="true"/>
+
+          <field id="codigo_detalle">
+            <label>Cod</label>
+          </field>
+
+          <field id="descripcion_detalle">
+            <label>Descripcion</label>
+          </field>
+
+          <field id="cantidad_detalle">
+            <label>Cantidad</label>
+          </field>
+
+          <field id="precio_venta">
+            <label>Precio</label>
+          </field>
+
+          <field id="total_linea" local="true">
+            <label>Total</label>
+            <expression>round(cantidad_detalle * precio_venta,2)</expression>
+          </field>
+          
+      </fieldGroup>
+
+    </table>
+
+    <join>
+      <table id="REG_MOVIMIENTOS">
+        <field id="id_regmovim">
+          <condicion operador="=">REG_DETALLES.regmovim_id</condicion>
+        </field>
+      </table>
+    </join>
+
+
+  </form>
+</histrix>

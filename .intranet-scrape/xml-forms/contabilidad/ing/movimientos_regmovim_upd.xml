@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" >
+    <title>Actualizacion Movimientos</title>
+    <obs></obs>
+    <form>
+        <table id="CTB_MOVIMIENTOS" idCampoCond="actualizar_reg">
+
+            <field id="id_movimiento" esClave="true" lastId="movimientos_minutas_ins.xml" />
+            <field id="regmovim_id" id_temp="regmovim_id" />
+            <field id="nro_minuta" id_temp="numero_minuta" />
+
+        </table>
+    </form>
+</histrix>

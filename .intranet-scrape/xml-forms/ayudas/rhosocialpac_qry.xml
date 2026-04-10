@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+  <title>Tipos de Liquidaciones</title>
+  <obs/>
+  <consulta>
+    <table id="RH_OBRASOCIAL">
+      <field id="rnos"/>
+      <field id="sigla"/>
+      <group>
+        <field id="rnos"/>
+      </group>
+      <order> 
+        <field id="sigla"/>
+      </order>
+    </table>
+    <join>
+      <table id="PAC_CUENTAS">
+        <field id="rhobrasocial_id">
+          <condicion operador="=">RH_OBRASOCIAL.rnos</condicion>
+        </field>
+      </table>
+    </join>
+  </consulta>
+</histrix>

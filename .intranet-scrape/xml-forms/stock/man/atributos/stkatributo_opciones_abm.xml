@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini">
+<title>Grupos de Atributos</title>
+<obs></obs>
+<form>
+    <table id="STK_ATRIBUTO_OPCIONES">
+
+        <field id="id_atribopciones" esClave="true" autoinc="true" noshow="true"/>
+        <field id="stkatributo_id" valauto="true" noshow="true"/>
+
+        <field id="valor_opcion">
+            <label>Valor</label>
+            <tipo>varchar</tipo>
+	    <size>50</size>
+        </field>
+
+        <field id="porcentaje_opcion">
+            <label modpos="">Porc.% </label>
+            <tipo>custom_numeric</tipo>
+        </field>
+        <field id="orden_opcion">
+            <label modpos="">Orden</label>
+            <tipo>integer</tipo>
+        </field>
+
+        <orden>
+            <field id="orden_opcion"/>
+        </orden>
+
+    </table>
+</form>	   
+</histrix>

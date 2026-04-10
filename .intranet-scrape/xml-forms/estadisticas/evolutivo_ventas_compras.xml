@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="consulta" _tipo="chart">
+  <title>VENTAS ANUALES</title>
+  <obs></obs>
+  <form>
+    <table id="GEN_CALENDAR">
+        <title>Ventas Anuales</title>
+
+        <filters>
+            <field id="fecha">
+                <label>Desde</label>
+                <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-12 month')) , 1, date("Y") -  1 ))</valor>
+                <operador>&gt;=</operador>
+            </field>
+            <field id="fecha">
+                <label modpos="nobr">Hasta</label>
+                <valor eval="true">date('d/m/Y', strtotime('-1 second', strtotime(date('Y-m-01'))))</valor>
+                <operador>&lt;=</operador>
+            </field>
+        </filters>
+
+        <!--<grafico id="Relacion">
+            <ancho>400</ancho>
+            <tipo>P</tipo>
+            <etiquetas>mes</etiquetas>
+            <serie>ventas</serie>
+            <serie>compras</serie>
+            <title>Iva Ventas vs Iva Compras</title>
+            <subtitulo></subtitulo>
+        </grafico>-->
+
+        <field id="mes">
+            <expression>month(fecha)</expression>
+            <label>Mes</label>
+            <options>
+                <option valor="1">Enero</option>
+                <option valor="2">Febrero</option>
+                <option valor="3">Marzo</option>
+                <option valor="4">Abril</option>
+                <option valor="5">Mayo</option>
+                <option valor="6">Junio</option>
+                <option valor="7">Julio</option>
+                <option valor="8">Agosto</option>
+                <option valor="9">Septiembre</option>
+                <option valor="10">Octubre</option>
+                <option valor="11">Noviembre</option>
+                <option valor="12">Diciembre</option>
+            </options>
+            <tipo>varchar</tipo>
+        </field>
+
+        <field id="fecha" oculto="true" />
+
+        <field id="year">
+            <label>Año</label>
+            <expression>year(fecha)</expression>
+        </field>
+
+        <field id="ventas" suma="true">
+            <expression>(SELECT SUM(IVAVENTAS.totcom * (CASE WHEN CCTCONCE.conimp = 1 THEN 1 ELSE -1 end)) 
+                            FROM IVAVENTAS
+                            LEFT JOIN CCTCONCE ON CCTCONCE.concod = IVAVENTAS.codcom 
+                                              AND CCTCONCE.siscod = '02'
+                            WHERE MONTH(IVAVENTAS.feciva) = MONTH(GEN_CALENDAR.fecha)
+                              AND YEAR(IVAVENTAS.feciva)  = YEAR(GEN_CALENDAR.fecha))</expression>
+            <label>Iva Ventas</label>
+            <tipo>custom_numeric</tipo>
+        </field>
+
+        <field id="compras" suma="true">
+            <expression>(SELECT SUM(totcom * (CASE WHEN conimp = 1 THEN -1 ELSE 1 END)) 
+                            FROM IVACOMPRAS
+                            LEFT JOIN CCTCONCE ON CCTCONCE.concod = IVACOMPRAS.codcom 
+                                              AND CCTCONCE.siscod = '01'
+                            LEFT JOIN CCTCUENT ON CCTCUENT.ctacod = IVACOMPRAS.ctacod 
+                                              AND CCTCUENT.siscod = '01'
+                            WHERE MONTH(IVACOMPRAS.feciva) = MONTH(GEN_CALENDAR.fecha)
+                              AND YEAR(IVACOMPRAS.feciva)  = YEAR( GEN_CALENDAR.fecha)
+                              AND CCTCUENT.totatr = 0
+                              AND CCTCUENT.ctacod != 51 )</expression>
+            <label>Iva Compras</label>
+            <tipo>custom_numeric</tipo>
+        </field>
+
+        <field id="iva_a_pagar" local="true" suma="true">
+            <label>Iva a Pagar</label>
+            <if exp="true">
+                <true>(compras - ventas)</true>
+                <false></false>
+            </if>
+            <tipo>custom_numeric</tipo>
+        </field>
+
+        <group>
+            <field id="year" />
+            <field id="mes" />
+        </group>
+
+    </table>
+  </form>
+</histrix>

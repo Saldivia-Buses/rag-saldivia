@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="utf-8"?>
+	<histrix  tipo="cabecera" graba="false" barraDrag="false">
+		<title>FACTURAS</title>
+		<obs></obs>
+		<form >
+			<table id="CCTMOVIM" label="Cabecera del comprobante">
+			<field id="siscli"  oculto="true">
+				<label>siscli</label>
+				<!--
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=" >'siscli'</condicion>
+					</field>
+				</parametro>
+					-->
+				<valor>'02'</valor>
+			</field>
+
+			<field id="sisctb"  oculto="true">
+				<label>sisctb</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=" >'sisctb'</condicion>
+					</field>
+				</parametro>
+			</field>
+			<field id="siscaj" oculto="true">
+				<label>siscaj</label>
+<!--				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'siscaj'</condicion>
+					</field>
+				</parametro>-->
+				<valor>05</valor>
+			</field>
+			<field id="cajcod"   oculto="true">
+				<label>cajcod</label>
+				<valor>2</valor>
+
+			</field>
+			<field id="opecod"   oculto="true">
+				<label>opecod</label>
+				<valor>0</valor>
+			</field>
+
+			<field id="succod" oculto="true">
+				<label>succod</label>
+				<valor>1</valor>
+			</field>
+			<field id="ctbdeu"  ctbcuenta="2" oculto="true">
+				<label>ctbdeu</label>
+				<parametro id="ctbparam_paralf.xml" retorna="paralf">
+					<field id="siscod">
+						<condicion operador="=" valorde="sisctb"></condicion>
+					</field>
+					<field id="parcla">
+						<condicion operador="=">'ctbdeu'</condicion>
+					</field>
+				</parametro>
+			</field>
+
+			<field id="tipoiva" oculto="true">
+				<valor>2</valor>
+			</field>
+
+			<field id="ctbhaber"  ctbtipo="2" oculto="true">
+				<valor>1</valor>
+			</field>
+
+				
+			
+			<field id="ctbiva"  ctbcuenta="3" oculto="true">
+				<label>ctbiva</label>
+				<parametro id="ctbparam_paralf.xml" retorna="paralf">
+					<field id="siscod">
+						<condicion operador="=" valorde="sisctb"></condicion>
+					</field>
+					<field id="parcla">
+						<condicion operador="=">'ctbidf'</condicion>
+					</field>
+				</parametro>
+			</field>				
+			<field id="ctbpiv"  ctbcuenta="4" oculto="true">
+				<label>ctbpiv</label>
+				<parametro id="ctbparam_paralf.xml" retorna="paralf">
+					<field id="siscod">
+						<condicion operador="=" valorde="sisctb"></condicion>
+					</field>
+					<field id="parcla">
+						<condicion operador="=">'ctbriv'</condicion>
+					</field>
+				</parametro>
+			</field>				
+			<field id="ctbpib"  ctbcuenta="5" oculto="true">
+				<label>ctbpib</label>
+				<parametro id="ctbparam_paralf.xml" retorna="paralf">
+					<field id="siscod">
+						<condicion operador="=" valorde="sisctb"></condicion>
+					</field>
+					<field id="parcla">
+						<condicion operador="=">'ctbrib'</condicion>
+					</field>
+				</parametro>
+			</field>		
+			<field id="ctbpga"  ctbcuenta="6" oculto="true">
+				<label>ctbpga</label>
+				<parametro id="ctbparam_paralf.xml" retorna="paralf">
+					<field id="siscod">
+						<condicion operador="=" valorde="sisctb"></condicion>
+					</field>
+					<field id="parcla">
+						<condicion operador="=">'ctbrga'</condicion>
+					</field>
+				</parametro>
+			</field>												
+			<field id="ctbhaber"  ctbtipo="2" oculto="true">
+				<valor>1</valor>
+			</field>	
+			<field id="imputiv" local="true" ctbtipo="3" oculto="true" >
+				<valor>2</valor>
+			</field>
+			<field id="imputpiv" local="true" ctbtipo="4" oculto="true">
+				<valor>2</valor>
+			</field>
+			<field id="imputpib" local="true" ctbtipo="5" oculto="true">
+				<valor>2</valor>
+			</field>
+			<field id="imputpga" local="true" ctbtipo="6" oculto="true">
+				<valor>2</valor>
+			</field>
+			<field id="imputnetos" local="true" ctbtipo="1" oculto="true">
+				<valor>2</valor>
+			</field>					
+				
+			<field id="ctacod" required="true" >
+					<label xml="cctcuent.xml" colspan="4">Cliente</label>
+					<help>Código de Proveedor </help>
+					<ayuda_ex id="CCTCUENT" _xml="HLPcctcuent.xml" dir="/help_local">
+						<field id="ctacod">
+							<label>Nro</label>
+						</field>
+						<field id="nombre">
+							<label>Nombre</label>
+							<detalle>ctanom</detalle>
+							<expression>ctanom</expression>
+						</field>
+						<field id="siscod" oculto="true">
+							<label>siscod</label>
+							<condicion operador="=">'02'</condicion>
+						</field>
+
+						<field id="ivacod">
+							<detalle>ivacod</detalle>
+						</field>
+						<field id="baja" oculto="true">
+							<condicion operador="=">0</condicion>
+						</field>						
+<!--						<field id="zoncod">
+							<detalle>zoncod</detalle>
+						</field>
+						-->
+						<field id="ivacod2">
+							<expression>(case when ivacod = 1 or ivacod = 2 then 'A' else 'B' end)</expression>
+							<detalle>movlet</detalle>
+						</field>
+						<field id="doccod">
+							<detalle>doccod</detalle>
+						</field>
+						<field id="ctanro">
+							<detalle>ctanro</detalle>
+						</field>
+
+
+						<clave>ctacod</clave>
+						<descripcion>ctanom</descripcion>
+					</ayuda_ex>
+					<tipo>integer</tipo>
+					<!-- <jseval>ctacod != \'\'</jseval> -->
+
+					<detalle>ctacod</detalle>
+				
+				</field>
+				<field id="ctanom" deshabilitado="true" sincelda="true">
+					<label colspan="3" modpos="nobr" ></label>
+					<help></help>
+					<tipo>varchar</tipo>
+				</field>
+
+
+
+	<!--			<field id="ivacod" deshabilitado="true">
+					<label modpos="nobr">Iva</label>
+					<help></help>
+					<tabla_ex id="FSMCTIVA">
+						<field id="ivacod"></field>
+						<field id="ivanom"></field>
+						<order>
+							<field id="ivacod"></field>
+						</order>
+					</tabla_ex>
+
+					<tipo>int</tipo>
+
+				</field>			 -->
+<!--				<field id="zoncod" deshabilitado="true" noshow="true">
+					<label >Zona</label>
+				</field>	 -->
+
+
+				<field id="concod" >
+					<label >Tipo</label>
+					<help>Tipo Comprobante </help>
+					<tabla_ex id="CCTCONCE">
+						<field id="concod"></field>
+						<field id="condes"></field>
+						<field id="siscod">
+							<condicion operador="=">'02'</condicion>
+						</field>
+						<field id="conimp">
+							<condicion operador="=">1</condicion>
+						</field>
+						<order>
+							<field id="concod"></field>
+						</order>
+					</tabla_ex>
+					<detalle>concod</detalle>
+				</field>
+				<field id="movlet" deshabilitado="true" sincelda="true">
+					<label modpos="nobr" ></label>
+					<valor>B</valor>
+
+				</field>
+				<field id="remito">
+					<label modpos="nobr">Remito Nro</label>
+					<valor default="true">0</valor>
+
+				</field>
+				
+				<field id="facturanro" copia="movnro" noshow="true" deshabilitado="true">
+					<parametro id="numeradorfac.xml" retorna="num">
+						  <field id="siscod" oculto="true" noselect="true">
+							  <condicion operador="=">'02'</condicion>
+									<tipo>varchar</tipo>
+									<valor>'02'</valor>
+							</field>
+							<field id="concod" oculto="true" noselect="true">
+								<condicion operador="=" >1</condicion>
+							</field>
+							<field id="num">
+				                <expression>max(movnro) + 1</expression>								
+							</field>
+					</parametro>
+					<!--<actualiza id="movnro"></actualiza> -->
+
+				</field>
+
+
+				<field id="movnpv" _deshabilitado="true">
+					<label modpos="nobr">Número</label>
+					<format>%04d</format>
+					<valor>1</valor>
+				</field>
+				<field id="movnro" ctbregnro="1" deshabilitado="false" sincelda="true" copia="nrorec">
+					<label modpos="nobr" >- </label>
+					<format>%08d</format>
+					<if exp="true">
+						<true>facturanro</true>
+						<false>0</false>
+					</if>
+					
+					<detalle>movnro</detalle>
+					<detalle>carrec</detalle>
+					<detalle>cajnro</detalle>
+					<detalle>movinc</detalle>
+
+				</field>
+
+				<field id="movfec" copio="movvto" __deshabilitado="true">
+					<label modpos="nobr">Fecha</label>
+					<help>Fecha de Emisión </help>
+					<valor>today</valor>
+					<detalle>movfec</detalle>
+				</field>
+				<field id="ivcreg" local="true" ctbfecha="2" oculto="true">
+					<label modpos="nobr" >Registracion</label>
+					<help>Fecha de Registracion en el libreo de IVA</help>
+					<tipo>date</tipo>
+					<valor>today</valor>
+					
+				</field>				
+				<field id="doccod" deshabilitado="true" noshow="true" >
+					<label modpos="nobr">Doc</label>
+				</field>
+				<field id="ctanro" deshabilitado="true">
+					<label modpos="nobr"></label>
+				</field>
+				<field id="ctacte" deshabilitado="true" noshow="true">
+					<detalle>ctacte</detalle>
+				</field>
+				<field id="movvto" noshow="true">
+					<label modpos="nobr">Vencimiento</label>
+					<help>Fecha de Vto</help>
+					<valor>today</valor>
+				</field>
+<!--				<field id="mesper" local="true">
+					<label >Periodo</label>
+					<help>Periodo</help>
+				</field>
+				-->
+		<!--		<field id="ivcreg" local="true" ctbfecha="2" oculto="true">
+					<label modpos="nobr" >Registracion</label>
+					<help>Fecha de Registracion en el libreo de IVA</help>
+					<tipo>date</tipo>
+					<valor>today</valor>
+
+				</field>				-->
+<!--				<field id="fpago" local="true">
+					<label xml="faccondi.xml" modpos="nobr">F.Pago</label>
+					<help>Forma de Pago</help>
+					<tabla_ex id="FACCONDI">
+						<field id="vtacod"></field>
+						<field id="condes"></field>
+						<order>
+							<field id="vtacod"></field>
+						</order>
+					</tabla_ex>
+					<tipo>integer</tipo>
+					<valor>99</valor>
+				</field>				-->
+<!--				<field id="idLista" local="true">
+					<tabla_ex xml="listamargencab.xml" />
+					<label modpos="nobr" >Lista</label>
+					<help>Forma de Pago</help>
+					<valor>1</valor>
+					<actualiza>
+					    <field destino="idLista" id="margen" />
+
+					</actualiza>
+				</field>				-->
+
+
+				<field id="conpag" local="true" oculto="true">
+					<valor>4</valor>
+				</field>
+				<field id="pagref" local="true" oculto="true">
+					<valor>"Factura Contado"</valor>
+				</field>
+
+				<field id="movcta" local="true" oculto="true">
+					<valor>1</valor>
+				</field>
+				<field id="hoy" local="true" oculto="true">
+					<tipo>date</tipo>
+					<valor>today</valor>
+				</field>
+
+				<field id="opecla" local="true" oculto="true">
+					<label  >Usuario</label>
+					<valor eval="true">$_SESSION['usuario']</valor>
+				</field>
+<!--  				<field id="fpago" obj="pos_cajmovim_ing.xml">
+					<label colspan="6">Forma de Pago</label>
+
+				</field>	-->
+
+			</table>
+		</form>
+	</histrix>

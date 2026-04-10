@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="abm-mini" logReference="nomapp">
+    <titulo>Tarjetas</titulo>
+    <obs/>
+    <consulta>
+        <tabla id="PERSONAL_TARJETA" label="Tarjetas" styleTbody="height:10em;">
+            <titulo>Tarjetas</titulo>
+            <filters>
+                <field id="legajo" deshabilitado="false">
+                    <label>Legajo</label>
+                    <operador>=</operador>
+                    <detalle>legajo</detalle>
+                </field>
+                <field id="nomapp" local="true" deshabilitado="true">
+                    <label>Nombre y Apellido</label>
+                </field>
+              
+                   
+            </filters>
+<!--			<movimientos>
+				<relacion id="seccionhist_update.xml"></relacion>
+				<relacion id="seccionhist_insert.xml"></relacion>
+				<relacion id="seccionhist_delete.xml"></relacion>				
+			</movimientos> -->
+            <field id="idPersona" deshabilitado="true" oculto="true">
+                <label>Persona</label>
+				
+				
+            </field>
+            <field id="legajo" deshabilitado="true" autocompletar="true" oculto="true" local="true" >
+                <label>legajo</label>
+                <size>50</size>
+                <ayuda_ex id="PERSONAL">
+                    <field id="legajo" esClave="true">
+                        <label>Legajo</label>
+                        <detalle>legajo</detalle>
+                    </field>
+                    <field id="nomapp">
+                        <label>Nombre y Apellido</label>
+                        <expresion having="false">CONCAT(apellido, ' ', Nombre)</expresion>
+                        <detalle>nomapp</detalle>
+                    </field>
+<!--				    <field id="Nombre">
+					<label>nombre</label>
+					<detalle>nom</detalle>
+				    </field>
+				    <field id="apellido">
+					<label>apellido</label>
+					<detalle>app</detalle>
+				    </field> -->
+                    <field id="IdPersona" noshow="true">
+                        <label>Nro persona</label>
+                        <detalle>IdPersona</detalle>
+                    </field>
+                    <field id="fechaEgreso" noshow="true">
+                        <condicion operador="=">'0000-00-00'</condicion>
+                    </field>
+                                    
+                </ayuda_ex>
+<!--				<condicion operador="=">''</condicion>	 -->
+            </field>
+            <field id="nomapp" local="true" noshow="true">
+                <label>Nombre y Apellido</label>
+                <size>80</size>
+            </field>
+			
+
+            <field id="tarjeta">
+                <label>Tarjeta</label>
+                <help>Codigo de Tarjeta</help>
+            </field>
+            <field id="fechaDesde">
+                <label>Desde Fecha</label>
+                <help>Fecha</help>
+            </field>
+        </tabla>
+
+    </consulta>
+</abm>

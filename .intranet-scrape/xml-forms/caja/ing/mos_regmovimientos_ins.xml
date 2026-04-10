@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="insert" 
+    _xmlImpresion="/clientes/qry/imp_facturainsumas_qry.xml" 
+    _directprint="factura" _printer="factura" _sqlhardcoded="true" processFirst="true">
+	<title>Movimientos en Cuentas Corrientes</title>
+	 <obs></obs>
+		<form>
+		    <table id="REG_MOVIMIENTOS">
+		    	
+				<field id="subsistema_id"      		id_temp="subsistema_id" >
+                    <detalle>subsistema_id</detalle>
+                    <tipo>varchar</tipo>
+                </field>
+
+				<field id="regcuenta_id"     		id_temp="regcuenta_id" >
+                        <detalle>regcuenta_id</detalle>
+                </field>
+
+				<field id="concepto_id"      			id_temp="regconcepto_id">
+                        <detalle>concepto_id</detalle>
+                </field>
+
+				<field id="fecha_movimiento"     		id_temp="fecha_movimiento"/>
+				<field id="letra_movimiento"     		id_temp="regcuenta_ivaletra"/>
+				<field id="iva_id"     					id_temp="regcuenta_ivaid"/>
+				<field id="puesto_movimiento"    	 	id_temp="puesto_movimiento"/>
+				<field id="nro_movimiento" 	     		id_temp="nro_movimiento">		
+                    <detalle>nro_movimiento</detalle>
+                </field>
+				<field id="reg_fecha" 	                id_temp="fecha_movimiento"/>				
+				<field id="bonificaciones_movimiento" 	id_temp="bonificaciones_movimiento"/>
+
+				<field id="neto_movimiento"             id_temp="neto_movimiento"/>
+				<field id="importe_iva"           		id_temp="importe_IVA"/>
+				<field id="importe_bon"					id_temp="importe_bon"/>
+				<field id="importe_exento"     			id_temp="importe_exento"/>
+				<field id="alicuota_iva" 	   		  	id_temp="alicuota_iva"/>
+
+		        <field id="regforma_id" 				id_temp="regforma_id" />
+				<field id="vencimiento_movimiento" 		_id_temp="vencimiento_movimiento">
+				    <valor>ifnull(date_add( fecha_movimiento, interval (select ifnull(plazo,0) from REG_FORMAS where id_regforma = '[__regforma_id__]' limit 1) day), reg_fecha)</valor>
+				    <tipo>integer</tipo>
+				</field>
+				
+				<!--<field id="vencimiento_movimiento" 	id_temp="vencimiento_movimiento">
+				    <valor>				
+                    	select date_format ( (date_add(vencimiento_movimiento, interval REG_FORMAS.plazo day )),"%Y/%m/%d") 
+                    	from REG_FORMAS id_regforma = '[__regforma_id__]'                               
+				    </valor>
+				    <tipo>integer</tipo>
+				</field>	-->
+
+
+				<!-- Fecha entrega -->
+            	<field id="fpv_movimiento"          	id_temp="fpv_movimiento"/>
+
+				<field id="importe_movimiento"    	 	id_temp="importe_movimiento" >
+				    <tipo>custom_numeric</tipo>
+				</field>
+				
+				<field id="saldo_movimiento"     		id_temp="saldo_movimiento" >	
+				    <tipo>custom_numeric</tipo>
+				</field>	
+
+				<field id="referencia_movimiento"       id_temp="referencia_movimiento"/>
+
+				<field id="regcuentavendedor_id"       id_temp="regcuentavendedor_id"/>
+
+				<field id="regcuentatransporte_id"  	id_temp="regcuentatransporte_id" />
+				<field id="nombre_movimiento" 			id_temp="regcuenta_nombre" />
+				<field id="cuit_movimiento"	  	 		id_temp="regcuenta_cuit" />
+				<field id="tiposervicio_afip"			id_temp="tiposervicio_afip" />
+				<field id="dni_movimiento"			    id_temp="regcuenta_doc" />
+		    </table>
+		</form>
+    </histrix>	

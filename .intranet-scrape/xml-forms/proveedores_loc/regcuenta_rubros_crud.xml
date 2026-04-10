@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="abm-mini" paginar="100">
+  <title>ABM CUENTA</title>
+  <obs></obs>
+  <form >
+    <table id="REG_CUENTA_RUBROS">
+	<field id="id_regcuentarubro" noshow="true" />
+	<field id="regcuenta_id" noshow="true" valauto="true"/>
+	<field id="stkrubro_id" deshabilitado="true" valauto="true">
+	    <label>Rubro</label>
+            <helper type="combo" id="STK_RUBROS">
+	      <field id="id_stkrubro"/>
+    	      <field id="rubnom">
+        	<expression>CONCAT(id_stkrubro, '-', nombre_rubro)</expression>
+              </field>
+            </helper>
+	    <valor>1</valor>
+        <actualiza>
+          <field id="stksubrubro_id" destino="stkrubro_id"/>
+        </actualiza>
+	</field>
+	<field id="stksubrubro_id">
+	    <label>Sub Rubro</label>
+    	    <helper type="combo" id="STK_SUBRUBROS">
+        	<field id="id_stksubrubro"/>
+        	<field id="subnom">
+    		    <expression>CONCAT(id_stksubrubro, '-', nombre_subrubro)</expression>
+        	</field>
+        	<field id="stkrubro_id" oculto="true">
+        	    <condicion operador="=">1</condicion>
+        	</field>
+    	    </helper>
+	</field>
+    </table>
+  </form>
+</histrix>

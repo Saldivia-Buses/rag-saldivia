@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="card" modifica="false" inserta="false" grid="17%, 17em" imprime="false" export="false" path="/fotos/coches" _autoupdate="10">
+  <title>Estado de Fábrica</title>
+  <obs />
+  <form >
+    <table id="PROD_PRODUCT_PATH" label="Controles de Calidad de Producción">
+
+	<field id="id_productpath" noshow="true" autoinc="true">
+	</field>
+	
+	<field id="linea_id" noshow="true">
+		<condicion operador="=">1</condicion>
+	</field>
+<!--
+    <field id="orden" tabla="MOMENTO" noshow="true">
+        <label>Orden Momento</label>
+    </field>
+
+    <field id="idPosicion" tabla="POSICIONESFAB" noshow="true">
+        <label>Orden Posicion</label>
+    </field>
+-->
+	
+	<field id="descripcion" style="padding-left:3px;line-height:2em;background-color:#444;color:white;">
+		<label>Posicion</label>
+		<expression><![CDATA[concat('<h3 style="background-color:',color,';" >', nombre, '</h3>')]]></expression>
+	</field>
+
+	<field id="id" noshow="true">
+	    <expression>productpath_id</expression>
+	</field>
+
+	    <field id="hayentrega" noshow="true">
+                <expression having="false">(select count(*)  from ENTREGASCOCHES where ENTREGASCOCHES.nrofab = PEDCOTIZ.nrocha  and ENTREGASCOCHES.entrega IS NOT NULL  limit 1)</expression>
+		<condicion operador="=">0</condicion>
+	    </field>
+
+      <field id="ficha_id" noshow="true">
+	    <expression>PEDCOTIZ.id</expression>
+      </field>
+	<field id="nrofab_id" noshow="true" >
+            <expression>PEDCOTIZ.nrocha</expression>
+	</field>
+	<field id="fecha" noshow="true">
+	    <expression>date(hora_registro)</expression>
+	    <tipo>date</tipo>
+	</field>
+        <field id="nrofab_id"  noZero="true">
+            <expression>PEDCOTIZ.nrocha</expression>
+
+            <label modpos="nobr" style="text-align:center;color:#444;font-size:14px;font-weight:bold;">Fab</label>
+            <help>Numero de Fabricacion</help>
+
+            <helper type="link" xml="ficha_producto1_qry.xml" dir="/producto" modal="true" title="Ficha Técnica">
+<!--                  <parameter source="ficha_id" target="producto_id"/> -->
+                 <parameter source="nrofab_id" target="nrofab"/> 
+                 <parameter source="nrofab_id" target="nrocha"/> 
+            </helper>
+	    <detalle>nrofab</detalle>
+        </field>
+            <field id="corpath" local="true" noshow="true">
+                <if exp="true">
+                    <true>'nrofab_id/corte'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+
+<!--         <field id="parametros" _noshow="true">
+        <label>param</label>
+        <expression>select parametros from PRODUCTO_ATRIBUTOS where id_prdatributo = 7</expression>
+        </field> -->
+
+        
+        <field id="cortePint" path="corpath" open="true" print="false" tabla="PEDCOTIZ">
+	    <expression>select valor_atributo from PRODUCTO_ATRIB_VALORES where producto_id = id and prdatributo_id = 7</expression>
+            <label>Corte</label>
+            <tipo>file</tipo>
+            <size>100</size>
+            <attribute id="attributes">parametros</attribute>
+        </field>
+        <field id="texto" local="true" style="font-size:2em;color:blue;font-weight:bold;">
+            
+        </field>
+	<field id="targetPos" noshow="true">
+	    <expression>''</expression>
+
+	</field>
+	<field id="pendientes" noshow="true">
+	    <expression>0</expression>
+	</field>
+
+	<field id="detalles" local="true" showObjTabla="true">
+	    <helper xml="salidas_de.xml" type="object">
+		<parameter source="targetPos" target="idMomento" />
+		<parameter source="pendientes" target="pendientes" />
+	    </helper>
+	</field>
+
+
+        <field id="homologacion_id" tabla="PEDCOTIZ" style="text-align:center;">
+                <label>Homol</label>
+                <helper type="combo" xml="combo_homologacion_modelo.xml" dir="/fabricacion" empty="true">
+                </helper>
+        </field>
+	<field id="registros">
+	    <expression>'Movimientos'</expression>
+                <helper type="link" xml="prod_path_registro.xml" title="Posiciones">
+		    <parameter source="nrofab_id" target="nrofab_id" />
+                </helper>
+	</field>
+
+
+        <field id="order_path" tabla="PROD_PRODUCT_PATH" noshow="true"/>
+
+        <field id="terminacionFinal" noshow="true" deshabilitado="false" required="false">
+            <expression having="false">terminacionFinal</expression>
+            <condicion operador="=">'0000-00-00'</condicion>
+            
+        </field>
+
+
+    <order>
+        <field id="order_path" _tabla="MOMENTO"/>
+    </order>
+
+    </table>
+
+    <join>
+    	<table id="POSICIONESFAB">
+    		<field id="id_posicionfab">
+    			<condicion operador="=">posicionfab_id</condicion>
+    		</field>
+    	</table>
+    </join>
+
+    <join>
+        <table id="MOMENTO">
+            <field id="idMomento">
+                <condicion operador="=">POSICIONESFAB.idMomento</condicion>
+            </field>
+        </table>
+    </join>
+
+    <join tipo="left">
+    	<table id="PROD_PATH_REGISTRO">
+    	    <field id="productpath_id">
+    		  <condicion operador="=">id_productpath</condicion>
+    	    </field>
+    	    <field id="hora_salida">
+    		  <condicion operador="=">'0000-00-00 00:00:00'</condicion>
+    	    </field>	
+    	</table>
+    </join>
+    <join tipo="left">
+    	<table id="PEDCOTIZ">
+    		<field id="nrocha">
+			<condicion operador="=">PROD_PATH_REGISTRO.nrofab_id</condicion>
+    			<!-- <condicion operador="=">(select nrofab_id from PROD_PATH_REGISTRO where productpath_id = id_productpath and hora_salida = '0000-00-00 00:00:00' order by hora_registro DESC limit 1 )</condicion> -->
+    		</field>
+    	</table>
+    </join>
+  </form>
+
+UNION
+
+    <form>
+        <table id="MOMENTO" label="Controles de Calidad de Producción">
+
+            <field id="idMomento" _noshow="true" />
+<!--
+            <field id="orden" noshow="true" local="true"/>
+            
+            <field id="idPosicion" noshow="true" local="true"/>
+-->
+            <field id="linea_id" noshow="true">
+                <condicion operador="=">1</condicion>
+            </field>
+
+            <field id="descripcion">
+                <label>Posicion</label>
+                <expression>concat('Salidas de ', descripcion)</expression>
+            </field>
+
+            <field id="reportar" noshow="true">
+                <condicion operador="=">1</condicion>
+            </field>
+
+            <field id="ficha_id" noshow="true" local="true" />
+	    
+	    <field id="hayentrega" local="true" noshow="true" />
+
+            <field id="nrofab_id" noshow="true" local="true" />
+
+            <field id="fecha" local="true" />
+
+            <field id="nrofab_id"  noZero="true" local="true" />
+
+            <field id="corpath" local="true" noshow="true">
+                <if exp="true">
+                    <true>'nrofab_id/corte'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="id" local="true" />
+
+        <field id="texto" noshow="true">
+	    <expression>''</expression>
+<!--
+                <expression><![CDATA[SELECT GROUP_CONCAT(PPR.nrofab_id SEPARATOR '<br>')
+                                        FROM PROD_PATH_REGISTRO PPR
+
+                                        JOIN PROD_PRODUCT_PATH PPP ON PPP.id_productpath = PPR.productpath_id
+                                        JOIN POSICIONESFAB PF      ON PF.id_posicionfab  = PPP.posicionfab_id
+                                        JOIN PEDCOTIZ PED          ON PPR.nrofab_id = PED.nrocha
+
+                                        WHERE IFNULL((SELECT COUNT(*) FROM PROD_PATH_REGISTRO PR WHERE PR.nrofab_id = PPR.nrofab_id AND hora_salida = '0000-00-00 00:00:00'), 0) = 0
+                                          AND PF.idMomento = MOMENTO.idMomento
+                                          AND PPR.hora_salida = (SELECT PROD_PR.hora_salida FROM PROD_PATH_REGISTRO PROD_PR WHERE PROD_PR.nrofab_id = PPR.nrofab_id ORDER BY PROD_PR.hora_salida DESC LIMIT 1)
+                                          AND PED.terminacionFinal = '0000-00-00'
+
+                                        ORDER BY PPR.nrofab_id, PPR.hora_salida DESC]]></expression>
+-->
+        </field>
+
+	<field id="targetPos" noshow="true">
+	    <expression>idMomento</expression>
+
+	</field>
+	<field id="pendientes" noshow="true">
+	    <expression>0</expression>
+	</field>
+
+	<field id="detalles" local="true">
+	    <helper xml="salidas_de.xml" type="object">
+		<parameter source="targetPos" target="idMomento" />
+	    </helper>
+	</field>
+
+            <field id="homologacion_id"  noZero="true" local="true" />
+<!--             <field id="parametros"  noZero="true" local="true" />
+ -->
+	<field id="registros">
+	    <expression>''</expression>
+                <helper type="link" xml="prod_path_registro.xml" >
+		    <parameter source="nrofab_id" target="nrofab_id" />
+                </helper>
+	</field>
+
+        <field id="order_path" _tabla="MOMENTO" local="true">
+	    <expression>100 + idMomento</expression>
+	</field>
+        <field id="terminacionFinal" noshow="true"  local="true">
+            
+        </field>
+
+
+    <order>
+        <field id="order_path" _tabla="MOMENTO"/>
+    </order>
+
+    </table>
+  </form>
+
+
+UNION
+
+    <form>
+        <table id="MOMENTO" label="Controles de Calidad de Producción">
+
+            <field id="idMomento" _noshow="true" />
+<!--
+            <field id="orden" noshow="true" local="true"/>
+            
+            <field id="idPosicion" noshow="true" local="true"/>
+-->
+            <field id="linea_id" noshow="true">
+                <condicion operador="=">1</condicion>
+            </field>
+
+            <field id="descripcion">
+                <label>Posicion</label>
+		<expression><![CDATA[concat('<h2 style="background-color:orange;" > CON PENDIENTES</h2>')]]></expression>
+            </field>
+
+            <field id="reportar" noshow="true">
+                <condicion operador="=">1 and permite_marcar_pendientes = 1</condicion>
+            </field>
+
+            <field id="ficha_id" noshow="true" local="true" />
+	    
+	    <field id="hayentrega" local="true" noshow="true" />
+
+            <field id="nrofab_id" noshow="true" local="true" />
+
+            <field id="fecha" local="true" />
+
+            <field id="nrofab_id"  noZero="true" local="true" />
+
+            <field id="corpath" local="true" noshow="true">
+                <if exp="true">
+                    <true>'nrofab_id/corte'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="id" local="true" />
+
+        <field id="texto" noshow="true">
+	    <expression>''</expression>
+<!--
+                <expression><![CDATA[SELECT GROUP_CONCAT(PPR.nrofab_id SEPARATOR '<br>')
+                                        FROM PROD_PATH_REGISTRO PPR
+
+                                        JOIN PROD_PRODUCT_PATH PPP ON PPP.id_productpath = PPR.productpath_id
+                                        JOIN POSICIONESFAB PF      ON PF.id_posicionfab  = PPP.posicionfab_id
+                                        JOIN PEDCOTIZ PED          ON PPR.nrofab_id = PED.nrocha
+
+                                        WHERE IFNULL((SELECT COUNT(*) FROM PROD_PATH_REGISTRO PR WHERE PR.nrofab_id = PPR.nrofab_id AND hora_salida = '0000-00-00 00:00:00'), 0) = 0
+                                          AND PF.idMomento = MOMENTO.idMomento
+                                          AND PPR.hora_salida = (SELECT PROD_PR.hora_salida FROM PROD_PATH_REGISTRO PROD_PR WHERE PROD_PR.nrofab_id = PPR.nrofab_id ORDER BY PROD_PR.hora_salida DESC LIMIT 1)
+                                          AND PED.terminacionFinal = '0000-00-00'
+
+                                        ORDER BY PPR.nrofab_id, PPR.hora_salida DESC]]></expression>
+-->
+        </field>
+
+	<field id="targetPos" noshow="true">
+	    <expression>idMomento</expression>
+
+	</field>
+	<field id="pendientes" >
+	    <expression>1</expression>
+	</field>
+	<field id="detalles" local="true">}
+	    <helper xml="salidas_de.xml" type="object">
+		<parameter source="targetPos" target="idMomento" />
+		<parameter source="pendientes" target="pendientes" />
+	    </helper>
+	</field>
+
+            <field id="homologacion_id"  noZero="true" local="true" />
+<!--             <field id="parametros"  noZero="true" local="true" />
+ -->
+	<field id="registros">
+	    <expression>''</expression>
+                <helper type="link" xml="prod_path_registro.xml" >
+		    <parameter source="nrofab_id" target="nrofab_id" />
+                </helper>
+	</field>
+
+        <field id="order_path" _tabla="MOMENTO" local="true">
+	    <expression>200 + idMomento</expression>
+	</field>
+        <field id="terminacionFinal" noshow="true"  local="true">
+            
+        </field>
+
+
+    <order>
+        <field id="order_path" _tabla="MOMENTO"/>
+    </order>
+
+    </table>
+  </form>
+
+</histrix>

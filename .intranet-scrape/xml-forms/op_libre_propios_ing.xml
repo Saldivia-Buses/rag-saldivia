@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix exportasuma="true" imprime="false" llenoTemporal="false" llenoreferente="true" tipo="ing">
+	<title>MOVIMIENTOS BANCARIOS</title>
+	<obs/>
+	<form >
+		<table id="BCSMOVIM" idCampoCond="imputar" label="Mov Bancarios">
+			<movimientos>
+				<relacion id="op_libre_propios_ingmov.xml"></relacion>
+			</movimientos>
+			<field id="siscod" noshow="true">
+				<label>siscod</label>
+				<help>Cod sistema</help>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'sisbcs'</condicion>
+					</field>
+				</parametro>
+			</field>
+			<field id="sisbcs"  local="true" noshow="true">
+				<label>siscar</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'sisbcs'</condicion>
+					</field>
+				</parametro>
+				<tipo>varchar</tipo>
+			</field>			
+			<field id="bcsmov" noshow="true">
+				<!--				<label>Concepto</label>
+				<help>Codigo de Concepto</help>
+				<tabla_ex id="BCSCONCE">
+					<field id="cnbcod"></field>
+					<field id="cnbdes"></field>
+				</tabla_ex>
+				<tipo>integer</tipo>
+				-->
+				<valor>2</valor>
+			</field>
+			<field id="bcsnro">
+				<label>Numero</label>
+				<help>Numero de Movimiento</help>
+				<tipo>integer</tipo>
+				<valor>0</valor>
+				<format>%08d</format>
+			</field>
+			<field id="bcscta">
+				<label>Concepto</label>
+				<help>Codigo de Concepto</help>
+				<tabla_ex id="BCSCUENT">
+					<field id="ccbcod"/>
+					<field id="ccbnom"/>
+					<field id="ctbcod" />
+				</tabla_ex>
+				<tipo>integer</tipo>
+			</field>
+			<field id="bcsfec">
+				<label>Fecha</label>
+				<valor>today</valor>
+			</field>
+			<field id="bcsfev">
+				<label>Vto.</label>
+				<valor>today</valor>
+			</field>
+			<field id="ctbcod"  noshow="true" deshabilitado="true">
+				<detalle>caj_ctb</detalle>
+				<tabla_ex id="BCSCUENT" >
+					<field id="ctbcod"/>
+					<field id="ccbnom" />
+				</tabla_ex>
+    			<valor>111203</valor>
+			</field>			
+			<field id="bcsimp" suma="true">
+				<label>Importe</label>
+				<help>Importe del Movimiento</help>
+				<tipo>numeric</tipo>
+				<valor>0</valor>
+				<detalle>cajimp</detalle>
+			</field>
+			<field id="cajcod" local="true" noshow="true">
+				<label>cajcod</label>
+				<valor>8</valor>
+				<detalle>cajcod</detalle>
+			</field>
+		
+			<field id="imputar" local="true" noshow="true">
+				<valor>1</valor>
+			</field>
+			<!-- NUMERADOR INTERNO NOMBRE DE CAMPO RESERVADO-->
+			<field id="_ORDEN" oculto="true">
+				<label>Orden</label>
+			</field>
+			<field id="nrorec" noshow="true">
+				<valor>12345</valor>
+			</field>
+			<field deshabilitado="true" id="referencia" local="true">
+				<label>Referencia</label>
+				<if exp="true" operador="=">
+					<true>"'O.P.:nrorec - Cuenta: bcscta'"</true>
+					<false>'test'</false>
+				</if>
+				<tipo>varchar</tipo>
+			</field>
+			<field ctbtipo="2" id="cajtip" local="true" noshow="true">
+				<valor>2</valor>
+				<detalle>cajtip</detalle>
+			</field>
+			<field id="opecla" local="true" noshow="true">
+				<valor eval="true">$_SESSION['usuario']</valor>
+			</field>			
+			<!--
+			<filters>
+				<field id="regfec">
+					<operador>=</operador>
+					<label>Fecha</label>
+					<valor>today</valor>
+				</field>
+			</filters>
+				-->
+			<order>
+				<field id="bcsnro"/>
+			</order>
+		</table>
+		<join tipo="left">
+			<table id="BCSCONCE">
+				<field id="siscod" oculto="true">
+					<label>BCSCONCE.siscod</label>
+					<condicion operador="=">BCSMOVIM.siscod</condicion>
+				</field>
+				<field id="cnbcod" oculto="true">
+					<condicion operador="=">BCSMOVIM.bcsmov</condicion>
+				</field>
+				<field id="cnbnom" oculto="true"></field>
+			</table>
+		</join>
+	</form>
+</histrix>

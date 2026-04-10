@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" deleteRow="false" inserta="false" _limit="20">
+  <title>Cta Ctes</title>
+
+  <obs/>
+  
+  <form detalle="despacho_informe_detalle.xml" inline="false" >
+
+    <table id="REG_MOVIMIENTOS">
+    
+	<filters>
+
+		<field id="fecha_desde">
+			<label>Desde</label>
+			<valor>today</valor>
+		</field>
+				
+		<field id="fecha_hasta">
+			<label>Hasta</label>
+			<valor>today</valor>
+		</field>
+		
+		<field id="puesto_movimiento">
+		    <label>Puesto</label>
+		    <operador>=</operador>
+   		</field>
+
+		<field id="regestado_id" editable="true">
+			<label>Estado</label>
+		    <operador>=</operador>
+		</field>
+    	
+	</filters> 
+
+		<field id="separador" local="true" deshabilitado="true" modpos="nobr" style="width:10px;" colstyle="display:none;"/>
+
+		<field id="id_regmovim" noshow="true" esClave="true" >
+			<detalle>regmovim_id</detalle>
+		</field>
+
+		<field id="concepto_id" noshow="true" >
+			<condicion>47</condicion>
+		</field>
+
+		<field id="subsistema_id"  noshow="true" />
+
+		<field id="subsistematr_id" local="true" noshow="true" valauto="true"/>    
+
+		<field id="regcuenta_id" noshow="true">
+			<label>Cliente</label>
+		</field>
+
+
+	<fieldGroup colstyle="text-align:center;vertical-align:middle;padding:2px 2px 2px 2px;" >
+
+			<field id="puesto_movimiento">
+				<label>Puesto</label>
+			    <helper type="combo" id="REG_NUMERADORES" empty="true">
+					<field id="puesto" />
+					<field id="nombre_puesto">
+					    <expression>puesto</expression>
+					</field>
+					<field id="regconcepto_id">
+						<condicion>47</condicion>
+					</field>
+		            <order>
+		    	        <field id="puesto" />
+		            </order>
+			    </helper>  
+			    <detalle>puesto_movimiento</detalle> 
+			</field>
+
+			<field id="fecha_desde" local="true" noshow="true">
+				<label>Fecha Desde</label>
+				<tipo>date</tipo>
+				<detalle>fecha_desde</detalle>
+			</field>
+
+			<field id="fecha_hasta" local="true" noshow="true">
+				<label>Fecha Hasta</label>
+				<tipo>date</tipo>
+				<detalle>fecha_hasta</detalle>
+			</field>
+			
+			<field id="fecha_movimiento" noshow="true">
+				<label>Fecha</label>
+				<condicion operador="&gt;=">STR_TO_DATE('[__fecha_desde__]', '%d/%m/%Y') and fecha_movimiento &lt;= STR_TO_DATE('[__fecha_hasta__]', '%d/%m/%Y')</condicion>
+			</field>
+
+			<field id="conteo" suma="true">
+				<label>Totales</label>
+				<expression>count(id_regmovim)</expression>
+			</field>
+
+			<field id="regestado_id">
+				<label>Estado</label>
+				<helper type="combo" xml="regestados_qry.xml" dir="/ayudas" empty="true" />
+				<detalle>regestado_id</detalle>
+			</field>
+
+	</fieldGroup>
+
+		<order>
+			<field id="puesto_movimiento" />
+		</order>
+
+		<group>
+			<field id="regestado_id" />
+			<field id="puesto_movimiento" />
+		</group>
+
+	</table>
+	
+	    <join>
+	      <table id="REG_CUENTA">
+	        <field id="id_regcuenta">
+	          <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+	        </field>
+	      </table>
+	    </join>
+	    
+	    <join>
+	      <table id="REG_CONCEPTOS">
+	        <field id="id_concepto">
+	          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+	        </field>
+	      </table>
+	    </join>
+
+	    <join tipo="left">
+	      <table id="REG_MOVIMIENTO_OBS">
+	        <field id="regmovim_id">
+	          <condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion>
+	        </field>
+	      </table>
+	    </join>
+
+  </form>
+</histrix>

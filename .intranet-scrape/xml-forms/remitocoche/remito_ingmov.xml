@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="insert" >
+       <title>ENCABEZADO COMPROBANTE</title>
+        <obs></obs>
+               <form >
+					<table id="REMITO" label="ENCABEZADO">
+						<field id="ctacod" id_temp="ctacod">
+						</field>
+						<field id="fecha" id_temp="fecha">
+						</field>
+						<field id="puesto" id_temp="puesto">
+						</field>
+						<field id="numero" id_temp="numero">
+						</field>
+						<field id="nrofab" id_temp="nrofab">
+						</field>
+					</table>
+               </form>
+        </histrix>

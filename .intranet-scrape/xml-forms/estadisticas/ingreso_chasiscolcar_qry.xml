@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="chart">
+	<title>Chasis</title>
+	<obs></obs>
+	<form >
+		<table id="GEN_CALENDAR" >
+			<title>Chasis ingresados</title>
+
+			<grafico id="IngresosChasis" >
+				<ancho>400</ancho>
+				<tipo>SC</tipo>
+				<etiquetas>mes</etiquetas>
+				<serie>chasis</serie>
+				<serie>mini</serie>
+				<title>Ingreso Chasis.</title>
+			</grafico>
+			<filters>
+				<field id="fecha">
+					<label>Desde</label>
+					<valor eval="true">
+						date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-3 month')) , 1, date("Y") -  1 ))
+					</valor>
+					<operador>&gt;=</operador>
+				</field>
+				<field id="fecha">
+					<label modpos="nobr">Hasta</label>
+					<valor eval="true">
+						date('d/m/Y', strtotime('-1 second', strtotime(date('Y-m-01'))))
+					</valor>
+					<operador>&lt;=</operador>
+				</field>
+				
+			</filters>
+
+			<field id="mes">
+				<expression>month(fecha)</expression>
+				<label>Mes</label>
+				<options>
+					<option valor="1">Ene</option>
+					<option valor="2">Feb</option>
+					<option valor="3">Mar</option>
+					<option valor="4">Abr</option>
+					<option valor="5">May</option>
+					<option valor="6">Jun</option>
+					<option valor="7">Jul</option>
+					<option valor="8">Ago</option>
+					<option valor="9">Sep</option>
+					<option valor="10">Oct</option>
+					<option valor="11">Nov</option>
+					<option valor="12">Dic</option>
+				</options>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="fecha" oculto="true">
+			<tipo>date</tipo>
+		</field>
+		<field id="year" _oculto="true">
+			<expression>year(fecha)</expression>
+
+		</field>
+
+		<field id="conces" local="true">
+			<helper type="combo" xml="concesionario.xml" empty="true"/>
+			<label>Conces</label>
+			<help>Concesionario</help>
+		</field>-->
+
+		<field id="chasis">
+			<expression>
+				CASE WHEN '2' = '' THEN (SELECT COUNT(*) FROM CHASIS LEFT JOIN CONCESIONARIO ON CHASIS.conces = CONCESIONARIO.idconces
+				 WHERE YEAR(entrada) = YEAR(GEN_CALENDAR.fecha) AND MONTH(entrada) = MONTH(GEN_CALENDAR.fecha))
+			ELSE (SELECT COUNT(*) FROM CHASIS LEFT JOIN CONCESIONARIO ON CHASIS.conces = CONCESIONARIO.idconces WHERE YEAR(entrada) = YEAR(GEN_CALENDAR.fecha) AND MONTH(entrada) = MONTH(GEN_CALENDAR.fecha) and idconces = '2' and not CHASIS.modcod='16') END
+			</expression>
+			<label>Grandotes</label>
+		</field>
+		
+
+		<field id="mini">
+			<expression>
+				CASE WHEN '2' = '' THEN (SELECT COUNT(*) FROM CHASIS LEFT JOIN CONCESIONARIO ON CHASIS.conces = CONCESIONARIO.idconces WHERE YEAR(entrada) = YEAR(GEN_CALENDAR.fecha) AND MONTH(entrada) = MONTH(GEN_CALENDAR.fecha))
+			ELSE (SELECT COUNT(*) FROM CHASIS LEFT JOIN CONCESIONARIO ON CHASIS.conces = CONCESIONARIO.idconces WHERE YEAR(entrada) = YEAR(GEN_CALENDAR.fecha) AND MONTH(entrada) = MONTH(GEN_CALENDAR.fecha) and idconces = '2' and CHASIS.modcod='16') END
+			</expression>
+			<label>Mini</label>
+		</field>
+
+	
+		<group>
+			<field id="year" />
+			<field id="mes" />
+		</group>
+
+	</table>
+
+</form>
+</histrix>

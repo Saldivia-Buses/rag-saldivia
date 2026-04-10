@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="insert" >
+       <title>detalle</title>
+        <obs></obs>
+               <consulta>
+					<table id="STKIMPUT" label="detalle" idCampoCond="graboC">
+						<field id="idMov" id_temp="idMov">
+						</field>
+						<field id="ctacod" id_cab="ctacod"> <!--ver -->
+						</field>
+						<field id="movfec" >
+							<valor>today</valor>
+						</field>
+						<field id="movnpv" id_cab="movnpv">
+						</field>
+						<field id="movnro" _id_cab="movnro">
+							<valor>[__movnro__]</valor>
+						</field>
+						<field id="movcant" id_temp="diferencia">
+						</field>
+					</table>
+               </consulta>
+        </histrix>

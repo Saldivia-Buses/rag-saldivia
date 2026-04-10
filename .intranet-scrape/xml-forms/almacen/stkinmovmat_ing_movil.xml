@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" subtipo="vertical" llenoTemporal="false" imprime="false" _path="fotos/pedidoint" inserta="false" modifica="false">
+	<title>SALIDA STOCK MOVIL</title>
+	<obs></obs>
+    <customScript>
+	setTimeout(function(){
+		$('[name="artcod"]').select();
+	});
+        </customScript>
+	<form >
+		<table id="STKINMOV" label="SALIDA DE MATERIALES">		
+			<movimientos _cabecera="stkinmovmat_cab.xml">
+				<relacion id="stkinmovmat_movil_ingmov.xml">
+				</relacion>
+			</movimientos>
+
+  <validation>
+      <condition><![CDATA[ cantidad_stock < movcant ]]></condition>
+      <message>No hay stock disponible</message>
+  </validation>
+
+            <field id="siscod" oculto="true">
+                <label>siscod</label>
+                <parametro id="fsmparam_paralf.xml" retorna="paralf">
+                    <field id="parcla">
+                        <condicion operador="=">'sisstk'</condicion>
+                    </field>
+                </parametro>
+            </field>
+            <field id="sisprv" oculto="true">
+                <label>Cod prov</label>
+                <parametro id="fsmparam_paralf.xml" retorna="paralf">
+                    <field id="parcla">
+                        <condicion operador="=">'sispro'</condicion>
+                    </field>
+                </parametro>
+                <tipo>char</tipo>
+            </field>
+
+            <field id="nrocha" required="true">
+                <label modpos="nobr">Unidad</label>
+                <help>Unidad</help>
+                <helper type="external" xml="HLPchasis_service.xml" dir="/help_local"></helper>
+                <valor>9999</valor>
+                <tipo>integer</tipo>
+            </field>
+
+            <field id="chades" deshabilitado="true">
+                <label modpos="nobr">Chasis</label>
+                <tipo>varchar</tipo>
+                <size>40</size>
+            </field>
+
+            <field id="ctacod" deshabilitado="true">
+                <label modpos="nobr">Cliente</label>
+            </field>
+
+            <field id="movfec" deshabilitado="true">
+                <label modpos="nobr">Fecha</label>
+                <help>Fecha del Movimiento</help>
+                <tipo>date</tipo>
+                <valor>today</valor>
+            </field>
+
+            <field id="opecod" required="true">
+                <label>Operario</label>
+                <ayuda_ex id="PERSONAL" xml="HLPpersonal_ope.xml" dir="/help_local">
+                    <field id="opecod"></field>
+                    <field id="nombres">
+                        <expression>CONCAT(PERSONAL.apellido,', ', PERSONAL.Nombre)</expression>
+                        <detalle>openom</detalle>
+                    </field>
+                </ayuda_ex>
+            </field>
+            
+            <field id="openom" deshabilitado="true" local="true">
+                <label modpos="nobr" colspan="2"></label>
+                <size>40</size>
+            </field>
+
+            <field id="movnro" deshabilitado="true">
+                <label modpos="nobr">Número</label>
+                <help>Número</help>
+                <parametro id="fsmparam_parent.xml" retorna="parent">
+                    <field id="parcla" oculto="true">
+                        <condicion operador="=">'nroalm'</condicion>
+                    </field>
+                    <field id="parent">
+                        <complete>parent +  1</complete>
+                    </field>
+                </parametro>
+                <tipo>integer</tipo>
+            </field>
+
+            <field id="opecla" local="true" oculto="true">
+                <label>Usuario</label>
+                <valor eval="true">$_SESSION['usuario']</valor>
+            </field>
+
+            <field id="movcod"  oculto="true">
+                <valor>41</valor>
+            </field>
+
+
+		<field id="id_herramienta" local="true" _autoing="true">
+				<label>Código de Barras</label>
+				<tipo>varchar</tipo>
+				<ayuda_ex id="HERRAMIENTAS" xml="HLPherramientas_bar.xml">
+					<field id="id_herramienta">
+						<label>Cod.</label>
+					</field>
+					<field id="artcod">
+						<label>insumo</label>
+						<detalle>artcod</detalle>
+					</field>	
+					<clave>id_herramienta</clave>
+					<descripcion>nomherr</descripcion>			
+				</ayuda_ex>				
+				<help>codigo de barras trazables</help>
+		</field>
+
+
+            <field id="artcod" esClave="true" style="font-size:20px;">
+                <label>Artículo</label>
+                <help>Código de Artículo. </help>
+                <helper type="external" id="STKINSUM" xml="HLPstkinsum.xml" dir="/help_local">
+                    <field id="artcod">
+                        <label>Cod.</label>
+                        <detalle>artcod</detalle>
+                    </field>
+                    <field id="artdes">
+                        <label>Insumo</label>
+                        <detalle>artdes</detalle>
+                    </field>
+
+                    <field id="unicps" oculto="true">
+                        <detalle>unicps</detalle>
+                    </field>
+                    <field id="artuni" oculto="true">
+                        <detalle>artuni</detalle>
+                    </field>
+
+                    <field id="valcps" oculto="true">
+                        <detalle>valcps</detalle>
+                    </field>
+                    <field id="valuso" oculto="true">
+                        <detalle>valuso</detalle>
+
+                    </field>
+
+                    <field id="hlp" oculto="true">
+                        <expression>CONCAT(' ', ROUND(valcps,2),(SELECT FSMUNIDS.uninom from FSMUNIDS where FSMUNIDS.unicod = STKINSUM.unicps), '=',  ROUND(valuso, 2), (SELECT FSMUNIDS.uninom from FSMUNIDS where FSMUNIDS.unicod = STKINSUM.artuni)  )</expression>
+                        <detalle>hlp</detalle>
+                    </field>
+
+                    <field id="cantxuni">
+                	   <detalle>cantxuni</detalle>
+            	    </field>
+
+            	    <field id="demprov">
+            		  <detalle>demprov</detalle>
+            	    </field>
+
+                    <field id="artmin">
+                        <detalle>artmin</detalle>
+                    </field>
+
+                    <clave>artcod</clave>
+                    <descripcion>artdes</descripcion>
+
+                </helper>
+                <actualiza>
+                    <field id="depcod" destino="stkarticulo_id" />
+                </actualiza>
+
+				<size>15</size>
+				<tipo>varchar</tipo>
+            </field>
+                                    
+            <field id="artdes" deshabilitado="true" tabla="STKINSUM" esClave="true">
+                <label>Descripción</label>
+                <tipo>varchar</tipo>
+                <size>40</size>
+            </field>
+
+            <field id="depcod" local="true"  required="true" colspan="4">
+                <label>Depósito Origen</label>
+                <helper xml="deposito_articulo_qry.xml" dir="/stock_local/qry" type="combo" empty="true">
+	          <field id="cantidad_stock" _oculto="true">
+    		     <expression _having="false" >sum((case when tipo_concepto = 0  then  1 else -1 end) * ifnull(cantidad,0))</expression>
+		         <condicion operador="!=">0</condicion>
+	    	    <detalle>cantidad_stock</detalle>
+	          </field>
+
+		</helper>
+            </field>
+	    <field id="cantidad_stock" deshabilitado="true">
+		<label>Máximo disponible</label>
+	    </field>
+
+            <field id="stkdeposito_id" noshow="true" />
+
+            <field id="stklocacion_id" noshow="true" />
+
+			<field id="movcant" incdec="true" local="true" suma="true" preventLoop="true">
+				<label>Cantidad</label>
+				<help>Cantidad</help>
+				<tipo>decimal</tipo>
+				<valor>1</valor>
+			</field>          
+                    
+
+            <field id="artuni" deshabilitado="true" esClave="true">
+                <label _modpos="nobr">Unidad de Uso </label>
+                <help>Unidad de Uso </help>
+                <helper type="combo" id="FSMUNIDS">
+                    <field id="unicod"></field>
+                    <field id="uninom"></field>
+                    <order>
+                        <field id="uninom"></field>
+                    </order>
+                </helper>
+            </field>
+
+            <field id="valuso" deshabilitado="true" noshow="true" esClave="true">
+                <label>valor de uso</label>
+                <valor>1</valor>
+            </field>
+            <field id="valcps" deshabilitado="true" noshow="true">
+                <label>valor Compra</label>
+                <valor>1</valor>
+            </field>
+            <field id="conversion" local="true" suma="true"  preventLoop="true" noshow="true">
+                <label>Conv</label>
+                <if exp="valcps == 1" operador="=">
+                    <true> cant / valuso</true>
+                    <false>cant * valcps</false>
+                </if>
+                <jseval campodestino="cant">(valcps == 1)?(conversion * valuso):(conversion / valcps)</jseval>
+				<format>%01.2f</format>
+            </field>
+
+            <field id="unicps"  deshabilitado="true">
+                <label modpos="nobr">Unidad de Compra</label>
+                <help>Unidad de Compra </help>
+                <helper type="combo" id="FSMUNIDS">
+                    <field id="unicod"></field>
+                    <field id="uninom"></field>
+                    <order>
+                        <field id="uninom"></field>
+                    </order>
+                </helper>
+            </field>
+
+			<field id="movcps" deshabilitado="true" local="true" noshow="true">
+				<if exp="(unidef + 0) == 1 ">
+					<true>movcant / valuso * valcps</true>
+					<false>movcant * valcps / valuso</false>
+				</if>
+			</field>
+
+			<field id="artcos" deshabilitado="true" local="true" noshow="true">
+			</field>
+
+			<field id="artrub" deshabilitado="true" local="true" noshow="true">
+			</field>
+
+			<field id="movref" deshabilitado="true" local="true" _noshow="true">
+				<valor eval="true">date('H:i:s').' Salida por almacen'</valor>
+			</field>	
+
+            <field id="confirmado" noshow="true">
+                <valor>0</valor>
+            </field>
+
+        </table>
+    </form>
+</histrix>

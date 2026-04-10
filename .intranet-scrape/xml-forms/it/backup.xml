@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+  <title>IT Correos</title>
+  <obs></obs>
+  <form>
+    <table id="ITBACKUPS" label="BACKUPS" limit="1">
+     
+      
+      <filters>
+         
+       <field id="servidor">
+      	<label>Servidor</label>
+      </field>
+      
+    </filters>
+      
+      
+      
+      
+ 	   <field id="id_it_backups">
+       <label>id</label>
+      
+       </field>
+
+      
+      
+      <field id="fecha">
+       <label>Fecha</label>
+      </field>      
+
+      
+         
+      <field id="hora">
+       <label>Hora</label>
+      </field>      
+
+
+      <field id="servidor">
+      	<label>Servidor</label>
+      </field>
+      
+      <field id="backup_descrip">
+      	<label>Backup Descrip</label>
+      </field>
+      
+      <field id="estado">
+       <label>Estado</label>
+      </field>
+      
+        
+      
+      
+      <field id="backup_error"  style="color:red;">
+       <label>Error</label>
+      </field>   
+      
+    
+
+<!--
+  
+      <order>
+      <field id="itdevicetype_id">
+        <label>Tipo</label>
+        
+        <helper type="combo" id="ITDEVICETYPE">
+           
+          <field id="id_itdevicetype" />
+          <field id="nombre_devicetype" />
+        
+        </helper>
+      
+      </field>
+      </order>
+-->
+
+
+          </table>
+  </form>
+</histrix>  

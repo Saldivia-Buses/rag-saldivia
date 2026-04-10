@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<histrix tipo="insert">
+		<title>MOVIMIENTOS recibidos  de orden compras</title>
+		<obs></obs>
+		<form >
+			<table id="OCPRECIB" label="RECIBIDOS" idCampoCond="grabo">
+				<field id="siscod" id_temp="siscod">
+				</field>
+								
+				<field id="ocpnro" id_temp="ocpnro">
+					<label>Nro </label>
+				</field>
+				<field id="ocpfec" id_padre="movfec__1">
+					<label>Entregado</label>
+					<tipo>date</tipo>
+				</field>
+				<field id="fecrec" id_padre="movfec__1" />
+				
+				<field id="ctacod" id_padre="nro_cuenta">
+					<label>ctacod</label>
+				</field>
+				<field id="artcod" id_temp="artcod" >
+					<label>artcod</label>
+				</field>
+				<field id="fecreq" id_temp="ped" >
+					<label>fecrec</label>
+				</field>
+				<field id="nrorec" id_padre="nro_remito" >
+					<label>nrorec</label>
+				</field>
+				<field id="pedcps" id_temp="movcps" >
+				</field>
+				<field id="reccps" id_temp="ingresan" >
+				</field>
+				<field id="ocpren" id_temp="ocpren" >
+				</field><!--
+				<field id="observacion" id_temp="observacion" >
+				</field>-->
+				
+				
+				<!--
+				<field id="peduso" id_temp="pedsuo" >
+				</field> -->
+				<field id="recuso" id_temp="ingresan" >
+				</field>
+<!--
+				<field id="codest" id_temp="codest" >
+				</field>-->
+				<field id="idPed" id_temp="idPed" >
+				</field>
+				
+				
+			</table>
+		</form>
+	</histrix>

@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud">
+  <title>PERSONAL POR SECCION</title>
+  <obs/>
+  <form >
+    <table id="PERSONAL" label="Personal por Seccion" _styleTbody="height:300px; overflow-x:hidden;">
+      <filters>
+	    <field id="id_seccion" deshabilitado="false">
+		<label>Sección</label>
+		<operador>=</operador>
+	    </field>
+      </filters>
+      
+      <field id="id_seccion">
+ <expression having="false">(select SECCION.id_seccion from SECCIONHISTORIA
+   left join SECCION on SECCION.id_seccion = SECCIONHISTORIA.id_seccion
+   where SECCIONHISTORIA.IdPersona = PERSONAL.IdPersona
+	and SECCIONHISTORIA.fechaDesde &lt;= date(now())
+   order by SECCIONHISTORIA.fechaDesde desc limit 1)
+ </expression>
+          <helper type="combo" id="SECCION" empty="true">
+            <field id="id_seccion"></field>
+            <field id="nombre"></field>
+	    <field id="activa">
+		<condicion operador="=">1</condicion>
+	    </field>
+          </helper>
+        <label>Sección</label>
+        <help>Sección</help>
+      </field>
+
+  <field id="IdPersona" _noshow="true">
+        <label>Id</label>
+        <help>id</help>
+  </field>
+
+  <field id="legajo" noshow="true">
+        <label>legajo</label>
+        <help>legajo</help>
+  </field>
+
+  <field id="apellido" noshow="true">
+  </field>
+      
+      <field id="nomAp">
+        <label>Apellido y Nombres</label>
+        <expression>CONCAT(apellido,', ', PERSONAL.Nombre)</expression>
+        <tipo>varchar</tipo>
+      </field>
+      <field id="nacimiento">
+        <label>Fecha de Nacimiento</label>
+      </field>      
+      <field id="fecing">
+        <label>Fecha Ingreso</label>
+      </field>
+      <field id="CUIL">
+        <label>CUIL</label>
+      </field>
+        
+      <field id="descripcion" _tabla="CATPERSONAL">
+        <label>Categoría</label>
+        <expression>select descripcion from CATEGHISTORIA
+                   left join CATPERSONAL
+                   on CATPERSONAL.IdSindicato = CATEGHISTORIA.idSindicato
+                   and CATPERSONAL.IdCateg = CATEGHISTORIA.IdCateg
+                   where CATEGHISTORIA.IdPersona = PERSONAL.IdPersona
+                   and CATEGHISTORIA.fechaDesde &lt; CURDATE()
+                   order by CATEGHISTORIA.fechaDesde desc limit 1
+        </expression>
+        <tipo>varchar</tipo>
+      </field>
+      <field id="fechaEgreso" oculto="true">
+        <label>Egreso</label>
+        <condicion operador="=">"0000-00-00"</condicion>  
+      </field>
+
+      <field id="idPuesto">
+        <label>Puesto</label>       
+        <helper type="external" id="CIUO" xml="ciuo.xml" dir="/personal/man">
+          <field id="idPuesto"></field>
+          <field id="nombre">
+            <detalle>nom</detalle>
+          </field>
+        </helper>
+      </field>
+      <field id="nom" sincelda="true">
+        <label modpos="nobr">Nombre del Puesto</label>
+        <expression>CIUO.nombre</expression>
+        <tipo>varchar</tipo>
+        <size>40</size>
+      </field>
+
+      <field id="rie">
+        <label>Riesgos Persona</label>
+        <expression>select group_CONCAT(riesgo_id) from RIESGO_PERSONAL where RIESGO_PERSONAL.persona_id = PERSONAL.idPersona</expression>
+        <tipo>varchar</tipo>
+      </field>
+  
+  <field id="riesgos" print="false" showObjTabla="true"  linkdes="Riesgos Seccion" obj="riesgo_seccion_mapa.xml" local="true">
+        <paring destino="idSeccion" operador="=">id_seccion</paring>
+        <label>Riesgos Sección</label>
+  </field> 
+
+	<field id="seguridad" print="false" local="true">
+	    <helper xml="salida_seguridad.xml" type="link" dir="/personal/ing" modal="true" title="Salida de EPP">
+		<parameter source="idPuesto" target="idPuesto" />
+		<parameter source="legajo" target="legajo" />
+		<parameter source="nomAp" target="nombre" />
+	    </helper>
+      <label>Entrega EPP</label>
+	    <valor>'EPP'</valor>
+	</field>
+
+  <field id="riesgos_personal" print="false" local="true">
+      <helper xml="riesgos_personal_crud.xml" type="link" dir="/personal" modal="true" title="Editar Riesgos">
+    <parameter source="IdPersona" target="persona_id" />
+      </helper>
+      <label>Editar Riesgos</label>
+      <valor>'Riesgos'</valor>
+  </field>
+
+      <order>
+        <field id="apellido"></field>
+      </order>      
+    </table>
+    <join tipo="left">
+      <table id="CATPERSONAL">
+        <field id="idSindicato">
+          <condicion operador="=">PERSONAL.idSindicato</condicion>
+        </field>
+        <field id="idCateg">
+          <condicion operador="=">PERSONAL.idCateg</condicion>
+        </field>
+      </table>   
+    </join>
+    <join tipo="left">
+      <table id="CIUO">
+        <field id="idPuesto">
+          <condicion operador="=">PERSONAL.idPuesto</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

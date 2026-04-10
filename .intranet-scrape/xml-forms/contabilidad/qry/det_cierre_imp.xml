@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+  <title>Movimientos</title>
+  <obs />
+  <form>
+    <table id="CTB_DETALLES" label="Imp. Libro diario">
+
+        <field id="id_detalle" noshow="true" print="false" />
+
+        <field id="movimiento_id" noshow="true" print="false" />
+
+        <field id="regmovim_id" noshow="true" print="false" tabla="CTB_MOVIMIENTOS">
+            <condicion operador="=">0 or CTB_MOVIMIENTOS.regmovim_id IS NULL</condicion>
+        </field>
+
+        <field id="ejercicio_id" noshow="true" print="false" tabla="CTB_MOVIMIENTOS">
+            <label>Ejercicio</label>
+        </field>
+
+        <field id="concepto_id" noshow="true" print="false" tabla="CTB_MOVIMIENTOS">
+            <label>Concepto</label>
+        </field>
+
+        <field id="desde_fecha" noshow="true" local="true" print="false">
+            <label>Desde</label>
+            <tipo>date</tipo>
+        </field>
+
+        <field id="hasta_fecha" noshow="true" local="true" print="false">
+            <label>Hasta</label>
+            <tipo>date</tipo>
+        </field>
+
+        <field id="fecha_movimiento" tabla="CTB_MOVIMIENTOS" repeat="false" noshow="true">
+            <label>Fecha</label>
+            <condicion operador="&gt;=">str_to_date('[__desde_fecha__]','%d/%m/%Y') and CTB_MOVIMIENTOS.fecha_movimiento &lt;= str_to_date('[__hasta_fecha__]','%d/%m/%Y')</condicion>
+            <tipo>date</tipo>
+        </field>
+
+        <field id="cuenta_id" PDFcolWidth="25">
+            <label>Nro. Cuenta</label>
+        </field>
+
+        <field id="nombre_cuenta" tabla="CTB_CUENTAS" PDFcolWidth="260">
+            <label>Descripcion</label>
+        </field>
+
+        <field id="referencia" tabla="CTB_MOVIMIENTOS" noshow="true">
+            <label>Detalle del Movimiento</label>
+            <condicion operador="=">'CIERRE EJERCICIO'</condicion>
+        </field>
+
+        <field id="doh" noshow="true" print="false" />
+
+        <field id="debe" suma="true" noZero="true" PDFcolWidth="20">
+            <label>Debe</label>
+            <expression>round((sum(case when doh = 0 then importe else '' end)),2)</expression>
+            <tipo>numeric</tipo>
+        </field>
+
+        <field id="haber" suma="true" noZero="true" PDFcolWidth="20">
+            <label>Haber</label>
+            <expression>round((sum(case when doh = 1 then importe else '' end)),2)</expression>
+            <tipo>numeric</tipo>
+        </field>
+
+        <group>
+            <field id="cuenta_id" />
+            <field id="doh" />
+        </group>
+
+        <order>
+            <field id="doh" />
+            <field id="cuenta_id" />
+        </order>
+
+    </table>
+
+    <join>
+        <table id="CTB_MOVIMIENTOS">
+            <field id="id_movimiento">
+                <condicion operador="=">CTB_DETALLES.movimiento_id</condicion>
+            </field>
+        </table>
+    </join>
+
+    <join>
+        <table id="CTB_CUENTAS">
+            <field id="id_cuenta">
+                <condicion operador="=">CTB_DETALLES.cuenta_id</condicion>
+            </field>
+            <field id="ejercicio_id">
+                <condicion operador="=">CTB_MOVIMIENTOS.ejercicio_id</condicion>
+            </field>
+        </table>
+    </join>
+
+  </form>
+</histrix>

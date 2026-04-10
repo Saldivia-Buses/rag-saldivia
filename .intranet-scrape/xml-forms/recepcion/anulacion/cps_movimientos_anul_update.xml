@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update" >
+    <title>Anular recepción Orden de compra</title>
+    <obs></obs>
+    <form  >
+        <table id="CPSENCAB" label="Anular recepción Orden de compra">
+            
+            <field id="ocpnro" esClave="true" id_temp="ocpnro">
+            </field>
+
+	    <field id="ctacod" esClave="true" id_temp="ctacod">
+	    </field>
+	    <field id="ocpest" >
+		<valor>1</valor>
+	    </field>
+        </table>
+
+
+    </form>
+</histrix>

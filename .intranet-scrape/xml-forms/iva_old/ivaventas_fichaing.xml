@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+	<histrix tipo="fichaing" inserta="false" modifica="false">
+		<title>IVA VENTAS</title>
+		<obs></obs>
+		<consulta>
+			<table id="IVAVENTAS" label="IVA VENTAS">
+                                <movimientos>
+                                    <relacion id="ivaventas_ingmov.xml"></relacion>
+                                </movimientos>
+				<field id="feciva">
+					<label>Fecha</label>
+					<help>Fecha del Comprobante</help>
+                                        <valor>today</valor>
+				</field>
+				<field id="fecreg">
+					<label modpos="nobr">Fecha Registracion</label>
+					<help>Fecha de Registracion</help>
+                                        <valor>today</valor>
+				</field>
+				<field id="ctacod" deshabilitado="true" >
+					<label>Cuenta</label>
+					<help>Código de Cuenta</help>
+                                        <valor>0</valor>
+				</field>
+				<field id="ctanom" _deshabilitado="true">
+					<label modpos="nobr">Clente</label>
+					<help>Nombre</help>
+                                        <valor>ANULADO</valor>
+                                        <size>40</size>
+				</field>
+				<field id="codcom" >
+                                    <tabla_ex id="CCTCONCE">
+                                        <field id="concod"></field>
+                                        <field id="condes"></field>
+                                        <field id="siscod">
+                                            <condicion operador="=">02</condicion>
+                                        </field>
+                                    </tabla_ex>
+					<label modpos="nobr">Conc</label>
+                                        <help>Concepto</help>
+				</field>
+				<field id="codlet">
+					<label>Letra</label>
+					<help>Letra del Comprobante</help>
+				</field>
+				
+				<field id="nronpv" sincelda="true">
+					<label modpos="nobr">Npv</label>
+					<help>Punto de Venta</help>
+					<formato>%04d</formato>
+				</field>
+				<field id="nrocom" sincelda="true">
+					<label modpos="nobr">Numero</label>
+					<help>Número de comprobante</help>
+				</field>
+                                <!--
+				<field id="regmin" tabla="CCTMOVIM" noshow="true">
+					<label>regmin</label>
+					<tipo>integer</tipo>
+					<valor>0</valor>
+                                        <help>Minuta</help>
+				</field>				
+-->
+				
+
+
+				<field id="nrodoc" deshabilitado="true">
+					<label modpos="nobr">CUIT</label>
+                                        <help>Número de CUIT</help>
+                                        <valor>00-00000000-0</valor>
+				</field>
+
+
+<!--				<field id="gravado" suma="true">
+			      <expresion>impgra * (case when conimp = 1 then 1 else -1 end)</expresion>
+					<label>Gravado</label>
+				</field>					
+  				<field id="impcod" tabla="IVAIMPORTES">
+					<label>Impuesto</label>
+					<tabla_ex id="IVAIMPUESTOS">
+						<field id="impcod"></field>
+						<field id="impnom"></field>
+					</tabla_ex>
+					  <tipo>varchar</tipo>
+				</field>
+
+				<field id="Importe"  suma="true">
+        			      <expresion>impimp * (case when conimp = 1 then 1 else -1 end)</expresion>
+					<label>Importe</label>
+				</field>				
+				<field id="execom" norepeat="true" suma="true">
+					<label>Exento</label>
+				</field>
+
+				<field id="NOG" norepeat="true" suma="true">
+					<label>No Grav.</label>
+				        <expresion>nogcom * (case when conimp = 1 then 1 else -1 end)</expresion>
+					
+				</field>-->
+	
+				<field id="totcom" deshabilitado="true" >
+					<label >Total</label>
+                                        <valor>0</valor>
+				</field>				
+			</table>
+					
+						
+		</consulta>
+	</histrix>

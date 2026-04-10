@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="ing" _deleteRow="false" subtipo="vertical">
+	<title>Devolución de Materiales</title>
+	<obs></obs>
+	<form>
+		<table id="DEVREMITO_REC" >
+			<title>Estados</title>
+			<movimientos>
+				<relacion id="devoluciones_rec_ins.xml" />
+				<relacion id="devoluciones_stkinmov_ins.xml" />
+			</movimientos>
+			<field id="id_recdev" noshow="true" />
+			<field id="devremito_id" valauto="true" noshow="true" />
+			<field id="concepto_recdev_id" required="true">
+				<label>Concepto</label>
+				<helper type="combo" id="DEVREMITO_CONCE" empty="true">
+					<field id="id_concrecdev"/>
+					<field id="desc_concrecdev"/>
+					<field id="stk_movcod" noshow="true">
+						<detalle>stk_movcod</detalle>
+					</field>
+				</helper>
+			</field>
+			<field id="fecha_recdev">
+				<label>Fecha</label>
+				<tipo>date</tipo>
+			</field>
+			<field id="puesto_recdev">
+				<label>Puesto</label>
+			</field>
+			<field id="nro_recdev">
+				<label modpos="nobr">Nro</label>
+			</field>
+            <field id="stkdeposito_id" _editable="true" local="true" deshabilitado="false">
+                <label>Almacen</label>
+                <tabla_ex id="STK_DEPOSITOS">
+                    <field id="id_stkdeposito"></field>
+                    <field id="nombre_deposito"></field>
+                    <field id="recepcion">
+			<condicion operador="=">1</condicion>
+		    </field>
+		    <order>
+			<field id="nombre_deposito" />
+		    </order>
+                </tabla_ex>
+		<expression>(select id_stkdeposito from STK_DEPOSITOS where recepcion = 1 limit 1)</expression>
+<!--
+                <if exp="'cant_recepciones' == 0 &amp;&amp; controles == 'Control'">
+                    <true>6</true>
+                    <false>1</false>
+                </if> -->
+            </field>
+
+			<field id="cantidad_recdev">
+				<label>Cantidad</label>
+			</field>
+			<field id="stk_movcod" local="true" noshow="true"/>
+			<field id="sisprv" local="true" valauto="true" noshow="true">
+				<valor>'01'</valor>
+			</field>
+			<field id="nro_cuenta" local="true" valauto="true" noshow="true"/>
+			<field id="nombre_articulo" local="true" valauto="true" noshow="true"/>
+			<field id="artcod" local="true" valauto="true" noshow="true"/>
+			<field id="movref" local="true" noshow="true">
+				<valor>'Recepcion de devolucion'</valor>
+			</field>
+
+			<field id="graba" local="true" noshow="true">
+				<if exp="id_recdev==0">
+					<true>1</true>
+					<false>0</false>
+				</if>
+			</field>
+			<field id="graba_stk" local="true" noshow="true">
+				<if exp="graba &amp;&amp; 'stk_movcod' != '0'">
+					<true>1</true>
+					<false>0</false>
+				</if>
+			</field>
+		</table>
+	</form>
+</histrix>

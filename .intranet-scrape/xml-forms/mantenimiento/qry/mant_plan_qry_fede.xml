@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" calendarAspectRatio="2.3" sidePanel="false">
+    <title>Mantenimiento</title>
+    <obs></obs>
+    <form>
+
+        <table id="MANT_PLAN_EVENTOS" label="Plan de mantenimiento" >
+
+
+
+    <fieldGroup colstyle="text-align:center; padding: 2px 2px 2px 2px;">
+           
+            <field id="equipo_id" repeat="false">
+                  <label>Equipo</label>
+                 <helper type="combo" id="MANT_EQUIPOS">
+                      <field id="id_equipo"/>
+                      <field id="nombre_equipo"/>
+                  </helper>
+            </field>
+
+            <field id="fecha_accion" >
+                <label>Fecha</label>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="plan_id">
+                <label>Tipo</label>
+                <expression>if(plan_id = 0,'TAREA', 'CORRECTIVO')</expression>
+
+            </field>
+
+           <field id="accion_id" >
+                <helper type="combo" id="MANT_ACCIONES" empty="true">
+                    <field id="id_accion"/>
+                    <field id="nombre_accion"/>
+                </helper>
+                <label>Acción</label>
+                <detalle>accion_id</detalle>
+            </field>
+
+            <field id="estado" tabla="MANTENIMIENTO_ESTADOS" >
+                <label>Estado</label>
+            </field>
+
+            <field id="observaciones" colstyle="text-align:left;padding:2px 2px 2px 2px;">
+                <label>Detalle</label>
+                <size>100</size>
+            </field>
+
+
+            
+    </fieldGroup>
+
+        </table>
+
+        <join tipo="left">
+            <table id="MANTENIMIENTO_ESTADOS">
+                <field id="id_estado" >
+                    <condicion operador="=">MANT_PLAN_EVENTOS.estado</condicion>
+                </field>
+            </table>
+        </join>
+
+
+    </form>
+</histrix>  

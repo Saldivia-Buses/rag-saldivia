@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update">
+	<title>Movimientos Bancarios</title>
+	<obs></obs>
+	<form >
+		<table id="BCS_IMPORTACION" label="Movimientos Bancarios" idCampoCond="Borrar">
+
+			<field id="id_importacion" id_temp="id_importacion" esClave="true">
+			</field>
+
+			<field id="procesado" >
+			    <valor>2</valor>
+			</field>
+			
+		</table>
+	</form>
+</histrix>

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="nosql" evento="insert">
+	<title>Mensajes Leidos</title>
+	<obs></obs>
+	<form >
+		<table id="HTXMESSAGES" label="Marca Leidos" >
+		<ejecuta>
+
+						<![CDATA[
+
+  $count = 1;
+    if (SMS == 1 && $count == 1){
+	$count++;
+	setlocale ( 'LC_ALL' , 'es_AR' );
+        $sms = iconv('UTF-8', 'ASCII//TRANSLIT', substr("ORIGEN: MENSAJE",0 , 160));
+
+//        $command = 'LANG=es_AR.utf-8';
+        $command = 'echo "'.$sms.'" | gnokii --sendsms TELEFONO  -r 1>/tmp/sms.log 2>/tmp/sms.error';
+        loger($command);
+        exec($command);
+        unset($command);
+    }
+    if ('CORREO' == '1'){
+    	    $db = $_SESSION["db"];
+	    $database = Cache::getCache('datosbase'.$db);
+
+        require_once '../lib/Swift4/swift_required.php';
+        $smtpServer= $_SESSION['smtpServer'];
+
+        $email= $_SESSION['email'];
+        $userName= $_SESSION['userName'];
+
+        //echo $email;
+        $user= $_SESSION['emailUser'];
+        $pass= $_SESSION['emailPass'];
+
+        //Create the Transport the call setUsername() and setPassword()
+        $transport = Swift_SmtpTransport::newInstance($smtpServer, 465, 'ssl')
+         ->setUsername($user)
+         ->setPassword($pass);
+        //Create the Mailer using your created Transport
+        $mailer = Swift_Mailer::newInstance($transport);
+        $date = date('d/m/Y');
+        //Create a message
+        if('EMAIL' != ''){
+            $message = Swift_Message::newInstance("Mensaje de ORIGEN SUBJECT")
+              ->setFrom($email)
+                ->setTo('EMAIL');
+
+            $message->setBody("MENSAJE", 'text/html');
+            //Add alternative parts with addPart()
+            $message->addPart("MENSAJE", 'text/plain');
+
+            //Pass a variable name to the send() method
+            if (!$mailer->send($message, $failures)){
+                echo "Failures:";
+                print_r($failures);
+            }
+            
+                 // COPY TO SENT FOLDER
+                 $server= $database->imapServer;
+	         $serverImap = "{".$server.":143/imap/notls}";
+     
+                if ($server == 'imap.gmail.com') {
+            	    $serverImap = '{imap.gmail.com:993/ssl}';
+	            $stream = imap_open( $serverImap."[GMail]/Enviados", $user, $pass);
+		    imap_append($stream, '{imap.gmail.com:993/ssl}[GMail]/Enviados', $message->getHeaders()."\r\n".
+									       $message->getTo()."\r\n".
+									       $message->getSubject()."\r\n".
+									       $message->getBody()."\r\n");
+               }                 
+        }
+    }
+
+										
+				]]>				
+</ejecuta>
+			<field id="ORIGEN"   id_temp="de" local="true">	</field>
+			<field id="SUBJECT"  id_temp="title" local="true"></field>
+			<field id="MENSAJE"  id_temp="mensaje" local="true"></field>
+			<field id="EMAIL"    id_temp="Email" local="true"></field>
+			<field id="DESTINO"  id_temp="destino" local="true"></field>
+			<field id="SMS"      id_temp="Sms" local="true"></field>
+			<field id="CORREO"   id_temp="CORREO" local="true"></field>
+			<field id="TELEFONO" id_temp="telefono" local="true"></field>
+		</table>
+	</form>
+</histrix>

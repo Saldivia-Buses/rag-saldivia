@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="abm-mini" class="consultaancha">
+	<title>TAREAS DEL PERSONAL</title>
+	<obs></obs>
+	<form >
+		<table id="TAREASCATEG" label="TAREAS POR CATEGORIA">
+			<field id="idSindicato" oculto="true">
+			</field>			
+			<field id="idCateg" oculto="true">
+			</field>
+			<field id="id_seccion" oculto="true">
+			</field>
+			<field id="idTarea" >
+				<label style="width:360px;">Tarea</label>
+				<tabla_ex id="TAREASPER">
+					<field id="idTarea"/>
+					<field id="descripcion"/>
+				</tabla_ex>
+				<size>30</size>
+			</field>
+
+	    </table>
+	</form>
+</histrix>

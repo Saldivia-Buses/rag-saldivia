@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Propiedades</title>
+  <obs></obs>
+  <consulta>
+
+    <table id="RH_VS_PROPIEDADES"  label="Propiedades">
+	<field id="codigo"  noshow="true" > </field>
+	<field id="nombre">
+
+		<label>Descripcion</label>
+		<help>Descripcion</help>
+	</field>
+
+	<field id="tabla"></field>
+         	<field id="rhconvenio_id1" local="true"/>
+	
+         	<field id="rhconvenio_id2" >
+		<expresion having="false">rhconvenio_id</expresion>
+
+		<condicion operador="=">'[__rhconvenio_id1__]' or isnull(RH_VS_PROPIEDADES.rhconvenio_id)</condicion> 
+	
+		</field>	
+	
+
+    </table>
+<!-- <join tipo="LEFT">		
+	<tabla id="RH_CONVENIOS">
+         	<field id="id_rhconvenio" colstyle="display:none;">
+		<condicion id="id_rhconvenio" operador="=">RH_PROPIEDADES.rhconvenio_id and (RH_PROPIEDADES.rhconvenio_id = '[__rhconvenio_id__]' or RH_PROPIEDADES.rhconvenio_id is null) </condicion>
+	
+		</field>	
+	</tabla>
+</join> -->
+
+		
+  </consulta>
+</histrix>  

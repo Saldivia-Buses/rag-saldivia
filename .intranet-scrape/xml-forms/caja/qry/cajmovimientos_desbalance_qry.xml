@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" >
+  <title>Movimientos desbalanceados</title>
+  <obs/>
+  <consulta detalle="recibo_cajdetalles_imp.xml" inline="true">
+
+    <table id="CAJ_MOVIMIENTOS" label="Movimientos desbalanceados">
+      <filters>
+        <field id="fecha_movimiento">
+          <label>Desde</label>
+          <operador>&gt;=</operador>
+          <valor>today</valor>
+          <tipo>date</tipo>
+        </field>
+
+        <field id="fecha_movimiento">
+          <label>Hasta</label>
+          <operador>&lt;=</operador>
+          <valor>today</valor>
+          <tipo>date</tipo>
+        </field>
+
+        <field id="cajconcepto_id">
+          <label>Descripción</label>
+          <operador>=</operador>
+        </field>
+
+        <field id="cajpuesto_id">
+          <label>Puesto</label>
+          <operador>=</operador>
+        </field>
+
+      </filters>
+      <field id="id_cajmovimiento" noshow="true" tipoOrden="DESC">
+        <detalle>cajmovimiento_id</detalle>
+        <attribute id="noshow">attnoshow</attribute>
+      </field>
+
+      <field id="useract" local="true" noshow="true">
+        <valor eval="true">$_SESSION['usuario']</valor>
+      </field>
+      <field id="attnoshow" local="true" noshow="true">
+        <if exp="'useract' == 'histrix'">
+          <true>'false'</true>
+          <false>'true'</false>
+        </if>
+      </field>
+      <field id="cajpuesto_id" noshow="true">
+        <helper type="combo" xml="cajpuestousers_qry.xml" dir="/ayudas" empty="true" />
+      </field>
+
+      <field id="cajconcepto_id" noshow="true">
+        <helper type="combo" id="CAJ_CONCEPTOS" empty="true">
+          <field id="id_cajconcepto" />
+          <field id="descripcion_concepto" />
+        </helper>
+      </field>
+
+      <field id="fecha_movimiento" _noshow="true">
+        <label>fecha</label>
+      </field>
+
+      <field id="descripcion_concepto" deshabilitado="false">
+        <label>Descripcion</label>
+        <expression>CAJ_CONCEPTOS.abreviatura_concepto</expression>
+      </field>
+
+      <field id="nro_comp" tdWidth="200px" PDFcolWidth="100" linkdes="Detalle de Comprobante">
+        <expression>CONCAT(' 0000-',lpad(CAJ_MOVIMIENTOS.nro_movimiento,8,'0'))</expression>
+        <helper type="link" dir="/caja/proc/del" xml="cajmovimiento_ficha.xml" >
+          <parameter source="id_cajmovimiento" target="id_cajmovimiento" operador="="/>
+        </helper>
+      </field>
+
+      <field id="regcuenta_id">
+        <expression>
+          IFNULL((SELECT regcuenta_id FROM REG_MOVIMIENTOS rm WHERE rm.cajmovimiento_id = CAJ_MOVIMIENTOS.id_cajmovimiento and rm.subsistema_id = CAJ_CONCEPTOS.subsistema_id LIMIT 1), referencia_movimiento)
+        </expression>
+        <helper type="combo" id="REG_CUENTA">
+          <field id="id_regcuenta" />
+          <field id="nombre_cuenta" />
+        </helper>
+        <label>Cuenta</label>
+      </field>
+
+      <field id="debe">
+        <expression>sum(CASE WHEN doh = 0 THEN importe_detalle ELSE 0 END)</expression>
+        <label>Debe</label>
+      </field>
+
+      <field id="haber">
+        <expression>sum(CASE WHEN doh = 1 THEN importe_detalle ELSE 0 END)</expression>
+        <label>Haber</label>
+        <condicion operador="!=">Debe</condicion>
+      </field>
+
+      <group>
+        <field id="id_cajmovimiento"/>
+      </group>
+      <order>
+        <field id="id_cajmovimiento"/>
+      </order>
+    </table>
+
+    <join>
+      <table id="CAJ_CONCEPTOS">
+        <field id="id_cajconcepto">
+          <condicion operador="=">CAJ_MOVIMIENTOS.cajconcepto_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join>
+      <table id="CAJ_DETALLES">
+        <field id="cajmovimiento_id">
+          <condicion operador="=">CAJ_MOVIMIENTOS.id_cajmovimiento</condicion>
+        </field>
+      </table>
+    </join>
+  </consulta>
+</histrix>

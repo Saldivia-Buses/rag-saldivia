@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" preloadData="false" procesa="false" tooltip="false" showCantidad="false" updateTotals="true" unserializeParent="false" preventDuplication="true">
+    <title>Detalle</title>
+    <obs/>
+    <form>
+        <table id="REG_DETALLES" label="movimientos">
+
+        <movimientos>
+            <relacion id="pos_regdetalles_ins.xml" />
+            <relacion id="pos_ctbdetalle_con.xml" />
+            <relacion id="pos_ctbdetalle_iva.xml" />
+            <relacion id="ticket_factura_imp.xml" />
+        </movimientos>
+
+            <field id="_ORDEN" local="true" noshow="true"/>
+
+            <field id="muestra_iva" local="true" noshow="true">
+                <valor eval="true"><![CDATA[ strpos($_SESSION['properties']['modulos'],'iva') != false ? 'false' : 'true' ]]>
+                </valor>
+            </field>     
+
+            <field id="id_regdetalle" noshow="true" esClave="false" />
+            
+            <field id="orden" deshabilitado="true" oculto="true" noshow="true">
+                <label>Orden</label>
+                <size>35</size>
+            </field>
+
+            <field id="oculta_servdet" local="true" valauto="true" noshow="true">
+                <helper type="parameter" id="SIS::pmfree::oculta_servdet" >
+                    <label>Oculta combo de CTBAUX con codigo en pos_main_free.xml</label>
+                    <defaultValue>true</defaultValue>
+                </helper>
+            </field>
+
+            <field id="oculta_cmbctbaux" local="true" valauto="true" noshow="true">
+                <helper type="parameter" id="SIS::pmfree::oculta_cmbctbaux" >
+                    <label>Oculta combo de CTBAUX sin usar codigo pos_main_free.xml</label>
+                    <defaultValue>false</defaultValue>
+                </helper>
+            </field>
+
+            <field id="codigo_detalle" noshow="true" />
+
+            <field id="facservicio_id" noshow="true" />
+
+            <field id="ctbcuenta_detalle_id" local="true" noshow="true" style="width:420px;">
+                <label>Imputacion CTB</label>
+                <attribute id="noshow">oculta_cmbctbaux</attribute>
+                <helper type="combo" id="CAJ_CTBCUENTA_AUX" empty="true">
+                    <field id="ctbcuenta_id" esClave="true" />
+                    <field id="referencia_cuenta" />
+                    <field id="codigo_detalle" noshow="true">
+                        <expression>ctbcuenta_id</expression>
+                        <detalle>codigo_detalle</detalle>
+                    </field>
+                </helper>
+            </field>
+
+	        <field id="codigo_detalle" noshow="true" />
+
+            <field id="facservicio_id" noshow="true" />
+
+	        <!-- <field id="rubro_oblea" local="true" required="true">
+                <label>Tipo Oblea</label>
+                <helper type="combo" id="CAJ_CTBRUBRO_AUX" empty="true">
+                    <field id="id_cajctbrubro" />
+                    <field id="nombre_ctbrubro" />
+                </helper>
+                <actualiza>
+                   <field id="servicio_detalle" destino="rubro_id"/>
+                </actualiza>
+            </field> -->
+
+            <field id="servicio_detalle" local="true" noshow="true">
+                <label>Servicio</label>
+                <attribute id="noshow">oculta_servdet</attribute>
+                <helper type="combo" xml="cajctbaux_qry.xml" dir="/caja/qry" empty="true" >
+                    <field id="descripcion_detalle" noshow="true">
+                        <expression>referencia_cuenta</expression>
+                    </field>
+                    <field id="neto_detalle" noshow="true">
+                        <expression>(CASE WHEN es_facturable = 1 THEN importe ELSE 0 END )</expression>
+                        <tipo>decimal</tipo>
+                    </field>
+                    <field id="importe_detalle" noshow="true">
+                        <expression>(CASE WHEN es_facturable = 1 THEN importe ELSE 0 END )</expression>
+                        <tipo>decimal</tipo>
+                    </field>
+                    <field id="no_facturado" noshow="true" colstyle="display:none;">
+                        <expression>(CASE WHEN es_facturable != 1 THEN importe ELSE 0 END )</expression>
+                        <tipo>decimal</tipo>
+                    </field>
+                    <field id="alicuota_iva" noshow="true">
+                        <expression>
+                            (CASE WHEN genregimen_id = 0 THEN ' ' ELSE  (CASE WHEN genregimen_id = 1 THEN 10.50 ELSE 21.00 END )END)
+                        </expression>
+                    </field>
+                    <field id="iva_detalle" noshow="true">
+                        <expression>
+                            round(((importe * 1) + 0  ) * ( ((CASE WHEN genregimen_id = 0 THEN 0 ELSE  (CASE WHEN genregimen_id = 1 THEN 10.50 ELSE 21.00 END )END)  )/ 100),2)
+                        </expression>
+                    </field>
+                    <field id="habilita_dominio" local="true" noshow="true">
+                        <expression>(CASE WHEN con_dominio = 0  THEN 'false' ELSE 'true' END)</expression>
+                    </field>
+                    <field id="ctbcuenta_detalle_id" noshow="true">
+                        <expression>ctbcuenta_id</expression>
+                        <detalle>ctbcuenta_detalle_id</detalle>
+                    </field>
+                    <field id="codigo_detalle" noshow="true">
+                        <expression>codigo</expression>
+                        <detalle>codigo_detalle</detalle>
+                    </field>
+                    <field id="facservicio_id" noshow="true">
+                        <expression>id_cajctbcuenta</expression>
+                        <detalle>facservicio_id</detalle>
+                    </field> 
+                    <field id="rubro_id" noshow="true" />   
+                </helper>
+            </field>
+
+           <field id="oculta_dominio" local="true" valauto="true" noshow="true">
+                <helper type="parameter" id="SIS::02::oculta_dominio" >
+                    <label>Oculta dominio factura libre</label>
+                    <defaultValue>true</defaultValue>
+                </helper>
+            </field>
+
+            <field id="descripcion_detalle" _noshow="true">
+                <label _modpos="nobr" _style="padding: 12px; font-size: 12px">Descripción</label>
+                <size>250</size>
+            </field>
+
+            <field id="habilita_dominio" local="true" noshow="true">               
+               <jsfunction event="onchange">
+                if($('[name=habilita_dominio]', '#pos_regdetalles_free_xml').val() == 'true')
+                     {
+                      $('[name=tabla_detalle]', '#pos_regdetalles_free_xml').removeAttr('disabled');
+                     }
+                     else
+                     {
+                      $('[name=tabla_detalle]', '#pos_regdetalles_free_xml').attr('disabled','disable');  
+                     }
+                </jsfunction>
+            </field>
+
+            <field id="tabla_detalle" _required="true" _noshow="true">
+                <label modpos="nobr" _style="text-align:center; font-size:12px;">Dominio</label>
+                <tipo>varchar</tipo>                
+                <size>10</size> 
+                <attribute id="noshow">oculta_dominio</attribute> 
+            </field> 
+
+            <!-- PRECIOS -->
+
+            <field id="alicuota_iva" noshow="true" valauto="true" _style="text-align: center;">
+                <label _modpos="nobr">Alic</label>
+                <helper type="combo" xml="genalicuotas_qry.xml" dir="/ayudas" empty="true"/>
+                <tipo>numeric</tipo>
+                <attribute id="noshow">muestra_iva</attribute>
+                <jseval fielddestino="iva_detalle">subtotal_detalle * (alicuota_iva / 100) </jseval>
+                <jseval campodestino="total_detalle">(neto_detalle * cantidad_detalle) + iva_detalle + exento_detalle</jseval>
+                <jseval campodestino="importe_IVA" total="true">iva_detalle</jseval>
+            </field>
+
+            <field id="exento_detalle" local="true" suma="true" deshabilitado="true" _noshow="true">
+                <label _Formstyle="width: 100px;">exento</label>
+                <help>Exento</help>
+                <if exp="alicuota_iva+0 == 0">
+                  <true>(cantidad_detalle * importe_detalle)</true>
+                  <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+                <jseval fielddestino="importe_exento" total="true" suma="true">exento_detalle</jseval>
+            </field>
+
+            <field id="precio_venta" noshow="true">
+                <label>P.Venta</label>
+                <if exp="alicuota_iva+0 == 0">
+		              <true>(exento_detalle + 0)</true>
+                      <false>(neto_detalle + 0) * (1 + (alicuota_iva + 0) / 100)</false>
+                </if>
+            </field>
+
+            <field id="deshabilita_neto" local="true" valauto="true" noshow="true">
+                <helper type="parameter" id="SIS::02::desh_neto" >
+                    <label>Deshabilita neto factura libre</label>
+                    <defaultValue>false</defaultValue>
+                </helper>
+            </field>
+
+    	    <field id="importe_detalle" local="true" deshabilitado="true" colstyle="display:none;">
+                <attribute id="deshabilitado">deshabilita_neto</attribute>
+                <tipo>decimal</tipo>
+                <format>%01.2f</format>
+                <jseval fielddestino="neto_detalle">(alicuota_iva == 0)?0:importe_detalle</jseval>
+                <jseval fielddestino="exento_detalle">(alicuota_iva == 0)?(cantidad_detalle * importe_detalle):0</jseval>
+                <size>10</size>
+    	    </field>
+
+            <field id="neto_detalle" suma="true" deshabilitado="true">
+                <label _modpos="nobr">Neto</label>
+        		<if exp="alicuota_iva+0 == 0">
+        		    <true>0</true>
+        		    <false>(importe_detalle + 0)</false>
+        		</if>
+		          <help>Neto</help>
+                <tipo>decimal</tipo>
+                <format>%01.2f</format>
+                <jseval fielddestino="neto_movimiento" total="true">neto_detalle</jseval>
+                <jseval fielddestino="subtotal_detalle">(neto_detalle * cantidad_detalle)</jseval>
+                <size>10</size>
+            </field>
+
+            <field id="subtotal_detalle" local="true" noshow="true" Formstyle="display:none;">              
+                <tipo>decimal</tipo>
+                <format>%01.2f</format>
+                <if exp="true">
+            	    <true>( neto_detalle + 0  ) * (cantidad_detalle + 0)</true>
+            	    <false></false>
+                </if>
+                <jseval fielddestino="iva_detalle">subtotal_detalle * (alicuota_iva / 100) </jseval>
+            </field>
+
+            <field id="iva_detalle" noshow="true" suma="true" deshabilitado="true" _style="width: 100px; text-align: right;">
+                <label _modpos="nobr">IVA</label>
+                <tipo>decimal</tipo>
+                <format>%01.2f</format>
+                <if exp="true">
+            	    <true>( subtotal_detalle + 0  ) * ( (alicuota_iva + 0 )/ 100)</true>
+            	    <false></false>
+                </if>
+                <jseval campodestino="total_detalle">(neto_detalle * cantidad_detalle) + iva_detalle + exento_detalle</jseval>
+                <jseval campodestino="importe_IVA" total="true">iva_detalle</jseval>
+                <attribute id="noshow">muestra_iva</attribute>
+            </field>
+
+            <field id="total_detalle" suma="true" deshabilitado="true" _style="width: 200px; text-align: right;">
+                <label _modpos="nobr" style="font-size:16px;color:red;">Total</label>
+                <tipo>decimal</tipo>
+                <format>%01.2f</format>
+                <if exp="true">
+            	    <true>( neto_detalle + 0  ) * ( cantidad_detalle + 0) + ( iva_detalle + 0) + ( exento_detalle + 0)</true>
+            	    <false></false>
+                </if>
+
+                <jseval campodestino="importe_movimiento" total="true">total_detalle</jseval>
+                <detalle>importe_movimiento</detalle>
+            </field>
+
+            <field id="cantidad_detalle" _required="true" noshow="true" Formstyle="display:none;">
+                <label modpos="nobr" _style="text-align:center; font-size:12px;">Cant.</label>
+                <tipo>integer</tipo>
+                <valor>1</valor>
+                <!-- <size>3</size> -->
+                <jseval>cantidad_detalle> 0</jseval>
+                <jseval fielddestino="subtotal_detalle">(neto_detalle * cantidad_detalle)</jseval>
+            </field>
+
+             <field id="no_facturado" suma="true" local="true" deshabilitado="true" colstyle="display:none;" Formstyle="display:none;">
+                <tipo>decimal</tipo>
+                <format>%01.2f</format>
+                <jseval campodestino="importe_sinfacturar" total="true">no_facturado</jseval>
+                <detalle>importe_sinfacturar</detalle>
+            </field>
+
+            <!-- CONTABLE -->
+
+    	    <fieldGroup local="true" noshow="true">
+                <field id="tiene_contabilidad" local="true" noshow="true">
+                    <valor eval="true"><![CDATA[ strpos($_SESSION['properties']['modulos'],'contabilidad') != false ? 1 : 0 ]]>
+                    </valor>
+                </field>
+                <field id="graba_ctb" local="true">
+                    <label>grabactb</label>
+                    <if exp="tiene_contabilidad == 1 &amp;&amp; neto_detalle != 0">
+                        <true>1</true>
+                        <false>0</false>
+                    </if>
+                </field>
+                <field id="orden_ctb" local="true">
+                    <if exp="true">
+                        <true>_ORDEN + 1</true>
+                        <false>0</false>
+                    </if>
+                </field>
+    	        <field id="imputacion_concepto" />
+
+                <field id="ctbcuenta_detalle_doh">
+                    <if exp="imputacion_concepto+0 == 1">
+                        <true>'0'</true>
+                        <false>'1'</false>
+                    </if>
+	               <tipo>varchar</tipo>
+                </field>
+
+    	        <field id="ctbcuenta_iva_id">
+
+                </field>
+
+                <field id="ctbcuenta_iva_doh">
+                    <if exp="imputacion_concepto+0 == 1">
+    	                <true>'0'</true>
+                        <false>'1'</false>
+    	            </if>
+    	            <tipo>varchar</tipo>
+                </field>
+    	    </fieldGroup>
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" >
+    <title>Años</title>
+    <obs></obs>
+    <form>
+        <table id="GEN_CALENDAR" >
+	  
+            <field id="anio" tipoOrden="DESC">
+                <expression>YEAR(fecha)</expression>
+            </field>
+
+            <field id="anio2">
+                <expression>YEAR(fecha)</expression>
+            </field>
+         
+            <group>
+                <field id="anio">
+                    <expression>YEAR(fecha)</expression>
+                </field>
+            </group>
+            <order>
+                <field id="anio">
+                    <expression>YEAR(fecha)</expression>
+                </field>
+            </order>				
+        </table>
+    </form>
+</histrix>
+
+

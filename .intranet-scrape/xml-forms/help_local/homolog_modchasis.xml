@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" >
+  <title>HOMOLOGACION POR MODELO</title>
+  <obs/>
+  <form >
+    <table id="HOMOLOGMOD">
+      <title>Homologaciones por modelo</title>
+
+      <field id="modcha" />
+      
+      <field id="moddes" tabla="MODCHASIS" />
+      
+      <field id="marcod" noshow="true" />
+      
+      <field id="nrocar" noshow="true" >
+<!--        <condicion operador="=">-1</condicion>      -->
+      </field>
+      
+      <field id="baja" noshow="true" >
+        <condicion operador="=">0</condicion>
+      </field>
+      
+      <order>
+        <field id="moddes" tabla="MODCHASIS" />
+      </order>
+
+    </table>
+	<join tipo="left">
+	    <table id="MODCHASIS">
+		<field id="modcha">
+		    <condicion operador="=">HOMOLOGMOD.modcha</condicion>
+		</field>
+		<field id="marcod">
+		    <condicion operador="=">HOMOLOGMOD.marcod</condicion>
+		</field>
+	    </table>
+	</join>
+  </form>
+</histrix>

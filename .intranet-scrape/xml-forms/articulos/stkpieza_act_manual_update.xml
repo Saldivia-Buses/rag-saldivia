@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+    <title>Formulas</title>
+    <obs></obs>
+    <form>
+        <table id="STKPIEZA" label="Composicion">
+			<sql>
+				UPDATE STKPIEZA
+				SET recalc = recalc + 1;
+
+			</sql>
+        </table>
+    </form>
+</histrix>	

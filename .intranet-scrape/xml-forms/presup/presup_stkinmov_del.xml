@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="delete">
+	<title>MOVIMIENTOS DE STOCK</title>
+	<obs></obs>
+	<form>
+		<table id="VISTA_STK_COSTOS" label="MOVIMIENTOS">
+			<field id="id_stkinmov" id_temp="id_stkinmov" esClave="true" />
+		</table>
+	</form>
+</histrix>

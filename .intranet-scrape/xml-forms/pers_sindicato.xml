@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+  <title>PERSONAL POR SINDICATO</title>
+  <obs/>
+  <form >
+    <table id="PERSONAL" label="Personal por Sindicato" styleTbody="height:300px; overflow-x:hidden;">
+      <filters>
+        <field id="IdSindicato">
+        <label>Sindicato</label>
+          <operador>=</operador>
+        </field>
+      </filters>
+      
+      <field id="IdSindicato">
+        <label>Sindicato</label>
+        <help>Sindicato</help>
+        <helper type="combo" id="SINDICATO">
+            <field id="IdSindicato"></field>
+            <field id="descripcion"></field>
+            <order>
+                <field id="descripcion"></field>
+            </order>
+          </helper>
+      </field>
+      <field id="legajo">
+        <label>Legajo</label>
+      </field>      
+      <field id="apellido">
+        <label>Apellido</label>
+      </field>
+      <field id="Nombre">
+        <label>Nombre</label>
+      </field>
+      <field id="CUIL">
+        <label>CUIL</label>
+      </field>
+      <field id="descripcion" tabla="CATPERSONAL">
+        <label>Categoría</label>
+        <expression>select descripcion from CATEGHISTORIA 
+                  left join CATPERSONAL 
+                  on CATPERSONAL.IdSindicato = CATEGHISTORIA.idSindicato 
+                  and CATPERSONAL.IdCateg = CATEGHISTORIA.IdCateg 
+                  where CATEGHISTORIA.IdPersona = PERSONAL.IdPersona
+                  and CATEGHISTORIA.fechaDesde &lt; CURDATE()
+                  order by CATEGHISTORIA.fechaDesde desc limit 1
+        </expression>
+        <tipo>varchar</tipo>
+      </field>
+      
+      <order>
+        <field id="legajo"></field>
+      </order>      
+    </table>
+  
+    <join tipo="left">
+      <table id="CATPERSONAL">
+        <field id="IdCateg">
+          <condicion operador="=">PERSONAL.IdCateg</condicion>
+        </field>
+        <field id="IdSindicato">
+          <condicion operador="=">PERSONAL.IdSindicato</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

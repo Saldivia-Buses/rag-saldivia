@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha" PDFsincabecera="true" sololectura="true" autoprint="true" PDFfontSize="10" PDFpageSize="A4" copies="2">
+  <title>Nota de Pedido</title>
+  <obs></obs>
+  <form>
+    <pdf PDForientacion="P">
+        <code><![CDATA[
+                $pdf->SetDrawColor(0);
+                $pdf->SetXY(10,10);
+
+                $tp = 05;
+                $ap = $pdf->anchoPagina - 2;
+                $mp = ($ap / 2);
+                $lp = $pdf->largoPagina;
+
+                // Frame Principal
+                $pdf->Rect(005, 005, $ap, $lp, 0.1);
+
+                // Nombre Empresa
+                $pdf->Rect(005, 005, $mp, 045, 0.1);
+
+                $datapath = $_SESSION['datapath'];
+                $file = "../database/$datapath/img/logo.jpg";
+
+                if (is_file($file))
+                {
+                    $posx = 31;
+                    $posy = 6;
+                    $width = 45;
+                    $pdf->Image($file, $posx + $this->offsetX, $posy + $this->offsetY, $width);
+                }
+
+                // Datos Comprobante
+                $pdf->Rect($mp + 5, 005, $mp, 045, 0.1);
+
+                // letra
+                $pdf->setFillColor(255,255,255);
+                $pdf->Rect($mp - 12, 005, 040, 025, 'F');
+                $pdf->Rect($mp - 12, 005, 040, 025, 0.1);
+
+                // Cliente
+                $pdf->Rect(005, 061, $ap, 041, 0.1);
+
+                // DATOS EMPRESA
+                $pdf->SetFontSize(8);
+
+                //$pdf->text(047, 035, iconv('UTF-8', 'windows-1252', html_entity_decode($_SESSION['properties']['nombre'])));
+                $pdf->text(030, 041, iconv('UTF-8', 'windows-1252', html_entity_decode($_SESSION['properties']['direccion'])).' - '.$_SESSION['properties']['localidad']);
+                $pdf->text(023, 045, $_SESSION['properties']['telefonos'].' - '.$_SESSION['properties']['mail']);
+                $pdf->text(037, 051, 'IVA RESPONSABLE INSCRIPTO');
+
+                $pdf->SetFont('Arial', 'B', 8);
+                $pdf->text($mp + 010, 045, 'C.U.I.T.: '.$_SESSION['properties']['cuit']);
+                $pdf->text($mp + 010, 051, 'Ingresos Brutos: '.$_SESSION['properties']['iibb']);
+                $pdf->text($mp + 075, 051, 'Fec. Inicio. Activ.: '.$_SESSION['properties']['fecha']);
+
+                $nro_pag = $pdf->PageNo();
+
+                if ($nro_pag == 1)
+                {
+                    $pdf->text($mp + 072, 020, 'ORIGINAL');
+
+                }
+
+                if ($nro_pag == 2)
+                {
+                    $pdf->text($mp + 070, 020, 'DUPLICADO');
+
+                }
+
+
+            ]]></code>
+        </pdf>
+        <table id="MRP_ORDEN_PRODUCCION" label="ORDEN DE PRODUCCION">
+
+            <field id="id_mrpordendetalle" tabla="MRP_ORDEN_DETALLE" noshow="true" print="false" />
+
+            <field id="id_mrporden" noshow="true" print="false" />
+            <field id="mrporden_concepto_id" noshow="true" print="false" />
+
+
+            <fieldGroup id="letra" deshabilitado="true" PDFnoborder="true" local="true">
+                <field id="letra_movimiento" PDFbold="true" PDFsize="26">
+                    <label posx="98.5" posY="5" />
+                    <valor>X</valor>
+                </field>
+
+                <field id="documento_no_valido" PDFbold="true" PDFsize="7" local="true">
+                    <label posx="85" posY="+2" />
+                    <valor>DOCUMENTO NO VALIDO
+          COMO FACTURA</valor>
+                </field>
+            </fieldGroup>
+
+            <field id="nombre_ordenconcepto" tabla="MRP_ORDEN_CONCEPTO" PDFbold="true" PDFnoborder="true" PDFnolabel="true" PDFsize="13">
+                <label posx="132" posy="3" />
+            </field>
+
+            <field id="numero_orden" PDFnoborder="true">
+                <label posx="145" posy="14" size="20">Orden Nro:</label>
+                <expression>CASE WHEN MRP_ORDEN_PRODUCCION.mrporden_concepto_id = 2 THEN (SELECT MOP.numero_orden FROM MRP_ORDEN_PRODUCCION MOP 
+                                                                                                WHERE MOP.id_mrporden = MRP_ORDEN_PRODUCCION.mrporden_relacionada_id) ELSE MRP_ORDEN_PRODUCCION.numero_orden END</expression>
+            </field>
+
+            <field id="fecha_orden" deshabilitado="true" PDFnoborder="true">
+                <label posx="145" posy="20" size="22">Fecha:</label>
+            </field>
+
+            <field id="separador" PDFnoborder="true" local="true">
+                <label posx="1" posy="+13" size="88" />
+                <attribute id="PDFbackgroundColor">color_estado</attribute>
+            </field>
+
+            <field id="mrpestado_id" PDFnoborder="true" pdfancho="200" PDFcolor="#000" style="text-align: center;" PDFalign="C" PDFbold="true">
+                <label posx="89" posy="0" size="115" />
+                <options>
+                    <option valor="0">EN PROCESO</option>
+                    <option valor="1">CUMPLIDA</option>
+                    <option valor="2">ANULADA</option>
+                </options>
+                <attribute id="PDFbackgroundColor">color_estado</attribute>
+            </field>
+
+            <field id="color_estado" noshow="true" print="false">
+                <expression>CASE WHEN mrpestado_id = 0 THEN '#F9E79F' WHEN mrpestado_id = 1 THEN '#2ECC71' ELSE '#EC7063' END</expression>
+            </field>
+
+            <field id="titulo_clientes" PDFnoborder="true" local="true" PDFcolor="#fff" PDFbackgroundColor="#212121" PDFbold="true">
+                <label posx="2" posy="+2" size="201" />
+                <valor>CLIENTES</valor>
+            </field>
+
+            <field id="clientes_orden" PDFnoborder="true" PDFsize="9" width="100%" pdfancho="400">
+                <label posx="5" posy="+1" />
+                <expression><![CDATA[GROUP_CONCAT(DISTINCT ' # ', REG_CUENTA.nombre_cuenta, ' (', REG_CUENTA.cuit_cuenta, ') - ', REG_CUENTA.cod_direccion, IFNULL(CONCAT(' - ', GEN_LOCALIDADES.nombre_localidad), ''), IFNULL(CONCAT(' - ', GEN_PROVINCIAS.nombre_provincia), '') SEPARATOR '\n')]]></expression>
+            </field>
+
+            <field id="produccion_titulo" PDFnoborder="true" local="true" PDFcolor="#fff" PDFbackgroundColor="#212121" PDFbold="true">
+                <label size="201" posx="2" posy="+29" />
+                <valor>ARTICULO A PRODUCIR</valor>
+            </field>
+
+            <field id="parametro_articulo" print="false" noshow="true">
+                <expression>CASE WHEN MRP_ORDEN_PRODUCCION.mrporden_concepto_id = 2 THEN (SELECT MOP.id_mrporden FROM MRP_ORDEN_PRODUCCION MOP 
+                                                                                                WHERE MOP.id_mrporden = MRP_ORDEN_PRODUCCION.mrporden_relacionada_id) ELSE MRP_ORDEN_PRODUCCION.id_mrporden END</expression>
+            </field>
+
+            <field id="movimientos" local="true" obj="mrp_ordendetalle_impresion.xml" pdfwidth="200">
+                <label colspan="4" posx="5" posy="+1" PDFsize="10" />
+                <!--<paring destino="mrporden_id">id_mrporden</paring>-->
+                <paring destino="mrporden_id">parametro_articulo</paring>
+            </field>
+
+            <field id="composicion_articulo" PDFnoborder="true" local="true" PDFcolor="#fff" PDFbackgroundColor="#212121" PDFbold="true">
+                <label size="201" posx="1" posy="+2" />
+                <valor>COMPOSICION</valor>
+            </field>
+
+             esto es para imprimir el detalle de los articulos usados con la perdida
+            <field id="stkarticulo_id"  tabla="MRP_ORDEN_DETALLE" oculto="true">
+                <label>Articulo</label>
+            </field>
+
+            <field id="objetivo_ordendetalle" tabla="MRP_ORDEN_DETALLE" oculto="true" >
+                <label>Objetivo</label>
+            </field>
+             esto es para imprimir el detalle de los articulos usados con la perdida y demas 
+            <field id="detalle_articulos" local="true" obj="mrp_bom_qry_impresion.xml" pdfwidth="200">
+                <label colspan="4" posx="5" posy="+1" PDFsize="10"></label>
+                <paring destino="stkarticulopadre_id">stkarticulo_id</paring>
+                <paring destino="WCantidad1">objetivo_ordendetalle</paring>
+                <paring destino="id_mrpordendetalle">id_mrpordendetalle</paring>
+            </field>
+
+            <field id="muestra_obs" print="false" noshow="true">
+                <expression>case when orden_comentarios = '' or orden_comentarios IS NULL then 'false' else 'true' end</expression>
+            </field>
+
+            <field id="orden_comentarios" deshabilitado="true" pdfancho="170" PDFnoborder="true" PDFsize="9">
+                <label colspan="4" posx="5" posy="+3">Comentarios:</label>
+                <tipo>varchar</tipo>
+                <attribute id="print">muestra_obs</attribute>
+            </field>
+
+            <field id="firma_empleado" local="true" PDFnoborder="true">
+                <label PDFsize="9" size="20" posx="5" posy="+13">Empleado:</label>
+                <valor>.........................................................</valor>
+            </field>
+
+            <field id="firma_encargado" local="true" PDFnoborder="true">
+                <label PDFsize="10" size="30" posx="105" posy="0">Enc. Produccion:</label>
+                <valor>.........................................................</valor>
+            </field>
+
+        </table>
+
+        <join>
+            <table id="MRP_ORDEN_DETALLE">
+                <field id="mrporden_id">
+                    <condicion operador="=">(CASE WHEN MRP_ORDEN_PRODUCCION.mrporden_concepto_id = 2 THEN MRP_ORDEN_PRODUCCION.mrporden_relacionada_id ELSE MRP_ORDEN_PRODUCCION.id_mrporden END)</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="MRP_ORDEN_CONCEPTO">
+                <field id="id_mrporden_concepto">
+                    <condicion operador="=">MRP_ORDEN_PRODUCCION.mrporden_concepto_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="MRP_IMPUTACION_DETALLE">
+                <field id="mrpordendetalle_id">
+                    <condicion operador="=">MRP_ORDEN_DETALLE.id_mrpordendetalle</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="REG_DETALLES">
+                <field id="id_regdetalle">
+                    <condicion operador="=">MRP_IMPUTACION_DETALLE.regdetalle_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="REG_MOVIMIENTOS">
+                <field id="id_regmovim">
+                    <condicion operador="=">REG_DETALLES.regmovim_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="REG_CUENTA">
+                <field id="id_regcuenta">
+                    <condicion operador="=">IFNULL(REG_MOVIMIENTOS.regcuenta_id, (CASE WHEN MRP_ORDEN_PRODUCCION.mrporden_concepto_id = 2 THEN (SELECT MOP.regcuenta_id FROM MRP_ORDEN_PRODUCCION MOP
+                                                                                                WHERE MOP.id_mrporden = MRP_ORDEN_PRODUCCION.mrporden_relacionada_id) ELSE MRP_ORDEN_PRODUCCION.regcuenta_id END))</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="GEN_LOCALIDADES">
+                <field id="id_localidad">
+                    <condicion operador="=">REG_CUENTA.localidad_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="GEN_PROVINCIAS">
+                <field id="id_provincia">
+                    <condicion operador="=">REG_CUENTA.provincia_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

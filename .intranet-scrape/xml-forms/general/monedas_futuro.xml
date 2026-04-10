@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" subtipo="vertical" _preloadData="false" paginar="20" imprime="false">
+    <title>Monedas a Futuro</title>
+	<obs/>
+
+	<form >
+		<table id="GEN_MONEDA_FUTURO" label="Cotizaciones" >
+			<filters>
+				<field id="fecha_cotizacion" >
+				    <label modpos="nobr">fecha</label>
+				<operador>=</operador>
+				</field>
+
+			</filters>
+			<field id="moneda_id" autoinc="true" noshow="true" />
+		    
+			<field id="periodo" _editable="true" valauto="true">
+		            <label modpos="nobr">Periodo</label>
+			</field>
+		
+			<field id="valor" >
+				<label >Valor</label>
+			</field>
+			<field id="variacion" >
+				<label >Variación</label>
+			</field>
+			<field id="porcentaje" >
+				<label >Porcentaje</label>
+			</field>
+
+			<field id="fecha_cotizacion" noshow="true">
+			    <label _modpos="nobr">Fecha</label>
+			    <tipo>date</tipo>
+			    <helper type="combo" id="GEN_MONEDA_FUTURO">
+				    <field id="fecha_cotizacion">
+				    </field>
+				    <field id="fecha_cotizacion2">
+					<expression>fecha_cotizacion</expression>
+					<tipo>date</tipo>
+				    </field>
+				    <group>
+				        <field id="fecha_cotizacion" />
+
+				    </group>
+			    </helper>
+			</field>
+
+		</table>
+
+	</form>
+</histrix>

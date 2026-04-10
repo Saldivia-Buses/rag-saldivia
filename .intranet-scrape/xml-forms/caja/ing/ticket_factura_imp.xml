@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="nosql" grabaFinal="true" postGrabacion="true">
+	<title/>
+    <obs/>
+    <form>
+        <table id="REG_MOVIMIENTOS" idCampoCond="fiscal">
+		    <ejecuta>
+			<![CDATA[ if( 'fiscal' == '1' ) 
+			{
+					_end_transaction();
+					loger('Ticket ------------- id_regmovim', 'updatessql.log');
+					_begin_transaction();
+					$printer = 'printer_fiscal_pos';
+					loger('Emito Ticket', 'updatessql.log');
+					ob_start();
+					echo "Generando ticket.. id_regmovim";
+					$calculo = new EmiteFiscal();
+					$calculo->setPrinter($printer);
+					$calculo->imprimir('id_regmovim');
+					echo "Fin";
+					$salida = ob_get_contents();
+					ob_end_clean();
+					loger($salida, 'updatessql.log');
+			} ]]>
+		    </ejecuta>
+			<field id="id_regmovim" lastId="pos_regmovimientos_ins.xml" />
+			<field id="fiscal" id_padre="fiscal" />
+			<field id="printer_fiscal_pos" id_padre="printer_fiscal_pos" />
+        </table>
+    </form>
+</histrix>

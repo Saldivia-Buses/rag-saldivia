@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" llenoTemporal="false" _imprime="true" _confirma="EMITIR FACTURA" impresion="proforma_imp.xml">
+    <title>Detalle</title>
+    <obs/>
+    <form>
+        <table id="FACDETAL" label="Detalle">
+
+            <movimientos cabecera="proforma_header.xml">
+                <relacion id="proforma_facdetal_ins.xml" />
+                <relacion id="proforma_cctmovim_ins.xml" />
+            </movimientos>
+
+            <field id="cant" local="true" conLabel="true" required="true">
+                <label style="font-size:15px;">Cantidad</label>
+                <tipo>integer</tipo>
+                <valor _default="true">1</valor>
+                <help>Cantidad</help>
+                <size>2</size>
+                <jseval campodestino="subtot">precio * cant</jseval>
+                <jseval campodestino="iva">subtot * alicuota / 100</jseval>
+                <jseval campodestino="total">subtot + iva</jseval>                
+            </field>
+
+            <field id="descripcion" local="true" conLabel="true" required="true">
+                <label style="font-size:15px;">Descripción</label>
+                <size>80</size>
+                <tipo>simpleditor</tipo>
+                <valor>Carrocería marca SALDIVIA, Modelo Aries con 45 Pasajeros, preparada para aire acondicionado, preparada para instalación de audio y video</valor>
+            </field>
+
+            <field id="precio"  local="true" esClave="true" _ctbimporte="1">
+                <label>Precio</label>
+                <tipo>numeric</tipo>
+                <size>15</size>
+                <help>Precio Unitario</help>
+                <jseval campodestino="subtot">(precio * cant).toFixed(2)</jseval>
+                <jseval campodestino="iva">(subtot * alicuota / 100).toFixed(2)</jseval>
+                <jseval campodestino="total">(subtot + iva).toFixed(2)</jseval>
+            </field>
+
+            <field id="alicuota" local="true">
+                <label>Alícuota</label>
+                <tabla_ex id="IVAIMPUESTOS">
+                    <field id="impali" />
+                    <field id="impnom" />
+                    <field id="impcod">
+                        <condicion operador="&lt;">4</condicion>
+                    </field>
+                </tabla_ex>
+                <tipo>decimal</tipo>
+                <valor>10.50</valor>
+                <help>Alicuota de IVA</help>
+                <jseval campodestino="subtot">(precio * cant).toFixed(2)</jseval>
+                <jseval campodestino="iva">(subtot * alicuota / 100).toFixed(2)</jseval>
+                <jseval campodestino="total">(subtot + iva).toFixed(2)</jseval>
+            </field>
+
+            <field id="impcod" deshabilitado="true" noshow="true">
+                <label>impcod</label>
+                <valor>2</valor>
+            </field> 
+
+            <field  id="iva" _ctbimporte="3" suma="true" local="true">
+                <label modpos="nobr">I.V.A.</label>
+                <if exp="iva == 0" operador="=">
+                    <true>round(precio,2 ) * alicuota / 100</true>
+                    <false>iva</false>
+                </if>
+                <tipo>numeric</tipo>
+                <help>I.V.A.</help>
+                <jseval campodestino="subtot">(precio * cant).toFixed(2)</jseval>
+<!--                 <jseval campodestino="iva">(subtot * alicuota / 100).toFixed(2)</jseval>
+ -->                <jseval campodestino="total">(subtot + iva).toFixed(2)</jseval>
+            </field>
+
+            <field id="subtot" suma="true">
+                <label>Subtotal</label>
+<!--                 <jseval campodestino="subtot">(precio * cant).toFixed(2)</jseval>
+ -->                <jseval campodestino="iva">(subtot * alicuota / 100).toFixed(2)</jseval>
+                <jseval campodestino="total">(subtot + iva).toFixed(2)</jseval>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="total" local="true" suma="true">
+                <label modpos="nobr">Total</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <!---<field id="total_redondeado" local="true" suma="true" noshow="true">
+                <label modpos="nobr" colstyle="font-weight:bold;font-size:22px;color:red;">Total</label>
+                <if exp="true">
+                    <true>ROUND((ROUND((total),0) / 10),0) * 10</true>
+                    <false></false>
+                </if>
+                <tipo>numeric</tipo>
+                <jseval campodestino="TOTAL" total="true">cajimp</jseval>
+            </field>
+
+            <field id="subtot_final" local="true" suma="true" noshow="true">
+                <label>Subtotal</label>
+                <if exp="true">
+                    <true>ROUND((total_redondeado / ('1.'.STR_REPLACE('.','',alicuota))) ,2)</true>
+                    <false></false>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field  id="iva_final" suma="true" local="true" noshow="true">
+                <label modpos="nobr">I.V.A.</label>
+                <if exp="true">
+                    <true>ROUND(((subtot_final * alicuota) / 100), 2)</true>
+                    <false>iva</false>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="precio_final"  local="true" noshow="true">
+                <label>Precio</label>
+                <if exp="true">
+                    <true>ROUND((subtot_final / cant), 2)</true>
+                    <false></false>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+-->
+
+        </table>
+    </form>
+</histrix>

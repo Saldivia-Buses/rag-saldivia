@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm">
+  <title>Tipos de documentos</title>
+  <obs></obs>
+  <consulta>
+    <table id="GEN_TIPOS_DOCUMENTOS" label="Tipos de Documentos">
+       
+       <filtros>
+      
+        <field id="nombre_tipo_documento">
+          <label>Nombre Documento</label>
+          <operador>like</operador>
+        </field>
+
+      </filtros>  
+   
+      <field id="id_tipo_documento" autoinc="true" noshow="true">
+        <label>Codigo </label>
+        <help>Código de tipo de documento </help>
+      </field>
+
+    	<field id="nombre_tipo_documento">
+        <label>Nombre </label>
+        <help>Nombre de tipo de documento</help>
+        <size>20</size>
+      </field>
+   
+      <field id="abreviacion_tipo_documento">
+        <label>Abreviacion</label>
+        <help>Nombre abreviado del tipo de documento</help>
+      </field>
+      
+      <order>
+          <field id="nombre_tipo_documento" />
+      </order>
+
+
+    </table>
+  </consulta>
+</histrix>  

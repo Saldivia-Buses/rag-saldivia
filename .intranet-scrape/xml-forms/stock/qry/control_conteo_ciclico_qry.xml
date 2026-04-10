@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" preloadData="false" _PDFsincabecera="true" _PDFconpie="true" sololectura="true" _autoprint="true" _PDFfontSize="8" _PDFpageSize="A4">
+  <title>CONTEO CICLICO</title>
+  <obs></obs>
+  <form detalle="control_conteo_ciclico_imp.xml">
+  	<table id="STK_ARTICULOS"  label="CONTEO CICLICO">
+
+  		<filters>
+
+  			<field id ="id_stkarticulo">
+  				<label>Cod. Art.</label>
+  				<operador>=</operador>
+          <help>Código del artículo</help>
+  			</field>
+
+  		</filters>
+
+  		<field id ="id_stkarticulo" _required="true" >
+			<label>Cod. Art.</label>
+			<helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas" empty="true"/>
+			<detalle>id_stkarticulo</detalle>
+      <help>Código del artículo</help>
+		</field>
+
+	</table>
+
+</form>
+</histrix>
+            

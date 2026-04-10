@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>TIPOS DE CARTEL</title>
+	<obs></obs>
+	<form >
+		<table id="TIPOCARTEL" label="Cartel de Ruta">
+
+			<field id="idCartel">
+				<label>Codigo</label>
+				<help>Codigo de Cartel</help>
+			</field>
+			<field id="nombre">
+				<label>Cartel</label>
+				<help>tipo de Asiento</help>
+			</field>
+		</table>
+	</form>	   
+</histrix> 

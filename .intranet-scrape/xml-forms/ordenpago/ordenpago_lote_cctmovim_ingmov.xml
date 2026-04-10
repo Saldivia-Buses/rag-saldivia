@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="insert" >
+       <title>COMPROBANTES</title>
+        <obs></obs>
+               <form >
+					<table id="CCTMOVIM" label="FACTURAS" idCampoCond="pagar">
+						<field id="siscod" id_padre="sisprv">
+							<valor>01</valor>
+						</field>
+						<field id="movcta" >
+							<valor>1</valor>
+						</field>
+						<field id="succod" >
+							<valor>1</valor>
+						</field>
+						<field id="ctacod"  id_temp="ctacod" />						
+						<field id="ctanom"  id_temp="ctanom" />						
+						<field id="zoncod"  id_temp="zoncod" />
+						<field id="movfec" id_padre="movfec" />						
+						<field id="movvto" id_padre="movfec" />
+						<field id="regfec" id_padre="movfec" />
+
+						<field id="concod" id_padre="concod" />						
+						<field id="movnpv" id_padre="movnpv" />
+						
+
+						<field id="movimp" id_temp="saldo" />
+						<field id="movnet" id_temp="saldo" />
+						
+
+
+						<field id="movref__1" >
+							<valor>'Pago Automatico'</valor>
+						</field>						
+
+						<field id="opecla" id_padre="opecla">
+						</field>
+
+						
+						<field id="movnro">
+							<valor>(select parent from CAJPARAM where parcla = 'nropag' limit 1)</valor>
+						</field>											
+						<field id="regmin" >
+						    <valor>(select numapr from CTBNUMER where siscod = '10' and nummes = substring('[__movfec__]',4,2))</valor>
+						</field>
+						
+					</table>
+               </form>
+        </histrix>

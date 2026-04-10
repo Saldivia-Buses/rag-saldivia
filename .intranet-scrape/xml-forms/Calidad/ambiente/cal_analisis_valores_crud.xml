@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" deleteRow="false" imprime="false">
+        <title>ASPECTO AMBIENTAL</title>
+        <obs/>
+        <form >
+            	    <table id="CAL_ANALISIS_AMBIENTAL">
+
+            		<field id="id_analisisambiental" noshow="true" >
+            		    
+            		</field>
+            		
+            		<field id="id_aspectoambiental" tabla="CAL_ASPECTO_AMBIENTAL" esClave="true" noshow="true">
+            		</field> 
+                        <field id="nombre_aspecto" tabla="CAL_ASPECTO_AMBIENTAL">
+                    	    <label>Aspecto</label>
+                                <size>50</size>
+                                <tipo>varchar</tipo>
+                        </field>
+                        <field id="id_impactovalor"  editable="true" refresh="true" deshabilitado="false">
+                    	    <label>Calificacion</label>
+                    	    <expresion>select AV.impactovalores_id from CAL_ANALISIS_VALORES AV where AV.aspectoambiental_id = id_aspectoambiental and AV.analisisambiental_id = id_analisisambiental</expresion>
+                    	    <helper xml="cal_impacto_valores_qry.xml" type="combo" empty="true">
+                    		<field id="analisis_id" local="true" >
+                    		    <condicion operador="=" valorde="analisis_id"></condicion>
+                    		</field>
+                    		<parameter source="id_aspectoambiental" target="aspectoambiental_id" />
+                    	<!--	<parameter source="analisis_id" target="analisis_id" /> -->
+                    	    </helper>
+                        </field>
+                        <field id="SQL" local="true" noshow="true">
+                    	    <if exp="true">
+                   		<true>'replace into CAL_ANALISIS_VALORES set aspectoambiental_id = id_aspectoambiental, impactovalores_id = ( id_impactovalor + 0), analisisambiental_id = \'id_analisisambiental\''</true>
+                   		<false></false>
+                    	    </if>
+                        </field>
+                                      
+                        <field id="EJECUTA" noshow="true">
+                    	    <expression sql="true">[__SQL__]</expression>
+                        </field>
+                	<group>
+                	    <field id="id_aspectoambiental"/>
+                	</group>           
+            	    </table>
+                    <join tipo="left">
+                	<table id="CAL_ASPECTO_AMBIENTAL">
+                	    <field id="id_aspectoambiental">
+                		<expresion>1</expresion>
+    			        <condicion operador="=">1</condicion> 
+
+                	    </field>
+                	</table>
+                    </join>
+        </form>
+</histrix>
+
+
+
+

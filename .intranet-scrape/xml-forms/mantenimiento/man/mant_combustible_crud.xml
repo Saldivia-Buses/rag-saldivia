@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CRUD
+Tarea: Tabla de Combustibles
+Autor: 
+Fecha: 24/08/12
+*******************************************************************************
+-->
+    <histrix tipo="crud">
+	<title>Tipo de Combustible</title>
+	 <obs></obs>
+		<form>
+		    <table id="MANT_COMBUSTIBLES" label="Tipo Combustible">
+				<field id="id_mantcombustible" esClave="true" autoinc="true" noshow="true" />
+
+				<field id="descripcion">
+					<label>Combustible</label>
+					<help>descripcion del combustible</help>
+					<size>50</size>
+				</field>
+
+				<field id="precio_unitario">
+					<label>Precio unitario</label>
+					<help>Precio unitario del combustible</help>
+				</field>
+		    </table>
+		</form>
+    </histrix>	

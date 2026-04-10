@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="abm-mini" path="/fotos/archivo/Electronica Afip/" imprime="false">
+    <title>Archivos de Comprobante</title>
+    <obs></obs>
+    <form >
+        <table id="REG_MOVIMIENTOS_ARCHIVOS" label="Archivos de Movimiento">
+            <field id="id_regarchivo" noshow="true"/>
+            <field id="path_archivo" path="regmovim_id" open="true">
+                <tipo>file</tipo>
+            </field>
+            <field id="regmovim_id" valauto="true" noshow="true" />
+        </table>
+    </form>
+</histrix>

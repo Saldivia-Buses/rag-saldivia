@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="cabecera"  graba="false">
+	<title>LISTAS DE PRECIOS</title>
+	<obs></obs>
+	<form >
+		<table id="LISTAPRECIOMODELO" >
+		    <title>Listas de precios</title>
+				<field id="idLista" deshabilitado="true">
+					<label>Nueva Lista</label>
+					<tabla_ex id="LISTAPRECIOMODELO">
+					    <field id="num">
+						<expression>max(idLista) + 1</expression>
+					    </field>
+					    <field id="lista">
+						<expression>max(idLista) + 1</expression>
+					    
+					    </field>
+					    
+					    
+					</tabla_ex>
+					<!--
+					<expression>select max(idLista) from LISTAPRECIOMODELO</expression> -->
+<!--					<parametro id="listapreciomodelo_param.xml" retorna="idLista2"> 
+					</parametro> -->
+				</field>
+				<field id="fecha">
+					<label modpos="nobr">Fecha</label>
+					<valor>today</valor>
+				</field>
+			
+				<field id="nombre">
+					<label >Nombre</label>
+					<valor>Lista de Precios</valor>
+				</field>
+				<field id="descripcion">
+					<label modpos="nobr">Descripción</label>
+					<valor>Lista de Precios</valor>
+				</field>
+				<field id="aumento" local="true">
+					<label >Porcentaje de Aumento</label>
+					<tipo>numeric</tipo>
+					<valor>0</valor>
+				</field>
+	    	
+		</table>
+	</form>	   
+</histrix>

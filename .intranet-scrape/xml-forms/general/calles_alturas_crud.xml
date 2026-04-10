@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="liveGrid" paginar="50">
+    <title>Altura Calles</title>
+    <obs></obs>
+    <consulta>
+        <table id="GEN_CALLES_ALTURAS" label="Calles">
+
+            <filters>
+              <!--  <field id="provincia_id" local="true">
+                    <label>Provincia</label>
+                    <operador>=</operador>
+                </field>
+                
+                <field id="localidad_id" local="true">
+                    <label>localidad</label>
+                    <operador>=</operador>
+                </field>
+-->
+                <field id="calle_id" >
+                    <operador>=</operador>
+                    <label>Calle</label>
+                </field>
+            </filters>
+
+            <field id="nombre_calle" tabla="GEN_CALLES" _noshow="true">
+                <label>Nombre </label>
+            </field>
+<!--
+            <field id="provincia_id" _local="true" >
+                <label>Provincia</label>
+                <tabla_ex xml="provincia_qry.xml" dir="/ayudas" vacio="true" />
+                <actualiza>
+                    <field destino="provincia_id" id="localidad_id" />
+                </actualiza>
+            </field>
+
+            <field id="localidad_id" local="true">
+                <label>localidad</label>
+                <tabla_ex id="GEN_LOCALIDADES" vacio="true">
+                    <field id="id_localidad"/>
+                    <field id="nombre_localidad"/>
+                    <field id="provincia_id" noshow="true">
+                        <condicion operador="=">'[__provincia_id__]'</condicion>
+                    </field>
+                </tabla_ex>
+                <actualiza>
+                    <field destino="localidad_id" id="calle_id" />
+                </actualiza>
+            </field>
+-->
+            <field id="calle_id"  colstyle="display:none;">
+                <label>Calles</label>
+                <tabla_ex xml="calles_qry.xml" dir="/ayudas" vacio="true">
+                </tabla_ex>
+		<condicion operador="=">0</condicion> 
+            </field>
+
+            <field id="id_altura" autoinc="true" noshow="true">
+                <label>Letra </label>
+                <help>Letra de la altura</help>
+            </field>
+            <field id="nro_altura">
+                <label>Nro</label>
+                <help>Nro de la altura</help>
+            </field>
+            <field id="letra_altura">
+                <label>Letra </label>
+                <help>Letra de la altura</help>
+            </field>
+            <field id="bis_altura">
+                <label>Bis </label>
+                <tipo>check</tipo>
+                <help>Altura bis</help>
+            </field>
+
+        </table>
+
+        <join tipo="inner">
+            <table id="GEN_CALLES">
+                <field id="id_calle">
+                    <condicion operador="=">GEN_CALLES_ALTURAS.calle_id</condicion>
+                </field>
+            </table>
+        </join>
+    </consulta>
+</histrix> 

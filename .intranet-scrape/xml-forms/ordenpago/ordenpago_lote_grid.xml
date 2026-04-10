@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" imprime="false" tableHeight="300px" paginar="20">
+    <title>Cuenta Corriente</title>
+    <obs/>
+    <form  >
+        <table id="CCTMOVIM" label="Movimientos" >
+
+            <filters>
+		    <field id="ctacod">
+			<label>Proveedor</label>
+			<operador>=</operador>
+		    </field>
+                    <field id="sal2" deshabilitado="false">
+                        <label>Importes menores a </label>
+                        <operador>&lt;</operador>
+                        <valor>3000</valor>
+                    </field>
+            </filters>
+
+            <movimientos> 
+                INGRESO RECIBO
+
+
+                <relacion id="ordenpago_lote_cajcompr_ingmov.xml" />                
+                <relacion id="ordenpago_lote_cctmovim_ingmov.xml" />   OK
+
+<!--                <relacion id="ordenpago_lote_cctmovim_update_ingmov.xml"> OK hecho en la imputación  -->
+                <relacion id="ordenpago_lote_cctimput_ingmov.xml" />
+
+                <relacion id="ordenpago_lote_cajmovim_ingmov.xml" /> Movimiento de caja
+
+    * GANANCIAS <relacion id="ordenpago_lote_cajmovim_RG_ingmov.xml" />
+           * IB <relacion id="ordenpago_lote_cajmovim_IB_ingmov.xml" />
+
+                <relacion id="ordenpago_lote_bcsmovim_ingmov.xml" />  Movimiento de bancos / cheques
+
+                 <relacion id="ordenpago_lote_chequeprint_ingmov.xml" />  impresion cheques 
+
+                 <relacion id="ordenpago_lote_opprint_ingmov.xml" />  impresion OP 
+
+                 <relacion id="ordenpago_lote_ctbregis_debe.xml" />      asiento debe
+        *        <relacion id="ordenpago_lote_ctbregis_haber.xml" />     asiento haber           
+        *        <relacion id="ordenpago_lote_ctbregis_RG_haber.xml" />     asiento haber                           
+        *        <relacion id="ordenpago_lote_ctbregis_RIB_haber.xml" />     asiento haber           
+
+
+                
+
+                <relacion id="ordenpago_lote_retacumu_ingmov.xml" />  ACUMULADO RETENCIONES
+
+                <relacion id="ordenpago_lote_ret1598.xml">    </relacion>  
+                <relacion id="ordenpago_lote_ret1598_print.xml">    </relacion>  
+
+                <relacion id="ordenpago_lote_retimpgan.xml" ></relacion>
+                <relacion id="ordenpago_lote_retimpgan_print.xml" ></relacion>
+
+
+                <relacion id="ordenpago_lote_actualiza_nros.xml" />     actualiza numerador OP y asiento
+            
+
+            </movimientos> 
+
+            <field id="concod" noshow="true" />
+
+            <field id="siscod" oculto="true">
+                <label>Cod.</label>
+                <help></help>
+                <condicion operador="=">01</condicion>
+            </field>
+            <field id="ctacod">
+                <label>Cuenta</label>
+                <help>Codigo de Cuenta</help>
+                <detalle>ctacod</detalle>
+            </field>
+            <field id="ctanom">
+                <expression>CCTCUENT.ctanom</expression>
+                <label>Nombre</label>
+                <help>Codigo de Cuenta</help>
+                <!--    <format>%30s</format> -->
+                <tipo>char</tipo>
+            </field>
+
+            <field id="ctanro" deshabilitado="true" >
+                <expression>CCTCUENT.ctanro</expression>
+                <label>cuit</label>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="ctadir" deshabilitado="true" noshow="true">
+                <expression>CCTCUENT.ctadir</expression>
+                <label modpos="nobr">dir</label>            
+                <tipo>varchar</tipo>
+            </field>        
+            <field id="ctaloc" deshabilitado="true" noshow="true">
+                <expression>CCTCUENT.ctaloc</expression>
+                <label modpos="nobr">loc</label>            
+                <tipo>varchar</tipo>            
+            </field>            
+            <field id="ctanib" deshabilitado="true" >
+                <expression>CCTCUENT.ctanib</expression>
+                <label modpos="nobr">nib</label>            
+                <tipo>varchar</tipo>            
+            </field>                    
+            <field id="zoncod" noshow="true" >
+                <expression>CCTCUENT.zoncod</expression>
+            </field>                    
+
+            <field id="ctagan" deshabilitado="true" >
+                <expression>CCTCUENT.ctagan</expression>
+                <label modpos="nobr">Ganancias</label>          
+                <tabla_ex id="REG_CATEGORIAS" vacio="true">
+                    <field id="id_regcategoria"></field>
+                    <field id="nombre_categoria"></field>
+                    <field id="tipo_categoria">
+                        <condicion operador="=">'ganancias'</condicion>
+                    </field>
+                </tabla_ex>                 
+            </field>            
+            <field id="catganancias_id" deshabilitado="true" noshow="true" >
+                <expression>CCTCUENT.catganancias_id</expression>
+	    </field>
+
+            <field id="por1598" noZero="true">
+                 <expression>CCTCUENT.por1598</expression>
+
+            </field>
+
+
+
+            <field id="acupag" >
+                <label>Acum.Pagos</label>
+                <expression>select sum( distinct RT.acupag) from RETACUMU RT where RT.ctacod = CCTMOVIM.ctacod and RT.siscod = '10' and year = year(now()) and mes = month(now())</expression>
+                <tipo>decimal</tipo>
+            </field>   
+            <field id="acuret" >
+                <label>Acum.Ret</label>
+                <expression>(select sum(distinct acuret) from RETACUMU where RETACUMU.ctacod = CCTCUENT.ctacod and RETACUMU.siscod = '10' and year = year(now()) and mes = month(now()))</expression>
+                <tipo>decimal</tipo>
+
+            </field>    
+
+
+            <field id="conimp" tabla="CCTCONCE" noshow="true">
+                <condicion operador="=">2</condicion>
+            </field>
+             <field id="movsal" oculto="true">
+                <condicion operador="!=">0</condicion>
+             </field>
+	    
+            <field id="saldo" suma="true">
+                <expression _having="false">sum(movsal)</expression>
+                <label>Saldo</label>
+            </field>
+
+            <field id="verdet" suma="true">
+
+                <helper xml="comprobantes_qry.xml" type="link" title="comprobantes">
+                        <parameter source="ctacod" target="ctacod" />
+                        <parameter source="siscod" target="siscod" />                        
+                </helper>
+
+                <expression _having="false">'Ver'</expression>
+                <label>Det</label>
+            </field>
+
+            <field id="classe" clasefila="true" noshow="true">
+                <expression>(select 'resaltado' from CCTMOVIM CCT where CCT.ctacod = CCTCUENT.ctacod and CCT.siscod = CCTCUENT.siscod and CCT.movsal &lt; 0 limit 1)</expression>
+
+            </field>    
+            <field id="imputar" >
+		<label>Imputar</label>
+                <helper xml="imputacion_op.xml" type="link" title="Imputacion" modal="true" dir="/imputacion_prov">
+                        <parameter source="ctacod" target="ctacod" />
+                        <parameter source="siscod" target="siscod" />                        
+                </helper>
+
+
+                <expression>(select 'imputar' from CCTMOVIM CCT where CCT.ctacod = CCTCUENT.ctacod and CCT.siscod = CCTCUENT.siscod and CCT.movsal &lt; 0 limit 1)</expression>
+
+            </field>    
+
+            <field id="sal2" noshow="true">
+                <expression _having="false">sum(movsal)</expression>
+            </field>            
+            <field id="impgra" suma="true" noshow="true">
+                <expression _having="false">sum(impgra * ( movsal / movimp))</expression>
+                <label>Neto</label>
+                <help></help>
+                
+            </field>
+
+
+			<field id="sumanetos" local="true" suma="true">
+				<label>Netos</label>
+				<if exp="true" >
+					<true>( impgra + 0 ) + (acupag + 0)</true>
+			
+					<false>0</false> 
+				</if>
+    
+			</field>
+
+
+		<field id="minimoret" noshow="true">
+			<label>minimo Ret</label>
+			<expression>select tabmin from RETTABLA where RETTABLA.ctagan = CCTCUENT.ctagan and RETTABLA.retcod = CCTCUENT.catganancias_id</expression>
+			<detalle>minimoret</detalle>
+		</field>
+
+			<field id="escala" noshow="true">
+				<label>escala</label>
+				<expression sql="true" >select escpor / 100 from RETTABLA join RETESCAL on RETTABLA.id_rettabla = RETESCAL.rettabla_id where RETTABLA.ctagan = '[__ctagan__]' and RETTABLA.retcod = '[__catganancias_id__]' and ([__sumanetos__] - [__minimoret__]  + 0) &gt; escmin and ([__sumanetos__] - [__minimoret__]  + 0) &lt;= escmax limit 1</expression>
+			</field>		
+
+			<field id="fijo" noshow="true">
+				<label>fijo</label>
+				<expression sql="true">select escfij from RETTABLA join RETESCAL on RETTABLA.id_rettabla = RETESCAL.rettabla_id where RETTABLA.ctagan = '[__ctagan__]' and RETTABLA.retcod = '[__catganancias_id__]' and ([__sumanetos__] - [__minimoret__]  + 0) &gt; escmin and ([__sumanetos__] - [__minimoret__]  + 0) &lt;= escmax limit 1</expression>
+			</field>	
+			<field id="minimo" noshow="true">
+				<label>minimo </label>
+				<expression sql="true">select escmin from RETTABLA join RETESCAL on RETTABLA.id_rettabla = RETESCAL.rettabla_id where RETTABLA.ctagan = '[__ctagan__]' and RETTABLA.retcod = '[__catganancias_id__]' and ([__sumanetos__] - [__minimoret__]  + 0) &gt; escmin and ([__sumanetos__] - [__minimoret__]  + 0) &lt;= escmax limit 1</expression>
+			</field>				
+
+			<field id="porretgan" noshow="true">
+                                        <expression>ifnull((select tabpor / 100 from RETTABLA where RETTABLA.ctagan = CCTCUENT.ctagan and RETTABLA.retcod = CCTCUENT.catganancias_id),0)</expression>
+                        </field>
+			<field id="RR" local="true" deshabilitado="true"   noZero="true">
+				<label  modpos="nobr">Ret.Ganancias</label>
+				<if exp="sumanetos &lt; ( minimoret + 0)" operador="=">
+					<true>0</true>
+			
+					<false>(ctagan != 8 &amp;&amp; (round((fijo + (sumanetos - ( minimoret + 0 )-  (minimo + 0) ) * ((escala + 0) + (porretgan + 0) ) ) - (acuret + 0), 2)) &gt; 20 )?round((fijo + (sumanetos - ( minimoret + 0 )-  (minimo + 0) ) * ((escala + 0) + (porretgan + 0) ) ) - (acuret + 0), 2):0</false> 
+				</if>
+				<tipo>numeric</tipo> 
+			</field>				
+
+			<field id="RI" local="true" noZero="true">
+				<label modpos="nobr">Ret.IIBB</label>
+				<if exp="(saldo + 0)  &lt;= 5000 " operador="=">
+					<true>0</true>
+					<false>((por1598  + 0 ) > 0)? (round(( (impgra + 0)  * (por1598  + 0 ) / 100), 2)):0</false> 
+				</if>
+				<tipo>decimal</tipo>
+				
+			</field>	
+
+            <field id="IMPORTE"  deshabilitado="true" _noshow="true" local="true" suma="true">
+                <label>Cheques</label>
+                <if exp="true">
+                    <true>saldo - ((RR + 0) + (RI - 0))</true> 
+                    <false>'0'</false>
+                </if>
+                <tipo>decimal</tipo>
+            </field>
+
+
+            <field id="IMPLETRAS" aletras="true" deshabilitado="true" _noshow="true" local="true" suma="true">
+                
+                <if exp="true">
+                    <true>saldo - ((RR + 0) + (RI - 0))</true> 
+                    <false>'0'</false>
+                </if>
+                <tipo>decimal</tipo>
+            </field>
+
+
+            <field id="Let1" local="true" deshabilitado="true" noshow="true">
+                <if exp="true">
+                    <true>urlencode(substrWords( 'IMPLETRAS.-', 0, 7))</true>
+                    <!--<true>substr('bcsimp', 0 ,40)</true> -->
+                    <false>'0'</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="Let2" local="true" deshabilitado="true" noshow="true">
+                <if exp="true">
+                    <true>urlencode(substrWords('IMPLETRAS.-', 7 ))</true>
+                    <false>'0'</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="numfac" noshow="true">
+                    <expression>group_concat(id_regmovim)</expression>
+            </field>
+            <field id="pagar" local="true">
+                <label>Pagar</label>
+                <tipo>check</tipo>
+            </field>
+
+            <field id="pagarRR" local="true"  _noshow="true">
+                <if exp="'pagar' == '1' &amp;&amp; RR + 0 != 0">
+                    <true>1</true>
+                    <false>0</false>
+                </if>
+            </field>
+
+            <field id="pagarRI" local="true" _noshow="true">
+                <if exp="'pagar' == '1' &amp;&amp; RI + 0 != 0">
+                    <true>1</true>
+                    <false>0</false>
+                </if>
+            </field>
+
+            <group>
+                <field id="CCTMOVIM.siscod"/>
+                <field id="CCTMOVIM.ctacod"/>
+            </group>
+            <order>
+                <field id="ctanom"/>
+            </order>
+
+        </table>
+        <join >
+            <table id="CCTCUENT">
+                <field id="siscod" >
+                    <condicion operador="=">CCTMOVIM.siscod</condicion>
+                </field>
+                <field id="ctacod" >
+                    <condicion operador="=">CCTMOVIM.ctacod</condicion>
+                </field>
+                <field id="baja">
+                    <condicion operador="=">0</condicion>
+                </field>                
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="CCTCONCE">
+                <field id="siscod" oculto="true">
+                    <condicion operador="=">CCTMOVIM.siscod</condicion>
+                </field>
+                <field id="concod" oculto="true">
+                    <condicion operador="=">CCTMOVIM.concod</condicion>
+                </field>
+            </table>
+        </join>
+		<join tipo="left">
+			<table id="IVAIMPORTES">
+				<field id="ctacod" >
+					<condicion operador="=">CCTMOVIM.ctacod</condicion>
+				</field>
+				<field id="codcom" >
+					<condicion operador="=">CCTMOVIM.concod</condicion>
+				</field>
+				<field id="nrocom" >
+					<condicion operador="=">CCTMOVIM.movnro</condicion>
+				</field>
+				<field id="nronpv" >
+					<condicion operador="=">CCTMOVIM.movnpv</condicion>
+				</field>
+				<field id="tipoiva" >
+					<condicion operador="=">1</condicion>
+				</field>
+				
+			</table>
+		</join>				
+
+    </form>
+</histrix>

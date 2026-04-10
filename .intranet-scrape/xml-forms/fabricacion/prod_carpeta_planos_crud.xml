@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud" class="consultaancha" path="fotos/articulos" modifica="false">
+	<title>Carpeta Planos</title>
+	<obs/>
+	<form >
+		<table id="PRD_CARPETA_PLANOS">
+			<title>Carpeta Planos</title>
+        <filters auto="true">
+
+			<field id="linea_id">
+				<label modpos="nobr">Línea</label>
+				<operador>=</operador>
+				<valor>1</valor>
+			</field>
+
+			<field id="seccion_id">
+				<label modpos="nobr">Sección</label>
+				<operador>=</operador>
+			</field>
+		</filters>
+					
+			<field id="id_carpetaplanos" esClave="true" noshow="true"/>
+			
+            <field id="nrocar_id" noshow="true" deshabilitado="true" valauto="true">
+                <label>Modelo</label>
+            </field>
+            <field id="modelo_lcm_id" noshow="true" deshabilitado="true" valauto="true" sincelda="true">
+                <label modpos="nobr">Modelo LCM</label>
+            </field>
+            <field id="homologacion_id" noshow="true" deshabilitado="true" valauto="true" colstyle="display:none" sincelda="true">
+                <label modpos="nobr">Homologacion</label>
+            </field>
+
+
+			<field id="usuario" noshow="true" deshabilitado="true" valauto="true">
+            <label>Usuario</label>
+            <valor eval="true">$_SESSION['usuario']</valor>
+            </field>
+
+		<field id="linea_id" colstyle="display:none;" deshabilitado="true" noshow="true">
+			<label>Línea</label>
+			<helper id="PROD_LINEAS" type="combo" empty="true">
+                <field id="id_linea" />
+                <field id="nombre_linea" />
+                <field id="vigente_linea" oculto="true">
+                	<condicion operador="=">1</condicion>
+                </field>
+		    </helper>
+		    <valor>1</valor>
+<!-- 			<actualiza>
+				<field id="seccion_id" destino="linea_id" /> 
+			</actualiza> -->
+		</field>
+
+		<field id="linea_id2" Formstyle="display:none;" >
+			<label modpos="nobr">Línea</label>
+			<helper id="PROD_LINEAS" type="combo" empty="true">
+                <field id="id_linea" />
+                <field id="nombre_linea" />
+                <field id="vigente_linea" oculto="true">
+                	<condicion operador="=">1</condicion>
+                </field>
+		    </helper>
+		    <expression>linea_id</expression>
+		</field>
+
+		<field id="seccion_id" colstyle="display:none;" _noshow="true">
+			<label>Sección</label>
+			<helper id="MOMENTO" type="combo" empty="true">
+                <field id="idMomento" />
+                <field id="descripcion" />
+                <field id="linea_id" oculto="true">
+                	<condicion operador="=">1</condicion>
+                </field>
+		    </helper>
+		</field>
+
+		<field id="seccion_id2" Formstyle="display:none;">
+			<label>Sección</label>
+			<helper id="MOMENTO" type="combo" empty="true">
+                <field id="idMomento" />
+                <field id="descripcion" />
+                <field id="linea_id" oculto="true">
+                	<condicion operador="=">1</condicion>
+                </field>
+		    </helper>
+		    <expression>PRD_CARPETA_PLANOS.seccion_id</expression>
+		</field>
+
+		<field id="tienehijos" noshow="true">
+			<expression>@tienehijos := ifnull((select 1 from STKPIEZA where STKPIEZA.idPadre = STKINSUM.artcod limit 1), 0)</expression>
+		</field>
+
+		<field id="bom" noshow="true" local="true">
+			<if exp="tienehijos">
+			    <true>'articulos/stkpieza_sincosto_qry.xml'</true>
+			    <false>''</false>
+			</if>
+		</field>
+
+		<field id="fecha" local="true" noshow="true">
+			<label>Fecha</label>
+			<valor>today</valor>
+			<tipo>date</tipo>
+			<detalle>fecha</detalle>
+		</field>
+
+		<field id="stkarticulo_id" required="true">
+			<label>Art.</label>
+			<help>Codigo de Artículo</help>
+			<ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/ayudas_local" >
+				<field id="artcod">
+					<label>Cod.</label>
+				</field>
+				<field id="artdes">
+					<label>Insumo</label>
+					<detalle>artdes</detalle>
+				</field>
+				<field id="posicionfab_alarma_id">
+					<detalle>posicionfab_alarma_id</detalle>
+				</field>
+				<field id="posicionfab_entrega_id">
+					<detalle>posicionfab_entrega_id</detalle>
+				</field>
+				<field id="posicionfab_id">
+					<detalle>posicionfab_id</detalle>
+				</field>												
+			</ayuda_ex>
+			<size>12</size>
+			<attribute id="linkint">bom</attribute>
+           	<paring destino="idPadre">stkarticulo_id</paring>
+           	<paring destino="fecha">fecha</paring>
+           	<attribute id="linkdes">artdes</attribute>
+           	<detalle>idPadre</detalle>			
+		</field>
+
+		<field id="artdes">
+			<expression>artdes</expression>
+			<label _modpos="nobr">Descripción</label>
+			<size>100</size>
+		</field>
+
+		<field id="cantidad_pieza_unidad">
+			<label>Cant.Unidad</label>
+			<help>Cant x Unidad</help>
+			<tipo>decimal</tipo>
+		</field>
+
+		<field id="estandar_plano">
+			<label>Estandar</label>
+			<options>
+				<option valor="0">No</option>
+				<option valor="1">Si</option>
+			</options>
+			<valor>1</valor>
+		</field>
+
+		<field id="posicionfab_alarma_id" noZero="true" deshabilitado="false">
+			<label>Inicio Fabri.</label>
+			<helper xml="posicionesfab_qry.xml" type="combo" dir="/produccion" empty="true">
+				<field id="linea_id" tabla="MOMENTO" oculto="true">
+					<condicion operador="=">1</condicion>
+				</field>
+				<field id="pertenece_linea" oculto="true">
+					<condicion operador="=">1</condicion>
+				</field>				
+			</helper>
+			<expression>case when PRD_CARPETA_PLANOS.posicionfab_alarma_id = '' then STKINSUM.posicionfab_alarma_id else PRD_CARPETA_PLANOS.posicionfab_alarma_id end</expression>
+		</field>
+
+		<field id="posicionfab_entrega_id" noZero="true" deshabilitado="false">
+			<label>Momento Entrega</label>
+			<helper xml="posicionesfab_qry.xml" type="combo" dir="/produccion" empty="true">
+				<field id="linea_id" tabla="MOMENTO" oculto="true">
+					<condicion operador="=">1</condicion>
+				</field>
+			</helper>
+			<expression>case when PRD_CARPETA_PLANOS.posicionfab_entrega_id = '' then STKINSUM.posicionfab_entrega_id else PRD_CARPETA_PLANOS.posicionfab_entrega_id end</expression>
+		</field>
+
+		<field id="posicionfab_id" noZero="true" deshabilitado="false">
+			<label>Destino Estac.</label>
+			<helper xml="posicionesfab_qry.xml" type="combo" dir="/produccion" empty="true">
+				<field id="linea_id" tabla="MOMENTO" oculto="true">
+					<condicion operador="=">1</condicion>
+				</field>
+			</helper>
+			<expression>case when PRD_CARPETA_PLANOS.posicionfab_id = '' then STKINSUM.posicionfab_id else PRD_CARPETA_PLANOS.posicionfab_id end</expression>
+		</field>
+
+      	<field id="herrinventario_id" tabla="STKINSUM" noZero="true" Formstyle="display:none;">
+        	<label>Abast.</label>
+        	<helper type="combo" xml="HLPherramientas_inv.xml" dir="/ayudas_local" empty="true"/>
+      	</field>
+
+      	<field id="modificar" Formstyle="display:none;" linkWidth="95%" linkHeight="85%" linkint="prod_carpeta_planos_articulos_crud.xml" local="true">
+        	<label>Modif.</label>
+        	<expression>'Modificar'</expression>
+	        <paring destino="id_carpetaplanos">id_carpetaplanos</paring>
+      	</field>
+
+		<field id="prdatributo_id" noZero="true">
+			<label>Atributo</label>
+        	<helper type="combo" xml="atributos_homologacion_qry.xml" dir="/producto" empty="true">
+<!--                 <parameter source="homologacion_id" target="homologacion_id"/>-->
+                    <!--<field id="homologacion_id" oculto="true" />-->
+            </helper>
+		</field>
+
+		<field id="userid" >
+		    <label>Cargó</label>
+		    <expression>concat(HTXUSERS.Nombre,' ', HTXUSERS.apellido,' ', stamp, ' En ', (
+		    	case when nrocar_id != 0 then 'Modelo'
+		    	     when modelo_lcm_id !=0 then 'Modelo/Chasis'
+		    	     when homologacion_id !=0 then 'Homologacion' end))</expression>
+		</field>
+
+		<field id="fotopath" local="true" noshow="true">
+			<if exp="true">
+				<true>'stkarticulo_id/'</true>
+				<false>''</false>
+			</if>
+			<tipo>varchar</tipo>
+		</field>
+ 
+ 		<field id="foto" path="fotopath" open="true" print="false" _download="true" Formstyle="display:none;">
+          		<expression>select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = STKINSUM.artcod and ARTICULO_FOTO.foto != '' order by revision desc limit 1</expression> 
+				<label>Imagen</label>
+                <tipo >file</tipo>
+                <size>20</size>
+		</field>
+
+</table>
+	<join tipo="left">
+		<table id="STKINSUM">
+			<field id="artcod">
+				<condicion operador="=">PRD_CARPETA_PLANOS.stkarticulo_id</condicion>
+			</field>
+			<field id="siscod">
+				<condicion operador="=">'01'</condicion>
+			</field>
+		</table>
+	</join> 
+
+		<join tipo="left">
+		    <table id="HTXUSERS">
+			<field id="login">
+			    <condicion operador="=">usuario</condicion>
+			</field>
+		    </table>
+		</join>
+
+	</form>
+</histrix>

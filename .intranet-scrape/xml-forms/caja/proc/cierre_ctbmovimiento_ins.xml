@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" grabaFinal="true">
+	<title>CIERRE</title>
+	<obs></obs>
+	<form >
+	     <table id="CTB_MOVIMIENTOS" idCampoCond="graba_ctb">
+			<field id="concepto_id"                 id_cab="ctbconcepto_id"/>
+			<field id="fecha_movimiento"            id_temp="fecha_movimiento">
+			    <tipo>date</tipo>
+			</field>
+			<field id="referencia"                  id_temp="referencia_movimiento"/>
+			<field id="ejercicio_id"                id_temp="id_ejercicio"/>
+			<field id="cajregistro_id" 			    id_temp="cajregistro_id" />
+	    </table>
+	</form>
+</histrix>

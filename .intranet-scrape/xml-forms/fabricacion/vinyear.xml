@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm">
+	<title>CODIGO DE AÑO PARA EL VIN</title>
+	<obs></obs>
+	<form >
+		<table id="VINYEAR" >
+		    <title>Años para el VIN</title>
+			<field id="year">
+				<label>Año</label>
+				<help>Año</help>
+			</field>
+		        <field id="code">
+				<label>Código</label>
+				<help>Código de Año</help>
+			</field>
+		</table>
+	</form>	   
+</histrix> 

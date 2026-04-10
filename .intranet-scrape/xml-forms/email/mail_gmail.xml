@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="crud" paginar="10">
+    <title>MAILS</title>
+    
+    <form >
+        <table id="inbox">
+          
+
+            <field id="id_inbox">
+                <label>Id Autoinc</label>
+            </field>  
+
+            
+
+            <field id="subject_mail">  
+                <label>De:</label>
+            </field>
+
+            <field id="date_mail">  
+                <label>Enviado el:</label>
+     
+            </field>
+
+
+            <field id="mail_mail" colstyle="display:none;">  
+                <label>Mensaje:</label>
+                <size>300000</size>
+                <tipo>editor</tipo>
+            </field>
+
+            <field id="attachment">
+                <label>Adjunto</label>
+            </field>
+            <order>
+                <field>date_mail</field>
+
+            </order>    
+
+
+         </table>
+           
+    
+    </form>
+</histrix>

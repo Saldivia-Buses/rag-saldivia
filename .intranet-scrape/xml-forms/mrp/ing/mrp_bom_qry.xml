@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" >
+    <title>Forecast Articulos</title>
+    <obs></obs>
+    <form >
+        <table id="STK_BOM" label="Forecast">
+        	<fieldGroup>
+
+				<field id="stkarticulopadre_id" deshabilitado="false"  esClave="true" noshow="true">
+				    <label modpos="nobr">Articulo</label>
+				    <help>Codigo de Articulo</help> 
+				</field>
+
+                <field id="id_stkarticulo" tabla="STK_ARTICULOS">
+                    <label>Código</label>
+                    <help>Codigo de Articulo</help>
+					<!-- <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas"/> -->
+                </field>    
+
+                <field id="nombre_articulo" tabla="STK_ARTICULOS">
+                    <detalle>nombre_articulo</detalle>
+                </field>
+
+                <field id="cantidad" _noshow="true" >
+                    <label>x unidad</label>
+					<tipo>numeric</tipo>
+                </field>
+
+                <field id="WCantidad1" local="true" noshow="true"  > <!-- parametro -->
+	                    <label>Cantidad</label>
+						<tipo>decimal</tipo>
+						<!-- <tipo>numeric</tipo> -->
+                </field>
+
+                <field id="W1Cantidad1" local="true" _noshow="true"> <!-- total necesario -->
+					<label>Total</label>
+					<if exp="true">
+						<true>( WCantidad1 * cantidad )</true>
+						<false>0</false>
+						<!-- <false>WCantidad1 * cantidad</false> -->
+					</if>
+					<tipo>numeric</tipo>
+				</field>
+
+				<field id="cantidad_stock" tabla="STK_STOCKACTUAL">
+				    <label>Stock</label>
+				    <tipo>numeric</tipo>
+				</field>
+
+				<field id="clase" clasefila="true" local="true" noshow="true">
+				    <if exp="cantidad_stock &lt; W1Cantidad1">
+					<true>'error'</true>
+					<false>''</false>
+				    </if>
+				</field>
+				
+				<!-- <field id="detalle" local="true" showObjTabla="true">                    
+                    <helper type="object" xml="z_mrp_proyprod2_qry.xml" _dir="/ayudas">
+						<parameter source="id_stkarticulo" target="stkarticulopadre_id" operator="="/>
+						<parameter source="W1Cantidad1" target="W2Cantidad2" />
+                    </helper>
+                </field>    -->
+
+            </fieldGroup>
+            
+            <group>
+                <field id="id_stkarticulo" ></field>
+            </group>
+
+        </table>
+
+        <join tipo="left">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">stkarticulohijo_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="STK_STOCKACTUAL">
+                <field id="stkarticulo_id">
+                    <condicion operador="=">id_stkarticulo</condicion>
+                </field>
+                <field id="stkdeposito_id">
+                    <condicion operador="=">1</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

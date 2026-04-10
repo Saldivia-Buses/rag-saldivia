@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" limit="0">
+    <title></title>
+    <obs></obs>
+    <form>
+        <table id="REG_DETALLES"  idCampoCond="porcentaje_incremento">
+            <field id="regmovim_id" esClave="true" lastId="mos_rrule_movimientos_ins.xml" />
+
+            <field id="porcentaje_incremento" id_temp="porcentaje_incremento" local="true" />
+            <field id="stklista_id" id_temp="stklista_id" local="true" />
+            <field id="fecha_movimiento" id_cab="fecha_movimiento" local="true" />
+            <field id="bonificaciones_movimiento" id_temp="bonificaciones_movimiento" local="true" />
+
+	    <!--<field id="ptotal_venta" local="true">
+		<valor>ROUND(((select (case when '[__stklista_id__]' = '' or STK_ARTICULOS.genmoneda_venta_id = 1 then ifnull(REG_DETALLES.neto_detalle, 0) else (GEN_FN_COTIZACION(genmoneda_venta_id,'[__fecha_movimiento__]')  * ifnull(STK_LISTADETALLE.stklistadetalle_precioventa,0))  end) 
+from STK_ARTICULOS join STK_LISTADETALLE on STK_LISTADETALLE.stkarticulo_id = STK_ARTICULOS.id_stkarticulo and STK_LISTADETALLE.stklista_id = '[__stklista_id__]' where STK_ARTICULOS.id_stkarticulo = REG_DETALLES.codigo_detalle) * (1 + (REG_DETALLES.alicuota_iva / 100)) * REG_DETALLES.cantidad_detalle), 2)</valor>
+		<tipo>integer</tipo>
+	    </field>-->
+
+            <field id="total_detalle">
+		<valor>(CASE WHEN '[__bonificaciones_movimiento__]' &gt; 0 THEN ((case when '[__porcentaje_incremento__]' &lt;= 0 then ROUND(((select (case when '[__stklista_id__]' = '' or STK_ARTICULOS.genmoneda_venta_id = 1 then ifnull(REG_DETALLES.precio_venta, 0) else (GEN_FN_COTIZACION(genmoneda_venta_id,'[__fecha_movimiento__]')  * ifnull(STK_LISTADETALLE.stklistadetalle_precioventa,0))  end) 
+from STK_ARTICULOS join STK_LISTADETALLE on STK_LISTADETALLE.stkarticulo_id = STK_ARTICULOS.id_stkarticulo and STK_LISTADETALLE.stklista_id = '[__stklista_id__]' where STK_ARTICULOS.id_stkarticulo = REG_DETALLES.codigo_detalle) * (1 + (REG_DETALLES.alicuota_iva / 100)) * REG_DETALLES.cantidad_detalle), 2) else ((ROUND(((select (case when '[__stklista_id__]' = '' or STK_ARTICULOS.genmoneda_venta_id = 1 then ifnull(REG_DETALLES.neto_detalle, 0) else (GEN_FN_COTIZACION(genmoneda_venta_id,'[__fecha_movimiento__]')  * ifnull(STK_LISTADETALLE.stklistadetalle_precioventa,0))  end) 
+from STK_ARTICULOS join STK_LISTADETALLE on STK_LISTADETALLE.stkarticulo_id = STK_ARTICULOS.id_stkarticulo and STK_LISTADETALLE.stklista_id = '[__stklista_id__]' where STK_ARTICULOS.id_stkarticulo = REG_DETALLES.codigo_detalle) * (1 + (REG_DETALLES.alicuota_iva / 100)) * REG_DETALLES.cantidad_detalle), 2) * '[__porcentaje_incremento__]' / 100) + ROUND(((select (case when '[__stklista_id__]' = '' or STK_ARTICULOS.genmoneda_venta_id = 1 then ifnull(REG_DETALLES.neto_detalle, 0) else (GEN_FN_COTIZACION(genmoneda_venta_id,'[__fecha_movimiento__]')  * ifnull(STK_LISTADETALLE.stklistadetalle_precioventa,0))  end) 
+from STK_ARTICULOS join STK_LISTADETALLE on STK_LISTADETALLE.stkarticulo_id = STK_ARTICULOS.id_stkarticulo and STK_LISTADETALLE.stklista_id = '[__stklista_id__]' where STK_ARTICULOS.id_stkarticulo = REG_DETALLES.codigo_detalle) * (1 + (REG_DETALLES.alicuota_iva / 100)) * REG_DETALLES.cantidad_detalle), 2)) end) - ((case when '[__porcentaje_incremento__]' &lt;= 0 then ROUND(((select (case when '[__stklista_id__]' = '' or STK_ARTICULOS.genmoneda_venta_id = 1 then ifnull(REG_DETALLES.precio_venta, 0) else (GEN_FN_COTIZACION(genmoneda_venta_id,'[__fecha_movimiento__]')  * ifnull(STK_LISTADETALLE.stklistadetalle_precioventa,0))  end) 
+from STK_ARTICULOS join STK_LISTADETALLE on STK_LISTADETALLE.stkarticulo_id = STK_ARTICULOS.id_stkarticulo and STK_LISTADETALLE.stklista_id = '[__stklista_id__]' where STK_ARTICULOS.id_stkarticulo = REG_DETALLES.codigo_detalle) * (1 + (REG_DETALLES.alicuota_iva / 100)) * REG_DETALLES.cantidad_detalle), 2) else ((ROUND(((select (case when '[__stklista_id__]' = '' or STK_ARTICULOS.genmoneda_venta_id = 1 then ifnull(REG_DETALLES.neto_detalle, 0) else (GEN_FN_COTIZACION(genmoneda_venta_id,'[__fecha_movimiento__]')  * ifnull(STK_LISTADETALLE.stklistadetalle_precioventa,0))  end) 
+from STK_ARTICULOS join STK_LISTADETALLE on STK_LISTADETALLE.stkarticulo_id = STK_ARTICULOS.id_stkarticulo and STK_LISTADETALLE.stklista_id = '[__stklista_id__]' where STK_ARTICULOS.id_stkarticulo = REG_DETALLES.codigo_detalle) * (1 + (REG_DETALLES.alicuota_iva / 100)) * REG_DETALLES.cantidad_detalle), 2) * '[__porcentaje_incremento__]' / 100) + ROUND(((select (case when '[__stklista_id__]' = '' or STK_ARTICULOS.genmoneda_venta_id = 1 then ifnull(REG_DETALLES.neto_detalle, 0) else (GEN_FN_COTIZACION(genmoneda_venta_id,'[__fecha_movimiento__]')  * ifnull(STK_LISTADETALLE.stklistadetalle_precioventa,0))  end) 
+from STK_ARTICULOS join STK_LISTADETALLE on STK_LISTADETALLE.stkarticulo_id = STK_ARTICULOS.id_stkarticulo and STK_LISTADETALLE.stklista_id = '[__stklista_id__]' where STK_ARTICULOS.id_stkarticulo = REG_DETALLES.codigo_detalle) * (1 + (REG_DETALLES.alicuota_iva / 100)) * REG_DETALLES.cantidad_detalle), 2)) end) * '[__bonificaciones_movimiento__]' / 100)) else (case when '[__porcentaje_incremento__]' &lt;= 0 then ROUND(((select (case when '[__stklista_id__]' = '' or STK_ARTICULOS.genmoneda_venta_id = 1 then ifnull(REG_DETALLES.precio_venta, 0) else (GEN_FN_COTIZACION(genmoneda_venta_id,'[__fecha_movimiento__]')  * ifnull(STK_LISTADETALLE.stklistadetalle_precioventa,0))  end) 
+from STK_ARTICULOS join STK_LISTADETALLE on STK_LISTADETALLE.stkarticulo_id = STK_ARTICULOS.id_stkarticulo and STK_LISTADETALLE.stklista_id = '[__stklista_id__]' where STK_ARTICULOS.id_stkarticulo = REG_DETALLES.codigo_detalle) * (1 + (REG_DETALLES.alicuota_iva / 100)) * REG_DETALLES.cantidad_detalle), 2) else ((ROUND(((select (case when '[__stklista_id__]' = '' or STK_ARTICULOS.genmoneda_venta_id = 1 then ifnull(REG_DETALLES.neto_detalle, 0) else (GEN_FN_COTIZACION(genmoneda_venta_id,'[__fecha_movimiento__]')  * ifnull(STK_LISTADETALLE.stklistadetalle_precioventa,0))  end) 
+from STK_ARTICULOS join STK_LISTADETALLE on STK_LISTADETALLE.stkarticulo_id = STK_ARTICULOS.id_stkarticulo and STK_LISTADETALLE.stklista_id = '[__stklista_id__]' where STK_ARTICULOS.id_stkarticulo = REG_DETALLES.codigo_detalle) * (1 + (REG_DETALLES.alicuota_iva / 100)) * REG_DETALLES.cantidad_detalle), 2) * '[__porcentaje_incremento__]' / 100) + ROUND(((select (case when '[__stklista_id__]' = '' or STK_ARTICULOS.genmoneda_venta_id = 1 then ifnull(REG_DETALLES.neto_detalle, 0) else (GEN_FN_COTIZACION(genmoneda_venta_id,'[__fecha_movimiento__]')  * ifnull(STK_LISTADETALLE.stklistadetalle_precioventa,0))  end) 
+from STK_ARTICULOS join STK_LISTADETALLE on STK_LISTADETALLE.stkarticulo_id = STK_ARTICULOS.id_stkarticulo and STK_LISTADETALLE.stklista_id = '[__stklista_id__]' where STK_ARTICULOS.id_stkarticulo = REG_DETALLES.codigo_detalle) * (1 + (REG_DETALLES.alicuota_iva / 100)) * REG_DETALLES.cantidad_detalle), 2)) end) end)</valor>
+                <tipo>integer</tipo>
+            </field>
+
+            <field id="neto_detalle">.
+                <valor>total_detalle / (1 + (alicuota_iva / 100))</valor>
+                <tipo>integer</tipo>
+            </field>
+
+            <field id="iva_detalle">
+                <valor>total_detalle - neto_detalle</valor>
+                <tipo>integer</tipo>
+            </field>.
+
+            <field id="precio_venta">
+                <valor>neto_detalle / cantidad_detalle</valor>
+                <tipo>integer</tipo>
+            </field>
+
+        </table>
+    </form>
+</histrix>
+

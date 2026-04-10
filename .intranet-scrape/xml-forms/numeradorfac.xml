@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<abm tipo="consulta">
+	<titulo>NUMERO</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="CCTMOVIM" >
+			<campo id="num">
+				<expresion>max(movnro) + 1</expresion>
+				<label>Entero</label>
+			</campo>
+		</tabla>
+	</consulta>	   
+</abm> 

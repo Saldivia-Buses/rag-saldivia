@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini">
+	<title>ACCIDENTES POR PERSONAL</title>
+	<obs/>
+	<form >
+		<table id="FRANCOS_PER" styleTbody="height:10em;">
+			
+
+			 <filters>
+				<field id="legajo" deshabilitado="false">
+				    <label>Legajo</label>
+				    <operador>=</operador>
+				    <detalle>legajo</detalle>
+				</field>
+				    <field id="nomapp" local="true" deshabilitado="true">
+					<label>Nombre y Apellido</label>
+				    </field>                
+				<field id="fechainicio">
+						<label>Desde</label>
+						<help>Fecha</help>
+				                <operador>&gt;=</operador>
+				                <valor>today</valor>
+					</field>
+					<field id="fechafin">
+						<label modpos="nobr">Hasta</label>
+						<help>Hasta Fecha</help>
+				                <operador>&lt;=</operador>
+				                <valor>today</valor>
+					</field>
+			    </filters>
+
+		         <field id="tipo" deshabilitado="true" noshow="true" valauto="true">
+				<label>tipo</label>
+				<valor>1</valor>
+				<condicion operador="=">1</condicion>			
+			</field>
+				<field id="id" esClave="true" autoinc="true" noshow="true">
+				</field>
+			
+			   <field id="legajo" deshabilitado="true" autocompletar="true" oculto="true" >
+				<label>legajo</label>
+				<size>50</size>
+				<tipo>varchar</tipo>
+				<helper type="external" id="PERSONAL">
+				    <field id="legajo" esClave="true">
+					 <label>Legajo</label>
+					 <detalle>legajo</detalle>
+				    </field>
+				    <field id="nomapp">
+					<label>Nombre y Apellido</label>
+					<expression having="false">CONCAT(apellido, ' ', Nombre)</expression>
+					<detalle>nomapp</detalle>
+				    </field>
+<!--				    <field id="Nombre">
+					<label>nombre</label>
+					<detalle>nom</detalle>
+				    </field>
+				    <field id="apellido">
+					<label>apellido</label>
+					<detalle>app</detalle>
+				    </field> -->
+                                    <field id="IdPersona" _noshow="true">
+                                        <label>Nro persona</label>
+                                        <detalle>IdPersona</detalle>
+                                    </field>
+				    <field id="fechaEgreso" _noshow="true">
+					<condicion operador="=">'0000-00-00'</condicion>
+				    </field>
+                                    
+				</helper>
+<!--				<condicion operador="=">''</condicion>	 -->
+			</field>
+				    <field id="nomapp" local="true" noshow="true">
+					<label>Nombre y Apellido</label>
+					<size>80</size>
+				    </field>     
+
+		    <field id="IdPersona" deshabilitado="true" oculto="true">
+				<label>Pers</label>
+				<!--<condicion operador="=">0</condicion>-->
+				
+			</field>           
+
+			<field id="idfranco">
+				<tabla_ex id="FRANCOS_CAT">
+					<field id="idfranco"/>
+					<field id="nombre"/>
+					<field id="tipo">
+					    <condicion operador="=">1</condicion>
+					</field>
+
+				</tabla_ex>
+				<label>Cod.</label>
+				<help>Codigo de Licencia</help>
+                <actualiza>
+                    <field destino="idfranco" id="id_franc"/>
+                </actualiza>
+ 			</field>
+
+			<field id="id_franc" noshow="true" local="true">
+				<tabla_ex id="FRANCOS_CAT">
+					<field id="id_francocat"/>
+					<field id="nombre"/>
+					<field id="tipo">
+					    <condicion operador="=">1</condicion>
+					</field>
+					<field id="idfranco" oculto="true"/>
+				</tabla_ex>
+                <actualiza>
+                    <field destino="id_francocat" id="franco_tipo_id"/>
+                </actualiza>
+ 			</field>
+
+			<field id="franco_tipo_id">
+        		<helper xml="accidente_per_tipo_crud.xml" type="combo" dir="/personal/man/"/>
+				<label>Tipo</label>
+				<help>Tipo de Licencia</help>
+			</field>
+
+			<field id="cuerpo_parte_id">
+        		<helper xml="accidente_per_partes_cuerpo_crud.xml" type="combo" dir="/personal/man/"/>
+				<label>Parte Afec</label>
+				<help>Parte del cuerpo afectada</help>
+			</field>
+
+			<field id="seccion_id">
+				<tabla_ex id="SECCION">
+					<field id="id_seccion"/>
+					<field id="nombre">
+						<expression>LEFT(nombre,15)</expression>
+					</field>
+					<field id="activa">
+						<condicion operador="=">1</condicion>
+					</field>
+					<order>
+						<field id="nombre" />
+					</order>
+				</tabla_ex>
+				<label>Sección</label>
+				<help>Sección donde ocurrió el accidente</help>
+			</field>
+			
+			<field id="fechainicio">
+				<label>Fecha Inicio</label>
+				<help>Fecha Inicio</help>
+			</field>
+			<field id="fechafin">
+				<label>Fecha Fin</label>
+				<help>Fecha Fin</help>
+			</field>
+			<field id="observaciones">
+				<label>Observaciones</label>
+				<help>Observaciones</help>
+				<size>200</size>
+			</field>
+			
+		</table>
+	</form>
+</histrix>

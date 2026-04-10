@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" subtipo="vertical">
+    <title>Articulo Proveedor</title>
+    <obs></obs>
+    <form >
+        <table id="STK_ARTICULO_PROVEEDOR" label="Articulo Proveedor">
+
+    <fieldGroup style="padding:2px 2px 2px 2px;vertical-align:middle;">
+
+            <field id="id_stkarticuloproveedor" noshow="true" autoinc="true" esClave="true">
+                <label>Codigo</label>
+                <help>Codigo de relacion articulo/proveedor</help>
+            </field>
+
+            <field id="stkarticulo_id" oculto="true" valauto="true">
+                <label>Articulo</label>
+                <help>Codigo de Articulo</help>
+            </field>
+            
+            <field id="regcuenta_id">
+                <label>Nro Proveedor</label>
+                <helper type="combo" id="REG_CUENTA" empty="true">
+                    <field id="id_regcuenta" esClave="true"/>
+                    <field id="nombre_cuenta"/>
+                    <field id="subsistema_id">
+                        <condicion operador="=">01</condicion>
+                    </field>
+                    <order>
+                	<field id="nombre_cuenta"></field>
+                    </order>
+                </helper>
+            </field>
+            
+            <field id="prv_articulo">
+                <label>Cod Articulo/proveedor</label>
+            </field>
+            
+            <field id="compra_minima" modpos="nobr">
+                <label>Compra Mínima</label>
+            </field>
+
+    </fieldGroup>
+
+        </table>
+        
+        <join tipo="left">
+            <table id="REG_CUENTA">
+                    <field id="subsistema_id">
+                        <condicion operador="=">01</condicion>
+                    </field>
+                <field id="id_regcuenta" oculto="true">
+                    <condicion operador="=">STK_ARTICULO_PROVEEDOR.regcuenta_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

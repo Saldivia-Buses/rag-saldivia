@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" subtipo="vertical" path="/fotos/personal">
+  <title>Titulos</title>
+  <obs></obs>
+  <form>
+    <table id="RH_TITULOS" label="Titulos">
+
+      <field id="id_rhtitulo" noshow="true">
+      </field>
+	
+      <field id="idPersona" noshow="true" valauto="true">
+	       <label>Persona</label>
+      </field>
+
+      <field id="tipoestudio">
+          <label modpos="nobr">Estudio</label>
+          <help>Estudio</help>
+          <tabla_ex id="ESTUDIOS" _vacio="true">
+              <field id="tipoestudio" />
+              <field id="descripcion" />
+          </tabla_ex>
+      </field>
+
+      <field id="descripcion">
+	       <label modpos="nobr">Descripcion</label>
+        <help>Descripcion de la carrera</help>
+      </field>
+
+    <field id="titpath" local="true" noshow="true">
+    </field>
+
+	<field id="archivo" path="titpath">
+	    <label modpos="nobr">Archivo</label>
+      <tipo>dir</tipo>
+      <size>50</size>
+	</field>
+    </table>
+  </form>
+</histrix>  

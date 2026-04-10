@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+    <title/>
+    <obs/>
+    <form>
+        <table id="CAJ_MOVIMIENTOS" idCampoCond="caja_cerrada">
+            <field id="cajregistro_id"          id_temp="cajregistro_id"/>
+            <field id="cajconcepto_id"          id_temp="cajconcepto_id"/>
+            <field id="cajpuesto_id"     	    id_temp="cajpuesto_contra_id"/>
+            <field id="nro_movimiento"          id_temp="nro_contra_movimiento"/>
+            <field id="fecha_movimiento"        id_temp="fecha_contra_movimiento">
+                <tipo>date</tipo>
+            </field>
+            <field id="hora_movimiento">
+                <valor>NOW()</valor>
+                <tipo>integer</tipo>
+            </field>
+            <field id="referencia_movimiento"   id_temp="referencia_contra_movimiento">
+          	  <tipo>varchar</tipo>
+      		</field>
+            <field id="importe_movimiento"      id_temp="importe_contra_movimiento">
+                <tipo>custom_numeric</tipo>
+            </field>
+            <field id="usuario_id"  id_temp="usuario_id" />
+        </table>
+    </form>
+</histrix>

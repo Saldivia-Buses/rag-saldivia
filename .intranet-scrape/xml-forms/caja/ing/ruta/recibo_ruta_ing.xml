@@ -1,0 +1,200 @@
+<histrix tipo="fichaing" inserta="false" borra="false" modifica="false" imprime="false" log="false" transaccional="true" tooltip="false" confirma="GRABAR">
+    <title>Pago</title>
+    <obs/>
+    <form >
+
+        <table id="REG_MOVIMIENTOS" label="Recibo">
+
+
+
+            <validation>
+                <condition><![CDATA['nro_movimiento' + 0 == 0]]>
+                </condition>         
+                <message>Debe Ingresar un Nro de Recibo</message>
+            </validation>
+
+            <validation>
+                <condition><![CDATA[importe_movimiento + 0 == 0]]>
+                </condition>
+                <message>Debe Imputar un Comprobante</message>
+            </validation>
+
+            <validation>
+                <condition><![CDATA[importe_anticipo + 0 < 0]]>
+                </condition>
+                <message>El anticipo no puede ser un numero negativo</message>
+            </validation>
+<!--
+            <cierraproceso id="cajmovimientos_ing.xml">
+                <paring destino="imputacion_concepto">imputacion_concepto</paring>
+                <paring destino="moneda_id">moneda_id</paring>
+                <paring destino="cajpuesto_id">cajpuesto_id</paring>
+                <paring destino="cajconcepto_id">cajconcepto_id</paring>
+                <paring destino="cajregistro_id">cajregistro_id</paring>
+                <paring destino="importe_movimiento">importe_movimiento</paring>
+                <paring destino="fecha_movimiento">fecha_movimiento</paring>
+                <paring destino="referencia_movimiento">referencia_movimiento</paring>
+                <paring destino="nro_movimiento">nro_movimiento</paring>
+                <paring destino="ctbcuenta_reg_id">ctbcuenta_id</paring>
+                <paring destino="ctbcuenta_reg_doh">ctbcuenta_reg_doh</paring>
+
+                <paring destion="subsistema_id">subsistema_id</paring>
+                <paring destion="regcuenta_id">regcuenta_id</paring>
+            </cierraproceso>
+-->
+            <movimientos>
+<!--                <relacion id="regmovimientos_ins.xml"/> 
+                <relacion id="regdetalles_ins.xml"/>  -->
+<!--                <relacion id="impresion_caja.xml"/>  -->
+            </movimientos>
+             
+            <field id="moneda_id" local="true" noshow="true">
+                <valor>1</valor>
+            </field>
+	    <field id="saldo_a_cct" local="true" noshow="true">
+		<valor>1</valor>
+	    </field>
+
+
+            <field id="id_regmovim" noshow="true">
+                <condicion operador="=">-1</condicion>
+            </field>
+      
+            <fieldGroup id="DEBUG" local="true" noshow="true">
+                <field id="cajpuesto_id"/>
+                <field id="cajconcepto_id"/>
+                <field id="cajregistro_id" />
+                <field id="fecha_movimiento"/>
+                <field id="subsistema_id"/>
+                <field id="regconcepto_id" />
+                <field id="tipoimpre_concepto" />
+                <field id="imputacion_concepto" />
+                <field id="imprime_concepto" />
+                <field id="ctbcuenta_id"/>
+                <field id="ctbcuenta_reg_doh">
+                    <if exp="imputacion_concepto == 0">
+                        <true>1</true>
+                        <false>0</false>
+                    </if>
+                </field>
+            </fieldGroup>
+      
+                          
+                              
+                             
+            <field id="regzona_id" local="true">
+                <label>Zona</label>
+                <helper type="combo" xml="regzonas_qry.xml" dir="/ayudas" empty="true" >
+                </helper> 
+                <size>6</size>
+                <actualiza>
+                    <field id="imputaciones" destino="regzona_id"/>
+                </actualiza>
+            </field>      
+
+
+            <field id="regcuenta_ivaletra" local="true" deshabilitado="true" noshow="true">
+                <label _modpos="nobr"  style="font-size: large;" >Letra</label>
+<!--                <actualiza>
+                    <field id="nro_movimiento" destino="letra" /> 
+                    <field id="impresion" destino="letra" />
+
+                    <field id="printerNameRem" destino="letra2" />
+                    
+                    <field id="printerNameFac" destino="letra" />
+                    
+                    
+                </actualiza>
+            -->
+                <valor>X</valor>
+                <size>1</size>
+                <detalle>letra_movimimento</detalle>
+            </field>
+            <field id="puesto_movimiento" _deshabilitado="true">
+                <label _modpos="nobr" _style="font-size: large;" _sincelda="true">puesto</label>
+                <helper type="combo" xml="npv_x_puesto_qry.xml" dir="/caja/ing/"></helper> 
+                <size>4</size>
+                <detalle>puesto_movimiento</detalle>
+            </field>
+
+            
+             <field id="nro_movimiento" deshabilitado="true">
+                <label modpos="nobr" sincelda="true">Nº</label> 
+           
+                <parametro id="/caja/ing/cajnumerador_param.xml" retorna="numero" >
+                    <field id="numero">
+                        <complete>numero + 1</complete>
+                    </field>
+                </parametro>
+                <formato>%08d</formato>
+                <size>8</size>
+                <detalle>nro_movimiento</detalle>
+            </field>
+            
+
+
+            <field id="referencia_movimiento" maxlength="144">
+                <label colspan="4">Referencia</label>
+                <tipo>varchar</tipo>
+                <size>144</size>
+            </field>
+
+            <field id="vencimiento_movimiento" noshow="true">
+                <valor>today</valor>
+            </field>
+ 
+            <field id="imputaciones" local="true">
+                <label colspan="10" />
+                <helper type="object" xml="regimputaciones_ruta_grid.xml" dir="/caja/ing/ruta/">
+                    <parameter source="imputacion_concepto" target="imputacion_concepto_comprobante_llama" />
+                </helper> 
+            </field>
+   
+            <field id="importe_imputado" local="true" deshabilitado="true">
+                <label style="font-size: large; text-align: right;">Imputado</label>
+                <jseval campodestino="importe_movimiento">importe_imputado</jseval>
+                <tipo>numeric</tipo>
+                <valor>0</valor>
+                <size>20</size>
+            </field> 
+
+            <field id="importe_anticipo" local="true" deshabilitado="true">
+                <label style="font-size: large; text-align: right;">Anticipo</label>
+                <tipo>numeric</tipo>
+                <valor>0</valor>
+                <size>20</size>
+            </field> 
+
+            <field id="importe_movimiento" _deshabilitado="true"> 
+                <label style="font-size: xx-large; text-align: right;">Total</label>        
+                <jseval campodestino="importe_anticipo">importe_movimiento - importe_imputado</jseval>
+                <tipo>numeric</tipo>
+                <valor>0</valor>
+                <size>20</size>
+            </field>
+
+
+            <field id="muestracheck" local="true" noshow="true">
+                <if exp="tipoimpre_concepto != 2">
+                    <true>'display:none;'</true>
+                    <false>''</false>
+                </if>
+            </field>
+
+            <field id="CHKimprime" local="true">
+                <attribute id="style">muestracheck</attribute>
+                <label style="font-size: medium; align: right;" _modpos="nobr">Imprime Comprobante</label>
+                <tipo>check</tipo>
+            </field>
+
+            <field id="impresion" local="true" noshow="true" deshabilitado="true">
+                <label>Programa de Impresion</label>
+                <if exp="CHKimprime=='1' || tipoimpre_concepto=='1'">
+                    <true>'imprime_concepto'</true>
+                    <false>''</false>
+                </if> 
+            </field>
+      
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update">
+    <title>Arbol Producto</title>
+    <obs></obs>
+    <form >
+        <table id="STK_BOM" label="Materia prima" idCampoCond="grabar">
+
+            <field id="id_stkbom" id_temp="id_stkbom" esClave="true" />
+            <field  id="stkarticulohijo_id" id_temp="stkarticulo_nuevo_id" />
+
+        </table>
+    </form>
+</histrix>

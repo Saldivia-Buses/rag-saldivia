@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update">
+	<form>
+		<table id="CAJ_REGISTROS">
+			<field id="id_cajregistro" 	id_temp="id_cajregistro" esClave="true" />
+			<field id="turno_registro" 	id_temp="turno_registro" />
+			<field id="apertura_caja" 	id_temp="apertura_caja" />
+			<field id="operador_nombre" 	id_temp="operador_nombre" />
+			<field id="apertura_recuento"   id_temp="apertura_recuento" />
+		</table>
+	</form>
+</histrix>

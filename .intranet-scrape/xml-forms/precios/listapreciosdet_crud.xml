@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" _subtipo="vertical" borra="false" preFetch="true">
+    <title>LISTAS DE PRECIOS</title> 
+    <obs></obs>
+    <eventos>
+        <event id="update">close</event>
+        <event id="update">refresh</event>
+    </eventos>
+    <form >
+        <table id="LISTAPRECIOSDET" >
+            <title>Listas de precios</title>
+			
+
+            <field id="idLista"  oculto="true">
+                <tabla_ex id="LISTAPRECIOSCAB">
+                    <field id="idLista">
+						   
+                    </field>
+                    <field id="nombre2">
+                        <expression>CONCAT(nombre, ' ',idLista)</expression>
+                    </field>
+                    <filtra>idLista</filtra>
+					   
+                </tabla_ex>
+					
+                <label>Lista</label>
+                <help>Lista</help>
+                <valor>1</valor>
+            </field>
+            <field id="idArticulo" oculto="true">
+                <label>articulo</label>
+                <help>Articulo</help>
+					
+            </field>
+
+            <field id="precio1">
+                <label>Precio</label>
+                <help>Precio de Venta</help>
+					
+            </field>
+            <field id="vigencia">
+                <label>vigencia</label>
+                <valor>today</valor>
+            </field>
+            <field id="obs">
+                <label>Obervaciones</label>
+                <help>Observaciones</help>
+            </field>
+            <order>
+                <field id="vigencia"></field>
+            </order>
+			
+        </table>
+    </form>
+</histrix>

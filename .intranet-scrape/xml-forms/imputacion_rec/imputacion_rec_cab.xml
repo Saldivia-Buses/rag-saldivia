@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" modifica="false" inserta="false" transaccional="true">
+    <title>Cuenta Corriente</title>
+    <obs/>
+    <form>
+        <table id="CCTCUENT" label="Movimientos">
+            <movimientos>
+                <relacion id="imputacion_rec_update_ingmov.xml"></relacion>
+            </movimientos>
+            <field id="siscod" oculto="true">
+                <label>Cod.</label>
+            </field>
+            <field id="nroimp" deshabilitado="true" local="true">
+                <label modpos="nobr" >Numero</label>
+                <help>Numero de Imputacion</help>
+                <parametro id="cajparam_parent.xml" retorna="parent">
+                    <field id="parcla" oculto="true">
+                        <condicion operador="=">'nroimp'</condicion>
+                    </field>
+                    <field id="parent">
+                        <complete>parent + 1</complete>
+                    </field>
+                </parametro>
+                <tipo>integer</tipo>
+                <format>%04d</format>
+                <detalle>nroimp</detalle>
+            </field>
+            <field id="ctacod" deshabilitado="true">
+                <label>Proveedor</label>
+                <ayuda_ex id="CCTCUENT" xml="cctcuent_c_saldo_neg.xml">
+                    <field id="ctacod">
+                        <label>Cod.</label>
+                    </field>
+                    <field id="ctanom">
+                        <label>Nombre</label>
+                        <detalle>ctanom</detalle>
+                    </field>
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">02</condicion>
+                    </field>
+                    <field id="baja" oculto="true">
+                        <condicion operador="=">0</condicion>
+                    </field>
+                    <order>
+                        <field id="CCTCUENT.ctanom" />
+                    </order>
+                    <clave>ctacod</clave>
+                    <descripcion>ctanom</descripcion>
+                </ayuda_ex>
+            </field>
+            <field deshabilitado="true" id="ctanom">
+                <label modpos="nobr">Nombre</label>
+            </field>
+
+            <field id="fecha" local="true">
+                <label modpos="nobr">Fecha</label>
+                <help/>
+                <tipo>date</tipo>
+                <valor>today</valor>
+            </field>
+            <field id="movnpvOP" local="true" deshabilitado="true">
+                <label>Numero</label>
+
+            </field>
+            <field id="movfecOP" local="true" deshabilitado="true">
+                <tipo>date</tipo>
+            </field>
+            <field id="movnroOP" local="true" deshabilitado="true">
+                <label modpos="nobr"></label>
+            </field>
+            <field id="concodOP" local="true" deshabilitado="true" _noshow="true"></field>
+            <field id="imputaciones" local="true" obj="imputacion_rec_ing.xml" >
+                <label colspan="6"></label>
+                <paring id="ctacod">ctacod</paring>
+
+
+            </field>
+            <field id="saldoOP" local="true" deshabilitado="true">
+                <label style="color:green; font-size:16px;">Saldo Orden. Pago</label>
+                <tipo>numeric</tipo>
+            </field>
+            <field id="totalImputado" local="true" deshabilitado="true">
+                <label style="color:blue; font-size:16px;">Total Imputado</label>
+                <jseval campodestino="saldoFinal">saldoOP + totalImputado</jseval>
+                <tipo>numeric</tipo>
+            </field>
+            <field id="saldoFinal" local="true" deshabilitado="true">
+                <label style="color:green; font-size:16px;">Saldo Final</label>
+                <tipo>numeric</tipo>
+            </field>
+        </table>
+    </form>
+</histrix>

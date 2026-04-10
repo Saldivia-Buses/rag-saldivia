@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="ficha" preFetch="true" imprime="false">
+		<title>Regla de Recurrencia</title>
+		<obs></obs>
+		<eventos>
+			<event id="update">close</event>
+			<event id="delete">close</event>
+			<event id="update">refresh</event>
+			<event id="delete">refresh</event>
+		</eventos>		
+		<form>
+		    <table id="REG_MOVIMIENTO_RRULES" label="Recurrencia">
+
+				<field id="id_regmovimrrule" autoinc="true" noshow="true" />
+
+				<field id="fecha_movimiento">
+					<label>Fecha</label>
+				</field>
+				
+				<field id="rrule" calendarRecurringRule="true">
+					<label>Repetir</label>
+					<tipo>rrule</tipo>
+				</field>		
+
+		    </table>
+		</form>
+    </histrix>	
+
+	
+	
+

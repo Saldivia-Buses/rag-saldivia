@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="ing"  subtipo="vertical" imprime="false">
+    <titulo>Origenes de No Conformidad</titulo>
+    <obs></obs>
+    <consulta>
+        <table id="CAL_ACCIONES_NCONF" >
+            <titulo>Estados</titulo>
+            <movimientos cabecera="cierre_nconf_cab.xml">
+
+            </movimientos>
+            <field id="id_accionnconf" autoinc="true" noshow="true">
+                <label>Cod.</label>
+                <help>Codigo</help>
+            </field>
+            <field id="noconformidad_id" oculto="true">
+            </field>
+            <field id="descripcion_accionnconf">
+                <label colspan="3">Acción a Realizar</label>
+                <size>100</size>
+            </field>
+            <field id="fecha_accionnconf">
+                <label>Fecha</label>
+            </field>
+            <field id="resp_rhpersonal_id" >
+                <helper type="combo" xml="rhpersonal_qry.xml" dir="/help_local" empty="true"/>
+                <label modpos="nobr">Responsable</label>
+
+                <help >Empleado responsable de la Acción</help>
+            </field>
+        </table>
+    </consulta>
+</histrix>

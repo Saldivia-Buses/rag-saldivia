@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" llenoTemporal="false">
+	<title>ASIENTO CONTABLE</title>
+	<obs></obs>
+	<form >
+		
+		<table id="CTBREGIS" label="minutas">
+			
+			<movimientos cabecera="ctbregis_cab.xml">
+				<relacion id="ctbregis_mov.xml"></relacion>
+			</movimientos>
+			
+			<field id="regfec" oculto="true">
+				<label>Fecha</label>
+				<help>Fecha del Asiento (Movimiento Contable) </help>
+			</field>
+			
+			<field id="ctbcod">
+				<label>Cuenta</label>
+				<help>Código de Cuenta Contable</help>
+				<tabla_ex id="CTBCUENT">
+					<field id="ctbcod"></field>
+					<field id="ctbnom"></field>
+					<field id="ctbhab">
+						<condicion operador="=">1</condicion>
+					</field>
+				</tabla_ex>
+				<tipo>string</tipo>
+			</field>
+
+			<field id="idcos" modpos="nobr" _tabla="CTB_DETALLES">
+				<label>Centro de costos</label>
+				<helper id="CTB_CENTROS"  type="combo" empty="true">
+					<field id="id_ctbcentro" />
+					<field id="centro">
+						<expression>concat(referencia_centro,' ', nombre_centro)</expression>
+					</field> 
+				</helper>
+				<detalle>idcos</detalle>
+			</field>
+			
+			<field id="regref">
+				<label>Referencia</label>
+				<help>Referencia</help>
+			</field>
+			
+			<field id="reg_imp1" suma="true" >
+				<label>Debe</label>
+				<help>Debe</help>
+			</field>
+
+			<field id="reg_imp2" suma="true">
+				<label>Haber</label>
+				<help>Haber</help>
+			</field>
+
+			<field id="valor" noshow="true" deshabilitado="true">
+				<label>valor</label>
+				<if exp="reg_imp1 + 0 == 0">
+					<true>reg_imp2</true>
+					<false>reg_imp1</false>
+				</if>
+			</field>				
+
+			<field id="regdoh" noshow="true" deshabilitado="true">
+				<label>Imputacion</label>
+				<help>Imputacion</help>
+				<if exp="reg_imp1 + 0 == 0">
+					<true>2</true>
+					<false>1</false>
+				</if>
+			</field>
+
+			<!-- NUMERADOR INTERNO NOMBRE DE CAMPO RESERVADO-->
+			<field id="_ORDEN" oculto="true">
+				<label>Orden</label>
+			</field>
+
+			<order>
+				<field id="regmin"></field>
+				<field id="regord"></field>
+			</order>
+		</table>
+		
+		<join tipo="left">
+			<table id="CTBCUENT">
+				<field id="ctbcod" oculto="true">
+					<condicion operador="=">CTBREGIS.ctbcod</condicion>
+				</field>
+			</table>
+		</join>
+
+		<!-- <join tipo="left">
+            <table id="CTB_DETALLES">
+                <field id="ctbregis_id">
+                    <condicion operador="=">CTBREGIS.id_ctbregis</condicion>
+                </field>
+            </table>
+        </join> -->
+	</form>
+</histrix>

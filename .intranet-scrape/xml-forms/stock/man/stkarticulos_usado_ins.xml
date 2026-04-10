@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" replaceInto="true">
+    <title>Artículos</title>
+    <obs></obs>
+    <form >
+        <table id="STK_ARTICULOS" label="Artículos" idCampoCond="graba_usado">
+            <field id="id_stkarticulo"      id_temp="codigo_ubarra" />
+            <field id="codigo_barra"        id_temp="codigo_ubarra" />
+            <field id="nombre_articulo"     id_temp="nombre_uarticulo" />
+            <field id="stkrubro_id"         id_temp="stkrubro_id" />
+            <field id="stksubrubro_id"      id_temp="stksubrubro_id" />
+            <field id="stkfamilia_id"       id_temp="stkfamilia_id" />
+            <field id="stkmarca_id"         id_temp="stkmarca_id" />
+            <field id="cantidad_pack"       id_temp="cantidad_pack" />
+            <field id="cantidad_pallet"     id_temp="cantidad_pallet" />
+            <field id="valor_compra"        id_temp="valor_compra" />
+            <field id="unidad_compra_id"    id_temp="unidad_compra_id" />
+            <field id="valor_uso"           id_temp="valor_uso" />
+            <field id="unidad_uso_id"       id_temp="unidad_uso_id" />
+            <field id="repuesto"            id_temp="repuesto" />
+            <field id="trazable"            id_temp="trazable" />
+
+            <field id="precio_costo"        id_temp="precio_ucosto" />
+            <field id="precio_origen"       id_temp="precio_uorigen" />
+
+            <field id="genmoneda_origen_id" id_temp="genmoneda_origen_id" />
+            <field id="precio_Promedio"     id_temp="precio_Promedio" />
+            <field id="gravado"             id_temp="gravado"/>
+            <field id="ivaregimen_id"       id_temp="ivaregimen_id" />
+            <field id="genmoneda_venta_id"  id_temp="genmoneda_venta_id" />
+            <field id="cuentadebe_id"       id_temp="cuentadebe_id" />
+            <field id="ctbcuentacps_id"     id_temp="ctbcuentacps_id" />
+        </table>
+    </form>
+</histrix>

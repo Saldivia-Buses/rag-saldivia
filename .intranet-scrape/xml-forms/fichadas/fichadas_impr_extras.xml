@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="consulta">
+	<titulo>Fichadas del Reloj</titulo>
+	<obs/>
+	<consulta>
+         <tabla id="GEN_CALENDAR" label="Fichadas del Reloj" styleTbody="height:300px;overflow-x:hidden;">
+			<campo id="dia">
+				<expresion>DAYOFWEEK(GEN_CALENDAR.fecha)</expresion>
+				<label>Dia</label>
+				<opciones>
+					<opcion valor="1">Domingo</opcion>
+					<opcion valor="2">Lunes</opcion>
+					<opcion valor="3">Martes</opcion>
+					<opcion valor="4">Miércoles</opcion>
+					<opcion valor="5">Jueves</opcion>
+					<opcion valor="6">Viernes</opcion>
+					<opcion valor="7">Sábado</opcion>
+
+				</opciones>
+				<tipo>varchar</tipo>
+			</campo>
+																															<campo id="tarjeta" local="true" oculto="true">
+				<label>tarjeta</label>
+
+			</campo>
+			<campo id="idJornada" local="true" oculto="true" >
+				<label>idJornada</label>
+
+			</campo>			 
+			<campo id="desdefecha" local="true" oculto="true">
+				<label>desdefecha</label>
+				<tipo>date</tipo>
+			</campo>
+			<campo id="hastafecha" local="true" oculto="true">
+				<label>hastafecha</label>
+				<tipo>date</tipo>
+
+			</campo>
+			<campo id="fecha">
+				<label>fecha</label>
+				<condicion operador="&gt;=" valorde="desdefecha"></condicion>
+				<condicion operador="&lt;=" valorde="hastafecha"></condicion>
+
+			</campo>
+			<campo id="Hora1">
+				<expresion>min(hora)</expresion>
+				<label>Hora Ent</label>
+				<tipo>varchar</tipo>
+			</campo>
+			<campo id="Hora2">
+				<expresion>max(hora)</expresion>
+				<label>Hora Sal</label>
+				<tipo>varchar</tipo>
+			</campo>
+
+
+			<campo id="Horas" suma="true">
+				<expresion>		TIMEDIFF(case when max(hora) &gt; JORNADA.salida  then JORNADA.salida else max(hora) end, 
+											case when min(hora) &lt; JORNADA.entrada then JORNADA.entrada else (min(hora)) end)</expresion>
+				<label>Horas Trabajadas</label>
+				<tipo>time</tipo>
+		
+			</campo>
+			<campo id="comunes" tabla="JORNADA"  noshow="true">
+				<tipo>time</tipo>
+			</campo>
+<!--			<campo id="extras50" tabla="JORNADA" suma="true" noshow="true">
+				<tipo>time</tipo>
+			</campo>					  -->
+			 <campo id="com" local="true" suma="true">
+				<label>Comunes</label>				 
+				 <if exp="'Horas' &gt;= 'comunes'">
+					 <verdadero>'comunes'</verdadero>
+					 <falso>('Horas' == '')?'':'Horas'</falso>
+					 
+				 </if>
+				 <tipo>time</tipo>
+			 </campo>
+			 
+	 
+			<campo id="ext" local="true" suma="true">
+				<label>Extras 50</label>				 
+				<if exp="'Horas' &gt;= 'comunes'">
+					<verdadero>time_diff('comunes', 'Horas')</verdadero>
+					 <falso>('Horas' == '')?'':'00:00:00'</falso>
+					 
+				 </if>				
+				<tipo>time</tipo>
+				
+			</campo>				 
+			<group>
+				<campo id="GEN_CALENDAR.fecha" />
+
+			</group>
+			<orden>
+				<campo id="fecha" tabla="GEN_CALENDAR"/>
+
+				<campo id="hora" />
+			</orden>
+		</tabla>
+		<join tipo="left">
+			<tabla id="FICHADAS">
+
+				<campo id="tarjeta">
+					<condicion operador="=" valorde="tarjeta">tarjeta</condicion>
+				</campo>
+				<campo id="fecha">
+					<condicion operador="=">GEN_CALENDAR.fecha</condicion>
+				</campo>
+				<campo id="borrado">
+					<condicion operador="=">0</condicion>
+				</campo>				
+			</tabla>
+
+
+		</join>
+		<join tipo="left">
+			<tabla id="JORNADA">
+				<campo id="idJornada">
+					<condicion operador="=" valorde="idJornada">idJornada</condicion>					
+				</campo>
+				<campo id="dia">
+					<condicion operador="=">DAYOFWEEK(GEN_CALENDAR.fecha)</condicion>					
+				</campo>				
+			</tabla>
+		</join>
+
+	</consulta>
+</abm>

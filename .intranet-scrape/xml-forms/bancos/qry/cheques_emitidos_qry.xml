@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" serverSide="true">
+    <title>Cheques Emitidos</title>
+    <obs/>
+    <form>
+        <table id="REG_MOVIMIENTOS" label="Cheques Emitidos">
+
+            <filters>
+                <field id="fecha_movimiento">
+                    <label>Desde Fecha Emision</label>
+                    <operador>&gt;=</operador>
+                    <tipo>date</tipo>
+                </field>
+                <field id="fecha_movimiento">
+                    <label modpos="nobr">Hasta Fecha Emision</label>
+                    <operador>&lt;=</operador>
+                    <tipo>date</tipo>
+                </field>
+                <field id="vencimiento_movimiento">
+                    <label>Desde Fecha Pago</label>
+                    <operador>&gt;=</operador>
+                    <valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m") - 3 , date("d"), date("Y")))</valor>
+                    <tipo>date</tipo>
+                </field>
+                <field id="vencimiento_movimiento">
+                    <label modpos="nobr">Hasta Fecha Pago</label>
+                    <operador>&lt;=</operador>
+                    <valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m"), date("t"), date("Y")))</valor>
+                    <tipo>date</tipo>
+                </field>
+                <field id="tipo_vista" deshabilitado="false">
+                    <label>Filtrar</label>
+                    <operador>=</operador>
+                    <valor>0</valor>
+                </field>
+                <field id="regcuenta_id">
+                    <label modpos="nobr">Banco</label>
+                    <operador>=</operador>
+                </field>
+                <field id="beneficiario" deshabilitado="false" colspan="4">
+                    <label>Beneficiario</label>
+                    <operador>like</operador>
+                </field>
+            </filters>
+
+            <field id="id_regmovim" esClave="true" noshow="true" />
+
+            <field id="subsistema_id" oculto="true" />
+
+            <field id="concepto_id" oculto="true" />
+
+            <field id="cajmovimiento_id" oculto="true" />
+
+            <field id="regcuenta_id" noshow="true">
+                <helper type="combo" xml="regcuenta_cmb.xml" dir="/ayudas" empty="true" />
+            </field>
+
+            <field id="fecha_movimiento">
+                <label>Fecha de Emision</label>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="vencimiento_movimiento">
+                <label>Fecha de Pago</label>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="conciliado">
+                <label>Fecha de Conciliacion</label>
+                <expression>IFNULL(REG_MOVIMIENTOS.conciliado, '0000-00-00')</expression>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="nro_movimiento">
+                <label>Nro. Movimiento</label>
+                <formato>%010d</formato>
+            </field>
+
+            <field id="beneficiario">
+                <label>Beneficiario</label>
+                <expression><![CDATA[SUBSTRING(IFNULL((IFNULL((SELECT REG_CUENTA.nombre_cuenta
+                                        FROM REG_MOVIMIENTOS RM
+                                        JOIN REG_CUENTA ON REG_CUENTA.id_regcuenta = RM.regcuenta_id
+                                        WHERE RM.cajmovimiento_id = REG_MOVIMIENTOS.cajmovimiento_id
+                                          AND RM.id_regmovim != REG_MOVIMIENTOS.id_regmovim
+                                          AND RM.subsistema_id != REG_MOVIMIENTOS.subsistema_id), REG_MOVIMIENTOS.referencia_movimiento)), CAJ_MOVIMIENTOS.referencia_movimiento), 1, 20)]]></expression>
+                <size>35</size>
+            </field>
+
+            <field id="nro_op">
+                <label>Nro Orden Pago</label>
+                <expression><![CDATA[SUBSTRING((IFNULL((SELECT RM.nro_movimiento
+                                        FROM REG_MOVIMIENTOS RM
+                                        JOIN REG_CUENTA ON REG_CUENTA.id_regcuenta = RM.regcuenta_id
+                                        WHERE RM.cajmovimiento_id = REG_MOVIMIENTOS.cajmovimiento_id
+                                          AND RM.id_regmovim != REG_MOVIMIENTOS.id_regmovim
+                                          AND RM.subsistema_id != REG_MOVIMIENTOS.subsistema_id), '')), 1, 20)]]></expression>
+                <size>35</size>
+            </field>
+
+            <field id="importe_movimiento" suma="true">
+                <label>Importe</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="acumulado" suma="true" acumula="true" local="true">
+                <label>Acumulado</label>
+                <expression>REG_MOVIMIENTOS.importe_movimiento</expression>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="tipo_vista"  noshow="true">
+                <helper type="combo">
+                    <option value="">Todos</option>
+                    <option value="0">No conciliados</option>
+                    <option value="1">Conciliados</option>
+                </helper>
+                <valor>0</valor>
+                <expresion having="false">IF(REG_MOVIMIENTOS.conciliado != '0000-00-00', 1, 0)</expresion>
+            </field>
+
+            <group>
+                <field id="id_regmovim" />
+            </group>
+
+            <order>
+                <field id="vencimiento_movimiento" />
+            </order>
+
+        </table>
+
+        <join tipo="left">
+            <table id="CAJ_MOVIMIENTOS">
+                <field id="id_cajmovimiento">
+                    <condicion operador="=">REG_MOVIMIENTOS.cajmovimiento_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" subtipo="vertical">
+<title>Grupos de Atributos</title>
+<obs></obs>
+<form detalle="stkatributos_crud.xml">
+    <table id="STK_ATRIBUTOS_GRUPOS">
+
+        <filters>
+            <field id="nombre_grupo">
+                <label>Nombre</label>
+                <operador>like</operador>
+            </field>
+        </filters>
+
+        <field id="id_stkgrupoatrib" esClave="true" autoinc="true" noshow="true" >
+            <detalle>stkgrupoatrib_id</detalle>
+        </field>
+
+        <field id="nombre_grupo">
+            <label>Nombre</label>
+            <tipo>varchar</tipo>
+        </field>
+
+        <field id="orden_grupo" colstyle="display: none;">
+            <label>Orden</label>
+            <tipo>integer</tipo>
+        </field>
+
+        <field id="deshabilitado_grupo">
+            <label>Deshabilitado</label>
+            <tipo>check</tipo>
+        </field>
+
+        <orden>
+            <field id="orden_grupo"/>
+        </orden>
+
+    </table>
+</form>    
+</histrix>

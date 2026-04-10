@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+	<histrix tipo="abm-mini">
+		<title>Inspección de Recepción</title>
+		<obs></obs>
+		<form >
+			<table id="NORMAINSUMOS" label="Inspeccion de Recepcion">
+				<field id="artcod" oculto="true">
+					<label>Articulo</label>
+					<help>Codigo de Articulo</help>
+				</field>
+				<field id="orden">
+					<label>orden</label>
+				</field>				
+				<field id="norcod">
+					<tabla_ex id="INSNORMA">
+						<field id="norcod" clave="true"></field>
+						<field id="nordes"></field>
+					</tabla_ex>
+					<label>Norma </label>
+					<help>
+					</help>
+				</field>
+				<field id="operador">
+					<label>Operador</label>
+					<options>
+						<option valor="0">O</option>						
+						<option valor="1">Y</option>
+					</options>
+				</field>				
+			</table>
+		</form>
+	</histrix>

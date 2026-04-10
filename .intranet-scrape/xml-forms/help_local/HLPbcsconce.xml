@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="ayuda">
+	<title>CONCEPTOS BANCARIOS</title>
+	<obs></obs>
+	<form >
+		<table id="BCSCONCE" >
+		    <title>Conceptos</title>
+			
+			<field id="cnbcod">
+				<label>Cod.</label>
+				<help>Codigo de Concepto</help>
+			</field>
+			
+			<field id="cnbdes">
+				<label>Descripcion</label>
+				<help>Descripcion del Concepto</help>
+			</field>
+
+			<field id="siscod" oculto="true">
+				<label>Cod</label>
+			</field>
+			<!--
+			<field id="cnbabv">
+				<label>Abrev.</label>
+				<help>Abreviatura a Utilizar</help>
+			</field>
+			
+			<field id="cnbtip">
+				<label>Imputacion</label>
+				<help>Imputacion Debo o Haber</help>
+				<options>
+				    <option valor="1">Debe </option>
+				    <option valor="2">Haber</option>
+				</options>
+				
+			</field>
+			
+			<field id="ctbcod">
+				<label> Cuentas</label>
+				<help>Cuentas contables a Imputar</help>
+			</field>
+	    
+	-->		
+	    		<order>
+				<field id="cnbcod"></field>
+			</order>
+			
+		</table>
+	</form>	   
+</histrix>

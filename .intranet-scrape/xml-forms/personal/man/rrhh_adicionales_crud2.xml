@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" subtipo="vertical" tooltip="false">
+	<title>ADICIONALES</title>
+	<obs/>
+	<form >
+		<table id="RRHH_ADICIONALES" label="Adicionales" styleTbody="height:10em;">
+
+
+
+			   <filters>
+					<field id="legajo" deshabilitado="false">
+					    <label>Legajo</label>
+					    <operador>=</operador>
+					    <detalle>legajo</detalle>
+					</field>
+					    <field id="nomapp" local="true" deshabilitado="true">
+						<label>Nombre y Apellido</label>
+					    </field>                
+                                            <field id="desdeFecha">
+						<label>Desde</label>
+						<help>Fecha</help>
+				                <operador>&gt;=</operador>
+				                <valor>today</valor>
+			                   </field>
+				<field id="hastaFecha">
+					<label modpos="nobr">Hasta</label>
+					<help>Hasta Fecha</help>
+		                        <operador>&lt;=</operador>
+		                        <valor>today</valor>
+				</field>
+            </filters>
+
+		    <field id="legajo" deshabilitado="true" autocompletar="true" oculto="true" >
+				<label>legajo</label>
+				<size>50</size>
+				<helper type="external" id="PERSONAL">
+				    <field id="legajo" esClave="true">
+						 <label>Legajo</label>
+						 <detalle>legajo</detalle>
+				    </field>
+				    <field id="nomapp">
+						<label>Nombre y Apellido</label>
+						<expression having="false">CONCAT(apellido, ' ', Nombre)</expression>
+						<detalle>nomapp</detalle>
+				    </field>
+	                <field id="IdPersona" noshow="true">
+	                    <label>Nro persona</label>
+	                    <detalle>IdPersona</detalle>
+	                </field>
+				    <field id="fechaEgreso" noshow="true">
+						<condicion operador="=">'0000-00-00'</condicion>
+				    </field>     
+				</helper>
+				<tipo>varchar</tipo>
+			</field>
+
+		    <field id="nomapp" local="true" noshow="true">
+				<label>Nombre y Apellido</label>
+				<size>80</size>
+		    </field>                
+
+			<field id="descripcion">
+				<label colspan="5">Descripción</label>
+				<help>Descripción del Adicional</help>
+				<size>60</size>
+			</field>
+			<field id="porcentaje">
+				<label>Porcentaje</label>
+				<help>Porcentaje</help>
+			</field>
+			<field id="fijo" >
+				<label modpos="nobr">Fijo</label>
+				<help>Importe Fijo</help>
+			</field>
+			<field id="maximo"  >
+				<label  modpos="nobr">Importe Máximo</label>
+				<help>Importe máximo</help>
+			</field>
+			
+			<field id="desdeFecha">
+				<label>Desde Fecha</label>
+				<help>Desde Fecha</help>
+			</field>
+			<field id="hastaFecha">
+				<label modpos="nobr">Hasta Fecha</label>
+				<help>Hasta Fecha</help>
+			</field>
+		</table>
+
+	</form>
+</histrix>

@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="fichaing" preFetch="true" inserta="false" modifica="false" borra="false" procesa="true" imprime="false">
+<title></title>
+<obs/>
+  <form>
+    <table id="STK_ARTICULOS">
+
+      <field id="id_stkarticulo" deshabilitado="true" esClave="true">
+        <label>Cod. Art.</label>
+      </field>
+
+      <field id="nombre_articulo" deshabilitado="true" modpos="nobr">
+	<size>50</size>
+      </field>
+
+      <field id="dem_diaria" style="width:6em;text-align:right;">
+        <label >Demanda Diaria</label>
+        <help>Cantidad demanda diaria</help>
+        <jseval campodestino="stock_minimo">Math.ceil(demprov * dem_diaria)</jseval>
+      </field>
+
+      <field id="demprov" style="width:6em;text-align:right;">
+        <label>Lead Time</label>
+        <help>Demora del proveedor en suministrar el artículo</help>
+        <tipo>integer</tipo>
+        <jseval campodestino="stock_minimo">Math.ceil(demprov * dem_diaria)</jseval>
+      </field>
+
+      <field id="stock_minimo" deshabilitado="false"  style="width:6em;text-align:right;">
+        <label >Stock Mínimo</label>
+        <help>Stock Mínimo</help>
+        <expression>ceil(demprov * dem_diaria)</expression>
+
+        <jseval campodestino="stock_reposicion">Math.ceil(stock_seguridad + stock_minimo)</jseval>
+        <jseval campodestino="stock_maximo">Math.ceil(stock_reposicion + stock_minimo)</jseval>
+        <jseval campodestino="lote_optimo">(parseInt(((stock_maximo - Math.ceil(demprov * dem_diaria)) / pack_embalaje), 10) + ((((stock_maximo - Math.ceil(demprov * dem_diaria)) % pack_embalaje) != 0) ? 1 : 0)) * pack_embalaje</jseval>
+
+
+	<tipo>custom_numeric</tipo>
+
+      </field>
+
+      <field id="stock_maximo" style="width:6em;text-align:right;">
+        <label >Stock Máximo</label>
+        <help>Stock Máximo</help>
+        <jseval campodestino="lote_optimo">(parseInt(((stock_maximo - Math.ceil(demprov * dem_diaria)) / pack_embalaje), 10) + ((((stock_maximo - Math.ceil(demprov * dem_diaria)) % pack_embalaje) != 0) ? 1 : 0)) * pack_embalaje</jseval>
+
+	<tipo>custom_numeric</tipo>
+      </field>
+
+      <field id="caracteristicas" style="color:red;width:6em;text-align:right;">
+        <label>%Seguridad</label>
+
+          <expression>(select sum(porcentaje_opcion) from STK_ATRIBUTO_OPCIONES inner join STK_ATRIBUTOS on stkatributo_id = id_stkatributo inner join STK_ATRIBUTOS_GRUPOS on id_stkgrupoatrib = stkgrupoatrib_id  inner join STK_ATRIBUTO_VALORES on STK_ATRIBUTO_VALORES.stkatributo_id = STK_ATRIBUTO_OPCIONES.stkatributo_id and valor_atributo = id_atribopciones  where  STK_ATRIBUTO_VALORES.stkarticulo_id = id_stkarticulo and id_stkgrupoatrib = 1)</expression>
+	<tipo>custom_numeric</tipo>
+          
+      </field>
+
+      <field id="porciento_seguridad" > caracteristicas------------------
+        <label style="color:red;">%Seguridad</label>
+          <expression>(select (sum(porcentaje_opcion) + 10) from STK_ATRIBUTO_OPCIONES inner join STK_ATRIBUTOS on stkatributo_id = id_stkatributo inner join STK_ATRIBUTOS_GRUPOS on id_stkgrupoatrib = stkgrupoatrib_id  inner join STK_ATRIBUTO_VALORES on STK_ATRIBUTO_VALORES.stkatributo_id = STK_ATRIBUTO_OPCIONES.stkatributo_id and valor_atributo = id_atribopciones  where  STK_ATRIBUTO_VALORES.stkarticulo_id = id_stkarticulo and id_stkgrupoatrib = 1)</expression>
+      </field>
+
+      <field id="stock_seguridad" colspan="1" deshabilitado="false"> stock min-------------------
+        <label>Stock Seguridad</label>
+        <help>Stock crítico en depósito</help>
+          <expression>round((select sum(porcentaje_opcion) + 10 from STK_ATRIBUTO_OPCIONES inner join STK_ATRIBUTOS on stkatributo_id = id_stkatributo 
+				    inner join STK_ATRIBUTOS_GRUPOS on id_stkgrupoatrib = stkgrupoatrib_id  inner join STK_ATRIBUTO_VALORES on 
+				    STK_ATRIBUTO_VALORES.stkatributo_id = STK_ATRIBUTO_OPCIONES.stkatributo_id and valor_atributo = id_atribopciones  
+				    where  STK_ATRIBUTO_VALORES.stkarticulo_id = id_stkarticulo and id_stkgrupoatrib = 1) /100 * demprov * dem_diaria, 0)</expression>
+<!--
+        <expression>ceil(stock_minimo)</expression>
+-->
+        <jseval campodestino="stock_reposicion">Math.ceil(stock_minimo + stock_minimo)</jseval>
+
+	<tipo>custom_numeric</tipo>
+      </field>
+
+      <field id="stock_reposicion" local="true" deshabilitado="true"  style="width:6em;text-align:right;">
+        <label >Punto Pedido</label>
+        <help>Stock de Reposición.</help>
+	<if exp="true">
+	    <true>stock_seguridad + stock_minimo</true>
+	    <false></false>
+	</if>
+        <tipo>custom_numeric</tipo>
+      </field>
+
+
+<!--
+      <field id="cantidad_pack">
+        <label >Cant.x Un.</label>
+        <help>Cantidad por unidad (en unidad de uso)</help>
+      </field>
+-->
+
+
+      <field id="lote_optimo" deshabilitado="false" style="width:6em;text-align:right;">
+        <label >Lote Óptimo Pedido</label>
+        <help>Lote Óptimo Pedido</help>
+      </field>
+
+      <field id="pack_embalaje" style="width:6em;text-align:right;">
+        <label >Standard Pack</label>
+        <jseval campodestino="lote_optimo">(parseInt(((stock_maximo - Math.ceil(demprov * dem_diaria)) / pack_embalaje), 10) + ((((stock_maximo - Math.ceil(demprov * dem_diaria)) % pack_embalaje) != 0) ? 1 : 0)) * pack_embalaje</jseval>
+      </field> 
+    
+      <field id="grilla" local="true" colspan="7">
+        <label>Características</label>
+        <helper dir="/stock/ing/" type="object" xml="producto_atributos_valores.xml" >
+          <parameter source="1" target="id_stkgrupoatrib" />
+          <parameter source="id_stkarticulo" target="stkarticulo_id" />
+        </helper>
+      </field>    
+    </table>
+
+  </form>
+</histrix>

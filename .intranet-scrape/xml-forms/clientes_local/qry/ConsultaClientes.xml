@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" sololectura="true" preloadData="false" paginar="20" >
+    <title>CONSULTA Clientes</title>
+    <obs></obs>
+    <form  detalle="cctconta.xml" inline="true">
+        <table id="REG_CUENTA" >
+            <title>Clientes</title>
+            
+            <filters>
+
+                <field id="nro_cuenta">
+                    <label>Cod.</label>
+                    <operador>=</operador>                  
+                </field>
+
+                <field id="nombre_cuenta" local="true" deshabilitado="false">
+                    <expression>CONCAT(REG_CUENTA.nombre_cuenta, ' (',REG_CUENTA.nombre_fantasia, ')', IFNULL((SELECT CONCAT(' de ', madre.nombre_fantasia) FROM REG_CUENTA madre WHERE madre.id_regcuenta = (SELECT regcuenta_id FROM REG_CUENTA_RELACIONES WHERE regcuentarelacionada_id = REG_CUENTA.id_regcuenta LIMIT 1)), ''))</expression>
+                    <label>Empresa</label>
+                    <help>Nombre</help>
+                    <operador>like</operador>
+                </field>
+
+                <field id="cont" noshow="false" deshabilitado="false" local="true">
+                    <label>Contacto</label>
+                    <operador>like</operador>
+                </field>
+
+                <field id="Telefono" noshow="false" deshabilitado="false" local="true">
+                    <label>Teléfono </label>
+                    <operador>like</operador>
+                </field>
+
+                <field id="cod_direccion" grupo="Ubicacion">
+                    <label >Dirección</label>
+                    <help>Dirección</help>
+                    <operador>like</operador>
+                </field>
+
+                <field id="localidad_nombre" grupo="Ubicacion">
+                    <label>Localidad</label>
+                    <help>Localidad</help>
+                    <operador>like</operador>
+                </field>
+
+                <field id="nombre_provincia" tabla="GEN_PROVINCIAS" grupo="Ubicacion">
+                        <label modpos="nobr">Provincia</label>
+                        <operador>like</operador>
+                </field>
+
+                <field id="fabricacion" deshabilitado="false" local="true">
+                    <label>Nro Fab</label>
+                    <operador>like</operador>
+                </field>
+
+                <field id="chasis" deshabilitado="false" >
+                    <label modpos="nobr">Nro Chasis</label>
+                    <operador>like</operador>
+                </field>
+
+                <field id="moddes" deshabilitado="false" >
+                    <label modpos="nobr">Modelo Chasis</label>
+                    <operador>like</operador>
+                </field>
+
+        <!--<field id="prvcod" grupo="Ubicacion">
+                <label modpos="nobr">Provincia </label>
+                <help >
+                </help>
+                <tabla_ex id="FSMPROVS">
+                    <field id="prvcod"></field>
+                    <field id="prvnom"></field>
+                </tabla_ex>
+                    <operador>=</operador>
+            </field>    
+-->
+        </filters>
+
+            <field id="subsistema_id" esClave="true" oculto="true">
+                <label>Cod</label>
+                <detalle>siscod</detalle>
+		          <condicion operador="=">'02'</condicion>
+            </field>
+
+            <field id="nro_cuenta" >
+                <label>Cod.</label>
+                <detalle>nrocta</detalle>
+                <detalle>ctacod</detalle>
+                <detalle>nombre_cuenta</detalle>
+            </field>
+            
+            <field id="cont" noshow="true" deshabilitado="false">
+                <expression>select group_CONCAT(nombre) from CCTCONTA where CCTCONTA.siscod = REG_CUENTA.subsistema_id and CCTCONTA.ctacod = REG_CUENTA.nro_cuenta</expression>
+                <label>Contacto</label>
+            </field>
+
+            <field id="Telefono" noshow="true" deshabilitado="false" >
+                <label>Teléfono </label>
+                <expression>select group_CONCAT(Telefono) from CCTCONTA where CCTCONTA.siscod = REG_CUENTA.subsistema_id and CCTCONTA.ctacod = REG_CUENTA.nro_cuenta</expression>
+            </field>
+            
+            <field id="nombre_cuenta" deshabilitado="false" autocompletar="true">
+                <ayuda_ex id="REG_CUENTA">
+                    <field id="nro_cuenta" noshow="true">
+                        <detalle>nro_cuenta</detalle>
+                    </field>
+                    <field id="nombre" >
+                    <expression having="false">CONCAT(REG_CUENTA.nombre_cuenta, ' (',REG_CUENTA.nombre_fantasia, ')', IFNULL((SELECT CONCAT(' de ', madre.nombre_fantasia) FROM REG_CUENTA madre WHERE madre.id_regcuenta = (SELECT regcuenta_id FROM REG_CUENTA_RELACIONES WHERE regcuentarelacionada_id = REG_CUENTA.id_regcuenta LIMIT 1)), ''))</expression>
+                    </field>
+                    <field id="subsistema_id" oculto="true">
+                        <condicion operador="=">'02'</condicion>
+                    </field>
+                    <field id="baja" oculto="true">
+                        <condicion operador="!=">1</condicion>
+                    </field>
+                </ayuda_ex>
+                <expression having="false">CONCAT(REG_CUENTA.nombre_cuenta, ' (',REG_CUENTA.nombre_fantasia, ')', IFNULL((SELECT CONCAT(' de ', madre.nombre_fantasia) FROM REG_CUENTA madre WHERE madre.id_regcuenta = (SELECT regcuenta_id FROM REG_CUENTA_RELACIONES WHERE regcuentarelacionada_id = REG_CUENTA.id_regcuenta LIMIT 1)), ''))</expression>
+                <label  colspan="5">Nombre</label>
+                <detalle>ctafan</detalle>
+                <size>50</size>
+            </field>
+
+            <field id="fabricacion" noshow="true" deshabilitado="false">
+                <label >NroFab</label>
+                <expression >select group_concat(nrocha) from PEDCOTIZ where PEDCOTIZ.ctacod = REG_CUENTA.nro_cuenta</expression>
+            </field>
+
+            <field id="chasis" noshow="true" deshabilitado="false" tabla="CHASIS">
+                <label >Chasis</label>
+<!--                <expression >select group_concat(CHASIS.chasis) from PEDCOTIZ left join CHASIS on CHASIS.nrocha = PEDCOTIZ.nrocha where PEDCOTIZ.ctacod = REG_CUENTA.nro_cuenta</expression>
+ -->
+            </field>
+
+		<field id="moddes" tabla="MODCHASIS"  deshabilitado="false">
+			<label modpos="nobr" colstyle="display:none;">Modelo Chasis</label>
+			<tipo>varchar</tipo>
+		</field>
+          
+          <field id="ultimas_llamadas" local="true" >
+            <helper type="link" xml="last_calls.xml" dir="/it" width="1200px" height="450px" reposition="true" title="Estado">
+              <parameter source="ultimas_llamadas" target="src" operator="in" />
+              </helper>
+          	  <label>Llamadas</label>
+         	 <valor>Últimas 20</valor>
+          </field>
+
+          <field deshabilitado="true" id="nro_cuenta2" local="true" tdWidth="50" print="false">
+            <helper type="link" xml="fichas_x_cliente.xml" width="1200px" height="450px" title="Total de Coches">
+                <parameter source="nro_cuenta" target="ctacod" operator="="/>
+            </helper>
+            <expression>select count(*) from VUNIDADES as PED where PED.ctacod = REG_CUENTA.nro_cuenta</expression>
+            <label >Ot.</label>
+            <help>Código de Cuenta</help>
+            <tipo>varchar</tipo>
+        </field>
+<!--
+            <field deshabilitado="true" id="nro_cuenta2" local="true" linkint="fichas_x_cliente.xml" linkdes="Total de Coches" print="false">
+                <expression>select count(*) from VUNIDADES as PED where PED.ctacod = REG_CUENTA.nro_cuenta</expression>
+                <label >Ot.</label>
+                <help>Codigo de Cuenta</help>
+                <paring destino="ctacod">nro_cuenta</paring>
+                <tipo>varchar</tipo>
+            </field>
+        -->
+            <field id="cuit_cuenta">
+                    <label  colspan="8">CUIT</label> 
+            </field>
+
+            <field id="cod_direccion">
+                <label colspan="4">Dirección</label>
+                <size>50</size>
+            </field>
+            
+            <field id="codigo_postal">
+                <label>C.P.</label>
+                <help>
+                </help>
+            </field>
+
+            <field id="localidad_nombre">
+                <label >Localidad</label>
+                <help>
+                </help>
+            </field>
+
+            <field id="nombre_provincia" tabla="GEN_PROVINCIAS">
+                <label modpos="nobr">Provincia</label>
+            </field>
+
+            <field id="tel_cuenta">
+                <label>Teléfono</label>
+            </field>
+          
+          <!--
+			<field id="ctatel2" noshow="true">
+				<expression>REPLACE(REPLACE(MID(ctatel, LOCATE(' ', replace(ctatel,' ','')) + 1), '-', ''), ' ', '')</expression>
+				<label>ctatel2</label>
+			</field> -->
+
+<!--
+			<field id="ctatel3" _noshow="true">
+				<expression>concat(ctatel, ', ' ,ctafax , ',' )</expression>
+				<label>ctatel2</label>
+			</field>
+    -->
+            <field id="fax_cuenta">
+                <label modpos="nobr" >Tel/Fax.</label>
+            </field>
+
+            <field id="baja" oculto="true">
+                <condicion operador="!=">1</condicion>
+            </field>
+
+            <field id="entrega_direccion">
+                <label>Dir.Envío</label>
+            </field>
+
+            <field id="entrega_localidad">
+                <label modpos="nobr">Loc.Envío</label>
+            </field>
+
+			<field id="entrega_codigopostal">
+                <label>Expreso.Envío</label>
+            </field>
+<!--
+			<field id="ctatel5" noshow="true">
+				<expression><![CDATA[@ctatel5:= (select REPLACE(
+concat( 
+'(', 
+IFNULL(( case when ctatel != '' then concat(''', replace(ctatel,' ',''), '',') else '' end ) , "''"),
+IFNULL(group_concat(replace(concat(''', replace(movil,'15',''),'''), ' ','')), "''"),
+',', 
+IFNULL(group_concat(replace(concat(''', movil,'''), ' ','')), "''"),
+',' , 
+IFNULL(group_concat(replace(concat(''', Telefono,'''), ' ','')), "''"),
+ ')'
+) 
+, '-', '')
+from CCTCONTA where CCTCONTA.ctacod = REG_CUENTA.nro_cuenta and CCTCONTA.subsistema_id = REG_CUENTA.subsistema_id and (Telefono != '' or movil != ''))]]></expression>
+			</field>
+
+		<field id="camp" noshow="true">
+			<expression>@camp:= (REPLACE(REPLACE(@ctatel5, '(', ''), ')', ''))</expression>
+		</field>
+
+            <field id="llamadas" local="true" linkdes="Ultimas llamadas">
+                <label modpos="nobr">Llamadas</label>
+                <helper type="link" xml="tel_log_cdr_xcuenta_qry.xml" dir="/tel">
+    				<parameter source="ctatel5" target="tels" operator="="/> 
+				</helper>
+				<expression sql="true"><![CDATA[SELECT MAX(DATE(calldate)) FROM ASTERIX_CDR WHERE src != '' and (src IN ([__camp__]) or dst IN ([__camp__])) and src NOT IN (998, 999)]]></expression>
+            </field>
+ -->  
+          
+            <order>
+                <field id="nombre_cuenta"></field>
+            </order>
+
+            <group>
+                <field id="nro_cuenta" tabla="REG_CUENTA"></field>
+            </group>
+
+        </table>
+
+        <join tipo="left">
+            <table id="GEN_PROVINCIAS">
+                <field id="id_provincia">
+                    <condicion operador="=">REG_CUENTA.provincia_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="PEDCOTIZ">
+                <field id="ctacod">
+                    <condicion operador="=">REG_CUENTA.nro_cuenta</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="CHASIS">
+                <field id="nrocha">
+                    <condicion operador="=">PEDCOTIZ.nrocha</condicion>
+                </field>
+            </table>
+        </join>
+		<join tipo="left">
+			<table id="MODCHASIS">
+				<field id="modcha">
+					<condicion operador="=">CHASIS.modcod</condicion>
+				</field>
+				<field id="marcod">
+					<condicion operador="=">CHASIS.marcod</condicion>
+				</field>
+			</table>
+		</join>
+    </form>
+</histrix> 

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" >
+    <title>Plan de mantenimiento</title>
+    <obs/>
+    <form >
+        <table id="GEN_CALENDAR" label="PLan Mantenimiento" >
+            <filters>
+
+                <field id="year" deshabilitado="false">
+                    <label>Año</label>
+                    <operador>=</operador>
+                    <valor eval="true">date("Y")</valor>
+                </field>
+
+                <field id="mes" deshabilitado="false">
+                    <label modpos="nobr">mes</label>
+                    <operador>=</operador>
+                    <valor eval="true">date("m")</valor>
+
+                </field>
+                <field id="equipo_id" >
+                    <helper type="combo" xml="mant_equipos_crud.xml" dir="/mantenimiento/man/" />
+                    <label>Nombre</label>
+                    <operador>=</operador>
+                </field>
+            </filters>
+            <field id="year" noshow="true">
+                <expresion having="false">YEAR(fecha)</expresion>
+            </field>
+            <field id="mes" noshow="true">
+                <expresion having="false">MONTH(fecha)</expresion>
+                <options>
+                    <option valor="1">Enero</option>
+                    <option valor="2">Febrero</option>
+                    <option valor="3">Marzo</option>
+                    <option valor="4">Abril</option>
+                    <option valor="5">Mayo</option>
+                    <option valor="6">Junio</option>
+                    <option valor="7">Julio</option>
+                    <option valor="8">Agosto</option>
+                    <option valor="9">Septiembre</option>
+                    <option valor="10">Octubre</option>
+                    <option valor="11">Noviembre</option>
+                    <option valor="12">Diciembre</option>
+
+                </options>
+
+            </field>
+
+            <field id="fecha">
+                <label>fecha</label>
+            </field>
+            <field id="dia">
+                <expresion>DAYOFWEEK(GEN_CALENDAR.fecha)</expresion>
+                <label>Dia</label>
+                <options>
+                    <option valor="1">Domingo</option>
+                    <option valor="2">Lunes</option>
+                    <option valor="3">Martes</option>
+                    <option valor="4">Miércoles</option>
+                    <option valor="5">Jueves</option>
+                    <option valor="6">Viernes</option>
+                    <option valor="7">Sábado</option>
+
+                </options>
+                <tipo>varchar</tipo>
+				<!--<condicion operador="&lt;">7</condicion>-->
+            </field>
+            <field id="equipo_id" tabla="MANT_PLAN">
+                <helper type="combo" xml="mant_equipos_crud.xml" dir="/mantenimiento/man/" empty="true"/>
+                <label modpos="nobr">Nombre</label>
+            </field>
+            <field id="accion_id" tabla="MANT_PLAN" noshow="true">
+
+                <condicion operador="!=">0</condicion>
+            </field>
+            <field id="nombre_accion" >
+                <expresion>nombre_accion</expresion>
+                <label>Accion</label>
+            </field>
+            <field id="res" local="true" clasefila="true" noshow="true">
+                <if exp="dia == 1 || dia == 7">
+                    <true>'grisado'</true>
+                    <false>''</false>
+                </if>
+            </field>
+
+            <group>
+                <field id="fecha" />
+
+            </group>
+            <order>
+                <field id="fecha" tabla="GEN_CALENDAR"/>
+
+            </order>
+        </table>
+        <join tipo="left" >
+            <table id="MANT_PLAN">
+                <field id="fecha_accion">
+                    <condicion operador="=">GEN_CALENDAR.fecha</condicion>
+                </field>
+            </table>
+
+
+        </join>
+        <join tipo="left" >
+            <table id="MANT_ACCIONES">
+                <field id="id_accion">
+                    <condicion operador="=">accion_id</condicion>
+                </field>
+            </table>
+
+
+        </join>
+    </form>
+</histrix>

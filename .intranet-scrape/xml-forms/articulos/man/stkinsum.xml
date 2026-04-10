@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud" borra="no"  paginar="250">
+	<title>Insumos</title>
+	<obs></obs>
+	<form   detalle="cctcuent_x_insumo.xml" inline="true">
+		<table id="STKINSUM">
+			<title>Insumos</title>
+			
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+			</field>
+			
+			<field id="artcod" deshabilitado="true" >
+				<ayuda_ex id="STKINSUM">
+					<clave>artcod</clave>
+					<descripcion>artdes</descripcion>
+				</ayuda_ex>
+				
+				<label>Cod.</label>
+				<detalle>artcod</detalle>
+				
+			</field>
+			<field id="artdes" deshabilitado="true">
+				<label>Articulo</label>
+				<help>Descripcion de Articulo. (ENTER = Retorna a ingreso de codigo).
+					</help>
+			</field>
+			<field id="costo" >
+				<label>Costo</label>
+				<expression>case when ((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) ) > 0  then ((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) ) else STKINSUM.artcos end</expression>
+			</field>
+
+			<field id="artpor">
+				<label>Descuento</label>
+				<help>Porcentaje de Descuento</help>
+			</field>
+			
+			<field id="valcps">
+				<label>Val.Compra</label>
+				<help>Valor de Compra </help>
+			<!--	<condicion operador="!=">valuso</condicion> -->
+				
+			</field>
+			
+			<field id="unicps">
+				<label modpos="nobr">Unidad</label>
+				<help>Unidad de Compra </help>
+				<tabla_ex id="FSMUNIDS">
+					<field id="unicod"></field>
+					<field id="uninom"></field>
+				</tabla_ex>
+			</field>
+			<field id="valuso">
+				<label>Val.Uso</label>
+				<help>Valor de Uso </help>
+				<!--		      <condicion operador="=">1</condicion> -->
+				
+			</field>
+			
+			<field id="artuni">
+				<label modpos="nobr">U.Uso</label>
+				
+				<help>Unidad de Uso </help>
+				<tabla_ex id="FSMUNIDS">
+					<field id="unicod"></field>
+					<field id="uninom"></field>
+				</tabla_ex>
+			</field>
+			
+			<field id="calculo"  deshabilitado="true">
+				<label>Calculo</label>
+				<expression>(case when ((select STKINSPR.artcos from
+								STKINSPR where STKINSPR.artcod = STKINSUM.artcod
+								and STKINSPR.siscod='01' order by fecult DESC limit 1) *
+								STKINSUM.valcps / STKINSUM.valuso) > 0 then ((select
+								STKINSPR.artcos from STKINSPR where STKINSPR.artcod =
+								STKINSUM.artcod and STKINSPR.siscod='01' order by
+								fecult DESC limit 1) * STKINSUM.valcps /
+								STKINSUM.valuso) else STKINSUM.artcos
+								end)</expression>
+<!--					<if exp="valuso == 1" operador="=">
+						<true>costo * valcps / valuso</true>
+						<false>costo * valuso / valcps</false>
+					</if> -->
+				<help>Calculo</help>
+			</field>
+			<field id="recLote">
+				<label modpos="nobr">Recepción por Lote</label>
+				<options>
+					<option valor="0">No</option>
+					<option valor="1">Si</option>
+				</options>
+
+			</field>
+			
+			<field id="t_pieza" oculto="true">
+				<label>Pieza</label>
+				<help>Es Pieza </help>
+			</field>
+			<field id="baja" oculto="true">
+				<label>Baja</label>
+				<condicion operador="!=">1</condicion>
+			</field>			
+			<!--  <field id="t-pieza">
+			<label>t-pieza </label>
+			<condicion operador="=">1</condicion> 
+			
+			</field>
+			-->
+			<!--
+			<field id="diapro">
+			<label>Dias</label>
+			<help>Dias de Proceso </help>
+			</field>
+			<field id="artmin">
+			<label>Critico</label>
+			<help>Stock critico en deposito</help>
+			</field>
+			<field id="artrep">
+			<label>Reposic</label>
+			<help>Stock de Reposicion</help>
+			</field>
+			<field id="artiva">
+			<label>Situacion IVA</label>
+			<help>Situacion I.V.A. </help>
+			<options>
+			<option valor="0">No Gravado</option>
+			<option valor="1">Alicuota Total</option>
+			<option valor="2">Alicuota Parcial</option>
+			</options>
+			</field>
+			
+			<field id="artctb">
+			<label>Cuenta Contable</label>
+			<help>Codigo Cuenta Contable </help>
+			<tabla_ex id="CTBCUENT">
+			<clave>ctbcod</clave>
+			<field id="ctbnom"></field>
+			</tabla_ex>
+			</field>
+			
+			-->
+			<filters>
+				<field id="artcod" deshabilitado="false">
+					<ayuda_ex id="STKINSUM">
+						<clave>artcod</clave>
+						<descripcion>artdes</descripcion>
+					</ayuda_ex>
+					
+					<label>Cod.</label>
+					<operador>=</operador>					
+				</field>			
+				<field id="artdes" deshabilitado="false">
+					<label>Articulo</label>
+					<help>Descripcion de Articulo. (ENTER = Retorna a ingreso de codigo).
+						</help>
+					<operador>like</operador>
+				</field>				
+			</filters>			
+		</table>
+	</form>
+</histrix>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="insert" >
+       <title>REGDETALLE</title>
+        <obs></obs>
+               <form >
+					<table id="REG_DETALLES" >
+						<field id="regmovim_id"      		lastId="factura_cctmovim_ingmov.xml" />
+
+						<field id="codigo_detalle"          id_temp="_ORDEN"/>
+						<field id="orden"          id_temp="_ORDEN"/>
+						<field id="descripcion_detalle"     id_temp="ctbnom" />	
+						<field id="cantidad_detalle"      	id_temp="artcan"/>
+
+						<field id="total_detalle"      	    id_temp="total" />					
+						<field id="total_percepcion"      	    id_temp="perciv" />					
+
+						<field id="alicuota_iva"      		id_temp="alicuota" />
+						<field id="neto_detalle"            id_temp="net2" />
+						<field id="iva_detalle"      		id_temp="iva" />
+
+
+						
+						
+					</table>
+               </form>
+        </histrix>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="ing" llenoTemporal="false" graboasiento="true" transaccional="true">
+	<title>BOLETA DE DEPOSITO</title>
+	<obs></obs>
+	<form >
+		
+		<table id="CARCHEQU" label="DEPOSITO DE EFECTIVO">
+	
+			<movimientos cabecera="boletadeposito_efe_cab.xml">
+				<relacion id="bcsmovim_bol_efe_ingmov.xml">	</relacion>  
+				<relacion id="cajmovim_bol_efe_ingmov.xml">	</relacion>  
+			</movimientos>
+			
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+				<help> Cod sistema</help>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla" >
+						<condicion operador="=">'sisbcs'</condicion>
+					</field>
+				</parametro>						
+			</field>
+
+			<field id="nroboldes"  >
+				<label>Boleta Deposito Banco</label>
+				<help>Numero de Boleta de Deposito del Banco</help>
+				
+			</field>		
+
+			<field id="carimp"  suma="true" ctbimporte="1" >
+				<label>Importe</label>
+			</field>		
+			<field id="carimp2" suma="true" deshabilitado="true" ctbimporte="2" >
+				<label>Importe2</label>
+					<if exp="1 == 1">
+					<true>carimp</true>
+					<false>carimp</false>
+				</if>
+			</field>					
+
+			<field id="ctbtip1" ctbtipo="1"  noshow="true">
+				<valor>1</valor>
+			</field>			
+			<field id="ctbtip2" ctbtipo="2" noshow="true">
+				<valor>2</valor>
+			</field>			
+			<field id="_ORDEN" oculto="true">
+				<label>Orden</label>
+			</field>
+
+		<order>
+			<field id="bcsnro"></field>
+		</order>
+
+		</table>
+		
+		<join tipo="left">
+			<table id="BCSCONCE">
+				<field id="siscod" oculto="true">
+					<label>BCSCONCE.siscod</label>
+					<condicion operador="=">BCSMOVIM.siscod</condicion>
+					
+				</field>
+				
+				<field id="cnbcod" oculto="true">
+					<condicion operador="=">BCSMOVIM.bcsmov</condicion>
+				</field>
+				
+				<field id="cnbnom" oculto="true">
+				</field>
+			</table>
+		</join>
+
+	</form>
+</histrix>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="card" PDFsincabecera="true" autoprint="true" PDFfontSize="11" PDFpageSize="A4" grid="23%, 600px" PDForientation="L">
+  <title>Etiquetas</title>
+  <obs></obs>
+  <form>
+        <table id="MRP_ORDEN_DETALLE" label="Etiquetas">
+
+            <field id="id_mrporden" tabla="MRP_ORDEN_PRODUCCION" noshow="true" print="false" />
+
+            <field id="regmovim_id" tabla="REG_DETALLES" noshow="true" print="false" />
+
+            <field id="objetivo_ordendetalle" noshow="true" print="false" />
+
+            <field id="stkarticulo_id" PDFbold="true" PDFnoborder="true" PDFnolabel="true" PDFalign="C" pdfancho="65">
+                <label posx="5" posy="+5" />
+            </field>
+
+            <field id="nombre_articulo" tabla="STK_ARTICULOS" PDFbold="true" PDFnoborder="true" PDFnolabel="true" PDFalign="C" pdfancho="65" />
+
+            <field id="path_name" tabla="MRP_PATH" PDFbold="true" PDFnoborder="true" PDFnolabel="true" PDFalign="C" pdfancho="65" />
+
+            <field id="fecha" PDFbold="true" PDFnoborder="true" PDFnolabel="true" PDFalign="C" pdfancho="65">
+                <expression>CONCAT('(', LPAD(MONTH(MRP_ORDEN_PRODUCCION.fecha_orden), 2, 0), RIGHT(YEAR(MRP_ORDEN_PRODUCCION.fecha_orden), 2),') (', REG_MOVIMIENTOS.nro_movimiento, ')')</expression>
+            </field>
+
+            <group>
+                <field id="regmovim_id" tabla="REG_DETALLES" />
+            </group>
+
+        </table>
+
+        <join>
+            <table id="MRP_ORDEN_PRODUCCION">
+                <field id="id_mrporden">
+                    <condicion operador="=">MRP_ORDEN_DETALLE.mrporden_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">MRP_ORDEN_DETALLE.stkarticulo_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="MRP_PATH">
+                <field id="id_mrppath">
+                    <condicion operador="=">MRP_ORDEN_PRODUCCION.mrppath_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="MRP_IMPUTACION_DETALLE">
+                <field id="mrpordendetalle_id">
+                    <condicion operador="=">MRP_ORDEN_DETALLE.id_mrpordendetalle</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="REG_DETALLES">
+                <field id="id_regdetalle">
+                    <condicion operador="=">MRP_IMPUTACION_DETALLE.regdetalle_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="REG_MOVIMIENTOS">
+                <field id="id_regmovim">
+                    <condicion operador="=">REG_DETALLES.regmovim_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

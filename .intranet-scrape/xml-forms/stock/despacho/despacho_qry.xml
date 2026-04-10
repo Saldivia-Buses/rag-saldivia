@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="liveGrid" _preloadData="false" deleteRow="false" inserta="false">
+  <title>Cta Ctes</title>
+  <obs/>
+  <form _detalle="regpendientes_qry.xml" inline="true" >
+    <table id="REG_MOVIMIENTOS">
+     
+      <!-- CONSULTA -->
+    
+	<filters>
+		<field id="fecha_movimiento">
+			<operador>&gt;=</operador>
+			<label>Desde Fecha</label>
+			<help>Fecha movimiento</help>
+			<valor>today</valor>
+		</field>
+
+		<field id="separador1" local="true" deshabilitado="true" modpos="nobr"/>
+
+		<field id="fecha_movimiento">
+			<operador>&lt;=</operador>
+			<label modpos="nobr">Hasta Fecha</label>
+			<help>Fecha movimiento</help>
+			<valor>today</valor>
+		</field>
+
+		<field id="nro_cuenta">
+			<operador>=</operador>
+			<label>Cliente</label>
+			<help>Cliente</help>
+		</field>
+
+		<field id="separador2" local="true" deshabilitado="true" modpos="nobr"/>
+		
+		<field id="formapago" deshabilitado="false">
+		    <label modpos="nobr">Forma de pago</label>
+		    <operador>=</operador>
+		</field>
+
+		<field id="separador3" local="true" deshabilitado="true" modpos="nobr"/>
+
+		<field id="puesto_movimiento">
+		    <label modpos="nobr">Puesto</label>
+		    <operador>=</operador>
+   		</field>
+
+		<field id="separador4" local="true" deshabilitado="true" modpos="nobr"/>
+
+		<field id="regestado_id" editable="true" modpos="nobr">
+			<label>Estado</label>
+		    <operador>=</operador>
+		</field>
+
+		<field id="separador5" local="true" deshabilitado="true" modpos="nobr"/>
+
+		<field id="sinFact" deshabilitado="false" modpos="nobr">
+		    <tipo>check</tipo>
+		    <label>Sin Factura</label>
+		    <operador>=</operador>
+		</field>
+    	
+	</filters> 
+	
+		<field id="separador1" local="true" deshabilitado="true" modpos="nobr" style="width:10px;" colstyle="display:none;"/>
+		<field id="separador2" local="true" deshabilitado="true" modpos="nobr" style="width:10px;" colstyle="display:none;"/>
+		<field id="separador3" local="true" deshabilitado="true" modpos="nobr" style="width:10px;" colstyle="display:none;"/>
+		<field id="separador4" local="true" deshabilitado="true" modpos="nobr" style="width:10px;" colstyle="display:none;"/>
+		<field id="separador5" local="true" deshabilitado="true" modpos="nobr" style="width:10px;" colstyle="display:none;"/>
+
+		<field id="subsistema_id" noshow="true" />
+
+		<field id="id_regmovim" noshow="true" esClave="true" >
+			<detalle>regmovim_id</detalle>
+		</field>
+
+		<field id="concepto_id" noshow="true">
+			<condicion>47</condicion> 
+		</field>
+
+		<field id="subsistematr_id" local="true" noshow="true" valauto="true"/>    
+
+		<field id="regcuentatransporte_id" noshow="true">
+			<label>Transporte</label>
+			<helper type="combo" xml="regcuenta_solamente_qry.xml" dir="/ayudas" empty="true" >
+	            <field id="subsistema_id" noshow="true">
+	                <condicion operador="=">'TR'</condicion>
+	            </field>
+	            <field id="nombre_cuenta" noshow="true">
+		        	<detalle>nombre_transporte</detalle>
+	    	    </field>
+	            <order>
+	    	        <field id="nombre_cuenta" />
+	            </order>
+	        </helper>
+		</field>
+		
+		<field id="nombre_transporte" noshow="true">
+		    <label>tran</label>
+			<expression>select RC.nombre_cuenta from REG_CUENTA as RC where RC.id_regcuenta =
+				(select regcuentarelacionada_id from REG_CUENTA_RELACIONES where REG_CUENTA_RELACIONES.subsistemarelacionada_id = 'TR' and REG_CUENTA_RELACIONES.regcuenta_id = REG_CUENTA.id_regcuenta limit 1)
+			</expression>
+		</field>
+
+		<field id="sinFact" deshabilitado="true" noshow="true">
+		    <expression>
+		    	(case when (select regdetallefac_id FROM REG_IMPUTACIONESDETALLES 
+		    		where regdetalleped_id = (select RG1.id_regdetalle from REG_DETALLES RG1 
+		    		where RG1.regmovim_id = REG_MOVIMIENTOS.id_regmovim limit 1) limit 1) != 0 then 0 else 1 end)
+	    	</expression>
+		    <tipo>check</tipo>
+		</field>
+
+	 	<field id="domicilio" noshow="true">
+	            <expression>CONCAT(REG_CUENTA.cod_direccion, ' ', 
+	            (case when REG_CUENTA.nro_direccion = 0 then ' ' else REG_CUENTA.nro_direccion end), ' ', 
+	            (case when REG_CUENTA.bis_direccion = 1 then 'Bis' else ' ' end), ' ', 
+	            (case when REG_CUENTA.abreviacion_direccion = ' ' then ' ' else REG_CUENTA.abreviacion_direccion end))
+	            </expression>
+	            <label>direccion</label>
+	    </field>
+
+	    <field id="localidad" noshow="true">
+	           <label>localidad</label>
+		       <expression>SELECT nombre_localidad FROM GEN_LOCALIDADES where id_localidad = REG_CUENTA.localidad_id limit 1</expression>
+	    </field>
+	    
+		<field id="nro_cuenta" tabla="REG_CUENTA" noshow="true">
+			<label>Cod</label>
+			<helper type="external" xml="regcuenta_solamente_nro_qry.xml" dir="/ayudas">
+			    <field id="subsistema_id" />
+			    <order>
+					<field id="nombre_cuenta"></field>
+			    </order>
+			</helper>
+		</field>
+
+		<field id="regcuenta_id" noshow="true">
+			<label>Cliente</label>
+		</field>
+
+
+
+<fieldGroup colstyle="text-align:center;vertical-align:middle;padding:2px 2px 2px 2px;" >
+
+		<field id="nombre_cuenta" tabla="REG_CUENTA" colstyle="text-align:left;vertical-align:middle;padding:2px 2px 2px 2px;">
+			<label>Nombre Cuenta</label>
+		</field>
+
+		<field id="fecha_movimiento">
+			<label>Fecha</label>
+		</field>
+
+		<field id="puesto_movimiento"  _noshow="true">
+			<label>Puesto</label>
+		    <helper type="combo" id="REG_NUMERADORES" empty="true">
+				<field id="puesto" />
+				<field id="nombre">
+				    <expression>puesto</expression>
+				</field>
+				<field id="regconcepto_id">
+					<condicion>47</condicion>
+				</field>
+	            <order>
+	    	        <field id="puesto" />
+	            </order>
+		    </helper>   
+		</field>
+
+		<field id="abreviacion_concepto" tabla="REG_CONCEPTOS" >
+			<label>Concepto</label>
+		</field>
+
+		<field id="nro_movimiento"  >
+			<label>Envio</label>
+			<expression>
+				CONCAT(REG_MOVIMIENTOS.letra_movimiento,':',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,'0'),'-',LPAD(REG_MOVIMIENTOS.nro_movimiento ,8,'0'))
+			</expression>
+			<helper type="link" dir="/clientes/qry" xml="imp_npinsumas_qry.xml" >
+			    <parameter source="id_regmovim" target="id_regmovim" />  
+			</helper> 
+		</field>
+
+		<field id="datos">
+		    <label>Comprobante</label>
+			<expression>
+				select CONCAT(RGM.letra_movimiento,':',LPAD(RGM.puesto_movimiento,4,'0'),'-',LPAD( RGM.nro_movimiento  ,8,'0')) from REG_MOVIMIENTOS RGM  
+				where RGM.id_regmovim = (select RD.regmovim_id from  REG_DETALLES RD 
+					where RD.id_regdetalle = (select regdetallefac_id FROM REG_IMPUTACIONESDETALLES where regdetalleped_id = (select RG1.id_regdetalle from REG_DETALLES RG1 where RG1.regmovim_id = REG_MOVIMIENTOS.id_regmovim limit 1) limit 1) limit 1)
+			</expression>
+			<helper type="link" dir="/clientes/qry" xml="imp_npinsumas_qry.xml" >
+			    <parameter source="buscofactura" target="id_regmovim" />  
+			</helper>
+		</field>
+
+		<field id="formapago">
+		    <label>forma</label>
+			<helper type="combo" dir="/ayudas" xml="regforma_qry.xml" empty="true" />
+		    <expression>
+		    	select regforma_id from REG_MOVIMIENTOS RG2  where RG2.id_regmovim = (select RD.regmovim_id from  REG_DETALLES RD where 
+					RD.id_regdetalle = (select regdetallefac_id FROM REG_IMPUTACIONESDETALLES where regdetalleped_id = (select RG1.id_regdetalle 
+					from REG_DETALLES RG1 where RG1.regmovim_id = REG_MOVIMIENTOS.id_regmovim limit 1) limit 1) limit 1) limit 1
+			</expression>
+		</field>
+	    
+		<field id="conciliado"  editable="true">
+			<label>Entregado</label>
+		</field>
+
+		<field id="plazo">
+			<label>Plazo</label>
+			<expression>datediff( ifnull(conciliado , now()) , REG_MOVIMIENTOS.fecha_movimiento)</expression>
+		</field>
+	               
+		<field id="regestado_id" editable="true">
+			<label>Estado</label>
+			<helper type="combo" xml="regestados_qry.xml" dir="/ayudas" empty="true">
+			</helper>
+		</field>
+		
+		<field id="categoria_id" editable="true">
+			<label>Despachado</label>
+			<helper type="combo" id="REG_CATEGORIAS" empty="true">
+			    <field id="id_regcategoria"/>
+			    <field id="nombre_categoria" />
+			    <field id="subsistema_id">
+				<condicion operador="=">'TR'</condicion>
+			    </field>
+			</helper>
+		</field>
+	    
+	    <field id="seguimiento" local="true" linkint="seguimiento.xml" linkdes="Seguimiento de las ordenes" linkdir="/clientes/qry"
+	    	  _obj="seguimiento_qry.xml" objdir="/clientes/qry" _showObjTabla="true" showValor="true">
+				<label>Obs</label>
+				<expression>case when isnull(observacion) then '+' else concat(date_format(fec_observacion, '%d/%m'), ' ',observacion) end</expression>
+	            <tipo>varchar</tipo>
+				<paring destino="regmovim_id">id_regmovim</paring>
+				<paring destino="tabla_origen">REG_MOVIMIENTOS</paring>
+		</field>
+	        
+	    <field id="cantidad_bultos" editable="true" >
+				<label>Bultos</label>
+				<tipo>decimal</tipo>
+	    </field>
+	                                                                                   
+	    <field id="etiqueta_desc" local="true" export="false" >
+	          <label>Etiqueta</label>
+	    	  <valor>Imp etiqueta</valor>
+	          <helper xml="etiqueta_desc_tpl.xml" type="link">
+	            <parameter source="nombre_cuenta"    	target="nombre_cuenta"></parameter>
+	            <parameter source="domicilio"    		target="domicilio"></parameter>
+				<parameter source="localidad" 	        target="localidad"></parameter>
+	            <parameter source="nro_movimiento"      target="nro_movimiento"></parameter>
+	            <parameter source="etiquetas"           target="printer"></parameter>
+	            <parameter source="true"                target="autoprint"></parameter>
+	            <parameter source="nombre_transporte"   target="nombre_transporte"></parameter>
+	            <parameter source="cantidad_bultos"     target="cantidad_copias"></parameter>
+	            <parameter source="cantidad_bultos"     target="cantidad_bultos"></parameter>
+	          </helper>
+	    </field>   
+
+</fieldGroup>
+
+		<group>
+			<field id="id_regmovim" tabla="REG_MOVIMIENTOS"/>
+		</group>
+
+</table>
+
+	    <join>
+	      <table id="REG_CUENTA">
+	        <field id="id_regcuenta">
+	          <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+	        </field>
+	      </table>
+	    </join>
+	    <join>
+	      <table id="REG_CONCEPTOS">
+	        <field id="id_concepto">
+	          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+	        </field>
+	      </table>
+	    </join>
+	    <join tipo="left">
+	      <table id="REG_MOVIMIENTO_OBS">
+	        <field id="regmovim_id">
+	          <condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion>
+	        </field>
+	      </table>
+	    </join>
+
+  </form>
+</histrix>

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm" subtipo="vertical">
+  <title>PARAMETROS DEL SISTEMA DE COMPRAS</title>
+  <obs></obs>
+  <form >
+    <table id="CPSPARAM" >
+      <title>Parametros Compras</title>
+
+      <field id="parcla">
+        <label>Clave</label>
+        <help>Nombre del Parámetro</help>
+
+      </field>
+      <field id="partip" print="false">
+        <label>Tipo</label>
+        <help>Tipo de Parámetro</help>
+        <options>
+            <option valor="1">Descriptivo</option>
+            <option valor="2">Porcentaje</option>
+            <option valor="3">Decimal</option>
+            <option valor="4">Entero</option>
+            <option valor="5">Opción</option>
+            
+        </options> 
+        <tipo>radio</tipo>
+      </field>
+
+      <field id="parde1">
+        <label>Descripción</label>
+        <help>Descripción del Parámetro </help>
+      </field>
+      <field id="paralf" colstyle="display:none;">
+        <label>Alfab.</label>
+        <help>Valor alfabético</help>
+        <tipo>simpleditor</tipo>
+<!--                <size>190</size> -->
+      </field>
+      <field id="parpor" _mask="99.999">
+        <label>Porcentaje</label>
+        <help>Valor Porcentual</help>
+
+      </field>
+      <field id="pardec">
+        <label>Decimal</label>
+        <help>Valor Decimal</help>
+        
+      </field>
+      <field id="parent">
+        <label>Entero</label>
+        <help>Valor Entero</help>
+
+      </field>
+    
+      <field id="paropc">
+        <label>Opción</label>
+        <help>Valor Lógico</help>
+        
+      </field> 
+<!--      <field id="hi" deshabilitado="true" clasefila="true" noshow="true" local="true">
+        <if exp="parent">
+                    <true>'resaltado'</true>
+                    <false>''</false>
+                </if>
+        <tipo>varchar</tipo>
+      </field> -->
+           
+      <order>
+        <field id="parcla"></field>
+      </order>
+      
+    </table>
+  </form>     
+</histrix> 

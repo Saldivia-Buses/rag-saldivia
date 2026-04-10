@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<histrix tipo="consulta">
+  <title>Generador de Obleas</title>
+  <obs/>
+  <form>
+  <table id="REG_DETALLES" label="Generador de Obleas">
+
+  <fieldGroup id="DEBUG" noshow="true">
+
+    <field id="id_regdetalle" />
+
+    <field id="regmovim_id" />
+
+  </fieldGroup>
+
+  <field id="codigo_detalle">
+    <label>Codigo</label>
+  </field>
+
+  <field id="descripcion_detalle">
+    <label>Descripcion</label>
+  </field>
+
+  <field id="neto_detalle">
+    <label>Imp. Neto</label>
+  </field>
+
+  <field id="iva_detalle">
+    <label>Imp. Iva</label>
+  </field>
+
+  <field id="total_detalle">
+    <label>Imp. Total</label>
+  </field>
+
+  <field id="tabla_detalle">
+    <label>Dominio</label>
+  </field>
+
+  <field id="codigo_serie">
+    <label>Oblea</label>
+  </field>
+
+  <field id="nro_partida">
+    <label>Nro Partida</label>
+  </field>
+
+  <field id="fecha_vencimiento">
+    <label>Vencimiento</label>
+  </field>
+
+  </table>
+
+  <join>
+    <table id="CAJ_CTBCUENTA_AUX">
+      <field id="codigo">
+        <condicion operador="=">REG_DETALLES.codigo_detalle</condicion>
+      </field>
+    </table>
+  </join>
+
+</form>
+</histrix>  

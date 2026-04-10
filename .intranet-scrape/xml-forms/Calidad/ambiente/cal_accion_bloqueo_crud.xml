@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud">
+        <title>ACCIONES BLOQUEO</title>
+        <obs/>
+        <form >                       
+                <table id="CAL_ACCIONES_BLOQUEO">
+                        <title>Acciones</title>
+                        <field id="id_accionesbloqueo" esClave="true" autoinc="true" noshow="true">
+                        </field>
+                        <field id="grado" >
+                    	    <label>Grado</label>
+                        </field>
+                        <field id="desde_significancia">
+                    	    <label>desde</label>
+                        </field>
+                        <field id="hasta_significancia">
+                    	    <label>hasta</label>
+                        </field>
+                        <field id="descripcion_bloqueo">
+                    	    <label>Descripción</label>
+
+                        </field>
+                        <field id="nombre_accion">
+                    	    <label>Accion bloqueo</label>
+
+                        </field>
+
+                </table>
+        </form>
+</histrix>
+

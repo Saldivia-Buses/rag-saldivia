@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="arbol" form="false" imprime="false" log="false" _preloadData="false" width="40">
+		<title>FORMACION DE PRODUCTO</title>
+        <obs></obs>
+               <form  detalle="piezas_select_det2.xml">
+                  <table id="STKPIEZA" label="Piezas">
+<!--		  <filters>
+	              <field id="idPadre" arbol="padre">
+    	                  <label>Articulo</label>
+        	          <help>Nombre del Articulo al que pertenece </help>
+                	    <operador>=</operador>
+            	      </field>
+		  
+		  </filters>
+                            -->
+                  <field id="idPadre" arbol="padre" esClave="true" noshow="true">
+                      <label>padre</label>
+                      <help>Nombre del Articulo al que pertenece </help>
+
+                  </field>
+                  <field id="articulo_hijo" arbol="hijo" required="true">
+                      <label>Codigo de Pieza</label>
+                      <help>Codigo del Articulo</help>
+					  <detalle>idPadre</detalle>					  
+		             <condicion operador="&lt;=">'900000'</condicion>
+					  
+                  </field>
+                  <field id="fecreq" local="true" noshow="true">
+                   <tipo>date</tipo>     
+                    <detalle>fecreq</detalle>
+                  </field>
+                  
+                  <field id="codprv" local="true" noshow="true">
+                    <detalle>codprv</detalle>
+                  </field>
+
+                  <field id="artdes" tabla="STKINSUM">
+                      <label>Nombre </label>
+                      <help>Nombre de la Pieza </help>
+					  <tipo>varchar</tipo>
+                  </field>
+		  
+		  
+                  </table>
+					<join tipo="left">
+						<table id="STKINSUM">
+							<field id="siscod" oculto="true">
+								<condicion operador="=">'01'</condicion>
+							</field>
+							<field id="artcod">
+								<condicion operador="=">STKPIEZA.articulo_hijo</condicion>
+							</field>
+							
+						</table>
+					</join>				   
+               </form>
+        </histrix>

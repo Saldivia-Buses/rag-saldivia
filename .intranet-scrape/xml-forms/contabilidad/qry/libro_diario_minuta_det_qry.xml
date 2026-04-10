@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" PDFlineColor="255,255,255" PDFlineas="false" PDFfontSize="9">
+  <title>Movimientos</title>
+  <obs/>
+  <form >
+    <table id="CTB_MOVIMIENTOS" label="Libro diario">
+
+      <field id="id_movimiento" noshow="true" />
+
+      <field id="fecha_movimiento" noshow="true">
+        <label>Fecha</label>
+        <help>Fecha movimiento</help>
+        <detalle>fecha_movimiento</detalle>
+        <tipo>date</tipo>
+      </field>
+      <field id="nro_minuta" noshow="true">
+        <label>Minuta</label>
+        <help>Numero de la minuta</help>
+        <detalle>nro_minuta</detalle>
+        <size>4</size>
+      </field>
+
+      <field id="concepto_id" noshow="true">
+        <helper type="combo" xml="ctbconcepto_qry.xml" dir="/ayudas" />
+        <label>Concepto</label>
+        <help>Código de concepto</help>
+        <detalle>concepto_id</detalle>
+      </field>
+
+      <field id="ejercicio_id" noshow="true">
+        <helper type="combo" xml="ctbejercicios_crud.xml" dir="/contabilidad/man/">
+          <field id="activo" tipoOrden="DESC"/>
+          <field id="fecha_mov1">
+            <expresion>DATE_FORMAT(comienza, '%d/%m/%Y')</expresion>
+            <tipo>date</tipo>
+            <detalle>ejercicio_id</detalle>
+          </field>
+          <field id="fecha_mov2">
+            <expresion>DATE_FORMAT(finaliza, '%d/%m/%Y')</expresion>
+            <tipo>date</tipo>
+          </field>
+          <field id="finaliza"></field>
+        </helper>
+        <label>Ejercicio</label>
+        <help>Ejercicio contable</help>
+        <detalle>ejercicio_id</detalle>
+      </field>
+      
+      <field id="cuenta" PDFcolWidth="120px">
+        <expression>CONCAT(CTB_CUENTAS.id_cuenta, ' ', CTB_CUENTAS.nombre_cuenta)</expression>
+	<label>Cuenta</label>
+      </field>
+      
+      <field id="debe" tdWidth="180" suma="true" PDFcolWidth="40px" noZero="true">
+        <expresion>sum(case when doh = 0 then importe else 0 end)</expresion>
+        <label>Debe</label>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="haber" tdWidth="180" suma="true" PDFcolWidth="40px" noZero="true">
+        <expresion>sum(case when doh = 1 then importe else 0 end)</expresion>
+        <label>Haber</label>
+        <tipo>numeric</tipo>
+      </field> <!--
+      <field id="diferencia" noZero="true" _tdWidth="50" suma="true" _PDFcolWidth="50px" PDFfontsize="17px">
+        <expresion>
+          sum( round(importe, 2) * (case when doh = 1 then 1 else -1 end))
+        </expresion>
+        <label>Diferencia</label>
+        <tipo>numeric</tipo>
+      </field>       -->
+      <field id="doh" tabla="CTB_DETALLES" noshow="true" />
+      <field id="orden" tabla="CTB_DETALLES" noshow="true" />
+
+      <order>
+        <field id="doh" />
+        <field id="orden" />
+      </order>
+
+      <group>
+        <field id="id_detalle" />
+      </group>
+
+    </table>
+
+    <join tipo="inner">
+      <table id="CTB_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">concepto_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="CTB_DETALLES">
+        <field id="movimiento_id">
+          <condicion operador="=">id_movimiento</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="CTB_CUENTAS">
+        <field id="id_cuenta">
+          <condicion operador="=">cuenta_id</condicion>
+        </field>
+        <field id="ejercicio_id">
+          <condicion operador="=">CTB_MOVIMIENTOS.ejercicio_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

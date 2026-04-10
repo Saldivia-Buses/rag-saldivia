@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<histrix tipo="consulta">
+		<title>Movs. Demeritos</title>
+		<obs></obs>
+		<form >
+			<table id="CPS_DEMERITOS_MOVIMIENTOS" label="Movimientos de Demeritos">
+				
+
+				<field id="regcuenta_id" oculto="true">
+					<label>Cuenta</label>
+					<!--
+					<helper type="combo" id="REG_CUENTA">
+						<field id="id_regcuenta"></field>
+						<field id="nombre_cuenta"></field>
+						<field id="subsistema_id" oculto="true">
+							<condicion operador="=">'01'</condicion>
+						</field>
+					</helper>
+				-->
+					<expresion>ifnull((select id_regcuenta from REG_CUENTA RC 
+						left join CPS_MOVIMIENTOS on
+						RC.id_regcuenta = CPS_MOVIMIENTOS.regcuenta_id 
+						where CPS_MOVIMIENTOS.id_cpsmovimiento = CPS_DEMERITOS_MOVIMIENTOS.cpsmovimiento_id), (select id_regcuenta from REG_CUENTA RC where RC.id_regcuenta = CPS_DEMERITOS_MOVIMIENTOS.regcuenta_id))</expresion>
+				</field>
+
+				<field id="cpsmovimiento_id" noshow="true">
+					<label>Movimimiento</label>
+				</field>
+								
+				<field id="fecha_demerito">
+					<label>Fecha</label>
+					<help>Fecha Demerito ultimos 6 meses</help>
+					<condicion operador="&gt;=">DATE_SUB(CURDATE(), INTERVAL 6 MONTH) and fecha_demerito &gt;= '2013-11-27'</condicion>
+				</field>
+
+				<field id="demerito_id" noshow="true">
+					<label>Cod Dem</label>
+					<help>Codigo Demerito</help>
+					<!--
+					<helper type="combo" id="CPS_DEMERITOS">
+                  			<field id="id_demerito"></field>
+                  			<field id="nombre_demerito">
+                  				<detalle>nom_demerito</detalle>
+                  			</field>
+              		</helper>
+              	-->
+                    <condicion operador="!=">0</condicion>
+				</field>
+
+				<field id="nombre_demerito" tabla="CPS_DEMERITOS">
+					<label>Demerito</label>
+					<help>Demerito</help>
+					<tipo>char</tipo>
+				</field>
+
+				<field id="peso_demerito" tabla="CPS_DEMERITOS">
+					<label>Importancia</label>
+					<tipo>integer</tipo>
+				</field>
+
+				<!--
+				<field id="tipocomp">
+					<label>Tipo Comp</label>
+					<help>Tipo Comprobante</help>
+					<formato>%12d</formato>
+					
+				</field>
+				
+				<field id="puesto">
+					<label>Puesto</label>
+				</field>
+				
+				<field id="nrocomp">
+					<label>Numero</label>
+					<help>Numero de Comprobante</help>
+				</field>
+				
+				<field id="movfec">
+					<label>Fecha Movimiento</label>
+					<help>
+					</help>
+				</field>
+			-->
+
+				<field id="ocpnro" local="true" linkint="ordencompra_imp.xml" linkdes="Ordenes de Compra" linkdir="compras/qry">
+					<label>Nro OC</label>
+					<expresion>select id_cpsmovimiento from CPS_MOVIMIENTOS where id_cpsmovimiento = CPS_DEMERITOS_MOVIMIENTOS.cpsmovimiento_id</expresion>
+					<paring destino="id_cpsmovimiento">cpsmovimiento_id</paring>
+				</field>
+
+				<field id="fecoc" local="true">
+					<expresion>select cpsfecha from CPS_MOVIMIENTOS where id_cpsmovimiento = CPS_DEMERITOS_MOVIMIENTOS.cpsmovimiento_id</expresion>
+					<tipo>date</tipo>
+					<label>Fecha OC</label>
+				</field>
+
+									
+				<field id="stkarticulo_id">
+					<label>Cod Art</label>
+					<help>Codigo Articulo</help>
+					<!--
+					<helper type="combo" id="STK_ARTICULOS">
+                  			<field id="id_stkarticulo"></field>
+                  			<field id="nombre_articulo">
+                  				<detalle>nom_articulo</detalle>
+                  			</field>
+              		</helper>
+              	-->
+				</field>
+
+				<field id="nombre_articulo" tabla="STK_ARTICULOS">
+					<label>Articulo</label>
+					<help>Descripcion Articulo</help>
+					<tipo>char</tipo>
+				</field>				
+				
+				<order>
+                    <field id="fecha_demerito" />
+                </order>
+
+			</table>
+			
+			<join tipo="left">
+				<table id="CPS_DEMERITOS">
+					<field id="id_demerito" _oculto="true">
+						<condicion operador="=">CPS_DEMERITOS_MOVIMIENTOS.demerito_id</condicion>
+					</field>
+				</table>
+			</join>		
+
+			<join tipo="left">
+				<table id="STK_ARTICULOS">
+				<field id="id_stkarticulo" _oculto="true">
+						<condicion operador="=">CPS_DEMERITOS_MOVIMIENTOS.stkarticulo_id</condicion>
+					</field>
+				</table>
+			</join>					
+			
+		</form>
+	</histrix>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm" subtipo="vertical">
+	<title>Puntuación</title>
+	<obs></obs>
+	<form >
+		<table id="CAL_AUDITORIA_PUNTUACION">
+		    <title>Análisis de Puntuación</title>
+
+			<field id="id_auditoriaintpunt" autoinc="true" noshow="true">
+				<label>Codigo</label>
+			</field>
+
+			<field id="puntaje">
+				<label>Puntaje</label>
+			</field>
+
+			<field id="valoracion">
+				<label>Valoración</label>
+				<tipo>varchar</tipo>
+				<size>100</size>
+			</field>
+				
+		</table>
+	</form>
+</histrix>

@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="consulta" paginar="40" path="fotos/pedidoint/">
+    <title>Pedidos Internos</title>
+    <obs/>
+    <form >
+        <table id="PEDIDOINT"  label="Pedidos Internos">
+            <filters>
+                <field  id="nrofab">
+                    <label>Nro Fab</label>
+                    <operador>=</operador>
+                </field>
+                <field id="artcod">
+                    <label>Artículo</label>
+                    <help>Código de Artículo</help>
+                    <operador>=</operador>
+                </field>
+            <field id="fechaemi" >
+                <label>Desde Fecha</label>
+                <valor>today</valor>
+                <operador>&gt;=</operador>
+            </field>
+            <field id="fechaemi" >
+                <label>Hasta Fecha</label>
+                <valor>today</valor>
+                <operador>&lt;=</operador>
+                
+            </field>
+
+            <field id="estado" >
+                <label>Estado</label>
+                <operador>=</operador>
+            </field>
+<!-- 	    <field id="checkrecib" deshabilitado="false">
+
+		<label>Recibido</label>
+                <operador>=</operador>
+
+	    </field> -->
+
+            </filters>
+            <field id="idPed">
+                <label>Nro Ped.</label>
+            </field>
+            <field id="fechaemi" deshabilitado="true" tipoOrden="DESC">
+                <label>Fecha</label>
+            </field>
+            <field id="_usu" deshabilitado="true" local="true" noselect="true" noshow="true">
+                <valor eval="true">$_SESSION['usuario']</valor>
+            </field>
+            <field id="usuario" deshabilitado="true" noshow="true">
+                <condicion operador="=" valorde="_usu">_usu</condicion> 
+            </field>
+            
+            <field id="idDeposito" deshabilitado="true">
+                <label modpos="nobr" colspan="6" Formstyle="display:none;">Lugar Entrega </label>
+                <help>Lugar de Entrega/Descarga</help>
+                <tabla_ex id="DEPOSITO">
+                    <field id="idDeposito">
+                    </field>
+                    <field id="direccion">
+                    </field>
+                </tabla_ex>
+                <tipo>integer</tipo>
+            </field>
+            <field deshabilitado="true" id="nrofab">
+                <label>Nro Fab.</label>
+                <help>Número de Fabricación</help>
+                <tabla_ex id="CHASIS">
+                    <field id="nrocha" muestra="true"/>
+                    <field id="chades"/>
+                    <order>
+                        <field id="nrocha"/>
+                    </order>
+                </tabla_ex>
+            </field>
+
+	    <field id="codprv">
+		<tipo>varchar</tipo>
+		<label>Proveedor</label>
+                <helper id="CCTCUENT" type="combo">
+                    <field id="ctacod">
+                        <label>Nro</label>
+                    </field>
+                    <field id="ctanom">
+                        <label>Nombre</label>
+                        <detalle>ctanom</detalle>
+                    </field>
+		    <field id="siscod">
+			<condicion operador="=">'01'</condicion>
+		    </field>
+		</helper>
+            <!--    <expression having="false">CONCAT(CCTCUENT.ctanom, ' (',CCTCUENT.ctafan, ')')</expression>-->
+		<size>50</size>
+	    </field>
+
+            <field deshabilitado="true" id="nrofab">
+                <label>NroFab</label>
+                <detalle>nrofab</detalle>
+            </field>
+            <field deshabilitado="true" id="artcod">
+                <label>Código Artículo</label>
+                <help>Código de Artículo</help>
+                <detalle>artcod</detalle>
+            </field>
+            <field deshabilitado="true" id="artdes" tabla="STKINSUM">
+                <label>Descripción</label>
+                <tipo>varchar</tipo>
+                <detalle>artdes</detalle>
+            </field>
+            <field id="movref" deshabilitado="true">
+                <label Formstyle="display:none;">Ref.</label>
+                <help>Referencia </help>
+                <size>5</size>
+                <detalle>observaciones</detalle>
+            </field>
+
+            <field deshabilitado="true" id="cant">
+                <label>Cantidad</label>
+                <help>Cantidad</help>
+                <detalle>movcps</detalle>
+            </field>
+            <field deshabilitado="true" id="unimed">
+                <label Formstyle="display:none;">Unidad de Medida</label>
+                <help>Unidad de Medida</help>
+                <tabla_ex id="FSMUNIDS">
+                    <field id="unicod"/>
+                    <field id="uninom"/>
+                    <order>
+                        <field id="uninom"/>
+                    </order>
+                </tabla_ex>
+                <detalle>unicps</detalle>
+            </field>
+			<field id="estado" >
+                <label>Estado</label>
+				<options>
+					<option valor=""></option>
+					<option valor="0">Pendiente</option>
+                    <option valor="1">Cumplido</option>                 
+                    <option valor="2">Anulado</option>                 
+				</options>
+			</field>
+
+            <field deshabilitado="true" id="fecreq">
+                <label>Fec.Req.</label>
+                <help>Fecha de Requerimiento</help>
+                <detalle>fecreq</detalle>
+            </field>
+
+            <field deshabilitado="true" id="fecreqoc" local="true">
+                <label>Fec.Req.OC.</label>
+                <expression>CPSMOVIM.fecreq</expression>
+                <help>Fecha de Requerimiento OC</help>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="valcps" noshow="true" tabla="STKINSUM">
+                <label>valcps</label>
+                <detalle>valcps</detalle>
+            </field>
+            <field id="valuso" noshow="true" tabla="STKINSUM">
+                <label>valuso</label>
+                <detalle>valuso</detalle>
+            </field>
+            <field id="hasorden" noshow="true">
+        	<expression>(case when PEDIDOINT.ocpnro = 0 then 'pedidoint_crud.xml' else '' end)</expression>
+            </field>
+            <field id="ocompra" noshow="true">
+        	<expression>(case when PEDIDOINT.ocpnro != 0 then 'ordencompra_qry.xml' else '' end)</expression>
+            </field>
+            
+            
+            <field id="editar" local="true">
+        	<attribute id="linkint">hasorden</attribute>
+                <helper type="link" xml="pedidoint_crud.xml" >
+                    <parameter source="idPed" target="idPed"/>
+                </helper>
+                <if exp="'hasorden' != ''">
+            	    <true>'Editar'</true>
+            	    <false>''</false>
+                </if>
+                
+                <label>Editar</label>
+                <valor>'Editar'</valor>
+            </field>
+             <field id="ocpnro" noshow="true">
+		</field>
+            
+             <field id="OCPBTN" deshabilitado="true" linkdes="Orden de Compra" >
+        	<attribute id="linkint">ocompra</attribute>
+		<expression>case when PEDIDOINT.ocpnro != 0 then concat(PROV_OC.ctafan, ': ', PEDIDOINT.ocpnro) else '' end</expression>
+                <helper type="link" xml="ordencompra_qry.xml" dir="/compras">
+                    <parameter source="idPed" target="idPed"/>
+                </helper>
+ 
+                <label>Nro OC.</label>
+		 <paring destino="ocpnro">ocpnro</paring>
+            </field>
+            <field id="recibido">
+                <label>Recibido</label>
+                <expression>select OCPRECIB.fecrec from OCPRECIB where OCPRECIB.idPed = PEDIDOINT.idPed and OCPRECIB.idPed != 0 limit 1</expression>
+                <tipo>date</tipo>
+            </field>
+<!-- 	    <field id="checkrecib" noshow="true" deshabilitado="false">
+                <expression>ifnull((select 1 from OCPRECIB where OCPRECIB.idPed = PEDIDOINT.idPed and OCPRECIB.idPed != 0 limit 1), 0)</expression>
+		<tipo>check</tipo>
+	    </field> -->
+            <field id="nrocom" noshow="true" >
+	</field>            
+        <field id="directorio" noshow="true" >
+	</field>            
+	
+	
+
+            <field id="archivo" path="directorio" download="true" print="false">
+                <label>Adjunto</label>
+                <tipo >file</tipo>
+                <size>40</size>
+            </field>
+
+            <field id="hi" deshabilitado="true" clasefila="true" noshow="true" local="true">
+                <if exp="estado">
+                    <true>'resaltado'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="mensaje"  >
+                <label>Mensaje</label>
+            </field>
+	    <group>
+		<field id="idPed" />
+	    </group>
+            <order>
+                <field id="estado"></field>
+                <field id="fechaemi"></field>
+
+            </order>
+
+        </table>
+
+        <join tipo="left">
+            <table id="CPSENCAB">
+                <field id="siscod" oculto="true">
+                    <condicion operador="=">''</condicion>
+                </field>
+                <field id="ocpnro" oculto="true">
+                    <condicion operador="=">PEDIDOINT.ocpnro</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="CPSMOVIM">
+                <field id="idPed" oculto="true">
+                    <condicion operador="=">PEDIDOINT.idPed</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="CCTCUENT" as="PROV_OC">
+                <field id="siscod" >
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="ctacod" >
+                    <condicion operador="=">CPSENCAB.ctacod</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="STKINSUM">
+                <field id="siscod" oculto="true">
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="artcod" oculto="true">
+                    <condicion operador="=">PEDIDOINT.artcod</condicion>
+                </field>
+            </table>
+        </join>
+
+
+    </form>
+</histrix>

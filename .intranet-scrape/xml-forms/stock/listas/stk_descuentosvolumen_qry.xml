@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+*******************************************************************************
+Tipo:  CRUD
+Tarea: Carga descuentos por volumen
+Autor: luis
+Fecha: 17/06/12
+*******************************************************************************
+-->
+<histrix tipo="consulta" subtipo="vertical" imprime="false">
+  <title>Descuentos por volumen de venta</title>
+  <obs/>
+  <form>
+    <table id="STK_DESCUENTOSVOLUMEN" label="Tabla de descuentos por volumen">
+      
+      <filters auto="true">
+        <field id="stklista_id" deshabilitado="true">
+        <label>Lista</label>
+        <operador>=</operador>
+        </field>
+      </filters>
+      
+      <field id="stklista_id" noshow="true">
+        <helper type="combo" id="STK_LISTAS">
+          <field id="id_stklista"/>
+          <field id="stklista_nombre"/>
+        </helper>
+      </field>
+      
+      <field id="id_descuentovolumen" autoinc="true" esClave="true" noshow="true"/>
+      <field id="desde_cantidad">
+        <label>Desde</label>
+        <size>5</size>
+      </field>
+      <field id="hasta_cantidad">
+        <label modpos="nobr">Hasta</label>
+        <size>5</size>
+      </field>
+      <field id="porcentaje_descuento0">
+        <label modpos="nobr">% Desc.Gral</label>
+        <size>5</size>
+      </field>
+      <field id="porcentaje_descuento1" noshow="true">
+        <label modpos="nobr">Descuento 2 (%)</label>
+      </field>
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" >
+    <title>Consulta de Producción</title>
+    <obs></obs>
+    <form >
+        <table id="STK_ARTICULOS" label="Consulta de Producción">
+            <filters>
+                    
+                <field id="fecha_movimiento" deshabilitado="false">
+                    <label>año</label>
+                    <operador>=</operador>
+                    <valor >today</valor>
+                    
+                </field>
+                <field id="id_stkarticulo" esClave="true">
+                    <label>Código</label>
+                    <help>Codigo de Articulo</help>
+                    <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+                        <field id="nombre_articulo">
+                            <detalle>nombre_articulo</detalle>
+                        </field>
+                        <field id="produccion_diaria">
+                            <detalle>minimo_ordendetalle</detalle>
+                        </field>
+                    
+                    </helper>
+                </field>
+
+                <field id="nombre_articulo" deshabilitado="false" >
+                    <label modpos="nobr">Articulo</label>
+                    <help>Codigo de Articulo</help>
+                    <operador>like</operador>
+                </field>
+			    
+            </filters>
+			
+            <fieldGroup>
+                <field id="id_stkarticulo" esClave="true">
+                    <label>Código</label>
+                    <help>Codigo de Articulo</help>
+                    <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas"/>
+                </field>    
+                <field id="nombre_articulo">
+            	    <label>Articulo</label>
+                    <detalle>nombre_articulo</detalle>
+                </field>
+                    
+                <field id="produccion_diaria">
+                    <detalle>minimo_ordendetalle</detalle>
+                </field>
+
+                <!--
+                <field id="total" noZero="false" tipoOrden="DESC">
+                    <label>Total</label>
+                    <expresion>sum(ifnull((STK_MOVIMIENTOS.cantidad),0) )</expresion>
+                    <tipo>grafico</tipo>
+                </field>
+                -->
+			
+                <field id="fecha_movimiento" noshow="true" tabla="STK_MOVIMIENTOS">
+                    <label>año</label>
+                    <tipo>date</tipo>
+                </field>		   
+            </fieldGroup>
+			
+            <fieldGroup noZero="true" _linkTag="a">
+                <field id="Enero">
+                    <label>Cantidad</label>
+                    <expresion>sum(STK_MOVIMIENTOS.cantidad )</expresion>
+                    <tipo>numeric</tipo>
+                    <helper type="link" xml="mrp_ordenes_cumplidas_qry.xml" dir="/mrp/qry">
+                        <parameter source="1" target="mes" />
+                        <parameter source="year" target="anio" />
+                        <parameter source="id_stkarticulo" target="stkarticulo_id" />
+                    </helper>
+
+                </field>
+                                  
+            </fieldGroup>
+
+            <group>
+                <field id="id_stkarticulo" ></field>
+            </group>
+            <order>
+                <field id="total"></field>
+            </order>
+
+        </table>
+        <join tipo="left">
+            <table id="STK_MOVIMIENTOS">
+                <field id="stkarticulo_id">
+                    <condicion operador="=">id_stkarticulo</condicion>
+                </field>
+            </table>
+        </join>
+        <join >
+            <table id="STK_CONCEPTOS">
+                <field id="id_stkconcepto">
+                    <condicion operador="=">stkconcepto_id</condicion>
+                </field>
+                <field id="tipo_concepto">
+                    <condicion operador="=">0</condicion>
+                </field>
+                <field id="produccion_concepto">
+                    <condicion operador="=">1</condicion>
+                </field>
+
+            </table>
+        </join>
+			
+    </form>
+</histrix>

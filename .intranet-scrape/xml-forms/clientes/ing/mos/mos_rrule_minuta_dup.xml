@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" sqlhardcoded="true">
+    <title />
+    <form>
+        <table id="REG_DETALLES" idCampoCond="graba_minuta">
+            <sql><![CDATA[ call generarMinuta( [__mos_rrule_movimientos_ins.xml__] ); ]]></sql>
+
+            <field id="regmovim_id"        id_temp="id_regmovim" />
+            <field id="stkdeposito_id"     id_cab="stkdeposito_id" />
+            <field id="stkconcepto_id"     id_cab="stkconcepto_id" />
+            <field id="idregmovim"         lastId="mos_rrule_movimientos_ins.xml" />
+        </table>
+    </form>
+</histrix>

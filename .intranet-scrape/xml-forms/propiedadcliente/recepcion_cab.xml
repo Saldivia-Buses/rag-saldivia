@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="cabecera" >
+	<title>REMITO</title>
+	<obs></obs>
+	<form >
+		<table id="FACREMIT" label="REMITO" graba="true">
+			<field id="ctacod" >
+				<label>Cliente</label>
+				<ayuda_ex id="CCTCUENT" _xml="HLPcctcuent.xml" dir="/help_local">
+					<field id="ctacod">
+						<label>Nro</label>
+					</field>
+					<field id="nombre">
+						<expression>ctanom</expression>
+						<label>Nombre</label>						
+						<detalle>ctanom</detalle>	
+						<tipo>varchar</tipo>					
+					</field>
+					<field id="siscod" oculto="true">
+						<label>siscod</label>
+						<condicion operador="=">'02'</condicion>
+					</field>					
+					<clave>ctacod</clave>
+					<descripcion>nombre</descripcion>
+					
+				</ayuda_ex>
+				<help>Codigo de Cuenta</help>
+                                <actualiza>
+                                    <field id="nrocha" destino="ctacod" />
+                                </actualiza>
+			</field>
+			<field id="ctanom" local="true" deshabilitado="true" sincelda="true">
+				<label modpos="nobr"></label>
+				<help>Nombre del Cliente</help>
+				<size>80</size>
+			</field>
+<!--			<field id="ocpnro"  deshabilitado="true">
+				<label modpos="nobr">O.Compra</label>
+				<help>Numero de Orden de Compra</help>
+			</field>
+			
+			<field id="ocpfec"  deshabilitado="true">
+				<label modpos="nobr">Fecha O.C</label>
+				<help>Fecha O.C.</help>
+			</field> -->
+			<field id="nrocha" >
+		            <label modpos="nobr">Nro Fabricación</label>
+            		    <help>Número de Fabricación</help>
+		            <tabla_ex  xml="HLPcoche_cli.xml" dir="/help_local">
+                                <field id="nrocha"></field>
+                                <field id="ctacod">
+                                    <condicion operador="=">0</condicion>
+                                </field>
+	                    </tabla_ex>
+	                    <valor default="true">0</valor>
+	                    <size>4</size>
+        		</field>
+			<field id="dos" local="true" oculto="true">
+				<valor>2</valor>
+			</field>				
+			<field id="remfec">
+				<label >Fecha Recibo</label>
+				<help>Fecha de Remito</help>
+				<valor>today</valor>
+			</field>			
+			<field id="remnro" min="1" deshabilitado="true">
+				<label modpos="nobr">Número</label>
+				<help>Número de Recibo</help>
+				<parametro id="fsmparam_parent.xml" retorna="parent">
+					<field id="parcla" oculto="true">
+						<condicion operador="=">'reccli'</condicion>
+
+					</field>
+                                        <field id="parent">
+                                                <complete>parent + 1</complete>
+                                        </field>
+
+				</parametro>
+				<format>%010d</format> 
+			</field>
+	
+		</table>
+	</form>
+</histrix>

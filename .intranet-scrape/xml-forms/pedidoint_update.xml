@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+	<histrix tipo="update" >
+		<title>Pedidos Internos</title>
+		<obs></obs>
+		<form >
+			<table id="PEDIDOINT" label="Cierro Movimientos" idCampoCond="imput2" >
+				<field esClave="true" id="idPed" id_temp="idPed"></field>
+				<field id="estado"	 	id_temp="uno"></field>
+				<field id="ocpnro"	 	>
+					<valor>[__ocpnro__]</valor>
+				</field>
+
+			</table>
+		</form>
+	</histrix>

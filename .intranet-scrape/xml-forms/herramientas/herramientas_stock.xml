@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<abm tipo="consulta">
+	<titulo>Disponibilidad de Herramientas</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="HERRAMIENTAS" label=">Disponibilidad de Herramientas">
+
+			<campo id="id_herramienta">
+				<label>Herramienta</label>
+				<help>Identificacion de la Herramienta </help>
+			</campo>
+			<campo id="artcod">
+<!--
+				<ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/help_local">
+					<campo id="artcod" >
+						<label>Cod.</label>
+					</campo>
+					<campo id="artdes">
+						<label>Insumo</label>
+						<detalle>artdes</detalle>
+					</campo>
+					<campo id="siscod" oculto="true">
+						<condicion operador="=">'01'</condicion>
+					</campo>
+					
+				</ayuda_ex>
+				-->
+				<label>Articulo</label>
+				<help>Codigo de Articulo, segun la tabla de insumos. </help>
+			</campo>
+			<campo id="artdes" tabla="STKINSUM" >
+				<label modpos="nobr">Insumo</label>
+				<help>Insumo </help>
+				<tipo>varchar</tipo>
+			</campo>
+			
+			<campo id="nomherr">
+				<label>Nombre </label>
+				<help>Nombre de la Herramienta. </help>
+			</campo>
+			<!--
+			<campo id="caract">
+				<label>Caract.</label>
+				<help>Caracteristicas principales de la Herramienta. </help>
+			</campo>
+			
+			<campo id="invcod">
+				<label>Inventario</label>
+				<help>Codigo de la Herramienta en el Inventario. </help>
+			</campo>
+			-->
+			<campo id="grucod" oculto="true">
+				<label>grupo </label>
+				<help>grupo </help>
+			
+				<condicion operador="=">1</condicion>
+				
+			</campo>
+			<campo id="cant2"  >
+				<expresion>sum(cantidad * (case when CONCHERR.movtip = '2' then -1 else 1 end) *  (case when CONCHERR.gruher = 2 then 0 else 1 end))</expresion>
+				<label>Subtotal</label>
+			</campo>		
+			<group>
+				<campo id="id_herramienta" tabla="HERRAMIENTAS"></campo>
+				<campo id="artcod" tabla="HERRAMIENTAS"></campo>
+				<campo id="artdes" tabla="STKINSUM" ></campo>
+				
+				<campo id="nomherr" tabla="HERRAMIENTAS"></campo>
+<!--				<campo id="caract" tabla="HERRAMIENTAS"></campo>
+				<campo id="invcod" tabla="HERRAMIENTAS"></campo> -->
+				<campo id="grucod" tabla="HERRAMIENTAS"></campo>
+
+			</group>			
+		</tabla>
+		<join tipo="left">
+			<tabla id="HERRMOVS">
+				<campo id="id_herramienta">
+					<condicion operador="=">HERRAMIENTAS.id_herramienta</condicion>
+				</campo>
+			</tabla>
+		</join>		
+		<join tipo="left">
+			<tabla id="CONCHERR">
+				<campo id="movher">
+					<condicion operador="=">HERRMOVS.movher</condicion>
+				</campo>
+				<campo id="movnom"></campo>
+			</tabla>
+		</join>		
+		<join tipo="left">
+
+			<tabla id="STKINSUM">
+				<campo id="siscod" oculto="true">
+					<label>STKINSUM.siscoc</label>
+					<condicion operador="=">'01'</condicion>
+				</campo>
+				<campo id="artcod" oculto="true">
+					<condicion operador="=">HERRAMIENTAS.artcod</condicion>
+				</campo>
+
+			</tabla>
+			
+		</join>		
+		
+	</consulta>
+</abm>

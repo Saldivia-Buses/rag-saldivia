@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="arbol" ancho="50%">
+	<title>Procesos de Produccion</title>
+	<obs/>
+	<form detalle="materiales_proceso_crud.xml" inline="true">
+		<table id="PROD_PROCESOS">
+			<title>Condiciones</title>
+			<filters> ..	
+			    	<field id="homologacion_id" >
+			    	    <label>Homologacion</label>
+			    	    <operador>=</operador>
+			    	</field>
+
+			</filters>
+		        <field id="homologacion_id"  noshow="true" valauto="true" >
+	                    <helper type="combo" xml="combo_homologacion_modelo.xml" dir="/fabricacion" >
+        			    <field id="baja">
+	                		<condicion operador="=">0</condicion>
+        			    </field>
+	                    </helper>
+
+		            <label>Modelo</label>
+		            <detalle>homologacion_id</detalle>
+			</field>
+
+			<field id="id_proceso" esclave="true" autoinc="true" noshow="true" arbol="hijo">
+				<label>Codigo</label>
+				<detalle>proceso_id</detalle>
+			</field>
+			<field id="procesopadre_id" arbol="padre" colstyle="display:none;">
+
+				<helper type="combo" xml="procesos_qry.xml" empty="true">
+        			    <field id="homologacion_id">
+	                		<condicion operador="=" valorder="homologacion_id"></condicion>
+        			    </field>
+
+				</helper>
+				<label>Codigo padre</label>
+			</field>
+			
+			<field id="nombre_proceso">
+				<label>Proceso</label>
+				<help>nombre del proceso</help>
+				<size>60</size>
+			</field>
+			<field id="descripcion_proceso">
+				<label>descripcion</label>
+				<help>Descripción del proceso</help>
+				<size>300</size>
+
+			</field>
+			<!--
+            <field id="stkdeposito_id">
+                <label >Deposito </label>
+                <helper type="combo"  xml="deposito.xml" dir="/compras">
+                </helper>
+            </field>
+
+-->
+		</table>
+	</form>
+</histrix>

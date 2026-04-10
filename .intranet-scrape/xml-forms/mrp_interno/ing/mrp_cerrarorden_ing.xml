@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" subtipo="vertical" 
+    imprime="false"
+    transaccional="true"  
+    inserta="false"
+    tooltip="false"
+      >
+    <title>CERRAR ORDEN DE PRODUCCION</title>
+    <form>
+        <table id="MRP_ORDEN_DETALLE" label="DETALLE DE LA ORDEN DE PRODUCCION">
+            <movimientos cabecera="mrp_cerrarorden_cab.xml">
+                <relacion id="mrp_cerrarordenproduccion_update.xml"></relacion>
+                <relacion id="mrp_cerrarordendetalle_update.xml"></relacion>
+<!--                 <relacion id="mrp_producido_stkmovimientos_insert.xml"></relacion>
+                <relacion id="mrp_consumido_stkmovimientos_insert.xml"></relacion>
+ -->            
+            </movimientos>
+
+
+
+            <field id="id_mrpordendetalle" noshow="true">
+            </field>
+            <field id="mrporden_id" noshow="true">
+            </field>
+	    
+	    
+            <field id="stkarticulo_id"   deshabilitado="true" esClave="true" >
+                <label>Artículo</label>
+                <help>Codigo de Articulo</help>
+                <!--
+                <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas_local">
+                    <field id="nombre_articulo">
+                        <detalle>nombre_articulo</detalle>
+                    </field>
+                    <field id="produccion_diaria">
+                        <detalle>minimo_ordendetalle</detalle>
+                    </field>
+                </helper>
+                -->
+            </field>
+            <field id="unidad_id" noshow="true">
+                <expression>case when STK_ARTICULOS.unidad_uso_id = 0 then 1 else STK_ARTICULOS.unidad_uso_id end</expression>
+            </field>
+            <field id="nombre_articulo"  tabla="STK_ARTICULOS"  deshabilitado="true">
+                <label modpos="nobr" colspan="5">Desc.</label>
+                <tipo>varchar</tipo>
+                <size>20</size>
+            </field>
+<!--            <field id="minimo_ordendetalle" deshabilitado="true">
+                <label colstyle="display:none;">Minimo</label>
+            </field>
+            -->
+            <field id="objetivo_ordendetalle"  deshabilitado="true" required="true" >
+                <label _modpos="nobr" style="color:red;">Obj.</label>
+            </field>
+            <field id="producido_ordendetalle" _noZero="true" suma="true">
+                <label modpos="nobr">Producido</label>
+            </field>
+            <field id="observaciones_ordendetalle"  >
+                <label _modpos="nobr" colspan="5"  >Obs</label>
+                <size>70</size>
+            </field>
+<!--
+            <field id="demora_justificada"  >
+                <label modpos="nobr" >Demora</label>
+                <help>Demora Justificada Expresada en Horas</help>
+                <size>3</size>
+            </field>
+            -->
+<!--
+            <field id="controles" showObjTabla="true" local="true" Formstyle="display:none;">
+                <helper type="object" xml="mrp_controldetalle_grid.xml">
+                    <parameter source="id_mrpordendetalle" target="mrpordendetalle_id" />
+                </helper>
+                <label modpos="nobr">Calidad</label>
+            </field>
+            <field id="indice" style="color:red;" suma="true">
+                <label modpos="nobr">I.C</label>
+                <expression sql="true">select sum(peso_control) from MRP_CONTROL_DETALLE left join MRP_CONTROLES on MRP_CONTROLES.id_mrpcontrol = MRP_CONTROL_DETALLE.mrpcontrol_id where
+        					MRP_CONTROL_DETALLE.mrpordendetalle_id = [__id_mrpordendetalle__] and control_estado = 0
+                </expression>
+            </field>
+            <field id="trazabilidad" showObjTabla="true" local="true" Formstyle="display:none;">
+                <helper type="object" xml="mrp_trazabilidad_grid.xml">
+                    <parameter source="id_mrpordendetalle" target="mrpordendetalle_id" />
+                </helper>
+                <label>Trazabilidad</label>
+            </field>
+               -->
+        </table>
+        <join tipo="left">
+            <table id="STK_ARTICULOS">
+<!--                <field id="subsistema_id" >
+                    <condicion operador="=">'01'</condicion>
+                </field>                            
+                -->
+                <field id="id_stkarticulo" >
+                    <condicion operador="=">MRP_ORDEN_DETALLE.stkarticulo_id</condicion>
+                </field>
+            </table>
+        </join>
+        
+    </form>
+</histrix>

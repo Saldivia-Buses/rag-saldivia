@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha" subtipo="vertical"  _logReference="nombre_articulo" borra="false" paginar="200">
+    <title>Conteos Ciclicos</title>
+    <obs></obs>
+    <form >
+        <table id="STK_CONTEOS" label="Conteos Ciclicos" >
+
+	    <filters>
+            <field id="fecha_conteo">
+                <label modpos="nobr">Desde fecha</label>
+                <operador>&gt;=</operador>
+                <valor>today</valor>
+            </field>
+            <field id="fecha_conteo">
+                <label modpos="nobr">Hasta fecha</label>
+                <operador>&lt;=</operador>
+                <valor>today</valor>
+            </field>
+
+            <field id="stkdeposito_id">
+                <label modpos="nobr">Deposito</label>
+                <operador>=</operador>
+            </field>
+			
+            <field id="stkarticulo_id">
+			  <operador>=</operador>
+			  <label>Código</label>
+			  <help>Articulo a buscar</help>
+			</field>
+			
+			<field id="nombre_articulo" local="true" deshabilitado="true" oculto="true">
+			  <label colspan="5">Nombre Articulo</label>
+			  <help>Nombre de Articulo a buscar</help>
+			</field>
+			
+            <field id="teorico" local="true" deshabilitado="true" oculto="true">
+              <label colspan="5">Teorico</label>
+            </field>
+	    </filters>
+            
+
+            <field id="id_stkconteo" esClave="true" autoinc="true" noshow="true" />
+
+            <field id="fecha_conteo">
+                <label>Fecha</label>
+                <tipo>date</tipo>
+                <valor>today</valor>
+            </field>
+
+            <field id="stkdeposito_id">
+                <label>Deposito</label>
+                <helper type="combo" _empty="true" id="STK_DEPOSITOS">
+                    <field id="id_stkdeposito" />
+                    <field id="nombre_deposito" />
+                </helper>
+            </field>
+
+            <field id="stkarticulo_id">
+				<label>Codigo</label>
+				<helper type="external" xml="stkarticulo_stockactual_qry.xml" _xml="stkarticulo_qry.xml" dir="/ayudas">
+				  <field id="wstklista_id" local="true">
+					<valor>1</valor>
+				  </field>
+				  <field id="nombre_articulo">
+				    <detalle>nombre_articulo</detalle>
+				  </field>
+                </helper>
+			</field>
+
+			<field id="nombre_articulo" oculto="true" local="true" noselect="true">
+				<label modpos="nobr">Nombre</label>
+				<size>40</size>
+			</field>
+            
+			<field id="conteo1">
+                <label>conteo 1</label>
+            </field>
+
+            <field id="conteo2">
+                <label modpos="nobr">conteo 2</label>
+            </field>
+
+            <field id="conteo3">
+                <label modpos="nobr">conteo 3</label>
+            </field>
+
+            <field id="teorico">
+                <label>Teorico</label>
+            </field>
+
+            <field id="diferencia">
+                <label>Diferencia</label>
+            </field>
+
+            <field id="cajas">
+                <label>Cajas</label>
+            </field>
+
+            <field id="observaciones">
+                <label>Obs.</label>
+            </field>
+               
+        </table>
+    </form>
+</histrix>  

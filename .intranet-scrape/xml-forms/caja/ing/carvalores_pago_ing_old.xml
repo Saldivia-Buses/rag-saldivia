@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" subtipo="vertical" inserta="false" borra="false" modifica="false" imprime="false" exportasuma="true" deleteRow="false" llenoreferente="true" confirma="CONFIRMAR" resume="true">
+  <title>Cartera de Valores</title>
+  <obs/>
+  <form>
+    <table id="CAR_VALORES" label="Cartera de Valores">
+      <movimientos _cabecera="carvalores_pago_cab.xml">
+        <relacion id="carmovimientos_egr.xml"/>
+        
+        <relacion id="carvalores_egr.xml"/>
+        
+      </movimientos>
+      <filters>
+        <field id="solo_menores" local="true">
+          <label>Valores menores al total</label>
+          <tipo>check</tipo>
+          <valor>1</valor>
+        </field>
+      </filters>
+      <field id="cajformapago_id" local="true" esClave="true" noshow="true">
+        <detalle>cajformapago_id</detalle>
+      </field>
+      <fieldGroup id="parametros_ingreso" local="true" noshow="true">
+        <field id="importe_movimiento"/>
+        <field id="imputacion_concepto"/>
+        <field id="fecha_movimiento"/>
+        <field id="referencia_movimiento"/>
+        <field id="tipo_movimiento">
+          <expression>[__imputacion_concepto__]</expression>
+        </field>
+      </fieldGroup>
+      <!-- SELECCIONADOS -->
+      <field id="imputar" local="true" refresh="true">
+        <label>Imp</label>
+        <tipo>check</tipo>
+      </field>
+      <field id="id_carvalor" esClave="true" noshow="true">
+        <label>Nº Interno</label>
+      </field>
+      <field id="cheque" noshow="true">
+        <expression>CONCAT(LPAD(ifnull(carbanco_id, 0) ,3,0),'-',LPAD(ifnull(sucursal_banco, 0) ,3,0),'-',ifnull(carplaza_id, 0))</expression>
+        <label>Código</label>
+      </field>
+      <field id="acreditacion_valor">
+        <label>Fecha Acred.</label>
+      </field>
+      <field id="nro_valor" style="text-align: right;color:blue;">
+        <label>Número</label>
+      </field>
+      <field id="nombre_banco" tabla="CAR_BANCOS" deshabilitado="true">
+        <label>Banco</label>
+      </field>
+      <field id="nombre_plaza" tabla="CAR_PLAZAS" deshabilitado="true">
+        <label>Plaza</label>
+      </field>
+      <field id="importe_valor" suma="true">
+        <label>Importe</label>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="titular_valor">
+        <label>Titular</label>
+        <size>10</size>
+      </field>
+      <!--
+      <field id="cuit_valor">
+        <label>CUIT</label>
+      </field>
+      -->
+      <field id="solo_menores" local="true" noshow="true">
+        <tipo>check</tipo>
+      </field>
+      <field id="selecciono" noshow="true">
+        <expression having="false">(importe_valor &lt;= [__importe_movimiento__] and [__solo_menores__] = 1) or ([__solo_menores__] = 0)</expression>
+        <condicion operador="=">1</condicion>
+      </field>
+      <field id="total_imputado" local="true" suma="true" _noshow="true" noZero="true">
+        <label style="color:blue;font-size:medium;">Total Imputado</label>
+        <if exp="imputar != ''">
+          <true>importe_valor</true>
+          <false>0</false>
+        </if>
+        <detalle>pago_valor</detalle>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="egreso_valor" noshow="true">
+        <condicion operador="=">'0000-00-00'</condicion>
+      </field>
+      <order>
+        <field id="acreditacion_valor"/>
+      </order>
+    </table>
+    <join tipo="LEFT">
+      <table id="CAR_BANCOS">
+        <field id="id_carbanco">
+          <condicion operador="=">CAR_VALORES.carbanco_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="LEFT">
+      <table id="CAR_PLAZAS">
+        <field id="id_carplaza">
+          <condicion operador="=">CAR_VALORES.carplaza_id</condicion>
+        </field>
+      </table>
+    </join>
+    <!-- Traigo solo los que posean movimiento de ingreso -->
+    <join>
+      <table id="CAR_MOVIMIENTOS">
+        <field id="carvalor_id">
+          <condicion operador="=">CAR_VALORES.id_carvalor</condicion>
+        </field>
+        <field id="tipo_movimiento">
+          <condicion operador="=">0</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

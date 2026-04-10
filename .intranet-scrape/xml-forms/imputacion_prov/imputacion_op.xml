@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" >
+    <title>Cuenta Corriente</title>
+    <obs/>
+    <form detalle="imputacion_op_cab.xml">
+        <table id="CCTMOVIM" label="Movimientos">
+        
+    	    <filters>
+    		<field id="ctacod">
+    		    <label>Cuenta</label>
+    		    <operador>=</operador>
+    		</field>
+    	    
+    	    </filters>
+        
+            <field id="siscod" oculto="true">
+                <label>Cod.</label>
+                <valor>'01'</valor>
+                <condicion operador="=">'01'</condicion>
+                <detalle>siscod</detalle>
+                
+                
+            </field>
+
+            <field id="ctacod" noshow="true">
+                <label>Proveedores con saldo</label>
+                <helper type="external"  xml="cctcuent_c_saldo_neg.xml">
+                    <field id="ctacod2">
+                        <expression>CCTCUENT.ctacod</expression>
+                    </field>
+                    <field id="ctanom2">
+                        <expression>concat(CCTCUENT.ctanom, ' (',CCTCUENT.ctafan,')')</expression>
+                        <label>Nom</label>
+						<detalle>ctanom2</detalle>
+                    </field>
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">01</condicion>
+                    </field>
+                    <order>
+                    <field id="ctanom2"/>
+                    </order>
+                </helper>
+                <detalle>ctacod</detalle>
+            </field>
+
+
+            <field id="movnpv" >
+                <label modpos="nobr">PV</label>
+                <help/>
+                <detalle>movnpvOP</detalle>
+            </field>
+
+            <field id="ctanom">
+                <label>Prov</label>
+            </field>
+            <field id="movnro" >
+                <label modpos="nobr">Numero</label>
+                <help/>
+                <detalle>movnroOP</detalle>
+            </field>
+            <field id="concod" noshow="true">
+                <detalle>concodOP</detalle>
+            </field>
+            
+            <field id="movfec" >
+                <label modpos="nobr">Fecha</label>
+                <help/>
+                <tipo>date</tipo>
+                <detalle>movfecOP</detalle>
+            </field>
+            <field id="movsal" >
+        	<label>Saldo</label>
+        	<condicion operador="&lt;">0</condicion>
+                <detalle>saldoOP</detalle>
+            </field>
+            <order>
+                <field id="movnro"></field>
+            </order>
+        </table>
+    </form>
+</histrix>
+

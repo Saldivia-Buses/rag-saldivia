@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" >
+  <title>numerador</title>
+  <obs />
+  <form>
+    <table id="REG_NUMERADORES">
+		<field id="impresion">
+			<expression>ejecuta</expression>
+		</field>
+		<field id="subsistema_id"  oculto="true" esClave="true"/>
+<!--		<field id="regconcepto_id" oculto="true" esClave="true"/> -->
+		<field id="puesto"         oculto="true" esClave="true"/>
+		<field id="letra"          oculto="true" esClave="true">
+			<condicion operador="=">'X'</condicion>
+		</field>
+		<field id="forzando" local="true" /> // Para forzar  la busqueda desde el regcuenta
+
+		
+    </table>
+  </form>
+</histrix>

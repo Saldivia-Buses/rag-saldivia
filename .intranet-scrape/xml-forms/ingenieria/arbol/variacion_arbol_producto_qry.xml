@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" preloadData="false" export="true" imprime="true">
+    <title>Variacion Arbol Producto</title>
+    <obs></obs>
+    <form >
+        <table id="STK_BOM_HIST" label="Materia prima">
+
+            <filters>
+
+                <field id="bom_variacion_id" deshabilitado="false">
+                    <label>Homologación</label>
+                    <operador>=</operador>
+                </field>
+
+                <field id="fecha_costo" deshabilitado="false">
+                    <label modpos="nobr">Fecha Desde</label>
+                    <operador>=</operador>
+                </field>
+
+                <field id="fecha_costo1" deshabilitado="false">
+                    <label modpos="nobr">Fecha Hasta</label>
+                    <operador>=</operador>
+                </field>
+
+            </filters>
+
+            <field id="id_stkbomhist" noshow="true"/>
+            
+            <field id="pieza_id" noshow="true" >
+                <label>pieza_id</label>
+            </field>
+
+            <field id="bom_variacion_id" noshow="true" required="true">
+                <label>Hom.</label>
+                <actualiza>
+                    <field destino="bom_variacion_id" id="fecha_costo"/>
+                    <field destino="bom_variacion_id" id="fecha_costo1"/>
+                </actualiza>
+            </field>
+
+            <field id="fecha_costo" required="true" colstyle="display:none;">
+                <helper type="combo" xml="arbol_prod_hist_fechas_qry.xml">
+                    <field id="fecha_costo"/>
+                </helper>
+                <label>Fecha1</label>
+                <detalle>fecha_costo</detalle>
+            </field>
+
+            <field id="fecha_costo1" local="true" colstyle="display:none;">
+                <label modpos="nobr">Fecha2</label>
+                <tipo>date</tipo>
+                <helper type="combo" xml="arbol_prod_hist_fechas_qry.xml">
+                    <field id="fecha_costo"/>
+                </helper>
+                <label>Fecha1</label>
+                <detalle>fecha_costo1</detalle>
+            </field>
+
+            <field id="stkarticulohijo_id" noshow="true">
+            </field>
+
+<!-- id del artículo en la 2da fecha -->
+<!--
+            <field id="id_stkbomhist1" noshow="true">
+                <expression>tkbomhist1:=(select id_stkbomhist from STK_BOM_HIST SBH where SBH.pieza_id = STK_BOM_HIST.pieza_id and SBH.stkarticulohijo_id = STK_BOM_HIST.stkarticulohijo_id and SBH.bom_variacion_id = STK_BOM_HIST.bom_variacion_id and SBH.fecha_costo = '[__fecha_costo1__]' limit 1)</expression>
+            </field>
+-->
+            <field id="stkarticulohijo_string">
+                <label>Artículo</label>
+                <help>Artículo Hijo</help>
+            </field>
+
+            <field id="cantidad">
+                <label>Cant1</label>
+                <help>Cantidad</help>
+            </field>
+
+            <field id="cantidad2">
+                <label>Cant2</label>
+                <help>Cantidad</help>
+                <expression>(select cantidad from STK_BOM_HIST SBH where SBH.pieza_id = STK_BOM_HIST.pieza_id and SBH.stkarticulohijo_id = STK_BOM_HIST.stkarticulohijo_id and SBH.bom_variacion_id = STK_BOM_HIST.bom_variacion_id and SBH.fecha_costo = '[__fecha_costo1__]' limit 1)</expression>
+                <attribute id="style">pintar1</attribute>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="unitario" >
+                <label>Unitario1</label>
+            </field>
+
+            <field id="unitario1">
+                <label>Unitario2</label>
+                <expression having="false">(select unitario from STK_BOM_HIST SBH where SBH.pieza_id = STK_BOM_HIST.pieza_id and SBH.stkarticulohijo_id = STK_BOM_HIST.stkarticulohijo_id and SBH.bom_variacion_id = STK_BOM_HIST.bom_variacion_id and SBH.fecha_costo = '[__fecha_costo1__]' limit 1)</expression>
+                <attribute id="style">pintar2</attribute>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="moneda" _noshow="true">
+                <label>moneda</label>
+		<expression>STK_COSTO_REPOSICION.moneda_id</expression>
+            </field>  
+
+            <field id="cambio_dolar">
+                <label>T.Cambio1</label>
+                <expression>@cambio_dolar:=(round(ifnull((select cotizacion_genmonedahis from GEN_MONEDA_HIS GMH where GMH.moneda_id = moneda_id and fecha_genmonedahis &lt;= '[__fecha_costo__]' order by fecha_genmonedahis desc limit 1),0),2))</expression>
+                <tipo>numeric</tipo>
+            </field> 
+
+            <field id="cambio_dolar1">
+                <label>T.Cambio2</label>
+                <expression>@cambio_dolar1:=(round(ifnull((select cotizacion_genmonedahis from GEN_MONEDA_HIS GMH where GMH.moneda_id = moneda_id and fecha_genmonedahis &lt;= '[__fecha_costo1__]' order by fecha_genmonedahis desc limit 1),0),2))</expression>
+                <tipo>numeric</tipo>
+            </field>  
+
+            <field id="pintar" local="true" noshow="true" clasefila="true">
+                <expression having="false">case when cantidad != ((select cantidad from STK_BOM_HIST SBH where SBH.pieza_id = STK_BOM_HIST.pieza_id and SBH.stkarticulohijo_id = STK_BOM_HIST.stkarticulohijo_id and SBH.bom_variacion_id = STK_BOM_HIST.bom_variacion_id and SBH.fecha_costo = '[__fecha_costo1__]' limit 1)) OR unitario != (select unitario from STK_BOM_HIST SBH where SBH.pieza_id = STK_BOM_HIST.pieza_id and SBH.stkarticulohijo_id = STK_BOM_HIST.stkarticulohijo_id and SBH.bom_variacion_id = STK_BOM_HIST.bom_variacion_id and SBH.fecha_costo = '[__fecha_costo1__]' limit 1) then 'resaltadoVioleta' end</expression>
+            </field>
+
+            <field id="diferencia1" style="text-align:right;">
+                <label>Costo 1</label>
+                <expression having="false">@diferencia1:=(case when cantidad != (select cantidad from STK_BOM_HIST SBH where SBH.pieza_id = STK_BOM_HIST.pieza_id and SBH.stkarticulohijo_id = STK_BOM_HIST.stkarticulohijo_id and SBH.bom_variacion_id = STK_BOM_HIST.bom_variacion_id and SBH.fecha_costo = '[__fecha_costo1__]' limit 1) OR unitario != (select unitario from STK_BOM_HIST SBH where SBH.pieza_id = STK_BOM_HIST.pieza_id and SBH.stkarticulohijo_id = STK_BOM_HIST.stkarticulohijo_id and SBH.bom_variacion_id = STK_BOM_HIST.bom_variacion_id and SBH.fecha_costo = '[__fecha_costo1__]' limit 1) 
+then round(cantidad * unitario /* * @cambio_dolar */ ,2) else '' end)</expression>
+		<tipo>custom_numeric</tipo>
+
+            </field>
+
+            <field id="diferencia2" style="text-align:right;">
+                <label>Costo 2</label>
+                <expression having="false">@diferencia2:=(case when cantidad != (select cantidad from STK_BOM_HIST SBH where SBH.pieza_id = STK_BOM_HIST.pieza_id and SBH.stkarticulohijo_id = STK_BOM_HIST.stkarticulohijo_id and SBH.bom_variacion_id = STK_BOM_HIST.bom_variacion_id and SBH.fecha_costo = '[__fecha_costo1__]' limit 1) OR unitario != (select unitario from STK_BOM_HIST SBH where SBH.pieza_id = STK_BOM_HIST.pieza_id and SBH.stkarticulohijo_id = STK_BOM_HIST.stkarticulohijo_id and SBH.bom_variacion_id = STK_BOM_HIST.bom_variacion_id and SBH.fecha_costo = '[__fecha_costo1__]' limit 1) 
+then round((select cantidad * unitario from STK_BOM_HIST SBH where SBH.pieza_id = STK_BOM_HIST.pieza_id and SBH.stkarticulohijo_id = STK_BOM_HIST.stkarticulohijo_id and SBH.bom_variacion_id = STK_BOM_HIST.bom_variacion_id and SBH.fecha_costo = '[__fecha_costo1__]' limit 1) /* *  @cambio_dolar1 */ ,2) else '' end)</expression>
+		<tipo>custom_numeric</tipo>
+
+            </field>
+
+            <field id="diferencia_final" style="text-align:right;color:red;font-weight:bold;" local="true">
+                <label>Variación costo</label>
+                <if exp="true">
+                    <true>diferencia1 - diferencia2</true>
+                    <false>''</false>
+                </if>
+		<tipo>custom_numeric</tipo>
+<!--		
+                <expression having="false">case when cantidad != (select cantidad from STK_BOM_HIST SBH where SBH.pieza_id = STK_BOM_HIST.pieza_id and SBH.stkarticulohijo_id = STK_BOM_HIST.stkarticulohijo_id and SBH.bom_variacion_id = STK_BOM_HIST.bom_variacion_id and SBH.fecha_costo = '[__fecha_costo1__]' limit 1) OR unitario != (select unitario from STK_BOM_HIST SBH where SBH.pieza_id = STK_BOM_HIST.pieza_id and SBH.stkarticulohijo_id = STK_BOM_HIST.stkarticulohijo_id and SBH.bom_variacion_id = STK_BOM_HIST.bom_variacion_id and SBH.fecha_costo = '[__fecha_costo1__]' limit 1) then round(@diferencia2 - @diferencia1,2) else '' end</expression>
+-->
+            </field>
+
+            <field id="pintar1" local="true" noshow="true">
+                <if exp="cantidad != cantidad2">
+                    <true>'color:red;font-weight:bold;'</true>
+                    <false>''</false>
+                </if>
+            </field>
+
+            <field id="pintar2" local="true" noshow="true">
+                <if exp="unitario != unitario1">
+                    <true>'color:red;font-weight:bold;'</true>
+                    <false>''</false>
+                </if>
+            </field>
+	    <group>
+	    <field id="id_stkbomhist"></field>
+	    </group>
+        </table>
+	<join tipo="left">
+	    <table id="STK_COSTO_REPOSICION">
+		<field id="stkarticulo_id">
+		    <condicion operador="=">stkarticulohijo_id</condicion>
+		</field>
+	    </table>
+	</join>
+
+    </form>
+</histrix>

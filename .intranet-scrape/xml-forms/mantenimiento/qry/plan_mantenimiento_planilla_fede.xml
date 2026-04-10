@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+MOD: FMM
+Fecha: 19/10/16
+-->
+<histrix tipo="consulta" PDForientacion="L" subtipo="horizontal" width="55">
+  
+  <title>Mantenimiento</title>
+  <obs/>
+  
+  <form detalle="plan_mantenimiento_planilla_eventos.xml" inline="false">
+
+    <table id="MANT_PLAN" label="Planilla de Mantenimiento">
+
+    <filters>
+
+          <field id="articulo_id" deshabilitado="false">
+              <label >Cod. Articulo</label>
+              <operador>like</operador>
+          </field>
+
+          <field id="separador" modpos="nobr" deshabilitado="true" editable="false"/>
+    
+          <field id="nombre_equipo" deshabilitado="false" modpos="nobr">
+              <label>Equipo</label>
+              <operador>like</operador>
+          </field>
+
+          <field id="separador" modpos="nobr" deshabilitado="true" editable="false"/>
+
+          <field id="deposito_id">
+              <label modpos="nobr">Depósito</label>
+              <operador>=</operador>
+          </field>
+
+          <field id="estado">
+            <label >Estado</label>
+            <operador>=</operador>
+            <!-- <valor>1</valor> -->
+          </field>
+
+          <field id="separador" modpos="nobr" deshabilitado="true" editable="false"/>
+
+          <field id="tipoequipo_id">
+              <label modpos="nobr">Tipo</label>
+              <operador>=</operador>
+              <!-- <valor>1</valor> -->
+          </field>
+
+          <field id="fecha_accion" >
+                <label _modpos="nobr">Desde Fecha</label>
+                <tipo>date</tipo>
+                <operador>&gt;=</operador>
+
+                <valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m"), 1, date("Y")))</valor>
+          </field>
+
+          <field id="separador" modpos="nobr" deshabilitado="true" editable="false"/>
+
+          <field id="fecha_accion" >
+                <label modpos="nobr">Hasta Fecha</label>
+                <tipo>date</tipo>
+                <operador>&lt;=</operador>
+
+                <valor>today</valor>
+          </field>
+
+    </filters>
+
+
+        <field id="separador" local="true" deshabilitado="true" editable="false" print="false" noshow="true">
+          <size>1</size>
+        </field>
+
+        <field id="id_plan" noshow="true" >
+              <detalle>plan_id</detalle>
+        </field>
+
+
+<fieldGroup colstyle="padding:3px 3px 3px 3px;">
+        
+        <field id="articulo_id" tabla="MANT_EQUIPOS" >
+              <label>Artículo</label>
+        </field>
+
+        <field id="fecha_accion" >
+              <label>Fecha</label>
+        </field>
+
+        <field id="nombre_equipo" tabla="MANT_EQUIPOS">
+              <label>Equipo</label>
+        </field>
+      
+        <field id="numero_serie" tabla="MANT_EQUIPOS">
+              <label>Nro Serie</label>
+        </field>
+
+        <field id="tipoequipo_id" tabla="MANT_EQUIPOS" _noshow="true" colstyle="text-align:center;">
+          <helper type="combo" id="MANT_TIPO_EQUIPO" empty="true">
+            <field id="id_tipo_equipo"/>
+            <field id="nombre_tipoequipo"/>
+          </helper>
+          <label>Tipo</label>
+        </field>
+      
+		<field id="deposito_id" tabla="MANT_EQUIPOS" noshow="true">
+			<label>Deposito</label>
+				<helper type="combo" id="STK_DEPOSITOS" empty="true">
+					<field id="id_stkdeposito" />
+					<field id="nombre_deposito" />
+				</helper>
+		</field>
+
+        <field id="nombre_accion" tabla="MANT_ACCIONES">
+            <label>Acción</label>
+        </field>
+
+        <field id="observaciones">
+           <label>Observaciones</label>
+        </field>
+
+        <field id="estado" colstyle="text-align:center;" >
+            <label>Estado</label>
+                <helper type="combo" id="MANTENIMIENTO_ESTADOS" empty="true">
+                    <field id="id_estado" />
+                    <field id="estado"/>
+                </helper>
+        </field>
+
+</fieldGroup>
+
+    </table>
+      
+        <join tipo="left">
+            <table id="MANT_EQUIPOS">
+                    <field id="id_equipo">
+                      <condicion operador="=">MANT_PLAN.equipo_id</condicion>
+                      </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+              <table id="MANT_ACCIONES">
+                <field id="id_accion">
+                  <condicion operador="=">MANT_PLAN.accion_id</condicion>
+                  </field>
+            </table>
+        </join> 
+
+    </form>
+    
+</histrix>

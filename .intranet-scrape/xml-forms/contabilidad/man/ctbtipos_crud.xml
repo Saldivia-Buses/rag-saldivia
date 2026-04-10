@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+  <title>Tipos de cuentas</title>
+  <obs></obs>
+  <form>
+    <table id="CTB_TIPOS" label="tipos">
+      <field id="id_tipo" autoinc="true" noshow="true">
+        <label>Código</label>
+        <help>Código de tipo de cuenta</help>
+      </field>
+      <field id="nombre_tipo">
+        <label>Nombre</label>
+        <help>Nombre del tipo de cuenta</help>
+      </field>
+      <field id="abreviacion_tipo">
+        <label>Abreviacion</label>
+        <help>Nombre abreviado del tipo de cuenta</help>
+      </field>
+      <field id="patrimonial">
+        <tipo>check</tipo>
+        <label>Patrimonial</label>
+        <help>Patrimonial</help>
+      </field>
+      <field id="test" local="true"  noshow="true">
+        <if exp="patrimonial &gt; 0 ">
+          <true>'color:red;'</true>
+          <false>'color:green;'</false>
+        </if>
+      </field>
+      <field id="tipo_saldo" show="none">
+        <attribute id="style">test</attribute>
+        <options>
+          <option valor="0">Deudor</option>
+          <option valor="1">Acreedor</option>
+        </options>
+        <label>Tipo de saldo</label>
+        <help>Tipo de saldo requerido</help>
+      </field>
+    </table>
+  </form>
+</histrix>  

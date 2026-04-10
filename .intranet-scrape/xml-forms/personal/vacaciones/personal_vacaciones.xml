@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" conBusqueda="true" imprimetanda="true" >
+  <title>FICHA PERSONAL</title>
+  <obs></obs>
+  <form  detalle="vacaciones_imprime.xml">
+    <table id="PERSONAL" label="Ficha Personal">
+      <filters>
+        <field  id="pervac" local="true">
+          <label>Período</label>
+          <help>Período de Vacaciones</help>
+          <parametro id="fsmparam_paralf.xml" retorna="paralf">
+          <field id="parcla">
+            <condicion operador="=">'pervac'</condicion>
+          </field>
+        </parametro>
+        <tipo>varchar</tipo>
+        </field>
+
+        <field  id="comvac" local="true">
+          <label>Comienza</label>
+          <help>Fecha de Comienzo de Vacaciones</help>
+          <parametro id="fsmparam_paralf.xml" retorna="paralf">
+          <field id="parcla">
+            <condicion operador="=">'comvac'</condicion>
+          </field>
+        </parametro>
+        <tipo>date</tipo>
+        </field>
+        <field  id="FechaFirma" local="true">
+          <label>Fecha Firma</label>
+          <help>Fecha de Comienzo de Vacaciones</help>
+            <tipo>date</tipo>
+            <valor>today</valor>
+        </field>        
+        <field  id="impvac" local="true">
+          <label>Impresión</label>
+          <help>Impresión de Vacaciones</help>
+          <parametro id="fsmparam_paralf.xml" retorna="paralf">
+          <field id="parcla">
+            <condicion operador="=">'impvac'</condicion>
+          </field>
+        </parametro>
+        <tipo>date</tipo>
+        </field>
+<!--
+        <field id="impvac" local="true">
+          <label>Fecha Impresion</label>
+          <parametro id="fsmparam_paralf.xml" retorna="paralf">
+            <field id="parcla">
+              <condicion operador="=">'impvac'</condicion>
+            </field>
+          </parametro>
+          <tipo>varchar</tipo>
+        </field>
+-->
+      </filters>
+
+      <field id="pervac" local="true" oculto="true">
+        <label>Periodo</label>
+        <parametro id="fsmparam_paralf.xml" retorna="paralf">
+          <field id="parcla">
+            <condicion operador="=">'pervac'</condicion>
+          </field>
+        </parametro>
+        <tipo>varchar</tipo>
+        <detalle>pervac</detalle>
+      </field>
+        <field  id="FechaFirma" local="true" noshow="true">
+        <detalle>FechaFirma</detalle>
+	    <valor>today</valor>
+        </field>        
+
+      <field id="comvac" local="true" oculto="true">
+        <label>Com</label>
+        <parametro id="fsmparam_paralf.xml" retorna="paralf">
+          <field id="parcla">
+            <condicion operador="=">'comvac'</condicion>
+          </field>
+        </parametro>
+        <tipo>date</tipo>
+        <detalle>comvac</detalle>
+      </field>
+      <field id="impvac" local="true" oculto="true">
+        <label>Comienza</label>
+        <parametro id="fsmparam_paralf.xml" retorna="paralf">
+          <field id="parcla">
+            <condicion operador="=">'impvac'</condicion>
+          </field>
+        </parametro>
+        <tipo>varchar</tipo>
+        <size>50</size>
+        <detalle>impvac</detalle>
+      </field>
+<!--
+      <field id="impvac" local="true" oculto="true">
+        <label>FechaImpresion</label>
+        <parametro id="fsmparam_paralf.xml" retorna="paralf">
+          <field id="parcla">
+            <condicion operador="=">'impvac'</condicion>
+          </field>
+        </parametro>
+        <tipo>varchar</tipo>
+        <size>50</size>
+      </field>
+-->
+
+      <field id="legajo">
+        <label modpos="nobr">Legajo</label>
+        <detalle>legajo</detalle>
+      </field>
+      <field id="apellido">
+        <label modpos="nobr" colspan="6">Apellido</label>
+        <help>Apellido</help>
+      </field>
+      <field id="Nombre">
+        <label modpos="nobr">Nombre</label>
+        <help>Nombre</help>
+      </field>
+      <field id="des2" tabla="SECCION">
+-       <expression>select SECCION.nombre from SECCIONHISTORIA left join SECCION ON SECCION.id_seccion = SECCIONHISTORIA.id_seccion 
+where SECCIONHISTORIA.IdPersona = PERSONAL.IdPersona order by SECCIONHISTORIA.fechaDesde DESC limit 1</expression> 
+        <label>Sección</label>
+        <tipo>varchar</tipo>
+      </field>
+
+
+      <field id="CUIL">
+        <label modpos="nobr" >C.U.I.L.</label>
+        <help>Número de Clave Única de Identificación Laboral</help>
+      </field>
+
+      <field id="DNI">
+        <label modpos="nobr" >D.N.I.</label>
+        <help>Número de Documento Nacional de Identidad</help>
+      </field>
+
+      <field id="nacimiento">
+        <label >Fecha Nac</label>
+        <help>Fecha de Nacimiento</help>
+      </field>
+
+<!--      <field id="fechaEgreso" oculto="true">
+        <label>Egreso</label>
+        <condicion operador="=">"0000-00-00"</condicion>
+      </field>-->
+      <field id="fecing">
+        <label>Ing</label>
+      </field>
+
+      <field id="years">
+        <label>Año</label>
+        <help></help>
+        <expression>year(now()) - year(fecing)</expression>
+        <tipo>integer</tipo>
+      </field>
+
+      <field id="vacs">
+        <label>Vacaciones</label>
+        <expression>case when FSMPARAM.paralf - year(fecing) = 0 and  DATEDIFF(  MAKEDATE( FSMPARAM.paralf, 365), fecing) &lt; (DATEDIFF(  MAKEDATE( FSMPARAM.paralf, 365), MAKEDATE( FSMPARAM.paralf, 365 / 2))) then   CEILING(DATEDIFF(  MAKEDATE( FSMPARAM.paralf, 365), fecing) * 14 / 365)
+                when FSMPARAM.paralf - year(fecing) = 0 and  DATEDIFF(  MAKEDATE( FSMPARAM.paralf, 365), fecing) &gt;= (DATEDIFF(  MAKEDATE( FSMPARAM.paralf, 365), MAKEDATE( FSMPARAM.paralf, 365 / 2))) then   14
+                when FSMPARAM.paralf + 1 - year(fecing)  &lt; 6 and  FSMPARAM.paralf + 1 - year(fecing) &gt; 0 then 14
+                when FSMPARAM.paralf + 1 - year(fecing)  &lt; 11 and FSMPARAM.paralf + 1 - year(fecing) &gt;= 6 then 21
+                when FSMPARAM.paralf + 1 - year(fecing)  &lt; 21 and FSMPARAM.paralf + 1 - year(fecing) &gt;= 11 then 28
+                when FSMPARAM.paralf + 1- year(fecing)  &gt;= 21 then 35 end</expression>
+        <tipo>integer</tipo>
+        <detalle>vacs</detalle>
+      </field>
+
+
+      
+      <field id="fechaEgreso" >
+        <label>Egreso</label>
+        <condicion operador="=">"0000-00-00"</condicion> 
+      </field>
+
+      <field id="finvac" local="true" _noshow="true">
+        <label>Fin</label>
+        <if exp="true">
+          <true>date('Y-m-d', strtotime('+'.(vacs-1).' days', strtotime('comvac')))</true>
+          <false>vacs + comvac</false>
+        </if>
+        <tipo>date</tipo>
+        <detalle>finvac</detalle>
+      </field>
+
+      
+      
+<!--      <field id="finvac" local="true" noshow="true">
+        <label>Fin</label>
+        <if exp="true">
+          <true>date('Y-m-d', strtotime('+'. (vacs - 1).' days', strtotime('comvac')))</true>
+          <false>vacs + comvac</false>
+        </if>
+        <tipo>date</tipo>
+        <detalle>finvac</detalle>
+      </field>-->
+<!--      <field id="impr_vacs" deshabilitado="true" local="true" linkint="vacaciones_imprime.xml" linkdes="Imprimir Notificacion Vacacional">
+        <label>Notificacion Vacaciones</label>
+        <help>Notificacion de Vacaciones</help>
+        <tipo>varchar</tipo>
+        <valor>"Imprimir Notif.Vac."</valor>
+        <paring destino="legajo" operador="=">legajo</paring>
+        <paring destino="vacs" operador="=">vacs</paring>
+        <paring destino="comvac" operador="=">comvac</paring>
+        <paring destino="finvac" operador="=">finvac</paring>
+        <paring destino="pervac" operador="=">pervac</paring>
+        <paring destino="impvac" operador="=">impvac</paring>
+      </field>
+      -->
+      <!-- <field id="finvac" local="true" oculto="true">
+        <label>Hasta fecha</label>
+        <expression sql="true"> select ADDDATE(comvac,vacs)</expression>
+      </field>-->
+<!--
+      <field id="nacionalidad">
+        <tabla_ex id="NACIONALIDAD" xml="nacionalidad.xml" />
+        <label>Nacionalidad</label>
+        <help>Nacionalidad</help>
+      </field>
+      <field id="estadocivil">
+        <tabla_ex id="ESTADOCIVIL" xml="estadocivil.xml" />
+
+        <label modpos="nobr">Estado Civil</label>
+        <help>Estado Civil</help>
+      </field>
+      <field id="calle">
+        <label>Calle</label>
+        <help></help>
+      </field>
+      <field id="numero">
+        <label modpos="nobr">Numero</label>
+        <help>Numero</help>
+      </field>
+      <field id="piso">
+        <label modpos="nobr">Piso</label>
+        <help>Piso</help>
+      </field>
+      <field id="depto">
+        <label modpos="nobr">Depto</label>
+        <help>Departamento</help>
+      </field>
+      <field id="localidad">
+        <label modpos="nobr">Localidad</label>
+        <help>Localidad</help>
+      </field>
+      <field id="fecing">
+        <label>Fecha de Ingreso</label>
+        <help></help>
+      </field>
+      <field id="horario">
+        <tabla_ex id="HORARIO" xml="horario.xml" />
+
+        <label modpos="nobr">Horario</label>
+        <help>Horario</help>
+      </field>  -->
+      <!--<field id="foto">
+        <label >Foto</label>
+        <help>Foto</help>
+         <tipo>file</tipo>
+      </field> -->
+<!--      <field id="login">
+        <label modpos="nobr">Login</label>
+        <help>  </help>
+      </field>
+
+
+
+      <field id="IdSindicato" >
+        <label>sindicato</label>
+        <tabla_ex id="SINDICATO">
+          <field id="IdSindicato"></field>
+          <field id="Nombre"></field>
+        </tabla_ex>
+        <help>Sindicato</help>
+        <valor>1</valor>
+        <actualiza>
+          <field destino="IdSindicato" id="Id_area"/>
+          <field destino="IdSindicato" id="IdCateg"/>
+          <field destino="IdSindicato" id="IdConvenio"/>
+        </actualiza>
+      </field>
+
+      <field id="Id_area" >
+        <label>Area</label>
+        <tabla_ex id="AREASSIND">
+          <field id="Id_area"/>
+          <field id="descripcion"/>
+          <field id="IdSindicato">
+            <condicion operador="=">1</condicion>
+          </field>
+
+
+        </tabla_ex>
+          <actualiza>
+            <field destino="Id_area" id="IdCateg"/>
+            <field destino="Id_area" id="IdConvenio"/>
+          </actualiza>
+
+        <operador>=</operador>
+        <valor>1</valor>
+      </field>
+      <field id="IdCateg" >
+        <label>Categoria</label>
+        <tabla_ex id="CATPERSONAL">
+          <field id="IdCateg"/>
+          <field id="descripcion"/>
+          <field id="IdSindicato" >
+            <condicion operador="=">1</condicion>
+
+          </field>
+
+          <field id="Id_area">
+            <condicion operador="=">1</condicion>
+          </field>
+        </tabla_ex>
+        <actualiza>
+          <field destino="IdCateg" id="IdConvenio"/>
+        </actualiza>
+        <valor>1</valor>
+      </field>
+      -->
+<!--      <field id="IdConvenio" >
+        <label>Convenio</label>
+        <tabla_ex id="CONVENIOS">
+          <field id="IdConvenio"/>
+          <field id="descripcion"/>
+          <field id="IdSindicato" >
+            <condicion operador="=">1</condicion>
+          </field>
+          <field id="Id_area" >
+            <condicion operador="=">1</condicion>
+          </field>
+          <field id="IdCateg" >
+            <condicion operador="=">1</condicion>
+          </field>
+
+        </tabla_ex>
+        <valor>1</valor>
+      </field>     -->
+
+
+
+
+<!--
+
+      <field id="Id_perfil">
+        <label modpos="nobr">Perfil</label>
+        <help>Perfil</help>
+      </field>
+      <field id="Id_usuario">
+        <label modpos="nobr">Usuario</label>
+        <help>Usuario</help>
+      </field>
+      -->
+<!--      <field id="familia" local="true" obj="familia.xml">
+        <label colspan="10"></label>
+        <paring destino="IdPersona">IdPersona</paring>
+
+      </field>      -->
+      <order>
+        <field id="apellido"></field>
+        <field id="Nombre"></field>
+
+      </order>
+    </table>
+  
+            <join tipo="left">
+            <table id="FSMPARAM">
+                <field id="parcla">
+                     <condicion operador="=">'pervac'</condicion>
+                 </field>
+            </table>
+         </join>
+
+    
+  </form>
+</histrix>

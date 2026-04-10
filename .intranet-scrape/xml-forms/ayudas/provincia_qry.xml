@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  Ayuda
+Tarea: Ayuda para la Tabla de Provincias
+Autor: d!ego2k
+Fecha: 27/08/10
+*******************************************************************************
+-->
+    <histrix tipo="consulta">
+	<title>Provincias</title>
+	 <obs></obs>
+		<form >
+		    <table id="GEN_PROVINCIAS" label="Provincias">
+
+				<field id="id_provincia" noshow="true" />
+
+				<field id="nombre_provincia">
+					<label>Nombre</label>
+				</field>
+
+				<order>
+					<field id="nombre_provincia" />
+				</order>
+
+		    </table>
+		</form>
+    </histrix>

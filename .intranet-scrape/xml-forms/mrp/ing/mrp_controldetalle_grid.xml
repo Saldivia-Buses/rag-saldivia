@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="liveGrid" deleteRow="false">
+    <title>DETALLE ORDEN PRODUCCION</title>
+    <obs></obs>
+    <form >
+        <table id="MRP_CONTROL_DETALLE" label="CONTROLES CALIDAD" >
+
+            <field id="id_mrpcontroldetalle"   noshow="true" esClave="true"/>
+
+            <field id="mrpordendetalle_id"   noshow="true" />
+            
+            <field id="mrpcontrol_id" noshow="true" />
+            
+            <field id="nombre_control" style="padding-left:4px;">
+        	   <expresion>nombre_control</expresion>
+            	<label>Control</label>
+            </field>
+
+            <field id="peso_control" noshow="true">
+        	   <expresion>peso_control</expresion>
+        	   <label>Valor</label>
+            </field>
+
+            <field id="control_estado" editable="true">
+            	<label style="text-align:center;width:11px;">S</label>
+            	<tipo>check</tipo>
+                <attribute id="deshabilitado">deshabilitado</attribute>
+            </field>
+
+            <field id="control_observacion" editable="true">
+        	   <label style="text-align:center;width:50px;">observacion</label>
+               <attribute id="deshabilitado">deshabilitado</attribute>
+
+             </field>
+
+            
+
+            <field id="mrpestado_id" local="true" noshow="true">
+                <label>estado</label>
+            </field>
+            
+            <field id="deshabilitado" local="true" noshow="true">
+                <expression> if([__mrpestado_id__] = 1,'true','false') </expression>
+            </field>
+
+
+
+        </table>
+        
+        <join tipo="left">
+    	    <table id="MRP_CONTROLES">
+        		<field id="id_mrpcontrol">
+        		    <condicion  operador="=">mrpcontrol_id</condicion>
+        		</field>
+    	    </table>
+    	    
+        </join>
+    </form>
+</histrix>

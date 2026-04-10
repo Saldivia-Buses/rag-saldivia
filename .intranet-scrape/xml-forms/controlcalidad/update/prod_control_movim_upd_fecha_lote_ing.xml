@@ -1,0 +1,187 @@
+<histrix tipo="ing" preloadData="false" inserta="false" modifica="false">
+    <title>Controles Calidad</title>
+    <obs/>
+    <form>
+        <table id="PROD_CONTROL_MOVIM" label="Controles Calidad">
+
+            <movimientos cabecera="prod_control_movim_upd_fecha_lote_cab.xml">
+                <relacion id="prod_control_movim_upd_fecha_lote_update.xml"></relacion> 
+            </movimientos>
+
+        <filters>
+			<field id="nrofab_id">
+                <label>Unidad</label>
+                <operador>=</operador>
+	        </field>
+	        	<field id="linea_id">
+                <label modpos="nobr">Linea</label>
+                <operador>=</operador>
+                <valor>1</valor>
+	        </field>
+
+			<field id="seccion_id">
+				<label modpos="nobr">Seccion</label>
+				<operador>=</operador>
+			</field>
+
+			<field id="fecha_control">
+				<label modpos="nobr">Fecha</label>
+				<operador>=</operador>
+			</field>
+
+	  	</filters>
+
+    	<field id="id_controlmovim" esClave="true" noshow="true"/>
+	    
+    	<field id="nrofab_id" noshow="true">
+			<label>Unidad</label>
+	    </field>
+
+	    <field id="linea_id" local="true" noshow="true">
+            <helper type="combo" xml="lineas.xml" dir="/produccion" empty="true"/>
+            <label >Linea</label>
+			<actualiza>
+				<field id="seccion_id" destino="linea_id" /> 
+			</actualiza>
+	    </field>
+
+		<field id="seccion_id" tabla="PROD_CONTROLES" colstyle="display:none;">
+			<label>Seccion</label>
+			<helper id="MOMENTO" type="combo" empty="true">
+                <field id="idMomento" />
+                <field id="descripcion" />
+                <field id="linea_id" oculto="true">
+                	<condicion operador="=">1</condicion>
+                </field>
+		    </helper>
+		</field>
+
+		<field id="nombre_control" tabla="PROD_CONTROLES">
+			    <label>Control</label>
+		</field>
+
+<!-- 		<field id="nombre_controlcausal" tabla="PROD_CONTROL_CAUSAL">
+			<label>Causa</label>
+	    </field> -->
+
+	    <field id="controlcausal_id" noZero="true">
+			<label>Causa</label>
+			<helper id="PROD_CONTROL_CAUSAL" type="combo" empty="true">
+                <field id="id_controlcausal" />
+                <field id="nombre_controlcausal" />
+                <field id="habilitado_controlcausal" oculto="true">
+                	<condicion operador="=">1</condicion>
+                </field>
+		    </helper>
+	    </field>
+
+		<field id="conforme">
+			<label>Aprobado</label>
+            <options>
+                <option valor=""></option>
+                <option valor="0">No</option>
+                <option valor="1">SI</option>
+            </options>		
+        </field>
+
+		<field id="no_conforme">
+			<label>No Conforme</label>
+            <options>
+                <option valor=""></option>
+                <option valor="0">No</option>
+                <option valor="1">SI</option>
+            </options>		
+        </field>
+
+    	<field id="controlado">
+    		<label>Controlado</label>
+            <options>
+                <option valor="0">No</option>
+                <option valor="1">SI</option>
+            </options>		
+        </field>
+
+		<field id="no_aplica">
+			<label>No Aplica</label>
+            <options>
+                <option valor="0">No</option>
+                <option valor="1">SI</option>
+            </options>		
+        </field>
+
+		<field id="userid" >
+			    <label>Controló</label>
+			    <expression>CONCAT(Nombre, '  ',apellido)</expression>
+		</field> 
+
+		<field id="fecha_control">
+			<label>Fecha</label>
+			<tipo>date</tipo>
+		</field> 
+
+        <field id="h_fecha_control" local="true" >
+            <label style="color:red;">Nueva Fecha</label>
+            <if exp="'h_fecha_control' != ''">
+                <true>'h_fecha_control'</true>
+                <false>('new_fecha_control' == '')?'fecha_control':'new_fecha_control'</false>
+            </if>
+        </field>
+
+		<field id="hora_control">
+			    <label>Hora</label>
+			    <size>50</size>
+		</field> 
+
+        <field id="h_hora_control" local="true" >
+            <label style="color:red;">Nueva Hora/Fecha</label>
+            <if exp="'h_hora_control' != ''">
+                <true>'h_hora_control'</true>
+                <false>('new_hora_control' == '')?'hora_control':'new_hora_control'</false>
+            </if>
+			<size>50</size>
+        </field>
+
+		<order>
+			<field id="nrofab_id" />
+		</order>
+
+	</table>
+		<join tipo="left">
+		    <table id="PROD_CONTROLES">
+			<field id="id_prodcontrol">
+			    <condicion operador="=">prodcontrol_id</condicion>
+			</field>
+		    </table>
+		</join>
+		<join tipo="left">
+		    <table id="MOMENTO">
+			<field id="idMomento">
+			    <condicion operador="=">PROD_CONTROLES.seccion_id</condicion>
+			</field>
+		    </table>
+		</join>
+		<join tipo="left">
+		    <table id="PROD_CONTROL_CAUSAL">
+			<field id="id_controlcausal">
+			    <condicion operador="=">PROD_CONTROL_MOVIM.controlcausal_id</condicion>
+			</field>
+		    </table>
+		</join>
+		<join tipo="left">
+		    <table id="PEDCOTIZ">
+			<field id="nrocha">
+			    <condicion operador="=">PROD_CONTROL_MOVIM.nrofab_id</condicion>
+			</field>
+		    </table>
+		</join>
+
+		<join tipo="left">
+		    <table id="HTXUSERS">
+			<field id="login">
+			    <condicion operador="=">user_id</condicion>
+			</field>
+		    </table>
+		</join>
+
+    </form>
+</histrix>

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+	<title>ENTRADA SALIDA STOCK POR CODIGO</title>
+	<obs/>
+	<form >
+		<table id="STKINMOV" label="ENTRADA SALIDA STOCK">
+<!--			<preconsultas>
+				<xmlfile id="stkinmov_pre1.xml"/>
+			</preconsultas> -->
+			<field copia="movfec2" id="movfec">
+				<label>Remito</label>
+				<help>Fecha Remito</help>
+			</field>
+			<field id="movfec2" local="true" noshow="true">
+				<label>test</label>
+				<help>Fecha Remito</help>
+				<preparam campo="movfec" operador="&lt;">true</preparam>
+			</field>
+			<field id="siscod" oculto="true">
+				<label>Codigo Sistema..</label>
+				<help></help>
+				<condicion operador="=">'01'</condicion>
+			</field>
+			<field id="nrocha">
+			    <label>NroFab</label>
+			</field>
+			
+			<field id="opecod"></field>
+			<field id="movref">
+				<label>Referencia</label>
+				<help></help>
+				<format>%10s</format>
+			</field>
+			<field id="artcod" oculto="true">
+				<label>Codigo Articulo</label>
+				<help>Codigo de Articulo.</help>
+				<ayuda_ex condes="true" id="STKINSUM">
+					<clave>artcod</clave>
+					<field id="artcod"/>
+					<field id="artdes"/>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'01'</condicion>
+					</field>
+				</ayuda_ex>
+				<preparam operador="=">true</preparam>
+			</field>
+			<field id="movcod">
+				<expression>STKCONCE.conabv</expression>
+				<label>Movim.</label>
+				<help>Codigo de Movimiento.</help>
+			</field>
+			<field id="Entrada" suma="true">
+				<expression>movuso * (case when contip = '1' then 1 else 0 end)</expression>
+				<label>Entrada</label>
+				<help></help>
+			</field>
+			<field id="Salida" suma="true">
+				<expression>movuso * (case when contip = '2' then 1 else 0 end)</expression>
+				<label>Salida</label>
+				<help></help>
+			</field>
+<!--			<field id="opecodEx">
+				<expression>CONCAT(PERSONAL.apellido, ', ', PERSONAL.Nombre)</expression>
+				<label>Operador</label>
+				<help></help>
+				<tipo>string</tipo>
+			</field> -->
+			<field acumula="true" id="EntSal" suma="true">
+				<expression>movuso * (case when contip = '1' then 1 else -1 end)</expression>
+				<label>Mov</label>
+				<help></help>
+			</field>
+			<filters>
+				<field id="artcod">
+					<operador>=</operador>
+					<label>Codigo</label>
+					<valor>0</valor>
+				</field>
+				<field copia="movfec2" id="movfec">
+					<operador>>=</operador>
+					<label>Desde Fecha</label>
+					<valor>today</valor>
+				</field>
+				<field deshabilitado="true" id="movfec2" local="true" noshow="true">
+					<label modpos="nobr"/>
+					<preparam campo="movfec" operador="&lt;=">true</preparam>
+					<operador>=</operador>
+					<valor>today</valor>
+				</field>
+				<field id="movfec">
+					<operador>&lt;=</operador>
+					<label>Hasta Fecha</label>
+					<valor>today</valor>
+				</field>
+			</filters>
+			<order>
+				<field id="movfec" />
+			</order>
+		</table>
+		<join tipo="left">
+			<table id="STKCONCE">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">'06'</condicion>
+				</field>
+				<field id="movcod" oculto="true">
+					<condicion operador="=">STKINMOV.movcod</condicion>
+				</field>
+				<field id="contip" oculto="true"/>
+				<field id="conabv" oculto="true"/>
+			</table>
+		</join>
+<!--		<join tipo="left">
+			<table id="PERSONAL">
+				<field id="opecod" oculto="true">
+					<condicion operador="=">STKINMOV.opecod and PERSONAL.opecod != 0</condicion>
+				</field>
+			</table>
+		</join> -->
+	</form>
+</histrix>

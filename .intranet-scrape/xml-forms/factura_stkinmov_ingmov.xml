@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="update">
+       <title>STKINMOV</title>
+        <obs></obs>
+               <form >
+					<table id="STKINMOV" label="MOVIMIENTO DE STOCK" idCampoCond="grdet">
+						<field id="siscod" id_temp="siscod" esclave="true">
+						</field>						
+						<field id="artcod" id_temp="artcod" esclave="true">
+						</field>
+						<field id="ctacod" id_cab="ctacod" esclave="true">
+						</field>
+						<field id="movnro" id_temp="movnro" esclave="true">
+						</field>
+						<field id="movcos" id_temp="artnet">
+						</field>
+						<field id="tipuni" id_temp="artuni">
+						</field> 
+						<field id="movimp" id_temp="neto" >
+						</field>
+						<field id="movpen" id_temp="movp2" >
+						</field>
+						<field id="facfec" id_cab="movfec">
+						</field>
+						<field id="opecla" id_cab="opecla">
+						</field>
+						<field id="succod" id_cab="succod">
+						</field>
+						
+						<field id="regmin" esNroMinuta="true">
+						</field>
+						<field id="movven" id_temp="movnro">
+						</field>
+
+
+					</table>
+               </form>
+        </histrix>

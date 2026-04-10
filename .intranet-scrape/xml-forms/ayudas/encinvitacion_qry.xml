@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Conceptos Contable</title>
+   <obs></obs>
+    <form>
+        <table id="ENC_INVITACIONES" label="Invitaciones">
+
+        <field id="id_encinvitacion" autoinc="true" noshow="true">
+      	    <label>Código</label>
+        </field>
+        
+        <field id="nombre_invitacion">
+      		<label>Descripcion</label>
+        </field>
+
+        <field id="fecha_invitacion" noshow="true">
+
+        </field>
+        
+        </table>
+    </form>
+</histrix>  
+

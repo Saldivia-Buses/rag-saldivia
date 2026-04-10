@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<histrix tipo="consulta" imprime="false" _autoupdate="240">
+  <title>ENTREGAS POR SECCION</title>
+  <obs/>
+  <form  >
+    <table id="MOMENTO" >
+      <title>Secciones de Fabricación</title>
+		<field id="mes" local="true" noshow="true" incdec="true" min="1" max="12">
+			<label>Mes</label>
+			<tipo>integer</tipo>
+			<size>2</size>
+				<valor eval="true">date('m')</valor>
+				<operador>=</operador>
+			
+			<detalle>mes</detalle>
+		</field>
+		<field id="user" local="true"  noselect="true" noshow="true">
+		    <valor eval="true">'%'.$_SESSION['usuario'].'%'</valor>
+		</field>
+		<field id="login" noshow="true">
+                        <condicion operador="like" valorde="user"></condicion>
+		</field>
+		<field id="year" local="true" noshow="true" incdec="true" min="1900" max="3000">
+			<label modpos="nobr">año</label>
+
+			<tipo>integer</tipo>
+			<size>4</size>
+				<valor eval="true">date('Y')</valor>
+				<operador>=</operador>
+			
+			<detalle>year</detalle>
+		</field>
+		<field id="linea_id"  deshabilitado="true" noshow="true">
+		</field>
+
+      <field id="idMomento"  deshabilitado="true" noshow="true">
+          <label>id</label>
+      </field>
+      <field id="coches" noshow="true">
+        <expression>select count(*) + 15 from TURNOSPRODUCCION left join PEDCOTIZ on PEDCOTIZ.nrocha = TURNOSPRODUCCION.nrofab where 
+    			TURNOSPRODUCCION.linea_id = MOMENTO.linea_id and
+    			month(fechaing) = [__mes__] and 
+		        year(fechaing) =  [__year__]</expression>
+        <detalle>coches</detalle>
+      </field>
+          <field id="reportar" noshow="true">
+		  <condicion operador="!=">0</condicion>
+
+          </field>
+	  <field id="puestos" noshow="true" >
+		  <expression>select count(*) from MOMENTO AS MOM left join POSICIONESFAB on POSICIONESFAB.idMomento = MOM.idMomento where MOM.linea_id= MOMENTO.linea_id and MOM.reportar = 1 and MOM.orden > MOMENTO.orden </expression>
+		  <tipo>integer</tipo>
+		  <detalle>puestos</detalle>
+	  </field>
+	<field id="limits" local="true" noshow="true">
+		<if exp="puestos">
+		    <true>'puestos, coches'</true>
+		    <false>coches</false>
+		</if>
+<!--
+		<if exp="puestos">
+		    <true>'coches'</true>
+		    <false>coches</false>
+		</if>
+-->
+		<label>limites</label>
+	</field>
+	  
+	 <field id="entregas" obj="planilla_seccion_det.xml" showObjTabla="true" local="true">
+ 				<paring destino="mes" operador=">=">mes</paring>
+ 				<paring destino="year" operador=">=">year</paring>
+ 				<paring destino="puestos" operador=">=">puestos</paring>
+ 				<paring destino="coches" >coches</paring>
+ 				<paring destino="linea_id" operador="=" >linea_id</paring>
+ 				<paring destino="limits" >limits</paring>
+ 				<paring destino="idMomento" >idMomento</paring>
+ 				
+
+ 		<!--		<paring destino="sale2" operador="=">ult</paring> -->
+
+	 </field>
+	 <field id="orden" noshow="true" tipoOrden="DESC">
+	 </field>
+	 <order>
+	    <field id="orden" noshow="true" >
+	 </field>
+	 
+	 </order>
+	 
+    </table>
+
+  </form>
+</histrix>

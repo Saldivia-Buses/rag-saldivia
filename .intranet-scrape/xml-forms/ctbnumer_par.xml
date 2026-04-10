@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+	<titulo>NUMERADOR CONTABLE</titulo>
+	<obs></obs>
+	<form>
+		<table id="CTBNUMER" label="PARAMETRO">
+			<field id="numapr">
+				<label>Entero</label>
+				<help>Valor Entero</help>
+			</field>
+		</table>
+	</form>	   
+</histrix> 

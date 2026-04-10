@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<histrix tipo="ayuda">
+  <title>CHEQUES HISTORICO</title>
+  <obs/>
+  <form>
+    <table id="CARCHEHI" >
+      <title>Historico de Cheques</title>
+
+      <campo id="siscod" oculto="true">
+      
+        <label>Cod</label>
+		  <condicion operador="=">'15'</condicion>
+      </campo>
+      <campo id="carint">
+        <label>Codigo</label>
+        <help>Codigo de Cuenta Bancaria</help>
+      </campo>
+      <campo id="carbco">
+        <label>Banco</label>
+      </campo>
+
+      <campo id="carimp">
+        <label>Importe</label>
+      </campo>
+      <campo id="carfec">
+        <label>fecha</label>
+      </campo>
+
+      <campo id="caralt">
+        <label>ALta</label>
+      </campo>
+
+
+    </table>
+  </form>
+</histrix>

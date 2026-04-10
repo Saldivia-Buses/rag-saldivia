@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" class="consultaancha" tableHeight="40em">
+  <title>Movimientos Mensuales</title>
+  <obs/>
+  <consulta>
+    <table id="CTB_MOVIMIENTOS" label="movimientos">
+
+      <field id="nro_minuta" noshow="true">
+        <label>Nro minuta</label>
+        <help>Numero de la minuta</help>
+      </field>
+      
+      <field id="id_detalle" tabla="CTB_DETALLES" noshow="true" />
+
+      <field id="concepto_id" noshow="true" />
+
+      <field id="cuenta_id" tabla="CTB_DETALLES" noshow="true">
+        <label>Cuenta</label>
+      </field>
+      
+      <field id="id_movimiento" noshow="true">
+        <label>Codigo</label>
+        <help>Código de movimiento</help>
+      </field>
+      
+      <field id="fecha_movimiento" noshow="true">
+        <label>Periodo</label>
+        <help>Fecha movimiento</help>
+        <condicion operador="&gt;=">'[__fecha_minima__]' and CTB_MOVIMIENTOS.fecha_movimiento &lt;= '[__fecha_maxima__]'</condicion>
+      </field>
+      
+      <field id="mes" noshow="true">
+        <expresion>MONTH(fecha_movimiento)</expresion>
+      </field>
+
+      <field id="anio" noshow="true">
+        <expresion>YEAR(fecha_movimiento)</expresion>
+      </field>
+
+      <field id="Periodo">
+        <label>Periodo</label>
+        <help>Fecha movimiento</help>
+        <expresion having="false">CONCAT(LPAD(MONTH(fecha_movimiento),2,0),'/',YEAR(fecha_movimiento))</expresion>
+      </field>
+      
+      <field id="debe" suma="true" noZero="true" acumula="true">
+        <expresion>sum(case when doh = 0 then importe else 0 end)</expresion>
+        <label>Debe</label>
+        <tipo>numeric</tipo>
+      </field>
+      
+      <field id="haber" suma="true" noZero="true" acumula="true">
+        <expresion>sum(case when doh = 1 then importe else 0 end)</expresion>
+        <label>Haber</label>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="diferencia" suma="true">
+        <expresion>sum(round(importe, 2) * (case when doh = 1 then 1 else -1 end))</expresion>
+        <label>Saldo</label>
+        <tipo>numeric</tipo>
+      </field>
+      
+      <field id="acumulado" suma="true" noZero="true" acumula="true">
+        <label>Acumulado</label>
+        <expresion>sum(round(importe, 2) * (case when doh = 0 then 1 else -1 end))</expresion>
+        <label>Haber</label>
+        <tipo>numeric</tipo>
+      </field>
+
+
+
+    
+      <field id="ejercicio_id" noshow="true" />
+
+      <field id="fecha_minima" noshow="true" local="true" />
+      <field id="fecha_maxima" noshow="true" local="true" />
+
+      <group>
+        <field id="mes"/>
+      </group>
+      <order>
+        <field id="anio"/>
+        <field id="mes"/>
+      </order>
+    </table>
+
+    <join tipo="inner">
+      <table id="CTB_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">concepto_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="CTB_DETALLES">
+        <field id="movimiento_id">
+          <condicion operador="=">id_movimiento</condicion>
+        </field>
+      </table>
+    </join>
+  </consulta>
+</histrix>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="arbol" form="false" width="50">
+	<title>MENU DEL SISTEMA</title>
+	<obs>Mediante este módulo se administran las opciones del menú del sistema</obs>
+	<form detalle="cal_proc_regis.xml" _inline="true">
+		<table id="HTXMENU" label="MENU">
+			
+			<field id="orden" esClave="true">
+				<label>Orden </label>
+				<help>Da el orden del item dentro del menu. Usar numeros separados </help>
+				<detalle>orden</detalle>
+			</field>
+			
+			<field id="menuId"  noshow="true">
+				<detalle>menuId</detalle>
+				<detalle>menu_id</detalle>
+				
+				
+			</field>
+			
+			<field id="Id_menu" arbol="padre"  esClave="true">
+				<label >Menu </label>
+				<help>Nombre del menu a que el item pertenece </help>
+				<valor>phpmen</valor>
+				<condicion operador="!=">''</condicion>
+				<detalle>Id_menu</detalle>
+			</field>
+			
+			<field id="titulo">
+				<label style="color:#444;font-weight:bold;">Titulo </label>
+				<help>Cartel con se muestra el item para su seleccion. </help>
+				
+			</field>
+			<field id="calidad" local="true" showObjTabla="true" colstyle="Display:none;">
+			    <label>calidad</label>
+			    <helper type="object" xml="cal_proc_regis_qry.xml" dir="/calidad2">
+				    <parameter source="menuId" target="menu_id"/>
+			    </helper>
+    			</field>
+			
+			<field id="hijo" arbol="hijo">
+				<label colstyle="display:none;">Menu a que el item llama </label>
+				<help>Nombre del menu a que el item llama (puede no hacerlo) </help>
+			</field>
+
+			<order>
+				<field id="orden"></field>
+			</order>
+		</table>
+	</form>
+</histrix>

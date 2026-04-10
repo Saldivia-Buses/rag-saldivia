@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" imprime="true" width="40%">
+    <title>Evaluación de desempeño</title>
+    <obs></obs>
+    <form detalle="evaluaciones_det.xml">
+        <table id="RH_EVALUACIONES" >
+            <title>Evaluación</title>
+
+    		<field id="id_rhevaluacion" autoinc="true" noshow="true">
+                <detalle>id_rhevaluacion</detalle>
+            </field>
+
+            <field id="fec_evaluacion" _deshabilitado="true">
+                <label>Fecha de Evaluación</label>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="legajo" tabla="PERSONAL" _deshabilitado="true">
+                <label>Legajo</label>
+                <detalle>legajo</detalle>
+            </field>
+
+            <field id="nombre" tabla="PERSONAL" _deshabilitado="true">
+                <label>Apellido y Nombre</label>
+                <expression>CONCAT(apellido, ' ', Nombre)</expression>
+                <detalle>evaluado</detalle>
+				<size>40</size>
+            </field>
+			<field id="id_seccion" tabla="PERSONAL" Formstyle="display:none;" colstyle="display:none;">
+				<helper type="combo" id="SECCION" empty="true">
+					<field id="id_seccion" />
+					<field id="nombre" />
+					<field id="activa" noshow="true">
+					    <condicion operador="=">1</condicion>
+					</field>
+				</helper>
+				<label>Sección</label>
+				<detalle>id_seccion</detalle>
+			</field>
+
+            <order>
+                <field id="nombre"/>
+            </order>
+        </table>
+        <join tipo="left">
+            <table id="PERSONAL">
+                <field id="idPersona">
+                    <condicion operador="=">RH_EVALUACIONES.rhpersona_id</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix> 

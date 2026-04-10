@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="fichaing" preFetch="true" inserta="false" borra="false" modifica="false" procesa="true" imprime="false">
+    <title>Stock Minimo</title>
+    <obs></obs>
+    <eventos>
+        <event id="procesar">close</event>
+        <event id="procesar">refresh</event>
+    </eventos>
+    <form>
+        <table id="STK_ARTICULOS" label="Stock Minimo">
+
+            <movimientos>
+                <relacion id="stkarticulo_stkmin_upd.xml" />
+            </movimientos>
+
+            <field id="id_stkarticulo" deshabilitado="true" valauto="true">
+                <label>Codigo</label>
+            </field>
+
+            <field id="nombre_articulo" deshabilitado="true">
+                <label>Articulo</label>
+            </field>
+
+            <field id="stock_minimo">
+                <label>Stock</label>
+                <help>Stock Minimo</help>
+                <tipo>enclosed_integer</tipo>
+            </field>
+
+        </table>
+    </form>
+</histrix>

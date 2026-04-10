@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="abm-mini" inserta="false" _paginar="100" borra="false" subtipo="vertical">
+	<title>Pedidos Internos</title>
+	<obs/>
+	<form >
+		<table id="PEDIDOINT"  label="Pedidos Internos">
+
+			<filters>
+				<field id="estado">
+					<label>Estado</label>
+				</field>
+				<field id="idPed" >
+					<label>Nro Ped.</label>
+				    <operador>=</operador>
+    				</field>			
+
+				<field  id="nrofab">
+					<label>NroFab</label>
+					<detalle>nrofab</detalle>
+					    <operador>=</operador>
+				</field>
+	    				
+				<field id="usuario" deshabilitado="false" >
+					<label modpos="nobr">Usuario</label>
+					    <operador>=</operador>
+				</field>					
+    				
+				<field  id="fechaemi" >
+				    <label>Desde</label>
+				    <operador>&gt;=</operador>
+				</field>
+			
+				<field  id="fechaemi" >
+				    <label>Hasta</label>
+				    <operador>&lt;=</operador>
+				</field>
+				
+			</filters>
+
+			<field id="idPed"  deshabilitado="true" esClave="true" _noshow="true">
+				<tipo>integer</tipo>
+				<label>Nro Ped.</label>
+			</field>			
+			
+			<field id="nrocom" deshabilitado="true" noshow="true">
+				<label>Nro Ped.</label>
+			</field>		
+
+			<field id="usuario" deshabilitado="true" >
+				<label>Usuario</label>
+				<tabla_ex id="HTXUSERS" vacio="true">
+					<field id="login"></field>
+					<field id="nombre">
+						<expression>concat(nombre,' ', apellido)</expression>
+					</field>
+					<order>
+						<field id="nombre"></field>
+					</order>
+					<field id="baja">
+						<condicion operador="=">0</condicion>
+				    </field>
+				</tabla_ex>	
+				<tipo>varchar</tipo>			
+			</field>		
+
+			<field id="estado" >
+				<label>Estado</label>
+				<options>
+					<option valor="0">Pendiente</option>
+					<option valor="1">Cumplido</option>					
+					<option valor="2">Anulado</option>
+				</options>
+				<condicion operador="=">0</condicion>
+			</field>
+
+			<field id="idDeposito" >
+				<label modpos="nobr" colspan="6" Formstyle="display:none;">Lugar Entrega </label>
+				<help>Lugar de Entrega/Descarga</help>
+				<tabla_ex id="DEPOSITO">
+					<field id="idDeposito">
+					</field>
+					<field id="direccion">
+					</field>
+				</tabla_ex>			
+				<tipo>integer</tipo>	
+			</field>	
+
+			<field deshabilitado="true" id="nrofab">
+				<label>Nro Fab.</label>
+				<help>Número de Fabricación</help>
+				<tabla_ex id="CHASIS">
+					<field id="nrocha" muestra="true"/>
+					<field id="chades"/>
+					<order>
+						<field id="nrocha"/>
+					</order>
+				</tabla_ex>
+			</field>
+
+			<field  id="nrofab">
+				<label>NroFab</label>
+				<detalle>nrofab</detalle>
+			</field>
+
+			<field  id="artcod">
+				<label>Artículo</label>
+				<help>Artículo</help>
+					<ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/help_local"> 
+						<field id="artcod">
+							<label>Cod.</label>
+							<detalle>artcod</detalle>
+						</field>
+						<field id="artdes">
+							<label>Insumo</label>
+							<detalle>artdes</detalle>
+						</field>
+
+						<field id="unicps" oculto="true">
+<!--							<detalle>unimed</detalle> -->
+							<detalle>unicps</detalle>
+						</field>
+						<field id="artuni" oculto="true">
+<!--							<detalle>unimed</detalle> -->
+							<detalle>artuni</detalle>
+						</field>
+						<field id="valcps" oculto="true">
+							<detalle>valcps</detalle>
+						</field>
+						<field id="valuso" oculto="true">
+							<detalle>valuso</detalle>
+						</field>						
+						<field id="siscod" oculto="true">
+							<condicion operador="=">'01'</condicion>
+						</field>
+					<field id="hlp" oculto="true">
+						<expression>CONCAT(' ', ROUND(valcps,2),(SELECT FSMUNIDS.uninom from FSMUNIDS where FSMUNIDS.unicod = STKINSUM.unicps), '=',  ROUND(valuso, 2), (SELECT FSMUNIDS.uninom from FSMUNIDS where FSMUNIDS.unicod = STKINSUM.artuni)  )</expression> 
+						<detalle>hlp</detalle>
+					</field>						
+						<clave>artcod</clave>
+						<descripcion>artdes</descripcion>
+					</ayuda_ex>
+			</field>
+
+			<field  id="artdes" tabla="STKINSUM" deshabilitado="true" modpos="nobr">
+				<label>Descripción</label>
+				<tipo>varchar</tipo>
+				<detalle>artdes</detalle>
+			</field>
+
+		  <field id="centrocostos_id" modpos="nobr" _required="true">
+			<label>Centro de costos</label>
+		    <helper id="CTB_CENTROS"  type="combo" empty="true">
+		      <field id="id_ctbcentro" />
+		      <field id="centro">
+		        <expression>concat(referencia_centro,' ', nombre_centro)</expression>
+		      </field> 
+		    </helper>
+		  </field>
+
+			<field id="movref" >
+				<label Formstyle="display:none;">Ref.</label>
+				<help>Referencia </help>
+				<size>5</size>
+				<detalle>observaciones</detalle>
+			</field> 
+
+            <field id="mensaje" deshabilitado="true">
+				<label style="color:green;" Formstyle="display:none;" modpos="nobr">Msj</label>
+				<tipo>varchar</tipo>
+			</field>			
+
+			<!-- COMPRAS -->
+			<field  id="movuso">
+				<label>Cant.Cps</label>
+			</field>
+
+			<field id="pencps" modpos="nobr">
+				<label>Pend.Cps</label>
+			</field>			
+			
+			<field  id="artuni" modpos="nobr">
+				<label Formstyle="display:none;">Unidad Compras</label>
+				<help>Unidad de Medida</help>
+				<tabla_ex id="FSMUNIDS">
+					<field id="unicod"/>
+					<field id="uninom"/>
+					<order>
+						<field id="uninom"/>
+					</order>
+				</tabla_ex>
+			</field>
+			
+			<!-- USO -->
+			<field  id="cant">
+				<label>Cantidad</label>
+				<help>Cantidad</help>
+				<detalle>movcps</detalle>
+			</field>
+
+			<field id="penuso" deshabilitado="true" modpos="nobr">
+				<label>Pend.Uso</label>
+			</field>
+
+			<field deshabilitado="true" id="unimed" modpos="nobr">
+				<label Formstyle="display:none;">Unidad de Medida</label>
+				<help>Unidad de Medida</help>
+				<tabla_ex id="FSMUNIDS">
+					<field id="unicod"/>
+					<field id="uninom"/>
+					<order>
+						<field id="uninom"/>
+					</order>
+				</tabla_ex>
+				<detalle>unicps</detalle>
+			</field>
+
+			<field  id="fechaemi" >
+				<label>Fec. Realizado</label>
+				<help>Fecha de Realizado</help>
+			</field>
+
+			<field  id="fecreq" modpos="nobr">
+				<label>Fec.Req.</label>
+				<help>Fecha de Requerimiento</help>
+<!-- 				<jseval>aFecha(\'fecreq\') &gt;= aFecha(\'fechaemi\')</jseval>
+ -->			</field>
+
+<!--			<field id="confirmado" noshow="true">
+			</field>
+			<field id="traspaso" local="true" refresh="true">
+				<label>Salida</label>
+				<tipo>check</tipo>
+			</field>
+			<field id="confirmar" local="true" refresh="true">
+				<label>a Compras</label>
+				<tipo>check</tipo>
+			</field>
+			<field id="aremito" local="true" deshabilitado="true" noshow="true">
+				<if exp="traspaso==1">
+					<true>2</true>
+					<false>confirmar</false>
+				</if>
+				<tipo>integer</tipo>
+			</field>
+	-->			
+        <order>
+			<field id="estado" ></field>			
+			<field id="fechaemi"></field>
+			
+		</order>
+
+		</table>
+		<join tipo="left">
+			<table id="STKINSUM">
+				<field id="siscod" oculto="true">
+					<label>STKINSUM.siscod</label>
+					<condicion operador="=">'01'</condicion>
+				</field>
+				<field id="artcod" oculto="true">
+					<condicion operador="=">PEDIDOINT.artcod</condicion>
+				</field>
+				<field id="artuni" oculto="true"></field>
+				<field id="unicps" oculto="true"></field>
+			</table>
+		</join>
+	</form>
+</histrix>

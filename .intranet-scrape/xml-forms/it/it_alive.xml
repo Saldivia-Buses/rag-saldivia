@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Inventario IT</title>
+  <obs></obs>
+  <form>
+    <table id="ITINVENTARY" label="INVENTARIO IT">
+      
+
+<filters>
+      
+      <field id="ip" noshow="false">
+          <label>IP</label>
+          <help>Buscar x ip</help>
+          <operador> like </operador>
+      </field>
+
+      <field id="user" noshow="false" size="20">
+        <label>Usuario</label>
+        <help>Buscar x usuario.</help>
+        <operador> like </operador>
+      </field>
+
+</filters>
+
+
+
+ 
+      <field id="id_itinventary" autoinc="true" noshow="true">
+        <label>ID</label>
+      </field> 
+      
+      <field id="location">
+
+        <label>Ubicacion</label>
+      </field>  
+
+     
+     
+      <field id="manufacturer">
+      <label>Manufacturer</label>
+      </field> 
+      
+      <field id="itdevicetype_id">
+        <label>Tipo</label>
+        <helper type="combo" id="ITDEVICETYPE">
+          <field id="id_itdevicetype" />
+          <field id="nombre_devicetype" />
+        </helper>
+      </field>
+
+       <field id="user" >
+        <label>Usuario</label>
+      </field> 
+
+      <field id="devicetype">
+      <label>DeviceType</label>
+      </field> 
+    
+  <!--    <field id="model">
+      <label>Model</label>
+      </field> 
+  -->  
+      <field id="serialnumber">
+      <label>SerialNumber</label>
+      </field> 
+
+       <field id="ipaddress">
+      <label>IpAddress</label>
+      <size>15</size>
+      </field> 
+
+       <field id="isup" local="true" deshabilitado="true" noshow="true" clasefila="true">
+               <if exp="true">
+                <true><![CDATA[(exec('ping -c 1 -t 1 ipaddress > /dev/null && echo 1'))?'resaltado':'']]></true>
+                <false>''</false>
+               </if>
+	</field>.
+                     
+      <field id="macaddress" >
+      <label>MacAddress</label>
+      <size>48</size>
+      </field> 
+
+      <field id="memory">
+      <label>Memory</label>
+      </field> 
+      
+       <field id="freedisk">
+      <label>FreeDisk</label>
+      </field>
+<!--
+       <field id="logicaldisk">
+      <label>LogicalDisk</label>
+      </field>
+-->
+       <field id="so">
+      <label>OperativeSystem</label>
+      </field>
+
+       <field id="biosversion">
+      <label>BiosVer</label>
+      </field>
+ 
+
+       <field id="biosdate">
+      <label>BiosDate</label>
+      <tipo>date</tipo>
+      </field>
+
+
+       <field id="procesortype">
+      <label>ProcesorType</label>
+      </field>
+
+      <field id="location">
+      <label>Location</label>
+      </field>
+      
+      <field id="purchasedate">
+      <label>purchasedate</label>
+      <tipo>date</tipo>
+      </field>
+      
+
+      <field id="purchaseprice">
+      <label>PurchasePrice</label>
+      </field>
+      
+
+
+          </table>
+  </form>
+</histrix>  

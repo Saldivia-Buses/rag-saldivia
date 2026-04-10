@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+	<title>Riesgos Laborales</title>
+	<form >
+		<table id="RIESGO_SECCION" label="Secciones">
+			<field id="idSeccion" oculto="true">
+				<label>Sec</label>
+				<help>Seccion </help>
+			</field>
+			
+			<field id="idRiesgo" >
+				<label>Riesgo</label>
+				<ayuda_ex id="RIESGOS" xml="riesgos.xml" dir="/personal/man/" >
+					<field id="idRiesgo"></field>
+					<field id="agente">
+						<detalle>agente</detalle>
+					</field>
+					
+				</ayuda_ex>
+				<help>Código de Riesgo</help>
+			</field>
+			
+			<field id="agente" >
+				<label>Agente</label>
+				<help>Agente de riesgo</help>
+				<expression>RIESGOS.agente</expression>
+				<tipo>varchar</tipo>
+			</field>
+			<order>
+				<field id="idRiesgo" tabla="RIESGO_SECCION"></field>
+			</order>
+		</table>
+		<join tipo="left">
+			<table id="RIESGOS">
+				<field id="idRiesgo">
+					<condicion operador="=">RIESGO_SECCION.idRiesgo</condicion>
+				</field>
+				
+			</table>
+		</join>		
+	</form>
+</histrix>

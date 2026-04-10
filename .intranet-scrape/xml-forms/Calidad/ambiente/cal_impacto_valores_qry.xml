@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+        <title>ASPECTO AMBIENTAL</title>
+        <obs/>
+        <form>
+                <table id="CAL_IMPACTO_VALORES">
+                        <title>Valores del Impacto Ambiental</title>
+                        <field id="id_impactovalores" esClave="true" autoinc="true" noshow="true">
+                        </field>
+                        <field id="aspectoambiental_id" oculto="true">
+                    	    <label>Aspecto</label>
+                        </field>
+
+                        <field id="descripcion_valor">
+                    	    <label>descripcion></label>
+                                <help>Descripción del Valor</help>
+                                <size>50</size>
+                        </field>
+                        <field id="significancia">
+                    	    <label>Significancia</label>
+                                <help>Significancia</help>
+                                <size>50</size>
+                                
+                        </field>
+                </table>
+        </form>
+</histrix>
+
+
+
+

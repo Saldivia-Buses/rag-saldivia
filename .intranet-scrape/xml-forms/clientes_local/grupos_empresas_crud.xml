@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="abm-mini">
+    <titulo>Grupos Empresariales</titulo>
+    <obs></obs>
+    <consulta  >
+        <tabla id="CCT_GRUPOS_EMPRESAS" label="Grupos Empresas">
+            <campo id="id_grupo" autoinc="true" noshow="true" esClave="true" >
+<!--                <condicion operador="&lt;=">2</condicion> -->
+            </campo>
+
+              <campo id="ctapadre_id" colstyle="display:none;" noshow="true">
+		<label>Padre</label>
+	      </campo>
+            <campo id="ctahijo_id" esClave="true">
+                <help>Codigo de Cuenta </help>
+                <ayuda_ex id="CCTCUENT">
+                    <campo id="ctacod">
+                        <detalle>ctacod</detalle>
+                    </campo>
+                    <campo id="ctanom">
+                        <detalle>nombre</detalle>
+                    </campo>
+                    <campo id="siscod">
+                        <condicion operador="=">'02'</condicion>
+                    </campo>
+                    <campo id="baja">
+                        <condicion operador="=">0</condicion>
+                    </campo>
+
+                    <orden>
+                        <campo id="ctanom"></campo>
+                    </orden>
+
+                  
+                </ayuda_ex>
+                <label>Cod</label>
+                <detalle>ctacod</detalle>
+            </campo>
+	    <campo id="nombre" colstyle="display:none;" local="true" deshabilitado="true">
+		<label>Nombre</label>
+		 <size>55</size>
+	    </campo>
+            <campo id="ctanom" tabla="CCTCUENT" deshabilitado="true" _Formstyle="display:none;" >
+                <label>Empresa</label>
+                <size>55</size>
+            </campo>
+            
+            <!--
+            <condicion operador="=">20</condicion>
+             -->
+            <campo id="nota_relacion">
+                <label>Nota</label>
+                <help>Notas Anexas</help>
+		<size>50</size>
+            </campo>
+
+        </tabla>
+        <join tipo="left">
+            <tabla id="CCTCUENT">
+                <campo id="siscod" >
+                    <condicion operador="=">'02'</condicion>
+                </campo>
+                <campo id="ctacod" >
+                    <condicion operador="=">CCT_GRUPOS_EMPRESAS.ctahijo_id</condicion>
+                </campo>
+            </tabla>
+        </join>
+    </consulta>
+</abm>

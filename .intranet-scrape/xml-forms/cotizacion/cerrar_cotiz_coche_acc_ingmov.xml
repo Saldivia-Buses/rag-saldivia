@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" dirxml="cotizacion">
+    <title>OPCIONES</title>
+    <obs></obs>
+    <form >
+        <table id="ACCESORIOS_COCHE"  >
+
+            <field id="id_accesorio"   id_temp="id_accesorio" esClave="true" ></field>
+            <field id="estado"        id_temp="estado" ></field>
+            <field id="aprobado"      id_cab="aprobado" ></field>
+            
+            
+        </table>
+    </form>
+</histrix>

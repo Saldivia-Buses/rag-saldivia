@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="insert" >
+	<title>Ingreso Movimiento</title>
+	 <obs></obs>
+		<form >
+		    <table id="STK_MOVIMIENTOS">
+				<field id="stkarticulo_id"         id_temp="stkarticulo_id"/>
+				<field id="stkdeposito_id" 	  	   id_temp="stkdeposito_origen_id"/>
+				<field id="stklocacion_id" 	  	   id_temp="stklocacion_origen_id"/>
+				<field id="fecha_movimiento" >
+					<valor>now()</valor>
+					<tipo>integer</tipo>
+				</field>
+				<field id="alta_movimiento"	>
+					<valor>now()</valor>
+					<tipo>integer</tipo>
+				</field>
+				<field id="stkconcepto_id"	>
+					<valor>(select id_stkconcepto from STK_CONCEPTOS where transferencia_concepto = 1 and tipo_concepto = 1 limit 1)</valor>
+				</field>
+				<field id="puesto_movimiento" 	   id_temp="puesto_movimiento"/>
+				<field id="numero_movimiento" 	   id_temp="numero_movimiento"/>
+				<field id="regcuenta_id" 	   	   id_temp="regcuenta_id"/>
+				<field id="orden_movimiento" 	   id_temp="_ORDEN"/>
+				<field id="unidad_id" 	           id_temp="unidad_id"/>
+				<field id="cantidad" 	           id_temp="cantidad"/>
+				<field id="movuso"	 	           id_temp="cantidad"/>			
+				<field id="referencia" 	           >
+					<valor>'Devolución desde producción'</valor>
+				</field>
+				<field id="user_id" >
+				    <valor eval="true">$_SESSION['idUser']</valor>
+				</field>
+				<field id="subsistema_id" >
+					<valor>'01'</valor>
+				</field>
+		    </table>
+		</form>
+    </histrix>	
+
+

@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="consulta"   >
+	<title>Anulación de Facturas</title>
+	<obs/>
+	<form  detalle="factura_anul_ing.xml">
+		<table id="CCTMOVIM" label="FACTURAS" idCampoCond="anular">
+
+			<filters>
+				<field id="ctacod">
+					<label>Proveedor</label>
+					<operador>=</operador>
+					<valor>0</valor>
+				</field>
+
+				<field id="ctanom" deshabilitado="true">
+					<label modpos="nobr"></label>
+				</field>
+
+				<field id="movfec" >
+					<label >Desde Fecha</label>
+					<operador>&gt;=</operador>
+					<valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m") , date("d")-30, date("Y")))</valor>
+				</field>	
+
+				<field id="movfec" >
+					<label modpos="nobr">Hasta Fecha</label>
+					<operador>&lt;=</operador>
+					<valor>today</valor>
+				</field>					
+				
+			</filters>
+
+			<field id="siscod" >
+				<label>Cod.</label>
+				<help/>
+<!--
+				<valor>'01'</valor>
+				<condicion operador="=">01</condicion>
+-->
+				<detalle>siscod</detalle>
+			</field>		
+
+			<field id="sisprv" local="true" noshow="true" >
+				<label>sis</label>
+				<tipo>varchar</tipo>
+				<valor>01</valor>
+			</field>
+			
+			<field id="ctacod" deshabilitado="true" noshow="true">
+				<label>Cta</label>
+				<ayuda_ex id="CCTCUENT" xml="HLPcctcuent.xml" dir="/help_local">
+					<field id="siscod" oculto="true">
+						<label>siscod</label>
+						<condicion operador="=">'01'</condicion>
+					</field>
+					<field id="ctacod">
+						<label>Nro</label>
+					</field>
+					<field id="ctanom">
+						<label>Nombre</label>
+						<detalle>ctanom</detalle>
+					</field>
+					<clave>ctacod</clave>
+					<descripcion>ctanom</descripcion>
+				</ayuda_ex>				
+				<detalle>ctacod</detalle>
+			</field>
+
+			<field id="ctanom" noshow="true" local="true">
+					<label modpos="nobr">nombre</label>
+			</field>
+
+			<field id="conimp"  deshabilitado="true" tabla="CCTCONCE" noshow="true">
+                <detalle>concod</detalle>
+			</field>
+
+			<field id="conimp"  deshabilitado="true" tabla="CCTCONCE" noshow="true">
+				<label>conc</label>
+				<help>Tipo de Comprobante</help>
+				<condicion operador="=">2</condicion>
+			</field>
+
+			<field id="condes" _oculto="true" tabla="CCTCONCE">
+				<label>Tipo</label>
+				<help>Tipo de Comprobante</help>
+			</field>
+
+			<field id="movfec" deshabilitado="true">
+				<label >Fecha</label>
+                <detalle>movfec</detalle>
+			</field>
+
+			<field id="movnpv" deshabilitado="true">
+				<label modpos="nobr">npv</label>
+				<help>Comprobante</help>
+				<format>%04d</format>
+				<detalle>movnpv</detalle>
+			</field>
+
+			<field id="movnro" deshabilitado="true">
+				<label modpos="nobr"/>
+				<help>Numero</help>
+				<format>%012d</format>
+                <detalle>movnro</detalle>
+			</field>
+
+			<field id="movimp" deshabilitado="true">
+				<label PDFsize="12" posx="130" posy="+1">Total Pago</label>
+				<format>%01.2f</format>
+			</field>
+
+			<field id="movsal" suma="true"  ctbimporte="1" calcsuma="true" deshabilitado="true">
+				<label>Saldo</label>
+				<condicion operador="=">movimp</condicion>
+			</field>
+
+			<field id="impgra"  local="true" suma="true" deshabilitado="true">
+				<label>Neto</label>
+			</field>			
+
+			<field id="regmin"  deshabilitado="true">
+				<label>Minuta</label>
+				<detalle>minuta</detalle> 
+			</field>				
+			
+		</table>
+
+		<join tipo="left">
+			<table id="CCTCONCE">
+				<field id="siscod" oculto="true">
+					<label>cctcuent.siscod</label>
+					<condicion operador="=">CCTMOVIM.siscod</condicion>
+				</field>
+				<field id="concod" oculto="true">
+					<condicion operador="=">CCTMOVIM.concod</condicion>
+				</field>
+				<field id="condes" oculto="true"></field>
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="CCTCUENT">
+				<field id="siscod" oculto="true">
+					<label>cctcuent.siscod</label>
+					<condicion operador="=">CCTMOVIM.siscod</condicion>
+				</field>
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">CCTMOVIM.ctacod</condicion>
+				</field>
+			</table>
+		</join>
+		
+	</form>
+</histrix>

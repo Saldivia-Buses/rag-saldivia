@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="ing" borra="no"   inserta="no" imprime="false" llenoreferente="true" exportasuma="true">
+	<title>EGRESO CHEQUE</title>
+	<obs></obs>
+	<form >
+		
+		<table id="CARCHEQU" label="Egreso de Cheques de cartera" idCampoCond="imputar">
+	
+			<movimientos >
+				<relacion id="op_libre_docs_ingmov.xml">	</relacion>  
+				<relacion id="op_libre_carchequ_del_ingmov.xml">	</relacion>
+			</movimientos>
+			<field id="ctbcod"  noshow="true" _local="true">
+				<detalle>caj_ctb</detalle>
+				<expression>select ctbcod__2 from CAJCONCE where cajcod = 4</expression>
+			</field>			
+			<field id="siscar" noshow="true" local="true">
+				<label>siscar</label>
+<!--				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'siscar'</condicion>
+					</field>
+				</parametro>
+				<tipo>varchar</tipo>-->
+				<valor>'05'</valor>
+			</field>
+						
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+				<help> Cod sistema</help>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla" >
+						<condicion operador="=">'sisbcs'</condicion>
+					</field>
+				</parametro>		
+				<condicion operador="=" >'05'</condicion>								
+			</field>
+			<field id="carint" deshabilitado="true">
+				<label>Nro Cheque Int</label>
+				<help>Codigo de Concepto</help>
+			</field>				
+			<field id="carnro" deshabilitado="true">
+				<label>Numero</label>
+			</field>				
+			<field id="carfec" deshabilitado="true">
+				<label>Fecha</label>
+				<tipo>date</tipo>
+			</field>				
+			
+			<field id="caralt" deshabilitado="true">
+				<label>Acreditacion</label>
+				<tipo>date</tipo>
+				
+			</field>				
+			<field id="carbco" deshabilitado="true">
+				<label>Banco</label>
+			</field>				
+			<field id="carimp" deshabilitado="true" suma="true" >
+				<label>Importe</label>
+				<detalle>cajimp</detalle> 
+			</field>		
+			<field id="caracr" deshabilitado="true" noshow="true">
+				<label>caracr</label>
+			</field>				
+
+			<field id="cardes" deshabilitado="true" noshow="true">
+				<label>Destino</label>
+				<help>Destino del Cheque</help>
+			</field>				
+
+			<field id="ctacod" deshabilitado="true" noshow="true">
+				<label>ctacod</label>
+			</field>				
+			<field id="carpla" deshabilitado="true" noshow="true">
+				<label>carpla</label>
+			</field>				
+			<field id="succod" deshabilitado="true" noshow="true">
+				<label>succod</label>
+			</field>				
+			<field id="cartip" deshabilitado="true" noshow="true">
+				<label>cartip</label>
+			</field>				
+			<field id="carobv" deshabilitado="true" noshow="true">
+				<label>carobv</label>
+			</field>				
+			<field id="carccb" deshabilitado="true" noshow="true">
+				<label>carccb</label>
+			</field>				
+			
+			<field id="ccbcod" deshabilitado="true" noshow="true">
+				<label>ccbcod</label>
+			</field>				
+			<field id="carcui" deshabilitado="true" noshow="true">
+				<label>carcui</label>
+			</field>				
+			<field id="carrec" deshabilitado="true" noshow="true">
+				<label>carrec</label>
+			</field>				
+			<field id="carmar" deshabilitado="true" noshow="true">
+				<label>carmar</label>
+			</field>				
+			<field id="caring" local="true" noshow="true">
+				<label>caring</label>
+				<valor>today</valor>
+				<tipo>date</tipo>
+			</field>					
+			<field id="bcsnro" deshabilitado="true" noshow="true">
+				<label>bcsnro</label>
+			</field>			
+			<field id="regmin" deshabilitado="true" noshow="true">
+				<label>regmin</label>
+			</field>			
+			<field id="opecla" deshabilitado="true" noshow="true">
+				<label>opecla</label>
+			</field>				
+			<field id="movnro" deshabilitado="true" noshow="true">
+				<label>movnro</label>
+			</field>				
+			<field id="concod" deshabilitado="true" noshow="true">
+				<label>concod</label>
+			</field>				
+			<field id="movnpv" deshabilitado="true" noshow="true">
+				<label>movnpv</label>
+			</field>				
+			<field id="cajcod" local="true" noshow="true">
+				<label>cajcod</label>
+				<valor>4</valor>
+				<detalle>cajcod</detalle>
+			</field>
+			<field ctbtipo="2" id="cajtip" local="true" noshow="true">
+				<valor>2</valor>
+				<detalle>cajtip</detalle>
+			</field>			
+<!--			<field id="imputar" local="true"  noshow="true">
+				<valor>1</valor>
+			</field>				-->
+			<field id="imputar" local="true" refresh="true" >
+				<label>imputar</label>
+				<help>Seleccion</help>
+				<tipo>check</tipo>  
+				<valor>0</valor>
+			</field>			
+			<field id="grabo" local="true" noshow="true">
+				<label>grabo</label>
+				<if exp="imputar==1">
+					<true>'true'</true>
+					<false>'false'</false>					
+				</if>
+			</field>				
+		<order>
+			<field id="bcsnro"></field>
+		</order>
+
+		</table>
+		
+		<join tipo="left">
+			<table id="BCSCONCE">
+				<field id="siscod" oculto="true">
+					<label>BCSCONCE.siscod</label>
+					<condicion operador="=">CARCHEQU.siscod</condicion>
+					
+				</field>
+				
+				<field id="cnbcod" oculto="true">
+					<condicion operador="=">CARCHEQU.ccbcod</condicion>
+				</field>
+				
+				<field id="cnbnom" oculto="true">
+				</field>
+			</table>
+		</join>
+
+	</form>
+</histrix>

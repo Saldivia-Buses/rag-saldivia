@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" showCantidad="false" tooltip="false" deleteRow="false" imprime="false">
+	<title>Consulta Valores</title>
+	<obs/>
+	<form>
+		<table id="CAJ_DETALLES">
+
+			<fieldGroup id="DEBUG">
+				<field id="fecha_desde" noshow="true" local="true" />
+				<field id="fecha_hasta" noshow="true" local="true" />
+				<field id="cajpuesto_id" noshow="true" tabla="CAJ_MOVIMIENTOS" />
+				<field id="cajconcepto_id1" local="true" noshow="true" />
+			</fieldGroup>
+			
+			<fieldGroup noshow="true">		
+				<field id="id_cajdetalle" />
+				
+				<field id="cajconcepto_id" tabla="CAJ_MOVIMIENTOS">
+					<condicion operador="=">'[__cajconcepto_id1__]' or '[__cajconcepto_id1__]' = ''</condicion>
+				</field>
+				
+				<field id="fecha_movimiento" tabla="CAJ_MOVIMIENTOS">
+					<condicion operador="&gt;=">'[__fecha_desde__]' and (CAJ_MOVIMIENTOS.fecha_movimiento &lt;= '[__fecha_hasta__]' or '[__fecha_hasta__]' = '')</condicion>
+				</field>
+			</fieldGroup>
+
+			<!-- DETALLES DE MOVIMIENTOS -->
+
+			<field id="doh" noshow="true" esClave="true" />
+
+			<field id="cuenta_id" esClave="true">
+				<label>Cuenta</label>
+				<helper type="link" xml="cajdetalleampliado_qry.xml">
+					<parameter source="cuenta_id" target="cuenta_id" />
+					<parameter source="fecha_desde" target="fecha_desde" />
+					<parameter source="fecha_hasta" target="fecha_hasta" />
+					<parameter source="cajpuesto_id" target="cajpuesto_id" />
+					<parameter source="cajconcepto_id1" target="cajconcepto_id1"  />
+				</helper>
+			</field>
+
+			<field id="nombre_cuenta" tabla="CTB_CUENTAS">
+				<label>Nombre</label>
+			</field>
+			
+			<field id="importe_detalle" noshow="true">
+				<condicion operador="!=">0</condicion>
+			</field>
+
+			<field id="saldo" noZero="true" suma="true">
+				<expression>sum((CASE WHEN CAJ_DETALLES.doh  = 0  THEN CAJ_DETALLES.importe_detalle ELSE 0 END)) - sum((CASE WHEN CAJ_DETALLES.doh != 0  THEN CAJ_DETALLES.importe_detalle ELSE 0 END))</expression>
+				<label>Saldo</label>
+				<tipo>decimal</tipo>
+			</field>
+			
+			<group>
+				<field id="cuenta_id" />
+			</group>
+
+			<order>
+				<field id="nombre_cuenta" />
+			</order>
+
+			<!-- FIN -->
+
+		</table>
+
+		<join>
+			<table id="CAJ_MOVIMIENTOS">
+				<field id="id_cajmovimiento">
+					<condicion operador="=">cajmovimiento_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join>
+			<table id="CAJ_CONCEPTOS">
+				<field id="id_cajconcepto">
+					<condicion operador="=">CAJ_MOVIMIENTOS.cajconcepto_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CTB_CUENTAS">
+				<field id="id_cuenta">
+					<condicion operador="=">cuenta_id</condicion>
+				</field>
+				<field id="ejercicio_id">
+					<condicion operador="=">(SELECT id_ejercicio FROM CTB_EJERCICIOS where activo = 1 ORDER BY id_ejercicio DESC LIMIT 1)</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

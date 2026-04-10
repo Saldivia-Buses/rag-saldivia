@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="abm" width="60">
+	<title>Hoja Ruta</title>
+	<obs></obs>
+	<form>
+		<table id="HOJA_RUTA" label="hoja Ruta">
+
+			<field id="id_hoja" autoInc="true" esClave="true" noshow="true">
+				<label>Codigo</label>
+				<help>Codigo de Hoja</help>
+			</field>
+			 <field id="tieneFicha" noshow="true">
+			          <expression>case when PEDCOTIZ.nrocha != 0 and PEDCOTIZ.nrocar != 0 and HOJA_RUTA.nrofab != 0 then 'fichaventas.xml' else '' end</expression>
+	                  </field>
+			<field id="fic" local="true" noshow="true" print="false">
+	                    <valor>'fichaventas_abm.xml'</valor>
+        		    <tip>varchar</tip>
+			    
+	                </field>
+			<field id="nrofab" esclave="true" _colstyle="display:none;" linkdes="Ver Ficha de Ventas" linkint="fichaventas.xml">
+					 <attribute id="linkint">tieneFicha</attribute>
+               
+                			<paring destino="nrocha">nrofab</paring>
+                                          <detalle>nrocha</detalle>
+
+
+
+					<label>Nro Fab.</label>
+					<help>Numero de Fabricacion </help>
+					<helper type="external" xml="HLPchasis_service.xml" dir="/help_local">
+					</helper>
+					<!--<ayuda_ex id="CHASIS" xml="HLPchasis.xml" dir="/help_local">
+						<field id="nrocha"></field>
+						<field id="chades">
+							<detalle>chades</detalle>
+						</field>
+					</ayuda_ex>-->
+				</field>
+				 <field id="chades" deshabilitado="true" local="true" colstyle="display:none;">
+					<label modpos="nobr">Descripcion</label>
+					<tipo>varchar</tipo>
+					<size>40</size>
+				    </field>
+				<field id="fecha_hoja" _colstyle="display:none;">
+			          <label>Fecha Alta</label>
+				 <tipo>date</tipo>
+				  <valor>today</valor>
+	                </field>
+				<!--<field id="modcha" tabla="CHASIS" local="true" Formstyle="Display:none">
+					<expression>CHASIS.chades</expression>
+					<label modpos="nobr">Chasis</label>
+					<tipo>varchar</tipo>
+					<size>40</size>
+				    </field>-->
+			
+	                
+	               
+
+                        
+				
+                        <field deshabilitado="true" id="ctacod" tabla="PEDCOTIZ" Formstyle="Display:none;">
+				<expression>SELECT LEFT(ctafan,5) FROM  CCTCUENT where  ctacod = PEDCOTIZ.ctacod and siscod='02'</expression>
+
+				<label >Cliente</label>
+				<help>Codigo de Cuenta</help>
+			        <size>25</size>
+
+			</field>
+			 <field id="moddes" tabla="MODCHASIS" >
+				<label colspan="6" size="23" posx="110" posy="0" PDFsize="10" Formstyle="display:none;">Nro Chasis</label>
+				<help></help>
+				<size>40</size>	
+			</field>
+        
+	               <field id="nrocar"  tabla="PEDCOTIZ" Formstyle="Display:none;">
+				<label size="24" posx="5" posy="+1" PDFsize="10" Formstyle="display:none;">Mod.</label>
+				<help></help>
+				<expression>SELECT RIGHT(modcar,4) FROM  CARROCERIA where  nrocar = PEDCOTIZ.nrocar </expression>
+					
+			</field>
+			
+                        <field deshabilitado="true" id="cantasi" tabla="PEDCOTIZ" color="true" transparent="true">
+			<!--	<expression>case when PEDCOTIZ.cantasi != '' then PEDCOTIZ.cantasi else TURNOSPRODUCCION.cantasi end</expression> -->
+				<label Formstyle="Display:none;">Asi.</label>
+				<help/>
+				<if exp="cantasi != 0">
+					<true>'cantasi'</true>
+					<false>'#FBEC5D'</false>
+				</if>
+			</field>			
+			<field id="asides" noshow="true" local="true">
+				<expression>SUBSTRING(MARCAASI.asides,1,4)</expression>
+				<tipo>varchar</tipo>				
+			</field>
+			<field id="marasi" tabla="PEDCOTIZ" color="true" transparent="true">
+				<expression>PEDCOTIZ.marasi</expression>
+				<label Formstyle="Display:none;" >M. Asi.</label>
+				<if exp="marasi != 0">
+					<true>'asides'</true>
+					<false>'#FBEC5D'</false>
+				</if>
+			</field>
+			<field id="tipasi" tabla="PEDCOTIZ">
+				<expression>SELECT SUBSTRING(asides,1,4) FROM  TIPOASIENTO where  tipasi = PEDCOTIZ.tipasi and siscod='03'</expression>
+				
+				<label size="24" posx="110" posy="0" PDFsize="10"  Formstyle="Display:none;">Tipo As.</label>
+			</field>
+			<field id="bagno2"  deshabilitado="true" Formstyle="Display:none;">
+				<label>B/b</label>
+				<expression>case when PEDCOTIZ.bagno = 1  THEN 'Si'
+				ELSE 'No' end</expression>
+								
+				<!--<if exp="'bagno2' == '0' ">
+					<true>'#FBEC5D '</true>
+					<false>'_bagno'</false>
+				</if>--> 	 
+				<tipo>varchar</tipo>
+			</field>
+<!--			<field id="miniba" tabla="PEDCOTIZ" deshabilitado="true" Formstyle="Display:none;">
+				<label>Bar.</label>
+				<expression>case when PEDCOTIZ.miniba = 2 THEN 'Si'
+				ELSE 'No' end</expression>
+			</field>                   -->
+<!--
+			<field id="barcom" tabla="PEDCOTIZ" color="true" transparent="true">
+				<label size="24" posx="110" posy="0" modpos="nobr" PDFsize="10">Bar Completo</label>
+				<help></help>
+				<tipo>check</tipo>
+				<options>
+					<option valor="">#FBEC5D </option>	
+					<option valor="0">No</option>
+					<option valor="1">Si</option>
+				</options>		
+			</field>-->
+			<field id="cucheta" tabla="PEDCOTIZ" Formstyle="Display:none;">
+				<label size="23" posx="160" posy="0"  PDFsize="10">Cuch</label>
+				<help></help>
+				<expression>case when PEDCOTIZ.cucheta = 2 THEN 'Si'
+				ELSE 'No' end</expression>
+			</field>			
+			<field id="desair" noshow="true">
+				<expression>SUBSTRING(MARCAAIR.desair,1,5 )</expression>
+				<tipo>varchar</tipo>				
+			</field>			
+			<field id="marair" tabla="PEDCOTIZ" Formstyle="Display:none;" >
+				<expression>PEDCOTIZ.marair</expression>
+				<label >Marca A/A</label>
+				<if exp="marair != 0">
+					<true>'desair'</true>
+					<false>'#FBEC5D '</false>
+				</if>
+			</field>			
+			<!--<field id="posdes" noshow="true" Formstyle="Display:none;">
+				<expression>POSICAIR.posdes</expression>
+			</field>
+			
+			<field id="posair" Formstyle="Display:none;">
+				<expression>PEDCOTIZ.posair</expression>
+				
+				<label >Posic.A/A</label>
+				<help></help>
+			</field>
+			<field id="vtnmov" tabla="PEDCOTIZ" Formstyle="Display:none;">
+				<label size="24" posx="5" posy="+1" PDFsize="10">Movil x lado</label>
+				<help></help>
+                                 <if exp="'vtnmov' != ''">
+					<true>'vtnmov'</true>
+					<false>'#FBEC5D '</false>
+				</if>
+                            <helper type="combo" xml="prd_helper_propiedades.xml" dir="/produccion" emtpy="true">
+                                <field id="campoficha_id">
+                                    <condicion operador="=">'cant_ventanas'</condicion>
+                                </field>
+                            </helper>
+			</field>
+		
+			<field id="vtnpuerta" tabla="PEDCOTIZ" Formstyle="Display:none;">
+				<label size="23" posx="110" posy="0" PDFsize="10">Pta Ascenso</label>
+				<help></help>
+				<expression>case when PEDCOTIZ.vtnpuerta = 2 THEN 'Movil'
+				when PEDCOTIZ.vtnpuerta = 1 THEN 'Fija' END
+				</expression>
+				
+				
+			</field>			
+			<field id="luneta" tabla="PEDCOTIZ"  Formstyle="Display:none;">
+				<label size="23" posx="160" posy="0" PDFsize="10" >Luneta</label>
+					<expression>case when PEDCOTIZ.luneta = 2 THEN 'Con Vidrio'
+						when PEDCOTIZ.luneta = 1 THEN 'Ciega' END
+					</expression>
+			</field>
+			<field id="calefn" tabla="PEDCOTIZ" color="true" transparent="true">
+				<label size="24" posx="5" posy="+1" PDFsize="10" Formstyle="Display:none;">Calef</label>
+				<help></help>
+				<expression>case when PEDCOTIZ.calefn = 1 THEN 'Si'
+				ELSE 'No' end</expression>
+				  		
+			</field>
+			<field id="tipcal" tabla="PEDCOTIZ" Formstyle="Display:none;"  >
+
+				<expression>SELECT SUBSTRING(descal,1,4) FROM  TIPCALEF where  tipcal = PEDCOTIZ.tipcal</expression>
+				<label size="23" posx="40" posy="0" modpos="nobr"  PDFsize="10">Tipo/C</label>
+				<help></help>
+			</field>
+			<field id="calcan" tabla="PEDCOTIZ" Formstyle="Display:none;">
+				<label size="24" posx="60" posy="0" modpos="nobr" PDFsize="10">Cant.</label>
+				<help></help>
+				<if exp="'calcan' != ''">
+					<true>'calcan'</true>
+					<false>'#FBEC5D '</false>
+				</if>
+                                <helper type="combo" xml="prd_helper_propiedades.xml" dir="/produccion" emtpy="true">
+                                    <field id="campoficha_id">
+                                        <condicion operador="=">'cant_calefactores'</condicion>
+                                    </field>
+                                </helper>
+			</field>
+
+
+
+			<field id="ninterno"  Formstyle="Display:none;">
+				<expression>CASE WHEN isnull(PEDCOTIZ.ninterno) THEN  '#FBEC5D' ELSE (CASE WHEN  PEDCOTIZ.ninterno like 'S/%' THEN '#FBEC5D' ELSE  PEDCOTIZ.ninterno END)END</expression>
+				
+				<label>Int</label>
+				<help></help>
+								
+				<tipo>varchar</tipo>
+			</field>
+
+-->
+
+			
+				</table>
+		 <join tipo="left">
+		    <table id="PEDCOTIZ">
+		        <field id="nrocha">
+		            <condicion operador="=">HOJA_RUTA.nrofab</condicion>
+		        </field>
+		    </table>
+		</join>
+		   <join tipo="left">
+		    <table id="CHASIS">
+		        <field id="nrocha">
+		            <condicion operador="=">HOJA_RUTA.nrofab</condicion>
+		        </field>
+		    </table>
+		</join>
+                <join tipo="left">
+            <table id="MODCHASIS">
+                <field id="modcha">
+                    <condicion operador="=">CHASIS.modcod</condicion>
+                </field>
+                <field id="marcod">
+                    <condicion operador="=">CHASIS.marcod</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+			<table id="MARCAASI">
+				<field id="marasi">
+					<condicion operador="=">PEDCOTIZ.marasi</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="MARCAAIR">
+				<field id="marair">
+					<condicion operador="=">PEDCOTIZ.marair</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="TIPOCARTEL">
+				<field id="idCartel">
+					<condicion operador="=">PEDCOTIZ.tipcartel</condicion>
+				</field>
+			</table>
+		</join>				
+		<join tipo="left">
+			<table id="POSICAIR">
+				<field id="posair">
+					<condicion operador="=">PEDCOTIZ.posair</condicion>
+				</field>
+			</table>
+		</join>		
+		
+	</form>	   
+</histrix> 

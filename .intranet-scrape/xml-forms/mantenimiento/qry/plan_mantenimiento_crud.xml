@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" dataSource="mantenimiento" _preloadData="false" _serverSide="true">
+    <title>Mantenimiento</title>
+    <obs/>
+    <form>
+        <table id="MANT_PLAN" label="Plan de mantenimiento">
+
+            <filters>
+                <field id="desde_fecha">
+                    <label>Desde</label>
+                    <operador>=</operador>
+                    <valor eval="true">date('d/m/Y',strtotime('last monday',strtotime('tomorrow')))</valor>
+                </field>
+                <field id="hasta_fecha">
+                    <label modpos="nobr">Hasta</label>
+                    <operador>=</operador>
+                    <valor eval="true">date('d/m/Y',strtotime('next sunday'))</valor>
+                </field>
+                <field id="tipoequipo_id">
+                    <label>Tipo Equipo</label>
+                    <operador>=</operador>
+                </field>
+
+                <field id="nombre_equipo">
+                    <label modpos="nobr">Nombre Equipo</label>
+                    <operador>=</operador>
+                </field>
+                <field id="numero_serie">
+                    <label modpos="nobr">Nro Serie</label>
+                    <operador>=</operador>
+                </field>
+
+                <field id="solo_pendientes">
+                    <label modpos="nobr">Solo Pendientes</label>
+                    <operador>=</operador>
+                    <valor>1</valor>
+                </field>
+            </filters>
+
+            <field id="desde_fecha" local="true" noshow="true">
+                <tipo>date</tipo>
+            </field>
+
+            <field id="hasta_fecha" local="true" noshow="true">
+                <tipo>date</tipo>
+            </field>
+
+            <field id="equipo_id" noshow="true" />
+
+            <field id="id_plan" noshow="true" />
+
+            <field id="accion_id" noshow="true">
+                <helper type="combo" id="MANT_ACCIONES" empty="true">
+                    <field id="id_accion" />
+                    <field id="nombre_accion">
+                        <expression>CONCAT(LEFT(nombre_accion, 50), '...')</expression>
+                    </field>
+                    <order>
+                        <field id="nombre_accion" />
+                    </order>
+                </helper>
+            </field>
+
+            <field id="fecha_accion" noshow="true" />
+            <field id="rrule" noshow="true" />
+
+            <field id="dia_accion" local="true" noshow="true" />
+
+            <field id="dia" local="true">
+                <label>DIA</label>
+                <!--<tipo>date</tipo>-->
+            </field>
+
+            <field id="nombre_tipoequipo" local="true" noshow="true">
+                <label>TIPO EQUIPO</label>
+            </field>
+
+            <field id="direccion" local="true" noshow="true">
+                <label>DEPOSITO</label>
+            </field>
+
+            <field id="nombre_equipo" local="true">
+                <label>EQUIPO</label>
+                <size>30</size>
+            </field>
+
+            <field id="numero_serie" local="true">
+                <label>NRO SERIE</label>
+            </field>
+
+            <field id="nombre_accion" local="true" noshow="true" />
+
+            <field id="abreviatura_accion" local="true" noshow="true">
+                <label>ACCION</label>
+                <attribute id="tooltip">nombre_accion</attribute>
+            </field>
+
+            <field id="tipoequipo_id" local="true" noshow="true">
+                <helper type="combo" id="MANT_TIPO_EQUIPO" empty="true">
+                    <field id="id_tipo_equipo" />
+                    <field id="nombre_tipoequipo" />
+                </helper>
+            </field>
+
+            <field id="deposito_id" local="true" noshow="true">
+                <helper type="combo" id="DEPOSITO" empty="true">
+                    <field id="idDeposito" />
+                    <field id="direccion" />
+                </helper>
+            </field>
+
+            <field id="realizado" local="true" clasefila="true" noshow="true" />
+
+            <field id="solo_pendientes" local="true" noshow="true" required="true">
+                <label>Eventos</label>
+                <options>
+                    <option valor="0">Todos</option>
+                    <option valor="1">Pendientes</option>
+                    <option valor="2">Realizados</option>
+                </options>
+            </field>
+
+            <field id="observaciones" local="true">
+                <label>ACCION</label>
+                <size>30</size>
+            </field>
+
+            <field id="mant_preventivo" local="true">
+                <label>MANT.PREVENTIVO</label>
+                <valor>MANT.PREVENTIVO</valor>
+                <helper type="link" xml="plan_preventivo_ficha.xml" width="600" height="300">
+                    <parameter source="equipo_id" target="equipo_id" />
+                </helper>
+            </field>
+
+            <field id="link" local="true">
+                <label>CARGAR</label>
+                <valor>OK</valor>
+                <helper type="link" xml="plan_mantenimiento_crud_ficha.xml" width="650" height="200">
+                    <parameter source="dia_accion" target="fecha_accion" />
+                    <parameter source="accion_id" target="accion_id" />
+                    <parameter source="id_plan" target="plan_id" />
+                </helper>
+            </field>
+
+        </table>
+    </form>
+</histrix>

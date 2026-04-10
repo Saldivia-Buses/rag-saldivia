@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="cabecera">
+	<title>Cuenta Corriente</title>
+	<obs/>
+	<consulta>
+		<table id="CCTCUENT" label="Movimientos">
+			<field id="siscod" oculto="true">
+				<label>Cod.</label>
+			</field>
+			<field id="sisprv" oculto="true">
+				<label>Cod.</label>
+				<valor>02</valor>
+			</field>			
+			<field id="consaldo" local="true">
+				<label>Clientes con saldo</label>
+				<tabla_ex id="CCTCUENT" xml="cctcuent_c_saldo_neg.xml">
+					<field id="ctacod">
+						<label>Cod.</label>
+					</field>
+					<field id="ctanom">
+						<label>Nombre</label>
+						<detalle>ctanom</detalle>
+					</field>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">02</condicion>
+					</field>
+					<field id="baja" oculto="true">
+						<condicion operador="=">0</condicion>
+					</field>
+					<order>
+						<field id="CCTCUENT.ctanom" />
+					</order>
+					<clave>ctacod</clave>
+					<descripcion>ctanom</descripcion>
+					
+				</tabla_ex>
+				<actualiza>
+					<field destino="ctacod" id="ctacod" />
+				</actualiza>
+
+			</field>
+			<field id="ctacod">
+				<label>Cliente</label>
+				<ayuda_ex id="CCTCUENT" xml="cctcuent_c_saldo_neg.xml">
+					<field id="ctacod">
+						<label>Cod.</label>
+					</field>
+					<field id="ctanom">
+						<label>Nombre</label>
+						<detalle>ctanom</detalle>
+					</field>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">02</condicion>
+					</field>
+					<field id="baja" oculto="true">
+						<condicion operador="=">0</condicion>
+					</field>
+					<order>
+						<field id="CCTCUENT.ctanom" />
+					</order>
+					<clave>ctacod</clave>
+					<descripcion>ctanom</descripcion>
+				</ayuda_ex>
+			</field>
+			<field deshabilitado="true" id="ctanom">
+				<label modpos="nobr">Nombre</label>
+			</field>
+			<field id="fecha" local="true">
+				<label modpos="nobr">Fecha</label>
+				<help/>
+				<tipo>date</tipo>
+				<valor>today</valor>
+			</field>
+			<field id="Opago" local="true" obj="imputacion_rc_cctmovim_ing.xml">
+				<label colspan="6">Recibo</label>
+			</field>
+		</table>
+	</consulta>
+</histrix>

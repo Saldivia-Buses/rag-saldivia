@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Convenios</title>
+  <obs></obs>
+  <consulta>
+	    <table id="RH_GRUPOS" label="Convenios">
+		<field id="id_rhgrupo" autoinc="true" noshow="true" ></field>
+		<field id="nombre_rhgrupo">
+			<label>nombre</label>
+			<help>nombre de agrupacion</help>
+		</field>
+	    </table>
+			<order>
+				<field id="nombre_rhgrupo"></field>
+			</order>
+
+  </consulta>
+</histrix>  

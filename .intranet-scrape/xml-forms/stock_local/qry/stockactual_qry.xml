@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" borra="no" inserta="no" _paginar="250" preloadData="false">
+  <title>Stock Actualizado</title>
+  <obs/>
+  <form>
+    <table id="STK_STOCKACTUAL" label="Stock Actualizado">
+
+  <filters>        
+      
+      	<field id="prov" deshabilitado="false" colspan="5
+">
+      		<label modpos="nobr">Proveedor</label>
+      	</field>
+      
+      	<field id="id_stkarticulo" tabla="STK_ARTICULOS" noshow="true">
+	        <operador>=</operador>
+        	<label>Codigo de Articulo</label>     
+      	</field>
+<!--
+        <field id="codigo_barra" tabla="STK_ARTICULOS">
+	        <operador>=</operador>
+        	<label modpos="nobr">Codigo de barra</label>
+        </field>
+-->
+        <field id="stkrubro_id">
+          	<operador>=</operador>
+	          <label modpos="nobr" rowspan="4">Rubro</label>
+        </field>
+
+      	<field id="cantidad_stock2" deshabilitado="false">
+      		<label>Desde Stock</label>
+      		<operador>&gt;=</operador>
+      		<valor>1</valor>
+      	</field>
+
+	      <field id="stkdeposito_id">
+        		<helper type="combo" id="STK_DEPOSITOS" empty="true">
+        			<field id="id_stkdeposito" />
+        			<field id="nombre_deposito" />
+    		    </helper>
+    	    	<label modpos="nobr">Depósito</label>
+          	<operador>=</operador>
+      	</field>
+
+    </filters>      
+      
+    <field id="prov" noshow="true">
+        <label>prov</label>
+        <expresion having="false">(select P.regcuenta_id from STK_ARTICULO_PROVEEDOR P where P.stkarticulo_id = STK_ARTICULOS.id_stkarticulo limit 1)</expresion>
+        <tabla_ex id="REG_CUENTA" _xml="REG_CUENTA.xml" vacio="true">
+            <field id="id_regcuenta">
+            </field>
+            <field id="nombre_cuenta" />
+            <field id="subsistema_id" oculto="true">
+                <condicion operador="=">'01'</condicion>
+            </field>
+        </tabla_ex>
+        <tipo>varchar</tipo>
+    </field>
+
+      <field id="id_stkarticulo" tabla="STK_ARTICULOS" _noshow="true" esClave="true">
+        <label>Codigo de Articulo</label>
+        <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+          <field id="wstklista_id" local="true">
+            <valor>1</valor>
+          </field>
+        </helper>
+      </field>
+
+<!--
+      <field id="codigo_barra" tabla="STK_ARTICULOS" noshow="true">
+        <label>Codigo de Barra</label>
+        <helper type="external" xml="stkarticulo_pos.xml" dir="/ayudas">
+          <field id="wstklista_id" local="true">
+            <valor>1</valor>
+          </field>
+        </helper>
+      </field>
+-->
+
+      <field id="stkrubro_id" tabla="STK_ARTICULOS" multiple="true" _colstyle="display:none;" noshow="true">
+        <label>Rubro</label>
+        <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true"/>
+      </field>
+
+      <field id="nombre_rubro" tabla="STK_RUBROS" />
+
+
+      <field id="stkdeposito_id" _colstyle="text-align:center;">
+        <label>Rubro</label>
+    	<helper type="combo" id="STK_DEPOSITOS" empty="true">
+    	  <field id="id_stkdeposito" />
+    	  <field id="nombre_deposito" />
+    	</helper>
+    	<label modpos="nobr">Depósito</label>
+      </field>
+
+
+
+
+      
+      <field id="nombre_articulo" tabla="STK_ARTICULOS">
+        <label>Articulo</label>
+      </field>
+
+	<!--      <field id="permiso" local="true" noshow="true">
+        <valor eval="true">$_SESSION['administrator']</valor>
+      </field> -->
+
+      <field id="cantidad_stock2" noshow="true" >
+	    <expression having="false">cantidad_stock</expression>
+	</field>
+      
+      <!-- <field id="total_procesado" local="true" noshow="true">
+        <if exp="cantidad_stock != 0">
+          <true>'SI'</true>
+          <false>'0'</false>
+        </if>
+      </field> -->
+
+      <field id="total_display" local="true" style="width:10em;font-weight:bold; font-size:14px; text-align:right;" _noZero="true" tdWidth="80px">
+        <label>Real</label>
+        <expression>cantidad_stock</expression>
+        <!-- <if exp="permiso == 1">
+          <true>cantidad_stock</true>
+          <false>total_procesado</false>
+        </if>-->
+	<!-- <tipo>numeric</tipo>-->
+                  <attribute id="tooltip">nombre_deposito</attribute>                       
+                <attribute id="linkdes">nombre_articulo</attribute>
+                <helper xml="stock_locacion_deposito_qry.xml" type="link" width="70%">
+                    <parameter source="id_stkarticulo" target="stkarticulo_id" />
+                    <parameter source="stkdeposito_id" target="stkdeposito_id" />
+                </helper>
+	    <tipo>custom_numeric</tipo>
+      </field>
+
+      <field id="enordendecompra" noZero="true" noshow="true">
+        <expresion>SELECT SUM(cantidad_compra) FROM CPS_DETALLE WHERE stkarticulo_id = STK_STOCKACTUAL.stkarticulo_id and recibido_compra != cantidad_compra</expresion>
+        <label>Entrante (OC)</label>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="realreal" local="true" noshow="true">
+        <if exp="true">
+          <true>total_display + enordendecompra - ennotapedido</true>
+          <false></false>
+        </if>
+        <label>Disponible</label>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="pinta" local="true" clasefila="true" oculto="true">
+        <if exp="total_stk &lt; 0">
+          <true>'resaltado'</true>
+          <false>''</false>
+        </if>
+      </field>
+
+      <order>
+        <field id="nombre_rubro" tabla="STK_RUBROS" />
+	<field id="nombre_articulo" tabla="STK_ARTICULOS" />
+      </order>
+
+      <group>
+        <field id="id_stkarticulo" tabla="STK_ARTICULOS"/>
+      </group>
+
+    </table>
+
+    <join>
+      <table id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">STK_STOCKACTUAL.stkarticulo_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="LEFT">
+      <table id="STK_RUBROS">
+        <field id="id_stkrubro">
+          <condicion operador="=">STK_ARTICULOS.stkrubro_id</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

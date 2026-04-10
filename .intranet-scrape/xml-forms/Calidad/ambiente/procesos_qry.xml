@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+        <title>Procesos de Produccion</title>
+        <obs/>
+        <form >
+                <table id="PROD_PROCESOS">
+                        <title>Condiciones</title>
+                        <field id="id_proceso" esClave="true" autoinc="true" noshow="true">
+                                <label>Codigo</label>
+                        </field>
+
+                        <field id="nombre_proceso">
+                                <help>nombre del proceso</help>
+                                <size>60</size>
+                        </field>
+                        <field id="homologacion_id" noshow="true">
+                                <label>homol</label>
+                        </field>
+                </table>
+        </form>
+</histrix>
+
+
+
+

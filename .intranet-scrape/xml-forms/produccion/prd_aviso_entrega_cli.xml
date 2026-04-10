@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="ficha" borra="false" inserta="false" modifica="true" preFetch="true">
+    <title>Fecha Aviso Entrega</title>
+    <obs></obs>
+    <eventos>
+        <event id="update">close</event>
+        <event id="update">refresh</event>
+    </eventos>
+    <form>
+        <table id="PEDCOTIZ" label="Fecha Aviso Entrega">
+
+            <field id="nrocha" deshabilitado="true" valauto="true">
+                <label>Unidad</label>
+                <detalle>nrocha</detalle>
+            </field>
+
+            <field id="terminacionFinal" editable="true">
+                <label>Aviso Entrega</label>
+                <tipo>date</tipo>
+            </field>
+
+        </table>
+    </form>
+</histrix>

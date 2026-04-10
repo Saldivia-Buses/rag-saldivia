@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" path="ISO9000" inserta="false" modifica="false">
+  <title>MANUAL DE CALIDAD</title>
+  <obs></obs>
+  <form >
+    <table id="CAL_DOCUMENTOS" label="Documentacion">
+
+      <!--<field id="nombre_documento">
+        <label>Tipo</label>
+        <helper type="combo" id="CAL_DOCUMENTOS">
+          <field id="id_documento" />
+          <field id="nombre_documento" />
+        </helper>
+      </field>-->
+
+      <field id="id_documento" noshow="true" autoinc="true" />
+
+      <field id="codigo_documento" noshow="true"/>
+
+      <field id="nombre_documento" noshow="true"/>
+
+      <field id="revision_documento" noshow="true"/>
+
+      <field id="vigencia_documento" noshow="true">
+        <condicion operador="!=">'NULL'</condicion>
+      </field>
+
+      <field id="tipodocumento_id" noshow="true">
+        <helper xml="cal_tipo_documento.xml" type="combo" dir="/calidad/ing" />
+        <label>Tipo</label>
+        <help>Tipo de Documento</help>
+        <condicion operador="=">10</condicion>
+      </field>
+      
+
+      <field id="descripcion_documento" style="font-weight:bold;">
+        <label>Descripción doc</label>
+        <expression>CONCAT (codigo_documento, ' ', nombre_documento, ' - ', vigencia_documento)</expression>
+      </field>
+
+      <field id="archivo_documento" viewer="true" open="true" print="false">
+        <label /><!--Archivo</label>-->
+        <help>Archivo del Documento</help>
+        <tipo>file</tipo>
+        <size>100</size>
+      </field>
+
+      <field id="ver_documento" local="true" linkWidth="95%" linkHeight="95%" style="font-size:17px;color:blue;font-weight:bold">
+        <expression>case when (select count(*) from CAL_DOCUMENTOS_PASOS where documento_id =  id_documento) != 0 then 'Ver Documento' else '' end</expression>
+        <helper type="link" xml="cal_documentos_edicion_pasos_qry.xml" dir="/calidad/qry/">
+          <parameter source="id_documento" target="documento_id" />
+          <parameter source="codigo_documento" target="codigo_documento" />
+          <parameter source="nombre_documento" target="nombre_documento" />
+          <parameter source="vigencia_documento" target="vigencia_documento" />
+        </helper>
+        <label>Editar</label>
+        <help>Editar Documuento</help>
+        <attribute id="linkdes">nombre_documento</attribute>
+      </field> 
+
+      <field id="seccion_id" noshow="true" tabla="CAL_DOCUMENTOS_SECCION"/>
+      
+      <order>
+        <field id="descripcion_documento" style="font-weight:bold;">
+        <label>descripcion doc</label>
+        <expression>CONCAT (codigo_documento, ' ', nombre_documento, ' - ', vigencia_documento)</expression>
+      </field>
+      </order>
+
+    </table>
+
+    <join tipo="left">
+      <table id="CAL_DOCUMENTOS_SECCION">
+      <field id="documento_id">
+          <condicion operador="=">CAL_DOCUMENTOS.id_documento</condicion>
+      </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>
+

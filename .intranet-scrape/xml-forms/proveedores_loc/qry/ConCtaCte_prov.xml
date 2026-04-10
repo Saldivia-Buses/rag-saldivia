@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+    <title>Cuenta Corriente</title>
+    <obs></obs>
+<!--        <form  detalle="cctmovim_comp_prov.xml"> -->
+
+    <form  detalle="imputaciones.xml" inline="true" hasDetail="tiene_detalle">
+        <table id="REG_MOVIMIENTOS" label="Movimientos" styleTbody="height:500px;">
+
+        <preconsultas>
+        <xmlfile id="ConCtaCte_prov_pre.xml"/>
+        </preconsultas>                            
+
+        <filters>
+            <field id="nro_cuenta">
+                <label>Cod.</label>
+                <help>Código de Cuenta </help>
+                <detalle>ctacod</detalle>
+                <operador>=</operador>
+            </field>
+
+            <field id="nombre_cuenta" local="true" deshabilitado="true" required="false"    >
+                <label modpos="nobr">Nombre</label>
+            </field>
+
+            <field id="fecha_desde">
+                <operador>&gt;=</operador>
+                <label>Desde Fecha</label>
+                <valor>today</valor>
+            </field>
+
+            <field id="fecha_hasta">
+                <operador>&lt;=</operador>
+                <label modpos="nobr">Hasta Fecha</label>
+                <valor>today</valor>
+            </field>
+
+            <field id="concepto_id" deshabilitado="true">
+                <operador>=</operador>
+                <label modpos="nobr">Concepto</label>
+            </field>
+
+            <field id="reg_fecha" required="true">
+                <label>Desde Registración</label>
+                <help></help>
+                <operador>&gt;=</operador>
+            </field>
+                
+            <field id="reg_fecha" required="true">
+                <label modpos="nobr">Hasta Registración</label>
+                <help></help>
+                <operador>&lt;=</operador>
+            </field>
+
+            <field id="mar_movimiento">
+                <label modpos="nobr">Con Seguimiento</label>
+                <operador>=</operador>
+            </field>
+
+            <field id="importe_movimiento">
+                <operador>&gt;=</operador>
+                <label>Desde Importe</label>
+            </field>
+
+            <field id="importe_movimiento">
+                <operador>&lt;=</operador>
+                <label modpos="nobr">Hasta Importe</label>
+            </field>
+
+            <field id="caj" deshabilitado="false">
+                <label modpos="nobr">Forma Pago</label>
+                <operador>=</operador>
+            </field>       
+
+        </filters>
+
+        <field id="id_regmovim" noshow="true" />
+
+        <field id="subsistema_id" oculto="true">
+            <label>Cod.</label>
+            <detalle>siscod</detalle>
+            <help></help>
+        </field>
+
+        <field id="nro_cuenta" noshow="true" required="false">
+            <help>Código de Cuenta </help>
+            <helper type="external" id="REG_CUENTA">
+                <field id="nro_cuenta">
+                    <detalle>nro_cuenta</detalle>
+                </field>
+                <field id="NOM">
+                    <expression having="false">CONCAT(nombre_fantasia, ' (',  nombre_cuenta,')')</expression>
+                    <label>Nombre</label>
+                    <detalle>nombre_cuenta</detalle>
+                </field>
+                <field id="subsistema_id" oculto="true"></field>
+                <field id="baja">
+                    <condicion operador="=">0</condicion>
+                </field>
+                <order>
+                    <field id="nombre_cuenta"></field>
+                </order>
+                <filtra>nro_cuenta</filtra>
+            </helper>
+            <detalle>ctacod</detalle>
+            <preparam campo="nro_cuenta" operador="=">true</preparam>
+        </field>
+
+        <field id="nombre_cuenta" tabla="REG_CUENTA" deshabilitado="true" local="true" noshow="true">
+            <label>Nombre</label>
+            <size>80</size>
+        </field>
+
+        <field id="concod" noshow="true">
+            <label>concod</label>
+            <detalle>concod</detalle>
+        </field>
+
+        <field id="puesto_movimiento" noshow="true">
+            <label>P.V.</label>
+            <help> Punto Venta</help>
+            <format>%04d</format>
+            <detalle>movnpv</detalle>
+        </field>
+
+        <field id="nro_movimiento">
+            <label>Número</label>
+            <help>Número Comprobante</help>
+            <format>%12d</format>
+            <detalle>movnro</detalle>
+        </field>
+
+        <field id="concepto_id" deshabilitado="true">
+           <label>Cod.Concepto</label>
+            <tipo>varchar</tipo>
+            <helper type="combo" id="REG_CONCEPTOS" empty="true">
+                <field id="id_concepto" />
+                <field id="descripcion_concepto" />
+                <order>
+                    <field id="descripcion_concepto" />
+                </order>
+            </helper>
+        </field>
+
+        <field id="reg_fecha" noshow="true">
+            <tipo>date</tipo>
+        </field>                
+
+        <field id="regmin" linkint="ctbregis2.xml" linkdir="ctb_old">
+            <label>Min</label>
+            <paring destino="regnro">nro_movimiento</paring>                    
+            <paring destino="regmin">regmin</paring>
+            <paring destino="regfec">reg_fecha</paring>
+        </field>
+
+        <field deshabilitado="true" id="OP" local="true" linkint="cctmovim_OP.xml" linkdes="Orden de Pago" print="false">
+            <label >Ot.</label>
+            <if exp="'concod' == '4'">
+                <true>'Ver'</true>
+                <false>''</false>
+            </if>
+            <help>Código de Cuenta</help>
+            <paring destino="ctacod">nro_cuenta</paring>
+            <paring destino="cajcta">nro_cuenta</paring>
+            <paring destino="regmin">regmin</paring>
+            <paring destino="movnpv">puesto_movimiento</paring>
+            <paring destino="movnro">nro_movimiento</paring>
+            <paring destino="nrocom">nro_movimiento</paring>
+            <paring destino="carpag">nro_movimiento</paring>
+            <paring destino="nropag">nro_movimiento</paring>
+            <paring destino="referencia">nro_movimiento</paring>
+            <paring destino="carrec">nro_movimiento</paring>
+            <paring destino="cajnro">nro_movimiento</paring>
+            <paring destino="movfec">fecha_movimiento</paring>
+            <paring destino="cajfec">fecha_movimiento</paring>
+            <tipo>varchar</tipo>
+        </field>
+           
+<!--             <field id="fact" deshabilitado="true" local="true" _linkint="factura_detalle.xml" linkint="factura_facremit.xml" linkdes="Factura" print="false">
+                <label>Fact</label>
+                <if exp="'concod' == '1'">
+                    <true>'verF'</true>
+                    <false>''</false>
+                </if>
+                <paring destino="ctacod">nro_cuenta</paring>
+                <paring destino="movnpv">puesto_movimiento</paring>
+                <paring destino="movnro">nro_movimiento</paring>
+                <paring destino="siscod">subsistema_id</paring>
+
+            </field>  -->   
+
+        <field id="eliminar" local="true" tdWidht="20">
+            <label>Detalle</label>
+            <expression>case when concod=1 or concod=2 or concod=3 or concod=36 then 'Detalle' else '' end</expression>
+            <attribute id="linkint">xml_llamar</attribute>
+            <helper type="link" dir="/anulaciones">
+                <parameter source="id_regmovim" target="id_regmovim" />
+                <parameter source="cajmovimiento_id" target="id_cajmovimiento" />
+                <parameter source="regmin" target="regmin" />
+            </helper>
+        </field>
+
+        <field id="xml_llamar"  local="true" noshow="true">
+            <if exp="concod==1||concod==2||concod==3||concod==36">
+                <true>'regmovimiento_ficha.xml'</true>
+                <false>''</false>
+            </if>
+        </field>
+
+        <field id="fecha_desde" local="true" noshow="true" required="false">
+            <label>d</label>
+            <tipo>date</tipo>
+            <preparam campo="fecha_desde" operador="=">true</preparam>
+        </field>
+        
+        <field id="fecha_hasta" local="true" noshow="true">
+            <label>h</label>
+            <tipo>date</tipo>
+        </field>
+
+        <field id="logregion_id">
+            <label modpos="nobr">Región</label>
+    	    <expression having="false">REG_MOVIMIENTOS.logregion_id</expression>
+            <help>Región de Logística</help>
+            <helper xml="log_region_crud.xml" dir="/logistica" type="combo" empty="true">
+            </helper>       
+            <helper xml="modificar_region.xml" _dir="/logistica" type="link" title="Modificar región" width="30%">
+            <parameter source="id_regmovim" target="id_regmovim" />
+            </helper>        
+        </field>
+
+        <field id="fecha_movimiento">
+            <label>Fecha </label>
+            <condicion operador="&lt;=">STR_TO_DATE('[__fecha_hasta__]', '%d/%m/%Y') and fecha_movimiento &gt;= (CASE when '[__fecha_desde__]' = '' THEN '1950-01-01' ELSE STR_TO_DATE('[__fecha_desde__]', '%d/%m/%Y') END)</condicion>
+            <detalle>movfec</detalle>
+        </field>
+
+        <field id="reg_fecha" >
+            <label>Registración</label>
+            <help></help>
+            <tipo>date</tipo>
+        </field>
+
+        <field id="importe_movimiento" noshow="true" />
+
+        <field id="Debe" suma="true" noZero="true">
+            <expression>REG_MOVIMIENTOS.importe_movimiento * (case when (REG_CONCEPTOS.imputacion_concepto + 1) = 1 then 1 else 0 end)</expression>
+            <label>Debe</label>
+        </field>
+
+        <field id="Haber" suma="true" link_int="cctmovim_comp.xml" linkdes="Ver Recibo" noZero="true">
+            <expression>REG_MOVIMIENTOS.importe_movimiento * (case when (REG_CONCEPTOS.imputacion_concepto + 1) = 2 then 1 else 0 end)</expression>
+            <label>Haber</label>
+            <paring destino="movnro">nro_movimiento</paring>
+            <paring destino="carrec">nro_movimiento</paring>
+            <paring destino="cajnro">nro_movimiento</paring>
+            <paring destino="movinc">nro_movimiento</paring>
+            <paring destino="movnpv">puesto_movimiento</paring>
+            <paring destino="ctacod">nro_cuenta</paring>
+            <paring destino="movfec">fecha_movimiento</paring>
+            <paring destino="cajfec">fecha_movimiento</paring>
+        </field>
+
+	    <field id="total_imputado">
+    		<label>Imputado</label>
+    		<expression>CASE REG_CONCEPTOS.imputacion_concepto WHEN 1 
+    			    THEN (SELECT SUM(movimp) FROM CCTIMPUT WHERE ctacod = REG_MOVIMIENTOS.nro_cuenta
+    				     and siscod = REG_MOVIMIENTOS.subsistema_id
+    				    and movnro = REG_MOVIMIENTOS.nro_movimiento
+    				    and concod = REG_MOVIMIENTOS.concod
+                        and movfec = REG_MOVIMIENTOS.fecha_movimiento)
+    			    ELSE (SELECT SUM(movimp) FROM CCTIMPUT WHERE ctacod = REG_MOVIMIENTOS.nro_cuenta
+    				     and siscod = REG_MOVIMIENTOS.subsistema_id
+    				    and movinc = REG_MOVIMIENTOS.nro_movimiento
+                        and movfec = REG_MOVIMIENTOS.fecha_movimiento
+    				    and movicc = REG_MOVIMIENTOS.concod and movnro != 0)
+    			    END
+    		</expression>
+    		<tipo>numeric</tipo>
+	    </field>
+
+	    <field id="test" suma="true" noZero="true" noshow="true">
+    		<label>Importe - imp</label>
+    		<expression>(REG_MOVIMIENTOS.importe_movimiento - ifnull((CASE REG_CONCEPTOS.imputacion_concepto WHEN 1 
+    			    THEN (SELECT SUM(movimp) FROM CCTIMPUT WHERE ctacod = REG_MOVIMIENTOS.nro_cuenta
+    				     and siscod = REG_MOVIMIENTOS.subsistema_id
+    				    and movnro = REG_MOVIMIENTOS.nro_movimiento
+    				    and concod = REG_MOVIMIENTOS.concod)
+    			    ELSE (SELECT SUM(movimp) FROM CCTIMPUT WHERE ctacod = REG_MOVIMIENTOS.nro_cuenta
+    				     and siscod = REG_MOVIMIENTOS.subsistema_id
+    				    and movinc = REG_MOVIMIENTOS.nro_movimiento
+    				    and movicc = REG_MOVIMIENTOS.concod and movnro != 0)
+    			    END), 0)) * (case when REG_CONCEPTOS.imputacion_concepto = 0 then -1 else 1 end)
+    		</expression>
+	    </field>
+
+        <field id="saldo_movimiento" suma="true" noZero="true">
+            <label>Saldo</label>
+            <help></help>
+            <tipo>numeric</tipo>
+        </field>
+
+        <field id="acumulado" suma="true" acumula="true" local="true">
+            <if exp="true">
+                <true>(Haber + 0) - (Debe + 0)</true>
+                <false>0</false>
+            </if>
+            <tipo>numeric</tipo>
+            <label>Acumulado</label>
+        </field>
+
+        <field id="caj" >
+            <label>Forma de Pago</label>
+                <expression having="false">ifnull((select 2 from CTBREGIS where CTBREGIS.ctbcod = '111102' and CTBREGIS.regmin = REG_MOVIMIENTOS.regmin and CTBREGIS.regnro = REG_MOVIMIENTOS.nro_movimiento and CTBREGIS.regfec = REG_MOVIMIENTOS.reg_fecha limit 1), 1)</expression>
+        <options>
+                <option valor="">Todos</option>
+                <option valor="2">Efectivo</option>
+                <option valor="1">Cta Cte</option>
+            </options>
+        </field>
+
+        <!--<field id="mar_movimiento">
+        <label>Seg</label>
+        <helper type="combo">
+            <option value=""></option>
+            <option value="1">Si</option>
+            <option value="0">No</option>
+        </helper>
+        </field>-->
+
+        <field id="mar_movimiento" linkint="imputacion_pago_OC.xml" linkdir="proveedores/ing" linkdes="Imputar orden de compra">
+            <label modpos="nobr">Seg</label>
+            <helper type="combo">
+                <option value=""></option>
+                <option value="1">Si</option>
+                <option value="0">No</option>
+            </helper>
+            <paring destino="nro_movimiento">nro_movimiento</paring>
+            <paring destino="subsistema_id">subsistema_id</paring>
+            <paring destino="concod">concod</paring>                    
+            <operador>=</operador>                    
+        </field>
+
+        <field id="tiene_detalle" noshow="true">
+            <expression>1</expression>
+        </field>
+
+        <field id="resaltado" clasefila="true" local="true" noshow="true">
+            <expression>case when saldo_movimiento != 0 then 'resaltado' end</expression>
+            <tipo>varchar</tipo>
+        </field>
+        
+        <order>
+            <field id="fecha_movimiento"></field>
+        </order>
+
+        </table>
+
+        <join tipo="left">
+            <table id="REG_CONCEPTOS">
+                <field id="id_concepto">
+                    <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

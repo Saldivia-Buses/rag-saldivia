@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="ing" subtipo="vertical" llenoTemporal="false" impresion="remitos_impresion.xml" imprime="false" transaccional="true">
+	<title>EMISION DE REMITOS</title>
+	<obs></obs>
+	<form >
+		<table id="REMDETAL" label="DETALLE DE LA ORDEN COMPRA">
+			<importar xml="remito_select.xml"  label="Pedidos Internos" titulo="Pedidos Internos">
+				<field id="codprv">codprv</field>
+			</importar>
+			<movimientos cabecera="remitoint_cab.xml">
+				<relacion id="remito_pedidoint_saldo_update.xml"></relacion>
+				<relacion id="remdetal_ingmov.xml"></relacion>
+			</movimientos>
+			<field id="_ORDEN" oculto="true" local="true">
+				<label>Orden</label>
+			</field>
+			<field id="artcod"  esClave="true">
+				<label>Codigo Articulo</label>
+				<help>Codigo de Articulo</help>
+				<ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/help_local">
+					<field id="artcod" >
+						<label>Cod.</label>
+					</field>
+					<field id="artdes">
+						<label>Insumo</label>
+						<detalle>artdes</detalle>
+					</field>
+					<field id="artpor" oculto="true">
+						<label>Porcent</label>
+						<detalle>artpor</detalle>
+					</field>
+					<field id="artcos" oculto="true">
+						<label>costo</label>
+						<detalle>artcos</detalle>
+					</field>
+					<field id="unicps" oculto="true">
+						<detalle>unicps</detalle>
+					</field>					
+					<field id="valcps" >
+						<detalle>valcps</detalle>
+					</field>
+					<field id="valuso" >
+						<detalle>valuso</detalle>
+					</field>
+					<field id="artuni" oculto="true">
+						<detalle>artuni</detalle>
+					</field>					
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'01'</condicion>
+					</field>
+					<field id="hlp" oculto="true">
+						<expression>CONCAT(' ', ROUND(valcps,2),(SELECT FSMUNIDS.uninom from FSMUNIDS where FSMUNIDS.unicod = STKINSUM.unicps), '=',  ROUND(valuso, 2), (SELECT FSMUNIDS.uninom from FSMUNIDS where FSMUNIDS.unicod = STKINSUM.artuni)  )</expression> 
+						<detalle>hlp</detalle>
+					</field>
+					<field id="costo" >
+						<label>Costo</label>
+						<expression>case when ((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) ) > 0  then ((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) ) else STKINSUM.artcos end</expression>
+						<detalle>costo</detalle>
+
+					</field>					
+					<clave>artcod</clave>
+					<descripcion>artdes</descripcion>
+				</ayuda_ex>
+			</field>
+			<field id="artdes"  tabla="STKINSUM" esClave="true">
+				<label modpos="nobr">Descripcion</label>
+				<tipo>varchar</tipo>
+				<size>20</size>
+			</field>
+			<field id="movref"  _esClave="true">
+				<label modpos="nobr" >Observaciones</label>
+				<size>70</size>
+				<valor> </valor>
+			</field>
+				<field id="valuso" deshabilitado="true" noshow="true">
+					<label>valor de uso</label>
+					<valor>1</valor>
+				</field>
+				<field id="valcps" deshabilitado="true" noshow="true">
+					<label>valor Compra</label>
+					<valor>1</valor>
+				</field>			
+			<field id="pedidoCompra" local="true" deshabilitado="true" noshow="true">
+			</field>
+			
+			<field id="movuso" local="true" incdec="true">
+				<label>Pedido Compras</label>
+				<help>Pedido (expresado en la unidad de compra)</help>
+				<valor>1</valor>
+				<tipo>decimal</tipo>
+                 <jseval campodestino="cant">(valuso == 1)?(movuso * valcps):(movuso / valuso)</jseval>			
+			</field>
+			<field id="pendienteCompra" local="true" deshabilitado="true" _noshow="true">
+				<label modpos="nobr">Pendiente Compra</label>
+				<if exp="true">
+					<true>pedidoCompra - movuso</true>
+					<false>0</false>
+				</if>
+			</field>
+			<field id="artuni" deshabilitado="true">
+				<label modpos="nobr">U.Compra</label>
+				<help>Unidad de Compra</help>
+				<tabla_ex id="FSMUNIDS">
+					<field id="unicod" clave="true"></field>
+					<field id="uninom"></field>
+				</tabla_ex>
+				<tipo>integer</tipo>
+			</field>
+
+			<field id="pedidoUso" local="true" deshabilitado="true" noshow="true">
+			</field>
+			
+			<field id="cant" local="true" incdec="true">
+				<label>Pedido Uso</label>
+				<help>Pedido (expresado en la unidad de compra)</help>
+				<valor>1</valor>
+				<tipo>decimal</tipo>
+                <jseval campodestino="movusp">(valcps == 1)?(cant * valuso):(cant / valcps)</jseval>				
+			</field>
+			<field id="pendienteUso" local="true" deshabilitado="true" noshow="true">
+				<label modpos="nobr" >Pendiente Uso</label>
+				<if exp="true">
+					<true>pedidoUso - cant</true>
+					<false>0</false>
+				</if>
+			</field>
+			
+			<field id="unicps" deshabilitado="true">
+				<label modpos="nobr">U.uso</label>
+				<help>Unidad de Uso</help>
+				<tabla_ex id="FSMUNIDS">
+					<field id="unicod" clave="true"></field>
+					<field id="uninom"></field>
+				</tabla_ex>
+				<tipo>integer</tipo>
+			</field>			
+
+			<field id="fecreq" local="true" esClave="true">
+				<label >Requerido</label>
+				<help>Fecha de Entrega</help>
+				<tipo>date</tipo>
+					<valor>today</valor> 
+			</field>
+			<field id="nrofab" local="true" esClave="true" >
+
+				<label modpos="nobr">NroFab</label>
+				<tipo>integer</tipo>
+				<valor>0</valor>
+				<size>3</size>
+				<maxsize>3</maxsize>
+			</field>			
+			<field id="artpor" deshabilitado="true" noshow="true">
+				<label modpos="nobr">artpor</label>
+				<tipo>numeric</tipo>
+				<valor>0</valor>
+			</field>
+			<field id="artcos" deshabilitado="true" noshow="true">
+				<label modpos="nobr">artcos</label>
+				<tipo>numeric</tipo>
+				<valor>0</valor>
+			</field>
+			<field id="hlp" deshabilitado="true" >
+				<size>40</size>
+				<tipo>varchar</tipo>
+				<label modpos="nobr">Ayuda</label>
+			</field>
+			<field id="costo" deshabilitado="true" >
+				<size>40</size>
+				<tipo>varchar</tipo>
+				<label modpos="nobr">Costo</label>
+			</field>			
+	        <field id="idPed" deshabilitado="true" noshow="true" esClave="true">
+				<label>idPedido</label>
+			</field>							
+
+			<field id="confirmado" local="true"  >
+				<if exp="pendienteCompra &lt;= 0">
+					<true>3</true>
+					<false>2</false>
+				</if> 
+				<tipo>integer</tipo>
+			</field>					
+			
+						
+			<order>
+				<field id="ocpren"></field>
+			</order>
+		</table>
+		<join tipo="left">
+			<table id="STKINSUM">
+				<field id="siscod" oculto="true">
+					<label>STKINSUM.siscod</label>
+					<condicion operador="=">'01'</condicion>
+				</field>
+				<field id="artcod" oculto="true">
+					<condicion operador="=">REMDETAL.artcod</condicion>
+				</field>
+				<field id="artuni" oculto="true">
+				</field>
+				<field id="unicps" oculto="true">
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha"  sololectura="true"  imprime="false">
+    <title>Ficha de Proveedor</title>
+    <obs></obs>
+    <form>
+
+        <table id="REG_CUENTA" label="Ficha de Proveedor">
+
+            <field id="id_regcuenta" autoinc="true" esClave="true" noshow="true" />
+
+            <field id="subsistema_id" oculto="true" esClave="true" valauto="true" />
+
+            <field id="subsistemarelacionada_id" local="true" oculto="true" valauto="true" />
+	    	    
+            <field id="nro_cuenta" esClave="true" colspan="13">
+              <label >Proveedor</label>
+              <help>Numero de la Cuenta</help>
+            </field>
+            
+            <field id="nombre_cuenta" style="font-size:18px;color:green;" sincelda="true">
+                <label modpos="nobr" ></label>
+                <help>Nombre de la cuenta</help>
+                <size>80</size>
+            </field>
+
+		    
+	    <!-- Dirección -->	  
+		    
+            <field id="cod_direccion">
+                <label colspan="4">Calle</label>
+                <size>40</size>
+            </field>
+
+
+            <field id="nro_direccion" sincelda="true">
+                <label modpos="nobr">Nº</label>
+                <size>10</size>
+            </field>
+            <field id="bis_direccion" sincelda="true">
+                <label modpos="nobr">Bis</label>
+                <tipo>check</tipo>
+            </field>
+
+            <field id="abreviacion_direccion">
+                <label modpos="nobr">Piso/Dpto</label>
+                <size>5</size>
+            </field>
+                        
+
+
+
+            <field id="codigo_postal">
+                <label modpos="nobr" >C.Postal</label>
+            </field>
+
+            <field id="nombre_localidad" tabla="GEN_LOCALIDADES" sincelda="true">
+                <label modpos="nobr"></label>
+            </field>
+            <field id="nombre_provincia" tabla="GEN_PROVINCIAS">
+                <label modpos="nobr">Prov.</label>
+            </field>
+
+
+            <field id="email_cuenta">
+                <label colspan="5">email</label>
+                <help>email de la cuenta</help>
+                <size>60</size>
+            </field>
+
+
+	    <!-- Fiscales -->
+
+            <field id="abreviacion_iva" tabla="GEN_IVA">
+                <label>Cat. IVA</label>
+                <help>Categoria de IVA</help>
+            </field>
+
+            <field id="cuit_cuenta">
+                <label modpos="nobr">Nº CUIT</label>
+                <help>Número de CUIT</help>
+                <size>15</size>
+            </field>
+
+            <field id="nro_ingbrutos">
+                <label modpos="nobr">Nº IBR</label>
+                <help>Numero de ingresos brutos de la cuenta</help>
+            </field>
+
+	    <!-- Fechas -->
+
+            <field id="alta_cuenta">
+                <label>Fecha de Alta</label>
+                <help>Fecha de alta de la cuenta</help>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="baja_cuenta">
+                <label modpos="nobr">Fecha de Baja</label>
+                <help>Fecha de Baja de la cuenta</help>
+                <tipo>date</tipo>
+            </field>
+
+
+            <field id="percepcion">
+                <label>Agente Percepcion</label>
+                <options exp="true">
+                    <option valor=""></option>
+                    <option valor="0">NO</option>
+                    <option valor="1">SI</option>
+                </options>
+            </field>
+
+            <field id="nombre_forma" tabla="REG_FORMAS">
+                <label modpos="nobr">Forma Pago</label>
+                <size>20</size>
+            </field>
+
+            <field id="nombre_categoria" tabla="REG_CATEGORIAS">
+                <label>Categoria</label>
+            </field>
+			
+	    <field id="nombre_afipactividad" tabla="GEN_AFIP_ACTIVIDADES">
+		<label>Cod. Actividad</label>
+		<help>Código de actividad principal según AFIP</help>
+	    </field>
+
+            <field id="nombre_zona" tabla="REG_ZONAS">
+                <label>Zona</label>
+            </field>
+            
+            
+      <fieldGroup>
+            <field id="contacto" obj="cuenta_contactos_crud.xml" local="true">
+                <paring destino="regcuenta_id">id_regcuenta</paring>
+            </field>
+      </fieldGroup>
+	  <!--
+	  
+      <fieldGroup>
+	        <if> if (strpos($_SESSION['properties']['modulos'],'contabilidad') != false) return true; </if>  
+            <field id="contable" obj="cuenta_imputaciones_crud.xml" local="true">
+                <paring destino="regcuenta_id">id_regcuenta</paring>
+            </field>
+      </fieldGroup>
+              -->
+      <fieldGroup>
+            <if> if (strpos($_SESSION['properties']['modulos'],'transportistas') != false) return true; </if>
+	        <field id="transportes" obj="cuenta_relacion_crud.xml" local="true" >
+	            <label>Transportistas</label>
+		        <paring destino="regcuenta_id">id_regcuenta</paring>
+		        <paring destino="subsistemarelacionada_id">subsistemarelacionada_id</paring>
+	        </field>
+      </fieldGroup>
+
+            <group>
+                <field id="nombre_cuenta" />
+            </group>
+	           
+        </table>
+        <join tipo="left">
+            <table id="GEN_PROVINCIAS">
+                <field id="id_provincia">
+                    <condicion operador="=">REG_CUENTA.provincia_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="GEN_LOCALIDADES">
+                <field id="id_localidad">
+                    <condicion operador="=">REG_CUENTA.localidad_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="GEN_IVA">
+                <field id="id_iva">
+                    <condicion operador="=">REG_CUENTA.iva_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="REG_FORMAS">
+                <field id="id_regforma">
+                    <condicion operador="=">REG_CUENTA.regforma_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="REG_CATEGORIAS">
+                <field id="id_regcategoria">
+                    <condicion operador="=">REG_CUENTA.categoria_ganancia</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="GEN_AFIP_ACTIVIDADES">
+                <field id="id_afipactividad">
+                    <condicion operador="=">REG_CUENTA.afipactividad_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="REG_ZONAS">
+                <field id="id_regzona">
+                    <condicion operador="=">REG_CUENTA.regzona_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

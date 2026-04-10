@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha" autoprint="true" preFetch="true" PDFfont="Courier">
+    <title>Registro Capacitaciones R6.2-02 Rev3</title>
+    <obs/>
+    <pie>                                                         Docente: ..................................</pie>
+    <form>
+        <table id="RH_CURSOS" label="Registro Capacitaciones R6.2-02 Rev3">
+	    
+            <field id="Id_curso">
+                <label posx="5" posy="+3" size="31">Codigo del Curso:</label>
+            </field>
+
+            <field id="descripcion">
+                <label posx="100" posy="0" size="31">Nombre Curso:</label>
+            </field>
+
+            <field id="Id_docente">
+                <label posx="5" posy="+2" size="31">Docente:</label>
+                <helper type="combo" id="RH_DOCENTES">
+                    <field id="id_docente" />
+                    <field id="nombre" />
+                    <order>
+                        <field id="nombre" />
+                    </order>
+                </helper>
+            </field>
+
+            <field id="id_centro">
+                <label posx="100" posy="0" size="31">Centro:</label>
+                <helper type="combo" id="RH_CENTROEDUC">
+                    <field id="id_centro"/>
+                    <field id="descripcion"/>
+                    <order>
+                        <field id="descripcion"/>
+                    </order>
+                </helper>
+            </field>
+
+            <field id="inicio">
+                <label posx="5" posy="+2" size="31">Inicio:</label>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="fin">
+                <label posx="85" posy="0" size="31">Fin:</label>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="edicion">
+                <label posx="155" posy="0" size="31">Horas:</label>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="contenido" pdfancho="170">
+                <label posx="5" posy="+2" size="31">Contenido:</label>
+            </field>
+
+            <field id="modalidad">
+                <label posx="5" posy="+2" size="31">Modalidad:</label>
+            </field>
+
+            <field id="observacion">
+                <label posx="5" posy="+2" size="31">Observacion:</label>
+            </field>
+
+            <!--<field id="cursosrealizados" local="true" colstyle="display:none;">
+                <helper type="object" xml="cursorealizado.xml" dir="">
+                    <parameter source="Id_curso" target="Id_curso" />
+                </helper>
+                <label posx="5" posy="+4">Cursantes</label>
+            </field>-->
+
+            <field id="label_cursosrealizados" local="true" PDFbold="true">
+                <label posx="20" posy="+4" size="31" />
+                <valor>Cursantes</valor>
+            </field>
+
+            <field id="label_firma" local="true" style="text-align:center;" PDFbold="true">
+                <label posx="150" posy="0" size="31"/>
+                <valor>Firma</valor>
+            </field>
+
+	    
+            <field id="cursosrealizados" local="true" PDFnoborder="true">
+                <label posx="5" posy="+7" />
+                <expression><![CDATA[SELECT GROUP_CONCAT(CONCAT(RPAD(CONCAT(P.apellido, ' ', P.nombre),74,'.'),'______________________________') SEPARATOR '\n\n') FROM RH_CURSO_REALIZADO RCR
+                                        JOIN PERSONAL P ON P.IdPersona = RCR.IdPersona
+                                        WHERE RCR.Id_curso = RH_CURSOS.Id_curso]]></expression>
+            </field>
+
+            <!--<field id="cursosrealizadosfirma" local="true" PDFnoborder="true">
+                <label posx="127" posy="0" />
+                <expression><![CDATA[SELECT GROUP_CONCAT('..................................' SEPARATOR '\n\n') FROM RH_CURSO_REALIZADO RCR
+                                        JOIN PERSONAL P ON P.IdPersona = RCR.IdPersona
+                                        WHERE RCR.Id_curso = RH_CURSOS.Id_curso]]></expression>
+            </field>-->
+
+            <group>
+                <field id="Id_curso" />
+            </group>
+
+        </table>
+    </form>
+</histrix>

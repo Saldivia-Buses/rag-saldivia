@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" inserta="false" modifica="false" imprime="false" deleteRow="false" procesa="false">
+  <title>Recepcion de Depositos</title>
+  <obs></obs>
+  <form>
+    <table id="STK_MOVIMIENTOS" label="Recepción de Depositos">
+
+      <movimientos>
+        <relacion id="stktransfer_upd_cdev.xml"/>
+        <relacion id="stktransfer_upd_concept_cdev.xml"/>
+        <relacion id="stktransfer_ins_cdev.xml"/>
+      </movimientos>
+
+  <fieldGroup style="vertical-align:middle; text-align:center; padding:2px;">
+
+      <field id="id_stkmovimiento" noshow="true" >
+        <label>id_stk</label>
+      </field>
+
+      <field id="fecha_movimiento" noshow="true" />
+      <field id="numero_movimiento" noshow="true" />    
+      <field id="precio_costo" noshow="true" />
+      <field id="precio_venta" noshow="true" />
+      <field id="precio_total" noshow="true" />
+      <field id="precio_promedio" noshow="true" />
+      <field id="_ORDEN" local="true" noshow="true" />
+      <field id="stkrubro_id" noshow="true" />
+      
+      <field id="stkarticulo_id">
+        <label>Código</label>
+      </field>
+
+      <field id="nombre_articulo" tabla="STK_ARTICULOS">
+        <label>Articulo</label>
+      </field> 
+
+      <field id="stkconcepto_id" _noshow="true" editable="true">
+        <label>Concepto ingreso</label>
+        <label >Concepto Devolucion</label>
+          <helper type="combo" id="STK_CONCEPTOS">
+            <field id="id_stkconcepto" />
+            <field id="nombre_concepto" />
+            <field id="tipo_concepto">
+              <condicion operador="=">0</condicion>
+            </field>
+          </helper>
+          <valor default="true">7</valor>
+      </field>
+
+      <field id="pendiente">
+        <label>Enviada</label>        
+        <tipo>numeric</tipo>
+        <condicion operador="&gt;">0</condicion>
+      </field>
+
+      <field id="cantidad" editable="true">
+        <label>Ingresada</label>
+        <tipo>numeric</tipo>
+        <jseval campodestino="cant_pendiente" actxml="false">(pendiente - cantidad).toFixed(2)</jseval>
+      </field>
+
+      <field id="ingresorechazo" local="true" noshow="true">
+               <if exp="cantidad == 0">
+                 <true>'1'</true>
+                 <false>'0'</false>
+               </if>
+      </field>
+
+      <field id="cant_pendiente" editable="true" local="true" deshabilitado="true" >
+          <label>Pendiente</label>
+          <tipo>numeric</tipo>
+      </field>
+
+      <field id="haydevolucion" local="true" noshow="true">
+               <if exp="cant_pendiente != 0">
+                 <true>'1'</true>
+                 <false>'0'</false>
+               </if>
+      </field>
+
+      <field id="concepto_devolucion" local="true" required="true" noshow="true">
+          <label >Concepto Devolucion</label>
+          <valor default="true">7</valor>
+        </field>
+
+      <field id="observaciones" editable="true" local="true">
+        <label>Observaciones</label>
+        <size>20</size>
+      </field>
+
+  </fieldGroup>
+
+      <order>
+        <field id="orden_movimiento" />
+      </order>
+
+    </table>
+
+    <join>
+      <tabla id="STK_CONCEPTOS">
+        <field id="id_stkconcepto">
+          <condicion operador="=">stkconcepto_id</condicion>
+        </field>
+        <field id="tipo_concepto">
+          <condicion operador="=">0</condicion>
+        </field>
+      </tabla>
+    </join>
+
+    <join>
+      <tabla id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">stkarticulo_id</condicion>
+        </field>
+      </tabla>
+    </join>
+
+
+  </form>
+</histrix>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Esta grabación tiene como objetivo grabar la partida contable
+	referida a la cuenta de disponibilidades
+-->
+<histrix tipo="insert">
+    <title/>
+    <obs/>
+    <form>
+        <table id="CAJ_DETALLES" idCampoCond="grabar_ctb">
+            <field id="cajmovimiento_id" lastId="cajmovimientos_ruta_ins.xml"/>
+            <field id="cuenta_id"       id_padre="ctbcuenta_detalle_efec" required="true"/>
+            <field id="doh"             >
+          	  <valor>0</valor>
+            </field>
+            <field id="importe_detalle" id_temp="total_imputado" required="true"/>
+        </table>
+    </form>
+</histrix>

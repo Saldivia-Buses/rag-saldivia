@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="cabecera" graba="false">
+    <title>ENTRADA SALIDA STOCK POR CODIGO</title>
+    <obs></obs>
+    <form >
+        <table id="stkinmov" label="SALIDA DE MATERIALES">
+
+            <field id="siscod" oculto="true">
+                <label>siscod</label>
+                <parametro id="fsmparam_paralf.xml" retorna="paralf">
+                    <field id="parcla">
+                        <condicion operador="=">'sisstk'</condicion>
+                    </field>
+                </parametro>
+            </field>
+            <field id="sisprv" oculto="true">
+                <label>Cod prov</label>
+                <parametro id="fsmparam_paralf.xml" retorna="paralf">
+                    <field id="parcla">
+                        <condicion operador="=">'sispro'</condicion>
+                    </field>
+                </parametro>
+                <tipo>char</tipo>
+            </field>
+
+            <field id="nrocha" required="true">
+                <label modpos="nobr">Unidad</label>
+                <help>Unidad</help>
+                <helper type="external" xml="HLPchasis_service.xml" dir="/help_local"></helper>
+                <valor>9999</valor>
+                <tipo>integer</tipo>
+            </field>
+
+            <field id="chades" deshabilitado="true">
+                <label modpos="nobr">Chasis</label>
+                <tipo>varchar</tipo>
+                <size>40</size>
+            </field>
+
+            <field id="ctacod" deshabilitado="true">
+                <label modpos="nobr">Cliente</label>
+            </field>
+
+            <field id="movfec" deshabilitado="true">
+                <label modpos="nobr">Fecha</label>
+                <help>Fecha del Movimiento</help>
+                <tipo>date</tipo>
+                <valor>today</valor>
+            </field>
+
+            <field id="opecod" required="true">
+                <label>Operario</label>
+                <ayuda_ex id="PERSONAL" xml="HLPpersonal_ope.xml" dir="/help_local">
+                    <field id="opecod"></field>
+                    <field id="nombres">
+                        <expression>CONCAT(PERSONAL.apellido,', ', PERSONAL.Nombre)</expression>
+                        <detalle>openom</detalle>
+                    </field>
+                </ayuda_ex>
+            </field>
+            
+            <field id="openom" deshabilitado="true" local="true">
+                <label modpos="nobr" colspan="2"></label>
+                <size>40</size>
+            </field>
+
+            <field id="movnro" deshabilitado="true">
+                <label modpos="nobr">Número</label>
+                <help>Número</help>
+                <parametro id="fsmparam_parent.xml" retorna="parent">
+                    <field id="parcla" oculto="true">
+                        <condicion operador="=">'nroalm'</condicion>
+                    </field>
+                    <field id="parent">
+                        <complete>parent +  1</complete>
+                    </field>
+                </parametro>
+                <tipo>integer</tipo>
+            </field>
+
+            <field id="opecla" local="true" oculto="true">
+                <label>Usuario</label>
+                <valor eval="true">$_SESSION['usuario']</valor>
+            </field>
+
+            <field id="movcod"  oculto="true">
+                <valor>41</valor>
+            </field>
+
+            <field id="depcod"  oculto="true">
+                <valor>2</valor>
+            </field>
+
+        </table>
+    </form>
+</histrix>

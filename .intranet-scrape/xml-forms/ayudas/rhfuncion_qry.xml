@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Secciones</title>
+  <obs></obs>
+  <consulta>
+    <table id="RH_FUNCIONES" label="Funciones">
+      <field id="id_rhfuncion" autoinc="true" noshow="true">
+        <label>Codigo</label>
+        <help>Código de funcion</help>
+      </field>
+      <field id="nombre_funcion">
+        <label>Nombre </label>
+        <help>Nombre de la funcion </help>
+        <size>15</size>
+      </field>
+    </table>
+  </consulta>
+</histrix>  

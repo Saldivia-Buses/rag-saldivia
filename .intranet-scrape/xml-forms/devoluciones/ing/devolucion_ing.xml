@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="fichaing" inserta="false" borra="false" modifica="false" subtipo="vertical" llenoTemporal="false" imprime="false" autoing="false" log="false"  procesa="true">
+    <title>Devolución de Materiales</title>
+    <obs></obs>
+    <form >
+
+        <table id="CPSMOVIM" >
+            <title>Estados</title>
+
+            <movimientos>
+<!--				<relacion id="cpsmovim_ingmov.xml" />	 -->
+				<relacion id="stkinmov_ingmov.xml" />	              
+                <relacion id="devremito_ingmov.xml" />
+                <relacion id="devremito_upd.xml" />
+                <relacion id="cpsencab_rec_ingmov.xml" />
+                <relacion id="fsmparam_nroalm_upd.xml"/>
+
+                <relacion id="devremito_imprimir.xml" />
+            </movimientos>
+
+            <validation>
+            	<condition><![CDATA[ ctacod == 0 ]]></condition>
+            	<message>Debe elegir un proveedor</message>
+            </validation>
+
+            <validation>
+            	<condition><![CDATA[ artcod == '' ]]></condition>
+            	<message>Debe elegir un artículo</message>
+            </validation>
+
+			<cierraproceso id="noconformidad_ing.xml" dir="/calidad/ing" noshow="true" condition="grabanconf == 1">
+			  <paring destino="origennconf_id">7</paring>
+			  <paring destino="subsistema_id">01</paring>
+			  <paring destino="codigodem">1</paring>
+			  <paring destino="stkarticulo_id">artcod</paring>
+			  <paring destino="stkarticulo_nombre">artdes</paring>
+			  <paring destino="regcuenta_id">regcuenta_id</paring>
+			  <paring destino="nombre_cuenta">ctanom</paring>
+			</cierraproceso>
+            
+            <field id="ctacod" local="true" requiered="true">
+                <label>Proveedor</label>
+                <helper type="external" id="REG_CUENTA">
+                    <field id="nro_cuenta">
+                    </field>
+                    <field id="NOM">
+                        <expression having="false">CONCAT(nombre_fantasia, ' (',  nombre_cuenta,')')</expression>
+                        <label>Nombre</label>
+                        <detalle>ctanom</detalle>
+                    </field>
+                    <field id="subsistema_id" oculto="true">
+                        <condicion operador="=">'01'</condicion>
+                    </field>
+                    <field id="baja" oculto="true">
+                        <condicion operador="=">0</condicion>
+                    </field>
+        		    <field id="id_regcuenta" noshow="true" >
+        			     <detalle>regcuenta_id</detalle>
+        		    </field>
+                    <order>
+                       <field id="NOM">
+                    	    <expression having="false">CONCAT(nombre_fantasia, ' (',  nombre_cuenta,')')</expression>
+        		         </field>
+                    </order>
+                </helper>
+		<actualiza>
+		    <field id="ocpnro" destino="ctacod" />
+		</actualiza>
+            </field>
+
+            <field id="ctanom" local="true" deshabilitado="true" _noshow="true">
+                <label modpos="nobr">Nombre</label>
+				<size>60</size>
+            </field>
+
+    	    <field id="regcuenta_id" local="true" noshow="true" />
+
+    	    <field id="ocpnro">
+    		  <label>Nro O.C.</label>
+                <helper type="combo" xml="cpsencab_qry.xml"  empty="true">
+		    <field id="movfec">
+		        <expression>date_format(ocpfec, '%d/%m/%Y')</expression>
+		        <detalle>movfec</detalle>
+			<tipo>date</tipo>
+		    </field>
+		</helper>
+
+    	    </field>
+
+			<field id="movfec" deshabilitado="true">
+				<label modpos="nobr">Fecha OC</label>
+				<tipo>date</tipo>
+			</field>
+
+            <field id="artcod">
+                <label>Código Artículo</label>
+                <help>Código de Artículo</help>
+                <ayuda_ex id="STKINSUM" xml="HLPstkinsum_old.xml" dir="/help_local">
+                    <field id="artcod">
+                        <label>Cod.</label>
+                        <detalle>artcod</detalle>
+                    </field>
+                    <field id="artdes">
+                        <label>Insumo</label>
+                        <detalle>artdes</detalle>
+                    </field>
+                    <field id="unicps" oculto="true">
+                        <detalle>unicps</detalle>
+                    </field>
+                    <field id="artuni" oculto="true">
+                        <detalle>artuni</detalle>
+                    </field>
+                    <field id="artcos" oculto="true">
+                        <detalle>artcos</detalle>
+                    </field>
+                    <field id="artrub" oculto="true">
+                        <detalle>artrub</detalle>
+                    </field>
+                    <field id="unidef" oculto="true">
+                        <detalle>unidef</detalle>
+                    </field>
+                    <field id="valcps" oculto="true">
+                        <detalle>valcps</detalle>
+                    </field>
+                    <field id="valuso" oculto="true">
+                        <detalle>valuso</detalle>
+                    </field>
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">'01'</condicion>
+                    </field>
+                    <clave>artcod</clave>
+                    <descripcion>artdes</descripcion>
+                </ayuda_ex>
+                <actualiza>
+                    <field id="depcod" destino="stkarticulo_id" />
+                </actualiza>
+                <size>10</size>
+            </field>
+
+            <field id="artdes" deshabilitado="true" local="true">
+                <label modpos="nobr">Descripción</label>
+                <tipo>varchar</tipo>
+		          <size>80</size>
+            </field>
+
+            <field id="remdev" local="true">
+                <label>Nro. Remito</label>
+            </field>
+
+            <field id="fecdev" local="true" required="true">
+                <label modpos="nobr">Fecha Devolución</label>
+                <tipo>date</tipo>
+		      <valor>today</valor>
+            </field>
+
+            <field id="codigodem" local="true">
+                <helper type="combo" id="DEMERITO">
+                  <field id="coddem"></field>
+                  <field id="desdem"></field>
+                  <field id="inactivo">
+			<condicion operador="=">0</condicion>
+		    </field>
+                </helper>
+                <label >Tipo Demérito</label>
+                <valor>3</valor>
+            </field>
+
+           <field id="depcod" local="true"  _required="true" colspan="4" editable="true">
+                <label>Depósito Origen</label>
+                <attribute id="deshabilitado">permito</attribute>
+                <helper xml="deposito_articulo_qry.xml" dir="/stock_local/qry" type="combo" _empty="true">
+                    <parameter source="artcod" target="stkarticulo_id" />
+                    <field id="stkarticulo_id" oculto="true">
+                        <condicion operador="=" valorde="artcod"></condicion>
+                    </field>
+                </helper>
+            </field>
+
+            <field id="stkdeposito_id" noshow="true" editable="true" local="true"/>
+
+            <field id="stklocacion_id" noshow="true" editable="true" local="true"/>
+
+			<field id="cantidadDevuelta" local="true">
+				<label style="text-color:red;">Cantidad devuelta</label>
+				<jseval campodestino="newpencps">cantidadDevuelta + pencps</jseval>
+			</field>
+
+    	    <field id="observacion">
+        		<label>Observación</label>
+        		<size>100</size>
+    	    </field>
+
+			<field id="tieneNoConf" local="true">
+				<label style="color:red; font-size:14px;">Generar No Conformidad</label>
+				<valor>1</valor>
+				<tipo>check</tipo>
+				<jseval campodestino="grabanconf">(tieneNoConf)?1:0</jseval>
+			</field>
+
+			<field id="descuentaStock" local="true">
+				<label style="color:green; font-size:14px;">Descuenta Stock</label>
+				<valor>1</valor>
+				<tipo>check</tipo>
+			</field>
+
+			<field id="grabanconf" local="true" noshow="true">
+				<valor>1</valor>
+			</field>
+
+			<field id="pencps" _local="true" deshabilitado="true" noshow="true">
+				<label modpos="nobr">Pendiente</label>
+			</field>
+
+			<field id="newpencps" local="true" deshabilitado="true" noshow="true">
+				<label modpos="nobr">Pendiente nuevo</label>
+				<expression>pencps</expression>
+			</field>
+
+			<field id="artrub" local="true" noshow="true" />
+            <field id="artuni" local="true" noshow="true" />
+
+            <field id="movnro" deshabilitado="true" local="true" noshow="true">
+                <label modpos="nobr">Número</label>
+                <help>Número</help>
+                <parametro id="fsmparam_parent.xml" retorna="parent">
+                    <field id="parcla" oculto="true">
+                        <condicion operador="=">'nroalm'</condicion>
+                    </field>
+                    <field id="parent">
+                        <complete>parent +  1</complete>
+                    </field>
+                </parametro>
+                <tipo>integer</tipo>
+            </field>
+
+			<field id="nrocha" noshow="true"/>
+			
+			<field id="opecla" local="true" noshow="true">
+                <label  >Usuario</label>
+                <valor eval="true">$_SESSION['usuario']</valor>
+            </field>
+
+            <field id="movref" deshabilitado="true" local="true" noshow="true">
+                <valor eval="true">date('H:i:s').' Salida por rechazado'</valor>
+            </field>
+
+			<field id="movcod" local="true" noshow="true">
+				<valor>45</valor>
+			</field>
+
+			<field id="7" local="true" noshow="true">
+				<valor>7</valor>
+			</field>
+
+			<field id="01" local="true" noshow="true">
+				<valor>01</valor>
+			</field>
+
+			<field id="1" local="true" noshow="true">
+				<valor>1</valor>
+			</field>
+
+            <field id="cero" local="true" noshow="true">
+                <valor>0</valor>
+            </field>
+        </table>
+    </form>
+</histrix>

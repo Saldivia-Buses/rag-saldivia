@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="cabecera" width="40" autoprint="true">
+  <title>Libro diario</title>
+  <obs></obs>
+  <form   _inline="true">
+    <table id="CTB_MOVIMIENTOS" label="Libro diario">
+      <field id="nro_minuta" noshow="false" deshabilitado="true">
+        <label>Nro de Asiento</label>
+        <help>Nº minuta</help>
+	<size>4</size>
+      </field>
+      <field id="id_movimiento" noshow="true" print="false" deshabilitado="true" >
+        <label>Codigo</label>
+        <help>Código de movimiento</help>
+	<detalle>movimiento_id</detalle>
+      </field>
+      <field id="concepto_id" noshow="true" print="false" deshabilitado="true">
+        <tabla_ex xml="conceptos_crud.xml">
+        </tabla_ex>
+        <label modpos="nobr">Concepto</label>
+        <help>Código de concepto</help>
+      </field>
+      <field id="fecha_movimiento" deshabilitado="true">
+        <label>Fecha</label>
+	<tipo>date</tipo>
+        <help>Fecha movimiento</help>
+      </field>
+      <field id="referencia1" local="true" deshabilitado="true">
+        <label>Referencia</label>
+        <help>Referencia del movimiento</help>
+      </field>
+      <field id="ejercicio_id" noshow="true" print="false" deshabilitado="true">
+<!--        <tabla_ex xml="ejercicios_crud.xml">
+          <field id="activo" tipoOrden="DESC"/>
+            <field id="finaliza">
+            </field>  
+        </tabla_ex> -->
+        <label>Ejercicio</label>
+        <help>Ejercicio contable</help>
+      </field>
+      <field id="abreviacion_concepto" tabla="CTB_CONCEPTOS" colstyle="Display:none;" print="false" deshabilitado="true">
+        <label>Concepto</label>
+        <help>Codigo de concepto</help>
+      </field>
+      <group>
+        <field id="id_movimiento"></field>
+      </group>
+    </table>
+    <join tipo="inner">
+      <table id="CTB_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">concepto_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="CTB_DETALLES">
+        <field id="movimiento_id">
+          <condicion operador="=">id_movimiento</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>  

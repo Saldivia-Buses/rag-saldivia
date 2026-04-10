@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" sololectura="true" preFetch="true" imprime="false" inserta="false" modifica="false" procesa="false" path="fotos/articulos">
+  <title>Locación</title>
+  <obs/>
+  <form >
+    <table id="STK_SOLICITUD_STKARTICULO" label="Scan">
+      <fieldGroup>
+
+	<field id="id_stksolicitud" autoinc="true" noshow="true">
+	</field>
+
+        <field id="stkarticulo_id" >
+          <label>Código</label>
+        </field>
+
+        <field id="nombre_articulo" deshabilitado="true" tabla="STK_ARTICULOS">
+	    <label>Descripción</label>
+	    <expression>nombre_articulo</expression>
+        </field>
+
+	<field id="peso_articulo"  tabla="STK_ARTICULOS">
+	    <label>peso Pieza (Kg)</label>
+	</field>
+
+        <field id="codigo_locacion" >
+	    <label>Locación</label>
+	    <expression>codigo_locacion</expression>
+        </field>
+
+
+    <field id="stock_minimo" tabla="STK_ARTICULO_LOCACION">
+      <label>Mínimo</label>
+    </field>
+
+    <field id="stock_maximo" tabla="STK_ARTICULO_LOCACION">
+      <label>Máximo</label>
+    </field>
+
+      <field id="frecuencia" deshabilitado="true">
+	<expression>frecuencia</expression>
+         <label>Frecuencia</label>
+	 <tipo>rrule</tipo>
+      </field>
+      
+      <field id="piezas_pack">
+         <label>Cantidad de Piezas</label>
+      </field>
+    
+
+      <field id="descripcion_standardpack">
+        <label>Standard Pack</label>
+
+	<expression>descripcion_standardpack</expression>
+      </field>
+      
+      <field id="piezas_pack">
+	<expression>piezas_pack</expression>
+         <label>Cantidad de Piezas</label>
+      </field>
+	<field id="peso_total">
+	    <label>peso Total (Kg)</label>
+	    
+		<expression>peso_articulo * piezas_pack</expression>
+	</field>
+	<field id="peso_gramo">
+	    <label>peso Total (En Gramos)</label>
+	    
+		<expression>peso_articulo * piezas_pack * 1000</expression>
+	</field>
+<!--
+      <field id="fotopath" local="true" noshow="true">
+        <if exp="true">
+          <true>'stkarticulo_id/'</true>
+          <false>''</false>
+        </if>
+        <tipo>varchar</tipo>
+      </field>
+-->
+      <field id="foto" _path="fotopath" _open="true" print="false" download="false" _viewer="true" watermark="stkarticulo_id" deshabilitado="true">
+          <expression>select concat(idArticulo,'/',ARTICULO_FOTO.foto) from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = STK_ARTICULO_LOCACION.stkarticulo_id and ARTICULO_FOTO.foto != '' order by revision desc limit 1</expression> 
+	        <label>Imagen</label>
+          <tipo Type="Image">file</tipo>
+          <size>40</size> 
+      </field>
+
+    <field id="deposito_origen_id" tabla="STK_ARTICULO_LOCACION">
+	<label>Depósito Origen</label>
+	<helper id="STK_DEPOSITOS"  type="combo" empty="true">
+	    <field id="id_stkdeposito" />
+	    <field id="nombre_deposito" />
+	</helper>
+    </field>
+
+    <field id="locacion_origen_id"  tabla="STK_ARTICULO_LOCACION">
+	<label>Loación Origen</label>
+	<helper id="STK_LOCACION"  type="combo" empty="true">
+	    <field id="id_stklocacion" />
+	    <field id="codigo_locacion" />
+	    <field id="stkdeposito_id" >
+<!--		<condicion operador="=">0</condicion> -->
+	    </field>
+	</helper>
+	
+    </field>
+
+    
+
+      </fieldGroup>
+
+    </table>
+    <join>
+	<table id="STK_ARTICULOS">
+	    <field id="id_stkarticulo">
+		<condicion operador="=">stkarticulo_id</condicion>
+	    </field>
+	</table>
+    </join>
+    <join>
+	<table id="STK_LOCACION">
+            <field id="id_stklocacion">
+		<condicion operador="=">stklocacion_id</condicion>
+            </field>
+	</table>
+    </join>  
+
+    <join>
+	<table id="STK_ARTICULO_LOCACION">
+            <field id="stklocacion_id">
+		<condicion operador="=">id_stklocacion</condicion>
+            </field>
+
+	    <field id="stkarticulo_id">
+		<condicion operador="=">id_stkarticulo</condicion>
+	    </field>
+	</table>
+    </join>  
+    <join tipo="left">
+	<table id="STK_ARTICULO_PACK">
+            <field id="id_articulopack">
+		<condicion operador="=">articulopack_id</condicion>
+            </field>
+	</table>
+    </join>  
+    <join tipo="left">
+	<table id="STK_STANDARD_PACK">
+            <field id="id_standardpack">
+		<condicion operador="=">standardpack_id</condicion>
+            </field>
+	</table>
+    </join>  
+
+</form>
+</histrix>

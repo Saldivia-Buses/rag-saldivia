@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" inserta="false" modifica="false" procesa="false" _autoprint="true" preFetch="true"  path="fotos/homologaciones/">
+  <title>Planos</title>
+  <obs/>
+  <form >
+    <table id="HOMOLOGMOD">
+      <title>Homologaciones por modelo</title>
+
+      <field id="id_homologacion" noshow="true" deshabilitado="true" autoinc="true" posX="5" posY="+2" >
+          <label>Homolog</label>
+      </field>
+
+    
+    
+    <field id="fotos" path="id_homologacion" _local="true" imageWidth="155" imageHeight="155" _atermark="id_homologacion">
+        <expression>CONCAT('/files/fotos/homologaciones/',id_homologacion,'/')  </expression> 
+        <label modpos="nobr" posX="5" posY="+2">Planos</label>
+
+        <tipo>dir</tipo>
+    </field>
+    </table>
+  </form>
+</histrix>

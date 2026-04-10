@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="abm-mini" borra="no" inserta="no" paginar="250" path="fotos/articulos">
+	<title>Insumos</title>
+	<obs></obs>
+	<form >
+		<table id="STKINSUM" >
+			<title>Insumos</title>
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+                <valor>'01'</valor>
+			</field>
+			<field id="artcod" deshabilitado="true" esClave="true">
+<!-- 				<ayuda_ex id="STKINSUM"  xml="HLPstkinsum.xml" dir="/help_local"> -->
+				<ayuda_ex id="STKINSUM" >
+					<field id="artcod" _oculto="true">
+						<label>Cod</label>
+					</field>
+					<field id="artdes">
+						<label>Nombre</label>
+						<detalle>artdes</detalle>
+					</field>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'01'</condicion>
+					</field>					
+			
+				</ayuda_ex>
+				
+				<label>Cod.</label>
+				<detalle>artcod</detalle>
+			</field>
+			<field id="artdes" autocompletar="true" deshabilitado="true">
+				<label>Articulo</label>
+				<help>Descripcion de Articulo.</help>
+				<ayuda_ex id="STKINSUM" >
+					<field id="artcod" noshow="true">
+						<label>cod</label>
+						<detalle>artcod</detalle>
+					</field>
+
+					<field id="artdes">
+						<label>Nombre</label>
+						<detalle>artdes</detalle>
+					</field>
+				
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'01'</condicion>
+					</field>					
+			
+				</ayuda_ex> 
+                <size>40</size>
+			</field>
+<!--			<field id="valcps" deshabilitado="true">
+				<label>Val.Compra</label>
+				<help>Valor de Compra </help> -->
+			<!--	<condicion operador="!=">valuso</condicion> -->
+				
+<!--			</field>
+			
+			<field id="unicps" deshabilitado="true">
+				<label modpos="nobr">Unidad</label>
+				<help>Unidad de Compra </help>
+				<tabla_ex id="FSMUNIDS">
+					<field id="unicod"></field>
+					<field id="uninom"></field>
+				</tabla_ex>
+			</field>
+			<field id="valuso" deshabilitado="true">
+				<label>Val.Uso</label>
+				<help>Valor de Uso </help>-->
+				<!--		      <condicion operador="=">1</condicion> -->
+<!--				
+			</field>
+			
+			<field id="artuni">
+				<label modpos="nobr">U.Uso</label>
+				
+				<help>Unidad de Uso </help>
+				<tabla_ex id="FSMUNIDS">
+					<field id="unicod"></field>
+					<field id="uninom"></field>
+				</tabla_ex>
+			</field> -->
+			
+			<field id="baja" oculto="true">
+				<condicion operador="!=">1</condicion>
+			</field>
+<!--			
+
+			<field id="artpor">
+				<label>Descuento</label>
+				<help>Porcentaje de Descuento</help>
+			</field>
+			
+			<field id="valcps">
+				<label>Val.Compra</label>
+				<help>Valor de Compra </help>
+				
+			</field>
+			
+			<field id="unicps">
+				<label>Unidad</label>
+				<help>Unidad de Compra </help>
+				<tabla_ex id="FSMUNIDS">
+					<field id="unicod"></field>
+					<field id="uninom"></field>
+				</tabla_ex>
+			</field>
+			<field id="valuso">
+				<label>Val.Uso</label>
+				<help>Valor de Uso </help>
+				
+			</field>
+			
+			<field id="artuni">
+				<label>U.Uso</label>
+				
+				<help>Unidad de Uso </help>
+				<tabla_ex id="FSMUNIDS">
+					<field id="unicod"></field>
+					<field id="uninom"></field>
+				</tabla_ex>
+			</field>
+			
+			<field id="calculo">
+				<label>Calculo</label>
+				<expression>artcos * valcps / valuso</expression>
+				<help>Calculo</help>
+			</field>
+			-->
+			
+			<!--
+			<field id="fecult" local="true" deshabilitado="true">
+				<expression>max(STKINSPR.fecult)</expression>
+				<label>Ult</label>
+			</field>                  -->
+			<field id="prov" deshabilitado="true" Formstyle="display:none;">
+				<label >prov</label>
+				<expression >(select INSPR.ctacod from STKINSPR as INSPR where INSPR.artcod = STKINSUM.artcod and INSPR.siscod = STKINSUM.siscod order by fecult DESC limit 1)</expression>
+		                     <tabla_ex id="CCTCUENT" _xml="cctcuent.xml">
+					 <field id="ctacod">
+						 
+					 </field>
+					 <field id="ctafan">
+						 
+					 </field>
+					 <field id="siscod" oculto="true">
+						 <condicion operador="=">'01'</condicion>
+
+					 </field>
+					 
+				 </tabla_ex>
+				<tipo>varchar</tipo>
+			</field>
+
+		  <field id="fecult" tabla="STKINSUM" tipoOrden="DESC">
+			<expression>ultima_compra</expression>
+		<!--    
+			<expression>(select INSPR.fecult from STKINSPR as INSPR where INSPR.artcod = STKINSUM.artcod and INSPR.siscod = STKINSUM.siscod order by fecult DESC limit 1)</expression> 
+		-->
+			<label>ult.compra</label>
+			<tipo>date</tipo>
+		  </field>
+  
+<!--			
+			<field id="artcos">
+				<label>Costo</label>
+				<help>Precio de Costo</help>
+			</field>			
+				-->
+      <field id="costoult" >
+        <label>Costo</label>
+        <expression>
+round(
+CASE WHEN tipocalculo_costo = 0 THEN
+
+(case WHEN (select sum(round( (costo_automatico * cantidad) * (1 + recargo / 100) , 2)) from STKPIEZA where idPadre  = STKINSUM.artcod limit 1) != 0 then (select sum(round( (costo_automatico * cantidad) * (1 + recargo / 100) , 2)) from STKPIEZA where idPadre  = STKINSUM.artcod limit 1)
+                when valcps &gt; valuso then costo_calculado * valcps
+                when valcps &lt; valuso then costo_calculado 
+
+                when ( costo_calculado * STKINSUM.valcps / STKINSUM.valuso) > 0  then (costo_calculado * STKINSUM.valcps / STKINSUM.valuso) else STKINSUM.artcos end)
+
+ELSE (SELECT artcos FROM STKINSPR sr WHERE sr.artcod = STKINSUM.artcod and sr.siscod = '01' ORDER BY fecult DESC LIMIT 1)
+
+END                , 2)
+              </expression>
+        <tipo>numeric</tipo>
+      </field>     
+			
+			<field id="porcVenta">
+				<label>%</label>
+				<help>Porcentaje</help>
+			</field>
+
+			<field id="precioVenta" deshabilitado="true">
+				<label>Precio de Venta</label>
+				<help>Precio de Venta</help>
+				<if exp="0costoult == 0" operador="=">
+					<false>0costoult + (0costoult * 0porcVenta / 100)</false>
+					<true>costoult</true>
+				</if>
+			</field>
+
+			<field id="repuesto">
+				<label>Repuesto</label>
+				<help>Repuesto Si o No </help>
+				<options>
+					<option valor=""></option>
+					<option valor="1">Si</option>
+					<option valor="0">No</option>
+				</options>
+				
+			</field>
+			
+			
+
+            <field id="fotopath" local="true" noshow="true" deshabilitado="true" Formstyle="display:none;">
+				<if exp="true">
+					<true>'artcod/'</true>
+					<false>''</false>
+				</if>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="foto" path="fotopath" download="true" deshabilitado="true" Formstyle="display:none;">
+                <expression>select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = STKINSUM.artcod order by revision desc limit 1</expression>
+				<label>Imagen</label>
+                <tipo >file</tipo>
+                <size>40</size>
+			</field>
+			<group>
+				<field id="artcod" tabla="STKINSUM">
+				</field>
+			</group>
+			<order>
+				<field id="artdes" tabla="STKINSUM">
+				</field>
+
+			</order>			
+			<filters>
+				<field id="artcod" deshabilitado="false">
+					<ayuda_ex id="STKINSUM">
+						<clave>artcod</clave>
+						<descripcion>artdes</descripcion>
+					</ayuda_ex>
+					
+					<label>Cod.</label>
+					<operador  modificador="left">=</operador>					
+				</field>			
+				<field id="artdes" >
+					<label>Articulo</label>
+					<help>Descripcion de Articulo. (ENTER = Retorna a ingreso de codigo).
+						</help>
+					<operador>like</operador>
+				</field>				
+				<field id="repuesto">
+					<operador>=</operador>
+					<label>Repuesto </label>
+					<valor>2</valor>
+				</field>
+			</filters>			
+		</table>
+		<join tipo="left">
+			<table id="STKINSPR">
+			<field id="siscod" oculto="true">
+				<condicion operador="=">STKINSUM.siscod</condicion>
+			</field>
+			<field id="artcod" oculto="true">
+				<condicion operador="=">STKINSUM.artcod</condicion>
+			</field>
+				
+			</table>
+		</join>		 
+	</form>
+</histrix>

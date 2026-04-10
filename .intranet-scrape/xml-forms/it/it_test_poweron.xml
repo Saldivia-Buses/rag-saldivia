@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="card" imprime="false" inserta="false">
+  <title>Inventario IT</title>
+  <obs></obs>
+  <form>
+    <table id="ITINVENTARY" label="INVENTARIO IT">
+      
+ 
+      <field id="id_itinventary" autoinc="true" noshow="true">
+        <label>ID</label>
+      </field> 
+
+      <field id="mac" noshow="true">
+       <label>macaddress</label>
+       <size>15</size>
+      </field> 
+
+       <field id="isup" local="true" deshabilitado="true" _noshow="true" _clasefila="true">
+               <if exp="true">
+                <true><![CDATA[(exec('wakeonlan mac > /dev/null && echo 1'))?'Prender':'Apagar']]></true>
+                <false>''</false>
+               </if>
+       </field>
+
+
+          </table>
+  </form>
+</histrix>

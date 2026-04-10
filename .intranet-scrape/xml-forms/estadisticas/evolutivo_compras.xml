@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<abm tipo="chart">
+	<titulo>COMPRAS ANUALES</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="GEN_CALENDAR" >
+			<titulo>Compras Anuales</titulo>
+
+	 
+		   <grafico id="COMPRAS" >
+			   <ancho>400</ancho>
+			   <tipo>L</tipo>
+			   
+			   <etiquetas>mes</etiquetas> 
+			   <serie>compras</serie>
+			   
+			   <titulo>Evolución de Compras</titulo>
+			   <subtitulo></subtitulo>
+		   </grafico>
+		    <filtros>
+			    <campo id="fecha">
+				    <label>Desde</label>
+				    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-12 month')) , 1, date("Y") -  1 ))</valor>
+				    <operador>&gt;=</operador>
+			    </campo>
+			    <campo id="fecha">
+                                    <label>Hasta</label>
+				    <valor eval="true">date('d/m/Y', strtotime('-1 second', strtotime(date('Y-m-01'))))</valor>
+				    <operador>&lt;=</operador>
+			    </campo>
+		    </filtros>
+                    <campo id="fecha" oculto="true">
+<!--                        <condicion operador="&gt;="> DATE_FORMAT(date_sub(date(now()) , interval 1 year) ,'%Y-%m-01') and GEN_CALENDAR.fecha &lt;= now()</condicion> -->
+
+        <!--                <condicion operador="&gt;="> date_sub(date(now()) , interval 1 year) and GEN_CALENDAR.fecha &lt;= now()</condicion> -->
+                    </campo>
+                    <campo id="year" oculto="true">
+                        <expresion>year(fecha)</expresion>
+
+                    </campo>
+			<campo id="mes">
+				<expresion>month(fecha)</expresion>
+				<label>Mes</label>
+				<opciones>
+					<opcion valor="1">Ene</opcion>
+					<opcion valor="2">Feb</opcion>
+					<opcion valor="3">Mar</opcion>
+					<opcion valor="4">Abr</opcion>
+					<opcion valor="5">May</opcion>
+					<opcion valor="6">Jun</opcion>
+					<opcion valor="7">Jul</opcion>
+					<opcion valor="8">Ago</opcion>
+					<opcion valor="9">Sep</opcion>
+					<opcion valor="10">Oct</opcion>
+					<opcion valor="11">Nov</opcion>
+					<opcion valor="12">Dic</opcion>
+
+				</opciones>
+       				<tipo>varchar</tipo>
+			</campo>
+
+			<campo id="compras">
+				<expresion>(select sum(totcom * (case when conimp = 1 then -1 else 1 end)) from IVACOMPRAS
+                                left join CCTCONCE on CCTCONCE.concod = IVACOMPRAS.codcom and CCTCONCE.siscod = '01'
+                                where
+                                month(IVACOMPRAS.feciva) = month(GEN_CALENDAR.fecha) and
+                                year(IVACOMPRAS.feciva) = year(GEN_CALENDAR.fecha)) </expresion>
+				<label>Compras</label>
+                                <tipo>numeric</tipo>
+			</campo>
+			<group>
+                                <campo id="year"></campo>
+				<campo id="mes"></campo>
+
+			</group>
+		</tabla>
+		
+	</consulta>	   
+</abm> 

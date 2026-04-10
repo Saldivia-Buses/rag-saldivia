@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  Ayuda
+Tarea: Ayuda para la Tabla de Conceptos
+Autor: d!ego2k
+Fecha: 27/08/10
+*******************************************************************************
+-->
+<histrix tipo="consulta">
+	<title>Servicios</title>
+	<obs></obs>
+	<form >	    
+	<table id="FAC_CONCEPTOS" label="Conceptos">
+
+		<field id="id_facconcepto">
+			<label>Código</label>
+			<help>Código</help>
+		</field>
+
+		<field id="nombre_concepto">
+			<label>Nombre</label>
+			<help>Nombre</help>
+		</field>
+
+		<field id="nombre_servicio" tabla="FAC_SERVICIOS">
+			<label>Servicio</label>
+			<help>Servicio</help>
+		</field>
+	</table>
+	<join>
+		<table id="FAC_SERVICIOS">
+			<field id="id_facservicio">
+				<condicion operador="=">facservicio_id</condicion>
+			</field>
+		</table>
+	</join>
+
+	</form>
+</histrix>	

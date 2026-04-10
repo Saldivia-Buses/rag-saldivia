@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" imprime="false">
+	<title>Detalles de partida</title>
+	<obs></obs>
+	<form>
+		<table id="STK_PARTIDA_DETALLES" label="Detalles de partidas">
+			<field id="id_stkpartida_detalle" noshow="true" />
+			<field id="stkpartida_id" noshow="true" />
+			<field id="cantidad">
+				<label>Cantidad</label>
+			</field>
+			<field id="pendiente">
+				<label>Pendiente</label>
+			</field>
+			<field id="nombre_articulo" tabla="STK_ARTICULOS">
+				<label>Articulo</label>
+			</field>
+		</table>
+		<join>
+			<table id="STK_ARTICULOS">
+				<field id="id_stkarticulo">
+					<condicion operador="=">STK_PARTIDA_DETALLES.stkarticulo_id</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

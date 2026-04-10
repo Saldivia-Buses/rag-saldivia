@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="calendar" sidePanel="false" calendarDefaultView="basicWeek" 
+    calendarOptions="hiddenDays:[0],header:{left: 'prev,next today',right:'month,basicWeek,agendaDay'},"
+    imprime="false" export="false" inserta="false" modifica="true">
+
+    <title>ORDENES DE PRODUCCION</title>
+    <obs/>
+    <form >
+        <table id="MRP_ORDEN_PRODUCCION" label="Consulta de Ordenes de Producción">
+
+            edito el campo solamente si no se comenzo
+            <field id="editable" calendarEditable="true" noshow="true">
+                <expression>sum(ifnull(cantidad,0)) = 0</expression>
+            </field>
+
+
+            <field id="color" calendarColor="true" noshow="true">
+                <expression>case when sum(ifnull(cantidad,0)) = 0 then '' 
+                                 when sum(ifnull(cantidad,0)) &lt; objetivo_ordendetalle then 'orange' 
+                                 when sum(ifnull(cantidad,0)) = objetivo_ordendetalle then '#009900' 
+                                 end</expression>
+            </field>
+            <field id="fecha_cierre" noshow="true">
+                <condicion operador="=">'0000-00-00'</condicion>
+                <tipo>date</tipo>
+            </field>
+
+
+            <field id="fecha_orden" calendarStartDate="true"  editable="true">
+                <label>Fecha</label>
+                <help>Fecha de Orden de Fabricación</help>
+            </field>
+            <field id="id_mrporden" calendarId="true"  deshabilitado="true" noshow="true">
+            </field>
+            <field id="numero_orden"  deshabilitado="true">
+                <expression>concat((case when scv_ID = 0 and mrporden_concepto_id != 1 then 'R' 
+                                     when scv_ID = 0 and mrporden_concepto_id = 1 then 'A' else '' end), numero_orden)</expression>                
+                <label>Nro</label>
+                <help>Numero de Orden de Fabricación</help>
+            </field>
+            <field id="stkarticulo_id" tabla="MRP_ORDEN_DETALLE" calendarSubject="true" >
+                <expression>stkarticulo_id</expression>
+                <label>Producto</label>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="cantidad_detalle" suma="true" _calendarSum="true">
+                <label>Cantidad</label>
+                <expresion>sum(objetivo_ordendetalle)</expresion>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="alto_corte" >
+                <label>Alto</label>
+                <expression>(case when alto_ordendetalle != 0 then alto_ordendetalle else alto end)</expression>
+            </field>
+            <field id="ancho_corte">
+                <label>Ancho</label>
+                <expression>(case when ancho_ordendetalle != 0 then ancho_ordendetalle else alto end)</expression>
+            </field>
+
+            <field id="subject" calendarSubject="true" noshow="true">
+                <expression>concat( concat((case when scv_ID = 0 and mrporden_concepto_id != 1 then 'R' 
+                                     when scv_ID = 0 and mrporden_concepto_id = 1 then 'A' else '' end), numero_orden),' - ',round(objetivo_ordendetalle,0),' ' , stkarticulo_id,' ' , nombre_articulo)</expression>
+            </field>
+
+            <field id="ubicacion">
+                <label>ubicacion</label>
+                <expression>(select nombre_mrpseccion FROM MRP_SECCION where id_mrpseccion = ifnull( (select MPP.mrpseccion_id from MRP_PRODUCT_PATH MPP WHERE MPP.stkrubro_id = STK_ARTICULOS.stkrubro_id and MPP.parent_productpath_id = max(MRP_DETALLE_REGISTRO.mrpseccion_id)) , 1))</expression>
+            </field>
+            <!--
+                <field id="mrpestado_id" ><label>Estado </label><help>Estado Actual</help><options><option valor="0">Pendiente</option><option valor="1">Cumplida</option></options><valor>0</valor></field>-->
+            <group>
+                <field id="id_mrporden"/>
+            </group>
+            <order>
+                <field id="fecha_orden"/>
+            </order>
+        </table>
+        <join tipo="left">
+            <table id="REG_CUENTA">
+                <field id="id_regcuenta">
+                    <condicion operador="=">regcuenta_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="MRP_ORDEN_DETALLE">
+                <field id="mrporden_id">
+                    <condicion operador="=">MRP_ORDEN_PRODUCCION.id_mrporden</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="inner">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">MRP_ORDEN_DETALLE.stkarticulo_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="MRP_DETALLE_REGISTRO">
+                <field id="mrpseccion_id">
+                    <condicion operador="=">1</condicion>
+                </field>
+
+                <field id="mrpordendetalle_id">
+                    <condicion operador="=">MRP_ORDEN_DETALLE.id_mrpordendetalle</condicion>
+                </field>
+            </table>
+        </join>        
+    </form>
+</histrix>

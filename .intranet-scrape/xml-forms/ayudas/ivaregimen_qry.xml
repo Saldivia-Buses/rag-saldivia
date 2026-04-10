@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Regimenes de IVA</title>
+  <obs></obs>
+  <form >
+    <table id="GEN_IVA_REGIMENES" label="Regimenes de IVA">
+
+      <field id="id_iva_regimen" autoinc="true" noshow="true" />
+   
+      <field id="nombre_iva_regimen">
+        <label>Nombre</label>
+      </field>
+      
+    </table>
+  </form>
+</histrix>  

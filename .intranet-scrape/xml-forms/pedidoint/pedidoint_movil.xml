@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" subtipo="vertical" llenoTemporal="false" imprime="false" path="fotos/pedidoint" inserta="false" modifica="false">
+    <title>Pedidos Internos</title>
+    <obs></obs>
+	<customScript>
+	setTimeout(function(){
+		$('[name="idPadre"]').focus();
+	});
+<![CDATA[
+        $('<style type="text/css">[instance="[__instance__]"] input[name="feriado"]{ display:none;} </style>').appendTo("head");
+    ]]>
+        </customScript>
+    <form >
+        <table id="PEDIDOINT" label="Detalle de insumos pedidos">
+            <movimientos>
+                <relacion id="pedidoint_movil_ingmov.xml"></relacion>
+            </movimientos>
+
+			<field id="_usu" deshabilitado="true" required="true" noshow="true">
+				<label modpos="nobr">Usuario</label>
+				<valor eval="true">$_SESSION['usuario']</valor>
+			</field>
+
+            <field id="fechaemi" noshow="true">
+        		<valor>today</valor>
+        		<tipo>date</tipo>
+            </field>
+
+			<field id="tipocomp" deshabilitado="true" noshow="true">
+				<label>Tipo Comp</label>
+				<help>Tipo Comprobante </help>
+				<valor>1</valor>					
+			</field>
+
+			<field id="puesto" deshabilitado="true" noshow="true">
+				<label>Comprobante</label>
+				<valor>1</valor>
+			</field>
+
+			<field id="nrocom" deshabilitado="true" noshow="true">
+				<label modpos="nobr">-</label>
+				<parametro id="fsmparam_parent.xml" retorna="parent">
+					<field id="parcla" oculto="true">
+						<condicion operador="=">'pednro'</condicion>
+					</field>
+					<field id="parent">
+						<complete>parent + 1</complete>
+					</field>
+				</parametro>
+			</field>
+
+            <field id="idPadre" esClave="true" style="font-size:20px;">
+                <label>Artículo</label>
+                <help>Código de Artículo. </help>
+                <helper type="external" id="STKINSUM" xml="HLPstkinsum.xml" dir="/help_local">
+                    <field id="artcod">
+                        <label>Cod.</label>
+                        <detalle>artcod</detalle>
+                    </field>
+                    <field id="artdes">
+                        <label>Insumo</label>
+                        <detalle>artdes</detalle>
+                    </field>
+		    <field id="pedido_automatico" noshow="true">
+			<condicion operador="!=">1</condicion>
+		    </field>
+
+                    <field id="unicps" oculto="true">
+                        <detalle>unicps</detalle>
+                    </field>
+                    <field id="artuni" oculto="true">
+                        <detalle>artuni</detalle>
+                    </field>
+                    <field id="valcps" oculto="true">
+                        <detalle>valcps</detalle>
+                    </field>
+                    <field id="valuso" oculto="true">
+                        <detalle>valuso</detalle>
+                    </field>
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">'01'</condicion>
+                    </field>
+                    <field id="hlp" oculto="true">
+                        <expression>CONCAT(' ', ROUND(valcps,2),(SELECT FSMUNIDS.uninom from FSMUNIDS where FSMUNIDS.unicod = STKINSUM.unicps), '=',  ROUND(valuso, 2), (SELECT FSMUNIDS.uninom from FSMUNIDS where FSMUNIDS.unicod = STKINSUM.artuni)  )</expression>
+                        <detalle>hlp</detalle>
+                    </field>
+                    <field id="cantxuni">
+                	   <detalle>cantxuni</detalle>
+            	    </field>
+            	    <field id="demprov">
+            		  <detalle>demprov</detalle>
+            	    </field>
+                    <field id="lote_optimo">
+                        <detalle>lote_optimo</detalle>
+                    </field>
+                    <field id="artrep">
+                        <detalle>artrep</detalle>
+			             <detalle>cant</detalle>
+                    </field>
+                    <field id="artmin">
+                        <detalle>artmin</detalle>
+                    </field>
+					<field id="pendientes">
+						 <expression>SELECT 'Pendiente' FROM CPSENCAB LEFT JOIN CPSMOVIM on  ( CPSMOVIM.ocpnro = CPSENCAB.ocpnro ) WHERE CPSENCAB.ocpfec >= date_sub(curdate(), interval 2 year) and CPSMOVIM.artcod = STKINSUM.artcod
+                        and CPSENCAB.ocpest = '1' and CPSMOVIM.pencps > 0 GROUP BY CPSENCAB.ocpnro LIMIT 1</expression>
+						<detalle>pendientesenoc</detalle>
+					</field>
+
+                    <field id="pendientes01">
+                        <expression>SELECT 'No Autorizada' FROM CPSENCAB LEFT JOIN CPSMOVIM on  ( CPSMOVIM.ocpnro = CPSENCAB.ocpnro ) WHERE CPSENCAB.ocpfec >= date_sub(curdate(), interval 2 year) and CPSMOVIM.artcod = STKINSUM.artcod
+                        and CPSENCAB.ocpest = '0' GROUP BY CPSENCAB.ocpnro LIMIT 1</expression>
+                        <detalle>pendientessnooc</detalle>
+                    </field>
+
+                    <field id="pendientes02">
+                        <expression>SELECT 'Ya Pedido' FROM PEDIDOINT WHERE PEDIDOINT.artcod = '[__artcod__]' and PEDIDOINT.estado = 0 GROUP BY PEDIDOINT.idPed LIMIT 1</expression>
+                        <detalle>pendientessinoc</detalle>
+                    </field>
+
+        <!-- funcion para sumarle dias habiles y no feriados a fecha dina-->
+                    <field id="fecreq">
+                        <label>Fec. Req</label>
+                        <expression>SUMARWORKDAYSAFECHA(demprov)</expression>
+                       <detalle>fecreq</detalle>
+                        <tipo>date</tipo>
+                    </field>
+                    
+                    <clave>artcod</clave>
+                    <descripcion>artdes</descripcion>
+                </helper>
+        		<size>15</size>
+        		<tipo>integer</tipo>
+            </field>
+
+            <field id="pendientessinoc" local="true" deshabilitado="true" sincelda="true">
+                <label modpos="nobr" style="color:red;"></label>
+            </field>
+                                    
+            
+
+            <field id="pendientesenoc" local="true" sincelda="true" deshabilitado="true">
+                <label modpos="nobr" style="color:red;"></label>
+            </field>
+
+            <field id="pendientessnooc" local="true" sincelda="true" deshabilitado="true">
+                <label style="color:red;"></label>
+            </field>
+
+            <field id="artdes" deshabilitado="true" tabla="STKINSUM" esClave="true">
+                <label>Descripción</label>
+                <tipo>varchar</tipo>
+                <size>60</size>
+            </field>
+
+            <field id="centrocostos_id" required="true">
+                <label>Centro de costos</label>
+                <helper id="CTB_CENTROS"  type="combo" empty="true">
+                    <field id="id_ctbcentro" />
+                    <field id="centro">
+                        <expression>concat(referencia_centro,' ', nombre_centro)</expression>
+                    </field> 
+                </helper>
+            </field>
+
+            <field id="artrep" local="true" deshabilitado="true">
+                <label _modpos="nobr" style="color:red; font-size:12px;">Punto de Pedido</label>
+                <help>Punto de Pedido</help>
+                <tipo>decimal</tipo>
+            </field>            
+                    
+            <field id="cant" incdec="true" local="true" suma="true" preventLoop="true">
+                <label>Cantidad </label>
+                <help>Cantidad </help>
+                <tipo>decimal</tipo>
+                <valor>1</valor>
+            </field>
+
+            <field id="artuni" deshabilitado="true" esClave="true">
+                <label _modpos="nobr">Unidad de Uso </label>
+                <help>Unidad de Uso </help>
+                <helper type="combo" id="FSMUNIDS">
+                    <field id="unicod"></field>
+                    <field id="uninom"></field>
+                    <order>
+                        <field id="uninom"></field>
+                    </order>
+                </helper>
+            </field>
+
+            <field id="valuso" deshabilitado="true" noshow="true" esClave="true">
+                <label>valor de uso</label>
+                <valor>1</valor>
+            </field>
+
+            <field id="valcps" deshabilitado="true" noshow="true">
+                <label>valor Compra</label>
+                <valor>1</valor>
+            </field>
+
+            <field id="conversion" local="true" suma="true"  preventLoop="true" noshow="true">
+                <label>Conv</label>
+                <if exp="valcps == 1" operador="=">
+                    <true> cant / valuso</true>
+                    <false>cant * valcps</false>
+                </if>
+                <jseval campodestino="cant">(valcps == 1)?(conversion * valuso):(conversion / valcps)</jseval>
+				<format>%01.2f</format>
+            </field>
+
+            <field id="unicps"  deshabilitado="true">
+                <label modpos="nobr">Unidad de Compra</label>
+                <help>Unidad de Compra </help>
+                <helper type="combo" id="FSMUNIDS">
+                    <field id="unicod"></field>
+                    <field id="uninom"></field>
+                    <order>
+                        <field id="uninom"></field>
+                    </order>
+                </helper>
+            </field>
+
+            <field id="movref" noshow="true">
+                <label colspan="1">Ref.</label>
+                <help>Referencia </help>
+                <size>200</size>
+               	<tipo>varchar</tipo>
+            </field>
+
+            <field id="mensaje" noshow="true">
+                <label colspan="5" modpos="nobr">Mensaje Interno</label>
+                <size>200</size>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="fecreq" esClave="true">
+                <label modpos="nobr">Fec.Requerimiento</label>
+                <help>Fecha de Requerimiento </help>
+                <!-- <valor eval="true">(date("N", mktime(0, 0, 0, date("m")  , date("d"), date("Y"))) > 2 )  ? date("d/m/Y", mktime(0, 0, 0, date("m")  , date("d")+5, date("Y"))) : date("d/m/Y", mktime(0, 0, 0, date("m")  , date("d")+3, date("Y")))</valor>
+                <jseval actxml="false">straFecha(\'hoy\') &lt;= aFecha(\'fecreq\')</jseval>
+                <jseval actxml="true" campodestino="fecreq">\'fecreq\'</jseval> --> 
+                <actualiza>
+                    <field id="feriado" destino="fecha_feriado" />
+                </actualiza> 
+                <tipo>date</tipo>
+            </field>
+
+            <field id="feriado" local="true" deshabilitado="true" sincelda="true" style="color: red; font-weight: bold; font-size: 14px;">
+                <label modpos="nobr" ></label>
+                <helper type="combo" id="FERIADOS" _empty="true">
+                    <field id="idFeriado">
+                      <tipo>date</tipo>
+                    </field>
+                    <field id="es_feriado">
+                        <expression >concat('Feriado: ',descripcion)</expression>
+                    </field>
+                    <field id="fecha_feriado">
+                         <expression having="false">date_format(idFeriado, '%d/%m/%Y')</expression>
+                    </field>
+                </helper>
+            </field> 
+            
+            <field id="confirmado" noshow="true">
+                <valor>0</valor>
+            </field>
+        </table>
+    </form>
+</histrix>

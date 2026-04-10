@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="insert">
+	<title>Ingreso Movimiento</title>
+	 <obs></obs>
+		<form >
+		    <table id="STK_MOVIMIENTOS">
+			<field id="stkarticulo_id"         id_temp="stkarticulo_id"/>
+			<field id="stkdeposito_id" 	   id_padre="stkdeposito_origen"/>
+			<field id="stkfamilia_id" 	   id_temp="stkfamilia_id"/>
+			<field id="stkrubro_id" 	   id_temp="stkrubro_id"/>
+			<field id="fecha_movimiento" 	   id_padre="fecha_movimiento"/>
+			<field id="alta_movimiento" 	   id_padre="alta_movimiento"/>
+			<field id="stkconcepto_id" 	   id_padre="stkconcepto_origen"/>
+			<field id="puesto_movimiento" 	   id_padre="puesto_movimiento"/>
+			<field id="numero_movimiento" 	   id_temp="nro_movimiento"/>
+			<field id="orden_movimiento" 	   id_temp="_ORDEN"/>
+			<field id="unidad_id" 	           id_temp="unidad_id"/>
+			<field id="cantidad" 	           id_temp="cantidad"/>
+			<field id="precio_costo" 	   id_temp="precio_costo"/>
+			<field id="precio_venta" 	   id_temp="precio_venta"/>
+			<field id="precio_promedio" 	   id_temp="precio_promedio"/>
+			<field id="precio_total" 	   id_temp="precio_total"/>
+			<field id="referencia" 	           id_padre="referencia"/>
+		    </table>
+		</form>
+    </histrix>	
+
+

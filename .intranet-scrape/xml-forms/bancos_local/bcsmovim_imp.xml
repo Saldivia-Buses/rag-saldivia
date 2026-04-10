@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" sololectura="true"  >
+    <title>Movimiento</title>
+    <obs></obs>
+    <form  >
+        <table id="BCSMOVIM" label="Cheque">
+			
+            <field id="bcscta" >
+		<label>Cuenta Bancaria</label>
+		<tabla_ex id="BCSCUENT">
+			<field id="ccbcod"></field>
+			<field id="ccbnom"></field>
+			<order>
+				<field id="ccbcod"></field>
+			</order>
+		</tabla_ex>
+
+            </field>
+			
+            <field id="siscod" oculto="true">
+            </field>
+            <field id="ctacod" _noshow="true">
+		    <label>Cuenta</label>
+            </field>
+
+            <field id="bcsmov" >
+		    <label>Concepto</label>
+
+            </field>
+            <field id="bcsnro" >
+                <label>Número</label>
+                <help>Numero de Movimiento </help>
+                <format>%010d</format>
+				
+            </field>
+            <field id="bcsfec">
+                <label>Fecha</label>
+                <help>Fecha del Movimiento</help>
+            </field>
+            <field id="bcsfev">
+                <label>Vencimiento</label>
+            </field>
+<!--
+            <field id="ctanom" >
+                <expression>(case when BCSMOVIM.tipo = 0 then ctanom
+                                when BCSMOVIM.tipo = 1 then CONCAT(ctanom, ' - NO A LA ORDEN -')
+                                when BCSMOVIM.tipo = 2 then ' '
+                                end)
+                                </expression>
+                <label>Nombre</label>
+                <tipo>varchar</tipo>
+                <size>80</size>
+            </field>
+-->
+
+            <field id="bcsimp">
+		<label>importe</label>
+                <tipo>numeric</tipo>
+            </field>
+            <field id="id_bcsmovim" noshow="true">
+            </field>
+
+        </table>
+<!--
+        <join>
+            <table id="CCTMOVIM">
+                <field id="siscod" oculto="true">
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="concod">
+                    <condicion>4</condicion>
+                </field>
+
+                <field id="movnro">
+                    <condicion>BCSMOVIM.nropag</condicion>
+                </field>
+                <field id="ctacod">
+                    <condicion>BCSMOVIM.ctacod</condicion>
+                </field>
+
+            </table>
+        </join>
+-->		
+    </form>
+</histrix>

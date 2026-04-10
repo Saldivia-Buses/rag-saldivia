@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" _autoprint="true" PDFfontSize="10" automail="true" preFetch="true" _PDFpageSize="A4" PDForientacion="L">
+    <title>Secciones de trabajo</title>
+    <obs/>
+    <form>
+        <table id="SECCION">
+
+	    <field id="id_seccion" _arbol="hijo" autoinc="true" oculto="true">
+		<label Formstyle="display:none;">Codigo</label>
+		<help>Codigo de Seccion</help>
+		<!--
+		<detalle>id_seccion</detalle>
+		<detalle>idSeccion</detalle>
+	    -->
+	    </field>
+
+	    <field id="nombre">
+		<label>Nombre</label>
+		<help>Nombre de Seccion</help>
+	    </field>
+
+	    <field id="descripcion">
+		<label>Descripcion</label>
+		<help>Descripcion de Seccion</help>
+	    </field>
+
+	    <field id="descripcion_perfil">
+		<label>Perfil</label>
+		<help>Descripcion del perfil</help>
+		<tipo>editor</tipo>
+	    </field>
+
+	    <field id="idSupervisor" _nodeText="true">
+		<label>Supervisor</label>
+		<tabla_ex id="PERSONAL" xml="HLPpersonal.xml" vacio="true" dir="/help_local">
+            	        <field id="legajo">
+            	            <condicion operador="!=">0</condicion>
+            	        </field>
+        	</tabla_ex>
+	    </field>
+
+    	<field id="supervisor">
+        	<label>Desc supervisor seccion</label>
+	        <help>Supervisor de Seccion</help>
+	    </field>
+
+	     <field id="linea_id" colstyle="display:none;">
+        	        <helper type="combo" xml="lineas.xml" dir="/produccion" _empty="true"/>
+        	        <label >Linea</label>
+        	        <valor>1</valor>
+    	</field>
+<!--
+	    <field id="useract" local="true" oculto="true">
+		<valor eval="true">$_SESSION['idUser']</valor>
+	    </field>
+
+	    <field id="nombreUsu" oculto="true">
+		<expression>SELECT CONCAT(HTXUSERS.apellido, ', ', HTXUSERS.Nombre) FROM HTXUSERS WHERE HTXUSERS.Id_usuario = '[__useract__]'</expression>
+	    </field>	
+-->
+	    <field id="to" local="true" email="to" print="false">
+			<expression>select email from PERSONAL where legajo = idSupervisor</expression>
+	    </field>
+
+	    <field id="subject" local="true" email="subject" print="false">
+		<expression>CONCAT('Responsabilidades y Autoridades por secciones', ' ')</expression>
+	    </field>
+
+	    <field id="mail_msg" local="true" oculto="true" email="body">				
+	        <expression><![CDATA[CONCAT( 'Seccion: ', SECCION.nombre, '</br>',
+                'Se le asigna a cada puesto un conjunto de actividades que la persona encargada deberá desarrollar dentro de la empresa, y sobre las cuales se basaran sus responsabilidades.</br>Se adjunta documento detallando la informacion.</br></br> ', 'Att.</br></br> '
+                )]]>
+	        </expression>			
+		</field>
+
+        </table>
+        <!--
+	
+       <join tipo="left">
+	    <table id="HTXUSERS">
+		<field id="id_usuario">
+		    <condicion operador="=">CAL_AUDITORIA_PERSONAS.usuario_id</condicion>
+		</field>
+		<field id="email">
+		    <condicion operador="!=">''</condicion>
+		</field>
+	    </table>
+       </join>
+    -->
+	<join tipo="left">
+	    <table id="CIUO">
+		<field id="idPuesto">
+		    <condicion operador="=">SECCION.idPuesto</condicion>
+		</field>
+		
+	</table>
+	</join>
+    </form>
+</histrix>

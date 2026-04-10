@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="ficha" path="/fotos/archivo/coches/" autoprint="true" PDForientation="P" limit="1" preFetch="true" PDFfontSize="11">
+	<title>Planilla de control de accesorios entegados con la unidad</title>
+
+	<obs/>
+
+	<form>
+		<table id="PEDCOTIZ">
+		<title>Planilla de control de accesorios - R 7.5-16</title> 
+			<field id="terminacionFinal">
+			    <label posx="5" posy="18" PDFsize="11">Fecha de entrega</label>
+			    <tipo>date</tipo>
+			</field>
+			<field id="nrocha" >
+				<label size="35" modpos="nobr" posx="110" posy="0">Nro. Fabricación</label>
+				<help>Numero de Fabricacion</help>
+			</field>
+			<field id="nrocar" tabla="PEDCOTIZ">
+				<label size="35" posx="5" posy="+1">Carroceria</label>
+				<help></help>
+				<tabla_ex xml="carroceria.xml"></tabla_ex>
+			</field>
+			<field id="ctacod" >
+				<label colspan="6" size="24" posx="110" posy="0">Cliente</label>
+				<help>Codigo de Cuenta</help>
+				<tabla_ex condes="true" id="CCTCUENT">
+					<field id="ctacod"/>
+					<field id="ctafan"/>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'02'</condicion>
+					</field>
+				</tabla_ex>
+			</field>
+			<field id="moddes" tabla="MODCHASIS" >
+				<label size="35" posx="5" posy="+1" modpos="nobr">Modelo de chasis</label>
+				<help></help>
+			</field>
+			<field id="chasis" tabla="CHASIS">
+				<label colspan="6" size="10" posx="110" posy="0">Nº</label>
+				<help></help>
+				<tipo>varchar</tipo>
+				<size>40</size>
+			</field>
+
+        		<field id="idMarcaMotor" tabla="CHASIS">
+	                    <label size="35" posx="5" posy="+1">Marca Motor</label>
+	                    <help>Marca del Motor</help>
+	                    <tabla_ex id="MARCAMOTOR" vacio="true">
+	                        <field id="idMarca">
+	    	                    <label>Codigo</label>
+		                    </field>
+		                    <field id="abrev">
+		                        <label>nombre</label>
+		                    </field>
+		            </tabla_ex>
+	                </field>
+
+    		        <field id="nromotor" tabla="CHASIS">
+	                    <label size="10" posx="110" posy="0">Nº  </label>
+	                    <help>Numero de Motor</help>
+	                </field>
+        		<field id="idTaco" tabla="CHASIS">
+	                    <tabla_ex xml="tacografos.xml" dir="/produccion" vacio="true"/>
+	                    <label size="35" posx="5" posy="+1">Marca Tacógrafo</label>
+	                    <help>Marca de tacografo</help>
+	                </field>
+	                <field id="nroTaco" tabla="CHASIS">
+	                    <label size="10" posx="110" posy="0">Nº </label>
+	                    <help>Número de tacografo</help>
+	                </field>
+<!--
+
+			<field id="ninterno" tabla="PEDCOTIZ">
+				<label  size="23" posx="160" posy="0" PDFsize="10">Nro Interno</label>
+				<help></help>
+			</field>
+-->
+<!--			<field id="modcod" tabla="CHASIS" >
+				<label size="23" posx="60" posy="0" modpos="nobr" PDFsize="10">Modelo</label>
+				<help></help>
+				<tabla_ex id="MODCHASIS">
+					<field clave="true" id="modcha">
+						<label>Modelo</label>
+						<help>Codigo del Modelo de Chasis</help>
+					</field>
+					<field id="moddes">
+						<label>Descripcion</label>
+						<help>Descripcion del Modelo</help>
+					</field>
+					<field id="marcod">
+						<label>Marca Chasis</label>
+					</field>
+				</tabla_ex>
+			</field>			-->
+		
+					
+<!--			<field id="tiphab" tabla="PEDCOTIZ">
+				<label size="24" posx="5" posy="+1"  PDFsize="10">Habilitacion</label>
+				<help></help>
+				<tabla_ex xml="tipohabil.xml" dir="/produccion"></tabla_ex>
+			</field>
+			<field id="prvcod" tabla="PEDCOTIZ">
+				<label size="23" posx="60" posy="0" modpos="nobr" colspan="4"  xml="fsmprovs.xml" PDFsize="10">Provincia</label>
+				<help></help>
+				<tabla_ex xml="fsmprovs.xml" vacio="true"></tabla_ex>
+			</field>			-->
+
+<!--			<field id="tipserv" tabla="PEDCOTIZ">
+				<label size="23" posx="60" posy="0"  PDFsize="10">Tipo Serv.</label>
+				<help>Tipo de Servicio</help>
+				<tabla_ex xml="tiposervicio.xml" dir="/produccion"></tabla_ex>
+			</field>
+			<field id="conces" tabla="CHASIS">
+				<tabla_ex xml="concesionario.xml" vacio="true"></tabla_ex>	          
+				<label colspan="6" size="23" posx="110" posy="0" PDFsize="10">Conces.</label>
+				<help></help>
+				<tipo>varchar</tipo>
+			</field>				-->
+
+
+
+		    <field id="detalle" local="true" showObjTabla="true" PDFsize="13">
+			<helper type="object" xml="controles_finales_qry.xml" dir="/controlcalidad/qry">
+			    <parameter source="nrocha" target="nrofab_id" />
+			</helper>
+			<label posx="5" posy="+2"/>
+		    </field>
+
+		    <field id="observ" local="true">
+			<label posx="5" posy="+2">Observaciones</label>
+			<valor>...........................................................................................................
+...........................................................................................................
+...........................................................................................................</valor>
+		    </field>
+    
+
+               
+		    <field id="adiclbl" local="true" >
+			<label size="60" posx="10" posy="+33" PDFsize="16" >Adicionales:</label>
+		    </field>
+		    <field id="Adic" local="true" showObjTabla="true">
+			<label size="60" posx="10" posy="+3" PDFsize="12" _PDFnoborder="true"> </label>
+			<helper type="object" xml="accesorios_coche_check.xml" dir="/produccion/man/">
+			    <parameter source="nrocha" target="nrofab" />
+			</helper>
+		</field>
+
+		<field id="Entrega" local="true">
+			<label size="90" posx="5" posy="+10">Entrega</label>
+			<valor></valor>
+		</field>
+
+		
+		<field id="Recibe" local="true">
+			<label size="90" posx="100" posy="0">Recibe</label>
+			<valor></valor>
+		</field>
+
+		<field id="entrego" local="true">
+			<label size="117" posx="5" posy="+8" PDFsize="12" PDFnoborder="true">Nombre y Apellido: ...........................................</label>
+                </field>
+		
+                <field id="nombre2" local="true">
+                	<label size="117" posx="100" posy="0" PDFsize="12" PDFnoborder="true">Nombre y Apellido: ...........................................</label>
+                </field>
+		
+		<field id="firmaentrego" local="true">
+                	<label size="117" posx="5" posy="+8" PDFsize="12" PDFnoborder="true">Firma: ...........................................</label>
+        	</field>
+		
+		<field id="firma" local="true">
+                	<label size="117" posx="+100" posy="0" PDFsize="12" PDFnoborder="true">Firma: ...........................................</label>
+        	</field>
+                
+		<field id="dni" local="true">
+                	<label size="117" posx="100" posy="+8" PDFsize="12" PDFnoborder="true">DNI: .............................................</label>
+                </field>
+
+		</table>
+		<join tipo="left">
+			<table id="CHASIS">
+				<field id="nrocha">
+					<condicion operador="=">PEDCOTIZ.nrocha</condicion>
+				</field>
+			</table>
+		</join>		
+		<join tipo="left">
+			<table id="CCTCUENT">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">'02'</condicion>
+				</field>
+
+				<field id="ctacod">
+					<condicion operador="=">PEDCOTIZ.ctacod</condicion>
+				</field>
+			</table>
+		</join>						
+<!--
+		<join tipo="left">
+			<table id="CCTCONTA">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">CCTCUENT.siscod</condicion>
+				</field>
+
+				<field id="ctacod">
+					<condicion operador="=">CCTCUENT.ctacod</condicion>
+				</field>
+			</table>
+		</join>			
+-->
+		<join tipo="left">
+			<table id="MODCHASIS">
+					<field clave="true" id="modcha">
+						<condicion operador="=">CHASIS.modcod</condicion>
+
+					</field>
+					<field id="marcod">
+						<condicion operador="=">CHASIS.marcod</condicion>
+					</field>			
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="ENTREGASCOCHES">
+					<field clave="true" id="nrofab">
+						<condicion operador="=">PEDCOTIZ.nrocha</condicion>
+
+					</field>
+				<field id="entrega">
+					<condicion operador="IS NOT NULL"></condicion>
+				</field>					
+			</table>
+		</join>
+	
+
+	</form>
+</histrix>

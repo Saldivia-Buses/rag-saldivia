@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="cabecera"  graba="true">
+	<titulo>LISTAS DE PRECIOS ADICIONALES</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="LISTAPRECIOSCAB" >
+		    <titulo>Listas de precios</titulo>
+				<campo id="idLista">
+					<label>Nueva Lista</label>
+					<parametro id="listaprecioscab_param.xml" retorna="idLista2">
+
+					</parametro>
+				</campo>
+				<campo id="fecha">
+					<label modpos="nobr">Fecha</label>
+					<valor>today</valor>
+				</campo>
+
+				<campo id="nombre">
+					<label >Nombre</label>
+					<valor>Lista de Precios</valor>
+				</campo>
+				<campo id="descripcion">
+					<label modpos="nobr">Descripción</label>
+					<valor>Lista de Precios</valor>
+				</campo>
+				<campo id="aumento" local="true">
+					<label >Porcentaje de Aumento</label>
+					<tipo>numeric</tipo>
+					<valor>0</valor>
+				</campo>
+
+		</tabla>
+	</consulta>
+</abm>

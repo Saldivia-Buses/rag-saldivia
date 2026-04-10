@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" subtipo="vertical" imprime="false" export="false">
+  <title>Perfiles</title>
+  <obs></obs>
+  <form detalle="items_usuario2_cons.xml">
+    <table id="HTXPROFILES" label="Perfiles">
+      <field id="Id_perfil" noshow="true" autoinc="true" esClave="true">
+        <label>Perfil</label>
+        <help></help>
+        <detalle>Id_perfil</detalle>
+      </field>
+      <field id="nombre">
+        <label>Nombre Perfil</label>
+        <help></help>
+        <size>10</size>
+      </field>
+      <field id="readonly" colstyle="display:none;">
+        <label>Solo Lectura</label>
+        <help>Este Perfil no puedo modificar datos</help>
+    	<tipo>check</tipo>
+      </field>
+      <field id="Id_menu" local="true" noshow="true">
+        <detalle>Id_menu</detalle>
+        <valor>'phpmen'</valor>
+      </field>
+      <field id="users" local="true" showObjTabla="true" style="display:none;">
+        <helper type="object" xml="usuario_profile.xml" >
+          <parameter  source="Id_perfil" target="Id_perfil" />
+        </helper>
+      </field>
+    </table>
+  </form>
+</histrix>

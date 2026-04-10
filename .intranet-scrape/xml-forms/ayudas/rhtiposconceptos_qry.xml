@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Tipos de Conceptos</title>
+  <obs></obs>
+  <consulta>
+    <table id="RH_TIPOSCONCEPTOS" label="Tipos de Conceptos">
+      <field id="id_rhtipoconcepto" autoinc="true" noshow="true">
+        <label>Codigo</label>
+        <help>Código de Tipo de concepto</help>
+      </field>
+      <field id="nombre_tipo">
+        <label>Tipo </label>
+        <help>Tipo </help>
+        <size>15</size>
+      </field>
+	<order>
+		<field id="nombre_tipo"/>
+	</order>
+    </table>
+  </consulta>
+</histrix>  

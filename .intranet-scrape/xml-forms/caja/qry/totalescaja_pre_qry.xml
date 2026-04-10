@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" >
+	<title>Eliminacion de Detalles de Movimientos de Caja</title>
+	<obs></obs>
+	<form>
+	<table id="CAJ_TOTALES1">
+		<field id="fecha_movimiento" noshow="true" >
+			<label>Fecha</label>
+ 
+		</field>
+	 
+		<field id="id_cajconcepto"  tabla="CAJ_CONCEPTOS" noshow="true" >
+			<label>Id_Con</label>
+		</field>
+		<field id="imputacion_concepto"  tabla="CAJ_CONCEPTOS" noshow="true" />
+
+		<field id="descripcion_concepto"  tabla="CAJ_CONCEPTOS" >
+			<label>Comp</label>
+			<expresion>'SALDO ANTERIOR'</expresion>
+		</field>
+                <field id="cajpuesto_id"      _noshow="true" >
+			<helper type="combo" xml="cajpuesto_qry.xml" dir="/ayudas" empty="true" />
+			<label>Puesto</label>
+                </field>
+
+		<field id="ing_efectivo" _suma="true" >
+			<expresion>sum(ing_efectivo) - sum(egr_efectivo)</expresion>
+			<label>Efectivo</label>
+		</field>
+		<field id="ing_valores" _suma="true" >
+			<expresion>sum(ifnull(ing_valores,0))</expresion>
+			<label>Valores</label>
+			<tipo>decimal</tipo>
+
+		</field>
+		<field id="ing_tran" _suma="true" >
+			<expresion>sum(ing_tran) * case when imputacion_concepto = 0 then 1 else -1 end</expresion>
+			<label>Ing.Tr.</label>
+		</field>
+		<field id="che_propio" _suma="true" >
+			<expresion>sum(che_propio) * case when imputacion_concepto = 0 then 1 else -1 end</expresion>
+			<label>Cheq.Emitidos</label>
+		</field>
+		<field id="ing_sellos" _suma="true" >
+			<expresion>sum(ing_sellos) * case when imputacion_concepto = 0 then 1 else -1 end</expresion>
+			<label>Sellos</label>
+		</field>
+		<field id="ing_IIBB" _suma="true" >
+			<expresion>sum(ing_IIBB) * case when imputacion_concepto = 0 then 1 else -1 end</expresion>
+			<label>II.BB.</label>
+		</field>
+		<field id="ing_gan" _suma="true" >
+			<expresion>sum(ing_gan) * case when imputacion_concepto = 0 then 1 else -1 end</expresion>
+			<label>Gananc.</label>
+		</field>
+		<field id="egr_tran"  _suma="true">
+			<expresion>sum(egr_tran) * case when imputacion_concepto = 0 then 1 else -1 end</expresion>
+			<label>Eg.Tr</label>
+		</field>
+		<field id="total"  _suma="true">
+			<expresion>sum(total)</expresion>
+			<label>Total</label>
+		</field>
+<!--		<group>
+			<field id="imputacion_concepto"  tabla="CAJ_CONCEPTOS" />
+			<field id="descripcion_concepto"  tabla="CAJ_CONCEPTOS" />
+		</group>
+-->
+	</table>
+		<join>
+			<table id="CAJ_CONCEPTOS">
+				<field id="id_cajconcepto">
+					<condicion operador="=">CAJ_TOTALES1.id_cajconcepto and CAJ_CONCEPTOS.imputacion_concepto != 2</condicion>
+				</field>
+			</table>
+		</join>
+	
+	</form>
+
+</histrix>  
+
+

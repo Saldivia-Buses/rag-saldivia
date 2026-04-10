@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="crud"  >
+        <title>Tipo De Detalle</title>
+        <obs></obs>
+        <form>
+                <table id="PROY_TIPODETALLE" >
+                    <title>Proyecto</title>
+                	<field id="id_tipodetalle" autoinc="true" noshow="true">
+                	</field>
+                    <field id="nombre_tipo">
+                        <label>Tipo de Detalle</label>
+                        <size>30</size>
+                    </field>
+                    <field id="descripcion_tipo">
+                        <label>Descripción Detalle</label>
+                        <!--<size>100</size>-->
+                        
+                    </field>
+                </table>
+        </form>           
+</histrix>

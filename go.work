@@ -8,6 +8,7 @@ use (
 	./services/auth
 	./services/bigbrother
 	./services/chat
+	./services/erp
 	./services/feedback
 	./services/ingest
 	./services/notification

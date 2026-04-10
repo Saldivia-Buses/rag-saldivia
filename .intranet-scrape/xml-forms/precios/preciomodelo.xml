@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="abm-mini" subtipo="vertical" class="consultaancha"  >
+	<titulo>PRECIOS POR MODELO</titulo>
+	<obs/>
+	<consulta>
+		<tabla id="PRECIOMODELO" styleTbody="height:400px;">
+			<titulo>Precios por modelo</titulo>
+			
+	
+			<campo id="idLista">
+				<tabla_ex id="LISTAPRECIOMODELO">
+					<campo id="idLista">
+					</campo>
+					<campo id="nom">
+						<expresion>concat(nombre,' - Vigencia Desde: ' , DATE_FORMAT(fecha, '%d/%m/%Y'))</expresion>
+					</campo>		
+				</tabla_ex>				
+				<label modpos="nobr">Lista</label>
+				<help>Lista</help>
+			</campo>	
+			<campo id="nrocar">
+				<label modpos="nobr">Carroceria</label>
+				<tabla_ex id="CARROCERIA">
+					<campo id="nrocar">
+						<label>Codigo</label>
+					</campo>
+					<campo id="modcar">
+						<label>Modelo</label>
+					</campo>					
+				</tabla_ex>
+			</campo>
+			
+			<campo id="idGrupo">
+				<label modpos="nobr">Grupo</label>
+			</campo>
+			<!-- <campo id="marcod">
+				<label modpos="nobr" >Marca</label>
+				<help>Marca del Chasis</help>
+				<tabla_ex id="MARCHASIS" vacio="true">
+					<campo id="marcod" clave="true">
+						<label>Codigo</label>
+						<help>Codigo de Chasis</help>
+					</campo>
+					<campo id="mardes">
+					</campo>					
+				</tabla_ex>
+				<actualiza>
+					<campo destino="marcod" id="modcha"/>
+				</actualiza>
+			</campo>
+			<campo id="modcha" >
+				<label modpos="nobr" colstyle="display:none;">Modelo</label>
+				<help>Modelo del Chasis</help>
+				<tabla_ex id="MODCHASIS" vacio="true">
+					<campo clave="true" id="modcha">
+						<label>Modelo</label>
+						<help>Codigo del Modelo de Chasis</help>
+					</campo>
+					<campo id="moddes">
+						<label>Descripcion</label>
+						<help>Descripcion del Modelo</help>
+					</campo>
+					<campo id="marcod">
+						<label>Marca Chasis</label>
+					</campo>
+				</tabla_ex>
+			</campo>		
+			
+			
+			<campo id="moddes" tabla="MODCHASIS" >
+				<expresion>MODCHASIS.moddes</expresion>
+				<label Formstyle="display:none;" modpos="nobr">Modelo de Chasis</label>
+				<tipo>varchar</tipo>
+			</campo> -->
+			<campo id="asientos">
+				<label>Asientos</label>
+				<label>Cantidad de Asientos</label>
+			</campo>
+			<campo id="tipserv">
+				<label modpos="nobr">Tipo</label>
+				<label>Tipo de Servicio</label>
+							<tabla_ex id="TIPOSERVICIO">
+                        <campo id="tipserv">
+                        </campo>
+                        <campo id="servdes">
+                        </campo>					
+				</tabla_ex>
+
+				
+			</campo>
+			
+			<campo id="banbar">
+				<label modpos="nobr">Baño Mbar</label>
+				<help>Baño / Minibar</help>
+				<opciones>
+					<opcion valor="0">--</opcion>
+					<opcion valor="1">Si</opcion>					
+				</opciones>
+			</campo>
+			<campo id="bastidor">
+				<label modpos="nobr">Bastidor</label>
+				<opciones>
+					<opcion valor="0">--</opcion>
+					<opcion valor="1">Si</opcion>					
+				</opciones>
+				<help>Bastidor</help>
+				
+			</campo>			
+			<campo id="largo">
+				<label modpos="nobr">Largo (m3)</label>
+				<help>Largo Expresado en Metros</help>
+			</campo>						
+			<campo id="bodega">
+				<label modpos="nobr">Bodega (m3)</label>
+				<help>Capacidad de Bodega expresado en Metros Cúbicos</help>
+			</campo>						
+			
+			<campo id="precio">
+				<label  style="color:green; font-size:16px;">Precio conces.</label>
+				<help>Precio</help>
+				<tipo>decimal</tipo>
+			</campo>
+			<campo id="margen">
+				<label modpos="nobr">% Rec</label>
+				<help>Recargo precio al público</help>
+				<valor>0.035</valor>
+			</campo>
+			<campo id="precio2">
+				<expresion>precio * (1 + margen)</expresion>
+				<label modpos="nobr" style="color:red; font-size:16px;">Precio público</label>
+				<help>Precio</help>
+			</campo>
+				
+			<orden>
+				<campo id="nrocar" tabla="PRECIOMODELO"></campo>
+				<campo id="idGrupo" tabla="PRECIOMODELO"></campo>
+				<campo id="asientos" tabla="PRECIOMODELO"></campo>				
+				
+				
+			</orden>
+		</tabla>
+		<join tipo="left">
+               <tabla id="CARROCERIA">
+					<campo id="nrocar">
+					       <condicion operador="=">PRECIOMODELO.nrocar</condicion>
+					</campo>
+				</tabla>		
+		</join>		
+	<!--	<join tipo="left">
+			<tabla id="MARCHASIS">
+				<campo id="marcod">
+					<condicion operador="=">PRECIOMODELO.marcod</condicion>
+				</campo>
+			</tabla>
+		</join>		
+		<join tipo="left">
+			<tabla id="MODCHASIS">
+				<campo id="modcha">
+					<condicion operador="=">PRECIOMODELO.modcha</condicion>
+				</campo>
+				<campo id="marcod">
+					<condicion operador="=">PRECIOMODELO.marcod</condicion>
+				</campo>
+			</tabla>
+		</join>
+		-->
+	</consulta>
+</abm>

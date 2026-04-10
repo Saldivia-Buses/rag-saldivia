@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+	<histrix tipo="abm-mini" subtipo="vertical">
+		<title>Artículo Proveedor</title>
+		<obs></obs>
+		<form >
+			<table id="STK_ARTICULOS_PROVEEDOR" label="Artículo Proveedor">
+				<field id="id_stkarticuloproveedor" noshow="true" autoinc="true" esClave="true">
+					<label>Código</label>
+					<help>Código de relación artículo/proveedor</help>
+				</field>
+				<field id="stkarticulo_id" oculto="true">
+					<label>Articulo</label>
+					<help>Codigo de Articulo</help>
+				</field>
+				<field id="regcuenta_id">
+					<label>Nro Proveedor</label>
+					<help>Código del Proveedor</help>
+					<ayuda_ex id="CCTCUENT" xml="HLPcctcuent.xml" dir="/help_local">
+					<field id="ctacod">
+						<label>Nro</label>
+					</field>
+					<field id="ctanom">
+						<label>Nombre</label>						
+						<detalle>ctanom</detalle>						
+					</field>
+						<field id="ctacod">
+						<label>cod</label>			
+						<detalle>codprv</detalle>			
+					</field>
+					<field id="siscod" oculto="true">
+						<label>siscod</label>
+						<condicion operador="=">'01'</condicion>
+					</field>					
+					<clave>ctacod</clave>
+					<descripcion>ctanom</descripcion>
+				</ayuda_ex>		
+				</field>
+                                 <field id="ctanom" tabla="CCTCUENT" deshabilitado="true">
+					<label>Proveedor</label>
+                                        <size>50</size>
+				</field>
+				 <field id="prv_articulo">
+					<label>Cod Artículo/proveedor</label>	
+				</field>
+								
+			</table>
+			    <!--<join tipo="left">
+				    <table id="STKINSUM">
+					<field id="siscod" oculto="true">
+					    <label>subsistema</label>
+					    <condicion operador="=">'01'</condicion>
+					</field>
+					<field id="artcod" oculto="true">
+					    <condicion operador="=">STK_ARTICULOS_PROVEEDOR.stkarticulo_id</condicion>
+					</field>
+				    </table>
+                             </join>
+
+			     <join tipo="left">
+				    <table id="STKINSPR">
+					<field id="siscod" oculto="true">
+					    <label>subsistema</label>
+					    <condicion operador="=">'01'</condicion>
+					</field>
+					<field id="ctacod" oculto="true">
+					    <condicion operador="=">STK_ARTICULOS_PROVEEDOR.regcuenta_id</condicion>
+					</field>
+				    </table>
+                             </join>-->
+                             <join tipo="left">
+				    <table id="CCTCUENT">
+					<field id="siscod" oculto="true">
+					    <label>subsistema</label>
+					    <condicion operador="=">'01'</condicion>
+					</field>
+					<field id="ctacod" oculto="true">
+					    <condicion operador="=">STK_ARTICULOS_PROVEEDOR.regcuenta_id</condicion>
+					</field>
+				    </table>
+                             </join>
+		</form>
+	</histrix>

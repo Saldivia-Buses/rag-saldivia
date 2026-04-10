@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<abm tipo="abm-mini">
+	<titulo>MODELOS DE AIRE ACONDICIONADO</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="MODELAIR" label="Modelos Aire">
+		  <filtro_ex>
+		    <label>Marca de Aire</label>
+		    <tabla_ex id="MARCAAIR">
+			<!-- fields a agregar al contenedor Filtro-->
+			<field id="marair"></field>
+			<field id="desair"></field>
+
+			<!-- field que se filtra (clave del filtro)-->
+			<filtra>marair</filtra>
+		    </tabla_ex>
+		  </filtro_ex>
+
+
+			<field id="modair">
+				<label>Codigo</label>
+				<help>Codigo de Modelo de Aire</help>
+			</field>
+
+			<field id="moddes">
+				<label>Modelo</label>
+				<help>Modelo de Aire Acondicionado</help>
+			</field>
+			<field id="desabv">
+				<label>Abrev.</label>
+				<help>Abreviatura a Utilizar</help>
+			</field>
+			<field id="marair">
+				<label>Marca</label>
+				<help>Marca de Aire</help>
+			      <tabla_ex id="MARCAAIR">
+			        <field id="marair"></field>
+			        <field id="desair"></field>
+			      </tabla_ex>
+
+			</field>
+
+			<field id="siscod" oculto="true">
+				<label>Cod</label>
+			</field>
+    			<orden>
+				<field id="marair"></field>
+			</orden>
+		</tabla>
+	</consulta>	   
+</abm> 

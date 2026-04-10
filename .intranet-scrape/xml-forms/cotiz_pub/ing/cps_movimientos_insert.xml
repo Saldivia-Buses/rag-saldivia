@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" grabaFinal="true">
+    <title>ORDEN DE COMPRA</title>
+    <obs></obs>
+    <form>
+        <table id="CPS_MOVIMIENTOS" label="ORDEN DE COMPRA" >
+            <field id="cpsfecha" id_cab="cpsfecha" />
+            <field id="cpsobservacion" id_cab="cpsobservacion" />
+            <field id="subsistema_id"   >
+        	<valor>'CT'</valor>
+            </field>
+        </table>
+    </form>
+</histrix>

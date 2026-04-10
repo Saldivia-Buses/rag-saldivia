@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" >
+    <title>ORDENES DE PRODUCCION</title>
+    <obs></obs>
+    <form  _detalle="link">
+	        
+	<table id="MRP_ORDEN_PRODUCCION" label="Ordenes de Producción" >
+
+	    <fieldGroup _style="font-size:0.8em">
+
+
+            <field id="fecha_orden" noshow="true">
+                <label>Fecha</label>
+                <condicion operador="&lt;=">date(now())</condicion>
+            </field>
+            <field id="fecha_cierre" noshow="true">
+<!--                <condicion operador="=">'0000-00-00'</condicion> -->
+            </field>
+            <field id="id_mrpordendetalle" noshow="true" tabla="MRP_ORDEN_DETALLE" >
+                <detalle>id_mrpordendetalle</detalle>
+                <detalle>mrpordendetalle_id</detalle>
+	        </field>
+
+            <field id="parent_productpath_id" noshow="true">
+                <expression>MRP_PRODUCT_PATH.parent_productpath_id</expression>
+            </field>
+
+
+    		<field id="mrpseccion_id" local="true" noshow="true">
+                <detalle>mrpseccion_id</detalle>
+    		</field>      
+            <!--           
+            <field id="mrpprioridad_id" editable="true">
+                <label>Prioridad</label>
+                <helper xml="mrp_prioridad_crud.xml" dir="/mrp/man/" type="combo">
+
+                </helper>
+            </field>
+        -->
+            <field id="id_mrporden" esClave="true">
+            <!--	<helper xml="ordenproduccion_imp.xml" dir="/mrp/qry/" type="link" modal="true" >
+            	    <parameter source="id_mrporden"  target="id_mrporden" />
+            	</helper>
+            -->
+                <label>Orden</label>
+                <help>Numero de Orden de Fabricación</help>
+                <detalle>mrporden_id</detalle>
+            </field>
+
+
+    		<field id="seccion_anterior" noshow="true">
+    		    <expression having="false">(case when id_mrpseccion = 1 then 1 else (ifnull((select sum(cantidad) from MRP_DETALLE_REGISTRO AS DR where mrpordendetalle_id = id_mrpordendetalle and DR.mrpseccion_id = MRP_PRODUCT_PATH.parent_productpath_id and DR.mrpconcepto_id = 1), 0) ) end)</expression>
+                <condicion operador="!=">0</condicion> 
+    		</field>
+
+
+        	<field id="stkarticulo_id" tabla="MRP_ORDEN_DETALLE" _noshow="true" style="white-space:nowrap;color:navy">
+        		<label>Código</label>
+        	</field>                 
+
+        	<field id="nombre_articulo" tabla="STK_ARTICULOS" style="font-size:0.8em" tdWidth="600px;">
+                
+        		<label>Artículo</label>
+
+        	</field>                 
+
+            <field id="xml_mrpseccion" tabla="MRP_SECCION" noshow="true" />
+
+    	    <field id="objetivo_ordendetalle" _noshow="true" style="text-align:right;">
+        		  <label>Total Orden</label>
+        		  <expresion>round(objetivo_ordendetalle, 0)</expresion>
+    		      
+    	    </field>
+
+
+    	    <field id="objetivo_real" _suma="true" noshow="true">
+        		<label>Obj</label>
+
+                <expression>ifnull((select sum(MDR.cantidad) FROM MRP_DETALLE_REGISTRO MDR where MDR.mrpseccion_id =  MRP_PRODUCT_PATH.parent_productpath_id and  MDR.mrpordendetalle_id = id_mrpordendetalle and MDR.mrpconcepto_id = 1), objetivo_ordendetalle )</expression>
+
+                <!--
+        		<expresion>objetivo_ordendetalle - ifnull( (select sum(MDR.roturas) FROM MRP_DETALLE_REGISTRO MDR where MDR.mrpseccion_id &lt; [__mrpseccion_id__] and  MDR.mrpordendetalle_id = id_mrpordendetalle),0)</expresion>
+    -->
+        		<!--<tipo>numeric</tipo> -->
+                <condicion operador="&gt;">ifnull(sum(cantidad ), 0)</condicion> 
+
+                <detalle>objetivo_ordendetalle</detalle>
+    	    </field>                 
+
+
+            <field id="Rechazar" noZero="true" style="text-align:right;">
+                <label>Rechazados</label>
+                <expression>ifnull(sum((case when mrpconcepto_id = 2 then cantidad else 0 end)),0)</expression>
+                <tipo>integer</tipo>
+            </field>
+
+
+            <field id="pendiente" noZero="true"  style="text-align:right;">
+                <label>Pendientes</label>
+                <expression>round(ifnull((select sum(MDR.cantidad) FROM MRP_DETALLE_REGISTRO MDR where MDR.mrpseccion_id =  MRP_PRODUCT_PATH.parent_productpath_id and  MDR.mrpordendetalle_id = id_mrpordendetalle), objetivo_ordendetalle ) - ifnull(( sum(cantidad ) ),0),0) </expression>
+
+                <tipo>integer</tipo>
+            </field>
+
+            <field id="Roturas" noZero="true"  style="text-align:right;">
+                <label>Rotos</label>
+                <expression>ifnull(sum((case when mrpconcepto_id = 3 then cantidad else 0 end)),0)</expression>
+
+                <tipo>integer</tipo>
+            </field>
+
+            <field id="id_detalle_reg" noshow="true" tabla="MRP_DETALLE_REGISTRO">
+            </field>
+
+            <field id="cantidad" _editable="true" deshabilitado="false" tabla="MRP_DETALLE_REGISTRO" noZero="true"  style="text-align:right;">
+                <label>Producidos</label>
+		        <expression>sum((case when mrpconcepto_id = 1 then cantidad else 0 end))</expression>
+                <tipo>integer</tipo>
+            </field>
+<!--
+            <field id="peso_mrpprioridad" tabla="MRP_PRIORIDAD" noshow="true">
+            </field>
+        -->
+	    </fieldGroup>
+
+            <group>
+                <field id="id_mrpordendetalle"></field>
+                <field id="id_productpath"></field>
+<!--                <field id="id_detalle_reg"></field>  -->
+            </group>
+            <order>
+<!--                <field id="peso_mrpprioridad" orderType="DESC"></field> -->
+                <field id="fecha_orden"></field>
+                <field id="id_mrporden"></field>
+            </order>            
+        </table>
+
+
+        <join tipo="left">
+            <table id="MRP_SECCION">
+                <field id="id_mrpseccion">
+                    <condicion operador="=">[__mrpseccion_id__]</condicion>
+                </field>
+            </table>
+        </join>           
+        <join tipo="inner">
+            <table id="MRP_ORDEN_DETALLE">
+                <field id="mrporden_id">
+                    <condicion operador="=">MRP_ORDEN_PRODUCCION.id_mrporden</condicion>
+                </field>
+            </table>
+        </join>
+        <!--
+        <join tipo="left">
+            <table id="MRP_PRIORIDAD">
+                <field id="id_mrpprioridad">
+                    <condicion operador="=">MRP_ORDEN_PRODUCCION.mrpprioridad_id</condicion>
+                </field>
+            </table>
+        </join>
+        -->
+        <join _tipo="left">
+    	    <table id="STK_ARTICULOS">
+        		<field id="id_stkarticulo">
+        		    <condicion  operador="=">MRP_ORDEN_DETALLE.stkarticulo_id</condicion>
+        		</field>
+    	    </table>
+        </join>
+        
+
+        <join tipo="left">
+            <table id="MRP_PRODUCT_PATH">
+                <field id="mrppath_id">
+                    <condicion operador="=">MRP_ORDEN_PRODUCCION.mrppath_id</condicion>
+                </field>                
+                <field id="mrpseccion_id">
+                    <condicion operador="=">id_mrpseccion</condicion>
+                </field>
+            </table>
+        </join>        
+        <join tipo="left">
+            <table id="MRP_DETALLE_REGISTRO">
+                <field id="mrpordendetalle_id">
+                    <condicion operador="=">id_mrpordendetalle</condicion>
+                </field>
+                <field id="mrpseccion_id">
+                      <condicion operador="=">id_mrpseccion</condicion>
+                </field>                 
+            </table>
+        </join>     
+    </form>
+</histrix>
+
+
+
+
+<!--
+
+
+
+
+
+
+            <field id="objetivo_ordendetalle"   tabla="MRP_ORDEN_DETALLE">
+                <label modpos="nobr">Objetivo</label>
+                  <tipo>numeric</tipo>
+            </field>
+            <field id="pathlength" max="100">
+                <label>Progreso</label>
+                <expression>round(100 / (select count(*) from MRP_PRODUCT_PATH PP where  PP.stkrubro_id = STK_ARTICULOS.stkrubro_id) * count(*), 2)</expression> 
+                <tipo>grafico</tipo>
+            </field>
+            
+            <field id="ubicacion" >
+                <label>ubicacion</label>
+                <expression>(select nombre_mrpseccion FROM MRP_SECCION where id_mrpseccion = ifnull( MRP_DETALLE_REGISTRO.mrpseccion_id , 1))</expression> 
+            </field>
+
+
+                <field id="cantidad" noZero="true">
+                    <label modpos="nobr">Producido</label>
+                    <expression>sum(cantidad)</expression>
+                    <tipo>integer</tipo>
+
+                </field>
+
+                <field id="roturas" noZero="true" style="text-align:right;" suma="true">
+                    <label modpos="nobr">Roturas</label>
+            <expression>sum(roturas)</expression>
+            <tipo>integer</tipo>
+                </field>
+ 
+                <field id="observaciones_ordendetalle" deshabilitado="true"  tabla="MRP_ORDEN_DETALLE">
+                    <label>Observaciones</label>
+                </field>
+
+            <field id="terminado" deshabilitado="false">
+                <expression >ifnull(sum(roturas + cantidad + rechazados),0) &gt;= objetivo_ordendetalle</expression>
+                <condicion operador="=">0</condicion>
+            </field>
+
+            <order>
+              <field id="mrpseccion_id" />
+            </order>
+
+            <group>
+              <field id="id_mrpordendetalle" />
+              <field id="mrpseccion_id" />
+            </group>
+      
+        <join >
+            <table id="MRP_ORDEN_DETALLE">
+                <field id="mrporden_id">
+                    <condicion operador="=">id_mrporden</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">MRP_ORDEN_DETALLE.stkarticulo_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="MRP_DETALLE_REGISTRO">
+                <field id="mrpordendetalle_id">
+                    <condicion operador="=">MRP_ORDEN_DETALLE.id_mrpordendetalle</condicion>
+                </field>
+            </table>
+        </join>
+-->

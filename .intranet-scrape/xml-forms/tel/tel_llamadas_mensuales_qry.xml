@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="chart">
+	<title>LLamadas</title>
+	<obs></obs>
+	<form>
+		<table id="ASTERIX_CDR" >
+			<title>Duracion Llamadas</title>
+		   <grafico id="llamadas" >
+			   <ancho>400</ancho>
+			   <tipo>P</tipo>
+			   <serie>entrantes</serie>
+                           <serie>salientes</serie>
+			   
+			   <title>Duracion Llamadas (min)</title>
+			   <subtitulo></subtitulo>
+		   </grafico>
+		    <filters>
+			    <field id="calldate" deshabilitado="false">
+				    <label>Desde</label>
+				    <valor>today</valor>
+				    <operador>&gt;=</operador>
+				    <tipo>date</tipo>
+			    </field>
+			    <field id="calldate" deshabilitado="false">
+			            <label>Hasta</label>
+				    <valor>today</valor>
+				    <operador>&lt;=</operador>
+				    <tipo>date</tipo>	
+			    </field>
+		    </filters>
+		
+        	    <field id="calldate" oculto="true">
+				<expression having="false">date(calldate)</expression>		
+				<tipo>date</tipo>	
+<!--                            <condicion operador="&gt;="> DATE_FORMAT(date_sub(date(now()) , interval 1 year) ,'%Y-%m-01') and GEN_CALENDAR.fecha &lt;= now()</condicion>
+-->
+<!--                        <condicion operador="&gt;="> date_sub(date(now()) , interval 1 year) and GEN_CALENDAR.fecha &lt;= now()</condicion> -->
+                    </field>
+                 
+			<field id="entrantes">
+				<expression>round(sum(case when LENGTH(dst) = 3 and disposition = 'ANSWERED' then trim(duration) else 0 end ) /60, 2)
+                                </expression>
+
+				<label>Entrantes</label>
+                                
+			</field>
+			<field id="salientes">
+				<expression>round(sum(case when LENGTH(src) = 3 then trim(duration) else 0 end) /60 , 2)
+                                </expression>
+				<label>Salientes</label>
+				
+			</field>
+			
+			<field id="entreinternos">
+				<expression having="false">(case when LENGTH(src) = 3 and LENGTH(dst) = 3 then 1 else 0 end)</expression>
+				<condicion operador="=">0</condicion>
+		
+			</field>
+		</table>
+			
+	</form>	   
+</histrix> 

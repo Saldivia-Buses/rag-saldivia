@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8" ?>
+   <histrix tipo="abm" preloadData="false">
+       <title>Modificacion Fecha OC</title>
+        <obs></obs>
+           <form  _detalle="cpsmovim.xml" _showCab="false">
+              <table id="CPSENCAB" label="ORDENES DE COMPRA">
+
+                <filters>
+                  <field id="ocpnro" > 
+                      <operador>&gt;=</operador>
+                      <label>Desde Número OC</label>
+                      <valor>0</valor>
+                  </field>  
+                  <field id="ocpnro"> 
+                     <operador>&lt;=</operador>
+                      <label>Hasta Número OC</label>
+                      <valor>0</valor>
+                  </field>  
+               </filters>
+
+                  <field id="siscod" oculto="true" table="CPSENCAB">
+                      <label>Codigo Sistema.. </label>
+                      <help> </help>
+                      <detalle>siscod</detalle>
+                  </field>
+
+                  <field id="ocpnro" deshabilitado="true">
+                      <label>Número-OC</label>
+                      <help>Número de Orden de Compra</help>
+                       <detalle>ocpnro</detalle>
+                  </field>
+
+                  <field id="ocpfec" >
+                      <label>Emisión</label>
+                      <help>Fecha de Orden de Compra</help>
+                       <detalle>ocpfec</detalle>
+                      <detalle>movfec</detalle>
+                  </field>
+<!--
+                  <field id="ocpfen">
+                      <label>Entrega</label>
+                      <help>Fecha de Entrega </help>
+                  </field>
+-->
+            <field id="ctafan" tabla="CCTCUENT" deshabilitado="true" >
+                   <label>Prov.</label>
+            </field>
+
+</table>
+ 
+<join tipo="LEFT">
+    <table id="CCTCUENT">
+        <field id="ctacod">
+            <condicion operador="=">CPSENCAB.ctacod</condicion>
+        </field>
+    </table>
+</join>
+
+
+                      
+               </form>
+        </histrix>

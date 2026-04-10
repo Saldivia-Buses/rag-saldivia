@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="nosql" >
+	<title/>
+    <obs/>
+    <form>
+        <table id="REG_MOVIMIENTOS" idCampoCond="facturar">
+		
+			<ejecuta>
+			    <![CDATA[ if( 'fiscal' == '1' ) {
+					try
+					{
+						$calculo = new EmiteFiscal();
+						$calculo->setHomo( $_SESSION['properties']['wsafiphomo'] );
+						$calculo->imprimir('id_regmovim');
+						$Nheader = 'Factura Electrónica Emitida';
+						$Ntext   = 'nombre_movimiento';
+						$code    = array('0' =>"Histrix.notification('id_regmovim', {icon:'mail_send.png',title:'$Nheader',text:'$Ntext' })");
+						if (class_exists('Html')) {
+						    echo Html::scriptTag($code);
+						} else {
+						    echo \Histrix\Html\Html::scriptTag($code);
+						}
+					}
+					catch(Exception $e)
+					{
+						loger( $e->getMessage(), 'webservice.log');
+						
+						// No hago rollback ya que es en tanda despues lo valido por CAE
+						$Nheader = 'Factura Electrónica nombre_movimiento';
+						$Ntext   = 'Error: '.trim(addslashes($e->getMessage()));
+						$code    = array('0'=>"Histrix.notification('id_regmovim', {icon:'mail_send.png',title:'$Nheader',text:\"$Ntext\"})");
+						echo \Histrix\Html\Html::scriptTag($code);
+						_rollback_transaction('',false);
+						_begin_transaction();
+					}
+				} else { } ]]>
+			</ejecuta>
+			
+			<field id="id_regmovim" lastId="mos_rrule_movimientos_ins.xml" />
+			<field id="fiscal" id_temp="fiscal" />
+			<field id="nombre_movimiento" id_temp="nombre_movimiento" />
+        </table>
+    </form>
+</histrix>

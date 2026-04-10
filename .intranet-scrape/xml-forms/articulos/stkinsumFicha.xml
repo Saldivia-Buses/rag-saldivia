@@ -1,0 +1,567 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix borra="no" tipo="ficha" tooltip="true" logReference="artdes" conBusqueda="true">
+  <title>Insumos</title>
+  <obs/>
+  <form >
+    <table id="STKINSUM" label="Insumos">
+    
+      <field id="siscod" oculto="true" esClave="true">
+        <label>Código Sistema</label>
+        <valor>'01'</valor>
+      </field>
+
+      <field id="artrub">
+        <label>Rubro</label>
+        <help>Rubro del Artículo</help>
+        <helper type="combo" id="STKRUBRO">
+          <field id="artrub"/>
+          <field id="rubnom">
+            <expression>CONCAT(artrub, '-', rubnom)</expression>
+          </field>
+        </helper>
+        <actualiza>
+          <field destino="artrub" id="artcodpro"/>
+          <field destino="artrub" id="artsub"/>
+        </actualiza>
+      </field>
+
+      <field id="artsub">
+        <label modpos="nobr">SubRubro</label>
+        <helper type="combo" id="STKSUBRU">
+          <field id="artsub"/>
+          <field id="subnom">
+            <expression>CONCAT(artsub, '-', subnom)</expression>
+          </field>
+          <field id="artrub" oculto="true">
+            <condicion operador="=">1</condicion>
+          </field>
+        </helper>
+        <actualiza>
+          <field destino="artsub" id="artcodpro"/>
+        </actualiza>
+        <help>Grupo del Artículo</help>
+      </field>
+
+      <field id="baja">
+        <label modpos="nobr" style="color:red;">Condición</label>
+        <help>Baja</help>
+        <options>
+          <option valor="0">Activo</option>
+          <option valor="1">Baja</option>
+        </options>
+        <valor>0</valor>
+        <tipo>integer</tipo>
+      </field>
+
+      <field deshabilitado="true" id="artcodpro" local="true" _noshow="true" >
+        <label style="color:red">Código Sugerido</label>
+        <tabla_ex id="STKSUBRU">
+          <field id="subnro">
+            <expression>SELECT max(STKINSUM.artcod) + 1   FROM STKINSUM where substring(STKINSUM.artcod, 1, 1) = STKSUBRU.artrub and substring(STKINSUM.artcod, 2, 2) = LPAD(STKSUBRU.artsub, 2, '0')</expression>
+          </field>
+          <field id="subnro2">
+            <expression>SELECT max(STKINSUM.artcod) + 1  FROM STKINSUM where substring(STKINSUM.artcod, 1, 1) = STKSUBRU.artrub and substring(STKINSUM.artcod, 2, 2) = LPAD(STKSUBRU.artsub, 2, '0')</expression>
+          </field>
+          <field id="artsub" oculto="true">
+            <condicion operador="=">1</condicion>
+          </field>
+          <field id="artrub" oculto="true">
+            <condicion operador="=">1</condicion>
+          </field>
+        </tabla_ex>
+      </field>
+
+      <field  esClave="true" id="artcod">
+        <label>Código Artículo</label>
+        <help>Código de Artículo</help>
+      </field>
+
+      <field id="artdes" maxlength="150">
+        <label colspan="10" modpos="nobr">Descripción</label>
+        <help>Descripción de Artículo</help>
+      	<tipo>varchar</tipo>
+      	<size>80</size>
+      </field>
+
+      <field id="valcps">
+        <label>Val.Compra</label>
+        <help>Valor de Compra</help>
+      </field>
+
+      <field id="unicps">
+        <label modpos="nobr">U. Compra</label>
+        <help>Unidad de Compra</help>
+        <tabla_ex id="FSMUNIDS">
+          <field id="unicod"/>
+          <field id="uninom"/>
+        </tabla_ex>
+      </field>
+
+      <field id="valuso">
+        <label modpos="nobr">Val.Uso</label>
+        <help>Valor de Uso</help>
+      </field>
+
+      <field id="artuni">
+        <label modpos="nobr">U.Uso</label>
+        <tabla_ex id="FSMUNIDS">
+          <field id="unicod"/>
+          <field id="uninom"/>
+        </tabla_ex>
+        <help>Código Unidad de Medida de Uso</help>
+      </field>
+      
+      <field id="usuario_id" valauto="true" noshow="true">
+        <label>Creado por</label>
+        <valor eval="true">$_SESSION['idUser']</valor>
+      </field>
+
+      <field id="creac" deshabilitado="true" >
+        <expression>DATE(STKINSUM.creado)</expression>
+        <label _modpos="nobr">Fecha de Creación</label>
+        <help>Fecha de Creación del artículo</help>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="fecvenc">
+        <label modpos="nobr">Fecha de Vencimiento</label>
+        <help>Fecha de Vencimiento del artículo</help>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="artiva">
+        <label>Situación IVA</label>
+        <help>Situación I.V.A.</help>
+        <options>
+          <option valor="0">No Gravado</option>
+          <option valor="1">Alicuota Total</option>
+          <option valor="2">Alicuota Parcial</option>
+        </options>
+      </field>
+<!--
+      <field id="ctbnom" tabla="CTBCUENT" autocompletar="true" deshabilitado="false" modpos="nobr">
+        <label >Cuenta Contable Compra</label>
+        <help>Código Cuenta Contable</help>
+        <helper type="external" id="CTBCUENT" vacio="true">
+          <field id="ctbcuentacps_id" noshow="true">
+            <expression>ctbcod</expression>
+            <detalle>ctbcuentacps_id</detalle>
+          </field>
+          <field id="ctbnom">
+            <expression>CONCAT(ctbnom, ' (', ctbcod, ')')</expression>
+          </field>       
+          <field id="ctbhab" noshow="true">
+            <condicion operador="=">1</condicion>
+          </field>
+          <order>
+            <field id="ctbnom" tabla="CTBCUENT"/>
+          </order>
+        </helper>
+        <expression>CONCAT(ctbnom, ' (', ctbcod, ')')</expression>
+        <size>40</size>
+      </field>
+-->
+      <field id="artctb2" _required="true" _noshow="true" >
+        <label _modpos="nobr" >Cuenta Compra</label>
+        <helper type="combo" id="CTBCUENT" empty="true">
+          <field id="artctb2" noshow="true">
+            <expression>ctbcod</expression>
+            
+          </field>
+          <field id="ctbnom">
+            <expression>CONCAT(ctbnom, ' (', ctbcod, ')')</expression>
+          </field>       
+          <field id="ctbhab" noshow="true">
+            <condicion operador="=">1</condicion>
+          </field>
+          <order>
+            <field id="ctbnom" tabla="CTBCUENT"/>
+          </order>
+        </helper>        
+      </field>
+
+      <field id="artctb" _required="true" _noshow="true" modpos="nobr">
+        <label >Cuenta Contable Venta</label>
+          <helper type="combo" id="CTBCUENT" empty="true">
+          
+          <field id="artctb" noshow="true">
+            <expression>ctbcod</expression>
+            <detalle>artctb</detalle>
+          
+          </field>
+          <field id="ctbnom2">
+            <expression>CONCAT(ctbnom, ' (', ctbcod, ')')</expression>
+          </field>       
+          <field id="ctbhab" noshow="true">
+            <condicion operador="=">1</condicion>
+          </field>
+          <order>
+            <field id="ctbnom" tabla="CTBCUENT"/>
+          </order>
+        </helper>
+      </field>
+      <field id="tipocalculo_costo">
+        <label modpos="nobr" >Tipo de Cálculo Costo</label>
+        <options> 
+          <option valor="0">Automático</option>
+          <option valor="1">Manual</option>
+        </options>
+      </field>
+<!--
+    desactualizado / utilizar standarpacks subsistema proveedor
+      <field id="stkformaemb_id">
+	<helper type="combo" xml="stkformasemb_qry.xml" dir="/ayudas_local" />
+	<label xml="/articulos/stk_formas_emb_abm.xml" modpos="nobr" >Forma de Emabalaje</label>
+      </field>
+-->
+      <field id="sep2" colspan="8" style="background-color:#444;color:white;" deshabilitado="true" local="true">
+  	    <label>Planos</label>
+  	    <valor>'Fabricación'</valor>
+      </field>
+
+      <field id="plaubi">
+        <label>Ubic.Plano</label>
+        <help></help>
+	       <size>30</size>
+      </field>
+
+      <field id="fabricacion_propia">
+        <label modpos="nobr" >Fabricación Propia</label>
+        <options> 
+          <option valor="0">No</option>
+          <option valor="1">Si</option>
+        </options>
+      </field>
+
+      <field id="ext_plano">
+        <label modpos="nobr">Extensión plano</label>
+        <tipo>check</tipo>
+      </field>
+      
+      <field id="norcod">
+        <label>Cod.Norma</label>
+        <help>Código de Norma</help>
+        <tabla_ex id="INSNORMA">
+          <field id="norcod"/>
+          <field id="norabv"/>
+        </tabla_ex>
+      </field>
+
+      <field id="t_pieza">
+        <label modpos="nobr">t_pieza</label>
+        <help>t-pieza</help>
+        <options>
+          <option valor="0">No</option>
+          <option valor="1">Si</option>
+        </options>
+      </field>
+
+      <field id="t_plano">
+        <label modpos="nobr">t_plano</label>
+        <help>t-plano</help>
+        <options>
+          <option valor="0">No</option>
+          <option valor="1">Si</option>
+        </options>
+      </field>
+
+      <field id="t_dispo">
+        <label modpos="nobr">t_dispo</label>
+        <help>t-dispo</help>
+        <options>
+          <option valor="0">No</option>
+          <option valor="1">Si</option>
+        </options>
+      </field>
+
+      <field id="sep1" colspan="8" style="background-color:#444;color:white;" deshabilitado="true" local="true">
+  	    <label>Stock</label>
+  	    <valor>'Stock'</valor>
+      </field>
+
+      <field id="stklocacion_fija_id">
+        <label>Locación Fija</label>
+        <helper _empty="true" id="STK_LOCACION" type="combo" empty="true">
+          <field id="id_stklocacion"/>
+          <field id="codigo_locacion">
+            <detalle>codigo_locacion</detalle>
+          </field>
+          <field id="stkdeposito_id">
+            <detalle>stkdeposito_id</detalle>
+          </field>
+          <order>
+            <field id="codigo_locacion" />
+          </order>
+        </helper>
+      </field>
+
+      <field id="trazable">
+        <label>Trazabilidad</label>
+        <help>Indica si el insumo es o No Trazable</help>
+        <options>
+          <option valor="0">No Trazable</option>
+          <option valor="1">Trazable</option>
+        </options>
+      </field>
+
+      <field id="recLote">
+        <label modpos="nobr">Recepción por Lote</label>
+        <options>
+          <option valor="0">No</option>
+          <option valor="1">Si</option>
+        </options>
+      </field>
+
+      <field id="stock">
+        <label modpos="nobr">Control Stock</label>
+        <options>
+          <option valor="0">No</option>
+          <option valor="1">Si</option>
+        </options>
+      </field>
+
+      <field id="fifo">
+        <label modpos="nobr">FIFO</label>
+        <options>
+          <option valor="0">No</option>
+          <option valor="1">Si</option>
+        </options>
+      </field>
+
+      <field id="dias_fifo" sincelda="true">
+        <label modpos="nobr">Dias FIFO</label>
+        <size>4</size>
+      </field>
+
+
+      <field id="peso_articulo">
+        <label>Peso (Kg)</label>
+      </field>
+
+      <field id="artmax">
+        <label modpos="nobr">Stock Máximo</label>
+        <help>Stock Máximo</help>
+        <jseval campodestino="lote_optimo">((lote_minimo &lt;= ((parseInt(((artmax - Math.ceil(demprov * dem_diaria)) / pack_embalaje), 10) + ((((artmax - Math.ceil(demprov * dem_diaria)) % pack_embalaje) != 0) ? 1 : 0)) * pack_embalaje)) ? ((parseInt(((artmax - Math.ceil(demprov * dem_diaria)) / pack_embalaje), 10) + ((((artmax - Math.ceil(demprov * dem_diaria)) % pack_embalaje) != 0) ? 1 : 0)) * pack_embalaje) : (parseInt((lote_minimo / pack_embalaje), 10) + (((lote_minimo % pack_embalaje) != 0) ? 1 : 0)) * pack_embalaje)</jseval>
+        <size>10</size>
+      </field>
+
+      <field id="artmin" deshabilitado="false">
+        <label modpos="nobr">Stock Mínimo</label>
+        <help>Stock Mínimo</help>
+        <expression>ceil(demprov * dem_diaria)</expression>
+        <size>10</size>
+        <jseval campodestino="artmax">Math.ceil(artrep + artmin)</jseval>
+        <jseval campodestino="artrep">Math.ceil(stock_seguridad + artmin)</jseval>
+        <jseval campodestino="lote_optimo">((lote_minimo &lt;= ((parseInt(((artmax - Math.ceil(demprov * dem_diaria)) / pack_embalaje), 10) + ((((artmax - Math.ceil(demprov * dem_diaria)) % pack_embalaje) != 0) ? 1 : 0)) * pack_embalaje)) ? ((parseInt(((artmax - Math.ceil(demprov * dem_diaria)) / pack_embalaje), 10) + ((((artmax - Math.ceil(demprov * dem_diaria)) % pack_embalaje) != 0) ? 1 : 0)) * pack_embalaje) : (parseInt((lote_minimo / pack_embalaje), 10) + (((lote_minimo % pack_embalaje) != 0) ? 1 : 0)) * pack_embalaje)</jseval>
+      </field>
+
+      <field id="stock_seguridad" colspan="1" deshabilitado="false">
+        <label>Stock Seguridad</label>
+        <help>Stock crítico en depósito</help>
+        <expression>round((select sum(porcentaje_opcion) + 10 from STK_ATRIBUTO_OPCIONES inner join STK_ATRIBUTOS on stkatributo_id = id_stkatributo 
+            inner join STK_ATRIBUTOS_GRUPOS on id_stkgrupoatrib = stkgrupoatrib_id  inner join STK_ATRIBUTO_VALORES on 
+            STK_ATRIBUTO_VALORES.stkatributo_id = STK_ATRIBUTO_OPCIONES.stkatributo_id and valor_atributo = id_atribopciones  
+            where  STK_ATRIBUTO_VALORES.stkarticulo_id = artcod and id_stkgrupoatrib = 1) /100 * demprov * dem_diaria, 0)</expression>
+        <jseval campodestino="artrep">Math.ceil(stock_seguridad + artmin)</jseval>
+        <size>10</size>
+      </field>
+
+      <field id="dem_diaria">
+        <label modpos="nobr">Demanda Diaria</label>
+        <help>Cantidad demanda diaria</help>
+        <jseval campodestino="artmin">Math.ceil(demprov * dem_diaria)</jseval>
+        <size>10</size>
+      </field>
+
+      <field id="cantxuni">
+        <label modpos="nobr">Cant.x Un.</label>
+        <help>Cantidad por unidad (en unidad de uso)</help>
+      </field>
+
+      <field id="artrep" _deshabilitado="true">
+        <label modpos="nobr">Punto Pedido</label>
+        <help>Stock de Reposición.</help>
+        <jseval campodestino="artmax">Math.ceil(artrep + artmin)</jseval>
+        <tipo>decimal</tipo>
+      </field>
+
+      <field id="demprov">
+        <label>Lead Time</label>
+        <help>Demora del proveedor en suministrar el artículo</help>
+        <tipo>integer</tipo>
+        <jseval campodestino="artmin">Math.ceil(demprov * dem_diaria)</jseval>
+      </field>
+
+      <field id="per_revision">
+        <label modpos="nobr">Período Revisión</label>
+        <help>Período de revisión</help>
+        <tipo>integer</tipo>
+      </field>
+
+      <field id="herrinventario_id">
+        <label _xml="/ayudas_local/HLPherramientas_inv.xml" modpos="nobr">H.Inventario</label>
+        <helper type="combo" xml="HLPherramientas_inv.xml" dir="/ayudas_local" empty="true"/>
+      </field>     
+ 
+      <field id="lote_optimo" deshabilitado="false">
+        <label modpos="nobr">Lote Óptimo Pedido</label>
+        <help>Lote Óptimo Pedido</help>
+        <!-- <if exp="lote_optimo > lote_minimo">
+          <true>lote_optimo</true>
+          <false>lote_minimo</false>
+        </if> -->
+      </field>
+      
+      <field id="dias_acopio">
+        <label>Días de Acopio</label>
+      </field>
+      
+      <field id="pedido_automatico" modpos="nobr">
+        <label>Pedido Automático</label>
+        <help>El sistema realizará el pedido automáticamente en base al punto de pedido</help>
+        <tipo>check</tipo>
+      </field>
+
+      <field id="pack_embalaje">
+        <label modpos="nobr">Standard Pack</label>
+        <jseval campodestino="lote_optimo">((lote_minimo &lt;= ((parseInt(((artmax - Math.ceil(demprov * dem_diaria)) / pack_embalaje), 10) + ((((artmax - Math.ceil(demprov * dem_diaria)) % pack_embalaje) != 0) ? 1 : 0)) * pack_embalaje)) ? ((parseInt(((artmax - Math.ceil(demprov * dem_diaria)) / pack_embalaje), 10) + ((((artmax - Math.ceil(demprov * dem_diaria)) % pack_embalaje) != 0) ? 1 : 0)) * pack_embalaje) : (parseInt((lote_minimo / pack_embalaje), 10) + (((lote_minimo % pack_embalaje) != 0) ? 1 : 0)) * pack_embalaje)</jseval>
+      </field> 
+
+      <field id="lote_minimo">
+        <label modpos="nobr">Lote Mínimo</label>
+        <jseval campodestino="lote_optimo">((lote_minimo &lt;= ((parseInt(((artmax - Math.ceil(demprov * dem_diaria)) / pack_embalaje), 10) + ((((artmax - Math.ceil(demprov * dem_diaria)) % pack_embalaje) != 0) ? 1 : 0)) * pack_embalaje)) ? ((parseInt(((artmax - Math.ceil(demprov * dem_diaria)) / pack_embalaje), 10) + ((((artmax - Math.ceil(demprov * dem_diaria)) % pack_embalaje) != 0) ? 1 : 0)) * pack_embalaje) : (parseInt((lote_minimo / pack_embalaje), 10) + (((lote_minimo % pack_embalaje) != 0) ? 1 : 0)) * pack_embalaje)</jseval>
+        <tipo>varchar</tipo>
+      </field> 
+
+      <field id="valor_oc" deshabilitado="true" noshow="true" _local="true" _colstyle="display:none;">
+        <label>Valor OC</label><!--
+        <parametro id="cpsparam.xml" retorna="pardec">
+            <field id="parcla" oculto="true">
+                <condicion operador="=">'valoc'</condicion>
+            </field>
+        </parametro>-->
+        <expression>SELECT pardec FROM CPSPARAM WHERE parcla = 'valoc'</expression>
+      </field>
+
+      <field id="costo_fin" deshabilitado="true" noshow="true" _local="true" _colstyle="display:none;">
+        <label>Costo Fin.</label><!--
+        <parametro id="cpsparam.xml" retorna="pardec">
+            <field id="parcla" oculto="true">
+                <condicion operador="=">'costfi'</condicion>
+            </field>
+        </parametro>-->
+        <expression>SELECT pardec FROM CPSPARAM WHERE parcla = 'costfi'</expression>
+      </field>
+
+
+
+      <field id="sep3" colspan="8" style="background-color:#444;color:white;" deshabilitado="true" local="true">
+  	    <label>Fabricación</label>
+  	    <valor>'Fabricación'</valor>
+      </field>
+
+
+
+      <field id="posicionfab_alarma_id" noZero="true">
+        <label _modpos="nobr">Inicio Fabri.</label>
+        <helper xml="posicionesfab_qry.xml" type="combo" dir="/produccion" empty="true">
+          <field id="linea_id" tabla="MOMENTO" oculto="true">
+            <condicion operador="=">1</condicion>
+          </field>
+        </helper>
+      </field>
+
+      <field id="posicionfab_entrega_id" noZero="true">
+        <label modpos="nobr">Momento Entrega</label>
+        <helper xml="posicionesfab_qry.xml" type="combo" dir="/produccion" empty="true">
+          <field id="linea_id" tabla="MOMENTO" oculto="true">
+            <condicion operador="=">1</condicion>
+          </field>
+        </helper>
+      </field>
+
+      <field id="posicionfab_id" noZero="true">
+        <label modpos="nobr">Destino Estac.</label>
+        <helper xml="posicionesfab_qry.xml" type="combo" dir="/produccion" empty="true">
+          <field id="linea_id" tabla="MOMENTO" oculto="true">
+            <condicion operador="=">1</condicion>
+          </field>
+        </helper>
+      </field>
+                             <!--
+      <field id="costo" noshow="true">
+        <label >Costo</label>
+        // NO TOCAR, TE MATO 
+
+        <expression having="false" >(
+        ifnull((select sum(round( (costo_automatico * cantidad) * (1 + recargo / 100) , 2)) from STKPIEZA where idPadre  = STKINSUM.artcod limit 1), 
+        (select ROUND(INSPR.artcos * valcps / valuso, 2) from STKINSPR as INSPR where  INSPR.siscod = STKINSPR.siscod and INSPR.fecult= max(STKINSPR.fecult) and INSPR.artcod = STKINSPR.artcod limit 1)))</expression>
+          
+        <expresion_1 having="false" >(
+        case when (select sum(round( (costo_automatico * cantidad) * (1 + recargo / 100) , 2)) from STKPIEZA where idPadre  = STKINSUM.artcod limit 1) != 0 then 
+                  (select sum(round( (costo_automatico * cantidad) * (1 + recargo / 100) , 2)) from STKPIEZA where idPadre  = STKINSUM.artcod limit 1)
+          else  (select ROUND(INSPR.artcos * valcps / valuso, 2) from STKINSPR as INSPR where INSPR.fecult= max(STKINSPR.fecult) and INSPR.artcod = STKINSPR.artcod and INSPR.siscod = STKINSPR.siscod limit 1) end)</expresion_1>
+
+        <tipo>numeric</tipo>
+      </field>     
+      
+                                  -->
+
+      <field id="norma" local="true" obj="normainsumos.xml">
+        <paring destino="artcod">artcod</paring>
+      </field> 
+
+      <field id="ultimocosto" local="true" obj="ultimocosto_cons.xml">
+        <paring destino="artcod">artcod</paring>
+      </field>
+      
+      <field id="Proveedor" local="true" obj="articulo_proveedor.xml">
+        <paring destino="stkarticulo_id">artcod</paring>
+      </field>
+
+      <field id="Composicion" local="true" obj="stkpieza_crud.xml">
+        <paring destino="idPadre">artcod</paring>
+      </field>
+
+      <field id="Composicionproceso" local="true" obj="stkbom_enproceso_crud.xml">
+        <paring destino="stkarticulopadre_id">artcod</paring>
+      </field>
+
+      <field id="datostecnicos" local="true" obj="stkinsum_datos_tecnicos.xml">
+        <paring destino="idArticulo">artcod</paring>
+      </field>      
+
+      <field id="locaciones" local="true" >
+        <helper xml="stkarticulo_locacion_grid.xml" type="object">
+          <parameter source="artcod" target="stkarticulo_id" />
+        </helper>
+      </field>    
+      <field id="uso" local="true" >
+        <helper xml="stkarticulo_uso_grid.xml" type="object" label="Locaciones de uso">
+          <parameter source="artcod" target="stkarticulo_id" />
+        </helper>
+      </field>    
+
+      <field id="packs" local="true" >
+        <helper xml="stk_articulo_pack_crud.xml" type="object" dir="/stock/man/">
+          <parameter source="artcod" target="stkarticulo_id" />
+        </helper>
+      </field>    
+
+      <field id="cantidad_modelo" local="true" >
+        <helper xml="mrp_cantidad_articulo_modelo_grid.xml" type="object">
+          <parameter source="artcod" target="stkarticulo_id" />
+        </helper>
+      </field>    
+    </table>
+   <!--
+    <join tipo="left">
+      <table id="CTBCUENT">
+        <field id="ctbcod" >
+          <condicion operador="=">STKINSUM.artctb</condicion>
+        </field>
+      </table>
+    </join>  
+-->
+  </form>
+</histrix>

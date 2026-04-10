@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF8"?>
+<histrix tipo="crud"    path="fotos/articulos">
+  <titulo>Artículo por Locación</titulo>
+  <obs/>
+  <form>
+    <table id="STK_ARTICULO_CARRO">
+
+    <title>Artículo por locación </title>
+      <field id="id_stkarticulocarro" noshow="true" autoinc="true" />
+
+      <field id="stkcarro_id" oculto="true" />
+      
+    <field id="stkarticulo_id">
+      <label>Artículo</label>
+      <helper id="STK_ARTICULOS" type="external">
+        <field id="id_stkarticulo">
+        </field>
+        <field id="nombre_articulo" >
+          <detalle>nombre_articulo</detalle>
+        </field>
+        <field id="baja_articulo" noshow="true">
+          <condicion operador="=">0</condicion>
+        </field>
+
+      </helper>
+    </field>
+
+    <field id="nombre_articulo" tabla="STK_ARTICULOS" deshabilitado="true">
+      <label>Nombre</label>
+	<size>40</size>
+
+    </field>
+
+      <field id="fotopath" local="true" noshow="true">
+        <if exp="true">
+          <true>'stkarticulo_id/'</true>
+          <false>''</false>
+        </if>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="foto" path="fotopath" _open="true"  download="false" _viewer="true" watermark="artcod">
+          <expression>select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = id_stkarticulo and ARTICULO_FOTO.foto != '' order by revision desc limit 1</expression> 
+          <label>Imagen</label>
+          <tipo Type="Image">file</tipo>
+          <size>40</size> 
+      </field>
+
+    <field id="cantidad_carro">
+      <label>Cantidad</label>
+    </field>
+
+    <field id="stklocacion_destino_id" >
+      <label>Locación de Destino</label>
+       <helper id="STK_LOCACION" type="combo">
+          <field id="id_stklocacion" >
+            
+          </field>
+          <field id="codigo_locacion" />
+
+       </helper>
+<!--       <expression>select stklocacion_id from STK_ARTICULO_LOCACION where stkarticulo_id = id_stkarticulo and stock_actual &gt;= cantidad_carro</expression> -->
+    </field>
+
+
+
+    <order>
+	     <field id="nombre_articulo" />
+    </order>
+    </table>
+    <join>
+      <table id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">stkarticulo_id</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

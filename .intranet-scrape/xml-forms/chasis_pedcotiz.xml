@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <abm tipo="consulta">
+       <titulo>NUMEROS DE FABRICACION</titulo>
+        <obs></obs>
+               <consulta detalle="fichaventas.xml">
+                  <tabla id="CHASIS" label="Numeros de Fabricacion">
+                  <campo id="nrocha">
+                      <label>Nro Fab</label>
+                      <help>Numero de Fabricacion </help>
+                      <detalle>nrocha</detalle>
+                  </campo>
+                  <campo id="chades">
+                      <label>Descripcion </label>
+                      <help>Descripcion</help>
+                  </campo>
+                  <campo id="chaobs">
+                      <label>Observ. </label>
+                      <help>Observaciones </help>
+                  </campo>
+	    <!--
+	    
+	    ESTO LO SACO DE ACA, TIENE QUE ESTAR EN LOS FORMULARIOS
+	    
+                  <campo id="chasis">
+                      <label>Nro.Chasis </label>
+                      <help>Nro de serie del Chasis </help>
+                  </campo>
+                  <campo id="modcha">
+                      <label>Modelo Chasis </label>
+                      <help>Modelo de Chasis </help>
+                  </campo>
+                  <campo id="ctacod">
+                      <label>Cliente</label>
+                      <help>Codigo de Cuenta</help>
+                  </campo>
+	   
+
+                  <campo id="conces">
+                      <label>Concesionario </label>
+                      <help>Concesionario</help>
+                  </campo>
+-->
+                  <campo id="entrada">
+                      <label>Fec.Entr.</label>
+                      <help>Fecha de Entrada</help>
+                  </campo>
+	    <!--
+                  <campo id="fecalt">
+                      <label>Alargue </label>
+                      <help>Fecha de Entrada en Alargue </help>
+                  </campo>
+    
+	          <campo id="fecent">
+                      <label>Herreria</label>
+                      <help>Fecha Entrada Herreria </help>
+                  </campo>
+                  <campo id="fecter">
+                      <label>Fin</label>
+                      <help>Fecha de Terminacion </help>
+                  </campo>
+                  <campo id="salida">
+                      <label>Salida</label>
+                      <help>Fecha de Salida</help>
+                  </campo>
+  -->
+			<orden>
+				<campo id="nrocha"></campo>
+			</orden>
+
+                  </tabla>
+		  
+               </consulta>
+        </abm>

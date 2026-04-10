@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="chart">
+	<title>Cantidad</title>
+	<obs></obs>
+	<form >
+		<table id="STK_ARTICULOS" >
+			<title>Cantidad</title>
+			<grafico id="Demora" >
+				<ancho>400</ancho>
+				<tipo>P</tipo>
+				<datos>cantidad</datos>
+				<etiquetas>herrinventario_id</etiquetas>
+				<title>H.Inventario</title>
+				<subtitulo></subtitulo>
+			</grafico>
+			<field id="id_stkarticulo" noshow="true" />
+			<field id="herrinventario_id">
+				<expression>IFNULL(herrinventario_id, 0)</expression>
+				<label _xml="/ayudas_local/HLPherramientas_inv.xml" modpos="nobr">H.Inventario</label>
+				<helper type="combo" xml="HLPherramientas_inv.xml" dir="/ayudas_local">
+					<option value="0">Sin Asignar</option>
+				</helper>
+			</field>
+			<field id="baja_articulo" noshow="true">
+			    <condicion operador="=">0</condicion>
+			</field>
+			<field id="cantidad">
+				<expression>COUNT(*)</expression>
+			</field>
+			<order>
+				<field id="cantidad" />
+			</order>
+			<group>
+				<field id="herrinventario_id" >
+					<expression>IFNULL(herrinventario_id, 0)</expression>
+				</field>
+			</group>
+		</table>
+	</form>
+</histrix>

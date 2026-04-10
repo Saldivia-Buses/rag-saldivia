@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="consulta">
+       <title>Ranking Proveedores</title>
+        <obs></obs>
+               <form >
+                  <table id="RANKINGPRV" label="Ranking Proveedores">
+                  <field id="prvcod">
+                      <label>Codigo de Cuenta </label>
+                      <help>Codigo de Proveedor </help>
+		    <tabla_ex id="CCTCUENT">
+			<!-- campos a agregar al contenedor Filtro-->
+			<field id="ctacod"></field>
+			<field id="ctanom"></field>
+			<field id="siscod" oculto="true">
+			    <condicion operador="=">'01'</condicion>
+			</field>
+
+			<filtra>ctacod</filtra>
+		    </tabla_ex>
+
+                  </field>
+                  <field id="fecha">
+                      <label>Fecha </label>
+                      <help> </help>
+                  </field>
+
+                  <field id="clase">
+                      <label>Clase </label>
+                      <help> </help>
+                  </field>
+                  </table>
+               </form>
+        </histrix>

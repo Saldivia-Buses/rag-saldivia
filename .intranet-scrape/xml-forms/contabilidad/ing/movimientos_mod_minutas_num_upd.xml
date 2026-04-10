@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="update" grabafinal="true" >
+	<title>Actualizacion Movimientos</title>
+	 <obs></obs>
+		<consulta>
+		     <table id="CTB_MOVIMIENTOS" idCampoCond="grabar">
+			<field id="id_movimiento"  lastId="detalles_movimientos_minutas_ins.xml" esClave="true"></field>
+			<field id="nro_minuta" id_cab="nro_minuta"/> 
+		    </table>
+		</consulta>
+    </histrix>	

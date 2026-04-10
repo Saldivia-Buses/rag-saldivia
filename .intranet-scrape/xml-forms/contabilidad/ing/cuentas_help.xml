@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="consulta">
+	<title>Cuentas</title>
+	 <obs></obs>
+		<consulta>
+		    <table id="CTB_CUENTAS" label="cuentas">
+				<field id="id_cuenta" autoinc="true" noshow="false" >
+					<label>Codigo</label>
+					<help>Codigo de cuenta</help>
+				</field>
+				<field id="nombre_cuenta">
+					<label>Nombre</label>
+					<help>Nombre de la cuenta contable</help>
+				</field>
+				<field id="tipo_id" colstyle="display:none;">
+					<helper type="combo" xml="ctbtipos_crud.xml" dir="/contabilidad/man">
+					</helper>
+					<label>Tipo de cuenta</label>
+					<help>Tipo de cuenta contable</help>
+				</field>
+
+				<field id="cuenta_superior_id" colstyle="display:none;">
+					<helper type="combo" xml="cuentas_inhabilitadas_qry.xml" dir="/ayudas">
+					</helper>
+					<label>Cuenta superior</label>
+					<help>Cuenta superior a esta cuenta contable</help>
+					<valor>0</valor>
+				</field>
+				
+				<field id="tipo_saldo" colstyle="display:none;">
+					<options>
+					    <option valor="0">Deudor</option>
+					    <option valor="1">Acreedor</option>
+					</options>
+					<label>Tipo saldo</label>
+					<help>Tipo de saldo de la cuenta: debe o haber</help>
+				</field>
+				<field id="ejercicio_id" colstyle="display:none;">
+					<helper type="combo" xml="ctbejercicios_crud.xml" dir="/contabilidad/man">
+					</helper>
+					<label>Ejercicio</label>
+					<help>Ejercicio al que pertenece la cuenta</help>
+				</field>
+				<field id="habilitada" colstyle="display:none;">
+					<tipo>check</tipo>
+					<label>Habilitada</label>
+					<help>Indica si la cuenta esta habilitada o no</help>
+				</field>
+				 <join tipo="left">
+				      <table id="CTB_EJERCICIOS">
+					<field id="id_ejercicio">
+					  <condicion operador="=">ejercicio_id</condicion>
+					</field>
+				      </table>
+				    </join>
+		    </table>
+		</consulta>
+    </histrix>	

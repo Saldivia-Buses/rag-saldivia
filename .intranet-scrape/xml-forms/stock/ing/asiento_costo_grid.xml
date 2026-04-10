@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" procesa="false" preloadData="false" tooltip="false" showCantidad="false" updateTotals="true" subtipo="vertical" unserializeParent="false" preventDuplication="true" importTempTable="TEMPTABLENAME" inserta="false" modifica="false" borra="false" deleteRow="false">
+  <title>Asiento de Costo</title>
+  <obs></obs>
+  <form>
+	<table id="STK_MOVIMIENTOS" label="Asiento de Costo">
+
+		<movimientos>
+			<relacion id="stkmovimientos_upd.xml" />
+		</movimientos>
+
+		<filters>
+			<field id="fecha_desde">
+				<label>Fecha Desde</label>
+				<valor>today</valor>
+				<operador>=</operador>
+			</field>
+			<field id="fecha_hasta">
+				<label modpos="nobr">Fecha Hasta</label>
+				<valor>today</valor>
+				<operador>=</operador>
+			</field>
+		</filters>
+
+		<field id="id_stkmovimiento" noshow="true"/>
+
+		<field id="stkdeposito_id" tabla="STK_MOVIMIENTOS" noshow="true">
+			<helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" empty="true" />
+		</field>
+
+		<field id="fecha_desde" noshow="true" local="true">
+			<tipo>date</tipo>
+		</field>
+
+		<field id="fecha_hasta" noshow="true" local="true">
+			<tipo>date</tipo>
+		</field>
+
+		<field id="fecha_movimiento" noshow="true">
+			<tipo>date</tipo>
+			<condicion operador="&gt;=">STR_TO_DATE('[__fecha_desde__]','%d/%m/%Y') and STK_MOVIMIENTOS.fecha_movimiento &lt;= STR_TO_DATE('[__fecha_hasta__]','%d/%m/%Y')</condicion>
+		</field>
+	      
+		<field id="nombre_rubro" tabla="STK_RUBROS" noshow="true" />
+
+		<field id="codigo_barra" tabla="STK_ARTICULOS" noshow="true">
+			<label>Codigo</label>
+		</field>
+
+		<field id="nombre_articulo" tabla="STK_ARTICULOS" noshow="true">
+			<label>Articulo</label>
+		</field>
+
+		<field id="ctbcuenta_id" style="color:#b32600; font-weight:bold;">
+			<label>Cuenta</label>
+			<expression>IF(IFNULL(STK_ARTICULOS.ctbcuentacps_id,'') = '', STK_RUBROS.ctbcuentarubrocps_id, STK_ARTICULOS.ctbcuentacps_id)</expression>                	
+		</field>
+
+		<field id="stkrubro_id">
+			<label>Rubro</label>
+			<helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true" />
+		</field>
+
+		<field id="cantidad" suma="true">
+			<label>Cantidad</label>
+			<expression>sum(STK_MOVIMIENTOS.cantidad)</expression>
+			<tipo>numeric</tipo>
+		</field>
+
+
+		<field id="precio_costouss">
+			<label>PPP U$S</label>
+			<expression>STK_MOVIMIENTOS.precio_promedio</expression>
+			<tipo>numeric</tipo>
+		</field>
+
+		<field id="importe_detalleuss" noZero="true" suma="true">
+			<label>Importe</label>
+			<expression>sum(STK_MOVIMIENTOS.precio_promedio * STK_MOVIMIENTOS.cantidad)</expression>
+			<tipo>numeric</tipo>
+		</field>		
+
+		<field id="precio_promedio">
+			<label>PPP $</label>			
+			<expression>sum(STK_MOVIMIENTOS.precio_promedio * STK_MOVIMIENTOS.cotizacion_genmonedahis)</expression>
+			<tipo>numeric</tipo>
+		</field>
+
+		<field id="importe_detalle" noZero="true" suma="true">
+			<label>Importe</label>
+			<expression>sum(STK_MOVIMIENTOS.precio_promedio * STK_MOVIMIENTOS.cotizacion_genmonedahis * STK_MOVIMIENTOS.cantidad)</expression>
+			<tipo>numeric</tipo>
+			<jseval campodestino="importe" total="true">importe_detalle</jseval>
+		</field>	
+
+		<field id="ctbcuenta_doh" local="true" noshow="true">
+			<valor>1</valor>
+		</field>	
+
+		<field id="marca" noshow="true">
+			<condicion operador="=">0 or marca = '' or marca IS NULL</condicion>
+		</field>
+
+		<group>
+			<field id="ctbcuenta_id" />
+			<field id="stkrubro_id" />
+		</group>
+
+		<order>
+			<field id="nombre_rubro"    tabla="STK_RUBROS" />
+		</order>
+
+	</table>
+
+	<join>
+		<table id="REG_MOVIMIENTOS">
+			<field id="id_regmovim">
+				<condicion operador="=">STK_MOVIMIENTOS.regmovimiento_id</condicion>
+			</field>
+		</table>
+	</join>      
+
+	<join>
+		<table id="GEN_SUBSISTEMAS">
+			<field id="id_subsistema">
+				<condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+			</field>			
+			<field id="iva_subsistema">
+				<condicion operador="=">1</condicion>
+			</field>				
+		</table>
+	</join>
+
+	<join>
+		<table id="STK_CONCEPTOS">
+			<field id="id_stkconcepto">
+				<condicion operador="=">STK_MOVIMIENTOS.stkconcepto_id</condicion>
+			</field>
+			<field id="tipo_concepto">
+				<condicion operador="=">1</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join>
+		<table id="STK_RUBROS">
+			<field id="id_stkrubro">
+				<condicion operador="=">STK_MOVIMIENTOS.stkrubro_id</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join>
+		<table id="STK_ARTICULOS">
+			<field id="id_stkarticulo">
+				<condicion operador="=">STK_MOVIMIENTOS.stkarticulo_id</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join tipo="left">
+		<table id="STK_LISTAS">
+			<field id="id_stklista">
+				<condicion operador="=">STK_MOVIMIENTOS.stklista_id</condicion>
+			</field>
+		</table>
+	</join>
+
+	<tempTable id="TEMPTABLENAME">
+		<row>
+			<field id="cuenta_id">ctbcuenta_id</field>
+			<field id="doh">ctbcuenta_doh</field>
+			<field id="importe">importe_detalle</field>
+		</row>
+	</tempTable>
+
+  </form>
+</histrix>

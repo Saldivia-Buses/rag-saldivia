@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<abm tipo="ayuda" >
+		<titulo>Adicionales</titulo>
+		<obs></obs>
+		<consulta>
+			<tabla id="LISTAPRECIOSDET"	>
+				<titulo>ADICIONALES</titulo>
+				<campo id="artcod" tabla="STKINSUM" esClave="true">
+					<tipo>varchar</tipo>
+				</campo>
+				<campo id="artdes" tabla="STKINSUM" deshabilitado="true">
+					<label>Nombre</label>
+					<tipo>varchar</tipo>
+				</campo>
+				<campo id="precio1" deshabilitado="true">
+					<label>Precio</label>
+					<tipo>decimal</tipo>
+				</campo>
+				<campo id="idLista" noshow="true" >
+					<condicion operador="=">(select max(idLista) from LISTAPRECIOSCAB)</condicion>
+				</campo>				
+				<orden>
+					<campo id="artdes"></campo>
+				</orden>
+			</tabla>
+			<join tipo="left">
+				<tabla id="STKINSUM">
+					<campo id="siscod" oculto="true">
+						<condicion operador="=">'02'</condicion>
+					</campo>
+					<campo id="artcod">
+						<condicion operador="=">LISTAPRECIOSDET.idArticulo</condicion>
+					</campo>
+				</tabla>
+			</join>
+		</consulta>
+	</abm>

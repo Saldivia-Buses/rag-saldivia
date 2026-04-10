@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="dashboard">
+        <titulo>Medidores de Calidad</titulo>
+<!--
+        <widget id="Coches"  width="400px">
+           <title>Cantidad Mensual de Coches</title>
+	       <url><![CDATA[histrixLoader.php?xml=evolutivo_coches.xml&dir=/estadisticas/calidad]]></url>
+        </widget> 
+-->
+
+        <widget id="horas_correctivo_eyh" width="45%" _height="50%">
+           <title>Reparacion de Maquinas y Equipos</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_mantcorr_rep_mye.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="horas_correctivo_herr" width="45%" _height="50%">
+           <title>Reparacion de Herramientas</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_mantcorr_rep_herr.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="horas_suspendida_eyh" width="45%" _height="50%">
+           <title>Tiempo suspendido de Maquinas y Equipos</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_mantcorr_sinuso_mye.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="horas_suspendida_herr" width="45%" _height="50%">
+           <title>Tiempo suspendido de Herramientas</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_mantcorr_sinuso_herr.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+<!--
+        <widget id="horas_sinuso" width="50%" height="50%">
+           <title>Horas sin usar</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_mantcorr_herr_rep.xml&dir=/estadisticas/calidad]]></url>
+        </widget>-->
+
+</histrix>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm">
+  <title>Regimenes de IIBB</title>
+  <obs></obs>
+  <consulta>
+    <table id="GEN_IIBB_REGIMENES" label="Regimenes de IIBB">
+      <filtros>
+        <field id="nombre_iibb_regimen">
+          <label>Nombre regimen</label>
+          <operador>like</operador>
+        </field>
+      </filtros>  
+      <field id="id_iibb_regimen" autoinc="true" noshow="true">
+        <label>Código </label>
+        <help>Código de IIBB regimen</help>
+      </field> 
+      <field id="nombre_iibb_regimen">
+        <label>Nombre </label>
+        <help>Nombre del regimen de IIBB</help>
+        <size>15</size>
+      </field>
+      <field id="base_calculo">
+        <label>Base</label>
+      </field>
+    </table>
+  </consulta>
+</histrix>

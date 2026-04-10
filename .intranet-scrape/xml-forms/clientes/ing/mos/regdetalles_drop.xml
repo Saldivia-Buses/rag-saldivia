@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+   <title/>
+   <obs/>
+   <form>
+	<table id="REG_DETALLES" idCampoCond="borra">
+
+		<sql>DELETE FROM REG_DETALLES WHERE regmovim_id = [__regmovim_id__]</sql>
+
+		<field id="regmovim_id" id_temp="regmovim_id" esClave="true" />
+
+	</table>
+   </form>
+</histrix>

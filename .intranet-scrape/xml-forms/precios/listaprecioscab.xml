@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>LISTAS DE PRECIOS</title>
+	<obs></obs>
+	<form >
+		<table id="LISTAPRECIOSCAB" >
+		    <title>Listas de precios</title>
+				<field id="idLista">
+					<label>Lista</label>
+				</field>
+				<field id="fecha">
+					<label>Fecha</label>
+				</field>
+				<field id="nombre">
+					<label>Nombre</label>
+				</field>
+				<field id="descripcion">
+					<label>Descripción</label>
+				</field>
+				<field id="pie">
+					<label>Pie</label>
+				</field>			
+
+			<order>
+				<field id="idLista"></field>
+			</order>
+
+		</table>
+	</form>
+</histrix>

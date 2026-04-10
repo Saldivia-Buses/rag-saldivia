@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<histrix tipo="consulta">
+  <title>ENTREGAS POR SECCION</title>
+  <obs/>
+  <form  >
+    <table id="MOMENTO" >
+      <title>Secciones de Fabricación</title>
+		<filters>
+	          <field id="linea_id" noshow="true">
+	            <label>Linea</label>
+		<operador>=</operador>
+
+    		  </field>
+
+        		<field id="mes" local="true" incdec="true">
+				<label>Mes</label>
+				<valor eval="true">date('m')</valor>
+				<operador>=</operador>
+			</field>
+
+			<field id="year" local="true" incdec="true">
+				<label modpos="nobr">Año</label>
+				<valor eval="true">date('Y')</valor>
+				<detalle>year</detalle>
+				<operador>=</operador>
+
+			</field>
+
+		</filters>
+	          <field id="linea_id" noshow="true">
+    		    <helper type="combo" xml="/produccion/lineas.xml"/>
+    		  </field>
+		
+		<field id="mes" local="true" noshow="true" incdec="true" min="1" max="12">
+			<label>Mes</label>
+			<tipo>integer</tipo>
+			<size>2</size>
+			<detalle>mes</detalle>
+		</field>
+
+		<field id="year" local="true" noshow="true" incdec="true" min="1900" max="3000">
+			<label modpos="nobr">año</label>
+
+			<tipo>integer</tipo>
+			<size>4</size>
+			<detalle>year</detalle>
+		</field>
+      <field id="idMomento"  deshabilitado="true" noshow="true">
+
+          <label>id</label>
+		  <detalle>idMomento</detalle>
+      </field>
+      <field id="descripcion" linkint="entregas_seccion_consficha.xml" linkdes="Imprimir">
+         <label style="font-size:1.5em;height:5em;">Sección</label>
+         <help>descripcion</help>
+			<paring destino="mes" operador=">=">mes</paring>
+			<paring destino="year" operador=">=">year</paring>
+			<paring destino="puestos" operador=">=">puestos</paring>
+			<paring destino="coches" >coches</paring>
+			<paring destino="linea_id" >linea_id</paring>
+
+			<paring destino="limits" >limits</paring>
+			<paring destino="titulo_div" >descripcion</paring>
+      </field>
+      <field id="coches" noshow="true">
+        <expression>select count(*) from TURNOSPRODUCCION left join PEDCOTIZ on PEDCOTIZ.nrocha = TURNOSPRODUCCION.nrofab where 
+    			TURNOSPRODUCCION.linea_id = MOMENTO.linea_id and 
+    			month(fechaing) =[__mes__] and 
+		        year(fechaing) = [__year__]</expression>
+        <detalle>coches</detalle>
+      </field>
+      <field id="reportar" noshow="true">
+		  <condicion operador="!=">0</condicion>
+
+      </field>
+	  <field id="puestos" noshow="true" >
+		  <expression>select count(*) from MOMENTO AS MOM left join POSICIONESFAB on POSICIONESFAB.idMomento = MOM.idMomento where MOM.linea_id = MOMENTO.linea_id and MOM.reportar = 1 and MOM.orden > MOMENTO.orden </expression>
+<!--		  <expression>select count(*) from POSICIONESFAB where POSICIONESFAB.idMomento = (select MOM.idMomento from MOMENTO AS MOM where MOM.orden > MOMENTO.orden and MOM.reportar = 1 ORDER BY ORDEN DESC limit 1)</expression> -->
+		  <tipo>integer</tipo>
+		  <detalle>puestos</detalle>
+	  </field>
+	<field id="limits" local="true" noshow="true">
+		<if exp="puestos">
+		    <true>'puestos, coches'</true>
+		    <false>coches</false>
+		</if>
+	</field>
+	  
+	 <field id="entregas" obj="entregas_seccion.xml" showObjTabla="true" local="true">
+ 				<paring destino="mes" operador=">=">mes</paring>
+ 				<paring destino="year" operador=">=">year</paring>
+ 				<paring destino="puestos" operador=">=">puestos</paring>
+ 				<paring destino="coches" >coches</paring>
+ 				<paring destino="limits" >limits</paring>
+ 				<paring destino="linea_id" >linea_id</paring>
+	 </field>
+	 <field id="orden" noshow="true" tipoOrden="DESC">
+	 </field>
+	 <order>
+	 <field id="orden" noshow="true" >
+	 </field>
+	 
+	 </order>
+	 
+    </table>
+
+  </form>
+</histrix>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="consulta">
+	<titulo>SALDO INICIAL</titulo>
+	<obs/>
+	<consulta>
+		<tabla id="STKINMOV" label="SALDO INICIAL STOCK">
+			<campo id="movfec" noselect="true" >
+				<label>Remito</label>
+				<help>Fecha Remito</help>
+			</campo>
+			<campo id="siscod" noselect="true">
+				<label>Cod.Sistema</label>
+				<help></help>
+				<condicion operador="=">'01'</condicion>
+			</campo>
+			<campo id="artcod" noselect="true">
+				<label>Articulo</label>
+				<help></help>
+			</campo>
+			<campo id="Entrada" suma="true">
+				<expresion>sum(movuso * (case when contip = '1' then 1 else 0 end))</expresion>
+				<label>Entrada</label>
+				<help></help>
+			</campo>
+			<campo id="Salida" suma="true">
+				<expresion>sum(movuso * (case when contip = '2' then 1 else 0 end))</expresion>
+				<label>Salida</label>
+				<help></help>
+			</campo>
+
+			<campo acumula="true" id="EntSal" suma="true">
+				<expresion>sum(movuso * (case when contip = '1' then 1 else -1 end))</expresion>
+				<label>Mov</label>
+				<help></help>
+			</campo>
+		</tabla>
+		<join tipo="left">
+			<tabla id="STKCONCE">
+				<campo id="siscod" oculto="true">
+					<condicion operador="=">'06'</condicion>
+				</campo>
+				<campo id="movcod" oculto="true">
+					<condicion operador="=">STKINMOV.movcod</condicion>
+				</campo>
+				<campo id="contip" oculto="true"/>
+				<campo id="conabv" oculto="true"/>
+			</tabla>
+		</join>
+
+	</consulta>
+</abm>

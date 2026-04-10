@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" inserta="false" modifica="false" imprime="false" process="true" transaccional="true" log="false">
+	<title>Orden de pago</title>
+	<obs/>
+		<customScript>
+			$('[name=cajcod], [name=chequera],[name=bcscta]').change();
+		</customScript>	
+	<form >
+
+		<table id="CCTCUENT" label="ORDEN DE PAGO">
+			<field id="siscod" oculto="true" >
+				<label>Cod.</label>
+				<help/>
+				<valor>01</valor>
+				<!-- <condicion operador="=">'01'</condicion> -->
+			</field>
+			<field id="sisprv" oculto="true" local="true">
+				<label>sisprv</label>
+				<help/>
+				<valor>01</valor>
+				<!-- <condicion operador="=">'01'</condicion> -->
+			</field>			
+
+
+			<field id="sisctb" oculto="true" local="true">
+				<label>sisctb</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'sisctb'</condicion>
+					</field>
+				</parametro>
+			</field>
+			<field id="sisret" oculto="true" local="true">
+				<label>sisret</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'sisret'</condicion>
+					</field>
+				</parametro>
+			</field>			
+			<field ctbcuenta="1" id="ctbpro" oculto="true" local="true">
+				<label>ctbdeu</label>
+				<parametro id="ctbparam_paralf.xml" retorna="paralf">
+					<field id="siscod" oculto="true">
+						<condicion operador="=" valorde="sisctb"/>
+					</field>
+					<field id="parcla">
+						<condicion operador="=">'ctbpro'</condicion>
+					</field>
+				</parametro>
+			</field>
+		
+	
+
+			<field ctbfecha="1" id="movfec">
+				<label modpos="nobr">Fecha</label>
+				<help/>
+				<valor>today</valor>
+				<tipo>date</tipo>
+			</field>
+			<field ctbfecha="1" id="acreditacion">
+				<label modpos="nobr">Acreditación</label>
+				<help/>
+				<valor>today</valor>
+				<tipo>date</tipo>
+			</field>
+			<field id="concod" oculto="true">
+				<label modpos="nobr">concod</label>
+				<help/>
+				<valor>4</valor>
+			</field>
+			<field ctbtipo="1" id="movcta" oculto="true">
+				<label modpos="nobr">movcta</label>
+				<help/>
+				<valor>1</valor>
+			</field>
+			<field id="zoncod" oculto="true">
+				<label modpos="nobr">zoncod</label>
+				<valor>0</valor>
+			</field>
+			<field deshabilitado="true" id="movnpv" noshow="true">
+				<label modpos="nobr">Orden de Pago</label>
+				<help>Comprobante</help>
+				<valor>0</valor>
+			</field>
+                        <field id="opecla" local="true" oculto="true">
+                                <label>Usuario</label>
+                                <valor eval="true">$_SESSION['usuario']</valor>
+                        </field>
+
+
+			<field id="year" oculto="true">
+				<label>año</label>
+				<valor eval="true">date('Y')</valor>
+			</field>
+			<field id="mes" oculto="true">
+				<label>mes</label>
+				<valor eval="true">date('m')</valor>
+			</field>
+			<field ctbregnro="1" deshabilitado="true" id="movnroOP" local="true" >
+				<label modpos="nobr" >Numero</label>
+				<help>Numero</help>
+				<parametro id="cajparam_parent.xml" retorna="parent">
+
+					<field id="parcla" oculto="true">
+						<condicion operador="=">'nropag'</condicion>
+					</field>re
+					<field id="parent">
+						<complete>parent + 1</complete>
+					</field>
+				</parametro>
+				<tipo>integer</tipo>
+				<format>%012d</format>
+
+			</field>			
+			
+
+			<field id="bcscta">
+				<label>Cuenta</label>
+				<help>Cuenta Bancaria</help>
+				<helper type="combo" id="BCSCUENT" _xml="HLPbcscuent.xml" dir="/help_local">
+					<field id="ccbcod"></field>
+					<field id="ccbnom">
+						<detalle>ccbnom</detalle>
+					</field>
+					<field id="ctbcod">
+						<detalle>ctbcod</detalle>
+					</field>
+
+				</helper>
+				
+				<actualiza>
+					<campo id="chequera" destino="ccbcod" />
+				</actualiza>
+			</field>
+			<field id="chequera" deshabilitado="true">
+				<label >Chequera</label>
+				<help>tipo de movimiento</help>
+				<helper id="CHEQUERAS" type="combo" _empty="true">
+					<field id="idChequera"/>
+					<field id="nroCheque"/>
+					<field id="ccbcod" />
+
+					<field id="printer">
+						<detalle>printer</detalle>
+						<condicion operador="!=">''</condicion>
+					</field>
+
+				</helper>
+			</field>
+
+
+			<field id="printer" _deshabilitado="true">
+				<label _modpos="nobr">Impresora</label>
+                    <helper type="combo" xml="htxprinters_qry.xml" dir="/ayudas" empty="true" >
+                    </helper>
+			</field>
+			<field id="printer_orden" >
+				<label modpos="nobr">Impresora Orden</label>
+                    <helper type="combo" xml="htxprinters_qry.xml" dir="/ayudas" empty="true" >
+                    </helper>
+
+                    <helper type="parameter" id="SIS::04::printer_orden" >
+                        <label>Orden de Pago: Impresora por defecto </label>
+                        <defaultValue>HPLVS</defaultValue>
+                    </helper>
+				
+			</field>
+
+
+			<field id="sisbcs" oculto="true">
+				<label >sisbcs</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'sisbcs'</condicion>
+					</field>
+				</parametro>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="siscaj" oculto="true">
+				<label >siscaj</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'siscaj'</condicion>
+					</field>
+				</parametro>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="cajcod" deshabilitado="true" >
+				<label >Tipo</label>
+				<help>tipo de movimiento</help>
+				<tabla_ex id="CAJCONCE" vacio="true">
+					<field id="cajcod"/>
+					<field id="cajdes"/>
+					<field id="ctbhaber">
+					    <expression>ctbcod__2</expression>
+					</field>
+
+					<field id="siscod" oculto="true">
+						<condicion operador="=" valorde="siscaj"/>
+					</field>
+					<field id="cajtip">
+						<condicion operador="=">2</condicion>
+					</field>
+					<order>
+						<field id="cajcod"/>
+					</order>
+
+				</tabla_ex>
+				<valor>8</valor>
+			</field>
+			<field id="ctbcod" deshabilitado="true" modpos="nobr">
+				<label>ctb</label>
+			</field>			
+			<field id="ctbhaber" deshabilitado="true" modpos="nobr">
+				<label>haber</label>
+			</field>
+
+			<field id="opecla" local="true" oculto="true">
+				<label>Usuario</label>
+				<valor eval="true">$_SESSION['usuario']</valor>
+			</field>
+
+
+			<field id="proveedores" local="true" colspan="10">
+				<label>Pagos</label>
+				<helper xml="ordenpago_lote_grid.xml" type="object">
+				</helper>
+
+			</field>
+
+		</table>
+		
+	</form>
+</histrix>

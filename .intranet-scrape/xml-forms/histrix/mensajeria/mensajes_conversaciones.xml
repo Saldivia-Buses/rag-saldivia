@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" preloadData="false" filter="true">
+	<title>MEnsajes</title>
+	<obs/>
+	<form >
+		<table id="HTXMESSAGES" label="Mensajeria" >
+			<filters>
+                <field id="fecha" deshabilitado="false">
+			       	<label>Desde</label>
+					<operador>&gt;=</operador>
+					<valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m") ,date("d")-30, date("Y")))</valor>					
+				</field>				
+				<field id="fecha" modpos="nobr" deshabilitado="false">
+					<label>Hasta</label>
+					<operador>&lt;=</operador>
+					<valor>today</valor>
+				</field>				
+			</filters> 
+			<field id="idMensaje" noshow="true" tipoOrden="DESC">
+				<label>id</label>
+
+			</field>
+			<field  id="fec2" deshabilitado="true" local="true" noshow="true">
+				<label modpos="nobr" Formstyle="display:none;">Fec2</label>
+				<tipo>date</tipo>
+					<valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m") ,date("d")-15, date("Y")))</valor>
+			</field>
+			
+			<field id="fecha" deshabilitado="false">
+				<label >Fecha</label>
+				<valor>today</valor>
+			</field>
+			<field deshabilitado="true" id="hora" >
+				<label Formstyle="display:none;">Hora</label>
+			</field>
+			<field deshabilitado="true" id="DE" >
+				<expression>de</expression>
+				<label>de</label>
+				<tipo>varchar</tipo>
+			</field>
+			
+			<field deshabilitado="true" id="_de" local="true" noshow="true">
+				<tipo>varchar</tipo>
+			</field>
+			<field id="para" deshabilitado="true" noshow="true" >
+			</field>
+			
+			<field id="_para" deshabilitado="true" noshow="true" local="true">
+			</field>
+			<field id="depara" deshabilitado="true" noshow="true">
+			    <expression having="false">CONCAT(de,para)</expression>
+			    <condicion operador="=">'[___de__][___para__]' or CONCAT(de,para) = '[___para__][___de__]'</condicion>
+			</field>
+			
+			
+			<field id="title" deshabilitado="true" >
+			<label>asunto</label>
+			</field>
+			
+			<field id="mensaje" deshabilitado="true">
+				<expression>case when isnull((select obs from HTXLOG where HTXLOG.idEvento = HTXMESSAGES.idEvento and HTXMESSAGES.idEvento != '' and (tipo = 'UPDATE' or tipo = 'DELETE') limit 1)) then mensaje else CONCAT(mensaje, ' (',(select obs from HTXLOG where HTXLOG.idEvento = HTXMESSAGES.idEvento and (tipo = 'UPDATE' or tipo = 'DELETE') limit 1),')') end </expression>
+				<label Formstyle="display:none;"
+					colstyle="color:#444;font-size:15px;">mensaje</label>
+				<help>Texto del mensaje</help>
+			</field>
+			<field id="msg2" deshabilitado="true"  local="true" noshow="true">
+				<if exp="true">
+					<true>'%0A%0A'.str_replace('%0A', '%0A>>', urlencode('>>mensaje'))</true>
+					<false>''</false>
+				</if>
+				<tipo>varchar</tipo>
+			</field>			
+		
+			<field id="idEvento" noshow="true">
+                            <condicion operador="=">'' or isnull(idEvento)</condicion>
+                        </field>
+			<field id="det" print="false" local="true" linkint="log_msg_cons.xml" linkdes="Detalle">
+        		        <label Formstyle="display:none;">Detalles</label>				
+				<paring destino="idEvento" operador="=">idEvento</paring>
+				<tipo>varchar</tipo>
+				<if exp="strlen('idEvento') != 0">
+					<true>'Detalle'</true>
+					<false>''</false>
+				</if>
+			</field>				
+			
+
+			<field id="responder" local="true" print="false"  linkint="mensajes_reply.xml" linkdes="Responder este Mensaje">
+				<label Formstyle="display:none;">Responder</label>
+				<tipo>varchar</tipo>
+				<valor><![CDATA['<img alt="../img/mail_generic.png" src="../img/mail_generic.png"/>']]></valor>
+				<paring destino="para" operador="=">DE</paring>
+				<paring destino="idHilo" >idMensaje</paring>
+				<paring destino="mensaje" operador="=">msg2</paring>					
+			</field>			
+								
+			<field id="leido" deshabilitado="true">
+				<label Formstyle="display:none;">leido</label>
+				<options>
+					<option valor="0">No</option>
+					<option valor="1">Si</option>
+				</options>
+				<tipo>check</tipo>
+				
+			</field>
+
+			<field id="hi" deshabilitado="true" clasefila="true" noshow="true" _local="true">
+			    <expression>case when de = '[___de__]' then 'grisado' end</expression>
+
+				<tipo>varchar</tipo>
+			</field>
+			
+			<order _ordenaTemporal="true">
+				<field id="idMensaje"/>
+			</order>
+
+		</table>
+	</form>
+</histrix>

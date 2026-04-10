@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+    <title>Documentos</title>
+    <obs/>
+    <form detalle="calauditoriaint_ing.xml">
+        <table id="CAL_DOCUMENTOS" label="Documentos">
+     		<field id="id_documento">
+				<detalle>documento_id</detalle>
+			</field>
+			<field id="codigo_documento">
+				<label>Código</label>
+			</field>
+			<field id="nombre_documento">
+				<label>Nombre</label>
+			</field>
+        </table>
+    </form>
+</histrix>

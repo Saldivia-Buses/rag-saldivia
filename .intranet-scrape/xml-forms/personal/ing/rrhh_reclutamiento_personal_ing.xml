@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud" subtipo="vertical" _inserta="false" paginar="50">
+  <title>Reclutamiento y Seleccion de Personal</title>
+  <obs></obs>
+  <form  >
+    <table id="RH_RECLUTAMIENTO_SELECCION" label="Reclutameinto y Seleccion de Personal">
+    
+    <filters>
+      <field id="fecha_entrevista">
+        <label>Desde</label>
+        <operador>&gt;=</operador>
+      </field>
+      <field id="fecha_entrevista">
+        <label modpos="nobr">Hasta</label>
+        <valor>today</valor>
+        <operador>&lt;=</operador>
+      </field>
+      <field id="seccion_id">
+        <label modpos="nobr">Sección</label>
+        <operador>=</operador>
+      </field>
+      <field id="resultado_reclutamiento_id">
+        <label modpos="nobr">Resultado</label>
+        <operador>=</operador>
+      </field>
+    </filters>
+
+      <field id="id_reclutamiento_seleccion" deshabilitado="true" tipoOrden="DESC" Formstyle="display:none;">
+        <label >Nro</label>
+        <help>Número de Reclutamiento</help>
+      </field>
+
+      <field id="fecha_entrevista">
+        <label>Fecha Entr.</label>
+        <help>Fecha de Entrevista</help>
+        <tipo>date</tipo>
+        <valor>today</valor>
+      </field>
+
+      <field id="nombre">
+        <label>Nombre</label>
+      </field>
+      
+      <field id="apellido">
+        <label>Apellido</label>
+      </field>
+
+      <field id="localidad_id">
+        <label>Localidad</label>
+        <tabla_ex id="LOCALIDADES" vacio="true">
+            <field id="idLocalidad" />
+            <field id="nombre" />
+            <field id="idProvincia"  oculto="true">
+            <condicion operador="=">21</condicion>
+            </field>
+        </tabla_ex>
+      </field>
+
+      <field id="telefono">
+        <label>Teléfono</label>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="celular">
+        <label>Celular</label>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="peso">
+        <label>Peso</label>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="altura">
+        <label>Altura</label>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="fecha_nacimiento">
+        <label>Fecha Nac.</label>
+        <help>Fecha de Nacimiento</help>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="seccion_id">
+        <label>Sección</label>
+        <helper id="SECCION" type="combo" empty="true">
+                  <field id="id_seccion" />
+                  <field id="nombre" />
+                  <field id="linea_id" oculto="true">
+                    <condicion operador="=">1</condicion>
+                  </field>
+          </helper>
+      </field>
+
+      <field id="referencia_reclutamiento">
+        <label>Referencias</label>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="procedencia_reclutamiento_id">
+        <label>Procedencia</label>
+        <helper type="combo" xml="rrhh_reclutamiento_personal_procedencia_ing.xml" empty="true"/>
+      </field>
+
+      <field id="resultado_reclutamiento_id">
+        <label>Resultado Entrev.</label>
+        <options>
+            <option valor="0"></option>
+            <option valor="1">1 (DEFICIENTE)</option>
+            <option valor="2">2 (REGULAR)</option>
+            <option valor="3">3 (COMÚN)</option>
+            <option valor="4">4 (BUENO)</option>
+            <option valor="5">5 (EXCELENTE)</option>
+        </options>
+      </field>
+
+      <field id="observaciones">
+        <label>Observaciones</label>
+        <tipo>varchar</tipo>
+        <size>250</size>
+      </field>
+
+      <order>
+        <field id="fecha"></field>
+      </order>
+      
+    </table>
+
+  </form>
+</histrix>

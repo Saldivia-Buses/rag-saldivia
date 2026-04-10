@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="abm">
+       <title>Tareas</title>
+        <obs></obs>
+               <form >
+                  <table id="SERVICE_COMPONENTES" label="COMPONENTES">
+                  <field id="idGrupo" >
+                      <label>Grupo</label>
+                      <options>
+                        <option valor="0">a Verificar</option>
+                        <option valor="1">Chequeo Funcionamiento</option>
+                        <option valor="2">Estado General</option>
+                        
+                        
+                      </options>
+                  </field>
+                  
+                  
+                  <field id="idComponente" autoinc="true" noshow="true">
+                      <label>id</label>
+                      <help> </help>
+                  </field>
+                  
+                  <field id="nombre" >
+                  
+                      <label>Componentes</label>
+                      <help>Componente a Verificar</help>
+                  </field>
+                  <field id="orden" >
+                  
+                      <label>Orden</label>
+                      <help>Orden</help>
+                  </field>
+                  </table>
+               </form>
+        </histrix>

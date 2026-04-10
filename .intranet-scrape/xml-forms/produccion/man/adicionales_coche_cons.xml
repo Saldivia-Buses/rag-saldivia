@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="consulta">
+	<titulo>Autorización Adicionales por choche</titulo>
+	<obs/>
+	<consulta>
+         <tabla id="ADICIONAL_COCHE" label="Autorizar Adicionales " style__Tbody="height:400px;overflow-x:hidden;">		
+			 <campo id="id" autoinc="true" esclave="true">
+				 <label>Nro</label>
+				
+			 </campo>
+			 <campo id="nrofab" oculto="true" esclave="true">
+				 <label>NroFab</label>
+				 <condicion operador="=">0</condicion>
+	 
+			 </campo>
+			 <campo id="idAdicional" noshow="true">
+				 <label>Cod.</label>
+				 <help>Codigo de Adicionales</help>
+			 </campo>
+			 <campo id="descripcion">
+				 <label>Descripción</label>
+				 <help>Descripción del Adicional</help>
+				 <size>80</size>
+			 </campo>
+<!--			 <campo id="alta" deshabilitado="true">
+				 <label>Alta</label>
+				 <valor>today</valor>
+				 <help>fecha de Alta</help>
+			 </campo> 
+
+			 
+			 <campo id="aut2" conLabel="true">
+				 <label>Ing.</label>
+				 <tipo>integer</tipo>
+				 <opciones>
+					 <opcion valor="0">Pend</opcion>
+					 <opcion valor="1">SI</opcion>
+					 <opcion valor="2">NO</opcion>
+				 </opciones>
+
+			 </campo>		
+			 <campo id="fechaval2" deshabilitado="true">
+				 <label>Fecha.</label>
+									 
+			 </campo> 
+			 <campo id="aut1" conLabel="true">
+				 <label>Ventas</label>
+				 <tipo>integer</tipo>
+				 <opciones>
+					 <opcion valor="0">Pend</opcion>
+					 <opcion valor="1">SI</opcion>
+					 <opcion valor="2">NO</opcion>
+				 </opciones>
+			 </campo>		 -->
+			 <campo id="sino">
+				 <label>Aut. </label>
+				 <expresion>case when aut1 =1 and aut2 = 1 then 'SI' when aut1 = 0 and aut2=0 then 'Pend' else 'NO' end</expresion>
+				 <tipo>varchar</tipo>
+			 </campo>
+<!--			 <campo id="fechaval1">
+				 <label>Fecha</label>
+			 </campo>			 
+			 -->
+				<campo id="idMomento">
+				 <label>Seccion</label>
+				 <tabla_ex id="MOMENTO">
+					 <campo id="idMomento">
+					 </campo>
+					 <campo id="descripcion">
+					 </campo>
+					 
+				 </tabla_ex>
+			 </campo>
+			 <!--
+			 <campo id="observaciones">
+				 <label>Observaciones</label>
+				 
+			 </campo> -->
+		<!--	 <campo id="tachado"   clasefila="true">
+				 <expresion>case when aut1 = 2 or aut2 = 2 then 'tachado' end</expresion>
+				 <tipo>varchar</tipo>
+			 </campo> -->
+
+	      </tabla>
+	</consulta>
+</abm>

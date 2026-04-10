@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta" preloadData="false">
+	<title>CARTERA DE CHEQUES GRAL</title>
+	<obs></obs>
+	<form >
+	<!-- detalle="cctmovim_OP.xml" -->
+		<table id="CARCHE_UNIFICADA" label="CARTERA DE CHEQUES GRAL">
+			<filters>
+				<field id="carint">
+					<label>Numero Interno</label>
+					<valor></valor>
+					<operador >=</operador>
+
+				</field>
+				<field id="carcui">
+				    <label>CUIT</label>
+				    <operador>like</operador>
+				</field>
+
+				<field id="carnro">
+					<!-- Creo un modificador al operador que cambia 
+					la parte izquierda de las comparaciones
+					Aca Agrego right(valor, length(valor ingresado))
+					-->
+					<operador modificador="right">=</operador>
+					<label>Numero Cheque</label>
+					<valor></valor>
+				</field>
+
+				<field id="tabla">
+					<label modpos="nobr">Estado</label>
+					<operador>like</operador>
+					<valor></valor>
+				</field>
+				<field id="caralt">
+					<label>Desde Fecha Alta</label>
+					<help>Fecha del cheque Alta. </help>
+					<operador>&gt;=</operador>
+				</field>
+				<field id="caralt">
+					<label modpos="nobr">Hasta Fecha Alta</label>
+					<help>Fecha del cheque Alta. </help>
+					<operador>&lt;</operador>
+				</field>
+				<field id="caring">
+					<label modpos="br">Desde Fecha Salida</label>
+					<help>Fecha del cheque ingresado. </help>
+					<operador>&gt;=</operador>
+				</field>
+				<field id="caring">
+					<label modpos="nobr">Hasta Fecha Salida</label>
+					<help>Fecha del cheque ingresado. </help>
+					<operador>&lt;</operador>
+				</field>			
+				<field id="carfec">
+					<label>Desde Fecha Cobro</label>
+					<help>Fecha del cheque</help>
+					<operador>&gt;=</operador>
+				</field>
+				<field id="carfec">
+					<label modpos="nobr">Hasta Fecha Cobro</label>
+					<help>Fecha del cheque</help>
+					<operador>&lt;</operador>
+					<valor>today</valor>
+
+                </field>
+
+
+				<field id="carimp">
+					<label>Desde Importe</label>
+					<operador>&gt;=</operador>
+				</field>			
+				<field id="carimp">
+					<label modpos="nobr">Hasta Importe</label>
+					<operador>&lt;=</operador>
+				</field>			
+				<field id="cartera_id">
+					<label>Cartera</label>
+					<operador>=</operador>
+				</field>
+			        <field id="ctanom" tabla="CCTCUENT" deshabilitado="false" >
+				         <label>Cuenta</label>
+					<operador>like</operador>
+				
+			        </field>				
+
+			</filters>
+
+			<field id="siscod" oculto="true">
+				<label>Codigo Sistema.. </label>
+				<help>
+				</help>
+			</field>
+
+			<field id="carint">
+				<label>Nro.Interno</label>
+				<help>
+				</help>
+			</field>
+				<field id="carcui">
+				    <label>CUIT</label>
+				</field>
+
+			<field id="tabla">
+				<label>Estado</label>
+				<helper type="combo">
+					<option value="">Todos</option>
+					<option value="CARCHEHI">Historico</option>
+					<option value="CARCHEQU">En cartera</option>
+				</helper>
+				<size>40</size>
+			</field>
+			<!--                  <field id="cartip">
+			<label>Tipo Cheque </label>
+			<help>[1/Enter] = Al Portador   *   [2] = A la orden </help>
+			</field>
+			-->
+			<field id="carfec">
+				<label>Fec.Cobro</label>
+				<help>Fecha del cheque ingresado. </help>
+			</field>
+			<field id="caralt">
+				<label>Fecha Alta </label>
+				<help>Fecha de Ingreso del cheque en cartera. </help>
+			</field>
+		<!--	<field id="fecha_emision">
+				<label>Fec.Emision</label>
+				<help>Fecha de emision. </help>
+				<tipo>date</tipo>
+			</field>-->
+			<field id="ctanom" tabla="CCTCUENT">
+				<label>Cuenta</label>
+				<help>
+				</help>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="carbco">
+				<label>Banco</label>
+				<help>Nombre de Banco de Procedencia. </help>
+			</field>
+			<field id="carimp" suma="true">
+				<label>Importe</label>
+				<help>Importe del cheque. </help>
+			</field>
+			<field id="carpag" linkint="cctmovim_OP.xml" linkdes="Orden de Pago" print="false">
+				<label>O.Pago</label>
+				<help></help>
+				<detalle>movnro</detalle>
+				
+				<expression>case when CCTMOVIM.concod = 4 then carpag else '' end</expression>
+              
+                <paring destino="movnro">movnro</paring>
+                
+                <paring destino="movfec">caring</paring>
+             
+      
+                <tipo>varchar</tipo>
+			</field>		
+			
+
+			
+			<field id="carrec">
+				<label>Recibo</label>
+				<help></help>
+			</field>			
+
+			<!--
+			<field id="bcsnro">
+			<label>Bol.Deposito </label>
+			<help>Boleta de Deposito. </help>
+			</field>
+			<field id="cajpla">
+			<label>Nro.de Caja. </label>
+			<help> </help>
+			</field>
+			<field id="caracr">
+			<label>F.Acreditacion </label>
+			<help>Fecha de Acreditacion </help>
+			</field>
+			<field id="carccb">
+			<label>Codigo del Banco </label>
+			<help> </help>
+			</field>
+			<field id="carcui">
+			<label>CUIT LIBRADOR </label>
+			<help> </help>
+			</field>
+			<field id="cardes">
+			<label>Plaza                . </label>
+			<help>Nombre de la plaza bancaria. </help>
+			</field>
+			<field id="carmar">
+			<label>Marca </label>
+			<help> </help>
+			</field> -->
+			<field id="carnro">
+			<label>Nro. Cheque</label>
+			<help>Numero de Cheque.</help>
+			</field>
+			<!--
+			<field id="carobv">
+			<label>Plaza Bancaria </label>
+			<help>Plaza Bancaria. </help>
+			</field>
+			<field id="carpla">
+			<label>Cod.Plaza            . </label>
+			<help>Codigo de Plaza Bancaria. (Enter : No Ingresa Plaza.) </help>
+			</field>
+			<field id="carrec">
+			<label>Nro Recibo </label>
+			<help> </help>
+			</field>
+			<field id="ccbcod">
+			<label>Codigo Cuenta        . </label>
+			<help>Codigo de Cuenta Bancaria </help>
+			</field>
+			<field id="circod">
+			<label>Cod. Circulo </label>
+			<help> </help>
+			</field>
+			<field id="concod">
+			<label>Codigo  Concepto </label>
+			<help> </help>
+			</field>
+		-->
+			<field id="movnpv" noshow="true">
+			<label>Nro. Punto Venta </label>
+			<help> </help>
+			</field>
+
+			<field id="movnro" noshow="true">
+			<label>Nro. Comprobante </label>
+			<help> </help>
+			</field>
+			<!--
+			<field id="opecla">
+			<label>Firma Electronica </label>
+			<help>Firma Electronica </help>
+			</field>
+			<field id="opecod">
+			<label>Cod.Operador </label>
+			<help> </help>
+			</field> -->
+			<field id="caring" >
+				<label modpos="nobr">Ingreso</label>
+				<help> </help>
+				<detalle>movfec</detalle>
+			</field>			
+			<field id="regmin">
+			<label>Minuta</label>
+			<help>Numero de Minuta</help>
+			</field>
+			<field id="ctacod" _tabla="CCTMOVIM">
+				<label>Prov.</label>
+			</field>
+			<field id="ctanom2" _tabla="CCTMOVIM">
+				<expression>CCTMOVIM.ctanom</expression>
+				<label>Nombre P.</label>
+				<tipo>varchar</tipo>
+			</field>			
+<!--			<field id="succod">
+			<label>Cod. Sucursal </label>
+			<help>Codigo de Sucursal </help>
+			</field>
+			-->
+
+			<field id="hihistorico" local="true" clasefila="true" noshow="true">
+		       	<expression>CASE WHEN CARCHE_UNIFICADA.tabla = 'CARCHEHI' THEN 'resaltadoVioleta' ELSE '' END</expression>
+    	    </field>
+	    <field id="cartera_id" noshow="true">
+			<helper type="combo" id="REG_CARTERAS_CHEQ" empty="true">
+			    <field id="id_cartera" />
+			    <field id="nombre_cartera" />
+			</helper>
+	    </field>
+	    <field id="carref" noshow="true">
+	    </field>
+	    <field id="test">
+	    	<label>Imagen</label>
+	    	<expression>case when carref != '' then 'Imprimir' end</expression>
+	    	<helper type="link" xml="cheque_imagenes.xml">
+	    		<parameter source="carint" target="carint" />
+	    		<parameter source="carref" target="carref" />
+
+	    	</helper>
+	    </field>
+
+
+
+			<group>
+				<field id="carint"></field>
+			</group>
+
+			<order>
+				<field id="carint"></field>
+			</order>
+		</table>
+		
+		<join tipo="left">
+			<table id="CCTCUENT">
+				<field id="siscod" oculto="true">
+					<label>cctcuent.siscoc</label>
+					<condicion operador="=">'02'</condicion>
+				</field>
+				
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">CARCHE_UNIFICADA.ctacod</condicion>
+				</field>
+
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="CCTMOVIM">
+				<field id="siscod" >
+					<condicion operador="=">'01'</condicion>
+				</field>
+				<field id="concod">
+					<condicion operador="=">4</condicion>
+				</field>
+				<field id="movnro" >
+					<condicion operador="=">CARCHE_UNIFICADA.carpag</condicion>
+				</field>
+				
+			</table>
+		</join>		
+	</form>
+</histrix>

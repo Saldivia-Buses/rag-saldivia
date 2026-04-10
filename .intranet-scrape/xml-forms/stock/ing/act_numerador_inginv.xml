@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update" limit="1" grabaFinal="true">
+  <title>numerador</title>
+  <obs/>
+  <form>
+    <table id="STK_NUMERADORES" >
+
+      <field id="subsistema_id"   id_temp="subsistema_id" esClave="true" />
+
+      <field id="puesto"          id_temp="stkdeposito_id"  esClave="true" />
+
+      <field id="stkconcepto_id"  id_temp="stknumconc"  esClave="true" />
+
+      <field id="numero"          id_temp="numero_upd" />
+
+
+    </table>
+  </form>
+</histrix>

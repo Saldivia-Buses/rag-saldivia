@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="delete" limit="0">
+       <title>BANCO</title>
+        <obs></obs>
+               <form >
+					<table id="BCSMOVIM" label="ANULACION ORDEN DE PAGO" >
+						<field id="siscod"  esClave="true">
+							<valor>04</valor>
+						</field>
+						<field id="regmin" id_temp="minuta" esClave="true">
+						</field>
+<!-- 						<field id="bcsfec" id_temp="movife" esClave="true">
+						</field> -->
+						
+						<field id="nropag" id_temp="movinc" esClave="true">
+						</field>
+						
+						
+					</table>
+               </form>
+        </histrix>

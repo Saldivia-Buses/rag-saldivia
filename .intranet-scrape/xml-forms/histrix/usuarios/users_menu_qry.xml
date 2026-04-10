@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Perfiles</title>
+  <obs></obs>
+  <form detalle="menu_by_user.xml">
+    <table id="HTXUSERS" label="Perfiles">
+
+      <field id="nombres">
+          <expresion>concat(Nombre, ' ', apellido)</expresion>
+      </field>
+      <field id="login">
+        <detalle>login</detalle>
+      </field>
+      <field id="Id_perfil" noshow="true">
+        <label>Perfil</label>
+        <help>Perfil de Acceso</help>
+        <detalle>Id_perfil</detalle>
+        <!--<detalle>Id_perfil</detalle> -->
+      </field> 
+      <field id="menuId" local="true">
+        <detalle>menuId</detalle>
+      </field>
+
+    </table>
+  </form>
+</histrix>

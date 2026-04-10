@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta"  >
+    <title>Operaciones</title>
+    <obs></obs>
+    <form >
+		<table id="REG_OPERACION_IMPORTACION" >
+
+		  	<field id="id_operacion_imp" noshow="true" autoinc="true">
+		  	</field>
+		  	
+		  	<field id="detalle" >
+			    <expression> concat(nro_carpeta, ' (',nro_simi,' - ', nro_oficializacion,')')</expression>
+		  	</field>
+			    <field id="nro_carpeta" tabla="REG_CARPETA_IMPORTACION" orderType="DESC" />
+			<order>
+			    <field id="nro_carpeta" orderType="DESC" />
+			</order>
+
+		</table>
+		<join>
+		    <table id="REG_CARPETA_IMPORTACION">
+			<field id="id_carpeta_imp">
+			    <condicion operador="=">carpeta_imp_id</condicion>
+			</field>
+		    </table>
+		</join>
+		</form>
+	</histrix>

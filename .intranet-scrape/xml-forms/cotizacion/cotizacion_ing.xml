@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ing" imprime="false" impresion="cotizacion_imp_SP.xml" tooltip="false" preloadData="false">
+    <title>OPCIONES</title>
+    <obs></obs>
+    <eventos>
+        <event id="procesar">close</event>
+    </eventos>
+    <form >
+        <table id="COTIZACION">
+            <movimientos cabecera="cotizacion_cab.xml">
+                <relacion id="cotizopmovim_ingmov.xml"></relacion>
+                <relacion id="cotizacion_ingmov.xml"/>
+          
+            </movimientos>
+            <title>OPCIONES</title>
+<!--        <filters >
+          <field id="idPrecio">
+
+            <operador>=</operador>
+          </field>
+          
+        </filters> 
+            <field id="idPrecio" noshow="true" deshabilitado="true" esClave="false" noselect="true">
+                <tipo>decimal</tipo>
+            </field>
+            <field id="idOpcion" noshow="true" deshabilitado="true" esClave="false" noselect="true">
+                <tipo>integer</tipo>
+            </field>
+-->
+      
+<!--             <field id="idSeccion" _deshabilitado="true" esClave="false" >
+                <tabla_ex id="COTIZSECCION">
+                    <field id="idSeccion" ></field>
+                    <field id="nombre" ></field>
+                </tabla_ex>
+                <tipo>varchar</tipo>
+                <label >Seccion</label>
+                <valor>22</valor>
+            </field>
+            <field id="descripcion" forceSize="true" esClave="false">
+                <label>Descripción</label>
+                <size>500</size>
+                <tipo>varchar</tipo>
+
+            </field>
+ -->        </table>
+    </form>
+</histrix>

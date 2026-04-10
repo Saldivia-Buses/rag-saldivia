@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="grid" subtipo="vertical" tooltip="false" inserta="false" preloadData="false" deleteRow="false" procesa="true" imprime="false" log="false">
+    <title>Detalle de Listas de Precios de Productos</title>
+    <obs></obs>
+    <form>
+        <table id="STK_LISTADETALLE" label="Maestro de Precios de Productos">
+
+            <movimientos>
+                <relacion id="stklistadetalle_ins.xml" />
+            </movimientos>
+
+            <filters> 
+                <field id="con_stock" deshabilitado="false">
+                	<label>Solo con stock</label>
+            	</field>
+               
+                <field id="stklista_id">
+                    <label>Lista Base</label>
+                </field>
+
+                <field id="stklista_aumento">
+                    <label modpos="nobr">Lista a Actualizar</label>
+                </field>
+               
+                <field id="stkfamilia_id" grupo="avanzado">
+                    <label modpos="nobr">Familia</label>
+                </field>
+                
+                <field id="stkrubro_id" grupo="avanzado">
+                    <label>Rubro</label>
+                </field>
+                
+                <field id="stksubrubro_id" grupo="avanzado">
+                    <label modpos="nobr">SubRubro</label>
+                </field>
+                
+                <field id="stkarticulo_id" deshabilitado="false" grupo="avanzado">
+                    <label modpos="nobr">Cod.Artic</label>
+                </field>
+
+                <field id="nombre_articulo" deshabilitado="false" grupo="avanzado">
+                    <label>Descripción</label>
+                    <operador>like</operador>
+                </field>
+                
+                <field id="stkmarca_id" grupo="avanzado">
+                  <label modpos="nobr">Marca</label>
+                </field>
+
+                <field id="wmetodo" local="true">
+                    <label>Incremento</label>
+                </field>       
+               
+                <field id="wxrentabilidad" local="true" noshow="true" _deshabilitado="false" modpos="nobr">                                    
+                    <valor default="true">0</valor> 
+                </field>
+
+                <field id="wtipincre" local="true" >
+                    <label modpos="nobr">Base</label>
+                </field>       
+
+                <field id="wredondeo" local="true">
+                    <label modpos="nobr">Redondea</label>
+                </field>
+                
+                
+            </filters>    
+       
+        <fieldGroup noshow="true">
+        
+            <field id="moneda_id" tabla="STK_LISTAS">
+                <helper type="combo" xml="monedacotiz_qry.xml" dir="/ayudas" empty="true">
+                    <field id="id_moneda" />
+                    <field id="abreviatura_moneda"  />
+                    <field id="cotizacion_genmonedahis" tabla="GEN_MONEDA_HIS"/>
+                </helper>
+            </field>
+
+            <field id="cotizacion_compra">
+                <expression>GEN_FN_COTIZACION(STK_LISTAS.moneda_id,current_date())</expression>
+                <tipo>numeric</tipo>
+            </field>
+            
+            <field id="moneda_idvta" tabla="STK_LISTAS">
+                <helper type="combo" xml="monedacotiz_qry.xml" dir="/ayudas" empty="true">
+                    <field id="id_moneda" />
+                    <field id="abreviatura_moneda"  />
+                    <field id="cotizacion_genmonedahis" tabla="GEN_MONEDA_HIS"/>
+                </helper>
+            </field>
+
+            <field id="cotizacion_venta">
+                <expression>GEN_FN_COTIZACION(STK_LISTAS.moneda_idvta,current_date())</expression>
+                <tipo>numeric</tipo>
+            </field>
+        
+        </fieldGroup>
+        
+        <field id="test_stock" noshow="true">
+	            <!--<expression having="false">
+					select (CASE WHEN '[__con_stock__]' = '0' THEN 1 ELSE ( CASE WHEN sum(case when tipo_concepto = 0 then 1 else -1 end * ifnull(STK_MOVIMIENTOS.cantidad,0) ) != 0 THEN 1 ELSE 0 END) END) 
+	            from STK_MOVIMIENTOS  LEFT JOIN    STK_CONCEPTOS ON (STK_CONCEPTOS.id_stkconcepto = STK_MOVIMIENTOS.stkconcepto_id) where stkarticulo_id = id_stkarticulo</expression> -->
+                <expression having="false">
+                    (select (CASE WHEN '[__con_stock__]' = '0' THEN 1 ELSE ( CASE WHEN sum( ifnull(cantidad_stock,0) ) != 0 THEN 1 ELSE 0 END) END) 
+                from STK_STOCKACTUAL where stkarticulo_id = id_stkarticulo)</expression>                 
+	            <condicion operador="=">1</condicion>
+	        </field> 
+	        
+        <field id="con_stock" noshow="true" local="true">
+	          <tipo>check</tipo>
+	        </field>
+        
+        <field id="id_stklistadetalle" autoinc="true" noshow="true" />
+                
+        <field id="stkarticulo_id" _oculto="true">
+          <label>Cod.Artic</label>
+          <expression having="false">STK_ARTICULOS.id_stkarticulo</expression>
+        </field>
+                 
+        <field id="codigo_barra" tabla="STK_ARTICULOS" noshow="true">
+            <label modpos="nobr">Cod.Barra</label>
+        </field>
+
+        <field id="nombre_articulo" tabla="STK_ARTICULOS">
+            <label>Descripcion</label>
+            <size>30</size>
+        </field>                
+
+        <field id="stklistadetalle_costo" deshabilitado="false">
+            <label style="color: green;">Precio Costo</label>
+            <expression>STK_ARTICULOS.precio_costo</expression>
+            <jseval campodestino="nuevo_costo">stklistadetalle_costo * wstklistadetalle_costo / 100 + stklistadetalle_costo </jseval>
+            <tipo>numeric</tipo>
+        </field>
+                
+        <field id="costo_en_pesos" local="true" deshabilitado="true" style="border-right: 2px solid black" noshow="true">
+            <label modpos="nobr">Costo Convertido</label>
+            <if exp="true">
+                <true>round((stklistadetalle_costo + 0 ) * (cotizacion_compra + 0 ),2)</true>
+                <false>0</false>
+            </if>
+            <tipo>decimal</tipo>
+            <format>%01.2f</format>
+        </field>        
+        
+        <field id="rentabilidad_actual" local="true">
+          <label style="color: #c3c3c3;">Act.Rent. %</label>
+          <if exp="true">
+            <true>round( (stklistadetalle_precioventa+0 - costo_en_pesos) / costo_en_pesos * 100,2)</true>
+            <false>0</false>
+          </if>
+          <format>%01.2f</format>
+          <tipo>numeric</tipo>
+        </field>
+
+        <field id="stklistadetalle_precioventa" deshabilitado="true" style="color: green;">
+            <label>Act. P.Venta</label>
+            <expression>ifnull(STK_LISTADETALLE.stklistadetalle_precioventa,0)</expression>
+            <tipo>decimal</tipo>
+            <format>%01.2f</format>       
+        </field>
+                    
+        <field id="wmetodo" local="true">          
+            <label>Tipo</label>
+            <helper type="combo">
+              <option value="01">Porcentual</option>
+              <option value="00">Fijo</option>
+            </helper>
+        </field>    
+
+        <field id="wxrentabilidad" local="true" _noshow="true" colstyle="display: none;">
+            <tipo>decimal</tipo>
+            <size>10</size>
+        </field>
+
+        <field id="lstaumento_costo" noshow="true">
+            <expression>LISTA_AUMENTO.stklistadetalle_costo</expression>
+        </field>
+
+        <field id="costo_en_pesos2" local="true" deshabilitado="true" style="border-right: 2px solid black" noshow="true">
+            <label modpos="nobr">Costo Convertido</label>
+            <if exp="true">
+                <true>round((lstaumento_costo + 0 ) * (cotizacion_compra + 0 ),2)</true>
+                <false>0</false>
+            </if>
+			<!-- ESTO ESTABA EN PRODUCCION DE ESTA FORMA:
+			<if exp="true">
+				<true>0</true>
+				<false>0</false>
+			</if> -->
+            <tipo>decimal</tipo>
+            <format>%01.2f</format>
+        </field>  
+        
+        <field id="stklista_aumento" local="true" required="true">
+            <label>Lista a Actualizar</label>            
+            <helper type="combo" xml="stklista_qry.xml" dir="/ayudas" empty="true" />
+        </field>
+
+        <field id="stklistadetalle_precioventa2" deshabilitado="true" style="color: green;">
+            <label>Act. P.Venta</label>
+            <expression>ifnull(LISTA_AUMENTO.stklistadetalle_precioventa,0)</expression>
+            <tipo>decimal</tipo>
+            <format>%01.2f</format>       
+        </field>
+
+        <field id="wstklistadetalle_precioventa2" local="true" _deshabilitado="true" editable="true" colstyle="color: red; text-align: right; ">
+            <label modpos="nobr" style="color: red;text-align:right;">Nvo P.Venta</label>
+            <if exp="wtipincre==0" >
+                <true> (wmetodo == 1)?round(stklistadetalle_precioventa * ( 1 + (wxrentabilidad / 100 ) ), wredondeo):round(stklistadetalle_precioventa + wxrentabilidad, wredondeo) </true>                  
+                <false>(wmetodo == 1)?round((costo_en_pesos / cotizacion_compra) * (1 + (wxrentabilidad / 100 ) ), wredondeo) : round((costo_en_pesos / cotizacion_compra) + wxrentabilidad , wredondeo) </false>  
+            </if>
+            <tipo>numeric</tipo>      
+        </field>
+        
+         <fieldGroup id="filtros" colstyle="display: none;" noshow="true">
+        
+            <field id="stklista_id" noshow="true" required="true">
+                <helper type="combo" xml="stklista_qry.xml" dir="/ayudas" empty="true" />
+            </field>
+
+            <field id="stkfamilia_id" noshow="true" tabla="STK_ARTICULOS">
+                <helper type="combo" xml="stkfamilia_qry.xml" dir="/ayudas" empty="true" />
+            </field>
+            
+            <field id="stkrubro_id" noshow="true" tabla="STK_ARTICULOS">
+                <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true" />
+            </field>
+            <field id="stksubrubro_id" noshow="true" tabla="STK_ARTICULOS">
+                <helper type="combo" xml="stksubrubro_qry.xml" dir="/ayudas" empty="true" />
+            </field>
+
+            <field id="stkmarca_id" noshow="true" tabla="STK_ARTICULOS">
+                <helper type="combo" xml="stkmarca_qry.xml" dir="/ayudas" empty="true" />
+            </field>
+
+            <field id="wtipincre" local="true">
+                <helper type="combo">
+                  <option value="01">Precio de Costo</option>
+                  <option value="00">Precio de Venta</option>
+                </helper>
+            </field>    
+
+            <field id="wredondeo" local="true">
+                <helper type="combo">
+                    <option value="02">No</option>
+                    <option value="00">Si</option>
+                </helper>
+            </field>
+
+        </fieldGroup>
+        
+        <order>
+            <field id="nombre_articulo" table="STK_ARTICULOS" />
+        </order>
+
+    </table>
+
+    <join tipo="left">
+        <table id="STK_LISTADETALLE" as="LISTA_AUMENTO">
+            <field id="stklista_id">
+                <condicion operador="=">'[__stklista_aumento__]'</condicion>
+            </field>
+            <field id="stkarticulo_id">
+                <condicion operador="=">STK_LISTADETALLE.stkarticulo_id</condicion>
+            </field>
+        </table>
+    </join>
+  
+    <join>
+        <table id="STK_ARTICULOS">
+            <field id="id_stkarticulo">
+                <condicion operador="=">STK_LISTADETALLE.stkarticulo_id</condicion>
+            </field>
+        </table>
+    </join>
+
+    <join>
+        <table id="STK_LISTAS">
+            <field id="id_stklista" >
+                <condicion operador="=">STK_LISTADETALLE.stklista_id</condicion>
+            </field>
+        </table>
+    </join>
+
+</form>
+</histrix>

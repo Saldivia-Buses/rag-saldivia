@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing"   tooltip="false"   preloadData="true"  transaccional="true"  procesa="true" imprime="false" >
+	<title>Descuentos por Artículo</title>
+	<obs/>
+	<form>
+	<table id="STK_DESCUENTOSARTCLI" label="Descuentos por Artículo">
+		<movimientos>
+			<relacion id="stk_descartcli_ins.xml" />
+			<relacion id="stk_descartcli_up.xml" />
+		</movimientos>
+
+<!--		<filters>
+			<field id="stkarticulo_id" >
+				<label>Producto</label>
+			</field>
+
+			<field id="nombre_producto" >
+				<label modpos="nobr">Fonetica</label>
+			</field>
+			<field id="stkrubro_id" >
+				<label modpos="nobr">Rubro</label>
+			</field>
+		</filters> -->
+		<field id="id_descuentoartcli"  deshabilitado="true"  autoinc="true"   >
+			<label modpos="nobr" >id</label>
+		</field>
+		 
+		<field id="nombre_producto" local="true" noshow="true">
+			<label>Fonetica</label>
+		</field>
+		<field id="stkrubro_id"  noshow="true" tabla="STK_ARTICULOS">
+			<label modpos="nobr">Rubro</label>
+			<helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true" />
+		</field>
+		<field id="subsistema_id" local="true" noshow="true" />
+		<field id="regcuenta_id"  _noshow="true"  valauto="true" esClave="true">
+			<label>Clientes</label>
+		</field>
+		<field id="xxxx"  oculto="true" esClave="true">
+			<expresion>stkarticulo_id</expresion>
+			<label>laclave</label>
+		</field>
+
+
+		<field id="stkarticulo_id" esClave="true" >
+			<helper type="combo" xml="stkarticulo_qry.xml" dir="/ayudas" empty="true"/>
+			<label>Producto</label>
+			<tipo>varchar</tipo>
+			<jseval campodestino="xxxx">stkarticulo_id</jseval>
+		</field>
+		<field id="nombre_articulo" noshow="true" tabla="STK_ARTICULOS">
+			<label>Articulos</label>
+			<condicion operador="like">'%[__nombre_producto__]%'</condicion>
+		</field>
+
+		<field id="valor1"   noshow="true" >
+			<expresion>'1'</expresion>
+			<tipo>numeric</tipo>
+		</field>
+
+		<field id="porcentaje_desc"   >
+			<label style="color: blue; width: 52px;text-align:right;">Descuento 1</label>
+			<tipo>numeric</tipo>
+			<jseval campodestino="cambios">valor1+0</jseval>
+		</field>
+		<field id="porcentaje_desc1" >
+			<label style="color: blue; width: 52px;text-align:right;">Descuento 2</label>
+			<tipo>numeric</tipo>
+			<jseval campodestino="cambios">valor1+0</jseval>
+		</field>
+
+		
+		<field id="cambios" local="true" deshabilitado="false" noshow="true">
+			<label>Mis Cambios</label>
+			<tipo>numeric</tipo>
+		</field>
+
+
+<!-- Este campo deberia determinar si hubo cambios en Nuevos Descuentos y si el registro no existe para insertar -->
+		<field id="lapone" local="true" noshow="true">
+			<label>lapone</label>
+			<if exp="('id_descuentoartcli'=='0.00')">
+			<true>'true'</true>
+			<false>'false'</false>
+			</if>
+		</field> 
+<!-- Este campo deberia determinar si hubo cambios en Nuevos Descuentos y si el registro existe para actualizar--> 
+		<field id="latoca" local="true" noshow="true">
+			<label>latoca</label>
+			<if exp="('cambios'=='1')">
+			<true>'true'</true>
+			<false>'false'</false>
+			</if>
+		</field>
+
+	<order>
+		<field id="nombre_articulo" >
+			<label>Articulos</label>
+		</field>
+	</order>
+	</table>
+
+	<join tipo="left">
+		<table id="STK_ARTICULOS">
+			<field id="id_stkarticulo">
+				<condicion operador="=">STK_DESCUENTOSARTCLI.stkarticulo_id</condicion>
+			</field>
+<!--			<field id="regcuenta_id"   tabla="STK_DESCUENTOSARTCLI">
+				<condicion operador="=">'[__wRegcuenta_id__]'</condicion>
+			</field> -->
+		</table>
+	</join>
+
+
+  </form>
+</histrix>

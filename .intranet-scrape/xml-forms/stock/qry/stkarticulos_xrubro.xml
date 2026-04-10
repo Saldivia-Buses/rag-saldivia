@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" path="fotos/articulos" preloadData="false" paginar="250" >
+   <title>Articulos Por Rubro</title>
+   <obs/>
+   <form>
+	<table id="STK_ARTICULOS">
+
+		<filters>
+			
+			<field id="id_stkarticulo">
+			    <label>Codigo</label>
+			    <operador>like</operador>
+			</field>
+			
+			<field id="nombre_articulo" modpos="nobr" colspan="8">
+			    <label>Articulo</label>
+			    <operador>like</operador>
+			</field>
+
+			<field id="stkrubro_id">
+				<label >Rubro</label>
+				<operador>=</operador>
+			</field>
+
+			<field id="stksubrubro_id">
+				<label modpos="nobr">SubRubro</label>
+				<operador>=</operador>
+			</field>
+
+			<field id="stkfamilia_id" modpos="nobr">
+				<label>Familia</label>
+				<operador>=</operador>
+			</field>
+			
+			<field id="stkmarca_id">
+				<label modpos="nobr">Marca</label>
+				<operador>=</operador>
+			</field>
+
+		</filters>
+
+	<fieldGroup  colstyle="text-align:center;">
+
+			<field id="id_stkarticulo">
+				<label>Codigo</label>
+    			<helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+					<field id="id_stkarticulo"></field>
+				</helper>
+			</field>
+
+			<field id="nombre_articulo"  >
+				<label>Nombre Articulo</label>
+				<size>99</size>
+			</field>
+			
+			<field id="stkrubro_id" multiple="true">
+				<label>Rubro</label>
+				<helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true" />
+			</field>
+
+			<field id="stksubrubro_id" multiple="true">
+				<label>SubRubro</label>
+				<helper type="combo" xml="stksubrubro_qry.xml" dir="/ayudas" empty="true"/>
+			</field>
+
+			<field id="stkfamilia_id" multiple="true">
+				<label>Familia</label>
+				<helper type="combo" xml="stkfamilia_qry.xml" dir="/ayudas" empty="true"/>
+			</field>
+
+			<field id="stkmarca_id" multiple="true">
+				<label>Marca</label>
+				<helper type="combo" xml="stkmarca_qry.xml" dir="/ayudas" empty="true"/>
+			</field>
+
+			<field id="stkarticulo_foto" xmlField="image" path="id_stkarticulo">
+				<label>Foto</label>
+				<tipo Type="Image">file</tipo>
+				<size>80</size>
+			</field>
+
+			<field id="baja_articulo" deshabilitado="true">
+				<label>Baja</label>
+				<tipo>check</tipo>
+			</field>
+
+			<order>
+				<field id="nombre_articulo" />
+			</order>
+
+		</fieldGroup>
+
+	</table>
+
+   </form>
+</histrix>

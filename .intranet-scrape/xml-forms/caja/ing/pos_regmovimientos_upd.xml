@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update"> 
+  	<title/>
+  	<obs/>
+  	<form>
+    	<table id="REG_MOVIMIENTOS" idCampoCond="graba_recibo">
+			
+			<field id="id_regmovim" 	 lastId="pos_regmovimientos_ins.xml" esClave="true" />	
+	      
+	    	<field id="cajmovimiento_id" lastId="cajmovimientos_ins.xml"/>
+
+    	</table>
+   	</form>
+</histrix>

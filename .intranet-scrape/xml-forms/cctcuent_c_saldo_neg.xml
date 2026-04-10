@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="consulta" >
+    <titulo>CUENTAS</titulo>
+    <obs></obs>
+    <consulta>
+        <tabla id="CCTCUENT" label="CUENTAS">
+            <field id="ctacod2" >
+                <expresion>CCTCUENT.ctacod</expresion>
+                <detalle>ctacod</detalle>
+            </field>
+            <field id="ctanom2">
+                <expresion>concat(CCTCUENT.ctanom, ' (',CCTCUENT.ctacod,')')</expresion>
+                <label>Nom</label>
+            </field>
+            <field id="ctacod" >
+                <detalle>ctacod</detalle>
+            </field>
+            <field id="ctanom" >
+                <detalle>ctanom</detalle>
+            </field>
+            <field id="baja" oculto="true">
+                <condicion operador="=">0</condicion>
+            </field>
+            <order>
+                <field id="CCTCUENT.ctanom" />
+            </order>
+            <group>
+                <field id="CCTCUENT.ctacod"></field>
+            </group>
+
+        </tabla>
+        <join tipo="inner">
+            <tabla id="CCTMOVIM">
+                <field id="siscod" >
+                    <condicion operador="=">CCTCUENT.siscod</condicion>
+                </field>
+                <field id="ctacod" >
+                    <condicion operador="=">CCTCUENT.ctacod</condicion>
+                </field>
+                <field id="movsal" >
+                    <condicion operador="!=">0</condicion>
+                </field>
+            </tabla>
+        </join>
+	<join>
+	    <table id="CCTCONCE">
+		<field id="concod">
+		    <condicion operador="=">CCTMOVIM.concod</condicion>
+		</field>
+		<field id="siscod">
+		    <condicion operador="=">CCTMOVIM.siscod</condicion>
+		</field>
+		<field id="conimp">
+		    <condicion operador="=">2</condicion>
+		</field>
+	    </table>
+	</join>
+
+    </consulta>
+</abm>

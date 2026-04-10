@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" inserta="false" borra="false" modifica="false" imprime="false" tooltip="false" confirma="GRABAR" transaccional="true" preFetch="true">
+    <title>Detalle de Valores</title>
+    <obs/>
+    <form>
+
+        <table id="CAJ_MOVIMIENTOS" label="Cambio de valores">
+
+            <cierraproceso id="cajmovimientos_ing.xml">
+                <paring destino="imputacion_concepto">imputacion_concepto</paring>
+                <paring destino="moneda_id">moneda_id</paring>
+                <paring destino="cajpuesto_id">cajpuesto_id</paring>
+                <paring destino="cajconcepto_id">cajconcepto_id</paring>
+                <paring destino="cajregistro_id">cajregistro_id</paring>
+                <paring destino="importe_movimiento">importe_movimiento</paring>
+                <paring destino="fecha_movimiento">fecha_movimiento</paring>
+                <paring destino="referencia_movimiento">referencia_movimiento</paring>
+	            <paring destino="puesto_movimiento">puesto_movimiento</paring>
+                <paring destino="nro_movimiento">nro_movimiento</paring>
+                <paring destino="ctbcuenta_reg_id">ctbcuenta_reg_id</paring>
+                <paring destino="ctbcuenta_reg_doh">ctbcuenta_reg_doh</paring>
+                <paring destino="stkdeposito_id">stkdeposito_id</paring>
+                <paring destino="limite_credito">limite_credito</paring>
+            </cierraproceso>
+
+            <movimientos>
+
+                <!-- Grabacion Movimientos de Caja -->
+                <relacion id="cajmovimientos_ant_upd.xml" />          
+                <relacion id="cajnumeradores_upd.xml" />
+
+            </movimientos>      
+
+            <field id="id_cajmovimiento" noshow="true">
+                <condicion operador="=">-1</condicion>
+                <detalle>id_cajmovimiento</detalle>
+            </field>
+
+            <field id="cambio_valores" local="true" style="background-color:#000;color:#fff;padding-top:5px;padding-bottom:5px;text-align:center;" deshabilitado="true" colspan="12" noshow="true">
+                <attribute id="noshow">oculta_titulos</attribute>
+                  <valor>Cambio de Valores</valor>
+                  <size>40</size>
+            </field>
+
+            <field id="oculta_titulos" local="true" noshow="true">
+                <helper type="parameter" id="SIS::02::oculta_titulos">
+                    <label>Oculta titulos identificadores en programas de caja</label>
+                    <defaultValue>false</defaultValue>
+                </helper>
+            </field>
+
+            <field id="esadmin" local="true" noshow="true" deshabilitado="true">
+                <valor eval="true">$_SESSION['administrator'] == 1 ? 'false' : 'true'</valor>
+            </field>
+
+
+            <fieldGroup id="parametros_ingreso" noshow="true">                    
+                <field id="moneda_id" local="true">
+                    <valor>1</valor>
+                </field>
+                <field id="cajpuesto_id"/>
+                <field id="cajconcepto_id"/>
+                <field id="tipoimpre_concepto" tabla="CAJ_CONCEPTOS" />
+
+                <field id="imputacion_concepto" local="true">
+                	<label>cpto</label>
+                	<valor>1</valor>
+                </field>
+                <field id="imputacion_grilla" local="true">
+                	<label>grilla</label>
+                	<valor>0</valor>
+				</field>
+
+                <field id="fecha_movimiento"/>
+                <field id="cajregistro_id" />
+            </fieldGroup>                
+
+ 
+
+           <field id="nro_movimiento" deshabilitado="true" _local="true">
+                <label>Nº Comprobante</label>  
+                <parametro id="cajnumerador_param.xml" retorna="numero">
+                    <field id="numero" />
+                </parametro>
+                <format>%08d</format>
+                <size>8</size>
+                <detalle>nro_movimiento</detalle>
+            </field>
+
+            <field id="referencia_movimiento" local="true">
+                <label>Referencia</label>
+        	    <size>255</size>
+            </field>
+                
+      <!--- DATOS PARA TABLA ARQUEO -->
+
+        <field id="separator_0" local="true" style="background-color: #c9c9c9; height: 1.5em;" colspan="2" deshabilitado="true">
+              <valor>Valores que Ingresan</valor>
+              <size>60</size>
+        </field>
+
+            <field id="detalles" local="true">
+                <label colspan="2"/>
+                <helper type="object" xml="cajvalores_cambio_grid.xml">
+                    <parameter source="imputacion_grilla" target="imputacion_concepto" />
+                    <parameter target="cajpuesto_id" source="cajpuesto_id"/>
+                    <parameter target="cajregistro_id" source="cajregistro_id"/>
+                    <parameter target="moneda_id" source="moneda_id"/>
+                </helper>
+            </field>
+
+
+            <field id="importe_movimiento" local="true" deshabilitado="true">
+                <label style="color:green;font-size:large;">Total</label>
+                <tipo>custom_numeric</tipo>
+                <formato>%-0.2f</formato>
+                <size>30</size>
+            </field>
+
+            <field id="importe_total" local="true" noshow="true">
+                <valor>0</valor>
+            </field>
+
+      <!-- CAMPOS PARA MOVIMIENTO DE CIERRE -->
+
+            <fieldGroup noshow="true">
+
+                <!-- Arma Partida Contable Forma de Pago -->
+
+                <field id="ctbcuenta_concepto_id">
+                    <expression>SELECT ifnull(ctbcuenta_forma_id,'') FROM CAJ_FORMAS_PAGO where CAJ_FORMAS_PAGO.id_cajformapago = CAJ_PUESTOS.cajformapagodif_id LIMIT 1</expression>
+                </field>
+
+                <!-- Para la Grabación del CAJ_VALORES -->
+
+                <field id="grabar" local="true" noshow="true">
+                    <valor>1</valor>
+                </field>
+                
+                
+                <field id="id_referencia" noshow="true">
+                     <expresion>'SIS::03::referencia_arqueo'</expresion>
+                </field>
+                
+
+            </fieldGroup>
+
+            
+            <!-- IMPRESION -->
+
+            <fieldGroup id="IMPRESION">
+            
+	          <field id="muestracheck" local="true" noshow="true">
+	            <if exp="tipoimpre_concepto != 2">
+	            <true>'display:none;'</true>
+	            <false>''</false>
+	            </if>
+	            <label>MuestraChk</label>
+	          </field>
+
+
+	          <field id="CHKimprime" local="true" noshow="true">
+	            <attribute id="style">muestracheck</attribute>
+	            <label style="font-size: medium; align: right;">Imprime Comprobante</label>
+	            <tipo>check</tipo>
+	          </field>
+
+	          <field id="impresion" local="true" noshow="true" deshabilitado="true">
+	            <label>Programa de Impresion</label>
+	            <if exp="CHKimprime=='1' || tipoimpre_concepto=='1'">
+	            <true>'imprime_concepto'</true>
+	            <false>''</false>
+	            </if> 
+	          </field>
+
+          	</fieldGroup>
+
+          <!-- FIN IMPRESION -->
+
+        </table>
+
+
+        <join tipo="left">
+            <table id="CAJ_CONCEPTOS">
+                <field id="id_cajconcepto">
+                    <condicion operador="=">CAJ_MOVIMIENTOS.cajconcepto_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join>
+            <table id="CAJ_PUESTOS">
+                <field id="id_cajpuesto">
+                    <condicion operador="=">'[__cajpuesto_id__]'</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

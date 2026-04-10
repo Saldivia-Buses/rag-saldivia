@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" preloadData="false">
+  <title>Cuentas Contables</title>
+  <obs/>
+  <consulta>
+    <table id="REG_CUENTA_IMPUTACION" label="Cuentas Contables">
+
+      <field id="id_regcuentaimputacion" noshow="true" />
+
+      <field id="regcuenta_id" valauto="true" noshow="true"/>
+
+      <field id="cuenta_id">
+        <label modpos="nobr">Cuenta</label>
+        <helper type="combo" xml="cuentas_habilitadas_qry.xml" dir="/ayudas" />
+      </field>
+
+      <field id="porcentaje" noshow="true">
+        <label>Porcentaje</label>
+        <tipo>numeric</tipo>
+        <valor>100</valor>
+      </field>
+
+      <field id="doh">
+        <label>Imputa</label>
+        <helper type="combo">
+          <option value="0">Debe</option>
+          <option value="1">Haber</option>
+        </helper>
+        <tipo>radio</tipo>
+      </field>
+    </table>
+
+    <join tipo="left">
+      <table id="CTB_CUENTAS">
+        <field id="id_cuenta">
+          <condicion operador="=">REG_CUENTA_IMPUTACION.cuenta_id</condicion>
+        </field>
+        <field id="ejercicio_id">
+          <condicion operador="=">(select id_ejercicio from CTB_EJERCICIOS where activo = 1 ORDER BY id_ejercicio DESC LIMIT 1)</condicion>
+        </field>
+      </table>
+    </join>
+<!--    <join>
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">REG_CUENTA_IMPUTACION.regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+    -->
+  </consulta>
+</histrix>

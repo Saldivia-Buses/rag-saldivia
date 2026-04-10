@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="abm" grabafinal="true">
+       <title>ENCABEZADO COMPROBANTE</title>
+        <obs></obs>
+               <form >
+					<table id="CCTENCAB" label="ENCABEZADO">
+						<field id="siscod" id_cab="siscli">
+						</field>
+						<field id="ctacod" id_cab="ctacod">
+						</field>
+						<field id="ctanom" id_cab="ctanom">
+						</field>
+						<field id="movfec" id_cab="movfec">
+						</field>
+						<field id="movnpv" id_cab="movnpv">
+						</field>
+						<field id="movnro" id_cab="movnro">
+						</field>
+						<field id="concod" id_cab="concod">
+						</field>
+						<field id="vtacod" id_cab="fpago">
+						</field>
+						<field id="seccod" id_cab="movcta">
+						</field>
+						<field id="succod" id_cab="movcta">
+						</field>
+						<field id="movimp" id_temp="total">
+						</field>
+						<field id="movlet" id_cab="movlet">
+						</field>
+						
+					</table>
+               </form>
+        </histrix>

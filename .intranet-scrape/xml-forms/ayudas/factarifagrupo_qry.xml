@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  Ayuda
+Tarea: Ayuda para la Tabla de Grupo de Tarifas
+Autor: d!ego2k
+Fecha: 27/08/10
+*******************************************************************************
+-->
+<histrix tipo="consulta">
+	<title>Grupo de Tarifas</title>
+	<obs></obs>
+	<form >	    
+		<table id="FAC_TARIFAS_GRP" label="Grupos de Tarifas">
+
+			<field id="id_factarifagrupo" />
+
+			<field id="nombre_grupo" />
+
+			<field id="facservicio_id" noshow="true" />
+
+		</table>
+	</form>
+</histrix>	

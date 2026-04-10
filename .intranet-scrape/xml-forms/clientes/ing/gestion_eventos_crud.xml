@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" modifica="false" path="cuentas">
+	<title>Control de Accesos</title>
+	<obs></obs>
+	<customScript>
+        $('#DIVgestion_eventos_crud_xml1038').bind("DOMSubtreeModified",  function() {
+
+        	$('div[aria-describedby="DIVFORMgestion_eventos_crud_xml"]').css("top", "70px");
+
+			$('#Formgestion_eventos_crud_xml .ui-widget img').css("height", "300px");
+			
+        });
+	</customScript>
+	<form>
+	    <table id="REG_CUENTA_EVENTOS" label="Control de Accesos">
+
+			<field id="id_regcuentaevento" esClave="true" noshow="true" />
+
+			<field id="fecha_ingreso" valauto="true" colstyle="text-align:center;">
+				<label>Fecha Ingreso</label>
+				<valor>today</valor>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="hora_ingreso" mask="99:99:99" valauto="true" colstyle="text-align:center;">
+				<label modpos="nobr">Hora de Ingreso</label>
+				<valor eval="true">date('H:i:s')</valor>
+				<tipo>varchar</tipo>
+			</field>	
+
+			<field id="subsistema_id" valauto="true" noshow="true" local="true">
+				<actualiza>
+					<field id="regcuenta_id" destino="subsistema_id" />
+				</actualiza>
+			</field>
+
+			<field id="regevento_id" required="true">
+				<label>Evento</label>
+				<helper type="combo" xml="regeventos_qry.xml" dir="/ayudas" empty="true" />
+			</field>
+
+			<field id="regcuenta_id" colstyle="text-align:center;" required="true">
+				<label modpos="nobr">Cuenta Principal</label>
+				<helper type="combo" id="REG_CUENTA" empty="true">
+					<field id="id_regcuenta" />
+					<field id="nombre_cuenta" />
+					<field id="baja_cuenta" oculto="true">
+						<condicion operador="=">'0000-00-00'</condicion>
+					</field>
+					<field id="subsistema_id" oculto="true" />
+				</helper>
+				<actualiza>
+					<field id="nro_documento" destino="cuenta_relacionada" />
+				</actualiza>
+			</field>
+
+			<field id="subsistemarelacionada_id" local="true" valauto="true" noshow="true">
+				<actualiza>
+					<field id="nro_documento" destino="subsistemarelacionada_id" />
+				</actualiza>
+			</field>
+			
+			<field id="regcuentarelacionada_id" noshow="true" required="true" />
+			
+			<field id="nro_documento" local="true" colstyle="display:none;" deshabilitado="false">
+				<label>Documento Acceso</label>
+				<expression>REG_CUENTA.nro_documento</expression>
+				<helper type="external" xml="regcuenta_relaciones_nrodoc_qry.xml" dir="/ayudas" empty="true" />
+			</field>
+
+			<field id="nombre_cuenta" deshabilitado="true" tabla="REG_CUENTA" colstyle="text-align:center;">
+				<label modpos="nobr">Cuenta Acceso</label>
+			</field>
+
+			<field id="imagen_cuenta" path="regcuentarelacionada_id" tabla="REG_CUENTA" colstyle="text-align:center;" deshabilitado="true" colspan="4">
+				<label>Foto</label>
+	        	<tipo Type="Image">file</tipo>
+	        	<size>100</size>
+			</field>
+
+			<field id="numero_documento" Formstyle="display:none;" colstyle="text-align:center;">
+				<label>Documento Acceso</label>
+				<expression>REG_CUENTA.nro_documento</expression>
+				<tipo>enclosed_integer</tipo>
+			</field>	
+
+			<field id="salida" local="true" style="text-align:center;">				
+				<valor>Salida</valor>
+				<helper type="link" xml="salida_evento_ficha.xml" icon="ui-icon-clock" text="false" height="450px">
+					<parameter target="id_regcuentaevento" source="id_regcuentaevento" />
+				</helper>
+			</field>
+
+			<field id="hora_egreso" noshow="true">
+				<condicion operador="=">'00:00:00'</condicion>
+			</field>
+
+	    </table>
+
+	    <join>
+	    	<table id="REG_CUENTA">
+	    		<field id="id_regcuenta">
+	    			<condicion operador="=">REG_CUENTA_EVENTOS.regcuentarelacionada_id</condicion>
+	    		</field>
+	    	</table>
+	    </join>
+
+	</form>
+</histrix>	

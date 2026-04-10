@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<histrix tipo="abm-mini">
+	<title>Detalle Contable</title>
+	<obs/>
+	<form >
+		<table id="CAJ_DETALLES">
+		
+			<field id="id_cajdetalle" noshow="true" />
+
+			<field id="cajmovimiento_id" print="false" noshow="true" valauto="true"/>
+			
+			<field id="cuenta_id">
+				<label>Cod. de Cuenta</label>
+                                <helper type="external" xml="ctbcuenta_qry.xml" dir="/ayudas"></helper>
+			</field>
+			
+			<field id="nombre_cuenta" tabla="CTB_CUENTAS">
+				<label>Descripción</label>
+			</field>
+
+			<field id="referencia_detalle" Formstyle="display:none;">
+				<label>Detalle</label>
+			</field>
+			
+			<field id="doh" print="false" colstyle="display:none;">
+				<helper type="combo">
+					<option value="0">Debe</option>
+					<option value="1">Haber</option>
+				</helper>
+			</field>
+			
+			<field id="importe_detalle" colstyle="display:none;">
+				<label>Importe</label>
+			</field>
+			
+			<field id="importe_debe" suma="true" noZero="true">
+				<label>Debe</label>
+				<expression>CASE WHEN doh = 0 THEN importe_detalle ELSE 0 END</expression>
+				<tipo>numeric</tipo>
+			</field>
+			
+			<field id="importe_haber" suma="true" noZero="true">
+				<label>Haber</label>
+				<expression>CASE WHEN doh = 1 THEN importe_detalle ELSE 0 END</expression>
+				<tipo>numeric</tipo>
+			</field>
+			
+			<order>
+				<field id="doh" />
+				<field id="cuenta_id" />
+			</order>
+		</table>
+		
+		<join>
+			<table id="CAJ_MOVIMIENTOS">
+				<field id="id_cajmovimiento">
+					<condicion operador="=">CAJ_DETALLES.cajmovimiento_id</condicion>
+				</field>
+			</table>
+		</join>
+		
+		<join tipo="left">
+			<table id="CTB_EJERCICIOS">
+				<field id="comienza">
+					<condicion operador="&lt;=">CAJ_MOVIMIENTOS.fecha_movimiento</condicion>
+				</field>
+				<field id="finaliza">
+					<condicion operador="&gt;=">CAJ_MOVIMIENTOS.fecha_movimiento</condicion>
+				</field>
+			</table>
+		</join>
+		
+		<join tipo="left">
+			<table id="CTB_CUENTAS">
+				<field id="id_cuenta">
+					<condicion operador="=">CAJ_DETALLES.cuenta_id</condicion>
+				</field>
+				<field id="ejercicio_id">
+					<condicion operador="=">CTB_EJERCICIOS.id_ejercicio</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

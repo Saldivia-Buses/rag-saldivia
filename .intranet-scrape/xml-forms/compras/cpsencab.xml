@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta">
+	<title>ORDENES DE COMPRA</title>
+	<obs></obs>
+	<form  detalle="cpsmovim.xml" inline="true">
+		<table id="CPSENCAB" label="ORDENES DE COMPRA">
+			<field id="siscod" oculto="true">
+				<label>Codigo Sistema.. </label>
+				<help>
+				</help>
+				<detalle>CPSMOVIM.siscod</detalle>
+			</field>
+			
+			<!--                  <field id="garnro">
+			<label>Doc.Garantes </label>
+			<help> </help>
+			</field>
+			<field id="movpor">
+			<label>Porc descuento </label>
+			<help>Porcentaje de descuento </help>
+			</field>
+			<field id="ocpbon">
+			<label>Bonificaciones </label>
+			<help>Bonificaciones esperadas para esta compra. </help>
+			</field>
+			<field id="ocpent">
+			<label>Lugar Entrega </label>
+			<help>Lugar de Entrega/Descarga. </help>
+			</field>
+			-->
+			<field id="ocpest" oculto="true">
+				<label>Estado </label>
+				<help>Estado Actual</help>
+                <options>
+                    <option valor="0">No Autorizada</option>
+                    <option valor="1">Pendiente</option>
+		    <option valor="2">Cumplida</option>
+                    <option valor="3">Parcial</option>
+                    <option valor="4">Anulada</option>
+                </options>
+				
+			</field>
+			<field id="ocpfec">
+				<label>Fecha</label>
+				<help>Fecha de Orden de Compra. </help>
+			</field>
+			<field id="ocpnro">
+				<label>Nro</label>
+				<help>Numero de Orden de Compra. </help>
+				<detalle>ocpnro</detalle>
+			</field>
+			<field id="ctacod" noshow="true">
+				<label>Proveedor</label>
+				<help>Proveedor</help>
+				<ayuda_ex id="CCTCUENT" xml="HLPcctcuent.xml" dir="/help_local">
+
+					
+					<field id="ctacod">
+						<label>Nro</label>
+						
+					</field>
+					<field id="ctanom">
+						<label>Nombre</label>						
+						<detalle>ctanom</detalle>						
+			
+					</field>
+        			<field id="baja" noshow="true">
+					<label>baja</label>						
+					       <condicion operador="!=">1</condicion>
+			        </field>				
+					<field id="siscod" oculto="true">
+						<label>siscod</label>
+						<condicion operador="=">'01'</condicion>
+					</field>					
+					<clave>ctacod</clave>
+					<descripcion>ctanom</descripcion>
+				</ayuda_ex>		
+				<!--<jseval campodestino="codprv">ctacod</jseval>				-->
+							
+			</field>			
+			<!--<field id="ctanom" local="true" deshabilitado="true">
+				<label modpos="nobr"></label>
+				<tipo>varchar</tipo>
+			</field> -->
+			<field id="ctacod2">
+				<expresion>CONCAT(ctafan, ' (',ctanom,')')</expresion>
+				<label>Proveedor </label>
+				<!--
+				<help>Codigo de Cuenta PROVEEDOR. </help>
+				<tabla_ex id="CCTCUENT">
+				<field id="ctacod"></field>
+				<field id="ctanom"></field>
+				</tabla_ex>
+				-->
+				<tipo>string</tipo>
+				
+			</field>
+			
+			<field id="ocpfen2">
+				<label>Entrega</label>
+				<help>Fecha de Entrega </help>
+				<expresion>select max(fecreq) from CPSMOVIM where CPSMOVIM.ocpnro = CPSENCAB.ocpnro</expresion>
+				<tipo>date</tipo>
+			</field>
+<!--			<field id="ocpimp" suma="true">
+				<label>Monto </label>
+				<help> Monto de la Orden de compra</help>
+				
+			</field> -->
+							<!--
+			<field id="ocpobs">
+			<label>Observaciones </label>
+			<help>Observaciones. </help>
+			</field>
+			<field id="opecla">
+			<label>Firma Electronica </label>
+			<help>Firma Electronica </help>
+			</field>
+			<field id="seccod">
+			<label>Cod.Seccion </label>
+			<help>Codigo de Seccion. </help>
+			</field>
+			
+			<field id="succod">
+			<label>Cod. Sucursal </label>
+			<help>Codigo de Sucursal </help>
+			</field>
+			<field id="tracod">
+			<label>Nombre Transporte </label>
+			<help> </help>
+			</field>
+			-->
+			<filters>
+				<field id="ctacod">
+					<label>Proveedor</label>
+                      <operador>=</operador>
+				</field>
+<!--				<field id="ctanom" deshabilitado="true">
+					<label modpos="nobr">Nom</label>
+				</field> -->
+				<field id="ocpfec">
+					<operador>>=</operador>
+					<label>Desde Fecha</label>
+				</field>
+				<field id="ocpfec">
+					<operador>&lt;=</operador>
+					<label>Hasta Fecha</label>
+				</field>
+				<field id="ocpfen2" deshabilitado="false">
+					<operador>&gt;=</operador>
+					<label>Desde Fecha Entrega</label>
+				</field>
+				<field id="ocpfen2" deshabilitado="false">
+					<operador>&lt;=</operador>
+					<label>Hasta Fecha Entrega</label>
+					<valor>today</valor>					
+				</field>
+
+				<field id="ocpest">
+					<operador>=</operador>
+					<label>Estado</label>
+					<valor>1</valor>
+					
+				</field>
+				
+			</filters>
+			
+		</table>
+		
+		<join tipo="left">
+			<table id="CCTCUENT">
+				<field id="siscod" oculto="true">
+					<label>cctcuent.siscoc</label>
+					<condicion operador="=">'01'</condicion>
+					
+				</field>
+				
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">CPSENCAB.ctacod</condicion>
+				</field>
+				
+				<field id="ctanom" oculto="true">
+				</field>
+			</table>
+		</join>
+		
+	</form>
+</histrix>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud" consultaancha="true" showcantidad="false" deleterow="false" _modifica="false">
+  <title>Incidencias Viajes</title>
+  <obs/>
+  <form>
+    <table id="MANT_VIAJES_INCIDENCIAS" label="Incidencias">   
+
+    <field id="admin" local="true" noshow="true">
+      <valor>1</valor>
+    </field>
+
+    <field id="id_mantviajesincidencias" autoinc="true" noshow="true" />
+
+    <field id="mantviajesvehiculo_id" valauto="true" noshow="true" /> 
+
+    <field id="nombre_incidencia">
+      <label>Incidencia</label>
+    </field>
+
+    <field id="supervisado" _noshow="true" colstyle="text-align:center" tdWidth="10px" _Formstyle="display:none;">
+      <label >Supervisado</label>
+      <expression><![CDATA[ case when MANT_VIAJES_INCIDENCIAS.supervisado = 1 then  '<img src="../img/ok.png" />'
+                            else '<img src="../img/cancel.png" />'  end ]]> 
+      </expression>
+    </field>
+
+    <field id="editable" local="true" bloqueafila="true" noshow="true" >
+       <label>Editable</label>    
+       <valor>"1"</valor>
+      <!--  
+       <if exp="'yo'=='login'">
+         <true>"0"</true>
+         <false>"1"</false>
+       </if>   
+     -->
+       <tipo>varchar</tipo>
+    </field>
+  
+
+    <field id="usuario_id" noshow="true">
+      <label>Usuario</label>
+      <valor eval="true">$_SESSION['idUser']</valor>
+      <help>Usuario</help>
+      <helper type="combo" id="HTXUSERS" empty="true">
+        <field id="id_usuario" />
+        <field id="login" />
+      </helper>
+    </field>
+
+    <field id="fecha_creado" noshow="true" valauto="true">
+      <tipo>date</tipo>
+      <valor>today</valor>
+    </field>
+
+    </table>
+
+    <join tipo="left">
+      <table id="MANT_VIAJES_VEHICULO">
+        <field id="id_mantviajesvehiculo">
+          <condicion operador="=">MANT_VIAJES_INCIDENCIAS.mantviajesvehiculo_id</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form> 
+</histrix>
+

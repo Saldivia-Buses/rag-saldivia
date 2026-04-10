@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+    <title>Calendario Vencimientos</title>
+    <obs/>
+    <form>
+	<table id="CPSMOVIM" label="DETALLE">
+
+	    <filters>
+	        <field id="fecha_movimiento" deshabilitado="false">
+			<label>Desde</label>
+	        	<operador>&gt;=</operador>
+			<valor eval="true">date("d/m/Y", mktime(0, 0, 0, 1 , 1, date("Y")))</valor>
+	        </field>
+	        <field id="fecha_movimiento" deshabilitado="false">
+			<label>Hasta</label>
+	        	<tipo>date</tipo>
+	        	<operador>&lt;=</operador>
+	        </field>
+
+	    </filters>
+
+			<field id="id_cpsmovim" deshabilitado="true" calendarId="true" noshow="true"/>
+
+			<field id="fecha_movimiento">
+				<label>Fecha</label>
+				<expression having="false">fecreq</expression>
+				<tipo>date</tipo>
+
+			</field>
+			<field id="siscod" oculto="true">
+				<condicion operador='='>''</condicion>
+
+			</field>
+			
+			<field id="ctanom" tabla="CCTCUENT" >
+			    <label>Nombre</label>
+			</field>
+
+		<field id="link" noshow="true">
+		    <label>Nro</label>
+
+		    <expression>'cpsencab_cabreimp.xml'</expression>
+
+		</field>
+		<!-- <field id="conpend">
+			<expression>''</expression>
+		</field> -->
+			<field id="ocpnro" tabla="CPSENCAB">
+			    <label>Nro</label>
+			    <helper xml="cpsencab_cabreimp.xml" type="link" dir="/compras/" title="Detalle del comprobante">
+				<parameter source="ocpnro" target="ocpnro" />
+			    </helper>
+
+			</field>
+
+			<field id="ocpest" noshow="true" tabla="CPSENCAB">
+				<label _modpos="nobr">Estado</label>
+				<help>Estado Actual</help>
+				<condicion operador="!=">2</condicion>
+<!--
+				<options>
+					<option valor=""></option>
+					<option valor="0">No Autorizada</option>
+					<option valor="1">Pendiente</option>
+					<option valor="2">Cumplida</option>
+					<option valor="3">Parcial</option>
+				</options>
+-->
+			</field> 
+		<field id="tipo">
+			<label>Tipo</label>
+		    <expression>'O.C.'</expression>
+		</field>
+			<field id="anuladas" noshow="true">
+				<expression having="false">ocpest</expression>
+				<condicion operador="=">1</condicion>
+			</field>
+
+<field id="fecreq" >
+	<expression having="false">fecreq</expression>
+	<label>Entrega Original</label>
+	<tipo>date</tipo>
+</field>
+<field id="entrega" >
+	<expression having="false">(case when fecreq &lt; date(now()) then now() else fecreq end)</expression>
+	<label>Fecha Entrega</label>
+	<tipo>date</tipo>
+</field>
+<field id="pencps" noshow="true">
+<label>Pendiente</label>
+<condicion operador="&gt;">0</condicion>
+</field>
+			<field id="vence"  deshabilitado="true" calendarStartDate="true">
+				<label>Fecha Vencimiento</label>
+
+					<expression having="false">(case when /* date_add(fecreq, interval 30 day) */ fecreq &lt; date(now()) then date_add(now(), interval 30 day) else date_add(fecreq, interval 30 day) end)</expression>
+				<tipo>date</tipo>
+			</field>
+			<field id="vencidas" noshow="true" clasefila="true">
+				<expression having="false">(case when date_add(fecreq, interval 30 day) &lt; date(now()) then 'resaltado' else 'zzzzzzzzz' end)</expression>
+				<tipo>custom_numeric</tipo>
+			</field>
+
+			<field id="subject" calendarSubject="true" suma="true" >
+			    <label>Importe</label>
+				<expression>sum(importe_total / movcps * pencps)</expression>
+				<tipo>custom_numeric</tipo>
+			</field>
+	<group>
+	    
+	    <field id="ocpnro" />
+	    <field id="vence" />
+	</group>
+			<order>
+<!--				<field id="id_regcuenta" /> -->
+				<field id="vence" />
+				<field id="fecreq" />
+			</order>
+	
+	</table>
+
+    <join tipo="left">
+	<table id="CPSENCAB">
+		<field id="ocpnro" >
+			<condicion operador="=">CPSMOVIM.ocpnro</condicion>
+		</field>
+		<field id="ocpfec" >
+			<condicion operador="=">CPSMOVIM.movfec</condicion>
+		</field>
+	</table>
+    </join>
+    <join tipo="left">
+	<table id="CCTCUENT">
+		<field id="siscod" >
+			<condicion operador="=">'01'</condicion>
+		</field>
+		<field id="ctacod" >
+			<condicion operador="=">CPSENCAB.ctacod</condicion>
+		</field>
+	</table>
+    </join>
+	<group>
+	    <field id="vencidas" />
+	    <field id="ocpnro" />
+	</group>
+			<order>
+				<field id="ctanom" />
+			</order>
+</form>
+    -->
+</histrix>

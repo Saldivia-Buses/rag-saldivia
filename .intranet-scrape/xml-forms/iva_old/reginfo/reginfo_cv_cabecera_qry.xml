@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" limit="1">
+	<title>REGINFO_CV_CABECERA</title>
+	<obs/>
+	<form >
+		<table id="HTXMENU" label="REGINFO_CV_CABECERA">
+			<fieldGroup id="DEBUG" noshow="true" local="true" print="false" export="false">
+				<field id="anio" />
+				<field id="mes" />
+				<field id="fecha_desde" />
+				<field id="fecha_hasta" />
+				<field id="archivo" />
+				<field id="titulo">
+					<setvar>titulo</setvar>
+					<expression>CONCAT('[__anio__]', '[__mes__]','_[__archivo__]')</expression>
+				</field>
+			</fieldGroup>
+			<fieldGroup id="exports">
+				<field id="cuit_informante" local="true">
+					<label>Cuit Informante</label>
+					<valor eval="true">
+						str_replace("-","",filter_var($_SESSION['properties']['cuit'], FILTER_SANITIZE_NUMBER_INT))
+					</valor>
+				</field>
+				<field id="periodo">
+					<label>Periodo</label>
+					<expression>CONCAT('[__anio__]', '[__mes__]')</expression>
+				</field>
+				<field id="secuencia">
+					<label>Secuencia</label>
+					<expression>'00'</expression>
+				</field>
+				<field id="sin_movimiento">
+					<label>Sin Movimiento</label>
+					<expression>CASE WHEN '' IS NULL THEN 'S' ELSE 'N' END</expression>
+				</field>
+				<field id="pro_cred_fis">
+					<label>Prorratear Credito Fiscal Computable</label>
+					<expression>CASE WHEN '' IS NULL THEN 'S' ELSE 'N' END</expression>
+				</field>
+				<field id="cred_fis_globocomp">
+					<label>Credito Fiscal Global o Comprobante</label>
+					<expression>CASE WHEN '' IS NULL THEN '1' ELSE '2' END</expression>
+				</field>
+				<field id="imp_cred_fis_glob">
+					<label>Importe Crédito Fiscal Computable Global</label>
+					<expression>CASE WHEN '' IS NULL THEN '1' ELSE '2' END</expression>
+				</field>
+			</fieldGroup>
+		</table>
+	</form>
+</histrix>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="ayuda" >
+	<title>Chasis</title>
+	<obs></obs>
+	<form >
+		<table id="CHASIS">
+			<title>CHASIS</title>
+			<field id="nrocha">
+				<label>Numero</label>
+			</field>
+			<field id="desC">
+				<label>Descripcion</label>
+				<expression>concat(MARCHASIS.desabv,' ', MODCHASIS.moddes,' - ', CARROCERIA.desabv, '(', PEDCOTIZ.cantasi,') ')</expression>
+				<tipo>varchar</tipo>
+			</field>			
+			<field id="ctacod" oculto="true">
+				<expression>PEDCOTIZ.ctacod</expression>
+				<label modpos="nobr">Cliente</label>
+			</field>			
+			<order>
+				<field id="CHASIS.nrocha"></field>
+			</order>
+		</table>
+		<join tipo="left">
+			<table id="MARCHASIS">
+					<field id="marcod">
+						<condicion operador="=">CHASIS.marcod</condicion>
+					</field>
+			</table>
+
+		</join>		
+		<join tipo="left">
+			<table id="MODCHASIS">
+					<field id="marcod">
+						<condicion operador="=">CHASIS.marcod</condicion>
+					</field>
+					<field id="modcha">
+						<condicion operador="=">CHASIS.modcod</condicion>
+					</field>
+			</table>
+
+		</join>	
+		<join tipo="left">
+			<table id="PEDCOTIZ">
+					<field id="nrocha">
+						<condicion operador="=">CHASIS.nrocha</condicion>
+					</field>
+			</table>
+
+		</join>
+		<join tipo="left">
+			<table id="CARROCERIA">
+					<field id="nrocar">
+						<condicion operador="=">PEDCOTIZ.nrocar</condicion>
+					</field>
+			</table>
+
+		</join>							
+	</form>
+</histrix>

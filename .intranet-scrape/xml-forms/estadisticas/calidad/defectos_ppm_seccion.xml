@@ -1,0 +1,196 @@
+<histrix tipo="consulta">
+    <title>Controles de calidad pendientes por seccion</title>
+    <obs/>
+    <form  _detalle="retrabajos_ficha_imp.xml">
+        <table id="PROD_CONTROL_MOVIM" label="Retrabajos">
+
+        <filters auto="true">
+	   		<field id="fecha_desde">
+	   			<label>Desde</label>
+	   			<operador>=</operador>
+	   			<valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m"), 1  , date("Y")))</valor>
+	   		</field>		   		
+
+	   		<field id="fecha_hasta">
+	   			<label modpos="nobr">Hasta</label>
+	   			<operador>=</operador>
+	   			<valor>today</valor>
+	   		</field>
+
+<!-- 			<field id="linea_id">
+                <label modpos="nobr">Linea</label>
+                <operador>=</operador>
+                <valor>1</valor>
+	        </field>
+ -->
+			<field id="seccion_id">
+				<label modpos="nobr">Sección</label>
+				<operador>=</operador>
+			</field>
+
+			<field id="controlcausal_id">
+				<label modpos="nobr">Causa</label>
+				<operador>=</operador>
+			</field>
+
+			<field id="nrofab_id">
+				<label modpos="nobr">Unidad</label>
+				<operador>=</operador>
+			</field>
+
+		</filters>
+
+	    <field id="fecha_desde" local="true" noshow="true">
+	    	<tipo>date</tipo>
+	    </field>
+	    
+	    <field id="fecha_hasta" local="true" noshow="true">
+	    	<tipo>date</tipo>
+	    </field>
+
+	    <field id="fecha_control" tabla="PROD_CONTROL_MOVIM" noshow="true">
+	    	<tipo>date</tipo>
+	    	<condicion operador="&gt;=">str_to_date('[__fecha_desde__]', '%d/%m/%Y') and fecha_control &lt;= str_to_date('[__fecha_hasta__]', '%d/%m/%Y')</condicion>
+	    </field>
+
+    	<field id="nrofab_id" noshow="true">
+			<label>coche</label>
+	    </field>
+
+    	<field id="nrofab_id_chasis">
+			<label>Unidad</label>
+			<expression>CONCAT(nrofab_id, ' - ', desabv, ' - ', LEFT(ctafan, 10))</expression>
+	    </field>
+
+<!-- 	    <field id="linea_id" local="true" noshow="true">
+            <helper type="combo" xml="lineas.xml" dir="/produccion" empty="true"/>
+            <label >Linea</label>
+			<actualiza>
+				<field id="seccion_id" destino="linea_id" /> 
+			</actualiza>
+	    </field> -->
+
+		<field id="seccion_id" tabla="PROD_CONTROLES">
+			<label>Sección</label>
+			<helper id="MOMENTO" type="combo" empty="true">
+                <field id="idMomento" />
+                <field id="descripcion" />
+                <field id="linea_id" oculto="true">
+                	<condicion operador="=">1</condicion>
+                </field>
+		    </helper>
+		</field>
+
+		<field id="nombre_obs" PDFsize="18px">
+			    <label>Control</label>
+			    <expression>CASE WHEN PROD_CONTROL_MOVIM.observacion_control != '' THEN CONCAT(nombre_control, ' - Obs: ',observacion_control) ELSE nombre_control END</expression>
+		</field>
+
+		<field id="nombre_controlcausal" tabla="PROD_CONTROL_CAUSAL">
+			<label>Causa</label>
+	    </field>
+
+	    <field id="controlcausal_id" colstyle="display:none;" export="false">
+			<label>Causa</label>
+			<helper id="PROD_CONTROL_CAUSAL" type="combo" empty="true">
+                <field id="id_controlcausal" />
+                <field id="nombre_controlcausal" />
+                <field id="habilitado_controlcausal" oculto="true">
+                	<condicion operador="=">1</condicion>
+                </field>
+		    </helper>
+	    </field>
+
+	    <!--<field id="cant_observaciones">
+			<label>Cant Obs</label>
+            	<expression><![CDATA[SELECT count(no_conforme)
+							FROM PROD_CONTROL_MOVIM AS PCM
+							INNER JOIN PROD_CONTROLES AS PC ON id_prodcontrol = prodcontrol_id 
+							WHERE seccion_id = PROD_CONTROLES.seccion_id 
+							AND controlcausal_id = PROD_CONTROL_MOVIM.controlcausal_id 
+							AND no_conforme = 1
+							AND fecha_control <= '[__fecha_hasta__]'
+							AND fecha_control >= '[__fecha_desde__]']]>
+				</expression>
+	    </field>-->
+
+		<field id="userid" >
+			    <label>Controló</label>
+			    <expression>CONCAT(Nombre, ' - ', date_format(date(hora_control), '%d/%m'))</expression>
+		</field>
+
+		<field id="no_conforme" deshabilitado="true" suma="true" noshow="true">
+			    <condicion operador="=">1</condicion>
+				<checklabel> </checklabel>
+		</field> 
+
+		<order>
+			<field id="nrofab_id" />
+		</order>
+
+	</table>
+		<join tipo="left">
+		    <table id="PROD_CONTROLES">
+			<field id="id_prodcontrol">
+			    <condicion operador="=">prodcontrol_id</condicion>
+			</field>
+		    </table>
+		</join>
+		<join tipo="left">
+		    <table id="MOMENTO">
+			<field id="idMomento">
+			    <condicion operador="=">PROD_CONTROLES.seccion_id</condicion>
+			</field>
+		    </table>
+		</join>
+		<join tipo="left">
+		    <table id="PROD_CONTROL_CAUSAL">
+			<field id="id_controlcausal">
+			    <condicion operador="=">PROD_CONTROL_MOVIM.controlcausal_id</condicion>
+			</field>
+		    </table>
+		</join>
+		<join tipo="left">
+		    <table id="PEDCOTIZ">
+			<field id="nrocha">
+			    <condicion operador="=">PROD_CONTROL_MOVIM.nrofab_id</condicion>
+			</field>
+		    </table>
+		</join>
+		<join tipo="left">
+            <table id="CCTCUENT">
+                <field id="ctacod">
+                    <condicion operador="=">PEDCOTIZ.ctacod</condicion>
+                </field>
+                <field id="siscod">
+                    <condicion operador="=">'02'</condicion>
+                </field>   
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="CHASIS">
+                <field id="nrocha">
+                    <condicion operador="=">PEDCOTIZ.nrocha</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="MODCHASIS">
+                <field id="modcha">
+                    <condicion operador="=">CHASIS.modcod</condicion>
+                </field>
+                <field id="marcod">
+                    <condicion operador="=">CHASIS.marcod</condicion>
+                </field>
+            </table>
+        </join>
+		<join tipo="left">
+		    <table id="HTXUSERS">
+			<field id="login">
+			    <condicion operador="=">user_id</condicion>
+			</field>
+		    </table>
+		</join>
+
+    </form>
+</histrix>

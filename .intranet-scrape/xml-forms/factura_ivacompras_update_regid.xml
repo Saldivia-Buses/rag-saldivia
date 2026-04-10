@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="insert" grabafinal="true">
+       <title>IVACOMPRAS</title>
+        <obs></obs>
+               <form >	
+					<table id="IVACOMPRAS" label="IVACOMPRAS">
+				                <sql>
+				                UPDATE `IVACOMPRAS`
+				                SET regmovim_id = (SELECT id_regmovim FROM REG_MOVIMIENTOS rm WHERE rm.nro_cuenta = IVACOMPRAS.ctacod and rm.puesto_movimiento = IVACOMPRAS.nronpv and rm.nro_movimiento = IVACOMPRAS.nrocom and rm.fecha_movimiento = IVACOMPRAS.feciva and rm.concod = IVACOMPRAS.codcom and rm.letra_movimiento = IVACOMPRAS.codlet limit 1)
+				                </sql>
+					</table>
+               </form>
+        </histrix>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>EQUIPOS DE TRABAJO</title>
+	<obs></obs>
+	<form >
+		<table id="EQUIPOPER" >
+			<title>Equipos</title>
+			<field id="id_equipo">
+				<label>Cod.Equipo</label>
+				<help>Codigo de Equipo</help>
+			</field>
+			<field id="nombre">
+				<label>Nombre</label>
+				<help>Nombre del Equipo</help>
+			</field>
+			<field id="descripcion">
+				<label>Descripcion</label>
+				<help>Descripcion Equipo</help>
+			</field>
+
+			<order>
+				<field id="id_equipo"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

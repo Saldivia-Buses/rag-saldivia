@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" inserta="false" modifica="false" imprime="false" _transaccional="true">
+	<title>Scan</title>
+	<obs/>
+
+	<form >
+		<table id="STK_MOVIMIENTOS" label="Scan">
+		
+			<movimientos>
+				<relacion id="scan_transfer_resta_ins.xml" />
+				<relacion id="scan_transfer_suma_ins.xml" />
+				<relacion id="scan_articulo_locacion_ins.xml" />
+			</movimientos>
+
+			<fieldGroup>
+
+				<field id="stklocacion_id" local="true" _noshow="true" _deshabilitado="true">
+					<label>Locacion Destino</label>
+					<helper id="STK_LOCACION" type="combo" _empty="true">
+						<field id="id_stklocacion">
+						</field>
+						<field id="codigo_locacion" >
+							<detalle>codigo_locacion</detalle>
+						</field>
+						<field id="stkdeposito_id">
+							<detalle>stkdeposito_id</detalle>
+						</field>
+					</helper>
+					<actualiza>
+						<field id="id_articulo_locacion" destino="stklocacion_id"/>
+					</actualiza>
+				</field>
+
+				<field id="id_articulo_locacion" deshabilitado="true" noshow="true">
+					<label>locacion Art</label>
+					<helper id="STK_ARTICULO_LOCACION" type="combo" _empty="true">
+						<field id="id_articulo_locacion">
+						</field>
+						<field id="stkarticulo_id"  oculto="true">
+						</field>
+						<field id="stklocacion_id">
+						</field>
+						<field id="stkdeposito_origen_id">
+							<expression>deposito_origen_id</expression>
+							<detalle>stkdeposito_origen_id</detalle>
+						</field>
+					</helper>
+				</field>
+
+				<field id="stkdeposito_id" noshow="true">
+				</field>
+
+				<field id="cantidad" >
+					<label>Cantidad</label>
+					<tipo>integer</tipo>
+					<valor>1</valor>
+				</field>
+
+				<field id="stkdeposito_origen_id" deshabilitado="true">
+					<label>Depósito Origen</label>
+					<helper xml="stkdepositos_qry.xml" type="combo" dir="/stock/man/" empty="true">
+					</helper>
+				</field>
+
+				<field id="unidad_id"   noshow="true"/>
+
+				<field id="puesto_movimiento" noshow="true">
+				</field>
+
+				<field id="numero_movimiento" noshow="true">
+				</field>
+
+			</fieldGroup>
+
+		</table>
+	</form>
+</histrix>

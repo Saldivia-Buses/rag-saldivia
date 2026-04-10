@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="dashboard">
+        <titulo>Medidores de Compras</titulo><!--
+        <widget id="CumplidasPendientes"  width="400px">
+            <title>Ordenes de Compra</title>
+	    <url><![CDATA[histrixLoader.php?xml=compras_oc.xml&dir=estadisticas]]></url>
+        </widget>-->
+
+
+        <widget id="ProvActivos"  width="400px" height="266px">
+            <title>Proveedores Activos</title>
+	    <url><![CDATA[histrixLoader.php?xml=compras_proov_act.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="Demoras"  width="400px" height="266px">
+            <title>Dias de Demora</title>
+	    <url><![CDATA[histrixLoader.php?xml=compras_demoras.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="EnFecha"  width="400px" height="266px">
+            <title>Recepciones En Fecha</title>
+	    <url><![CDATA[histrixLoader.php?xml=compras_enfecha.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="Ranking"  width="400px" height="266px">
+            <title>Ranking de Demora</title>
+	    <url><![CDATA[histrixLoader.php?xml=compras_demoras_rank.xml&dir=estadisticas]]></url>
+        </widget>
+		<widget id="Pedidos_a_fecha"  width="400px"  height="266px">
+            <title>Pedidos a Fecha</title>
+	    <url><![CDATA[histrixLoader.php?xml=compras_pedidos.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="pedidos_internos"  width="400px"  height="266px">
+            <title>Pedidos Internos</title>
+	    <url><![CDATA[histrixLoader.php?xml=compras_pedidos_usuarios.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="pedidos_internos_sd"  width="400px" height="266px">
+            <title>Pedidos Internos S/Desc</title>
+	    <url><![CDATA[histrixLoader.php?xml=compras_pedidos_sdesc.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="pedidos_internos_sd_xart"  width="400px" height="266px">
+            <title>Pedidos Internos S/Desc x Art.</title>
+	    <url><![CDATA[histrixLoader.php?xml=compras_pedidos_sdesc_xart.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="Pedidos_compras"  width="400px" height="266px">
+            <title>Compras / Pedidos Internos</title>
+	    <url><![CDATA[histrixLoader.php?xml=compras_sin_pedidos.xml&dir=estadisticas]]></url>
+        </widget>
+
+         <widget id="Ranking_Murabito"  width="400px" height="266px">
+            <title>Compras / Pedidos Internos</title>
+        <url><![CDATA[histrixLoader.php?xml=compras_murabito.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="herramientas_inv"  width="400px"  height="266px">
+            <title>Herramientas Abastecimiento</title>
+        <url><![CDATA[histrixLoader.php?xml=compras_abastecimiento.xml&dir=estadisticas]]></url>
+        </widget>            
+       <!--
+        <widget id="Tareas"  width="400px" >
+            <title>Tareas realizadas</title>
+	    <url><![CDATA[histrixLoader.php?xml=postventa_tareas.xml&dir=estadisticas]]></url>
+        </widget> -->
+</histrix>
+
+

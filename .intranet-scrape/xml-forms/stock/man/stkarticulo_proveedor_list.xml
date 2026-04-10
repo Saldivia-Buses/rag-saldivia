@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="list" subtipo="vertical">
+    <title>Articulo Proveedor</title>
+    <obs></obs>
+    <form >
+        <table id="STK_ARTICULO_PROVEEDOR" label="Articulo Proveedor">
+            <field id="id_stkarticuloproveedor" noshow="true" autoinc="true" esClave="true">
+                <label>Codigo</label>
+                <help>Codigo de relacion articulo/proveedor</help>
+            </field>
+            <field id="stkarticulo_id" oculto="true">
+                <label>Articulo</label>
+                <help>Codigo de Articulo</help>
+            </field>
+            <field id="regcuenta_id">
+                <label>Nro Proveedor</label>
+                <help>Codigo del Proveedor</help>
+                <helper type="combo" id="REG_CUENTA" empty="true">
+                    <field id="id_regcuenta"/>
+                    <field id="nombre_cuenta"/>
+                    <field id="subsistema_id">
+                        <condicion operador="=">01</condicion>
+                    </field>
+                    <order>
+                	<field id="nombre_cuenta"></field>
+                    </order>
+                </helper>
+            </field>
+            <field id="prv_articulo">
+                <label>Cod Articulo/proveedor</label>
+            </field>
+            <field id="compra_minima">
+                <label>Compra Mínima</label>
+            </field>
+								
+        </table>
+    </form>
+</histrix>

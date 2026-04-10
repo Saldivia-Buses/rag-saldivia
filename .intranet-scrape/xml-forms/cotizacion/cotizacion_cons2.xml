@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="consulta" _conBusqueda="true">
+       <title>COTIZACION</title>
+        <obs></obs>
+        <form  _detalle="cotizacion_abm.xml">
+        <table id="COTIZACION" label="COTIZACIONES">
+            <filters auto="true">
+
+                <field id="fecha" deshabilitado="false">
+                    <label modpos="nobr">Desde</label>
+                    <help>Fecha Cotización</help>
+                    <valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m")-2, 01, date("Y")))</valor>
+
+                <operador>&gt;=</operador>
+                </field>
+
+                <field id="fecha" deshabilitado="false">
+                    <label modpos="nobr">Hasta</label>
+                    <help>Fecha Cotización</help>
+                    <valor _eval="true">today</valor>
+                <operador>&lt;=</operador>
+                </field>
+
+                <field id="homologacion_id" deshabilitado="false">
+                    <label modpos="nobr">Homo</label>
+                    <help>Homologación</help>
+                <operador>=</operador>
+                </field>
+
+
+            </filters>
+   
+        <field id="idCotiz" autoinc="true" tipoOrden="DESC">
+            <label style="text-align:center;font-size:14px;">Nro Cotiz.</label>
+            <help>Número de Cotizacioón</help>
+            <attribute id="linkint">detalles</attribute>
+            <paring destino="idCotiz">idCotiz</paring>
+            <paring destino="homologacion_id">homologacion_id</paring>
+            <detalle>idCotiz</detalle>
+        </field>
+
+      <field id="crearn" _noshow="true" deshabilitado="true" autoinc="true" local="true" _linktab="true" linkdes="Nueva Ficha">
+            <label>Crear FV</label>
+            <expression>case when (select count(*) from PEDCOTIZ where PEDCOTIZ.id = ficha_id) = 0 then '>>>>>' else '' end</expression>           
+            <helper xml="configurador_ing.xml" type="link" dir="/producto/ing" >
+                <parameter source="homologacion_id" target="homologacion_id" />
+                <parameter source="idCotiz" target="cotizacion_id" />
+                <parameter source="ctacod" target="ctacod" />
+            </helper>
+      </field>
+
+      <field id="ctacod" noshow="true">
+          <label>Cuenta Cliente</label>
+          <detalle>ctacod</detalle>
+      </field>
+
+      <field id="homologacion_id" tabla="COTIZACION" noZero="true">
+            <label>Homol</label>
+            <helper type="combo" xml="combo_homologacion_modelo.xml" dir="/fabricacion" empty="true">
+            </helper>
+            <detalle>homologacion_id</detalle>
+        </field>
+
+            <field id="ficha_id"  noshow="true">
+                <label>id.</label>
+                <tipo>integer</tipo>
+            </field>
+
+           <field id="tieneFicha" noshow="true">
+                <expression>(case when ficha_id != 0 then 'ficha_producto1_qry.xml' else '' end)</expression>
+            </field>
+
+            <field id="nrofab" deshabilitado="true">
+                <expression>select PEDCOTIZ.nrocha from PEDCOTIZ where PEDCOTIZ.id = ficha_id</expression>
+                <label modpos="nobr" style="text-align:center;font-size:14px;">FT.</label>
+                <help>Número de Fabricación</help>
+                <attribute id="linkint">tieneFicha</attribute>
+                    <paring destino="nrocha">nrofab</paring>
+                <detalle>nrocha</detalle>
+                <helper type="link" xml="ficha_producto1_qry.xml" dir="/producto" modal="true" title="Ficha Técnica">
+                    <parameter source="ficha_id" target="producto_id"/>
+                    <parameter source="nrofab" target="nrofab"/>
+                </helper>
+            </field>
+
+        <field id="detalles" noshow="true">
+            <expression>case when ficha_id = 0 then ( case when COTIZACION.homologacion_id != 0 then 'cotizacion_imp_con_atributos.xml' else 'cotizacion_imp_SP.xml' end) else  'cotizacion_imp_acc.xml' end</expression>
+        </field>
+
+        <field id="encabezado" local="true">
+            <label>Encabe.</label>
+            <helper type="link" xml="cotizacion_abm.xml" title="Editar Encabezado">
+                <parameter source="idCotiz" target="idCotiz"/>
+            </helper>
+            <attribute id="linkdes">idCotiz</attribute>
+            <expression>case when ficha_id = 0 then ( case when COTIZACION.homologacion_id != 0 then '>>>>' else '>>>>' end) else '' end</expression>        
+        </field>
+
+        <field id="acces" local="true">
+            <label>Accesorios</label>
+            <helper type="link" xml="accesorios_coche_precio.xml" dir="/produccion/man/" title="Editar Adicionales">
+                <parameter source="idCotiz" target="cotizacion_id"/>
+            </helper>
+            <attribute id="linkdes">idCotiz</attribute>
+            <valor>>>>></valor>
+        </field>
+
+       <field id="consulta_cotizacion" noshow="true" local="true" print="false">
+       	<valor>'false'</valor>
+      </field>
+       <field id="consulta_cotizacion2" noshow="true" local="true" print="false">
+       	<valor>'1'</valor>
+      </field>
+      <field id="filtro_atributos" noshow="true" local="true" print="false">
+        <valor>1</valor>
+      </field>
+    <field id="atributos" local="true">
+	<label  size="25" posx="10" posy="+1" PDFsize="10">Atributos</label>
+	<helper xml="configurador_atributos_process_upd.xml" type="link" dir="/producto/ing">
+      <parameter source="homologacion_id" target="homologacion_id" />
+      <parameter source="idCotiz" target="cotizacion_id" />
+<!--      <parameter source="filtro_atributos" target="activo_cotizacion" /> -->
+<!--      <parameter source="consulta_cotizacion" target="consulta_cotizacion" /> -->
+<!--      <parameter source="consulta_cotizacion2" target="consulta_cotizacion2" /> -->
+	</helper>
+	<valor>'Atributos'</valor>
+    </field>
+
+            <field id="fecha">
+                <label modpos="nobr">Fecha</label>
+                <help>Fecha de Cotización</help>
+                <valor>today</valor>
+            </field>
+            
+            <field id="ctanom">
+                <label>Nombre</label>
+                <tipo>varchar</tipo>
+                <expression>case when COTIZACION.ctacod = 0 then LEFT(COTIZACION.ctanom, 25) else LEFT(CCTCUENT.ctanom, 25) end</expression>
+            </field>
+
+            <field id="ctacon" noshow="true">
+                <label>Contacto</label>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="ctafan" tabla="CCTCUENT" noshow="true">
+                <label>Emp</label>
+                <tipo>varchar</tipo>
+
+            </field>
+
+            <field id="mardes" tabla="MARCHASIS" PDFsize="12" noshow="true">
+                <expression>MODCHASIS.moddes</expression>
+                <label size="22" posx="5" posy="+2">Chasis</label>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="modas" noshow="true">
+                <label >Carroceria</label>
+
+                <expression>CONCAT(CARROCERIA.modcar, ' (',COTIZACION.asientos, ' As)')</expression>
+            </field>
+
+            <field id="idLista"  noZero="true">
+                <label>Lista</label>
+            </field>
+            <order>
+                <field id="idCotiz" tabla="COTIZACION"></field>
+            </order>
+
+        </table>
+
+        <join tipo="left">
+            <table id="CARROCERIA">
+                <field id="siscod" oculto="true">
+                    <condicion operador="=">'03'</condicion>
+                </field>
+                <field id="nrocar">
+                    <condicion operador="=">COTIZACION.modcar</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="MODCHASIS">
+                <field id="siscod" oculto="true">
+                    <condicion operador="=">'03'</condicion>
+                </field>
+                <field id="marcod">
+                    <condicion operador="=">COTIZACION.marcod</condicion>
+                </field>
+                <field id="modcha">
+                    <condicion operador="=">COTIZACION.modcha</condicion>
+                </field>
+            </table>
+        </join>
+        
+        <join tipo="left">
+            <table id="CCTCUENT">
+                <field id="ctacod">
+                    <condicion operador="=">COTIZACION.ctacod</condicion>
+                </field>
+                <field id="siscod">
+                    <condicion operador="=">'02'</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="TURNOSPRODUCCION">
+                <field id="idCotiz">
+                    <condicion operador="=">COTIZACION.idCotiz</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

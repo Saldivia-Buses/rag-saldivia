@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini"  subtipo="vertical" _ldap="true" >
+    <title>CONTACTOS</title>
+    <obs></obs>
+    <form >
+        <table id="CCTCONTA" label="Contactos">
+            <field id="siscod" oculto="true">
+                <label>Codigo Sistema </label>
+                <help>
+                </help>
+            </field>
+            <field id="idconta" autoinc="true" noshow="true">
+                <label>id</label>
+                <help>
+                </help>
+            </field>
+            <field id="ctacod" oculto="true">
+                <label>Cuenta</label>
+                <help>
+                </help>
+            </field>
+            <field id="nrocta" noshow="true">
+                 <expression having="false">ifnull(rc.nro_cuenta, CCTCONTA.ctacod)</expression>
+            </field>
+            <field id="nombre" ldifName="cn,sn">
+                <label>Nombre </label>
+                <help>Nombre del contacto</help>
+                 <size>18</size>
+            </field>
+	    <field id="dniconta">
+		<label>Nro.Doc</label>
+	    </field>
+            <field id="ctafan" local="true" deshabilitado="true" ldifName="o" noshow="true">
+                    
+            </field>
+            <field id="cargo">
+
+                <label>Cargo </label>
+                <help>Cargo </help>
+                <tabla_ex id="CARGOS">
+            
+                    <field id="cargo" clave="true"></field>
+                    <field id="nombre"></field>
+                    <order>
+                        <field id="nombre"></field>
+                    </order>
+                </tabla_ex>
+            </field>
+
+                <!--
+                <field id="cn" ldifName="cn" local="true" _noshow="true">
+                        <expresion>case when nombre != '' then nombre else ctafan end</expresion>
+
+                        <tipo>varchar</tipo>
+                </field>
+                <field id="sn" ldifName="sn" local="true" _noshow="true">
+                        <expresion>case when nombre != '' then nombre else ctafan end</expresion>
+
+                        <tipo>varchar</tipo>
+                </field> -->
+
+        
+
+            <field id="Telefono" ldifName="mobile">
+                <label>Telefono </label>
+                <help></help>
+                <size>12</size>
+            </field>
+            <!--
+			<field id="ctatel2" noshow="true">
+				<expresion>REPLACE(REPLACE(MID(Telefono, LOCATE(' ', Telefono) + 1), '-', ''), ' ', '')</expresion>
+				<label>ctatel2</label>
+			</field>
+			-->
+            <field id="interno" ldifName="mobile">
+                <label>Interno </label>
+                <size>5</size>
+            </field>
+
+            <field id="movil" >
+                <label>Celular</label>
+                <size>12</size>
+            </field>
+            <!--
+			<field id="llamadas" local="true" linkdes="Ultimas llamadas" >
+				<label modpos="nobr" Formstyle="display:none;">Llamadas</label>
+				<helper type="link" xml="tel_log_cdr_xcuenta_qry.xml" dir="/tel">
+					<parameter source="ctatel2" target="telefonos" operator="like"/>
+				</helper>
+				<valor>'Llamadas'</valor>
+			</field>
+			-->
+            <field id="mail" ldifName="mail" ldifKey="true">
+                <label>Mail </label>
+                <help>
+                </help>a
+                <size>30</size>
+                <tipo>email</tipo>
+            </field>
+
+<!--
+    	    <field id="password" >
+		<label>Password</label>
+		<tipo Type="password">varchar</tipo>
+	    </field> -->
+          <!--  <field id="notas">
+                <label>Notas </label>
+                <help></help>
+            </field>-->
+
+			<field id="fecha_cump">
+				<label>Cumpleaños</label>	
+				<tipo>date</tipo>
+			</field>
+
+            <field id="principal" conLabel="true">
+                <label>Principal</label>
+                <tipo>check</tipo>
+                <help></help>
+                                        
+            </field>
+            <field id="pagos"  conLabel="true">
+                <label>Pagos</label>
+                <tipo>check</tipo>
+                <help></help>
+                                        
+            </field>
+		<!--		
+			<field id="tel" noshow="true">
+				<expresion>IFNULL(REPLACE(REPLACE(REPLACE(Telefono, '-', ''), '*', ''), ' ', ''), '')</expresion>
+			</field>
+			<field id="cel" noshow="true">
+				<expresion>IFNULL(REPLACE(REPLACE(REPLACE(movil, '-', ''), '*', ''), ' ', ''), '')</expresion>
+			</field>
+		
+			<field id="ultimasLlamadas" local="true" linkint="tel_log_cdr_xcuenta_qry.xml" linkdir="/tel" linkdes="Ver">
+				<expresion>'Ver'</expresion>
+				<label>Ult. llamadas</label>-->
+	<!--			<paring destino="tel">tel</paring>
+				<paring destino="cel">cel</paring>
+			</field>
+			-->
+            <group>
+                <field id="idConta" />
+            </group>
+        </table>
+        <join tipo="left">
+            <table id="REG_CUENTA">
+                <field id="nro_cuenta">
+                    <condicion operador="=">CCTCONTA.ctacod</condicion>
+                </field><!--
+                <field id="subsistema_id">
+                    <condicion operador="=">CCTCONTA.siscod</condicion>
+                </field>-->
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="REG_CUENTA_RELACIONES">
+                <field id="regcuenta_id">
+                    <condicion operador="=">REG_CUENTA.id_regcuenta</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="REG_CUENTA" as="rc">
+                <field id="id_regcuenta">
+                    <condicion operador="=">REG_CUENTA_RELACIONES.regcuentarelacionada_id</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

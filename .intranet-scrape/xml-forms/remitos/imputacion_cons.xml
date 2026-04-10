@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8" ?>
+   <histrix tipo="consulta">
+       <title>Cuenta Corriente</title>
+        <obs></obs>
+<!--				<form  detalle="cctmovim_comp_prov.xml"> -->
+			<form  detalle="imputacion_ing.xml" >
+				<table id="CCTMOVIM" label="Movimientos" styleTbody="height:500px;">
+
+					<filters>
+						<field id="ctacod">
+							<operador>=</operador>
+							<label>Prov.</label>
+						</field>
+						
+						<field id="movfec">
+							<operador>&gt;=</operador>
+							<label>Desde Fecha</label>
+							<valor>today</valor>
+						</field>
+
+						<field id="movfec">
+							<operador>&lt;=</operador>
+							<label>Hasta Fecha</label>
+							<valor>today</valor>
+						</field>
+						
+					</filters>
+
+					<field id="siscod" oculto="true">
+						<label>Cod.</label>
+						<condicion operador="=">'01'</condicion>
+					</field>
+
+					<field id="ctacod">
+						<label>Proveedor</label>
+						<help>Código de Proveedor </help>
+						<ayuda_ex id="CCTCUENT" xml="HLPcctcuent.xml" dir="/help_local">
+							<field id="siscod" oculto="true">
+								<label>siscod</label>
+								<condicion operador="=">'01'</condicion>
+							</field>
+							<field id="ctacod">
+								<label>Nro</label>
+							</field>
+							<field id="ctanom">
+								<label>Nombre</label>
+								<detalle>ctanom</detalle>
+							</field>
+							<clave>ctacod</clave>
+							<descripcion>ctanom</descripcion>
+						</ayuda_ex>
+						<tipo>decimal</tipo>
+						<detalle>ctacod</detalle>
+					</field>
+
+					<field id="ctanom" deshabilitado="true">
+						<label colspan="3" modpos="nobr" nolabel="true">Nombre</label>
+						<tipo>varchar</tipo>
+	<!--					<detalle>ctanom</detalle> -->
+					</field>
+
+							<!--		        <condicion operador="=">20</condicion>
+							-->
+						<field id="concod" noshow="true">
+							<label>concod</label>
+							<condicion operador="=">1</condicion>
+							<detalle>concod</detalle>
+						</field>
+
+						<field id="movnpv">
+							<label>P.V.</label>
+							<help> Punto Venta</help>
+							<format>%04d</format>
+							<detalle>movnpv</detalle>
+						</field>
+
+						<field id="movnro"> <!-- linkint="factura_detalle.xml" linkdes="Ver Detalle del Comprobante">-->
+							<label>Número</label>
+							<help> Número Comprobante</help>
+							<format>%12d</format>
+							<detalle>movnro</detalle>
+						</field>
+
+						<field id="concepto">
+							<expression>condes</expression>
+							<label>Cod.Concepto</label>
+							<tipo>string</tipo>
+							<!--		      <tabla_ex id="CCTCONCE">
+							<field id="concod"></field>
+							<field id="condes"></field>
+							</tabla_ex>
+							-->
+						</field>
+
+						<field id="regmin" oculto="true">
+							<label>Minuta</label>
+						</field>						
+			            
+						<field id="movfec">
+							<label>Fecha </label>
+							<detalle>movfec</detalle>
+						</field>
+
+						<!--          <field id="movvto">
+						<label>Venc. </label>
+						<help> </help>
+						</field>
+						-->
+						<field id="Debe" suma="true">
+							<expression>movimp * (case when conimp = 1 then 1 else 0 end)</expression>
+							<label>Debe</label>
+						</field>
+
+						<field id="Haber" suma="true" link_int="cctmovim_comp.xml" linkdes="Ver Recibo">
+							<expression>movimp * (case when conimp = 2 then 1 else 0 end)</expression>
+							<label>Haber</label>
+						<!-- <paring destino="siscod">siscod</paring>							-->
+							<paring destino="movnro">movnro</paring>
+							<paring destino="carrec">movnro</paring>
+							<paring destino="cajnro">movnro</paring>
+							<paring destino="movinc">movnro</paring>
+							<paring destino="movnpv">movnpv</paring>
+							<paring destino="ctacod">ctacod</paring>
+							<paring destino="movfec">movfec</paring>
+							<paring destino="cajfec">movfec</paring>
+						</field>
+
+						<field id="movsal" suma="true">
+							<label>Saldo</label>
+							<tipo>numeric</tipo>
+						</field>
+
+						<order>
+							<field id="movfec"></field>
+						</order>
+					</table>
+
+					<join tipo="left">
+						<table id="CCTCONCE">
+							<field id="siscod" oculto="true">
+								<label>cctcuent.siscod</label>
+								<condicion operador="=">
+									CCTMOVIM.siscod</condicion>
+							</field>
+
+							<field id="concod" oculto="true">
+								<condicion operador="=">
+									CCTMOVIM.concod</condicion>
+							</field>
+
+							<field id="condes" oculto="true">
+							</field>
+
+						</table>
+					</join>
+				</form>
+        </histrix>

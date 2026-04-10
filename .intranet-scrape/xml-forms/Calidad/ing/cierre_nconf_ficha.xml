@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="fichaing" borra="false" inserta="false" modifica="false" preFetch="true">
+    <title>Cierre de No Conformidad</title>
+    <obs></obs>
+    <form >
+        <table id="CAL_NOCONFORMIDADES" >
+            <title>Estados</title>
+                       
+	        <movimientos>
+        	 <relacion id="noconformidad_update.xml" /> 
+            </movimientos>
+                           
+
+            <fieldGroup deshabilitado="true" >
+                <field id="id_noconformidad" >
+                    <label modpos="nobr">Número</label>
+                    <help>Número de No conformidad</help>
+
+                </field>
+                <field id="fecha_nconf" >
+                    <label modpos="nobr" >Fecha</label>
+                    <help>Fecha de No conformidad</help>
+                </field>
+                <field id="fecha_cierrenconf"  deshabilitado="false">
+                    <label  >Fecha Cierre</label>
+                    <help>Fecha de Cierre</help>
+                    <valor>today</valor>
+                    <tipo>date</tipo>
+                </field>
+                <field id="nuevoestadonconf_id" local="true" deshabilitado="false">
+                    <helper xml="calestadosnconf_crud.xml" type="combo" dir="/calidad/man" _empty="true">
+                            <field id="tipo_estadonconf">
+                                    <condicion operador="=">1</condicion>
+                            </field>
+                    </helper>
+                    <detalle>nuevoestadonconf_id</detalle>
+                    <label>Estado</label>
+                    <help>Estado de la No conformidad</help>
+                </field>
+				<field id="regcuenta_id" _noshow="true" deshabilitado="false">
+					<label>Cuenta</label>
+					<helper type="external" xml="regcuenta_autocomplete_qry.xml" dir="/help_local"/>
+				</field>
+				<field id="origennconf_id">
+                    <helper xml="calorigennconf_qry.xml" type="combo" dir="/help_local" empty="true"/>
+                    <label modpos="nobr">Origen</label>
+                    <help>Origen de la No conformidad</help>
+                </field>
+                        
+                <field id="rhseccion_id">
+                    <helper xml="rhseccion_qry.xml" type="combo" dir="/help_local" empty="true" />
+                    <label modpos="nobr">Sección</label>
+                    <help>Sección de la No conformidad</help>
+                </field>
+                <field id="stkarticulo_id" deshabilitado="true">
+			        <label >Artículo</label>
+				</field>
+				<field id="stkarticulo_nombre" local="true" autocompletar="true" valid="true" deshabilitado="false">
+					<label colspan="3">Nombre Artículo</label>
+					<helper type="external" xml="stkarticulo_autocomplete_qry.xml" dir="/help_local"/> 
+			        <size>60</size>
+                </field>                   
+                <field id="descripcion_nconf" deshabilitado="false">
+                    <label colspan="5">Descripción</label>
+                    <help>Descripción de la no conformidad</help>
+                    <size>200</size>
+                </field>
+                <field id="contencion_nconf" deshabilitado="false">
+                    <label colspan="5">Acción de contención</label>
+                    <help>Acción de Contención ante la no conformidad</help>
+                    <size>200</size>
+                </field>
+			
+            </fieldGroup>
+            <fieldGroup>
+                <field id="causa_nconf">
+                    <label colspan="5">Causa Raíz</label>
+                    <help>Causa Raíz de la no conformidad</help>
+                    <size>200</size>
+                </field>
+                <field id="acciones_nconf" local="true">
+                    <label colspan="5">Acciones Realizadas</label>
+                    <help>Acciones Correctivas / Preventivas</help>
+                    <helper xml="cierre_nconf_grid.xml" type="object" dir="/calidad/ing" >
+                        <parameter source="id_noconformidad" target="noconformidad_id" />
+                    </helper>
+                </field>
+            </fieldGroup>
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" grabafinal="true">
+	<title>Movimientos</title>
+	<obs></obs>
+	<form>
+		<table id="CTB_MOVIMIENTOS" idCampoCond="graba">
+			<field id="id_movimiento" esClave="true" id_temp="id_movimiento" />
+			<field id="concepto_id" id_temp="valor">
+				<valor>1</valor>
+			</field>
+		</table>
+	</form>
+</histrix>

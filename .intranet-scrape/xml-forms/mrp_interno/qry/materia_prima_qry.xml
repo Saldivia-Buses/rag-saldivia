@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="consulta"    >
+		<title>FORMACION DE PRODUCTO</title>
+        <obs></obs>
+               <form  >
+                  <table id="STKPIEZA" label="Piezas">
+
+                  <field id="idPadre" noshow="true">
+                      <label>padre</label>
+                      <help>Nombre del Articulo al que pertenece </help>
+	             <condicion operador="=">-1</condicion>
+
+                  </field>
+                  <field id="articulo_hijo" >
+                      <label>Codigo de Pieza</label>
+                      <help>Codigo del Articulo</help>
+					  <detalle>idPadre</detalle>					  
+                  </field>
+                  <field id="artdes" tabla="STKINSUM">
+                      <label>Nombre </label>
+                      <help>Nombre de la Pieza </help>
+			  <tipo>varchar</tipo>
+                  </field>
+
+                  <field id="cantidad" noshow="true">
+                  </field>
+
+                  <field id="cant_prod" local="true" noshow="true">
+                	<valor>0</valor>
+                	<tipo>decimal</tipo>
+                  </field>
+                  <field id="cant_total" >
+                	<label>Requerido</label>
+                	<expression>[__cant_prod__] * cantidad</expression>
+                  </field>
+		  <field id="unidad">
+		    <expression>nombre_unidad</expression>
+		  </field>
+		  
+                  </table>
+					<join tipo="left">
+						<table id="STKINSUM">
+							<field id="siscod" oculto="true">
+								<condicion operador="=">'01'</condicion>
+							</field>
+							<field id="artcod">
+								<condicion operador="=">STKPIEZA.articulo_hijo</condicion>
+							</field>
+							
+						</table>
+					</join>				   
+					<join tipo="left">
+						<table id="GEN_UNIDADES">
+							<field id="id_unidad">
+								<condicion operador="=">STKINSUM.artuni</condicion>
+							</field>
+							
+						</table>
+					</join>				   
+               </form>
+        </histrix>

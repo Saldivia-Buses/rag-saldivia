@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+    <title>PEDIDOS</title>
+    <obs></obs>
+    <form  >
+        <table id="CPSMOVIM" label="DETALLE">
+            <field id="siscod" oculto="true">
+                <label>Codigo Sis </label>
+                <condicion operador='='>''</condicion>
+            </field>
+            <field id="ocpnro" oculto="true">
+            </field>
+            
+            <field id="idPed" deshabilitado="true" _noshow="true" >
+        	<helper type="link" xml="pedidoint_qry.xml" dir="/pedidoint">
+        	    <parameter source="idPed" target="idPed" />
+        	</helper>
+            </field>
+			
+    </table>
+    </form>
+</histrix>

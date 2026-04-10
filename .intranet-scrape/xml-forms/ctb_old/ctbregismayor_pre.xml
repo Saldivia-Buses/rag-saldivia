@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<histrix tipo="consulta">
+	<title>Minutas</title>
+	<obs></obs>
+	<form >
+		<table id="CTBREGIS" label="Minutas">
+
+		<field id="siscod" oculto="true">
+			<label>siscod</label>
+			<help> Cod sistema</help>
+<!-- 				<condicion operador="=">'10'</condicion>
+ -->		</field>
+		
+		<field id="idcos" modpos="nobr">
+			<!-- <expression having="false">CTB_DETALLES.ctbcentro_id</expression> -->
+			<label>Centro de costos</label>
+			<helper id="CTB_CENTROS"  type="combo" empty="true" >
+				<field id="id_ctbcentro" />
+				<field id="centro">
+					<expression>concat(referencia_centro,' ', nombre_centro)</expression>
+				</field> 
+			</helper>
+		</field>
+		
+		<field id="regmin">
+			<label>Minuta </label>
+			<help>Numero de Asiento </help>
+		</field>
+
+		<field id="regfec">
+			<label>Fecha </label>
+			<help></help>
+		</field>
+
+		<field id="regfec_desde" local="true" noshow="true">
+			<label>desde</label>
+			<tipo>date</tipo>
+		</field>
+
+		<field id="regfec_hasta" local="true" noshow="true">
+			<label>hasta</label>
+			<tipo>date</tipo>
+		</field>
+		
+		<field id="ctbcod">
+			<label>Cuenta</label>
+			<!--
+			<ayuda_ex id="CTBCUENT" xml="HLPctbcuent.xml" dir="/help_local">
+				<field id="ctbcod">
+				</field>
+				<field id="ctbnom">
+				</field>
+				<field id="siscod" oculto="true">
+					<condicion operador="=">'10'</condicion>
+				</field>
+			</ayuda_ex>			-->
+			<condicion operador="&lt;=">'[__ctbcod_hasta__]' and CTBREGIS.ctbcod &gt;= '[__ctbcod_desde__]'</condicion>	
+		</field>
+			
+			<field id="ctbcod_desde" local="true" noshow="true">
+				<label>ctbdesde</label>
+			<!--	<ayuda_ex id="CTBCUENT" xml="HLPctbcuent.xml" dir="/help_local">
+					<field id="ctbcod">
+					</field>
+					<field id="ctbnom">
+					</field>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'10'</condicion>
+					</field>
+				</ayuda_ex>	 -->
+			</field>
+
+			<field id="ctbcod_hasta" local="true" noshow="true">
+				<label>ctbhasta</label>
+<!--				<ayuda_ex id="CTBCUENT" xml="HLPctbcuent.xml" dir="/help_local">
+					<field id="ctbcod">
+					</field>
+					<field id="ctbnom">
+					</field>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'10'</condicion>
+					</field>
+				</ayuda_ex>	
+-->
+			</field>
+
+			<field id="nombre_cuenta" tabla="CTB_CUENTAS">
+				<label>Nombre</label>
+				<expression>''</expression>
+				<help>Código de Cuenta Contable</help>
+				<tipo>string</tipo>
+			</field>
+			
+			<field id="regref">
+				<expression>''</expression>
+				<label>Referencia</label>
+				<help>Referencia</help>
+			</field>
+
+			<field id="comprobante">
+				<expression>'SALDO INICIAL'</expression>
+				<label>Comprobante</label>
+			</field>
+			<!--                  <field id="regtip" oculto="true">
+			<label>Cod.Comp.</label>
+			<help>Codigo de Comprobante </help>
+			</field>
+			-->
+			<field id="debe" suma="true">
+				<expression>sum(regimp * (case when regdoh = 1 then 1 else 0	end))</expression>
+				
+				<label>Debe</label>
+				<help>Importe del Movimiento en el Debe</help>
+			</field>
+			
+			<field id="haber" suma="true">
+				<expression>sum(regimp * (case when regdoh = 2 then 1 else 0	end))</expression>
+				<label>Haber</label>
+				<help>Importe del Movimiento en el Haber</help>
+			</field>
+	
+			<field id="dif" _suma="true" local="true" _acumula="true" >
+				<expression> sum(regimp * (case when regdoh = 1 then 1 else 0	end)) - sum(regimp * (case when regdoh = 2 then 1 else 0	end))</expression>
+				<label>Saldo</label>
+				<help>Importe del Movimiento en el Haber</help>
+			</field>
+
+			<field id="difacum" local="true" acumula="true" suma="true">
+			    <if exp="true">
+		                <true>(dif + 0)</true>
+                		<false>(dif + 0)</false>
+                            </if>
+	                    <label>Acum</label>
+                        </field>
+                            
+			<field id="color" clasefila="true" local="true" noshow="true">
+				<valor>resaltado</valor>
+			</field>
+
+			<order>
+				<field id="regfec"></field>
+			
+			</order>
+			
+		</table>
+		<join tipo="left">
+			<table id="CTB_CUENTAS">
+
+				<field id="ejercicio_id" oculto="true">
+					<condicion operador="=">CTBREGIS.siscod</condicion>
+				</field>
+				
+				<field id="id_cuenta" oculto="true">
+					<condicion operador="=">CTBREGIS.ctbcod</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="REG_MOVIMIENTOS">
+				<field id="nro_movimiento" oculto="true">
+					<condicion operador="=">CTBREGIS.regnro</condicion>
+				</field>
+				<field id="regmin" oculto="true">
+					<condicion operador="=">CTBREGIS.regmin</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="REG_CONCEPTOS">
+				<field id="id_concepto" oculto="true">
+					<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+				</field>
+			</table>
+		</join>
+
+	</form>
+</histrix>

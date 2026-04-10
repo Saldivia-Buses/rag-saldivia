@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="list" subtipo="vertical">
+  <title>Art Observaciones</title>
+  <obs/>
+  <form>
+    <table id="REG_CUENTA_OBSERVACIONES" label="Articulos Consumidos">
+
+      <field id="id_regobservacion" autoinc="true" noshow="true"/>
+
+      <field id="regcuenta_id" noshow="true" valauto="true">
+        <!--
+        <condicion operador="=">-1</condicion>
+      -->
+      </field>
+
+      <field id="regtipobs_id" noshow="true" _valauto="true">
+          <valor>2</valor> 
+          <condicion operador="=">2</condicion> 
+      </field>
+<!--
+      <field id="fecha_observacion" noshow="true">
+        <label>Fecha</label>
+        <help>Fecha</help>
+        <valor>today</valor>
+        <tipo>date</tipo>
+      </field>
+-->
+      <field id="codigo_articulo">
+        <label>Cod Art</label>
+        <help>Articulo que consume</help>
+        <helper type="external" xml="stkarticulo_qry2.xml" dir="/ayudas">
+          
+          <field id="id_stkarticulo" />
+          <field id="nombre_articulo">
+            <detalle>texto_observacion</detalle>
+          </field>
+          
+          <order>
+            <field id="nombre_articulo" tabla="STK_ARTICULOS" />
+          </order>
+        </helper>
+      </field>
+
+      <field id="texto_observacion">
+        <label>Nombre Art</label>
+        <help>Nombre articulo que consume</help>
+        <size>200</size>
+      </field>
+
+      <field id="cantidad">
+        <label>Cantidad</label>
+        <help>Cantidad que consume</help>
+      </field>
+
+      
+      <field id="precio">
+        <label>Precio</label>
+        <help>Precio al que compra</help>
+    </field>
+
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Personal</title>
+  <obs></obs>
+  <form>
+    <table id="RH_PERSONAL" label="Personal">
+      <field id="id_rhpersonal" noshow="true">
+        <label>Codigo</label>
+        <help>Código Empleado</help>
+      </field>
+
+      <field id="NomApe" >
+        <label>Nombre </label>
+        <help>Nombre de empleado </help>
+		<expresion>concat(nombre_personal," ",apellido_personal)</expresion>
+      </field>
+      <field id="nombre_personal" />
+
+      <order>
+          <field id="nombre_personal" />
+      </order>
+    </table>
+  </form>
+</histrix>  

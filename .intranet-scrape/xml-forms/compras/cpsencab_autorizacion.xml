@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" inserta="no" paginar="150">
+    <title>REIMPRESION DE ORDENES DE COMPRA</title>
+    <obs></obs>
+    <form  >
+        <table id="CPSENCAB" label="ORDENES DE COMPRA">
+            <movimientos>
+                <relacion id="cpsencab_autorizacion_update.xml"></relacion>
+            </movimientos>
+	    <filters>
+		<field id="ocpest">
+		    <label>Estado</label>
+		    <operador>=</operador>
+		    <valor>0</valor>
+		</field>
+	    </filters>
+            <field id="siscod" oculto="true">
+                <label>Codigo Sistema.. </label>
+                <help>
+                </help>
+                <detalle>CPSMOVIM.siscod</detalle>
+            </field>
+
+
+            <field id="ocpfec" tipoOrden="DESC" deshabilitado="true">
+                <label>Fecha</label>
+                <help>Fecha de Orden de Compra. </help>
+                <detalle>ocpfec</detalle>
+            </field>
+            <field id="ctacod" deshabilitado="true">
+                <label>Cod</label>
+            </field>
+
+            <field id="ctanom" tabla="CCTCUENT" deshabilitado="true">
+                    <label>Proveedor</label>
+            </field>
+            <field id="ocpnro" deshabilitado="true">
+                <helper type="link" xml="cpsencab_cabreimp.xml">
+                        <parameter source="ocpnro" target="ocpnro" />
+                        <parameter source="ctacod" target="ctacod" />
+                </helper>
+                <label>Nro</label>
+                <help>Numero de Orden de Compra. </help>
+                <detalle>ocpnro</detalle>
+            </field>
+           <field id="fpago" >
+                   <label size="23" colspan="4" posx="6" posy="+1" PDFsize="11">F.Pago</label>
+                   <help>Forma de Pago</help>
+                  <helper type="combo" xml="HLPformapago_qry.xml" dir="/ayudas_local" empty="true"/>
+           </field>
+
+
+
+
+            <!--
+            <field id="ocpimp" suma="true">
+                <label>Monto </label>
+                <help> Monto de la Orden de compra</help>
+            </field>
+            -->
+            <field id="ocpest"  >
+                <label>Estado </label>
+                <help>Estado Actual</help>
+                <options>
+                    <option valor="0">No Autorizada</option>
+                    <option valor="1">Autorizada</option>
+		    <option valor="2">Cumplida</option>
+                    <option valor="3">Parcial</option>
+                    <option valor="4">Anulada</option>
+                </options>
+                
+<!--                 <condicion operador="=">0</condicion> -->
+
+
+            </field>
+            <field id="color" noshow="true" clasefila="true">
+            <expression>(case when ocpest != 0 then 'grisado' end)</expression>
+            </field>
+            
+            <field id="fecha_autorizado" local="true" >
+                <valor>today</valor>
+                <tipo>date</tipo>
+            </field>
+            <field id="moneda_id">
+                <expression>min(moneda_id)</expression>
+                <label modpos="nobr">Moneda</label>
+             <!--    <expression>select descripcion_moneda from STK_COSTO_REPOSICION where moneda_id</expression> -->
+                <helper type="combo" xml="moneda_qry.xml" dir="/ayudas" >
+                     <field id="id_moneda"/>
+                    <field id="descripcion_moneda"/> 
+                </helper>
+            </field>
+
+            <field id="Neto" suma="true">
+                <label>Neto</label>
+                <expression>sum(importe_total) - sum(importe_iva)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>            
+            <field id="Iva" suma="true">
+                <label>Iva</label>
+                <expression>sum(importe_iva)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>            
+            <field id="total" suma="true">
+                <label>Total</label>
+                <expression>sum(importe_total)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+	    <field id="usuarios">
+		<label>Solicitó</label>
+		<expression>group_concat(DISTINCT concat(Nombre, ' ', apellido), ' ')</expression>
+	    </field>
+            <group>
+                <field id="ocpnro"></field>
+            </group>
+            <order>
+                <field id="ocpfec"></field>
+            </order>
+        </table>
+
+
+        <join tipo="left">
+
+            <table id="CCTCUENT">
+                <field id="siscod" oculto="true">
+                    <label>cctcuent.siscoc</label>
+                    <condicion operador="=">'01'</condicion>
+
+                </field>
+
+                <field id="ctacod" oculto="true">
+                    <condicion operador="=">CPSENCAB.ctacod</condicion>
+                </field>
+
+                <field id="ctanom" oculto="true">
+                </field>
+            </table>
+        </join>
+
+
+        <join tipo="left">
+
+            <table id="CPSMOVIM">
+                <field id="ocpnro" oculto="true">
+                    <condicion operador="=">CPSENCAB.ocpnro</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="PEDIDOINT">
+                <field id="idPed" oculto="true">
+                    <condicion operador="=">CPSMOVIM.idPed</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="HTXUSERS">
+                <field id="login">
+                    <condicion operador="=">PEDIDOINT.usuario</condicion>
+                </field>
+            </table>
+        </join>
+
+
+    </form>
+</histrix>

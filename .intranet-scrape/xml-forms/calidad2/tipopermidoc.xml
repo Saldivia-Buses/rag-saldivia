@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+        <title>TIPOS PERMISOS DE DOCUMENTOS</title>
+        <obs></obs>
+        <form>
+                <table id="TIPOPERMI" >
+                    <title>Tipos de Permisos</title>
+                                        
+                        <campo id="Id_permi">
+                                <label>Tipo</label>
+                                <help>Codigo de Permiso</help>
+                        </campo>
+                        
+                        <campo id="nombre">
+                                <label>Nombre</label>
+                                <help>Nombre de Permiso</help>
+                        </campo>
+    
+                        <campo id="descripcion">
+                                <label>Descripcion</label>
+                                <help>Descripcion de Permiso</help>
+                        </campo>
+                        
+                                    
+                </table>
+        </form>           
+</histrix>

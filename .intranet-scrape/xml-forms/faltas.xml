@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>FALTAS</title>
+	<obs></obs>
+	<form >
+		<table id="FALTAS" >
+			<title>Tabla de Faltas</title>
+			<field id="faltas">
+				<label>Cantidad de Faltas</label>
+				<help>Cantidad de Faltas</help>
+			</field>
+			<field id="porcentaje">
+				<label>Porcentaje</label>
+				<help>Porcentaje</help>
+			</field>
+			
+		</table>
+	</form>	   
+</histrix> 

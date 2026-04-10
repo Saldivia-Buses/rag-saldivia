@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="cabecera" graba="true">
+	<title>REMITO</title>
+	<obs></obs>
+	<form >
+		 <validation>
+		     <condition><![CDATA[ remnro == 0 ]]></condition>
+		     <message>Ingrese nro de remito</message>
+		 </validation>
+		 <validation>
+		     <condition><![CDATA[ remnpv == 0 ]]></condition>
+		     <message>Ingrese Npv</message>
+		 </validation>
+		
+		<table id="FACREMIT" label="REMITO" graba="true">
+
+
+		
+			
+			
+			<field id="ocpnro"  >
+				<label >O.Compra</label>
+				<help>Numero de Orden de Compra</help>
+				<size>10</size>
+
+				<ayuda_ex id="CPSENCAB">
+					<field id="ocpnro" />
+
+					<field id="ocprnro2">
+					    <expression>ocpnro</expression>
+					</field>
+
+					<field id="ctacod">
+						<label>Prov</label>
+						<detalle>ctacod</detalle>
+					</field>
+					<field id="ocpfec">
+						<expression>date_format(ocpfec, "%d/%m/%Y")</expression>
+						<label>Fecha</label>
+						<detalle>ocpfec</detalle>
+						<detalle>movfec</detalle>
+						<tipo>date</tipo>
+					</field>
+					<field id="remnro" noshow="true">
+						<expression>SELECT remnro FROM FACREMIT WHERE ctacod = CPSENCAB.ctacod ORDER BY remfec desc LIMIT 1</expression>
+						<detalle>remnro</detalle>
+						<label>NRem</label>
+					</field>
+					<field id="remnpv" noshow="true">
+						<expression>SELECT remnpv FROM FACREMIT WHERE ctacod = CPSENCAB.ctacod ORDER BY remfec desc LIMIT 1</expression>
+						<detalle>remnpv</detalle>
+						<label>Nnpv</label>
+					</field>
+					<field id="remfec" noshow="true">
+						<expression>SELECT date_format(remfec, "%d/%m/%Y") FROM FACREMIT WHERE ctacod = CPSENCAB.ctacod ORDER BY remfec desc LIMIT 1</expression>
+						<detalle>remfec</detalle>
+						<label>RemFec</label>
+					</field>
+
+					<!--
+					<field id="siscod" oculto="true">
+						<label>siscod</label>
+						<condicion operador="=">'01'</condicion>
+					</field>					
+					<clave>ctacod</clave>
+					<descripcion>nombre</descripcion>
+					    -->
+				</ayuda_ex>		
+               	<actualiza>
+					<field id="pedidos" destino="ocpnro" />
+				</actualiza>       
+				<jseval campodestino="ocpnro" xml="recepcion_ing">ocpnro</jseval>
+				<jsfunction event="onchange">filtracampos('FFormrecepcion_ing_xml','recepcion_ing.xml');</jsfunction>
+				      
+			</field>
+		
+			<field id="ctacod" _oculto="true" deshabilitado="false">
+				<label modpos="nobr">Proveedor</label>
+				<ayuda_ex id="CCTCUENT" _xml="HLPcctcuent.xml" dir="/help_local">
+					<field id="ctacod">
+						<label>Nro</label>
+					</field>
+					<field id="nombre">
+						<expression>ctanom</expression>
+						<label>Nombre</label>						
+						<detalle>ctanom</detalle>	
+						<tipo>varchar</tipo>					
+					</field>
+					<field id="siscod" oculto="true">
+						<label>siscod</label>
+						<condicion operador="=">'01'</condicion>
+					</field>					
+					<clave>ctacod</clave>
+					<descripcion>nombre</descripcion>
+					
+				</ayuda_ex>		
+
+								
+				<help>Codigo de Cuenta</help>
+			</field>
+		
+		
+			<field id="ctanom" local="true" deshabilitado="true" sincelda="true">
+				<label modpos="nobr"></label>
+				<help>Nombre del proveedor</help>
+			</field>
+			
+			<field id="ocpfec"  deshabilitado="true">
+				<label modpos="nobr">Fecha O.C</label>
+				<help>Fecha O.C.</help>
+				<tipo>date</tipo>
+			</field>
+			<field id="dos" local="true" oculto="true">
+				<valor>2</valor>
+			</field>				
+			<field id="remfec">
+				<label >Fecha Remito</label>
+				<help>Fecha de Remito</help>
+				<valor>today</valor>
+			</field>			
+			<field id="remnpv">
+				<label modpos="nobr">Npv</label>
+				<help>Punto de Venta</help>
+				<format>%04d</format>
+			</field>
+			<field id="remnro" min="1">
+				<label modpos="nobr">Numero</label>
+				<help>Numero de Remito</help>
+				<detalle>movnro</detalle>
+				<format>%010d</format> 
+			</field>
+
+			<field id="movfec__1">
+				<label>Fecha Recepcion</label>
+				<help>Fecha de Recepcion</help>
+				<tipo>date</tipo>
+				<valor>today</valor>				
+			</field>		
+			<field id="forzarCump" local="true" _refresh="true">
+				<label modpos="nobr">Marcar Como Cumplida</label>
+				<tipo>check</tipo>              	 
+			</field>		
+
+            <field id="pedidos" local="true"  showObjTabla="true">
+				<helper type="object" xml="cpsmovim_pedidos_noTabs.xml">
+					<parameter source="ocpnro" target="ocpnro" />
+				</helper>
+                <label colspan="4">Pedidos  </label>
+            </field>
+		
+		</table>
+
+	</form>
+</histrix>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" subtipo="vertical" _preloadData="false">
+  <title>Monedas Valores</title>
+  <obs/>
+  <form>
+    <table id="GEN_MONEDA_VALORES" label="Valores por Moneda">
+
+      <field id="id_monedavalor" autoinc="true" noshow="true"/>
+
+      <field id="genmoneda_id" esClave="true" noshow="true" />
+
+      <field id="descripcion_valor">
+        <label>Tipo</label>
+        <helper type="combo">
+           <option value="Billete">Billete</option>
+           <option value="Moneda">Moneda</option>
+        </helper>
+      </field>
+      <field id="moneda_valor">
+        <label>Valor</label>
+      </field>
+    </table>
+  </form>
+</histrix>

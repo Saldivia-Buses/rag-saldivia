@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" >
+  <title>Numerador Remitos</title>
+  <obs />
+  <form>
+    <table id="REG_NUMERADORES">
+<!--		<field id="regconcepto_id" oculto="true" esClave="true"/> -->
+
+			<field id="Remito_Concepto_id" noshow="true" esClave="true">
+	    			<expression having="false" >regconcepto_id</expression>
+                            <condicion>47</condicion>
+
+			</field>
+			
+		<field id="Remito_Puesto"         oculto="true" esClave="true">
+			<expression>puesto</expression>
+		</field>
+		
+		<field id="Remito_letra"          esClave="true">
+			<expression having="false">letra</expression>
+			<condicion operador="=">'X'</condicion>
+		</field>
+		<field id="forzando" local="true" /> // Para forzar  la busqueda desde el regcuenta
+		<field id="printer">
+		</field>
+		<field id="impresion">
+			<expression>ejecuta</expression>
+		</field>
+
+    </table>
+  </form>
+</histrix>

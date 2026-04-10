@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<abm tipo="insert" imprime="false" >
+		<titulo>OTROS</titulo>
+		<obs></obs>
+		<consulta>
+			<tabla id="COTIZOTROS">
+				<campo id="idCotiz" id_padre="NewCotiz">
+				</campo>
+				<campo id="idSeccion" id_temp="idSeccion">
+				</campo>
+				<campo id="descripcion" id_temp="descripcion">
+				</campo>
+			</tabla>
+		</consulta>
+	</abm>

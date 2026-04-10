@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="crud">
+	<title>Tarjetas Rfid</title>
+	<obs></obs>
+	<form >
+		<table id="RFID_TARJETAS" >
+		    <title>Tarjetas Rfid</title>
+			<field id="id_rfid_tarjeta" noshow="true" esClave="true">
+				<label>Codigo</label>
+			</field>
+			<field id="numero_rfid" required="true">
+                <tipo>integer</tipo>
+				<label>Número</label>
+				<help>Número Tarjeta Rfid</help>
+			</field>
+			<field id="activo">
+				<label>Activo</label>
+				<options>
+					<option valor="1">Si</option>
+					<option valor="0">No</option>
+				</options>
+			</field>
+
+        </table>
+	</form>	   
+</histrix> 

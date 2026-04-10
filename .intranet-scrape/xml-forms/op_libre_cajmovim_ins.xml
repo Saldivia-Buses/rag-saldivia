@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="insert" >
+       <title>COMPROBANTES</title>
+        <obs></obs>
+               <form >
+					<table id="CAJMOVIM" label="movimientos de caja">
+						<field id="siscod" id_cab="siscaj"></field>
+						<field id="cajfec" id_cab="movfec"></field>
+						<field id="succod" >
+							<valor>1</valor>
+						</field>
+<!--						<field id="cajnpv" id_padre=""></field> -->
+						<field id="cajcod" id_temp="cajcod" ></field>
+						<field id="cajnro" id_cab="movnroOP"></field>
+						<field id="cajimp" id_temp="cajimp"></field>
+						<field id="concod" id_temp="cajconce"></field>
+						<field id="opecla" id_cab="opecla"></field>
+						<field id="cajcta">
+							<valor>0</valor>
+						</field>
+						
+					</table>
+               </form>
+        </histrix>

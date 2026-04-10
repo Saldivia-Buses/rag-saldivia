@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+    <title>MOVIMIENTOS DE orden compras</title>
+    <obs></obs>
+    <form >
+        <table id="PEDIDOINT" label="MOVIMIENTOS" >
+            <field id="usuario" 	id_cab="_usu"></field>
+            <field id="artcod" 		id_temp="id_stkarticulo"></field>
+            <field id="tipocomp">
+		    <valor>1</valor>
+	    </field>
+
+            <field id="fechaemi" >
+		<valor>now()</valor>
+		<tipo>integer</tipo>
+	    </field>
+
+            <field id="puesto" 		id_cab="puesto">
+		    <valor>1</valor>
+	    </field>
+            <field id="nrocom" 	>
+		<expression>(select parent from FSMPARAM where parcla = 'pednro' limit 1)</expression>
+	    </field>
+            <field id="renglon" >
+		    <valor>1</valor>
+	    </field>
+            <field id="fecreq"	 	id_temp="fecreq"></field>
+
+            <field id="cant"	 	id_temp="lote_compra"></field>
+            <field id="unimed"	 	id_temp="unidad_compra_id"></field>
+	    <!--
+            <field id="nrofab"	 	id_cab="nrofab"></field>
+	    -->
+            <field id="codprv"	 	id_temp="nro_cuenta"></field>
+
+            <field id="artuni"	 	id_temp="unidad_uso_id"></field>
+            <field id="unicps"	 	id_temp="unidad_compra_id"></field>
+            <field id="movuso"	 	id_temp="lote_optimo"></field>
+            <field id="movcps"	 	id_temp="lote_compra"></field>
+
+            <field id="penuso"	 	id_temp="lote_optimo"></field>
+            <field id="pencps"	 	id_temp="lote_compra"></field>
+
+            <field id="movref"	 	>
+		      <valor>'Pedido automático'</valor>
+	        </field>
+
+            <field id="idDeposito"      >
+		      <valor>(select id_stkdeposito from STK_DEPOSITO where recepcion = 1 limit 1)</valor>
+	        </field>
+
+
+            <field id="confirmado"	>
+		      <valor>0</valor>
+	        </field>
+            <field id="mensaje"         >
+		<valor>Pedido automático</valor>
+	    </field>
+
+
+            <field id="cpsproyecto_id"      >
+		    <valor>1</valor>
+	    </field>
+            <field id="centrocostos_id"      >
+		    <valor>24</valor>
+	    </field>
+        </table>
+    </form>
+</histrix>

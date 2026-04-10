@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="insert">
+	<title>Ingreso Movimiento</title>
+	 <obs></obs>
+		<form >
+		    <table id="STK_ARTICULO_EXISTENCIAS"  		>
+			<sql>
+			create temporary table temp_art as select * from STK_ARTICULO_EXISTENCIAS where STK_ARTICULO_EXISTENCIAS.stkarticulo_id= '[__id_stkarticulo__]';
+			
+			update temp_art set  stkarticulo_id = '[__stkarticulo_destino_id__]';
+			
+			
+			REPLACE INTO STK_ARTICULO_EXISTENCIAS select * from temp_art;
+			
+			drop temporary table temp_art;
+			
+			delete from STK_ARTICULO_EXISTENCIAS where stkarticulo_id = '[__id_stkarticulo__]';
+
+			</sql>
+			<field id="stkarticulo_id"         id_temp="id_stkarticulo"/>
+			<field id="stkarticulo_destino_id" id_temp="stkarticulo_destino_id"/>
+
+		    </table>
+		</form>
+    </histrix>	
+
+

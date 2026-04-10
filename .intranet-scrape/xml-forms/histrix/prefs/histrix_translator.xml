@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+	<histrix tipo="consulta" dataSource="dictionaries"  >
+		<title>Preferencias</title>
+		<obs></obs>
+		<consulta detalle="tmx_translator.xml">
+			<table id="HTXOPTIONS" label="OPCIONES">
+				<field id="tmxfile" noshow="true">
+					<label>archivo</label>
+					<detalle>tmxfile</detalle>
+				</field>
+				<field id="filename" noshow="true">
+					
+					<detalle>filename</detalle>
+				</field>
+				<field id="dictionary" style="padding:1em; font-weight:bold;">
+					<label>Diccionario</label>
+					
+				</field>				
+			</table>
+		</consulta>
+	</histrix>

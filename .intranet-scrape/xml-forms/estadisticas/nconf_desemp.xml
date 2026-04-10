@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="chart">
+	<title>Desempeño de No Conformidades</title>
+	<obs></obs>
+	<form >
+		<table id="GEN_CALENDAR" >
+			<title>Cantidad2</title>
+	 
+		   <grafico id="Desempeño" >
+			   <ancho>400</ancho>
+			   <tipo>C</tipo>
+			   <etiquetas>estadonconf_id</etiquetas>
+			   <serie>cantxvalor</serie>
+			   <title>Estados NC</title>
+			   <subtitulo></subtitulo>
+		   </grafico>
+		    <filters>
+			    <field id="fecha">
+				    <label>Desde</label>
+				    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-12 month')) , 1, date("Y") -  1 ))</valor>
+				    <operador>&gt;=</operador>
+			    </field>
+			    <field id="fecha">
+                                    <label>Hasta</label>
+				    <valor eval="true">date('d/m/Y', strtotime('-1 second', strtotime(date('Y-m-01'))))</valor>
+				    <operador>&lt;=</operador>
+			    </field>
+				<field id="estadonconf_id">
+					<label>Estado</label>
+					<operador>=</operador>
+				</field>
+		    </filters>
+
+			<field id="fecha" oculto="true">
+				<tipo>date</tipo>
+            </field>
+
+			<field id="estadonconf_id" tabla="CAL_NOCONFORMIDADES">
+				<helper type="combo" id="CAL_ESTADOS_NCONF" empty="true">
+					<field id="id_estadonconf"/>
+					<field id="nombre_estadonconf"/>
+				</helper>
+			</field>
+			<field id="cantxvalor">
+				<expression>COUNT(*)</expression>
+				<label>Cantidad</label>
+			</field>
+			<group>
+				<field id="estadonconf_id" tabla="CAL_NOCONFORMIDADES"/>
+
+			</group>
+		</table>
+		<join tipo="inner">
+			<table id="CAL_NOCONFORMIDADES">
+				<field id="fecha_nconf">
+					<condicion operador="=">GEN_CALENDAR.fecha</condicion>
+				</field>
+			</table>
+		</join>
+	</form>	   
+</histrix> 

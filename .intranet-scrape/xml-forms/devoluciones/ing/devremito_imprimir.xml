@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="nosql"  xmlImpresion="/devoluciones/ing/devoluciones_remito_imp.xml" >
+    <title>DEVOLUCION</title>
+    <obs></obs>
+    <form >
+        <table id="DEVREMITO" label="MOVIMIENTOS">
+            <field id="id_revremito" lastId="devremito_ingmov.xml" >
+                <detalle>id_devremito</detalle>
+            </field>
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="ficha" autoprint="true" preFetch="true" >
+    <title>Perfil de Puesto</title>
+    <obs></obs>
+    <form>
+        <table id="RH_PERFIL_PUESTO" >
+            <title>Perfil de Puesto</title>     
+            
+            <fieldGroup>
+             <!--<field id="marcadeagua" local="true" PDFbold="true" PDFitalic="true" PDFrotate="-45">
+		    <expression>CASE WHEN CAL_NOCONFORMIDADES.estadonconf_id != 7 THEN '   COPIA NO \n\n\n\n\n\n\n\nCONTROLADA' ELSE '' END</expression>
+		    <label posx="30" posy="5" PDFcolor="#D3D3D3" PDFsize="105" size="400" PDFrestorePosition="true"/>
+		    <size>200</size>
+	        </field>
+
+	        <field id="marcacopnocontr" local="true" PDFbold="true" PDFitalic="true" PDFrotate="-8">
+		    <expression>CASE WHEN CAL_NOCONFORMIDADES.estadonconf_id != 7 THEN 'COPIA NO \n\nCONTROLADA'ELSE '' END</expression>
+		    <label posx="35" posy="260" PDFcolor="#FF2222" PDFsize="25" size="400" PDFrestorePosition="true"/>
+		    <size>200</size>
+	        </field>-->
+			</fieldGroup>                           
+	    	
+
+            <fieldGroup  PDFsize="12">
+		                                 
+			<field id="id_perfilpuesto" oculto="true">
+                <detalle>id_perfilpuesto</detalle>
+            </field>
+
+		    <field id="nombre_perfilpuesto">
+				<label posx="5" posy="17">Puesto</label>
+                <help>Nombre del puesto</help>
+                <size>50</size>				
+		    </field>
+
+			<field id="seccion_perfilpuesto">
+            		    <tabla_ex id="SECCION" vacio="true">
+                		<field id="id_seccion"></field>
+                		<field id="nombre"></field>
+                		<field id="activa">
+							<condicion operador="=">1</condicion>
+                		</field>
+                		<order>
+                				<field id="nombre" />
+                		</order>
+            		    </tabla_ex>
+			    <label posx="120" posy="17">Seccion</label>
+			</field>
+
+			<field id="puestosup_perfilpuesto">
+            		    <tabla_ex id="RH_PERFIL_PUESTO" vacio="true">
+                		<field id="id_perfilpuesto"></field>
+                		<field id="nombre_perfilpuesto"></field>
+                		<field id="activo_perfilpuesto">
+							<condicion operador="=">1</condicion>
+                		</field>
+                		<order>
+                				<field id="nombre_perfilpuesto" />
+                		</order>
+            		    </tabla_ex>
+			    <label posx="5" posy="+2">Puesto Reporta</label>
+			</field>
+
+			<field id="dat1" local="true">
+                <label size="195" posx="5" posy="+6" pdffill="195">Mision del puesto</label>
+            </field>
+
+		    <field id="mision_perfilpuesto">
+				<label posx="5" posy="+2"></label>
+                <help>Mision del puesto</help>
+		    </field>
+
+			<field id="dat9" local="true">
+                <label size="195" posx="5" posy="+6" pdffill="195">Funciones</label>
+            </field>
+
+			<field id="funciones" local="true">
+			<label posx="10" posy="+4"></label>
+			<helper type="object" xml="perfil_responsabilidades_qry.xml">
+			    <parameter source="id_perfilpuesto" target="perfilpuesto_id" />
+			</helper>
+		    </field>
+
+			<field id="dat2" local="true">
+                <label size="195" posx="5" posy="+6" pdffill="195">Requisitos del puesto</label>
+            </field>
+
+		    <field id="requisitos_perfilpuesto">
+				<label posx="5" posy="+2"></label>
+                <help>Requisitos del puesto</help>
+		    </field>
+
+			<field id="dat3" local="true">
+                <label size="195" posx="5" posy="+6" pdffill="195">Formacion Requerida</label>
+            </field>
+
+		    <field id="formacion_perfilpuesto">
+				<label posx="5" posy="+2"></label>
+                <help>Formacion Requerida</help>
+		    </field>
+
+			<field id="dat4" local="true">
+                <label size="195" posx="5" posy="+6" pdffill="195">Idiomas necesarios</label>
+            </field>
+
+		    <field id="idiomas_perfilpuesto">
+				<label posx="5" posy="+2"></label>
+                <help>Idiomas necesarios</help>
+		    </field>
+
+			<field id="dat5" local="true">
+                <label size="195" posx="5" posy="+6" pdffill="195">Manejo de Software</label>
+            </field>
+
+		    <field id="software_perfilpuesto">
+				<label posx="5" posy="+2"></label>
+                <help>Manejo de Software</help>
+		    </field>
+
+			<field id="dat6" local="true">
+                <label size="195" posx="5" posy="+6" pdffill="195">Conocimientos especificos</label>
+            </field>
+
+		    <field id="conocimientos_perfilpuesto">
+				<label posx="5" posy="+2"></label>
+                <help>Conocimientos especificos</help>
+		    </field>
+
+			<field id="dat7" local="true">
+                <label size="195" posx="5" posy="+6" pdffill="195">Experiencia Laboral</label>
+            </field>
+
+		    <field id="experiencia_perfilpuesto">
+				<label posx="5" posy="+2"></label>
+                <help>Experiencia Laboral</help>
+		    </field>
+
+			<field id="dat8" local="true">
+                <label size="195" posx="5" posy="+6" pdffill="195">Condiciones de Trabajo</label>
+            </field>
+
+		    <field id="condiciones_perfilpuesto">
+				<label posx="5" posy="+2"></label>
+                <help>Condiciones de Trabajo</help>
+		    </field>
+
+			<field id="dat9" local="true">
+                <label size="195" posx="5" posy="+6" pdffill="195">Competencias</label>
+            </field>
+
+			<field id="competencias" local="true">
+			<label posx="10" posy="+2"></label>
+			<helper type="object" xml="perfil_competencias_perfil.xml" dir="/personal">
+			    <parameter source="id_perfilpuesto" target="perfilpuesto_id" />
+			</helper>
+		    </field>	            
+		
+            </fieldGroup>
+         	
+		</table>
+    </form>
+</histrix>

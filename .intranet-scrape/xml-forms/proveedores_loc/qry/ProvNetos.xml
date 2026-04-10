@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="consulta" >
+       <title>Cuenta Corriente</title>
+        <obs></obs>
+               <form  detalle="cpsencab_x_prov_det2.xml" _detalle="ConCtaCteDetSal.xml" inline="true">
+                  <table id="IVAIMPORTES" label="Movimientos">
+
+<!--                  <field id="siscod" oculto="true">
+                      <label>Cod.</label>
+                      <help> </help>
+		      <detalle>siscod</detalle>
+                  </field> 
+-->
+		  <field id="movfec" tabla="CCTMOVIM">
+		    <label>Fecha</label>
+		    <tipo>date</tipo>
+		  </field>
+		    <field id="minfec" noshow="true">
+			<expression>min(feciva)</expression>
+			<detalle>minfec</detalle>
+		    </field>
+		    <field id="maxfec" noshow="true">
+			<expression>max(feciva)</expression>
+			<detalle>maxfec</detalle>
+		    </field>
+		  <field id="tipoiva" noshow="true">
+		    <label>TipoIva</label>
+		    <condicion operador="=">1</condicion>
+		  </field>
+		  
+		  <field id="totatr" tabla="CCTCUENT" noshow="true">
+		    <label>No Influye</label>
+		    <condicion operador="=">0</condicion>
+		  </field>
+		  
+		  <field id="ivacod" tabla="CCTCUENT" noshow="true">
+		    <label>IvaCod</label>
+		    <condicion operador="=">1</condicion>
+		  </field>
+
+                  <field id="ctacod">
+                      <label>Cuenta</label>
+                      <help>Codigo de Cuenta</help>
+		      <detalle>ctacod</detalle>
+			<detalle>ctacod</detalle>
+
+                  </field>
+
+                  <field id="ctanom">
+		      <expression>CCTCUENT.ctanom</expression>
+                      <label>Nombre</label>
+                      <help>Codigo de Cuenta</help>
+		      <tipo>varchar</tipo>
+                  </field>
+			<field id="ctanro">
+		      <expression>CCTCUENT.ctanro</expression>
+				
+				<label >CUIT</label>
+				<tipo>varchar</tipo>
+			</field>					  
+
+<!--                  <field id="ctanro">
+		      <expression>CCTCUENT.ctanro</expression>
+                      <label>CUIT</label>
+                      <help>CUIT</help>
+		      <format>%30s</format>
+                  </field>
+-->
+<!--                  <field id="movsal" suma="true">
+		      <expression>sum(movsal)</expression>
+		      <label>Saldo</label>
+                      <help> </help>
+		      <condicion operador=" != ">0</condicion>  
+                 </field> -->
+
+			<field id="debe" suma="true" tipoOrden="DESC">
+				<expression>sum(impgra * (case when codcom = 1 then 1 else 0 end))</expression>
+				<label>debe</label>
+				<tipo>decimal</tipo>
+			</field>
+			<field id="haber" suma="true">
+				<expression>sum(impgra * (case when codcom = 2 then 1 else 0 end))</expression>
+				<label>haber</label>
+				<tipo>decimal</tipo>
+			</field>
+			<field id="dif" local="true">
+				<label>diferencia</label>
+				<if exp="true">
+					<true>debe - haber</true>
+					<false>0</false>
+				</if>
+				<tipo>decimal</tipo>
+				<condicion operador="!=">0</condicion>
+			</field>
+			<filters>
+			    <field id="movfec">
+				<label>Desde Fecha</label>
+				<operador>&gt;=</operador>
+				<valor>today</valor>
+			    </field>
+		    	    <field id="movfec">
+				<operador>&lt;=</operador>
+				<label>Hasta Fecha</label>
+				<valor>today</valor>
+			    </field>
+                  <field id="ctacod">
+                      <label>Cuenta</label>
+                      <help>Codigo de Cuenta</help>
+		      <detalle>ctacod</detalle>
+		      <format>%04d</format>
+			<detalle>ctacod</detalle>
+				<operador>=</operador>
+
+                  </field>
+
+			</filters>
+    		    <group>
+<!--    		        <field id="IVAIMPORTES.siscod"></field>
+    		        <field id="IVAIMPORTES.siscod"></field>-->
+    		       <field id="IVAIMPORTES.ctacod"></field> 
+    	<!--	        <field id="CCTCUENT.ctacod"></field>
+    		        <field id="CCTCUENT.ctanom"></field>
+    		        <field id="CCTCUENT.ctanro"></field>
+         -->
+		    </group>
+
+		    <order>
+			<field id="debe"> </field>
+		    </order>
+
+                  </table>
+		  
+		  <join tipo="inner">
+		    <table id="CCTMOVIM">
+			<field id="siscod">
+			    <condicion operador="=">01</condicion>
+			</field>
+			<field id="ctacod">
+			    <condicion operador="=">IVAIMPORTES.ctacod</condicion>
+			</field>
+			<field id="movnro">
+			    <condicion operador="=">IVAIMPORTES.nrocom</condicion>
+			</field>
+			<field id="movlet">
+			    <condicion operador="=">IVAIMPORTES.codlet</condicion>
+			</field>
+			<field id="concod">
+			    <condicion operador="=">concod</condicion>
+			</field>
+		    </table>
+		  </join>
+	    
+		  <join tipo="inner">
+		    <table id="CCTCUENT">
+			<field id="siscod" oculto="true">
+			    <condicion operador="=">01</condicion>
+			</field>
+			<field id="ctacod" oculto="true">
+			    <condicion operador="=">IVAIMPORTES.ctacod</condicion>
+			</field>
+		    </table>
+		  </join>
+		<join tipo="left">
+			<table id="CCTCONCE">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">01</condicion>
+				</field>
+				<field id="concod" oculto="true">
+					<condicion operador="=">IVAIMPORTES.codcom</condicion>
+				</field>
+			</table>
+		</join>						   
+	    
+		  
+               </form>
+        </histrix>

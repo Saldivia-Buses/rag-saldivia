@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+	<title>Ejercicios</title>
+	<obs></obs>
+	<form>
+		<table id="CTB_EJERCICIOS" label="Ejercicios">
+			<field id="id_ejercicio" autoinc="true" noshow="true">
+				<label>Codigo</label>
+				<help>Codigo de ejercicio</help>
+				<detalle>ejercicio_id</detalle>
+			</field>
+			<field id="nombre_ejercicio">
+				<label>Nombre</label>
+				<help>Nombre de ejercicio</help>
+				<size>20</size>
+			</field>
+			<field id="comienza" tipoOrden="DESC">
+				<label>Comienzo</label>
+				<help>Comienzo del ejercicio</help>
+				<detalle>comienza</detalle>
+			</field>
+			<field id="finaliza">
+				<label>Finalizacion</label>
+				<help>Finalizacion del ejercicio</help>
+				<detalle>finaliza</detalle>
+			</field>
+			<field id="cerrado" deshabilitado="true" >
+				<tipo>check</tipo>
+				<label>Cerrado</label>
+				<help>Ejercicio Cerrado</help>
+				<tipo>check</tipo>
+			</field>
+			<field id="activo" tipoOrden="DESC">
+				<tipo>check</tipo>
+				<label>Activo</label>
+				<help>Ejercicio Activo</help>
+			</field>
+
+			<field id="ejercicio_anterior_id">
+				<helper type="combo" id="CTB_EJERCICIOS">
+                     <field id="id_ejercicio" tipoOrden="DESC" />
+                     <field id="nombre_ejercicio" />
+				</helper>
+				<label>ejercicio anterior</label>
+				<help>Codigo ejercicio anterior</help>
+			</field>
+			<field id="tipo_renumeracion" >
+				<options>
+					<option valor="0">Anual</option>
+					<option valor="1">Mensual</option>
+				</options>
+				<label>Tipo de renumeracion</label>
+			</field>
+			<field id="cuenta_resultado_id">
+				<label>Cuenta Resultado</label>
+			</field>
+
+			<field id="cuentas_contables" local="true" Formstyle="display:none;" style="text-align:center;">
+				<label>Inicializar Plan de Cuentas</label>
+				<expression><![CDATA[SELECT (CASE WHEN COUNT(*) > 0 THEN '' ELSE '>>' END) FROM CTB_CUENTAS WHERE CTB_CUENTAS.ejercicio_id = CTB_EJERCICIOS.id_ejercicio]]></expression>
+				<helper type="link" xml="plancuenta_ing.xml" dir="/contabilidad/ing/">
+				    <parameter target="ejercicio_origen_id" source="ejercicio_anterior_id" />
+				    <parameter target="ejercicio_destino_id" source="id_ejercicio" />
+				</helper>
+			</field>
+
+			<order>
+				<field id="activo"></field>
+			</order>
+		</table>
+	</form>
+</histrix>

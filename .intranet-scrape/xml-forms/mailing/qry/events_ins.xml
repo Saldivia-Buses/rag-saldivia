@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert"  tipoInsert="IGNORE">
+  <title>Estadisticas</title>
+  <obs/>
+  <form >
+    <table id="HtxMailgunEvents">
+
+      <field id="id"         id_temp="id" />
+      <field id="timestamp"  id_temp="timestamp" />
+      <field id="event"      id_temp="event" />
+      <field id="sender"     id_temp="sender" />
+      <field id="from"       id_temp="from" />
+      <field id="targets"    id_temp="targets" />
+      <field id="recipient"  id_temp="recipient" />
+      <field id="subject"    id_temp="subject" />
+      <field id="log_level"  id_temp="log_level" />
+      <field id="item" 	     id_temp="item"  />
+      <field id="domain"     id_temp="domain"  />
+
+    </table>
+  </form>
+</histrix>

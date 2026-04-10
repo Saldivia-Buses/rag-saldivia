@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ayuda">
+  <title>Numeradores</title>
+  <obs></obs>
+  <form >
+    <table id="REG_NUMERADORES" label="Numeradores">
+		<field id="id_regnumerador" esClave="true" noshow="true" />
+		<field id="descripcion">
+			<label>Nombre</label>
+			<expresion>concat(lpad(puesto,4,0), '  ', descripcion_concepto, ' ' ,letra)</expresion>
+		</field>
+
+	<order>
+		<field id="descripcion">
+			<expresion>concat(lpad(puesto,4,0), '  ', descripcion_concepto, ' ' ,letra)</expresion>
+		</field>
+	</order>
+
+    </table>
+	<join >
+		<table id="REG_CONCEPTOS">
+			<field id="id_concepto">
+				<condicion operador="=">regconcepto_id</condicion>
+			</field>
+		</table>
+	</join>
+
+  </form>
+</histrix>

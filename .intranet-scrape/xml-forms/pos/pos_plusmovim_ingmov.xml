@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="insert" grabafinal="true" postGrabacion="true">
+       <title>detalle</title>
+        <obs></obs>
+               <consulta>
+					<table id="PLUSMOVIM" label="detalle" idCampoCond="conTjtPlus" >
+<!--						<field id="artcod" id_temp="libro">
+						</field>
+						-->
+
+						<field id="idConcepto" id_padre="concod">
+						</field>
+						<field id="fecha" id_padre="movfec">
+						</field>
+						
+						<field id="movcod" id_padre="concod">
+						</field>
+						<field id="puntos" id_temp="cajimp">
+						</field>						
+
+						<field id="ctacod" id_padre="ctacod"></field>
+
+						<field id="movnpv" id_padre="movnpv"></field>
+						<field id="movnro" id_padre="nrorec"></field>
+						<field id="puntos" id_temp="imputado"></field>
+						
+
+
+<!--						<field id="regmin" esNroMinuta="true">
+						</field> 
+						-->
+					</table>
+               </consulta>
+        </histrix>

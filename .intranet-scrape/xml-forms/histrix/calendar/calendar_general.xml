@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="calendar"  calendarAspectRatio="1.65" _calendarTasks="calendar_tasks.xml">
+    <title>Calendario</title>
+    <obs/>
+    <form >
+        <table id="HTXCALENDAR" >
+
+            <field id="startdate" calendarStartDate="true">
+                <label >Inicio</label>
+                <tipo>date</tipo>
+                <condicion operador="!=">'0000-00-00'</condicion>
+            </field>
+
+            <field id="starttime" calendarStartTime="true" > 
+                <label  modpos="nobr">Hora</label>
+                <tipo>time</tipo>
+            </field>
+            <field valauto="true" id="editable" local="true" calendarEditable="true" noshow="true">
+        	<valor>1</valor>
+            </field>
+
+            <field id="enddate"  calendarEndDate="true">
+                <label >Dia Fin</label>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="endtime"  calendarEndTime="true">
+                <label modpos="nobr">Hora Fin</label>
+                <tipo>time</tipo>
+            </field>
+            <field id="subject" calendarSubject="true">
+                <label colspan="6">Titulo</label>
+                <size>60</size>
+            </field>
+            <field id="recurringrule" calendarRecurringRule="true"  print="false" >
+                <label colspan="3">Recurrencia</label>
+                <size>300</size>
+            </field>
+
+            <field id="description" calendarDescription="true">
+                <label colspan="4">Descripcion</label>
+            </field>
+
+            <field  id="id_calendar" autoinc="true" noshow="true" calendarId="true">
+            </field>
+            <field id="user_id" valauto="true" noshow="true">
+                <condicion operador="=">0</condicion>
+                 <valor >0</valor>
+            </field>
+
+            <field id="color" local="true" calendarColor="true" noshow="true" >
+                <if exp="user_id == 0">
+                    <true>''</true>
+                    <false>'green'</false>
+                </if>
+            </field>
+
+            <order>
+                <field id="startdate"/>
+            </order>
+        </table>
+    </form>
+</histrix>

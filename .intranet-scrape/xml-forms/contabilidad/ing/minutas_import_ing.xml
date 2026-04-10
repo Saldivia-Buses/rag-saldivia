@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ing" imprime="false" llenoreferente="true" style="height:100%" modifica="false" inserta="false" deleteRow="false" procesa="true">
+  <title>Detalles</title>
+  <obs></obs>
+  <form>
+    <table id="CTB_DETALLES" label="Detalle de la Minuta">
+
+        <field id="id_detalle" noshow="true"/>
+
+        <field id="movimiento_id" noshow="true" />
+
+        <field id="cuenta_id" esClave="true">
+            <label>Cuenta</label>
+            <detalle>cuenta_id</detalle>
+        </field>
+
+        <field id="nombre_cuenta" tabla="CTB_CUENTAS" deshabilitado="true" >
+            <label>Nombre</label>
+            <detalle>nombre_cuenta</detalle>
+        </field>
+
+        <field id="doh" esClave="true" noshow="true">
+            <detalle>tipo</detalle>
+        </field>
+
+        <field id="importe" esClave="true" noshow="true">
+            <detalle>importe_dh</detalle>
+        </field>
+
+        <field id="debe" suma="true" noZero="true" deshabilitado="false">
+            <expresion>case when doh = 0 then importe end</expresion>
+            <label>Debe</label>
+            <tipo>numeric</tipo>
+            <detalle>debe</detalle>
+        </field>
+
+        <field id="haber" suma="true" noZero="true" deshabilitado="false">
+            <expresion>case when doh = 1 then importe end</expresion>
+            <label>Haber</label>
+            <tipo>numeric</tipo>
+            <detalle>haber</detalle>
+        </field>
+
+        <field id="referencia">
+            <label>Referencia</label>
+            <help>Referencia</help>
+            <detalle>referencia</detalle>
+        </field>
+
+        <group>
+            <field id="id_detalle" />
+        </group>
+
+    </table>
+
+        <join tipo="left">
+            <table id="CTB_CUENTAS">
+                <field id="id_cuenta">
+                    <condicion operador="=">CTB_DETALLES.cuenta_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="CTB_MOVIMIENTOS">
+                <field id="id_movimiento">
+                    <condicion operador="=">CTB_DETALLES.movimiento_id</condicion>
+                </field>
+            </table>
+        </join>
+
+  </form>
+</histrix>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="consulta" >
+  <title>RUBROS DE STOCK</title>
+  <obs></obs>
+  <form detalle="materiales_proceso_crud.xml" _inline="true">
+    <table id="PROD_PROCESOS" label="Procesos" >
+      <filters>
+	  <field id="homlogacion_id" deshabilitado="false">
+	       <operador>=</operador>
+    	  </field>  
+      </filters>
+
+      <field id="homlogacion_id" local="true" noshow="true" tabla="STK_ARTICULO_PROCESO">
+                <helper type="combo" xml="combo_homologacion_modelo.xml" dir="/fabricacion" >
+            	    <field id="baja">
+            		<condicion operador="=">0</condicion>
+            	    </field>
+                </helper>
+
+        <label>Modelo</label>
+        <detalle>homologacion_id</detalle>
+      </field>
+      
+      <field id="id_proceso" noshow="true">
+        <detalle>proceso_id</detalle>
+      </field>
+      
+      <field id="nombre_proceso">
+        <label>Proceso</label>
+      </field>
+      <order>
+        <field id="nombre_proceso"></field>
+      </order>
+      <group>
+        <field id="id_proceso"></field>
+      </group>      
+    </table>
+    <join tipo="left">
+	<table id="STK_ARTICULO_PROCESO">
+	    <field id="proceso_id">
+		<condicion operador="=">id_proceso</condicion>
+	    </field>
+/	</table>
+    </join>
+  </form>     
+</histrix>

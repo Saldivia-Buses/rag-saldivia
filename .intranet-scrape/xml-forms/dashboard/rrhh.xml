@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="dashboard">
+
+        <titulo>Medidores de Recursos Humanos</titulo>
+        <widget id="inasistencias"  width="400px"  height="300px">
+            <title>Cantidad de inasistencias x mes</title>
+        <url><![CDATA[histrixLoader.php?xml=rrhh_inasistencias.xml&dir=estadisticas]]></url>
+        </widget>        
+        <widget id="horas_extras"  width="400px"  height="300px">
+            <title>Cantidad de horas extras trabajadas x mes</title>
+        <url><![CDATA[histrixLoader.php?xml=rrhh_horas_extras.xml&dir=estadisticas]]></url>
+        </widget>        
+<!--         <widget id="horas_extras_productivas"  width="400px"  height="300px">
+            <title>H.Extras productivas x mes</title>
+        <url><![CDATA[histrixLoader.php?xml=rrhh_horas_extras_productivas.xml&dir=estadisticas]]></url>
+        </widget>
+ -->        <widget id="horas_extraordinarias_seccion"  width="430px"  height="300px">
+            <title>Cantidad de horas extras en el mes</title>
+        <url><![CDATA[histrixLoader.php?xml=rrhh_horas_fuera_horario_seccion.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="horas_extraordinarias"  width="400px"  height="300px">
+            <title>Cantidad de horas extraos últimos 30 días</title>
+        <url><![CDATA[histrixLoader.php?xml=rrhh_horas_fuera_horario.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="horas_normales"  width="400px"  height="300px">
+            <title>Cantidad de horas trabajadas x mes</title>
+        <url><![CDATA[histrixLoader.php?xml=rrhh_horas_normales.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="personal_registrado"  width="400px"  height="300px">
+            <title>Personal Registrado</title>
+        <url><![CDATA[histrixLoader.php?xml=rrhh_personal_registrado.xml&dir=estadisticas]]></url>
+        </widget>
+
+        <widget id="rotacion_personal"  width="48%"  height="300px">
+            <title>Rotacion Personal</title>
+        <url><![CDATA[histrixLoader.php?xml=rrhh_personal_rotacion.xml&dir=estadisticas]]></url>
+        </widget>
+
+        <widget id="ausentismo_personal_evolutivo"  width="48%"  height="300px">
+            <title>Ausentismo Personal</title>
+        <url><![CDATA[histrixLoader.php?xml=rrhh_personal_ausentismo_evolutivo.xml&dir=estadisticas]]></url>
+        </widget>
+
+        <widget id="directos_indirectos"  width="400px"  height="300px">
+            <title>Relacion Directos e Indrectos</title>
+        <url><![CDATA[histrixLoader.php?xml=rrhh_personal_directos_indirectos.xml&dir=estadisticas]]></url>
+        </widget>
+
+        <widget id="francos"  width="400px"  height="300px">
+            <title>Francos</title>
+        <url><![CDATA[histrixLoader.php?xml=rrhh_francos.xml&dir=estadisticas]]></url>
+        </widget>
+        
+        <widget id="accidentes"  width="400px" height="300px">
+            <title>Accidentes</title>
+	    <url><![CDATA[histrixLoader.php?xml=rrhh_accidentes.xml&dir=estadisticas]]></url>
+        </widget>
+	    <widget id="seccion"  width="400px"  height="300px">
+            <title>Secciones</title>
+	    <url><![CDATA[histrixLoader.php?xml=rrhh_personalxseccion.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="categoria"  width="400px"  height="300px">
+            <title>Categorias</title>
+	    <url><![CDATA[histrixLoader.php?xml=rrhh_personalxcat.xml&dir=estadisticas]]></url>
+        </widget>
+	   <widget id="antiguedades"  width="400px"  height="300px">
+            <title>Antigüedades</title>
+	    <url><![CDATA[histrixLoader.php?xml=rrhh_antiguedades.xml&dir=estadisticas]]></url>
+        </widget>
+		<widget id="desempeño"  width="400px"  height="300px">
+            <title>Desempeño</title>
+	    <url><![CDATA[histrixLoader.php?xml=rrhh_personalxdesempeno.xml&dir=estadisticas]]></url>
+        </widget>
+		<widget id="desempenio"  width="400px"  height="300px">
+            <title>Promedio desempeño</title>
+	    <url><![CDATA[histrixLoader.php?xml=rrhh_desempenio_xseccion.xml&dir=estadisticas]]></url>
+        </widget>
+		<widget id="horas_fuera_horario"  width="400px"  height="300px">
+            <title>Horas Fuera de horario</title>
+	    <url><![CDATA[histrixLoader.php?xml=rrhh_horas_fuera_horario.xml&dir=estadisticas]]></url>
+        </widget><!--
+        <widget id="personal"  width="400px"  height="266px">
+            <title>Personal</title>
+        <url><![CDATA[histrixLoader.php?xml=rrhh_personal.xml&dir=estadisticas]]></url>
+        </widget>
+		<widget id="capacitaciones"  width="400px"  height="266px">
+            <title>Capacitaciones</title>
+	    <url><![CDATA[histrixLoader.php?xml=rrhh_cursos_xmes.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="capacitaciones"  width="400px"  height="266px">
+            <title>Capacitaciones</title>
+        <url><![CDATA[histrixLoader.php?xml=rrhh_cursosxseccion.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="polivalencias"  width="400px"  height="266px">
+            <title>Polivalencias</title>
+        <url><![CDATA[histrixLoader.php?xml=rrhh_polivalenciasxseccion.xml&dir=estadisticas]]></url>
+        </widget>-->
+	
+	
+</histrix>
+

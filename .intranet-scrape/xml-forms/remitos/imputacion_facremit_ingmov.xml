@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="update" limit="1">
+       <title>REMITOS</title>
+        <obs></obs>
+               <form >
+					<table id="FACREMIT" label="ACTUALIZA REMITO" idCampoCond="grabar">
+						<field id="ctacod" id_cab="ctacod"      esClave="true"></field>						
+						<field id="remnro" id_temp="remnro"   esClave="true"></field>
+						<field id="remfec" id_temp="remfec" esClave="true">
+							<tipo>date</tipo>
+						</field>
+
+						<field id="cierre" id_temp="imputar">
+    							<valor>1</valor>
+						</field>
+
+						
+					</table>
+               </form>
+        </histrix>

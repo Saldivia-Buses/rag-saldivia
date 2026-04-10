@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="consulta">
+	<title>Control Calidad</title>
+	<obs/>
+
+	<form >
+		<table id="CONTROLCALIDAD">
+			<title>Control de Calidad</title>
+			<field id="nrofab" oculto="true">
+				<label >Nro de Fabricación</label>
+				<help>Número de Fabricación</help>
+			</field>
+			<field id="fecha" >
+				<label>Fecha</label>
+				<tipo>date</tipo>	
+				
+			</field>
+
+			<field id="descripcion" tabla="MOMENTO" >
+				<label>Sección</label>
+			</field>
+			<field id="observaciones" >
+				<label>observaciones</label>
+			</field>
+			<field id="cantObs" >
+				<label>Cantidad</label>
+				<tipo>integer</tipo>
+			</field>
+
+			<field id="color" tabla="CALIFICACION" color="true" tdWidth="10">
+                            <label style="color:transparent;">Cal.</label>
+
+			</field>
+			<order>
+						<field id="fecha" >
+			</field>
+
+			</order>
+
+		</table>
+                <join tipo="left">
+                    <table id="MOMENTO">
+                        <field id="idMomento">
+                            <condicion operador="=">idSeccion</condicion>
+                            </field>
+                    </table>
+                </join>
+                <join tipo="left">
+                    <table id="CALIFICACION">
+                        <field id="idCalificacion">
+                            <condicion operador="=">CONTROLCALIDAD.idCalificacion</condicion>
+                            </field>
+                    </table>
+                </join>
+
+	</form>
+</histrix>

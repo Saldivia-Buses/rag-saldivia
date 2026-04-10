@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" subtipo="vertical" imprime="false" confirma="CONFIRMAR">
+  <title>Ingreso de Valores</title>
+  <obs/>
+  <consulta>
+    <table id="CAR_VALORES" label="Carga de Valores">
+
+      <movimientos>
+        <relacion id="ingreso_ins.xml"/>
+        <relacion id="ingresomov_ins.xml"/>
+      </movimientos>
+
+      <field id="id_carvalor" esClave="true" noshow="true">
+        <condicion operador="=">-1</condicion>
+      </field>
+
+      <fieldGroup id="parametros" local="true" noshow="true">
+        <field id="fecha_movimiento"/>      
+        <field id="referencia_movimiento">
+          <valor>'INGRESO MANUAL A CARTERA'</valor>
+        </field>
+        <field id="tipo_movimiento">
+          <valor>0</valor>
+        </field>
+
+       <field id="subsistema_cliente">
+          <actualiza>
+            <field id="cuenta_id" destino="subsistema_id"/>
+          </actualiza>
+        </field>
+
+      </fieldGroup>
+
+      <!-- Banco / Sucursal / Plaza -->
+	
+<fieldGroup style="padding:2px 2px 2px 2px;vertical-align:middle;" colstyle="text-align:center;">
+
+      <field id="carbanco_id" valauto="000">
+        <label>ID Banco</label>
+        <helper type="external" xml="carbanco_qry.xml" dir="/ayudas" />
+        <size>3</size>
+      </field>
+
+      <field id="nombre_banco" deshabilitado="true" tabla="CAR_BANCOS"  modpos="nobr" sincelda="true">
+        <label>Nombre</label>
+        <size>60</size>
+      </field>
+	  
+      <field id="sucursal_banco" valauto="000" modpos="nobr">
+        <label>Sucursal</label>
+        <size>3</size>
+      </field>
+
+      <field id="carplaza_id" valauto="0000">
+        <label>ID Plaza</label>
+        <helper type="external" xml="carplaza_qry.xml" dir="/ayudas" />
+        <size>4</size>
+      </field>
+
+      <field id="nombre_plaza" deshabilitado="true" tabla="CAR_PLAZAS" modpos="nobr" sincelda="true">
+        <label>Nombre Plaza</label>
+        <size>60</size>
+      </field>
+
+      <field id="nro_valor" modpos="nobr">
+        <label>Nº Valor</label>
+      </field>
+
+      <field id="separador0" deshabilitado="true" local="true"  modpos="nobr" sincelda="true" colstyle="display:none;"/>
+
+      <field id="cuenta_valor"  modpos="nobr">
+        <label>Nº Cuenta</label>
+        <tipo>varchar</tipo>
+        <size>20</size>
+      </field>
+
+
+      <field id="fecha_valor">
+        <label>Fecha de Emision</label>
+        <valor>today</valor>
+      </field>
+
+      <field id="separador1" deshabilitado="true" local="true"  modpos="nobr" sincelda="true" colstyle="display:none;"/>
+
+      <field id="acreditacion_valor" modpos="nobr">
+        <label>Fecha de Acreditación</label>
+        <valor>today</valor>
+      </field>
+
+      <field id="moneda_id" >
+        <helper type="combo" xml="monedas_qry.xml" dir="/ayudas" />
+        <label>Moneda</label>
+      </field>
+
+      <field id="separador2" deshabilitado="true" local="true"  modpos="nobr" sincelda="true" colstyle="display:none;" />
+
+      <field id="importe_valor" valauto="0.00" suma="true"  modpos="nobr" >
+        <label>Importe</label>
+        <detalle>pago_valor</detalle>
+      </field>
+
+
+      <field id="cuenta_id" local="true" required="true">
+        <helper type="external" xml="regcuenta_relacionescmb_nro_dh.xml" dir="/ayudas" _empty="true" >
+          <field id="subsistema_id" oculto="true" />
+        </helper>
+        <label>Cliente</label>
+      </field> 
+
+      <field id="regcuenta_nombre" local="true" deshabilitado="true" modpos="nobr" sincelda="true">
+        <label>Nombre Cliente</label>
+        <size>70</size>
+      </field>
+      
+      <field id="regcuenta_id" local="true" noshow="true" required="true" modpos="nobr">
+        <label>ID Cuenta</label>
+      </field>  
+
+      <field id="titular_valor" modpos="nobr">
+        <label colspan="2">Titular</label>
+        <size>70</size>
+      </field>
+
+      <field id="cuit_valor" modpos="nobr">
+        <label>CUIT</label>
+        <size>13</size>
+      </field>
+
+</fieldGroup>
+
+    </table>
+
+    <join>
+      <table id="CAR_BANCOS">
+        <field id="id_carbanco">
+          <condicion operador="=">CAR_VALORES.carbanco_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join>
+      <table id="CAR_PLAZAS">
+        <field id="id_carplaza">
+          <condicion operador="=">CAR_VALORES.carplaza_id</condicion>
+        </field>
+      </table>
+    </join>
+  </consulta>
+</histrix>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert">
+	<title>Duplicar Costo</title>
+	<obs/>
+	<form >
+		<table id="STKINMOV" label="Duplicar Costo">
+			<field id="siscod" id_cab="sispre"></field>
+			<field id="artcod" id_temp="artcod"></field>
+			<field id="movfec" id_temp="movfec"></field>
+			<field id="movcod" id_cab="movcod"></field>
+			<field id="movnro" id_cab="movnro"></field>
+			<field id="movcos" id_temp="movcos"></field>
+			<field id="movalt" id_cab="movfec"></field>
+			
+<!--
+			<field id="ctacod" id_cab="?"></field>
+			-->
+			
+<!--			<field id="nrocha" id_temp="nrocha"></field> -->
+
+			<field id="movpes" id_temp="movpes"></field>
+<!--			<field id="movcant" id_temp="cant"></field> -->
+
+
+			<field id="movref" id_cab="movref__1"></field>
+
+
+		<!--
+
+			<field id="opecod"></field>
+			<field id="opecodEx"></field>
+			<field id="cant"></field>
+			<field id="movimp"></field> -->
+		</table>
+	</form>
+</histrix>

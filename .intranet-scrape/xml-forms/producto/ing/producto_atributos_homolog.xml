@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" subtipo="vertical" width="60">
+<title>Atributos</title>
+<obs></obs>
+<form detalle="producto_atributos_homolog_asigna.xml">
+    <table id="PRODUCTO_ATRIBUTOS">
+        <title>Seccion</title>
+
+        <filters auto="true">
+            <field id="prdseccion_id">
+                <label modpos="nobr">Sección</label>
+                <operador>=</operador>
+                <valor>1</valor>
+            </field>
+        </filters>
+
+        <field id="prdseccion_id" _colstyle="display:none;" valauto="true">
+            <label>Atributo</label>
+            <helper id="PRODUCTO_SECCION" type="combo" empty="true">
+            <field id="id_prdseccion" />
+            <field id="nombre_seccion" />
+            </helper>
+        </field>
+
+        <field id="id_prdatributo" autoinc="true" noshow="true" deshabilitado="true" _break="true">
+    	    <detalle>prdatributo_id</detalle>
+    	    <valor>0</valor>
+        </field>
+
+        <field id="orden_atributo" _activador="activo">
+            <label>orden</label>
+        </field>
+        
+        <field id="nombre_atributo" _activador="activo">
+            <label _modpos="nobr" colspan="4">Nombre Atributo</label>
+            <help>Nombre del atributo</help>
+        </field>           
+
+        <field id="estandar_adicional">
+            <label>Tipo</label>
+            <options>
+                <option valor="0">Estandar</option>
+                <option valor="1">Adicional</option>
+            </options>
+       </field>
+
+        <field id="clase_adicional" clasefila="true" local="true" noshow="true">
+     	    <expression>case when estandar_adicional = 1 then 'resaltadoRojo' else '' end</expression>
+            <label>calse adicional</label>
+        </field>
+
+        <field id="descrip_cotizacion">
+            <label>Descrip.</label>
+            <size>100</size>
+        </field>
+
+        <field id="activo_cotizacion" _activa="true">
+            <label>Cotiz</label>
+            <tipo>check</tipo>
+        </field>
+        
+        <field id="activo_fichatecnica" _activa="true">
+            <label>FT</label>
+            <tipo>check</tipo>
+        </field>
+
+        <field id="activo" _activa="true">
+    	    <label>FV</label>
+            <tipo>check</tipo>
+        </field>
+
+        <field id="print_label" >
+    	    <label colstyle="display:none;">Nombre FV</label>
+            <tipo>check</tipo>
+        </field>
+        <field id="print_value" >
+    	    <label colstyle="display:none;">Valor FV</label>
+            <tipo>check</tipo>
+        </field>
+
+
+        <field id="clase" clasefila="true" local="true" noshow="true">
+    	    <expression>case when activo = 0 and activo_cotizacion = 0 and activo_fichatecnica = 0 then 'grisado' else '' end</expression>
+            <label>Habilitado</label>
+        </field>
+
+        <field id="definir_antes_seccion_id">
+                <helper type="combo" id="MOMENTO" empty="true">
+                    <field id="idMomento" />
+                    <field id="descripcion" />
+                    <field id="linea_id">
+                        <condicion operador="=">1</condicion>
+                    </field>
+                    <order>
+                        <field id="orden" />
+                    </order>
+                </helper>               
+                <label>Definir antes de</label>
+        </field>
+
+        <field id="tipo_atributo" _activador="activo">
+            <label >Tipo</label>
+            <help>tipo del atributo</help>
+            <helper type="combo" empty="true">
+            
+        	<option value=""></option>
+        	<option value="varchar">Texto</option>
+
+        	<option value="integer">Entero</option>
+        	<option value="decimal">Decimal</option>
+        	<option value="file">Archivo</option>
+        	<option value="check">checkbox</option>
+        	<option value="radio">opciones</option>
+        	<option value="object">Tabla</option>
+            </helper>
+        </field>
+	<field id="stkarticulo_id" _activador="activo">
+    	    <label>Artículo</label>
+        </field>
+
+        <field id="helper_xml" _activador="activo">
+    	    <label colstyle="display:none;">Archivo xml</label>
+    	    <size>15</size>
+
+        </field>
+        <field id="helper_dir" sincelda="true" _activador="activo">
+    	    <label modpos="nobr" colstyle="display:none;">directorio</label>
+    	    <size>15</size>
+
+        </field>
+        <field id="parametros" _activador="activo">
+    	    <label colstyle="display:none;">Parámetros</label>
+    	    <size>50</size>
+
+        </field>
+        
+	<order>
+        <field id="clase" local="true"/>
+        <field id="estandar_adicional"/>
+        <field id="orden_atributo" />
+	</order>
+
+    </table>
+<!--     <join tipo="left">
+	<table id="PRODUCTO_ATRIB_OPCIONES">
+	    <field id="prdatributo_id">
+		    <condicion operador="=">id_prdatributo</condicion>
+	    </field>
+	</table>
+    </join> -->
+</form>	   
+</histrix>

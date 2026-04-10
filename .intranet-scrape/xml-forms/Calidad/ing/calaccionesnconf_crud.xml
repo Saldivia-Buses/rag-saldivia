@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="abm-mini"   >
+    <title>Origenes de No Conformidad</title>
+    <obs></obs>
+    <form >
+        <table id="CAL_ACCIONES_NCONF" >
+            <title>Estados</title>
+            <field id="id_accionnconf" autoinc="true" noshow="true">
+                <label>Cod.</label>
+                <help>Codigo</help>
+            </field>
+            <field id="noconformidad_id" oculto="true">
+                <valor>-1</valor>
+
+            </field>
+            <field id="descripcion_accionnconf">
+                <label>Acción a Realizar</label>
+                <size>40</size>
+            </field>
+			
+			<field id="tipo_accionnconf" noshow="true">
+				<label>Tipo de Acción</label>
+				<options>
+					<option valor="1">Análisis</option>
+					<option valor="2">Preventiva</option>
+					<option valor="3">Correctiva</option>		
+				</options>
+				<valor>1</valor>
+			</field>
+
+            <field id="fecha_accionnconf">
+                <label>Fecha</label>
+                <valor>today</valor>
+                <tipo>date</tipo>
+            </field>
+            <field id="resp_rhpersonal_id" >
+                <helper type="combo" id="HTXUSERS" empty="true">
+		    <field id="id_usuario"/>
+		    <field id="nombre">
+			<expresion>CONCAT(apellido, ' ', Nombre)</expresion>
+		    </field>
+		    <order>
+			<field id="nombre"/>
+		    </order>
+                </helper>
+                <label modpos="nobr">Responsable</label>
+
+                <help >Empleado responsable de la Acción</help>
+            </field>
+        </table>
+    </form>
+</histrix>

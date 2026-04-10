@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF8"?>
+<histrix tipo="abm-mini" subtipo="vertical" imprime="false" width="35">
+  <titulo>Packs</titulo>
+  <obs/>
+  <form detalle="stkpackesc_crud.xml">
+    <table id="STK_PACKS">
+
+      <field id="id_stkpack" noshow="true">
+		<label>Código</label>
+		<detalle>stkpack_id</detalle>
+	  </field>
+
+      <field id="nombre_pack">
+        <label>Nombre</label>
+      </field>
+
+    </table>
+  </form>
+</histrix>

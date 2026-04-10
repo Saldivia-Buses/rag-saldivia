@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix imprime="false" inserta="false" modifica="false" tipo="consulta" transaccional="true">
+  <title>Scan</title>
+  <obs/>
+  <form>
+    <table id="STK_LOCACION" label="Scan">
+          
+          <field id="id_stklocacion"/>
+
+          <field id="codigo_locacion2">
+            <expression>concat(ifnull(
+              (select ' (Fija)' from STK_ARTICULOS where id_stkarticulo = '[__stkarticulo_id__]'  and id_stklocacion = stklocacion_fija_id )
+              , '-'
+              ),
+               codigo_locacion,  
+              ' stock: ', 
+                   ifnull( 
+              (select stock_actual from STK_ARTICULO_LOCACION  WHERE stkarticulo_id = '[__stkarticulo_id__]' and id_stklocacion = stklocacion_id limit 1), '0')
+              , ' ',
+              (select date_format(max(fecha_movimiento), '%d/%m/%y') from STK_MOVIMIENTOS M 
+              where M.stkarticulo_id = '[__stkarticulo_id__]' and 
+                   M.stkdeposito_id = STK_LOCACION.stkdeposito_id 
+                And M.stklocacion_id = STK_LOCACION.id_stklocacion)
+               )</expression>
+             <!-- <expression>
+              case when 
+                ifnull((select 0 from STK_ARTICULOS where id_stkarticulo = '[__stkarticulo_id__]'  and id_stklocacion = stklocacion_fija_id ), 1) = 0 
+              then               
+                concat(
+                      '(Fija)', '-', 
+                      codigo_locacion,  
+                      ' stock: ', 
+                      ifnull( 
+                            (select stock_actual from STK_ARTICULO_LOCACION  WHERE stkarticulo_id = '[__stkarticulo_id__]' and id_stklocacion = stklocacion_id limit 1), '0'
+                            )
+                      , ' ',
+                      (select date_format(max(fecha_movimiento), '%d/%m/%y') from STK_MOVIMIENTOS M 
+                      where M.stkarticulo_id = '[__stkarticulo_id__]' and 
+                           M.stkdeposito_id = STK_LOCACION.stkdeposito_id 
+                        And M.stklocacion_id = STK_LOCACION.id_stklocacion)
+                      ) end
+             </expression>  -->
+               <!-- <expression>concat(codigo_locacion, if([__fija__]=0,
+                                  ' (Fija)', 
+                                   '' ),
+     ' stock: ', ifnull(
+                                  (SELECT stock_actual
+                                   FROM STK_ARTICULO_LOCACION
+                                   WHERE stkarticulo_id = '[__stkarticulo_id__]'
+                                     AND id_stklocacion = stklocacion_id LIMIT 1), '0') , 
+     ' ',
+     (SELECT date_format(max(fecha_movimiento), '%d/%m/%y')
+      FROM STK_MOVIMIENTOS M
+      WHERE M.stkarticulo_id = '[__stkarticulo_id__]'
+        AND M.stkdeposito_id = STK_LOCACION.stkdeposito_id
+        AND M.stklocacion_id = STK_LOCACION.id_stklocacion) )</expression>  -->
+          </field>
+
+          <field id="stkarticulo_id" local="true" oculto="true"/>
+
+          <field id="fija">
+            <expression>ifnull((select 0 from STK_ARTICULOS where id_stkarticulo = '[__stkarticulo_id__]'  and id_stklocacion = stklocacion_fija_id ), 1)</expression>
+            <tipo>integer</tipo>
+<!--             <detalle>fija</detalle>
+ -->          </field>
+
+          <field id="codigo_locacion" noshow="true" />
+
+          <field id="stock" _bloqueafila="true">
+            <expression having="false">(select stock_actual from STK_ARTICULO_LOCACION  WHERE stkarticulo_id = '[__stkarticulo_id__]' and id_stklocacion = stklocacion_id limit 1)</expression>
+            <condicion operador="!=">0 </condicion>
+            <detalle>stock</detalle>
+          </field>
+
+          <field id="stkdeposito_origen_id">
+            <expression>stkdeposito_id</expression>
+            <detalle>stkdeposito_origen_id</detalle>
+          </field>
+
+          <field id="computable">
+            <expression having="false">(select suma_total from STK_DEPOSITOS where id_stkdeposito = stkdeposito_id)</expression>
+            <condicion operador="=">1</condicion>
+          </field>
+
+          <order>
+            <field id="fija" />
+            <field id="codigo_locacion" />
+          </order> 
+
+
+  </table>
+  </form>
+</histrix>

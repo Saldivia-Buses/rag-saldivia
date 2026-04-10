@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="fichaing" preFetch="true" inserta="false" modifica="false" confirma="Eliminar Solicitud">
+  <title>VIAJANTES</title>
+  <obs></obs>
+    <eventos>
+        <event id="procesar">close</event>
+        <event id="procesar">refresh</event>
+    </eventos>
+  <form >
+
+    <table id="REG_CUENTA" label="VIAJANTES">
+      <movimientos>
+          <relacion id="eliminar_cliente_del.xml" />
+      </movimientos>
+
+    <fieldGroup>
+      <field id="id_regcuenta" noshow="true">
+      <detalle>id_regcuenta</detalle>
+      </field>
+
+      <field id="nombre_cuenta" deshabilitado="true">
+           <label>Nombre o Razon Social</label>
+      </field>
+      <field id="subsistema_id" noshow="true" esClave="true" valauto="true">
+          <operador>=</operador>
+      </field>
+    </fieldGroup>
+  
+  </table>
+  </form>
+</histrix>  

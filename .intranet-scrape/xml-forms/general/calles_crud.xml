@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" preloadData="false">
+  <title>Calles</title>
+  <obs></obs>
+  <form>
+    <table id="GEN_CALLES" label="Calles">
+	
+       <filters>
+
+       	<field id="nacionalidad_id">
+						<label>País</label>
+						<operador>=</operador>
+					</field>
+
+			<field id="provincia_id">
+				<label modpos="nobr">Provincia</label>
+				<operador>=</operador>
+			</field>
+
+			<field id="localidad_id">
+				<label modpos="nobr">Localidad</label>
+				<operador>=</operador>
+			</field>
+
+       </filters>
+    
+		<field id="id_calle" autoinc="true" noshow="true">
+			<label>Código</label>
+		</field>
+
+		<field id="nacionalidad_id" local="true" style="padding:2px 2px 2px 2px;width:250px;vertical-align:middle;">
+		    <label >País</label>
+		    <helper id="GEN_NACIONALIDADES" type="combo" empty="true">
+		        <field id="id_nacionalidad" >
+		        	<condicion operador="=">14 OR id_nacionalidad = 16</condicion>
+		        </field>
+		        <field id="pais" />
+					<order>
+	           			<field id="pais" />
+					</order>
+	    	</helper>
+	    	<actualiza>
+        		<field id="provincia_id" destino="nacionalidad_id"/>
+     		</actualiza>
+	    </field>   
+
+	    <field id="provincia_id" local="true" _sincelda="true" style="padding:2px 2px 2px 2px;width:250px;vertical-align:middle;">
+      		<label>Provincia</label>
+      		<helper id="GEN_PROVINCIAS" type="combo" empty="true">
+		        <field id="id_provincia" />
+		        <field id="nombre_provincia" />
+		        <field id="nacionalidad_id" oculto="true"/>
+					<order>
+	           			<field id="nombre_provincia" />
+					</order>
+	    	</helper>
+      		<actualiza>
+        		<field id="localidad_id" destino="provincia_id"/>
+      		</actualiza>
+    	</field>
+
+		<field id="localidad_id" local="true" style="padding:2px 2px 2px 2px;width:300px;vertical-align:middle;" >
+          <label>Localidad</label>
+          <helper type="combo" xml="localidad_qry.xml" dir="/ayudas" empty="true">
+            <field id="provincia_id" oculto="true">
+              <condicion operador="=">-1</condicion>
+            </field>
+          </helper>
+        </field>
+
+		<field id="nombre_calle">
+			<label>Nombre Calle</label>
+			<help>Nombre de la Calle</help>
+		</field>
+
+    </table>
+  </form>
+</histrix>  

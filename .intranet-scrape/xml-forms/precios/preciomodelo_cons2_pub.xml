@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta"   >
+	<title>PRECIOS POR MODELO</title>
+	<obs/>
+	<form >
+		<table id="GRUPOPRECIOS" >
+			<title>Precios por modelo</title>
+
+
+
+	
+			<field id="nrocar" noshow="true">
+			</field>		
+			<field id="idGrupo" noshow="true">
+			</field>			
+			<field id="idLista" local="true" noshow="true">
+			</field>			
+<!--			<field id="desabv">
+				<expresion>concat(MARCHASIS.desabv,' ', MODCHASIS.moddes)</expresion>
+				<label colstyle="width:100px;"></label>
+				<tipo>varchar</tipo>
+			</field>		-->	
+			<field id="cons3" obj="preciomodelo_cons3.xml" showObjTabla="true"   local="true" PDFlineas="false">
+				<paring destino="idLista" operador="=">idLista</paring>				
+				<paring destino="idGrupo" operador="=">idGrupo</paring>
+				<paring destino="nrocar" operador="=">nrocar</paring>
+			</field>
+			<field id="cons4" obj="preciomodelo_cons4_pub.xml" showObjTabla="true"   local="true"  PDFlineas="false">
+				<paring destino="idLista" operador="=">idLista</paring>				
+				
+				<paring destino="idGrupo" operador="=">idGrupo</paring>
+				<paring destino="nrocar" operador="=">nrocar</paring>
+			</field>								
+			<group>
+				<field id="idGrupo"></field>
+			</group>
+		</table>
+<!--		<join>
+			<table id="MARCHASIS">
+				<field id="marcod">
+					<condicion operador="=">GRUPOPRECIOS.marcod</condicion>
+				</field>
+			</table>
+		</join>	
+		<join>
+			<table id="MODCHASIS">
+				<field id="marcod">
+					<condicion operador="=">GRUPOPRECIOS.marcod</condicion>
+				</field>
+				<field id="modcha">
+					<condicion operador="=">GRUPOPRECIOS.modcha</condicion>
+				</field>
+				
+			</table>
+		</join>	-->
+
+		
+	</form>
+</histrix>
