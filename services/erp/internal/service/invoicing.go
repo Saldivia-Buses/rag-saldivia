@@ -153,17 +153,17 @@ func (s *Invoicing) CreateInvoice(ctx context.Context, req CreateInvoiceRequest)
 		return nil, fmt.Errorf("recalculate invoice totals: %w", err)
 	}
 
-	if err := tx.Commit(ctx); err != nil {
-		return nil, fmt.Errorf("commit: %w", err)
-	}
-
-	// StrictLogger after commit — avoids phantom audit entries if commit fails
+	// StrictLogger before commit — abort if audit fails (financial operation)
 	if err := s.audit.WriteStrict(ctx, audit.Entry{
 		TenantID: req.TenantID, UserID: req.UserID,
 		Action: "erp.invoice.created", Resource: uuidStr(inv.ID),
 		Details: map[string]any{"number": req.Number, "type": req.InvoiceType}, IP: req.IP,
 	}); err != nil {
-		slog.Error("STRICT audit failed after invoice commit", "error", err, "invoice_id", uuidStr(inv.ID))
+		return nil, fmt.Errorf("strict audit failed, aborting: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("commit: %w", err)
 	}
 
 	s.publisher.Broadcast(req.TenantID, "erp_invoicing", map[string]any{

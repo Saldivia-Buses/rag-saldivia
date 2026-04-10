@@ -106,7 +106,8 @@ func main() {
 	r := app.Router()
 	r.Get("/health", hc.Handler())
 
-	authRead := sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist, FailOpen: true})
+	// FailOpen=false for ERP — all data is sensitive (financial, PII)
+	authRead := sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist, FailOpen: false})
 	authWrite := sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist, FailOpen: false})
 
 	r.Group(func(r chi.Router) {

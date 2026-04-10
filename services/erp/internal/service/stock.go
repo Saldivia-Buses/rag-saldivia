@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/jackc/pgx/v5/pgtype"
 
@@ -239,6 +240,8 @@ func pgNumericNeg(s string) pgtype.Numeric {
 	if s == "" {
 		s = "0"
 	}
+	// Handle already-negative values: strip leading minus before negating
+	s = strings.TrimPrefix(s, "-")
 	_ = n.Scan("-" + s)
 	return n
 }

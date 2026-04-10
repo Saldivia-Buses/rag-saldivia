@@ -35,3 +35,4 @@
 - [PR #126 Astro Plan 12](project_pr126_astro_plan12.md) -- 10k LOC astro expansion, BLOQUEADO: sqlc not generated (won't compile), ctx.Brief typo, user isolation gap in GetMessages
 - [PR #131 Plan 16 Polish](project_pr131_plan16_polish.md) -- pkg/server bootstrap + 12 main.go migrations, blockers: Timeout kills WS/SSE, compose broken, agent modules missing
 - [PR #138 Plan 17 Phases 7b+8](project_pr138_plan17_7b_8.md) -- ERP accounts+production+C2 fix, blockers: trigger crashes Allocate (no status col), balance update silent failure
+- [PR #141 Post-audit ERP](project_pr141_post_audit.md) -- Post-audit fixes, APPROVED, float64 precision in cash count diff is medium finding
