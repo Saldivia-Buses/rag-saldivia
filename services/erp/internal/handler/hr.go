@@ -60,6 +60,10 @@ func (h *HR) CreateDepartment(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
 		return
 	}
+	if body.Code == "" || body.Name == "" {
+		http.Error(w, `{"error":"code and name are required"}`, http.StatusBadRequest)
+		return
+	}
 	d, err := h.svc.CreateDepartment(r.Context(), repository.CreateDepartmentParams{
 		TenantID: slug, Code: body.Code, Name: body.Name,
 		ParentID: optUUID(body.ParentID), ManagerID: optUUID(body.ManagerID),
@@ -126,6 +130,11 @@ func (h *HR) UpsertEmployee(w http.ResponseWriter, r *http.Request) {
 	var hd string
 	if body.HireDate != nil { hd = *body.HireDate }
 	if body.ScheduleType == "" { body.ScheduleType = "full_time" }
+	validSchedule := map[string]bool{"full_time": true, "part_time": true, "shifts": true}
+	if !validSchedule[body.ScheduleType] {
+		http.Error(w, `{"error":"invalid schedule_type (full_time, part_time, shifts)"}`, http.StatusBadRequest)
+		return
+	}
 	ed, err := h.svc.UpsertEmployee(r.Context(), repository.UpsertEmployeeDetailParams{
 		TenantID: slug, EntityID: entityID, DepartmentID: optUUID(body.DepartmentID),
 		Position: body.Position, HireDate: pgDate(hd),
@@ -171,6 +180,15 @@ func (h *HR) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		return
+	}
+	validEventTypes := map[string]bool{"absence": true, "leave": true, "accident": true, "transfer": true, "promotion": true, "sanction": true, "overtime": true, "vacation": true}
+	if !validEventTypes[body.EventType] {
+		http.Error(w, `{"error":"invalid event_type"}`, http.StatusBadRequest)
+		return
+	}
+	if body.DateFrom == "" {
+		http.Error(w, `{"error":"date_from is required"}`, http.StatusBadRequest)
 		return
 	}
 	entityID, err := parseUUID(body.EntityID)

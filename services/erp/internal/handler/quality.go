@@ -75,6 +75,13 @@ func (h *Quality) CreateNC(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest); return
 	}
+	if body.Number == "" || body.Description == "" {
+		http.Error(w, `{"error":"number and description are required"}`, http.StatusBadRequest); return
+	}
+	validSev := map[string]bool{"minor": true, "major": true, "critical": true}
+	if !validSev[body.Severity] {
+		http.Error(w, `{"error":"invalid severity (minor, major, critical)"}`, http.StatusBadRequest); return
+	}
 	nc, err := h.svc.CreateNC(r.Context(), repository.CreateNonconformityParams{
 		TenantID: slug, Number: body.Number, Date: pgDate(body.Date),
 		TypeID: optUUID(body.TypeID), OriginID: optUUID(body.OriginID),
@@ -99,8 +106,18 @@ func (h *Quality) UpdateNCStatus(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest); return
 	}
+	validNCStatus := map[string]bool{"open": true, "investigating": true, "corrective_action": true, "closed": true}
+	if !validNCStatus[body.Status] {
+		http.Error(w, `{"error":"invalid status (open, investigating, corrective_action, closed)"}`, http.StatusBadRequest); return
+	}
 	if err := h.svc.UpdateNCStatus(r.Context(), id, slug, body.Status, r.Header.Get("X-User-ID"), r.RemoteAddr); err != nil {
-		http.Error(w, `{"error":"not found"}`, http.StatusNotFound); return
+		if err.Error() == "NC not found" {
+			http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		} else {
+			slog.Error("update NC status failed", "error", err)
+			http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		}
+		return
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -129,6 +146,10 @@ func (h *Quality) CreateCA(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest); return
+	}
+	validActionType := map[string]bool{"corrective": true, "preventive": true}
+	if !validActionType[body.ActionType] || body.Description == "" {
+		http.Error(w, `{"error":"valid action_type and description required"}`, http.StatusBadRequest); return
 	}
 	var dd string
 	if body.DueDate != nil { dd = *body.DueDate }
