@@ -413,6 +413,19 @@ type ErpBom struct {
 	Notes     string         `json:"notes"`
 }
 
+type ErpCalendarEvent struct {
+	ID          pgtype.UUID        `json:"id"`
+	TenantID    string             `json:"tenant_id"`
+	Title       string             `json:"title"`
+	Description string             `json:"description"`
+	StartAt     pgtype.Timestamptz `json:"start_at"`
+	EndAt       pgtype.Timestamptz `json:"end_at"`
+	AllDay      bool               `json:"all_day"`
+	EntityID    pgtype.UUID        `json:"entity_id"`
+	UserID      string             `json:"user_id"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+}
+
 type ErpCashCount struct {
 	ID             pgtype.UUID        `json:"id"`
 	TenantID       string             `json:"tenant_id"`
@@ -463,6 +476,24 @@ type ErpCheck struct {
 	MovementID pgtype.UUID        `json:"movement_id"`
 	Notes      string             `json:"notes"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpCommunication struct {
+	ID        pgtype.UUID        `json:"id"`
+	TenantID  string             `json:"tenant_id"`
+	Subject   string             `json:"subject"`
+	Body      string             `json:"body"`
+	SenderID  string             `json:"sender_id"`
+	Priority  string             `json:"priority"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpCommunicationRecipient struct {
+	ID              pgtype.UUID        `json:"id"`
+	TenantID        string             `json:"tenant_id"`
+	CommunicationID pgtype.UUID        `json:"communication_id"`
+	RecipientID     string             `json:"recipient_id"`
+	ReadAt          pgtype.Timestamptz `json:"read_at"`
 }
 
 type ErpControlledDocument struct {
@@ -597,6 +628,18 @@ type ErpFiscalYear struct {
 	Status    string      `json:"status"`
 }
 
+type ErpFuelLog struct {
+	ID        pgtype.UUID        `json:"id"`
+	TenantID  string             `json:"tenant_id"`
+	AssetID   pgtype.UUID        `json:"asset_id"`
+	Date      pgtype.Date        `json:"date"`
+	Liters    pgtype.Numeric     `json:"liters"`
+	KmReading pgtype.Int4        `json:"km_reading"`
+	Cost      pgtype.Numeric     `json:"cost"`
+	UserID    string             `json:"user_id"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
 type ErpHrEvent struct {
 	ID        pgtype.UUID        `json:"id"`
 	TenantID  string             `json:"tenant_id"`
@@ -673,6 +716,32 @@ type ErpJournalLine struct {
 	Credit       pgtype.Numeric `json:"credit"`
 	Description  string         `json:"description"`
 	SortOrder    int32          `json:"sort_order"`
+}
+
+type ErpMaintenanceAsset struct {
+	ID        pgtype.UUID        `json:"id"`
+	TenantID  string             `json:"tenant_id"`
+	Code      string             `json:"code"`
+	Name      string             `json:"name"`
+	AssetType string             `json:"asset_type"`
+	UnitID    pgtype.UUID        `json:"unit_id"`
+	Location  string             `json:"location"`
+	Metadata  []byte             `json:"metadata"`
+	Active    bool               `json:"active"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpMaintenancePlan struct {
+	ID             pgtype.UUID `json:"id"`
+	TenantID       string      `json:"tenant_id"`
+	AssetID        pgtype.UUID `json:"asset_id"`
+	Name           string      `json:"name"`
+	FrequencyDays  pgtype.Int4 `json:"frequency_days"`
+	FrequencyKm    pgtype.Int4 `json:"frequency_km"`
+	FrequencyHours pgtype.Int4 `json:"frequency_hours"`
+	LastDone       pgtype.Date `json:"last_done"`
+	NextDue        pgtype.Date `json:"next_due"`
+	Active         bool        `json:"active"`
 }
 
 type ErpNonconformity struct {
@@ -920,6 +989,24 @@ type ErpSuggestionResponse struct {
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 }
 
+type ErpSurvey struct {
+	ID          pgtype.UUID        `json:"id"`
+	TenantID    string             `json:"tenant_id"`
+	Title       string             `json:"title"`
+	Description string             `json:"description"`
+	Status      string             `json:"status"`
+	UserID      string             `json:"user_id"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpSurveyQuestion struct {
+	ID        pgtype.UUID `json:"id"`
+	TenantID  string      `json:"tenant_id"`
+	SurveyID  pgtype.UUID `json:"survey_id"`
+	Question  string      `json:"question"`
+	SortOrder int32       `json:"sort_order"`
+}
+
 type ErpTaxEntry struct {
 	ID        pgtype.UUID        `json:"id"`
 	TenantID  string             `json:"tenant_id"`
@@ -1026,6 +1113,32 @@ type ErpWithholding struct {
 	CertificateNum pgtype.Text        `json:"certificate_num"`
 	Date           pgtype.Date        `json:"date"`
 	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpWorkOrder struct {
+	ID          pgtype.UUID        `json:"id"`
+	TenantID    string             `json:"tenant_id"`
+	Number      string             `json:"number"`
+	AssetID     pgtype.UUID        `json:"asset_id"`
+	PlanID      pgtype.UUID        `json:"plan_id"`
+	Date        pgtype.Date        `json:"date"`
+	WorkType    string             `json:"work_type"`
+	Description string             `json:"description"`
+	AssignedTo  pgtype.UUID        `json:"assigned_to"`
+	Status      string             `json:"status"`
+	Priority    string             `json:"priority"`
+	CompletedAt pgtype.Timestamptz `json:"completed_at"`
+	UserID      string             `json:"user_id"`
+	Notes       string             `json:"notes"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpWorkOrderPart struct {
+	ID          pgtype.UUID    `json:"id"`
+	TenantID    string         `json:"tenant_id"`
+	WorkOrderID pgtype.UUID    `json:"work_order_id"`
+	ArticleID   pgtype.UUID    `json:"article_id"`
+	Quantity    pgtype.Numeric `json:"quantity"`
 }
 
 type FeedbackEvent struct {
