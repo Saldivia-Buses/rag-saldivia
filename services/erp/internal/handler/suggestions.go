@@ -16,12 +16,13 @@ import (
 
 // Suggestions handles suggestion endpoints.
 type Suggestions struct {
-	svc *service.Suggestions
+	svc      *service.Suggestions
+	tenantID string // tenant slug, resolved at startup
 }
 
 // NewSuggestions creates a suggestion handler.
-func NewSuggestions(svc *service.Suggestions) *Suggestions {
-	return &Suggestions{svc: svc}
+func NewSuggestions(svc *service.Suggestions, tenantID string) *Suggestions {
+	return &Suggestions{svc: svc, tenantID: tenantID}
 }
 
 // Routes returns the chi router for suggestion endpoints.
@@ -48,11 +49,7 @@ func (h *Suggestions) Routes() chi.Router {
 
 // List returns paginated suggestions.
 func (h *Suggestions) List(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := parseTenantID(r)
-	if !ok {
-		http.Error(w, `{"error":"missing tenant context"}`, http.StatusBadRequest)
-		return
-	}
+	tenantID := h.tenantID
 
 	p := pagination.Parse(r)
 
@@ -73,11 +70,7 @@ func (h *Suggestions) List(w http.ResponseWriter, r *http.Request) {
 
 // Get returns a suggestion with its response thread.
 func (h *Suggestions) Get(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := parseTenantID(r)
-	if !ok {
-		http.Error(w, `{"error":"missing tenant context"}`, http.StatusBadRequest)
-		return
-	}
+	tenantID := h.tenantID
 
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
@@ -100,11 +93,7 @@ func (h *Suggestions) Get(w http.ResponseWriter, r *http.Request) {
 
 // Create creates a new suggestion.
 func (h *Suggestions) Create(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := parseTenantID(r)
-	if !ok {
-		http.Error(w, `{"error":"missing tenant context"}`, http.StatusBadRequest)
-		return
-	}
+	tenantID := h.tenantID
 
 	r.Body = http.MaxBytesReader(w, r.Body, 16<<10) // 16KB max
 
@@ -117,7 +106,7 @@ func (h *Suggestions) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, _ := parseUserID(r)
+	userID := r.Header.Get("X-User-ID")
 
 	suggestion, err := h.svc.Create(r.Context(), service.CreateRequest{
 		TenantID: tenantID,
@@ -139,11 +128,7 @@ func (h *Suggestions) Create(w http.ResponseWriter, r *http.Request) {
 
 // Respond adds a response to a suggestion.
 func (h *Suggestions) Respond(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := parseTenantID(r)
-	if !ok {
-		http.Error(w, `{"error":"missing tenant context"}`, http.StatusBadRequest)
-		return
-	}
+	tenantID := h.tenantID
 
 	suggestionID, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
@@ -161,7 +146,7 @@ func (h *Suggestions) Respond(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, _ := parseUserID(r)
+	userID := r.Header.Get("X-User-ID")
 
 	response, err := h.svc.Respond(r.Context(), service.RespondRequest{
 		TenantID:     tenantID,
@@ -183,11 +168,7 @@ func (h *Suggestions) Respond(w http.ResponseWriter, r *http.Request) {
 
 // MarkRead marks a suggestion as read.
 func (h *Suggestions) MarkRead(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := parseTenantID(r)
-	if !ok {
-		http.Error(w, `{"error":"missing tenant context"}`, http.StatusBadRequest)
-		return
-	}
+	tenantID := h.tenantID
 
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
@@ -205,11 +186,7 @@ func (h *Suggestions) MarkRead(w http.ResponseWriter, r *http.Request) {
 
 // CountUnread returns the number of unread suggestions.
 func (h *Suggestions) CountUnread(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := parseTenantID(r)
-	if !ok {
-		http.Error(w, `{"error":"missing tenant context"}`, http.StatusBadRequest)
-		return
-	}
+	tenantID := h.tenantID
 
 	count, err := h.svc.CountUnread(r.Context(), tenantID)
 	if err != nil {
@@ -221,22 +198,3 @@ func (h *Suggestions) CountUnread(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]any{"unread": count})
 }
 
-// parseTenantID extracts tenant ID from JWT claims (set by auth middleware).
-func parseTenantID(r *http.Request) (uuid.UUID, bool) {
-	tid := r.Header.Get("X-Tenant-ID")
-	if tid == "" {
-		return uuid.Nil, false
-	}
-	id, err := uuid.Parse(tid)
-	return id, err == nil
-}
-
-// parseUserID extracts user ID from JWT claims.
-func parseUserID(r *http.Request) (uuid.UUID, bool) {
-	uid := r.Header.Get("X-User-ID")
-	if uid == "" {
-		return uuid.Nil, false
-	}
-	id, err := uuid.Parse(uid)
-	return id, err == nil
-}

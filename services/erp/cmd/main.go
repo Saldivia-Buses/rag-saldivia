@@ -60,7 +60,7 @@ func main() {
 	// Repository + Service + Handler
 	repo := repository.New(pool)
 	suggestionsSvc := service.NewSuggestions(repo, auditWriter, publisher, tenantSlug)
-	suggestionsHandler := handler.NewSuggestions(suggestionsSvc)
+	suggestionsHandler := handler.NewSuggestions(suggestionsSvc, tenantSlug)
 
 	// Health
 	hc := health.New("erp")

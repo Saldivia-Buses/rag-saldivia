@@ -4,22 +4,21 @@
 
 CREATE TABLE IF NOT EXISTS erp_suggestions (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tenant_id   UUID NOT NULL,
-    user_id     UUID NOT NULL,          -- who submitted
-    origin      TEXT NOT NULL DEFAULT '',-- department/area
-    body        TEXT NOT NULL,           -- suggestion content
+    tenant_id   TEXT NOT NULL,              -- tenant slug (single-tenant V1)
+    user_id     TEXT NOT NULL DEFAULT '',   -- user identifier from JWT
+    origin      TEXT NOT NULL DEFAULT '',   -- department/area
+    body        TEXT NOT NULL,              -- suggestion content
     is_read     BOOLEAN NOT NULL DEFAULT false,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_erp_suggestions_tenant ON erp_suggestions(tenant_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_erp_suggestions_user ON erp_suggestions(tenant_id, user_id);
 
 CREATE TABLE IF NOT EXISTS erp_suggestion_responses (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tenant_id       UUID NOT NULL,
+    tenant_id       TEXT NOT NULL,
     suggestion_id   UUID NOT NULL REFERENCES erp_suggestions(id) ON DELETE CASCADE,
-    user_id         UUID NOT NULL,  -- who responded
+    user_id         TEXT NOT NULL DEFAULT '',
     body            TEXT NOT NULL,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );

@@ -32,12 +32,12 @@ func NewSuggestions(repo *repository.Queries, auditWriter *audit.Writer, publish
 }
 
 // List returns paginated suggestions with response count.
-func (s *Suggestions) List(ctx context.Context, tenantID uuid.UUID, limit, offset int) ([]repository.Suggestion, error) {
+func (s *Suggestions) List(ctx context.Context, tenantID string, limit, offset int) ([]repository.Suggestion, error) {
 	return s.repo.ListSuggestions(ctx, tenantID, limit, offset)
 }
 
 // Get returns a single suggestion with its responses.
-func (s *Suggestions) Get(ctx context.Context, id, tenantID uuid.UUID) (*repository.Suggestion, []repository.SuggestionResponse, error) {
+func (s *Suggestions) Get(ctx context.Context, id uuid.UUID, tenantID string) (*repository.Suggestion, []repository.SuggestionResponse, error) {
 	suggestion, err := s.repo.GetSuggestion(ctx, id, tenantID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("get suggestion: %w", err)
@@ -53,8 +53,8 @@ func (s *Suggestions) Get(ctx context.Context, id, tenantID uuid.UUID) (*reposit
 
 // CreateRequest holds data for creating a suggestion.
 type CreateRequest struct {
-	TenantID uuid.UUID
-	UserID   uuid.UUID
+	TenantID string
+	UserID   string
 	Origin   string
 	Body     string
 	IP       string
@@ -74,7 +74,7 @@ func (s *Suggestions) Create(ctx context.Context, req CreateRequest) (*repositor
 	// Audit
 	s.audit.Write(ctx, audit.Entry{
 		TenantID: s.tenantSlug,
-		UserID:   req.UserID.String(),
+		UserID:   req.UserID,
 		Action:   "erp.suggestion.created",
 		Resource: suggestion.ID.String(),
 		Details:  map[string]any{"origin": req.Origin},
@@ -84,7 +84,7 @@ func (s *Suggestions) Create(ctx context.Context, req CreateRequest) (*repositor
 	// Notify via NATS → notification service can alert admins
 	s.publisher.Notify(s.tenantSlug, "new_suggestion", map[string]any{
 		"suggestion_id": suggestion.ID.String(),
-		"user_id":       req.UserID.String(),
+		"user_id":       req.UserID,
 		"origin":        req.Origin,
 		"preview":       truncate(req.Body, 100),
 	})
@@ -101,9 +101,9 @@ func (s *Suggestions) Create(ctx context.Context, req CreateRequest) (*repositor
 
 // RespondRequest holds data for responding to a suggestion.
 type RespondRequest struct {
-	TenantID     uuid.UUID
+	TenantID     string
 	SuggestionID uuid.UUID
-	UserID       uuid.UUID
+	UserID       string
 	Body         string
 	IP           string
 }
@@ -133,7 +133,7 @@ func (s *Suggestions) Respond(ctx context.Context, req RespondRequest) (*reposit
 	// Audit
 	s.audit.Write(ctx, audit.Entry{
 		TenantID: s.tenantSlug,
-		UserID:   req.UserID.String(),
+		UserID:   req.UserID,
 		Action:   "erp.suggestion.responded",
 		Resource: req.SuggestionID.String(),
 		Details:  map[string]any{"response_id": response.ID.String()},
@@ -151,12 +151,12 @@ func (s *Suggestions) Respond(ctx context.Context, req RespondRequest) (*reposit
 }
 
 // MarkRead marks a suggestion as read.
-func (s *Suggestions) MarkRead(ctx context.Context, id, tenantID uuid.UUID) error {
+func (s *Suggestions) MarkRead(ctx context.Context, id uuid.UUID, tenantID string) error {
 	return s.repo.MarkSuggestionRead(ctx, id, tenantID)
 }
 
 // CountUnread returns the number of unread suggestions.
-func (s *Suggestions) CountUnread(ctx context.Context, tenantID uuid.UUID) (int, error) {
+func (s *Suggestions) CountUnread(ctx context.Context, tenantID string) (int, error) {
 	return s.repo.CountUnread(ctx, tenantID)
 }
 

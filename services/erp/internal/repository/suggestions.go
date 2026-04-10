@@ -1,5 +1,4 @@
 // Package repository provides database access for ERP modules.
-// Matches sqlc output patterns — regenerate with `make sqlc` when queries change.
 package repository
 
 import (
@@ -13,8 +12,8 @@ import (
 // Suggestion represents a row in erp_suggestions.
 type Suggestion struct {
 	ID            uuid.UUID `json:"id"`
-	TenantID      uuid.UUID `json:"tenant_id"`
-	UserID        uuid.UUID `json:"user_id"`
+	TenantID      string    `json:"tenant_id"`
+	UserID        string    `json:"user_id"`
 	Origin        string    `json:"origin"`
 	Body          string    `json:"body"`
 	IsRead        bool      `json:"is_read"`
@@ -26,9 +25,9 @@ type Suggestion struct {
 // SuggestionResponse represents a row in erp_suggestion_responses.
 type SuggestionResponse struct {
 	ID           uuid.UUID `json:"id"`
-	TenantID     uuid.UUID `json:"tenant_id"`
+	TenantID     string    `json:"tenant_id"`
 	SuggestionID uuid.UUID `json:"suggestion_id"`
-	UserID       uuid.UUID `json:"user_id"`
+	UserID       string    `json:"user_id"`
 	Body         string    `json:"body"`
 	CreatedAt    time.Time `json:"created_at"`
 }
@@ -44,7 +43,7 @@ func New(db *pgxpool.Pool) *Queries {
 }
 
 // ListSuggestions returns paginated suggestions with response count.
-func (q *Queries) ListSuggestions(ctx context.Context, tenantID uuid.UUID, limit, offset int) ([]Suggestion, error) {
+func (q *Queries) ListSuggestions(ctx context.Context, tenantID string, limit, offset int) ([]Suggestion, error) {
 	rows, err := q.db.Query(ctx,
 		`SELECT s.id, s.tenant_id, s.user_id, s.origin, s.body, s.is_read, s.created_at, s.updated_at,
 		        COUNT(r.id)::INT AS response_count
@@ -76,7 +75,7 @@ func (q *Queries) ListSuggestions(ctx context.Context, tenantID uuid.UUID, limit
 }
 
 // GetSuggestion returns a single suggestion by ID.
-func (q *Queries) GetSuggestion(ctx context.Context, id, tenantID uuid.UUID) (*Suggestion, error) {
+func (q *Queries) GetSuggestion(ctx context.Context, id uuid.UUID, tenantID string) (*Suggestion, error) {
 	var s Suggestion
 	err := q.db.QueryRow(ctx,
 		`SELECT id, tenant_id, user_id, origin, body, is_read, created_at, updated_at
@@ -91,7 +90,7 @@ func (q *Queries) GetSuggestion(ctx context.Context, id, tenantID uuid.UUID) (*S
 }
 
 // CreateSuggestion inserts a new suggestion.
-func (q *Queries) CreateSuggestion(ctx context.Context, tenantID, userID uuid.UUID, origin, body string) (*Suggestion, error) {
+func (q *Queries) CreateSuggestion(ctx context.Context, tenantID, userID, origin, body string) (*Suggestion, error) {
 	var s Suggestion
 	err := q.db.QueryRow(ctx,
 		`INSERT INTO erp_suggestions (tenant_id, user_id, origin, body)
@@ -106,7 +105,7 @@ func (q *Queries) CreateSuggestion(ctx context.Context, tenantID, userID uuid.UU
 }
 
 // MarkSuggestionRead marks a suggestion as read.
-func (q *Queries) MarkSuggestionRead(ctx context.Context, id, tenantID uuid.UUID) error {
+func (q *Queries) MarkSuggestionRead(ctx context.Context, id uuid.UUID, tenantID string) error {
 	_, err := q.db.Exec(ctx,
 		`UPDATE erp_suggestions SET is_read = true, updated_at = now()
 		 WHERE id = $1 AND tenant_id = $2`,
@@ -115,7 +114,7 @@ func (q *Queries) MarkSuggestionRead(ctx context.Context, id, tenantID uuid.UUID
 }
 
 // ListResponses returns all responses for a suggestion.
-func (q *Queries) ListResponses(ctx context.Context, suggestionID, tenantID uuid.UUID) ([]SuggestionResponse, error) {
+func (q *Queries) ListResponses(ctx context.Context, suggestionID uuid.UUID, tenantID string) ([]SuggestionResponse, error) {
 	rows, err := q.db.Query(ctx,
 		`SELECT id, tenant_id, suggestion_id, user_id, body, created_at
 		 FROM erp_suggestion_responses
@@ -142,7 +141,7 @@ func (q *Queries) ListResponses(ctx context.Context, suggestionID, tenantID uuid
 }
 
 // CreateResponse inserts a new response to a suggestion.
-func (q *Queries) CreateResponse(ctx context.Context, tenantID, suggestionID, userID uuid.UUID, body string) (*SuggestionResponse, error) {
+func (q *Queries) CreateResponse(ctx context.Context, tenantID string, suggestionID uuid.UUID, userID, body string) (*SuggestionResponse, error) {
 	var r SuggestionResponse
 	err := q.db.QueryRow(ctx,
 		`INSERT INTO erp_suggestion_responses (tenant_id, suggestion_id, user_id, body)
@@ -156,7 +155,7 @@ func (q *Queries) CreateResponse(ctx context.Context, tenantID, suggestionID, us
 }
 
 // CountUnread returns the number of unread suggestions.
-func (q *Queries) CountUnread(ctx context.Context, tenantID uuid.UUID) (int, error) {
+func (q *Queries) CountUnread(ctx context.Context, tenantID string) (int, error) {
 	var count int
 	err := q.db.QueryRow(ctx,
 		`SELECT COUNT(*)::INT FROM erp_suggestions WHERE tenant_id = $1 AND is_read = false`,
