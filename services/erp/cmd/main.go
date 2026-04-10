@@ -76,6 +76,10 @@ func main() {
 	salesHandler := handler.NewSales(salesSvc)
 	invoicingSvc := service.NewInvoicing(repo, pool, auditWriter, publisher)
 	invoicingHandler := handler.NewInvoicing(invoicingSvc)
+	currentAccountsSvc := service.NewCurrentAccounts(repo, pool, auditWriter, publisher)
+	currentAccountsHandler := handler.NewCurrentAccounts(currentAccountsSvc)
+	productionSvc := service.NewProduction(repo, pool, auditWriter, publisher)
+	productionHandler := handler.NewProduction(productionSvc)
 
 	// Health
 	hc := health.New("erp")
@@ -108,6 +112,8 @@ func main() {
 		r.Mount("/v1/erp/purchasing", purchasingHandler.Routes(authWrite))
 		r.Mount("/v1/erp/sales", salesHandler.Routes(authWrite))
 		r.Mount("/v1/erp/invoicing", invoicingHandler.Routes(authWrite))
+		r.Mount("/v1/erp/accounts", currentAccountsHandler.Routes(authWrite))
+		r.Mount("/v1/erp/production", productionHandler.Routes(authWrite))
 	})
 
 	app.Run()

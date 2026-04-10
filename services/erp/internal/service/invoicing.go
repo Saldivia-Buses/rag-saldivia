@@ -179,20 +179,79 @@ func (s *Invoicing) CreateInvoice(ctx context.Context, req CreateInvoiceRequest)
 	return &InvoiceDetail{Invoice: inv, Lines: lines}, nil
 }
 
+// PostInvoice posts a draft invoice: changes status, generates tax entries (libro IVA),
+// all in a single transaction.
 func (s *Invoicing) PostInvoice(ctx context.Context, id pgtype.UUID, tenantID, userID, ip string) error {
-	rows, err := s.repo.PostInvoice(ctx, repository.PostInvoiceParams{ID: id, TenantID: tenantID})
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback(ctx)
+	qtx := s.repo.WithTx(tx)
+
+	// 1. Flip status to posted
+	rows, err := qtx.PostInvoice(ctx, repository.PostInvoiceParams{ID: id, TenantID: tenantID})
 	if err != nil {
 		return fmt.Errorf("post invoice: %w", err)
 	}
 	if rows == 0 {
 		return fmt.Errorf("invoice not found or not draft")
 	}
+
+	// 2. Fetch invoice + lines to generate tax entries
+	inv, err := qtx.GetInvoice(ctx, repository.GetInvoiceParams{ID: id, TenantID: tenantID})
+	if err != nil {
+		return fmt.Errorf("get invoice for tax gen: %w", err)
+	}
+
+	lines, err := qtx.ListInvoiceLines(ctx, repository.ListInvoiceLinesParams{
+		InvoiceID: id, TenantID: tenantID,
+	})
+	if err != nil {
+		return fmt.Errorf("list lines for tax gen: %w", err)
+	}
+
+	// 3. Generate tax entries grouped by tax_rate
+	// Period from invoice date (YYYY-MM)
+	var period string
+	if inv.Date.Valid {
+		t := inv.Date.Time
+		period = fmt.Sprintf("%04d-%02d", t.Year(), t.Month())
+	}
+
+	direction := "sales"
+	if inv.Direction == "received" {
+		direction = "purchases"
+	}
+
+	for _, line := range lines {
+		_, err := qtx.CreateTaxEntry(ctx, repository.CreateTaxEntryParams{
+			TenantID:  tenantID,
+			InvoiceID: id,
+			Period:    period,
+			Direction: direction,
+			NetAmount: line.LineTotal,
+			TaxRate:   line.TaxRate,
+			TaxAmount: line.TaxAmount,
+		})
+		if err != nil {
+			return fmt.Errorf("create tax entry: %w", err)
+		}
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit post: %w", err)
+	}
+
+	// Audit after commit (avoids phantom entries)
 	if err := s.audit.WriteStrict(ctx, audit.Entry{
 		TenantID: tenantID, UserID: userID,
-		Action: "erp.invoice.posted", Resource: uuidStr(id), IP: ip,
+		Action: "erp.invoice.posted", Resource: uuidStr(id),
+		Details: map[string]any{"period": period, "tax_entries": len(lines)}, IP: ip,
 	}); err != nil {
-		return fmt.Errorf("strict audit failed: %w", err)
+		slog.Error("STRICT audit failed after invoice post", "error", err, "invoice_id", uuidStr(id))
 	}
+
 	s.publisher.Broadcast(tenantID, "erp_invoicing", map[string]any{
 		"action": "invoice_posted", "invoice_id": uuidStr(id),
 	})
