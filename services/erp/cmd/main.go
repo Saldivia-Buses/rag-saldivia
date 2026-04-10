@@ -79,12 +79,12 @@ func main() {
 	r := app.Router()
 	r.Get("/health", hc.Handler())
 
+	authRead := sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist, FailOpen: true})
+	authWrite := sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist, FailOpen: false})
+
 	r.Group(func(r chi.Router) {
-		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{
-			Blacklist: blacklist,
-			FailOpen:  true,
-		}))
-		r.Mount("/v1/erp/suggestions", suggestionsHandler.Routes())
+		r.Use(authRead) // default for mount, write endpoints override below
+		r.Mount("/v1/erp/suggestions", suggestionsHandler.Routes(authWrite))
 		// Future ERP modules mount here:
 		// r.Mount("/v1/erp/reclamos", reclamosHandler.Routes())
 		// r.Mount("/v1/erp/entregas", entregasHandler.Routes())

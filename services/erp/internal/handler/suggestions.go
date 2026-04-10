@@ -26,10 +26,11 @@ func NewSuggestions(svc *service.Suggestions, tenantID string) *Suggestions {
 }
 
 // Routes returns the chi router for suggestion endpoints.
-func (h *Suggestions) Routes() chi.Router {
+// authWrite middleware enforces FailOpen=false on write operations.
+func (h *Suggestions) Routes(authWrite func(http.Handler) http.Handler) chi.Router {
 	r := chi.NewRouter()
 
-	// All users can read + create suggestions
+	// Read endpoints — FailOpen true (inherited from parent group)
 	r.Group(func(r chi.Router) {
 		r.Use(sdamw.RequirePermission("erp.read"))
 		r.Get("/", h.List)
@@ -37,7 +38,9 @@ func (h *Suggestions) Routes() chi.Router {
 		r.Get("/{id}", h.Get)
 	})
 
+	// Write endpoints — FailOpen false (revoked tokens rejected)
 	r.Group(func(r chi.Router) {
+		r.Use(authWrite)
 		r.Use(sdamw.RequirePermission("erp.write"))
 		r.Post("/", h.Create)
 		r.Post("/{id}/respond", h.Respond)
@@ -80,7 +83,12 @@ func (h *Suggestions) Get(w http.ResponseWriter, r *http.Request) {
 
 	suggestion, responses, err := h.svc.Get(r.Context(), id, tenantID)
 	if err != nil {
-		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		if err.Error() == "get suggestion: no rows in result set" {
+			http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		} else {
+			slog.Error("get suggestion failed", "error", err, "id", id)
+			http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		}
 		return
 	}
 
@@ -107,6 +115,10 @@ func (h *Suggestions) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userID := r.Header.Get("X-User-ID")
+	if userID == "" {
+		http.Error(w, `{"error":"missing user identity"}`, http.StatusUnauthorized)
+		return
+	}
 
 	suggestion, err := h.svc.Create(r.Context(), service.CreateRequest{
 		TenantID: tenantID,
@@ -147,6 +159,10 @@ func (h *Suggestions) Respond(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userID := r.Header.Get("X-User-ID")
+	if userID == "" {
+		http.Error(w, `{"error":"missing user identity"}`, http.StatusUnauthorized)
+		return
+	}
 
 	response, err := h.svc.Respond(r.Context(), service.RespondRequest{
 		TenantID:     tenantID,

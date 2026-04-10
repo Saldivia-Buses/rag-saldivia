@@ -68,6 +68,9 @@ func (q *Queries) ListSuggestions(ctx context.Context, tenantID string, limit, o
 		}
 		suggestions = append(suggestions, s)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if suggestions == nil {
 		suggestions = []Suggestion{}
 	}
@@ -133,6 +136,9 @@ func (q *Queries) ListResponses(ctx context.Context, suggestionID uuid.UUID, ten
 			return nil, err
 		}
 		responses = append(responses, r)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	if responses == nil {
 		responses = []SuggestionResponse{}

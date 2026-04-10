@@ -161,8 +161,9 @@ func (s *Suggestions) CountUnread(ctx context.Context, tenantID string) (int, er
 }
 
 func truncate(s string, max int) string {
-	if len(s) <= max {
+	runes := []rune(s)
+	if len(runes) <= max {
 		return s
 	}
-	return s[:max] + "..."
+	return string(runes[:max]) + "..."
 }
