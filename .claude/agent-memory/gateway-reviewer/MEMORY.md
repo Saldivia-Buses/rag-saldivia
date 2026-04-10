@@ -34,3 +34,4 @@
 - [2.0.3 Branch Review](project_pr_2.0.3_review.md) -- Health/OTel/MCP/alerts/dashboards, CAMBIOS REQUERIDOS: JSON injection, db_query bypass, no deploy confirmation
 - [PR #126 Astro Plan 12](project_pr126_astro_plan12.md) -- 10k LOC astro expansion, BLOQUEADO: sqlc not generated (won't compile), ctx.Brief typo, user isolation gap in GetMessages
 - [PR #131 Plan 16 Polish](project_pr131_plan16_polish.md) -- pkg/server bootstrap + 12 main.go migrations, blockers: Timeout kills WS/SSE, compose broken, agent modules missing
+- [PR #138 Plan 17 Phases 7b+8](project_pr138_plan17_7b_8.md) -- ERP accounts+production+C2 fix, blockers: trigger crashes Allocate (no status col), balance update silent failure
