@@ -1,0 +1,219 @@
+package handler
+
+import (
+	"encoding/json"
+	"log/slog"
+	"net/http"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
+
+	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	"github.com/Camionerou/rag-saldivia/services/erp/internal/service"
+)
+
+// Catalogs handles catalog endpoints.
+type Catalogs struct {
+	svc *service.Catalogs
+}
+
+// NewCatalogs creates a catalog handler.
+func NewCatalogs(svc *service.Catalogs) *Catalogs {
+	return &Catalogs{svc: svc}
+}
+
+// Routes returns the chi router for catalog endpoints.
+func (h *Catalogs) Routes(authWrite func(http.Handler) http.Handler) chi.Router {
+	r := chi.NewRouter()
+
+	r.Group(func(r chi.Router) {
+		r.Use(sdamw.RequirePermission("erp.catalogs.read"))
+		r.Get("/", h.List)
+		r.Get("/types", h.ListTypes)
+		r.Get("/{id}", h.Get)
+	})
+
+	r.Group(func(r chi.Router) {
+		r.Use(authWrite)
+		r.Use(sdamw.RequirePermission("erp.catalogs.write"))
+		r.Post("/", h.Create)
+		r.Put("/{id}", h.Update)
+		r.Delete("/{id}", h.Delete)
+	})
+
+	return r
+}
+
+// List returns catalogs filtered by type query param.
+func (h *Catalogs) List(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	catalogType := r.URL.Query().Get("type")
+	if catalogType == "" {
+		http.Error(w, `{"error":"type query param required"}`, http.StatusBadRequest)
+		return
+	}
+
+	activeOnly := r.URL.Query().Get("active") != "false"
+
+	catalogs, err := h.svc.List(r.Context(), slug, catalogType, activeOnly)
+	if err != nil {
+		slog.Error("list catalogs failed", "error", err)
+		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]any{"catalogs": catalogs})
+}
+
+// ListTypes returns distinct catalog types.
+func (h *Catalogs) ListTypes(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+
+	types, err := h.svc.ListTypes(r.Context(), slug)
+	if err != nil {
+		slog.Error("list catalog types failed", "error", err)
+		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]any{"types": types})
+}
+
+// Get returns a single catalog entry.
+func (h *Catalogs) Get(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		return
+	}
+
+	catalog, err := h.svc.Get(r.Context(), id, slug)
+	if err != nil {
+		slog.Error("get catalog failed", "error", err, "id", id)
+		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(catalog)
+}
+
+// Create creates a new catalog entry.
+func (h *Catalogs) Create(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	r.Body = http.MaxBytesReader(w, r.Body, 64<<10) // 64KB
+
+	var body struct {
+		Type     string           `json:"type"`
+		Code     string           `json:"code"`
+		Name     string           `json:"name"`
+		ParentID *uuid.UUID       `json:"parent_id,omitempty"`
+		Sort     int              `json:"sort_order"`
+		Metadata *json.RawMessage `json:"metadata,omitempty"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		return
+	}
+
+	var meta json.RawMessage
+	if body.Metadata != nil {
+		meta = *body.Metadata
+	}
+
+	catalog, err := h.svc.Create(r.Context(), service.CreateCatalogRequest{
+		TenantID: slug,
+		Type:     body.Type,
+		Code:     body.Code,
+		Name:     body.Name,
+		ParentID: body.ParentID,
+		Sort:     body.Sort,
+		Metadata: meta,
+		UserID:   r.Header.Get("X-User-ID"),
+		IP:       r.RemoteAddr,
+	})
+	if err != nil {
+		slog.Error("create catalog failed", "error", err)
+		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(catalog)
+}
+
+// Update updates an existing catalog entry.
+func (h *Catalogs) Update(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	r.Body = http.MaxBytesReader(w, r.Body, 64<<10)
+
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		return
+	}
+
+	var body struct {
+		Code     string           `json:"code"`
+		Name     string           `json:"name"`
+		ParentID *uuid.UUID       `json:"parent_id,omitempty"`
+		Sort     int              `json:"sort_order"`
+		Active   bool             `json:"active"`
+		Metadata *json.RawMessage `json:"metadata,omitempty"`
+	}
+	// Default active to true so omitting it doesn't deactivate
+	body.Active = true
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		return
+	}
+
+	var meta json.RawMessage
+	if body.Metadata != nil {
+		meta = *body.Metadata
+	}
+
+	catalog, err := h.svc.Update(r.Context(), service.UpdateCatalogRequest{
+		ID:       id,
+		TenantID: slug,
+		Code:     body.Code,
+		Name:     body.Name,
+		ParentID: body.ParentID,
+		Sort:     body.Sort,
+		Active:   body.Active,
+		Metadata: meta,
+		UserID:   r.Header.Get("X-User-ID"),
+		IP:       r.RemoteAddr,
+	})
+	if err != nil {
+		slog.Error("update catalog failed", "error", err)
+		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(catalog)
+}
+
+// Delete soft-deletes a catalog entry.
+func (h *Catalogs) Delete(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		return
+	}
+
+	if err := h.svc.Delete(r.Context(), id, slug, r.Header.Get("X-User-ID"), r.RemoteAddr); err != nil {
+		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}

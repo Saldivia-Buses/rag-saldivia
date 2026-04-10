@@ -15,19 +15,17 @@ import (
 
 // Suggestions handles suggestion business logic.
 type Suggestions struct {
-	repo       *repository.Queries
-	audit      *audit.Writer
-	publisher  *traces.Publisher
-	tenantSlug string
+	repo      *repository.Queries
+	audit     *audit.Writer
+	publisher *traces.Publisher
 }
 
 // NewSuggestions creates a suggestions service.
-func NewSuggestions(repo *repository.Queries, auditWriter *audit.Writer, publisher *traces.Publisher, tenantSlug string) *Suggestions {
+func NewSuggestions(repo *repository.Queries, auditWriter *audit.Writer, publisher *traces.Publisher) *Suggestions {
 	return &Suggestions{
-		repo:       repo,
-		audit:      auditWriter,
-		publisher:  publisher,
-		tenantSlug: tenantSlug,
+		repo:      repo,
+		audit:     auditWriter,
+		publisher: publisher,
 	}
 }
 
@@ -73,7 +71,7 @@ func (s *Suggestions) Create(ctx context.Context, req CreateRequest) (*repositor
 
 	// Audit
 	s.audit.Write(ctx, audit.Entry{
-		TenantID: s.tenantSlug,
+		TenantID: req.TenantID,
 		UserID:   req.UserID,
 		Action:   "erp.suggestion.created",
 		Resource: suggestion.ID.String(),
@@ -82,7 +80,7 @@ func (s *Suggestions) Create(ctx context.Context, req CreateRequest) (*repositor
 	})
 
 	// Notify via NATS → notification service can alert admins
-	s.publisher.Notify(s.tenantSlug, "new_suggestion", map[string]any{
+	s.publisher.Notify(req.TenantID, "new_suggestion", map[string]any{
 		"suggestion_id": suggestion.ID.String(),
 		"user_id":       req.UserID,
 		"origin":        req.Origin,
@@ -90,7 +88,7 @@ func (s *Suggestions) Create(ctx context.Context, req CreateRequest) (*repositor
 	})
 
 	// Broadcast via NATS → WS Hub pushes to connected admins in real-time
-	s.publisher.Broadcast(s.tenantSlug, "erp_suggestions", map[string]any{
+	s.publisher.Broadcast(req.TenantID, "erp_suggestions", map[string]any{
 		"action":        "created",
 		"suggestion_id": suggestion.ID.String(),
 	})
@@ -132,7 +130,7 @@ func (s *Suggestions) Respond(ctx context.Context, req RespondRequest) (*reposit
 
 	// Audit
 	s.audit.Write(ctx, audit.Entry{
-		TenantID: s.tenantSlug,
+		TenantID: req.TenantID,
 		UserID:   req.UserID,
 		Action:   "erp.suggestion.responded",
 		Resource: req.SuggestionID.String(),
@@ -141,7 +139,7 @@ func (s *Suggestions) Respond(ctx context.Context, req RespondRequest) (*reposit
 	})
 
 	// Broadcast for real-time update
-	s.publisher.Broadcast(s.tenantSlug, "erp_suggestions", map[string]any{
+	s.publisher.Broadcast(req.TenantID, "erp_suggestions", map[string]any{
 		"action":        "responded",
 		"suggestion_id": req.SuggestionID.String(),
 		"response_id":   response.ID.String(),
