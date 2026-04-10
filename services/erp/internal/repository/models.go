@@ -490,6 +490,42 @@ type ErpFiscalYear struct {
 	Status    string      `json:"status"`
 }
 
+type ErpInvoice struct {
+	ID             pgtype.UUID        `json:"id"`
+	TenantID       string             `json:"tenant_id"`
+	Number         string             `json:"number"`
+	Date           pgtype.Date        `json:"date"`
+	DueDate        pgtype.Date        `json:"due_date"`
+	InvoiceType    string             `json:"invoice_type"`
+	Direction      string             `json:"direction"`
+	EntityID       pgtype.UUID        `json:"entity_id"`
+	CurrencyID     pgtype.UUID        `json:"currency_id"`
+	Subtotal       pgtype.Numeric     `json:"subtotal"`
+	TaxAmount      pgtype.Numeric     `json:"tax_amount"`
+	Total          pgtype.Numeric     `json:"total"`
+	OrderID        pgtype.UUID        `json:"order_id"`
+	JournalEntryID pgtype.UUID        `json:"journal_entry_id"`
+	AfipCae        pgtype.Text        `json:"afip_cae"`
+	AfipCaeDue     pgtype.Date        `json:"afip_cae_due"`
+	Status         string             `json:"status"`
+	UserID         string             `json:"user_id"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpInvoiceLine struct {
+	ID          pgtype.UUID    `json:"id"`
+	TenantID    string         `json:"tenant_id"`
+	InvoiceID   pgtype.UUID    `json:"invoice_id"`
+	ArticleID   pgtype.UUID    `json:"article_id"`
+	Description string         `json:"description"`
+	Quantity    pgtype.Numeric `json:"quantity"`
+	UnitPrice   pgtype.Numeric `json:"unit_price"`
+	TaxRate     pgtype.Numeric `json:"tax_rate"`
+	TaxAmount   pgtype.Numeric `json:"tax_amount"`
+	LineTotal   pgtype.Numeric `json:"line_total"`
+	SortOrder   int32          `json:"sort_order"`
+}
+
 type ErpJournalEntry struct {
 	ID            pgtype.UUID        `json:"id"`
 	TenantID      string             `json:"tenant_id"`
@@ -516,6 +552,40 @@ type ErpJournalLine struct {
 	Credit       pgtype.Numeric `json:"credit"`
 	Description  string         `json:"description"`
 	SortOrder    int32          `json:"sort_order"`
+}
+
+type ErpOrder struct {
+	ID          pgtype.UUID        `json:"id"`
+	TenantID    string             `json:"tenant_id"`
+	Number      string             `json:"number"`
+	Date        pgtype.Date        `json:"date"`
+	OrderType   string             `json:"order_type"`
+	CustomerID  pgtype.UUID        `json:"customer_id"`
+	QuotationID pgtype.UUID        `json:"quotation_id"`
+	Status      string             `json:"status"`
+	Total       pgtype.Numeric     `json:"total"`
+	UserID      string             `json:"user_id"`
+	Notes       string             `json:"notes"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpPriceList struct {
+	ID         pgtype.UUID `json:"id"`
+	TenantID   string      `json:"tenant_id"`
+	Name       string      `json:"name"`
+	CurrencyID pgtype.UUID `json:"currency_id"`
+	ValidFrom  pgtype.Date `json:"valid_from"`
+	ValidUntil pgtype.Date `json:"valid_until"`
+	Active     bool        `json:"active"`
+}
+
+type ErpPriceListItem struct {
+	ID          pgtype.UUID    `json:"id"`
+	TenantID    string         `json:"tenant_id"`
+	PriceListID pgtype.UUID    `json:"price_list_id"`
+	ArticleID   pgtype.UUID    `json:"article_id"`
+	Description pgtype.Text    `json:"description"`
+	Price       pgtype.Numeric `json:"price"`
 }
 
 type ErpPurchaseOrder struct {
@@ -561,6 +631,33 @@ type ErpPurchaseReceiptLine struct {
 	OrderLineID pgtype.UUID    `json:"order_line_id"`
 	ArticleID   pgtype.UUID    `json:"article_id"`
 	Quantity    pgtype.Numeric `json:"quantity"`
+}
+
+type ErpQuotation struct {
+	ID         pgtype.UUID        `json:"id"`
+	TenantID   string             `json:"tenant_id"`
+	Number     string             `json:"number"`
+	Date       pgtype.Date        `json:"date"`
+	CustomerID pgtype.UUID        `json:"customer_id"`
+	Status     string             `json:"status"`
+	CurrencyID pgtype.UUID        `json:"currency_id"`
+	Total      pgtype.Numeric     `json:"total"`
+	ValidUntil pgtype.Date        `json:"valid_until"`
+	Notes      string             `json:"notes"`
+	UserID     string             `json:"user_id"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpQuotationLine struct {
+	ID          pgtype.UUID    `json:"id"`
+	TenantID    string         `json:"tenant_id"`
+	QuotationID pgtype.UUID    `json:"quotation_id"`
+	ArticleID   pgtype.UUID    `json:"article_id"`
+	Description string         `json:"description"`
+	Quantity    pgtype.Numeric `json:"quantity"`
+	UnitPrice   pgtype.Numeric `json:"unit_price"`
+	SortOrder   int32          `json:"sort_order"`
+	Metadata    []byte         `json:"metadata"`
 }
 
 type ErpSequence struct {
@@ -617,6 +714,18 @@ type ErpSuggestionResponse struct {
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 }
 
+type ErpTaxEntry struct {
+	ID        pgtype.UUID        `json:"id"`
+	TenantID  string             `json:"tenant_id"`
+	InvoiceID pgtype.UUID        `json:"invoice_id"`
+	Period    string             `json:"period"`
+	Direction string             `json:"direction"`
+	NetAmount pgtype.Numeric     `json:"net_amount"`
+	TaxRate   pgtype.Numeric     `json:"tax_rate"`
+	TaxAmount pgtype.Numeric     `json:"tax_amount"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
 type ErpTreasuryMovement struct {
 	ID             pgtype.UUID        `json:"id"`
 	TenantID       string             `json:"tenant_id"`
@@ -646,6 +755,21 @@ type ErpWarehouse struct {
 	Name     string      `json:"name"`
 	Location string      `json:"location"`
 	Active   bool        `json:"active"`
+}
+
+type ErpWithholding struct {
+	ID             pgtype.UUID        `json:"id"`
+	TenantID       string             `json:"tenant_id"`
+	InvoiceID      pgtype.UUID        `json:"invoice_id"`
+	MovementID     pgtype.UUID        `json:"movement_id"`
+	EntityID       pgtype.UUID        `json:"entity_id"`
+	Type           string             `json:"type"`
+	Rate           pgtype.Numeric     `json:"rate"`
+	BaseAmount     pgtype.Numeric     `json:"base_amount"`
+	Amount         pgtype.Numeric     `json:"amount"`
+	CertificateNum pgtype.Text        `json:"certificate_num"`
+	Date           pgtype.Date        `json:"date"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
 }
 
 type FeedbackEvent struct {
