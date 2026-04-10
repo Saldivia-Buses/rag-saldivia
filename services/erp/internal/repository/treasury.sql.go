@@ -250,6 +250,38 @@ func (q *Queries) CreateTreasuryMovement(ctx context.Context, arg CreateTreasury
 	return i, err
 }
 
+const getCheck = `-- name: GetCheck :one
+SELECT id, tenant_id, direction, number, bank_name, amount, issue_date, due_date,
+       entity_id, status, movement_id, notes, created_at
+FROM erp_checks WHERE id = $1 AND tenant_id = $2
+`
+
+type GetCheckParams struct {
+	ID       pgtype.UUID `json:"id"`
+	TenantID string      `json:"tenant_id"`
+}
+
+func (q *Queries) GetCheck(ctx context.Context, arg GetCheckParams) (ErpCheck, error) {
+	row := q.db.QueryRow(ctx, getCheck, arg.ID, arg.TenantID)
+	var i ErpCheck
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.Direction,
+		&i.Number,
+		&i.BankName,
+		&i.Amount,
+		&i.IssueDate,
+		&i.DueDate,
+		&i.EntityID,
+		&i.Status,
+		&i.MovementID,
+		&i.Notes,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getTreasuryBalance = `-- name: GetTreasuryBalance :many
 SELECT ba.id, ba.bank_name, ba.account_number,
        COALESCE(SUM(CASE WHEN tm.movement_type IN ('bank_deposit', 'check_received') THEN tm.amount ELSE 0 END), 0)::NUMERIC(16,2) AS total_in,

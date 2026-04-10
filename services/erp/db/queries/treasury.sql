@@ -56,6 +56,11 @@ INSERT INTO erp_checks (tenant_id, direction, number, bank_name, amount, issue_d
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 RETURNING id, tenant_id, direction, number, bank_name, amount, issue_date, due_date, entity_id, status, movement_id, notes, created_at;
 
+-- name: GetCheck :one
+SELECT id, tenant_id, direction, number, bank_name, amount, issue_date, due_date,
+       entity_id, status, movement_id, notes, created_at
+FROM erp_checks WHERE id = $1 AND tenant_id = $2;
+
 -- name: UpdateCheckStatus :execrows
 UPDATE erp_checks SET status = $3
 WHERE id = $1 AND tenant_id = $2;

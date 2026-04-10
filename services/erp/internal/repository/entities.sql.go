@@ -34,39 +34,37 @@ func (q *Queries) CountEntities(ctx context.Context, arg CountEntitiesParams) (i
 }
 
 const createEntity = `-- name: CreateEntity :one
-INSERT INTO erp_entities (tenant_id, type, code, name, encrypted_tax_id, tax_id_hash, email, phone, address, metadata)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-RETURNING id, tenant_id, type, code, name, encrypted_tax_id, tax_id_hash, email, phone, address, metadata, active, created_at, updated_at
+INSERT INTO erp_entities (tenant_id, type, code, name, tax_id_hash, email, phone, address, metadata)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+RETURNING id, tenant_id, type, code, name, tax_id_hash, email, phone, address, metadata, active, created_at, updated_at
 `
 
 type CreateEntityParams struct {
-	TenantID       string      `json:"tenant_id"`
-	Type           string      `json:"type"`
-	Code           string      `json:"code"`
-	Name           string      `json:"name"`
-	EncryptedTaxID []byte      `json:"encrypted_tax_id"`
-	TaxIDHash      pgtype.Text `json:"tax_id_hash"`
-	Email          pgtype.Text `json:"email"`
-	Phone          pgtype.Text `json:"phone"`
-	Address        []byte      `json:"address"`
-	Metadata       []byte      `json:"metadata"`
+	TenantID  string      `json:"tenant_id"`
+	Type      string      `json:"type"`
+	Code      string      `json:"code"`
+	Name      string      `json:"name"`
+	TaxIDHash pgtype.Text `json:"tax_id_hash"`
+	Email     pgtype.Text `json:"email"`
+	Phone     pgtype.Text `json:"phone"`
+	Address   []byte      `json:"address"`
+	Metadata  []byte      `json:"metadata"`
 }
 
 type CreateEntityRow struct {
-	ID             pgtype.UUID        `json:"id"`
-	TenantID       string             `json:"tenant_id"`
-	Type           string             `json:"type"`
-	Code           string             `json:"code"`
-	Name           string             `json:"name"`
-	EncryptedTaxID []byte             `json:"encrypted_tax_id"`
-	TaxIDHash      pgtype.Text        `json:"tax_id_hash"`
-	Email          pgtype.Text        `json:"email"`
-	Phone          pgtype.Text        `json:"phone"`
-	Address        []byte             `json:"address"`
-	Metadata       []byte             `json:"metadata"`
-	Active         bool               `json:"active"`
-	CreatedAt      pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
+	ID        pgtype.UUID        `json:"id"`
+	TenantID  string             `json:"tenant_id"`
+	Type      string             `json:"type"`
+	Code      string             `json:"code"`
+	Name      string             `json:"name"`
+	TaxIDHash pgtype.Text        `json:"tax_id_hash"`
+	Email     pgtype.Text        `json:"email"`
+	Phone     pgtype.Text        `json:"phone"`
+	Address   []byte             `json:"address"`
+	Metadata  []byte             `json:"metadata"`
+	Active    bool               `json:"active"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
 
 func (q *Queries) CreateEntity(ctx context.Context, arg CreateEntityParams) (CreateEntityRow, error) {
@@ -75,7 +73,6 @@ func (q *Queries) CreateEntity(ctx context.Context, arg CreateEntityParams) (Cre
 		arg.Type,
 		arg.Code,
 		arg.Name,
-		arg.EncryptedTaxID,
 		arg.TaxIDHash,
 		arg.Email,
 		arg.Phone,
@@ -89,7 +86,6 @@ func (q *Queries) CreateEntity(ctx context.Context, arg CreateEntityParams) (Cre
 		&i.Type,
 		&i.Code,
 		&i.Name,
-		&i.EncryptedTaxID,
 		&i.TaxIDHash,
 		&i.Email,
 		&i.Phone,
@@ -239,7 +235,7 @@ func (q *Queries) DeleteEntityDocument(ctx context.Context, arg DeleteEntityDocu
 }
 
 const getEntity = `-- name: GetEntity :one
-SELECT id, tenant_id, type, code, name, encrypted_tax_id, tax_id_hash,
+SELECT id, tenant_id, type, code, name, tax_id_hash,
        email, phone, address, metadata, active, created_at, updated_at
 FROM erp_entities
 WHERE id = $1 AND tenant_id = $2 AND deleted_at IS NULL
@@ -251,20 +247,19 @@ type GetEntityParams struct {
 }
 
 type GetEntityRow struct {
-	ID             pgtype.UUID        `json:"id"`
-	TenantID       string             `json:"tenant_id"`
-	Type           string             `json:"type"`
-	Code           string             `json:"code"`
-	Name           string             `json:"name"`
-	EncryptedTaxID []byte             `json:"encrypted_tax_id"`
-	TaxIDHash      pgtype.Text        `json:"tax_id_hash"`
-	Email          pgtype.Text        `json:"email"`
-	Phone          pgtype.Text        `json:"phone"`
-	Address        []byte             `json:"address"`
-	Metadata       []byte             `json:"metadata"`
-	Active         bool               `json:"active"`
-	CreatedAt      pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
+	ID        pgtype.UUID        `json:"id"`
+	TenantID  string             `json:"tenant_id"`
+	Type      string             `json:"type"`
+	Code      string             `json:"code"`
+	Name      string             `json:"name"`
+	TaxIDHash pgtype.Text        `json:"tax_id_hash"`
+	Email     pgtype.Text        `json:"email"`
+	Phone     pgtype.Text        `json:"phone"`
+	Address   []byte             `json:"address"`
+	Metadata  []byte             `json:"metadata"`
+	Active    bool               `json:"active"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
 
 func (q *Queries) GetEntity(ctx context.Context, arg GetEntityParams) (GetEntityRow, error) {
@@ -276,7 +271,6 @@ func (q *Queries) GetEntity(ctx context.Context, arg GetEntityParams) (GetEntity
 		&i.Type,
 		&i.Code,
 		&i.Name,
-		&i.EncryptedTaxID,
 		&i.TaxIDHash,
 		&i.Email,
 		&i.Phone,
@@ -290,7 +284,7 @@ func (q *Queries) GetEntity(ctx context.Context, arg GetEntityParams) (GetEntity
 }
 
 const listEntities = `-- name: ListEntities :many
-SELECT id, tenant_id, type, code, name, encrypted_tax_id, tax_id_hash,
+SELECT id, tenant_id, type, code, name, tax_id_hash,
        email, phone, address, metadata, active, created_at, updated_at
 FROM erp_entities
 WHERE tenant_id = $1
@@ -313,20 +307,19 @@ type ListEntitiesParams struct {
 }
 
 type ListEntitiesRow struct {
-	ID             pgtype.UUID        `json:"id"`
-	TenantID       string             `json:"tenant_id"`
-	Type           string             `json:"type"`
-	Code           string             `json:"code"`
-	Name           string             `json:"name"`
-	EncryptedTaxID []byte             `json:"encrypted_tax_id"`
-	TaxIDHash      pgtype.Text        `json:"tax_id_hash"`
-	Email          pgtype.Text        `json:"email"`
-	Phone          pgtype.Text        `json:"phone"`
-	Address        []byte             `json:"address"`
-	Metadata       []byte             `json:"metadata"`
-	Active         bool               `json:"active"`
-	CreatedAt      pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
+	ID        pgtype.UUID        `json:"id"`
+	TenantID  string             `json:"tenant_id"`
+	Type      string             `json:"type"`
+	Code      string             `json:"code"`
+	Name      string             `json:"name"`
+	TaxIDHash pgtype.Text        `json:"tax_id_hash"`
+	Email     pgtype.Text        `json:"email"`
+	Phone     pgtype.Text        `json:"phone"`
+	Address   []byte             `json:"address"`
+	Metadata  []byte             `json:"metadata"`
+	Active    bool               `json:"active"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
 
 func (q *Queries) ListEntities(ctx context.Context, arg ListEntitiesParams) ([]ListEntitiesRow, error) {
@@ -351,7 +344,6 @@ func (q *Queries) ListEntities(ctx context.Context, arg ListEntitiesParams) ([]L
 			&i.Type,
 			&i.Code,
 			&i.Name,
-			&i.EncryptedTaxID,
 			&i.TaxIDHash,
 			&i.Email,
 			&i.Phone,
@@ -554,41 +546,39 @@ func (q *Queries) SoftDeleteEntity(ctx context.Context, arg SoftDeleteEntityPara
 
 const updateEntity = `-- name: UpdateEntity :one
 UPDATE erp_entities
-SET code = $3, name = $4, encrypted_tax_id = $5, tax_id_hash = $6,
-    email = $7, phone = $8, address = $9, metadata = $10, active = $11, updated_at = now()
+SET code = $3, name = $4, tax_id_hash = $5,
+    email = $6, phone = $7, address = $8, metadata = $9, active = $10, updated_at = now()
 WHERE id = $1 AND tenant_id = $2 AND deleted_at IS NULL
-RETURNING id, tenant_id, type, code, name, encrypted_tax_id, tax_id_hash, email, phone, address, metadata, active, created_at, updated_at
+RETURNING id, tenant_id, type, code, name, tax_id_hash, email, phone, address, metadata, active, created_at, updated_at
 `
 
 type UpdateEntityParams struct {
-	ID             pgtype.UUID `json:"id"`
-	TenantID       string      `json:"tenant_id"`
-	Code           string      `json:"code"`
-	Name           string      `json:"name"`
-	EncryptedTaxID []byte      `json:"encrypted_tax_id"`
-	TaxIDHash      pgtype.Text `json:"tax_id_hash"`
-	Email          pgtype.Text `json:"email"`
-	Phone          pgtype.Text `json:"phone"`
-	Address        []byte      `json:"address"`
-	Metadata       []byte      `json:"metadata"`
-	Active         bool        `json:"active"`
+	ID        pgtype.UUID `json:"id"`
+	TenantID  string      `json:"tenant_id"`
+	Code      string      `json:"code"`
+	Name      string      `json:"name"`
+	TaxIDHash pgtype.Text `json:"tax_id_hash"`
+	Email     pgtype.Text `json:"email"`
+	Phone     pgtype.Text `json:"phone"`
+	Address   []byte      `json:"address"`
+	Metadata  []byte      `json:"metadata"`
+	Active    bool        `json:"active"`
 }
 
 type UpdateEntityRow struct {
-	ID             pgtype.UUID        `json:"id"`
-	TenantID       string             `json:"tenant_id"`
-	Type           string             `json:"type"`
-	Code           string             `json:"code"`
-	Name           string             `json:"name"`
-	EncryptedTaxID []byte             `json:"encrypted_tax_id"`
-	TaxIDHash      pgtype.Text        `json:"tax_id_hash"`
-	Email          pgtype.Text        `json:"email"`
-	Phone          pgtype.Text        `json:"phone"`
-	Address        []byte             `json:"address"`
-	Metadata       []byte             `json:"metadata"`
-	Active         bool               `json:"active"`
-	CreatedAt      pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
+	ID        pgtype.UUID        `json:"id"`
+	TenantID  string             `json:"tenant_id"`
+	Type      string             `json:"type"`
+	Code      string             `json:"code"`
+	Name      string             `json:"name"`
+	TaxIDHash pgtype.Text        `json:"tax_id_hash"`
+	Email     pgtype.Text        `json:"email"`
+	Phone     pgtype.Text        `json:"phone"`
+	Address   []byte             `json:"address"`
+	Metadata  []byte             `json:"metadata"`
+	Active    bool               `json:"active"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
 
 func (q *Queries) UpdateEntity(ctx context.Context, arg UpdateEntityParams) (UpdateEntityRow, error) {
@@ -597,7 +587,6 @@ func (q *Queries) UpdateEntity(ctx context.Context, arg UpdateEntityParams) (Upd
 		arg.TenantID,
 		arg.Code,
 		arg.Name,
-		arg.EncryptedTaxID,
 		arg.TaxIDHash,
 		arg.Email,
 		arg.Phone,
@@ -612,7 +601,6 @@ func (q *Queries) UpdateEntity(ctx context.Context, arg UpdateEntityParams) (Upd
 		&i.Type,
 		&i.Code,
 		&i.Name,
-		&i.EncryptedTaxID,
 		&i.TaxIDHash,
 		&i.Email,
 		&i.Phone,

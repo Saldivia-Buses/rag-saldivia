@@ -1,5 +1,5 @@
 -- name: ListEntities :many
-SELECT id, tenant_id, type, code, name, encrypted_tax_id, tax_id_hash,
+SELECT id, tenant_id, type, code, name, tax_id_hash,
        email, phone, address, metadata, active, created_at, updated_at
 FROM erp_entities
 WHERE tenant_id = $1
@@ -20,22 +20,22 @@ WHERE tenant_id = $1
   AND (sqlc.arg(active_only)::BOOLEAN = false OR active = true);
 
 -- name: GetEntity :one
-SELECT id, tenant_id, type, code, name, encrypted_tax_id, tax_id_hash,
+SELECT id, tenant_id, type, code, name, tax_id_hash,
        email, phone, address, metadata, active, created_at, updated_at
 FROM erp_entities
 WHERE id = $1 AND tenant_id = $2 AND deleted_at IS NULL;
 
 -- name: CreateEntity :one
-INSERT INTO erp_entities (tenant_id, type, code, name, encrypted_tax_id, tax_id_hash, email, phone, address, metadata)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-RETURNING id, tenant_id, type, code, name, encrypted_tax_id, tax_id_hash, email, phone, address, metadata, active, created_at, updated_at;
+INSERT INTO erp_entities (tenant_id, type, code, name, tax_id_hash, email, phone, address, metadata)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+RETURNING id, tenant_id, type, code, name, tax_id_hash, email, phone, address, metadata, active, created_at, updated_at;
 
 -- name: UpdateEntity :one
 UPDATE erp_entities
-SET code = $3, name = $4, encrypted_tax_id = $5, tax_id_hash = $6,
-    email = $7, phone = $8, address = $9, metadata = $10, active = $11, updated_at = now()
+SET code = $3, name = $4, tax_id_hash = $5,
+    email = $6, phone = $7, address = $8, metadata = $9, active = $10, updated_at = now()
 WHERE id = $1 AND tenant_id = $2 AND deleted_at IS NULL
-RETURNING id, tenant_id, type, code, name, encrypted_tax_id, tax_id_hash, email, phone, address, metadata, active, created_at, updated_at;
+RETURNING id, tenant_id, type, code, name, tax_id_hash, email, phone, address, metadata, active, created_at, updated_at;
 
 -- name: SoftDeleteEntity :execrows
 UPDATE erp_entities SET deleted_at = now(), active = false, updated_at = now()

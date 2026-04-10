@@ -53,10 +53,10 @@ func (s *HR) GetEmployee(ctx context.Context, entityID pgtype.UUID, tenantID, us
 	return ed, nil
 }
 
-func (s *HR) UpsertEmployee(ctx context.Context, p repository.UpsertEmployeeDetailParams, userID, ip string) (repository.ErpEmployeeDetail, error) {
+func (s *HR) UpsertEmployee(ctx context.Context, p repository.UpsertEmployeeDetailParams, userID, ip string) (repository.UpsertEmployeeDetailRow, error) {
 	ed, err := s.repo.UpsertEmployeeDetail(ctx, p)
 	if err != nil {
-		return repository.ErpEmployeeDetail{}, fmt.Errorf("upsert employee: %w", err)
+		return repository.UpsertEmployeeDetailRow{}, fmt.Errorf("upsert employee: %w", err)
 	}
 	s.audit.Write(ctx, audit.Entry{TenantID: p.TenantID, UserID: userID, Action: "erp.employee.upserted", Resource: uuidStr(ed.ID), IP: ip})
 	s.publisher.Broadcast(p.TenantID, "erp_hr", map[string]any{"action": "employee_updated", "entity_id": uuidStr(ed.EntityID)})
