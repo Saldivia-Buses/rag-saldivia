@@ -156,7 +156,7 @@ func (h *Accounting) CreateFiscalYear(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
 		return
 	}
-	fy, err := h.svc.CreateFiscalYear(r.Context(), slug, body.Year, body.StartDate, body.EndDate)
+	fy, err := h.svc.CreateFiscalYear(r.Context(), slug, body.Year, body.StartDate, body.EndDate, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
 		slog.Error("create fiscal year failed", "error", err)
 		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)

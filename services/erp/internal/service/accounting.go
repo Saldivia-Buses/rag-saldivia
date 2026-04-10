@@ -87,13 +87,22 @@ func (s *Accounting) ListFiscalYears(ctx context.Context, tenantID string) ([]re
 }
 
 // CreateFiscalYear creates a new fiscal year.
-func (s *Accounting) CreateFiscalYear(ctx context.Context, tenantID string, year int, startDate, endDate string) (repository.ErpFiscalYear, error) {
+func (s *Accounting) CreateFiscalYear(ctx context.Context, tenantID string, year int, startDate, endDate, userID, ip string) (repository.ErpFiscalYear, error) {
 	var sd, ed pgtype.Date
 	_ = sd.Scan(startDate)
 	_ = ed.Scan(endDate)
-	return s.repo.CreateFiscalYear(ctx, repository.CreateFiscalYearParams{
+	fy, err := s.repo.CreateFiscalYear(ctx, repository.CreateFiscalYearParams{
 		TenantID: tenantID, Year: int32(year), StartDate: sd, EndDate: ed,
 	})
+	if err != nil {
+		return repository.ErpFiscalYear{}, fmt.Errorf("create fiscal year: %w", err)
+	}
+	s.auditLog.Write(ctx, audit.Entry{
+		TenantID: tenantID, UserID: userID,
+		Action: "erp.fiscal_year.created", Resource: uuidStr(fy.ID),
+		Details: map[string]any{"year": year}, IP: ip,
+	})
+	return fy, nil
 }
 
 // EntryDetail bundles a journal entry with its lines.

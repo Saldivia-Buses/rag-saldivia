@@ -241,8 +241,9 @@ func (q *Queries) GetAccount(ctx context.Context, arg GetAccountParams) (ErpAcco
 
 const getAccountBalance = `-- name: GetAccountBalance :many
 SELECT jl.account_id, a.code AS account_code, a.name AS account_name,
-       SUM(jl.debit) AS total_debit, SUM(jl.credit) AS total_credit,
-       SUM(jl.debit) - SUM(jl.credit) AS balance
+       SUM(jl.debit)::NUMERIC(16,2) AS total_debit,
+       SUM(jl.credit)::NUMERIC(16,2) AS total_credit,
+       (SUM(jl.debit) - SUM(jl.credit))::NUMERIC(16,2) AS balance
 FROM erp_journal_lines jl
 JOIN erp_accounts a ON a.id = jl.account_id
 JOIN erp_journal_entries je ON je.id = jl.entry_id
@@ -260,12 +261,12 @@ type GetAccountBalanceParams struct {
 }
 
 type GetAccountBalanceRow struct {
-	AccountID   pgtype.UUID `json:"account_id"`
-	AccountCode string      `json:"account_code"`
-	AccountName string      `json:"account_name"`
-	TotalDebit  int64       `json:"total_debit"`
-	TotalCredit int64       `json:"total_credit"`
-	Balance     int32       `json:"balance"`
+	AccountID   pgtype.UUID    `json:"account_id"`
+	AccountCode string         `json:"account_code"`
+	AccountName string         `json:"account_name"`
+	TotalDebit  pgtype.Numeric `json:"total_debit"`
+	TotalCredit pgtype.Numeric `json:"total_credit"`
+	Balance     pgtype.Numeric `json:"balance"`
 }
 
 func (q *Queries) GetAccountBalance(ctx context.Context, arg GetAccountBalanceParams) ([]GetAccountBalanceRow, error) {

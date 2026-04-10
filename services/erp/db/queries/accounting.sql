@@ -83,8 +83,9 @@ RETURNING id, tenant_id, entry_id, account_id, cost_center_id, entry_date, debit
 
 -- name: GetAccountBalance :many
 SELECT jl.account_id, a.code AS account_code, a.name AS account_name,
-       SUM(jl.debit) AS total_debit, SUM(jl.credit) AS total_credit,
-       SUM(jl.debit) - SUM(jl.credit) AS balance
+       SUM(jl.debit)::NUMERIC(16,2) AS total_debit,
+       SUM(jl.credit)::NUMERIC(16,2) AS total_credit,
+       (SUM(jl.debit) - SUM(jl.credit))::NUMERIC(16,2) AS balance
 FROM erp_journal_lines jl
 JOIN erp_accounts a ON a.id = jl.account_id
 JOIN erp_journal_entries je ON je.id = jl.entry_id
