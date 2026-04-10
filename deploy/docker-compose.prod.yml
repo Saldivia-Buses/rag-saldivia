@@ -193,6 +193,7 @@ services:
       EXTRACTOR_NATS_PASS: ${EXTRACTOR_NATS_PASS}
       ASTRO_NATS_PASS: ${ASTRO_NATS_PASS}
       BIGBROTHER_NATS_PASS: ${BIGBROTHER_NATS_PASS}
+      ERP_NATS_PASS: ${ERP_NATS_PASS}
     volumes:
       - nats_data:/data
       - ./nats/nats-server.conf:/etc/nats/nats-server.conf:ro
@@ -702,6 +703,50 @@ services:
       resources:
         limits:
           memory: 512M
+          cpus: "1.0"
+
+  # ── ERP (legacy Histrix replacement — modular business modules) ──────
+
+  erp:
+    <<: *service-defaults
+    image: ghcr.io/camionerou/sda-erp:${ERP_VERSION:-latest}
+    build:
+      context: ..
+      dockerfile: services/erp/Dockerfile
+    depends_on:
+      postgres-platform:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    environment:
+      ERP_PORT: "8013"
+      REDIS_URL: redis:6379
+      NATS_URL: nats://erp:${ERP_NATS_PASS}@nats:4222
+      TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
+      <<: *jwt-public
+    secrets:
+      - jwt_public_key
+      - db_tenant_template_url
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8013/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - frontend
+      - backend
+      - data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.erp.rule=PathPrefix(`/v1/erp`)"
+      - "traefik.http.routers.erp.entrypoints=websecure"
+      - "traefik.http.services.erp.loadbalancer.server.port=8013"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
           cpus: "1.0"
 
   # ── BigBrother (Plan 15 — network intelligence, EXCEPTION: Alpine + CAP_NET_RAW) ──
