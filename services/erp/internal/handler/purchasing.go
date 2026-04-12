@@ -35,6 +35,20 @@ func (h *Purchasing) Routes(authWrite func(http.Handler) http.Handler) chi.Route
 		r.Use(sdamw.RequirePermission("erp.purchasing.approve"))
 		r.Post("/orders/{id}/approve", h.Approve)
 	})
+
+	// QC Inspections
+	r.Group(func(r chi.Router) {
+		r.Use(sdamw.RequirePermission("erp.purchasing.read"))
+		r.Get("/inspections", h.ListInspections)
+		r.Get("/inspections/{id}", h.GetInspection)
+		r.Get("/suppliers/{id}/demerits", h.ListSupplierDemerits)
+	})
+	r.Group(func(r chi.Router) {
+		r.Use(authWrite)
+		r.Use(sdamw.RequirePermission("erp.purchasing.inspect"))
+		r.Post("/receipts/{id}/inspect", h.InspectReceipt)
+	})
+
 	return r
 }
 
@@ -186,6 +200,80 @@ func (h *Purchasing) Receive(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *Purchasing) InspectReceipt(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	receiptID, err := parseUUID(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, `{"error":"invalid receipt id"}`, http.StatusBadRequest)
+		return
+	}
+	r.Body = http.MaxBytesReader(w, r.Body, 64<<10)
+	var body struct {
+		Inspections []service.InspectionInput `json:"inspections"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || len(body.Inspections) == 0 {
+		http.Error(w, `{"error":"inspections array required"}`, http.StatusBadRequest)
+		return
+	}
+	results, err := h.svc.InspectReceipt(r.Context(), slug, receiptID, body.Inspections,
+		r.Header.Get("X-User-ID"), r.RemoteAddr)
+	if err != nil {
+		slog.Error("inspect receipt failed", "error", err)
+		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]any{"inspections": results})
+}
+
+func (h *Purchasing) ListInspections(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	p := pagination.Parse(r)
+	status := r.URL.Query().Get("status")
+	inspections, err := h.svc.ListInspections(r.Context(), slug, status, p.Limit(), p.Offset())
+	if err != nil {
+		slog.Error("list inspections failed", "error", err)
+		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]any{"inspections": inspections})
+}
+
+func (h *Purchasing) GetInspection(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	id, err := parseUUID(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		return
+	}
+	insp, err := h.svc.GetInspection(r.Context(), id, slug)
+	if err != nil {
+		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(insp)
+}
+
+func (h *Purchasing) ListSupplierDemerits(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	supplierID, err := parseUUID(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, `{"error":"invalid supplier id"}`, http.StatusBadRequest)
+		return
+	}
+	demerits, err := h.svc.ListSupplierDemerits(r.Context(), slug, supplierID)
+	if err != nil {
+		slog.Error("list supplier demerits failed", "error", err)
+		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		return
+	}
+	total, _ := h.svc.GetSupplierDemeritTotal(r.Context(), slug, supplierID)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]any{"demerits": demerits, "total_points": total})
 }
 
 func (h *Purchasing) ListReceipts(w http.ResponseWriter, r *http.Request) {

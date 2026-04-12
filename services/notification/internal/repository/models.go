@@ -942,6 +942,22 @@ type ErpPurchaseReceiptLine struct {
 	Quantity    pgtype.Numeric `json:"quantity"`
 }
 
+type ErpQcInspection struct {
+	ID            pgtype.UUID        `json:"id"`
+	TenantID      string             `json:"tenant_id"`
+	ReceiptID     pgtype.UUID        `json:"receipt_id"`
+	ReceiptLineID pgtype.UUID        `json:"receipt_line_id"`
+	ArticleID     pgtype.UUID        `json:"article_id"`
+	Quantity      pgtype.Numeric     `json:"quantity"`
+	AcceptedQty   pgtype.Numeric     `json:"accepted_qty"`
+	RejectedQty   pgtype.Numeric     `json:"rejected_qty"`
+	Status        string             `json:"status"`
+	InspectorID   string             `json:"inspector_id"`
+	Notes         string             `json:"notes"`
+	CompletedAt   pgtype.Timestamptz `json:"completed_at"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+}
+
 type ErpQuotation struct {
 	ID         pgtype.UUID        `json:"id"`
 	TenantID   string             `json:"tenant_id"`
@@ -1020,6 +1036,16 @@ type ErpSuggestionResponse struct {
 	SuggestionID pgtype.UUID        `json:"suggestion_id"`
 	UserID       string             `json:"user_id"`
 	Body         string             `json:"body"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpSupplierDemerit struct {
+	ID           pgtype.UUID        `json:"id"`
+	TenantID     string             `json:"tenant_id"`
+	SupplierID   pgtype.UUID        `json:"supplier_id"`
+	InspectionID pgtype.UUID        `json:"inspection_id"`
+	Points       int32              `json:"points"`
+	Reason       string             `json:"reason"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 }
 

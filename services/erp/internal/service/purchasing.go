@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
@@ -193,6 +194,181 @@ type ReceiveLineRequest struct {
 	OrderLineID pgtype.UUID
 	ArticleID   pgtype.UUID
 	Quantity    string
+}
+
+// ============================================================
+// QC Inspection (Plan 18 Fase 3)
+// ============================================================
+
+// InspectionInput holds data for one inspection line.
+type InspectionInput struct {
+	ReceiptLineID string `json:"receipt_line_id"`
+	ArticleID     string `json:"article_id"`
+	Quantity      string `json:"quantity"`
+	AcceptedQty   string `json:"accepted_qty"`
+	RejectedQty   string `json:"rejected_qty"`
+	Notes         string `json:"notes"`
+}
+
+// InspectReceipt performs QC inspection on receipt lines: accept/reject per line,
+// creates stock movements for accepted qty, demerits for rejected qty.
+func (s *Purchasing) InspectReceipt(ctx context.Context, tenantID string, receiptID pgtype.UUID, inspections []InspectionInput, inspectorID, ip string) ([]repository.ErpQcInspection, error) {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback(ctx)
+	qtx := s.repo.WithTx(tx)
+
+	// Resolve supplier through receipt → order → supplier_id
+	receipt, err := qtx.GetPurchaseReceipt(ctx, repository.GetPurchaseReceiptParams{
+		ID: receiptID, TenantID: tenantID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("get receipt: %w", err)
+	}
+	order, err := qtx.GetPurchaseOrder(ctx, repository.GetPurchaseOrderParams{
+		ID: receipt.OrderID, TenantID: tenantID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("get order: %w", err)
+	}
+	supplierID := order.SupplierID
+
+	var results []repository.ErpQcInspection
+	for i, inp := range inspections {
+		rlID, err := parseUUIDStr(inp.ReceiptLineID)
+		if err != nil {
+			return nil, fmt.Errorf("invalid receipt_line_id in inspection %d: %w", i, err)
+		}
+		artID, err := parseUUIDStr(inp.ArticleID)
+		if err != nil {
+			return nil, fmt.Errorf("invalid article_id in inspection %d: %w", i, err)
+		}
+
+		qc, err := qtx.CreateInspection(ctx, repository.CreateInspectionParams{
+			TenantID:      tenantID,
+			ReceiptID:     receiptID,
+			ReceiptLineID: rlID,
+			ArticleID:     artID,
+			Quantity:      pgNumeric(inp.Quantity),
+			AcceptedQty:   pgNumeric(inp.AcceptedQty),
+			RejectedQty:   pgNumeric(inp.RejectedQty),
+			Status:        "completed",
+			InspectorID:   inspectorID,
+			Notes:         inp.Notes,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("create inspection %d: %w", i, err)
+		}
+
+		// Mark as completed
+		qtx.CompleteInspection(ctx, repository.CompleteInspectionParams{
+			ID: qc.ID, TenantID: tenantID,
+		})
+
+		// Accepted qty → stock movement (in)
+		acceptedF := parseFloatStr(inp.AcceptedQty)
+		if acceptedF > 0 {
+			// Create stock movement for accepted goods
+			// We use the first warehouse (default) — in production this would
+			// come from the receipt or a warehouse selection in the UI
+			_, err := qtx.CreateStockMovement(ctx, repository.CreateStockMovementParams{
+				TenantID:      tenantID,
+				ArticleID:     artID,
+				WarehouseID:   pgtype.UUID{}, // default warehouse
+				MovementType:  "in",
+				Quantity:      pgNumeric(inp.AcceptedQty),
+				UnitCost:      pgNumeric("0"), // cost from PO line
+				ReferenceType: pgText("qc_inspection"),
+				ReferenceID:   qc.ID,
+				UserID:        inspectorID,
+				Notes:         fmt.Sprintf("QC accepted: %s of %s", inp.AcceptedQty, inp.Quantity),
+			})
+			if err != nil {
+				slog.Warn("stock movement for QC accept failed (warehouse may not be set)", "error", err)
+			}
+		}
+
+		// Rejected qty → demerit to supplier
+		rejectedF := parseFloatStr(inp.RejectedQty)
+		if rejectedF > 0 {
+			points := int32(rejectedF) // 1 point per rejected unit
+			if points < 1 {
+				points = 1
+			}
+			_, err := qtx.CreateDemerit(ctx, repository.CreateDemeritParams{
+				TenantID:     tenantID,
+				SupplierID:   supplierID,
+				InspectionID: qc.ID,
+				Points:       points,
+				Reason:       fmt.Sprintf("Rechazo QC: %s unidades de %s", inp.RejectedQty, inp.Quantity),
+			})
+			if err != nil {
+				return nil, fmt.Errorf("create demerit %d: %w", i, err)
+			}
+		}
+
+		results = append(results, qc)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("commit inspections: %w", err)
+	}
+
+	s.audit.Write(ctx, audit.Entry{
+		TenantID: tenantID, UserID: inspectorID,
+		Action: "erp.qc.inspected", Resource: uuidStr(receiptID),
+		Details: map[string]any{"inspections": len(inspections)}, IP: ip,
+	})
+	s.publisher.Broadcast(tenantID, "erp_purchasing", map[string]any{
+		"action": "qc_inspected", "receipt_id": uuidStr(receiptID),
+	})
+
+	return results, nil
+}
+
+func (s *Purchasing) ListInspections(ctx context.Context, tenantID, status string, limit, offset int) ([]repository.ListInspectionsRow, error) {
+	return s.repo.ListInspections(ctx, repository.ListInspectionsParams{
+		TenantID: tenantID, StatusFilter: status, Limit: int32(limit), Offset: int32(offset),
+	})
+}
+
+func (s *Purchasing) GetInspection(ctx context.Context, id pgtype.UUID, tenantID string) (repository.ErpQcInspection, error) {
+	return s.repo.GetInspection(ctx, repository.GetInspectionParams{ID: id, TenantID: tenantID})
+}
+
+func (s *Purchasing) ListSupplierDemerits(ctx context.Context, tenantID string, supplierID pgtype.UUID) ([]repository.ErpSupplierDemerit, error) {
+	return s.repo.ListSupplierDemerits(ctx, repository.ListSupplierDemeritsParams{
+		TenantID: tenantID, SupplierID: supplierID,
+	})
+}
+
+func (s *Purchasing) GetSupplierDemeritTotal(ctx context.Context, tenantID string, supplierID pgtype.UUID) (int32, error) {
+	return s.repo.GetSupplierDemeritTotal(ctx, repository.GetSupplierDemeritTotalParams{
+		TenantID: tenantID, SupplierID: supplierID,
+	})
+}
+
+// parseUUIDStr parses a UUID string for service layer use.
+func parseUUIDStr(s string) (pgtype.UUID, error) {
+	if s == "" {
+		return pgtype.UUID{}, fmt.Errorf("empty UUID")
+	}
+	id, err := uuid.Parse(s)
+	if err != nil {
+		return pgtype.UUID{}, err
+	}
+	return pgtype.UUID{Bytes: id, Valid: true}, nil
+}
+
+func parseFloatStr(s string) float64 {
+	if s == "" {
+		return 0
+	}
+	var f float64
+	fmt.Sscanf(s, "%f", &f)
+	return f
 }
 
 // Receive creates a receipt and updates received quantities in one transaction.

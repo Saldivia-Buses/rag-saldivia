@@ -29,6 +29,116 @@ func (q *Queries) ApprovePurchaseOrder(ctx context.Context, arg ApprovePurchaseO
 	return result.RowsAffected(), nil
 }
 
+const completeInspection = `-- name: CompleteInspection :execrows
+UPDATE erp_qc_inspections SET status = 'completed', completed_at = now()
+WHERE id = $1 AND tenant_id = $2 AND status = 'pending'
+`
+
+type CompleteInspectionParams struct {
+	ID       pgtype.UUID `json:"id"`
+	TenantID string      `json:"tenant_id"`
+}
+
+func (q *Queries) CompleteInspection(ctx context.Context, arg CompleteInspectionParams) (int64, error) {
+	result, err := q.db.Exec(ctx, completeInspection, arg.ID, arg.TenantID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const createDemerit = `-- name: CreateDemerit :one
+INSERT INTO erp_supplier_demerits (tenant_id, supplier_id, inspection_id, points, reason)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id, tenant_id, supplier_id, inspection_id, points, reason, created_at
+`
+
+type CreateDemeritParams struct {
+	TenantID     string      `json:"tenant_id"`
+	SupplierID   pgtype.UUID `json:"supplier_id"`
+	InspectionID pgtype.UUID `json:"inspection_id"`
+	Points       int32       `json:"points"`
+	Reason       string      `json:"reason"`
+}
+
+func (q *Queries) CreateDemerit(ctx context.Context, arg CreateDemeritParams) (ErpSupplierDemerit, error) {
+	row := q.db.QueryRow(ctx, createDemerit,
+		arg.TenantID,
+		arg.SupplierID,
+		arg.InspectionID,
+		arg.Points,
+		arg.Reason,
+	)
+	var i ErpSupplierDemerit
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.SupplierID,
+		&i.InspectionID,
+		&i.Points,
+		&i.Reason,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const createInspection = `-- name: CreateInspection :one
+
+INSERT INTO erp_qc_inspections (tenant_id, receipt_id, receipt_line_id, article_id,
+    quantity, accepted_qty, rejected_qty, status, inspector_id, notes)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+RETURNING id, tenant_id, receipt_id, receipt_line_id, article_id, quantity,
+    accepted_qty, rejected_qty, status, inspector_id, notes, completed_at, created_at
+`
+
+type CreateInspectionParams struct {
+	TenantID      string         `json:"tenant_id"`
+	ReceiptID     pgtype.UUID    `json:"receipt_id"`
+	ReceiptLineID pgtype.UUID    `json:"receipt_line_id"`
+	ArticleID     pgtype.UUID    `json:"article_id"`
+	Quantity      pgtype.Numeric `json:"quantity"`
+	AcceptedQty   pgtype.Numeric `json:"accepted_qty"`
+	RejectedQty   pgtype.Numeric `json:"rejected_qty"`
+	Status        string         `json:"status"`
+	InspectorID   string         `json:"inspector_id"`
+	Notes         string         `json:"notes"`
+}
+
+// ============================================================
+// QC Inspection queries (Plan 18 Fase 3)
+// ============================================================
+func (q *Queries) CreateInspection(ctx context.Context, arg CreateInspectionParams) (ErpQcInspection, error) {
+	row := q.db.QueryRow(ctx, createInspection,
+		arg.TenantID,
+		arg.ReceiptID,
+		arg.ReceiptLineID,
+		arg.ArticleID,
+		arg.Quantity,
+		arg.AcceptedQty,
+		arg.RejectedQty,
+		arg.Status,
+		arg.InspectorID,
+		arg.Notes,
+	)
+	var i ErpQcInspection
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.ReceiptID,
+		&i.ReceiptLineID,
+		&i.ArticleID,
+		&i.Quantity,
+		&i.AcceptedQty,
+		&i.RejectedQty,
+		&i.Status,
+		&i.InspectorID,
+		&i.Notes,
+		&i.CompletedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const createPurchaseOrder = `-- name: CreatePurchaseOrder :one
 INSERT INTO erp_purchase_orders (tenant_id, number, date, supplier_id, currency_id, total, notes, user_id)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -184,6 +294,39 @@ func (q *Queries) CreatePurchaseReceiptLine(ctx context.Context, arg CreatePurch
 	return i, err
 }
 
+const getInspection = `-- name: GetInspection :one
+SELECT qi.id, qi.tenant_id, qi.receipt_id, qi.receipt_line_id, qi.article_id,
+       qi.quantity, qi.accepted_qty, qi.rejected_qty, qi.status, qi.inspector_id,
+       qi.notes, qi.completed_at, qi.created_at
+FROM erp_qc_inspections qi WHERE qi.id = $1 AND qi.tenant_id = $2
+`
+
+type GetInspectionParams struct {
+	ID       pgtype.UUID `json:"id"`
+	TenantID string      `json:"tenant_id"`
+}
+
+func (q *Queries) GetInspection(ctx context.Context, arg GetInspectionParams) (ErpQcInspection, error) {
+	row := q.db.QueryRow(ctx, getInspection, arg.ID, arg.TenantID)
+	var i ErpQcInspection
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.ReceiptID,
+		&i.ReceiptLineID,
+		&i.ArticleID,
+		&i.Quantity,
+		&i.AcceptedQty,
+		&i.RejectedQty,
+		&i.Status,
+		&i.InspectorID,
+		&i.Notes,
+		&i.CompletedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getPurchaseOrder = `-- name: GetPurchaseOrder :one
 SELECT id, tenant_id, number, date, supplier_id, status, currency_id, total, notes, user_id, created_at
 FROM erp_purchase_orders WHERE id = $1 AND tenant_id = $2
@@ -211,6 +354,125 @@ func (q *Queries) GetPurchaseOrder(ctx context.Context, arg GetPurchaseOrderPara
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const getPurchaseReceipt = `-- name: GetPurchaseReceipt :one
+SELECT pr.id, pr.tenant_id, pr.order_id, pr.date, pr.number, pr.user_id, pr.notes, pr.created_at
+FROM erp_purchase_receipts pr
+WHERE pr.id = $1 AND pr.tenant_id = $2
+`
+
+type GetPurchaseReceiptParams struct {
+	ID       pgtype.UUID `json:"id"`
+	TenantID string      `json:"tenant_id"`
+}
+
+func (q *Queries) GetPurchaseReceipt(ctx context.Context, arg GetPurchaseReceiptParams) (ErpPurchaseReceipt, error) {
+	row := q.db.QueryRow(ctx, getPurchaseReceipt, arg.ID, arg.TenantID)
+	var i ErpPurchaseReceipt
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.OrderID,
+		&i.Date,
+		&i.Number,
+		&i.UserID,
+		&i.Notes,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getSupplierDemeritTotal = `-- name: GetSupplierDemeritTotal :one
+SELECT COALESCE(SUM(points), 0)::INT AS total_points
+FROM erp_supplier_demerits WHERE tenant_id = $1 AND supplier_id = $2
+`
+
+type GetSupplierDemeritTotalParams struct {
+	TenantID   string      `json:"tenant_id"`
+	SupplierID pgtype.UUID `json:"supplier_id"`
+}
+
+func (q *Queries) GetSupplierDemeritTotal(ctx context.Context, arg GetSupplierDemeritTotalParams) (int32, error) {
+	row := q.db.QueryRow(ctx, getSupplierDemeritTotal, arg.TenantID, arg.SupplierID)
+	var total_points int32
+	err := row.Scan(&total_points)
+	return total_points, err
+}
+
+const listInspections = `-- name: ListInspections :many
+SELECT qi.id, qi.tenant_id, qi.receipt_id, qi.article_id, qi.quantity,
+       qi.accepted_qty, qi.rejected_qty, qi.status, qi.inspector_id, qi.created_at,
+       a.code AS article_code, a.name AS article_name, pr.number AS receipt_number
+FROM erp_qc_inspections qi
+JOIN erp_articles a ON a.id = qi.article_id
+JOIN erp_purchase_receipts pr ON pr.id = qi.receipt_id
+WHERE qi.tenant_id = $1
+  AND ($4::TEXT = '' OR qi.status = $4::TEXT)
+ORDER BY qi.created_at DESC
+LIMIT $2 OFFSET $3
+`
+
+type ListInspectionsParams struct {
+	TenantID     string `json:"tenant_id"`
+	Limit        int32  `json:"limit"`
+	Offset       int32  `json:"offset"`
+	StatusFilter string `json:"status_filter"`
+}
+
+type ListInspectionsRow struct {
+	ID            pgtype.UUID        `json:"id"`
+	TenantID      string             `json:"tenant_id"`
+	ReceiptID     pgtype.UUID        `json:"receipt_id"`
+	ArticleID     pgtype.UUID        `json:"article_id"`
+	Quantity      pgtype.Numeric     `json:"quantity"`
+	AcceptedQty   pgtype.Numeric     `json:"accepted_qty"`
+	RejectedQty   pgtype.Numeric     `json:"rejected_qty"`
+	Status        string             `json:"status"`
+	InspectorID   string             `json:"inspector_id"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	ArticleCode   string             `json:"article_code"`
+	ArticleName   string             `json:"article_name"`
+	ReceiptNumber string             `json:"receipt_number"`
+}
+
+func (q *Queries) ListInspections(ctx context.Context, arg ListInspectionsParams) ([]ListInspectionsRow, error) {
+	rows, err := q.db.Query(ctx, listInspections,
+		arg.TenantID,
+		arg.Limit,
+		arg.Offset,
+		arg.StatusFilter,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListInspectionsRow{}
+	for rows.Next() {
+		var i ListInspectionsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.TenantID,
+			&i.ReceiptID,
+			&i.ArticleID,
+			&i.Quantity,
+			&i.AcceptedQty,
+			&i.RejectedQty,
+			&i.Status,
+			&i.InspectorID,
+			&i.CreatedAt,
+			&i.ArticleCode,
+			&i.ArticleName,
+			&i.ReceiptNumber,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listPurchaseOrderLines = `-- name: ListPurchaseOrderLines :many
@@ -391,6 +653,46 @@ func (q *Queries) ListPurchaseReceipts(ctx context.Context, arg ListPurchaseRece
 			&i.Notes,
 			&i.CreatedAt,
 			&i.OrderNumber,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listSupplierDemerits = `-- name: ListSupplierDemerits :many
+SELECT sd.id, sd.tenant_id, sd.supplier_id, sd.inspection_id, sd.points, sd.reason, sd.created_at
+FROM erp_supplier_demerits sd
+WHERE sd.tenant_id = $1 AND sd.supplier_id = $2
+ORDER BY sd.created_at DESC
+`
+
+type ListSupplierDemeritsParams struct {
+	TenantID   string      `json:"tenant_id"`
+	SupplierID pgtype.UUID `json:"supplier_id"`
+}
+
+func (q *Queries) ListSupplierDemerits(ctx context.Context, arg ListSupplierDemeritsParams) ([]ErpSupplierDemerit, error) {
+	rows, err := q.db.Query(ctx, listSupplierDemerits, arg.TenantID, arg.SupplierID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ErpSupplierDemerit{}
+	for rows.Next() {
+		var i ErpSupplierDemerit
+		if err := rows.Scan(
+			&i.ID,
+			&i.TenantID,
+			&i.SupplierID,
+			&i.InspectionID,
+			&i.Points,
+			&i.Reason,
+			&i.CreatedAt,
 		); err != nil {
 			return nil, err
 		}

@@ -50,6 +50,59 @@ RETURNING id, tenant_id, receipt_id, order_line_id, article_id, quantity;
 UPDATE erp_purchase_order_lines SET received_qty = received_qty + $3
 WHERE id = $1 AND tenant_id = $2;
 
+-- name: GetPurchaseReceipt :one
+SELECT pr.id, pr.tenant_id, pr.order_id, pr.date, pr.number, pr.user_id, pr.notes, pr.created_at
+FROM erp_purchase_receipts pr
+WHERE pr.id = $1 AND pr.tenant_id = $2;
+
+-- ============================================================
+-- QC Inspection queries (Plan 18 Fase 3)
+-- ============================================================
+
+-- name: CreateInspection :one
+INSERT INTO erp_qc_inspections (tenant_id, receipt_id, receipt_line_id, article_id,
+    quantity, accepted_qty, rejected_qty, status, inspector_id, notes)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+RETURNING id, tenant_id, receipt_id, receipt_line_id, article_id, quantity,
+    accepted_qty, rejected_qty, status, inspector_id, notes, completed_at, created_at;
+
+-- name: CompleteInspection :execrows
+UPDATE erp_qc_inspections SET status = 'completed', completed_at = now()
+WHERE id = $1 AND tenant_id = $2 AND status = 'pending';
+
+-- name: ListInspections :many
+SELECT qi.id, qi.tenant_id, qi.receipt_id, qi.article_id, qi.quantity,
+       qi.accepted_qty, qi.rejected_qty, qi.status, qi.inspector_id, qi.created_at,
+       a.code AS article_code, a.name AS article_name, pr.number AS receipt_number
+FROM erp_qc_inspections qi
+JOIN erp_articles a ON a.id = qi.article_id
+JOIN erp_purchase_receipts pr ON pr.id = qi.receipt_id
+WHERE qi.tenant_id = $1
+  AND (sqlc.arg(status_filter)::TEXT = '' OR qi.status = sqlc.arg(status_filter)::TEXT)
+ORDER BY qi.created_at DESC
+LIMIT $2 OFFSET $3;
+
+-- name: GetInspection :one
+SELECT qi.id, qi.tenant_id, qi.receipt_id, qi.receipt_line_id, qi.article_id,
+       qi.quantity, qi.accepted_qty, qi.rejected_qty, qi.status, qi.inspector_id,
+       qi.notes, qi.completed_at, qi.created_at
+FROM erp_qc_inspections qi WHERE qi.id = $1 AND qi.tenant_id = $2;
+
+-- name: CreateDemerit :one
+INSERT INTO erp_supplier_demerits (tenant_id, supplier_id, inspection_id, points, reason)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id, tenant_id, supplier_id, inspection_id, points, reason, created_at;
+
+-- name: ListSupplierDemerits :many
+SELECT sd.id, sd.tenant_id, sd.supplier_id, sd.inspection_id, sd.points, sd.reason, sd.created_at
+FROM erp_supplier_demerits sd
+WHERE sd.tenant_id = $1 AND sd.supplier_id = $2
+ORDER BY sd.created_at DESC;
+
+-- name: GetSupplierDemeritTotal :one
+SELECT COALESCE(SUM(points), 0)::INT AS total_points
+FROM erp_supplier_demerits WHERE tenant_id = $1 AND supplier_id = $2;
+
 -- name: ListPurchaseReceipts :many
 SELECT pr.id, pr.tenant_id, pr.order_id, pr.date, pr.number, pr.user_id, pr.notes, pr.created_at,
        po.number AS order_number
