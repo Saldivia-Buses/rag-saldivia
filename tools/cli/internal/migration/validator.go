@@ -78,7 +78,7 @@ func DefaultValidationRules() []ValidationRule {
 			Domain:      "accounting",
 			LegacyTable: "CTB_DETALLES",
 			Constraint:  "numeric_cast",
-			Query:       "SELECT id_detalle as legacy_id, importe as detail FROM CTB_DETALLES WHERE importe IS NOT NULL AND importe != '' AND CAST(importe AS DECIMAL(16,2)) IS NULL",
+			Query:       "SELECT id_detalle as legacy_id, importe as detail FROM CTB_DETALLES WHERE importe IS NOT NULL AND importe != '' AND importe NOT REGEXP '^-?[0-9]+(\\\\.[0-9]+)?$'",
 			Transform:   "skip",
 		},
 	}

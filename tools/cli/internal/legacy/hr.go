@@ -38,14 +38,5 @@ func TrainingReader(db *sql.DB) *GenericReader {
 	}
 }
 
-// TrainingAttendeeReader creates a reader for RH_CURSO_REALIZADO.
-func TrainingAttendeeReader(db *sql.DB) *GenericReader {
-	return &GenericReader{
-		DB:         db,
-		Table:      "RH_CURSO_REALIZADO",
-		Target:     "erp_training_attendees",
-		DomainName: "hr",
-		PKColumn:   "id_curso_realizado",
-		Columns:    "id_curso_realizado, Id_curso, IdPersona, calificacion, presente",
-	}
-}
+// TrainingAttendeeReader is deferred — needs FK resolution to both training and entity.
+// Will be implemented when training attendee migration is prioritized.

@@ -27,18 +27,5 @@ func EmployeeReader(db *sql.DB) *GenericReader {
 	}
 }
 
-// ContactReader creates a reader for MED_CONTACTO.
-// Note: MED_CONTACTO has no PK. We use a synthetic ROW_NUMBER approach.
-// The reader returns all contacts for a given entity type.
-func ContactReader(db *sql.DB) *GenericReader {
-	// MED_CONTACTO has no PK, so we read all rows ordered by codigo (entity id).
-	// Resume is based on a synthetic rowindex.
-	return &GenericReader{
-		DB:         db,
-		Table:      "MED_CONTACTO",
-		Target:     "erp_entity_contacts",
-		DomainName: "entity",
-		PKColumn:   "codigo", // Not a real PK but the best we have for ordering
-		Columns:    "codigo, id_tipo, tipo_ente, valor",
-	}
-}
+// ContactReader is deferred — MED_CONTACTO has no PK, needs synthetic key approach.
+// Will be implemented when entity contact migration is prioritized.

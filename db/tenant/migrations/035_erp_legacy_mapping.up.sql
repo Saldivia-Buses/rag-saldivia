@@ -14,7 +14,7 @@ CREATE TABLE erp_legacy_mapping (
     migrated_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
     UNIQUE(tenant_id, domain, legacy_table, legacy_id)
 );
-CREATE INDEX idx_erp_legacy_map ON erp_legacy_mapping(tenant_id, domain, legacy_id);
+-- UNIQUE constraint on (tenant_id, domain, legacy_table, legacy_id) already provides the primary lookup index.
 CREATE INDEX idx_erp_legacy_sda ON erp_legacy_mapping(sda_id);
 
 -- Migration run log

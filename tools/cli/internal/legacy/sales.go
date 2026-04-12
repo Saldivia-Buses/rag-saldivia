@@ -14,14 +14,5 @@ func QuotationReader(db *sql.DB) *GenericReader {
 	}
 }
 
-// OrderReader creates a reader for PEDIDOINT (internal purchase requisitions / orders).
-func OrderReader(db *sql.DB) *GenericReader {
-	return &GenericReader{
-		DB:         db,
-		Table:      "PEDIDOINT",
-		Target:     "erp_orders",
-		DomainName: "sales",
-		PKColumn:   "idPed",
-		Columns:    "idPed, artcod, fechaemi, codprv, estado, usuario, nrocom, tipocomp",
-	}
-}
+// OrderReader is deferred — PEDIDOINT has complex state machine and cross-references.
+// Will be implemented when order migration is prioritized.

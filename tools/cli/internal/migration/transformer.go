@@ -2,6 +2,7 @@ package migration
 
 import (
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/shopspring/decimal"
@@ -105,9 +106,14 @@ func SafeDateRequired(t time.Time) time.Time {
 }
 
 // ParseDecimal parses a string value into decimal.Decimal.
+// Logs a warning on invalid input instead of silently returning zero.
 func ParseDecimal(s string) decimal.Decimal {
+	if s == "" || s == "0" {
+		return decimal.Zero
+	}
 	d, err := decimal.NewFromString(s)
 	if err != nil {
+		slog.Warn("invalid decimal value, defaulting to zero", "value", s, "err", err)
 		return decimal.Zero
 	}
 	return d

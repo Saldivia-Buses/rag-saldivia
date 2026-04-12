@@ -26,29 +26,9 @@ func CashRegisterReader(db *sql.DB) *GenericReader {
 	}
 }
 
-// CashMovementReader creates a reader for CAJ_MOVIMIENTOS.
-func CashMovementReader(db *sql.DB) *GenericReader {
-	return &GenericReader{
-		DB:         db,
-		Table:      "CAJ_MOVIMIENTOS",
-		Target:     "erp_treasury_movements",
-		DomainName: "treasury",
-		PKColumn:   "id_cajmovimiento",
-		Columns:    "id_cajmovimiento, cajconcepto_id, cajpuesto_id, importe_movimiento, referencia_movimiento, fecha_movimiento, cajregistro_id, usuario_id",
-	}
-}
-
-// BankMovementReader creates a reader for CAR_MOVIMIENTOS.
-func BankMovementReader(db *sql.DB) *GenericReader {
-	return &GenericReader{
-		DB:         db,
-		Table:      "CAR_MOVIMIENTOS",
-		Target:     "erp_treasury_movements",
-		DomainName: "treasury",
-		PKColumn:   "id_carmovimiento",
-		Columns:    "id_carmovimiento, tipo_movimiento, referencia_movimiento, fecha_movimiento, cajmovimiento_id, regcuenta_id",
-	}
-}
+// CashMovementReader and BankMovementReader are deferred — treasury movement migration
+// requires mapping CAJ_MOVIMIENTOS + CAR_MOVIMIENTOS into a unified erp_treasury_movements
+// table with complex movement_type resolution. Will be implemented alongside invoicing.
 
 // CheckReader creates a reader for CARCHEQU (cheques).
 // PK is composite (carint, siscod, succod) but we use carint for ordering.

@@ -41,14 +41,5 @@ func StockMovementReader(db *sql.DB) *GenericReader {
 	}
 }
 
-// BOMReader creates a reader for STKPIEZA (STK_BOM is a view over STKPIEZA).
-func BOMReader(db *sql.DB) *GenericReader {
-	return &GenericReader{
-		DB:         db,
-		Table:      "STKPIEZA",
-		Target:     "erp_bom",
-		DomainName: "stock",
-		PKColumn:   "id_stkpieza",
-		Columns:    "id_stkpieza, stkarticulopadre_id, stkarticulohijo_id, cantidad, posicionfab_id",
-	}
-}
+// BOMReader is deferred — STKPIEZA has varchar article FKs that need hashCode resolution.
+// Will be implemented when BOM migration is prioritized.
