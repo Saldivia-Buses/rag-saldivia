@@ -724,7 +724,7 @@ func (h *Handler) Brief(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Query(w http.ResponseWriter, r *http.Request) {
 	flusher, ok := w.(http.Flusher)
 	if !ok {
-		http.Error(w, "streaming not supported", http.StatusInternalServerError)
+		http.Error(w, `{"error":"streaming not supported"}`, http.StatusInternalServerError)
 		return
 	}
 
