@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -16,9 +17,36 @@ import (
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/service"
 )
 
-type Treasury struct{ svc *service.Treasury }
+// TreasuryService is the interface the Treasury handler depends on.
+type TreasuryService interface {
+	ListBankAccounts(ctx context.Context, tenantID string, activeOnly bool) ([]repository.ErpBankAccount, error)
+	CreateBankAccount(ctx context.Context, p repository.CreateBankAccountParams, userID, ip string) (repository.ErpBankAccount, error)
+	ListCashRegisters(ctx context.Context, tenantID string) ([]repository.ErpCashRegister, error)
+	CreateCashRegister(ctx context.Context, tenantID, name string, accountID pgtype.UUID, userID, ip string) (repository.ErpCashRegister, error)
+	ListMovements(ctx context.Context, tenantID string, dateFrom, dateTo pgtype.Date, typeFilter string, limit, offset int) ([]repository.ListTreasuryMovementsRow, error)
+	CreateMovement(ctx context.Context, req service.CreateTreasuryMovementRequest) (repository.CreateTreasuryMovementRow, error)
+	ListChecks(ctx context.Context, tenantID, direction, status string) ([]repository.ErpCheck, error)
+	CreateCheck(ctx context.Context, p repository.CreateCheckParams, userID, ip string) (repository.ErpCheck, error)
+	UpdateCheckStatus(ctx context.Context, id pgtype.UUID, tenantID, newStatus, userID, ip string) error
+	GetBalance(ctx context.Context, tenantID string) ([]repository.GetTreasuryBalanceRow, error)
+	ListCashCounts(ctx context.Context, tenantID string, limit, offset int) ([]repository.ErpCashCount, error)
+	CreateCashCount(ctx context.Context, p repository.CreateCashCountParams, ip string) (repository.ErpCashCount, error)
+	ListReceipts(ctx context.Context, tenantID, typeFilter string, dateFrom, dateTo pgtype.Date, limit, offset int) ([]repository.ListReceiptsRow, error)
+	GetReceipt(ctx context.Context, tenantID string, id pgtype.UUID) (*service.ReceiptDetail, error)
+	CreateReceipt(ctx context.Context, tenantID string, inp service.ReceiptInput, userID, ip string) (*service.ReceiptDetail, error)
+	VoidReceipt(ctx context.Context, tenantID string, receiptID pgtype.UUID, userID, ip string) error
+	ListReconciliations(ctx context.Context, tenantID string) ([]repository.ListReconciliationsRow, error)
+	GetReconciliation(ctx context.Context, tenantID string, id pgtype.UUID) (*service.ReconciliationDetail, error)
+	CreateReconciliation(ctx context.Context, tenantID string, bankAccountID pgtype.UUID, period string, statementBalance, bookBalance string, userID, ip string) (repository.ErpBankReconciliation, error)
+	ImportStatementLines(ctx context.Context, tenantID string, reconID pgtype.UUID, lines []service.StatementLineInput) (int, error)
+	AutoMatch(ctx context.Context, tenantID string, reconID pgtype.UUID) (*service.AutoMatchResult, error)
+	MatchManual(ctx context.Context, tenantID string, reconID, lineID, movementID pgtype.UUID) error
+	ConfirmReconciliation(ctx context.Context, tenantID string, reconID pgtype.UUID, userID, ip string) error
+}
 
-func NewTreasury(svc *service.Treasury) *Treasury { return &Treasury{svc: svc} }
+type Treasury struct{ svc TreasuryService }
+
+func NewTreasury(svc TreasuryService) *Treasury { return &Treasury{svc: svc} }
 
 func (h *Treasury) Routes(authWrite func(http.Handler) http.Handler) chi.Router {
 	r := chi.NewRouter()

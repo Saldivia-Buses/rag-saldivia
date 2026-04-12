@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -10,13 +11,33 @@ import (
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
+	"github.com/Camionerou/rag-saldivia/services/erp/internal/repository"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/service"
 )
 
-// Accounting handles accounting endpoints.
-type Accounting struct{ svc *service.Accounting }
+// AccountingService is the interface the Accounting handler depends on.
+type AccountingService interface {
+	ListAccounts(ctx context.Context, tenantID string, activeOnly bool) ([]repository.ErpAccount, error)
+	CreateAccount(ctx context.Context, tenantID, code, name string, parentID pgtype.UUID, accountType string, isDetail bool, costCenterID pgtype.UUID, userID, ip string) (repository.ErpAccount, error)
+	ListCostCenters(ctx context.Context, tenantID string, activeOnly bool) ([]repository.ErpCostCenter, error)
+	CreateCostCenter(ctx context.Context, tenantID, code, name string, parentID pgtype.UUID, userID, ip string) (repository.ErpCostCenter, error)
+	ListFiscalYears(ctx context.Context, tenantID string) ([]repository.ListFiscalYearsRow, error)
+	CreateFiscalYear(ctx context.Context, tenantID string, year int, startDate, endDate, userID, ip string) (repository.CreateFiscalYearRow, error)
+	SetFiscalYearResultAccount(ctx context.Context, tenantID string, yearID, accountID pgtype.UUID, userID, ip string) error
+	PreviewClose(ctx context.Context, tenantID string, yearID pgtype.UUID) (*service.PreviewCloseResult, error)
+	CloseFiscalYear(ctx context.Context, tenantID string, yearID pgtype.UUID, userID, ip string) (*service.CloseResult, error)
+	ListEntries(ctx context.Context, tenantID string, dateFrom, dateTo pgtype.Date, status string, limit, offset int) ([]repository.ListJournalEntriesRow, error)
+	GetEntry(ctx context.Context, id pgtype.UUID, tenantID string) (*service.EntryDetail, error)
+	CreateEntry(ctx context.Context, req service.CreateEntryRequest) (*service.EntryDetail, error)
+	PostEntry(ctx context.Context, id pgtype.UUID, tenantID, userID, ip string) error
+	GetBalance(ctx context.Context, tenantID string, dateFrom, dateTo pgtype.Date) ([]repository.GetAccountBalanceRow, error)
+	GetLedger(ctx context.Context, tenantID string, accountID pgtype.UUID, dateFrom, dateTo pgtype.Date, limit, offset int) ([]repository.GetLedgerRow, error)
+}
 
-func NewAccounting(svc *service.Accounting) *Accounting { return &Accounting{svc: svc} }
+// Accounting handles accounting endpoints.
+type Accounting struct{ svc AccountingService }
+
+func NewAccounting(svc AccountingService) *Accounting { return &Accounting{svc: svc} }
 
 func (h *Accounting) Routes(authWrite func(http.Handler) http.Handler) chi.Router {
 	r := chi.NewRouter()

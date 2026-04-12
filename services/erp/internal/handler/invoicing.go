@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -14,9 +15,22 @@ import (
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/service"
 )
 
-type Invoicing struct{ svc *service.Invoicing }
+// InvoicingService is the interface the Invoicing handler depends on.
+type InvoicingService interface {
+	ListInvoices(ctx context.Context, tenantID string, typeFilter, dirFilter, statusFilter string, dateFrom, dateTo pgtype.Date, limit, offset int) ([]repository.ListInvoicesRow, error)
+	GetInvoice(ctx context.Context, id pgtype.UUID, tenantID string) (*service.InvoiceDetail, error)
+	CreateInvoice(ctx context.Context, req service.CreateInvoiceRequest) (*service.InvoiceDetail, error)
+	PostInvoice(ctx context.Context, id pgtype.UUID, tenantID, userID, ip string) error
+	GetTaxBook(ctx context.Context, tenantID, period, direction string) ([]repository.GetTaxBookRow, error)
+	ListWithholdings(ctx context.Context, tenantID, typeFilter string, limit, offset int) ([]repository.ListWithholdingsRow, error)
+	CreateWithholding(ctx context.Context, p repository.CreateWithholdingParams, userID, ip string) (repository.ErpWithholding, error)
+	VoidPreview(ctx context.Context, id pgtype.UUID, tenantID string) (*service.VoidPreviewResult, error)
+	VoidInvoice(ctx context.Context, id pgtype.UUID, tenantID, reason, userID, ip string) (*service.VoidResult, error)
+}
 
-func NewInvoicing(svc *service.Invoicing) *Invoicing { return &Invoicing{svc: svc} }
+type Invoicing struct{ svc InvoicingService }
+
+func NewInvoicing(svc InvoicingService) *Invoicing { return &Invoicing{svc: svc} }
 
 func (h *Invoicing) Routes(authWrite func(http.Handler) http.Handler) chi.Router {
 	r := chi.NewRouter()

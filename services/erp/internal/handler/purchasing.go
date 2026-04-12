@@ -1,20 +1,38 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
+	"github.com/Camionerou/rag-saldivia/services/erp/internal/repository"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/service"
 )
 
-type Purchasing struct{ svc *service.Purchasing }
+// PurchasingService is the interface the Purchasing handler depends on.
+type PurchasingService interface {
+	ListOrders(ctx context.Context, tenantID, status string, limit, offset int) ([]repository.ListPurchaseOrdersRow, error)
+	GetOrder(ctx context.Context, id pgtype.UUID, tenantID string) (*service.OrderDetail, error)
+	CreateOrder(ctx context.Context, req service.CreateOrderRequest) (*service.OrderDetail, error)
+	ApproveOrder(ctx context.Context, id pgtype.UUID, tenantID, userID, ip string) error
+	Receive(ctx context.Context, req service.ReceiveRequest) error
+	ListReceipts(ctx context.Context, tenantID string, limit, offset int) ([]repository.ListPurchaseReceiptsRow, error)
+	InspectReceipt(ctx context.Context, tenantID string, receiptID pgtype.UUID, inspections []service.InspectionInput, inspectorID, ip string) ([]repository.ErpQcInspection, error)
+	ListInspections(ctx context.Context, tenantID, status string, limit, offset int) ([]repository.ListInspectionsRow, error)
+	GetInspection(ctx context.Context, id pgtype.UUID, tenantID string) (repository.ErpQcInspection, error)
+	ListSupplierDemerits(ctx context.Context, tenantID string, supplierID pgtype.UUID) ([]repository.ErpSupplierDemerit, error)
+	GetSupplierDemeritTotal(ctx context.Context, tenantID string, supplierID pgtype.UUID) (int32, error)
+}
 
-func NewPurchasing(svc *service.Purchasing) *Purchasing { return &Purchasing{svc: svc} }
+type Purchasing struct{ svc PurchasingService }
+
+func NewPurchasing(svc PurchasingService) *Purchasing { return &Purchasing{svc: svc} }
 
 func (h *Purchasing) Routes(authWrite func(http.Handler) http.Handler) chi.Router {
 	r := chi.NewRouter()
