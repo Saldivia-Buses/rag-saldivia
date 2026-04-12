@@ -11,6 +11,43 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const calculateQualityKPIs = `-- name: CalculateQualityKPIs :one
+SELECT
+    COUNT(*) FILTER (WHERE status != 'closed') AS open_ncs,
+    COUNT(*) AS total_ncs,
+    COUNT(*) FILTER (WHERE status = 'closed') AS closed_ncs,
+    CASE WHEN COUNT(*) > 0 THEN
+        ROUND(COUNT(*) FILTER (WHERE status = 'closed')::NUMERIC / COUNT(*)::NUMERIC * 100, 1)
+    ELSE 0 END AS resolution_rate
+FROM erp_nonconformities WHERE tenant_id = $1
+    AND date >= $2 AND date <= $3
+`
+
+type CalculateQualityKPIsParams struct {
+	TenantID string      `json:"tenant_id"`
+	DateFrom pgtype.Date `json:"date_from"`
+	DateTo   pgtype.Date `json:"date_to"`
+}
+
+type CalculateQualityKPIsRow struct {
+	OpenNcs        int64 `json:"open_ncs"`
+	TotalNcs       int64 `json:"total_ncs"`
+	ClosedNcs      int64 `json:"closed_ncs"`
+	ResolutionRate int32 `json:"resolution_rate"`
+}
+
+func (q *Queries) CalculateQualityKPIs(ctx context.Context, arg CalculateQualityKPIsParams) (CalculateQualityKPIsRow, error) {
+	row := q.db.QueryRow(ctx, calculateQualityKPIs, arg.TenantID, arg.DateFrom, arg.DateTo)
+	var i CalculateQualityKPIsRow
+	err := row.Scan(
+		&i.OpenNcs,
+		&i.TotalNcs,
+		&i.ClosedNcs,
+		&i.ResolutionRate,
+	)
+	return i, err
+}
+
 const createAudit = `-- name: CreateAudit :one
 INSERT INTO erp_audits (tenant_id, number, date, audit_type, scope, lead_auditor_id, notes)
 VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -214,6 +251,58 @@ func (q *Queries) CreateNonconformity(ctx context.Context, arg CreateNonconformi
 		&i.ClosedAt,
 		&i.UserID,
 		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const createQualityRisk = `-- name: CreateQualityRisk :one
+INSERT INTO erp_quality_risks (tenant_id, title, description, category, probability, impact, mitigation, responsible_id, review_date, user_id)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+RETURNING id, tenant_id, title, description, category, probability, impact, status, mitigation, responsible_id, review_date, user_id, created_at, updated_at
+`
+
+type CreateQualityRiskParams struct {
+	TenantID      string      `json:"tenant_id"`
+	Title         string      `json:"title"`
+	Description   string      `json:"description"`
+	Category      string      `json:"category"`
+	Probability   string      `json:"probability"`
+	Impact        string      `json:"impact"`
+	Mitigation    string      `json:"mitigation"`
+	ResponsibleID pgtype.UUID `json:"responsible_id"`
+	ReviewDate    pgtype.Date `json:"review_date"`
+	UserID        string      `json:"user_id"`
+}
+
+func (q *Queries) CreateQualityRisk(ctx context.Context, arg CreateQualityRiskParams) (ErpQualityRisk, error) {
+	row := q.db.QueryRow(ctx, createQualityRisk,
+		arg.TenantID,
+		arg.Title,
+		arg.Description,
+		arg.Category,
+		arg.Probability,
+		arg.Impact,
+		arg.Mitigation,
+		arg.ResponsibleID,
+		arg.ReviewDate,
+		arg.UserID,
+	)
+	var i ErpQualityRisk
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.Title,
+		&i.Description,
+		&i.Category,
+		&i.Probability,
+		&i.Impact,
+		&i.Status,
+		&i.Mitigation,
+		&i.ResponsibleID,
+		&i.ReviewDate,
+		&i.UserID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -499,6 +588,192 @@ func (q *Queries) ListNonconformities(ctx context.Context, arg ListNonconformiti
 	return items, nil
 }
 
+const listQualityIndicators = `-- name: ListQualityIndicators :many
+
+SELECT id, tenant_id, period, indicator_type, value, target, created_at FROM erp_quality_indicators
+WHERE tenant_id = $1
+    AND period BETWEEN $2 AND $3
+ORDER BY period, indicator_type
+`
+
+type ListQualityIndicatorsParams struct {
+	TenantID   string `json:"tenant_id"`
+	PeriodFrom string `json:"period_from"`
+	PeriodTo   string `json:"period_to"`
+}
+
+// ─── Quality Indicators ────────────────────────────────────────────────────
+func (q *Queries) ListQualityIndicators(ctx context.Context, arg ListQualityIndicatorsParams) ([]ErpQualityIndicator, error) {
+	rows, err := q.db.Query(ctx, listQualityIndicators, arg.TenantID, arg.PeriodFrom, arg.PeriodTo)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ErpQualityIndicator{}
+	for rows.Next() {
+		var i ErpQualityIndicator
+		if err := rows.Scan(
+			&i.ID,
+			&i.TenantID,
+			&i.Period,
+			&i.IndicatorType,
+			&i.Value,
+			&i.Target,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listQualityRisks = `-- name: ListQualityRisks :many
+
+SELECT qr.id, qr.tenant_id, qr.title, qr.description, qr.category, qr.probability, qr.impact, qr.status, qr.mitigation, qr.responsible_id, qr.review_date, qr.user_id, qr.created_at, qr.updated_at, e.name AS responsible_name
+FROM erp_quality_risks qr
+LEFT JOIN erp_entities e ON e.id = qr.responsible_id AND e.tenant_id = qr.tenant_id
+WHERE qr.tenant_id = $1
+    AND ($4::TEXT = '' OR qr.status = $4::TEXT)
+ORDER BY
+    CASE qr.probability WHEN 'critical' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 ELSE 4 END,
+    CASE qr.impact WHEN 'critical' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 ELSE 4 END
+LIMIT $2 OFFSET $3
+`
+
+type ListQualityRisksParams struct {
+	TenantID     string `json:"tenant_id"`
+	Limit        int32  `json:"limit"`
+	Offset       int32  `json:"offset"`
+	StatusFilter string `json:"status_filter"`
+}
+
+type ListQualityRisksRow struct {
+	ID              pgtype.UUID        `json:"id"`
+	TenantID        string             `json:"tenant_id"`
+	Title           string             `json:"title"`
+	Description     string             `json:"description"`
+	Category        string             `json:"category"`
+	Probability     string             `json:"probability"`
+	Impact          string             `json:"impact"`
+	Status          string             `json:"status"`
+	Mitigation      string             `json:"mitigation"`
+	ResponsibleID   pgtype.UUID        `json:"responsible_id"`
+	ReviewDate      pgtype.Date        `json:"review_date"`
+	UserID          string             `json:"user_id"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+	ResponsibleName pgtype.Text        `json:"responsible_name"`
+}
+
+// ─── Risk Register ─────────────────────────────────────────────────────────
+func (q *Queries) ListQualityRisks(ctx context.Context, arg ListQualityRisksParams) ([]ListQualityRisksRow, error) {
+	rows, err := q.db.Query(ctx, listQualityRisks,
+		arg.TenantID,
+		arg.Limit,
+		arg.Offset,
+		arg.StatusFilter,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListQualityRisksRow{}
+	for rows.Next() {
+		var i ListQualityRisksRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.TenantID,
+			&i.Title,
+			&i.Description,
+			&i.Category,
+			&i.Probability,
+			&i.Impact,
+			&i.Status,
+			&i.Mitigation,
+			&i.ResponsibleID,
+			&i.ReviewDate,
+			&i.UserID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.ResponsibleName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listSupplierScorecards = `-- name: ListSupplierScorecards :many
+
+SELECT sc.id, sc.tenant_id, sc.supplier_id, sc.period, sc.total_receipts, sc.accepted_qty, sc.rejected_qty, sc.total_demerits, sc.quality_score, sc.created_at, e.name AS supplier_name
+FROM erp_supplier_scorecards sc
+JOIN erp_entities e ON e.id = sc.supplier_id AND e.tenant_id = sc.tenant_id
+WHERE sc.tenant_id = $1
+ORDER BY sc.period DESC, sc.quality_score ASC
+LIMIT $2 OFFSET $3
+`
+
+type ListSupplierScorecardsParams struct {
+	TenantID string `json:"tenant_id"`
+	Limit    int32  `json:"limit"`
+	Offset   int32  `json:"offset"`
+}
+
+type ListSupplierScorecardsRow struct {
+	ID            pgtype.UUID        `json:"id"`
+	TenantID      string             `json:"tenant_id"`
+	SupplierID    pgtype.UUID        `json:"supplier_id"`
+	Period        string             `json:"period"`
+	TotalReceipts int32              `json:"total_receipts"`
+	AcceptedQty   pgtype.Numeric     `json:"accepted_qty"`
+	RejectedQty   pgtype.Numeric     `json:"rejected_qty"`
+	TotalDemerits int32              `json:"total_demerits"`
+	QualityScore  pgtype.Numeric     `json:"quality_score"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	SupplierName  string             `json:"supplier_name"`
+}
+
+// ─── Supplier Scorecards ───────────────────────────────────────────────────
+func (q *Queries) ListSupplierScorecards(ctx context.Context, arg ListSupplierScorecardsParams) ([]ListSupplierScorecardsRow, error) {
+	rows, err := q.db.Query(ctx, listSupplierScorecards, arg.TenantID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListSupplierScorecardsRow{}
+	for rows.Next() {
+		var i ListSupplierScorecardsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.TenantID,
+			&i.SupplierID,
+			&i.Period,
+			&i.TotalReceipts,
+			&i.AcceptedQty,
+			&i.RejectedQty,
+			&i.TotalDemerits,
+			&i.QualityScore,
+			&i.CreatedAt,
+			&i.SupplierName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateNonconformityStatus = `-- name: UpdateNonconformityStatus :execrows
 UPDATE erp_nonconformities SET status = $3,
     closed_at = CASE WHEN $3 = 'closed' THEN now() ELSE closed_at END
@@ -517,4 +792,120 @@ func (q *Queries) UpdateNonconformityStatus(ctx context.Context, arg UpdateNonco
 		return 0, err
 	}
 	return result.RowsAffected(), nil
+}
+
+const updateQualityRiskStatus = `-- name: UpdateQualityRiskStatus :one
+UPDATE erp_quality_risks SET status = $3, updated_at = now() WHERE id = $1 AND tenant_id = $2 RETURNING id, tenant_id, title, description, category, probability, impact, status, mitigation, responsible_id, review_date, user_id, created_at, updated_at
+`
+
+type UpdateQualityRiskStatusParams struct {
+	ID       pgtype.UUID `json:"id"`
+	TenantID string      `json:"tenant_id"`
+	Status   string      `json:"status"`
+}
+
+func (q *Queries) UpdateQualityRiskStatus(ctx context.Context, arg UpdateQualityRiskStatusParams) (ErpQualityRisk, error) {
+	row := q.db.QueryRow(ctx, updateQualityRiskStatus, arg.ID, arg.TenantID, arg.Status)
+	var i ErpQualityRisk
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.Title,
+		&i.Description,
+		&i.Category,
+		&i.Probability,
+		&i.Impact,
+		&i.Status,
+		&i.Mitigation,
+		&i.ResponsibleID,
+		&i.ReviewDate,
+		&i.UserID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const upsertQualityIndicator = `-- name: UpsertQualityIndicator :one
+INSERT INTO erp_quality_indicators (tenant_id, period, indicator_type, value, target)
+VALUES ($1, $2, $3, $4, $5)
+ON CONFLICT (tenant_id, period, indicator_type) DO UPDATE SET value = EXCLUDED.value, target = EXCLUDED.target
+RETURNING id, tenant_id, period, indicator_type, value, target, created_at
+`
+
+type UpsertQualityIndicatorParams struct {
+	TenantID      string         `json:"tenant_id"`
+	Period        string         `json:"period"`
+	IndicatorType string         `json:"indicator_type"`
+	Value         pgtype.Numeric `json:"value"`
+	Target        pgtype.Numeric `json:"target"`
+}
+
+func (q *Queries) UpsertQualityIndicator(ctx context.Context, arg UpsertQualityIndicatorParams) (ErpQualityIndicator, error) {
+	row := q.db.QueryRow(ctx, upsertQualityIndicator,
+		arg.TenantID,
+		arg.Period,
+		arg.IndicatorType,
+		arg.Value,
+		arg.Target,
+	)
+	var i ErpQualityIndicator
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.Period,
+		&i.IndicatorType,
+		&i.Value,
+		&i.Target,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const upsertSupplierScorecard = `-- name: UpsertSupplierScorecard :one
+INSERT INTO erp_supplier_scorecards (tenant_id, supplier_id, period, total_receipts, accepted_qty, rejected_qty, total_demerits, quality_score)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+ON CONFLICT (tenant_id, supplier_id, period) DO UPDATE SET
+    total_receipts = EXCLUDED.total_receipts, accepted_qty = EXCLUDED.accepted_qty,
+    rejected_qty = EXCLUDED.rejected_qty, total_demerits = EXCLUDED.total_demerits,
+    quality_score = EXCLUDED.quality_score
+RETURNING id, tenant_id, supplier_id, period, total_receipts, accepted_qty, rejected_qty, total_demerits, quality_score, created_at
+`
+
+type UpsertSupplierScorecardParams struct {
+	TenantID      string         `json:"tenant_id"`
+	SupplierID    pgtype.UUID    `json:"supplier_id"`
+	Period        string         `json:"period"`
+	TotalReceipts int32          `json:"total_receipts"`
+	AcceptedQty   pgtype.Numeric `json:"accepted_qty"`
+	RejectedQty   pgtype.Numeric `json:"rejected_qty"`
+	TotalDemerits int32          `json:"total_demerits"`
+	QualityScore  pgtype.Numeric `json:"quality_score"`
+}
+
+func (q *Queries) UpsertSupplierScorecard(ctx context.Context, arg UpsertSupplierScorecardParams) (ErpSupplierScorecard, error) {
+	row := q.db.QueryRow(ctx, upsertSupplierScorecard,
+		arg.TenantID,
+		arg.SupplierID,
+		arg.Period,
+		arg.TotalReceipts,
+		arg.AcceptedQty,
+		arg.RejectedQty,
+		arg.TotalDemerits,
+		arg.QualityScore,
+	)
+	var i ErpSupplierScorecard
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.SupplierID,
+		&i.Period,
+		&i.TotalReceipts,
+		&i.AcceptedQty,
+		&i.RejectedQty,
+		&i.TotalDemerits,
+		&i.QualityScore,
+		&i.CreatedAt,
+	)
+	return i, err
 }

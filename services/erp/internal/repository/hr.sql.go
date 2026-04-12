@@ -52,6 +52,36 @@ func (q *Queries) CreateAttendance(ctx context.Context, arg CreateAttendancePara
 	return i, err
 }
 
+const createCompetency = `-- name: CreateCompetency :one
+INSERT INTO erp_competencies (tenant_id, name, description, category) VALUES ($1, $2, $3, $4) RETURNING id, tenant_id, name, description, category, active
+`
+
+type CreateCompetencyParams struct {
+	TenantID    string `json:"tenant_id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Category    string `json:"category"`
+}
+
+func (q *Queries) CreateCompetency(ctx context.Context, arg CreateCompetencyParams) (ErpCompetency, error) {
+	row := q.db.QueryRow(ctx, createCompetency,
+		arg.TenantID,
+		arg.Name,
+		arg.Description,
+		arg.Category,
+	)
+	var i ErpCompetency
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.Name,
+		&i.Description,
+		&i.Category,
+		&i.Active,
+	)
+	return i, err
+}
+
 const createDepartment = `-- name: CreateDepartment :one
 INSERT INTO erp_departments (tenant_id, code, name, parent_id, manager_id)
 VALUES ($1, $2, $3, $4, $5)
@@ -83,6 +113,90 @@ func (q *Queries) CreateDepartment(ctx context.Context, arg CreateDepartmentPara
 		&i.ParentID,
 		&i.ManagerID,
 		&i.Active,
+	)
+	return i, err
+}
+
+const createEvaluation = `-- name: CreateEvaluation :one
+INSERT INTO erp_evaluations (tenant_id, entity_id, evaluator_id, period, eval_type, strengths, weaknesses, goals, comments)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+RETURNING id, tenant_id, entity_id, evaluator_id, period, eval_type, overall_score, strengths, weaknesses, goals, comments, status, submitted_at, reviewed_at, created_at
+`
+
+type CreateEvaluationParams struct {
+	TenantID    string      `json:"tenant_id"`
+	EntityID    pgtype.UUID `json:"entity_id"`
+	EvaluatorID string      `json:"evaluator_id"`
+	Period      string      `json:"period"`
+	EvalType    string      `json:"eval_type"`
+	Strengths   string      `json:"strengths"`
+	Weaknesses  string      `json:"weaknesses"`
+	Goals       string      `json:"goals"`
+	Comments    string      `json:"comments"`
+}
+
+func (q *Queries) CreateEvaluation(ctx context.Context, arg CreateEvaluationParams) (ErpEvaluation, error) {
+	row := q.db.QueryRow(ctx, createEvaluation,
+		arg.TenantID,
+		arg.EntityID,
+		arg.EvaluatorID,
+		arg.Period,
+		arg.EvalType,
+		arg.Strengths,
+		arg.Weaknesses,
+		arg.Goals,
+		arg.Comments,
+	)
+	var i ErpEvaluation
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.EntityID,
+		&i.EvaluatorID,
+		&i.Period,
+		&i.EvalType,
+		&i.OverallScore,
+		&i.Strengths,
+		&i.Weaknesses,
+		&i.Goals,
+		&i.Comments,
+		&i.Status,
+		&i.SubmittedAt,
+		&i.ReviewedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const createEvaluationScore = `-- name: CreateEvaluationScore :one
+INSERT INTO erp_evaluation_scores (tenant_id, evaluation_id, competency_id, score, comments)
+VALUES ($1, $2, $3, $4, $5) RETURNING id, tenant_id, evaluation_id, competency_id, score, comments
+`
+
+type CreateEvaluationScoreParams struct {
+	TenantID     string         `json:"tenant_id"`
+	EvaluationID pgtype.UUID    `json:"evaluation_id"`
+	CompetencyID pgtype.UUID    `json:"competency_id"`
+	Score        pgtype.Numeric `json:"score"`
+	Comments     string         `json:"comments"`
+}
+
+func (q *Queries) CreateEvaluationScore(ctx context.Context, arg CreateEvaluationScoreParams) (ErpEvaluationScore, error) {
+	row := q.db.QueryRow(ctx, createEvaluationScore,
+		arg.TenantID,
+		arg.EvaluationID,
+		arg.CompetencyID,
+		arg.Score,
+		arg.Comments,
+	)
+	var i ErpEvaluationScore
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.EvaluationID,
+		&i.CompetencyID,
+		&i.Score,
+		&i.Comments,
 	)
 	return i, err
 }
@@ -223,6 +337,86 @@ func (q *Queries) GetEmployeeDetail(ctx context.Context, arg GetEmployeeDetailPa
 	return i, err
 }
 
+const getEvaluation = `-- name: GetEvaluation :one
+SELECT ev.id, ev.tenant_id, ev.entity_id, ev.evaluator_id, ev.period, ev.eval_type, ev.overall_score, ev.strengths, ev.weaknesses, ev.goals, ev.comments, ev.status, ev.submitted_at, ev.reviewed_at, ev.created_at, e.name AS entity_name
+FROM erp_evaluations ev
+JOIN erp_entities e ON e.id = ev.entity_id AND e.tenant_id = ev.tenant_id
+WHERE ev.id = $1 AND ev.tenant_id = $2
+`
+
+type GetEvaluationParams struct {
+	ID       pgtype.UUID `json:"id"`
+	TenantID string      `json:"tenant_id"`
+}
+
+type GetEvaluationRow struct {
+	ID           pgtype.UUID        `json:"id"`
+	TenantID     string             `json:"tenant_id"`
+	EntityID     pgtype.UUID        `json:"entity_id"`
+	EvaluatorID  string             `json:"evaluator_id"`
+	Period       string             `json:"period"`
+	EvalType     string             `json:"eval_type"`
+	OverallScore pgtype.Numeric     `json:"overall_score"`
+	Strengths    string             `json:"strengths"`
+	Weaknesses   string             `json:"weaknesses"`
+	Goals        string             `json:"goals"`
+	Comments     string             `json:"comments"`
+	Status       string             `json:"status"`
+	SubmittedAt  pgtype.Timestamptz `json:"submitted_at"`
+	ReviewedAt   pgtype.Timestamptz `json:"reviewed_at"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	EntityName   string             `json:"entity_name"`
+}
+
+func (q *Queries) GetEvaluation(ctx context.Context, arg GetEvaluationParams) (GetEvaluationRow, error) {
+	row := q.db.QueryRow(ctx, getEvaluation, arg.ID, arg.TenantID)
+	var i GetEvaluationRow
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.EntityID,
+		&i.EvaluatorID,
+		&i.Period,
+		&i.EvalType,
+		&i.OverallScore,
+		&i.Strengths,
+		&i.Weaknesses,
+		&i.Goals,
+		&i.Comments,
+		&i.Status,
+		&i.SubmittedAt,
+		&i.ReviewedAt,
+		&i.CreatedAt,
+		&i.EntityName,
+	)
+	return i, err
+}
+
+const getSeniorityYears = `-- name: GetSeniorityYears :one
+SELECT
+    EXTRACT(YEAR FROM AGE(CURRENT_DATE, ed.hire_date))::INT AS seniority_years,
+    ed.hire_date
+FROM erp_employee_details ed
+WHERE ed.tenant_id = $1 AND ed.entity_id = $2 AND ed.hire_date IS NOT NULL
+`
+
+type GetSeniorityYearsParams struct {
+	TenantID string      `json:"tenant_id"`
+	EntityID pgtype.UUID `json:"entity_id"`
+}
+
+type GetSeniorityYearsRow struct {
+	SeniorityYears int32       `json:"seniority_years"`
+	HireDate       pgtype.Date `json:"hire_date"`
+}
+
+func (q *Queries) GetSeniorityYears(ctx context.Context, arg GetSeniorityYearsParams) (GetSeniorityYearsRow, error) {
+	row := q.db.QueryRow(ctx, getSeniorityYears, arg.TenantID, arg.EntityID)
+	var i GetSeniorityYearsRow
+	err := row.Scan(&i.SeniorityYears, &i.HireDate)
+	return i, err
+}
+
 const listAttendance = `-- name: ListAttendance :many
 SELECT id, tenant_id, entity_id, date, clock_in, clock_out, hours, source, created_at
 FROM erp_attendance WHERE tenant_id = $1
@@ -279,6 +473,44 @@ func (q *Queries) ListAttendance(ctx context.Context, arg ListAttendanceParams) 
 	return items, nil
 }
 
+const listCompetencies = `-- name: ListCompetencies :many
+
+SELECT id, tenant_id, name, description, category, active FROM erp_competencies WHERE tenant_id = $1 AND ($2::BOOLEAN = false OR active = true) ORDER BY category, name
+`
+
+type ListCompetenciesParams struct {
+	TenantID   string `json:"tenant_id"`
+	ActiveOnly bool   `json:"active_only"`
+}
+
+// ─── Competencies ──────────────────────────────────────────────────────────
+func (q *Queries) ListCompetencies(ctx context.Context, arg ListCompetenciesParams) ([]ErpCompetency, error) {
+	rows, err := q.db.Query(ctx, listCompetencies, arg.TenantID, arg.ActiveOnly)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ErpCompetency{}
+	for rows.Next() {
+		var i ErpCompetency
+		if err := rows.Scan(
+			&i.ID,
+			&i.TenantID,
+			&i.Name,
+			&i.Description,
+			&i.Category,
+			&i.Active,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listDepartments = `-- name: ListDepartments :many
 SELECT id, tenant_id, code, name, parent_id, manager_id, active
 FROM erp_departments WHERE tenant_id = $1 ORDER BY code
@@ -301,6 +533,65 @@ func (q *Queries) ListDepartments(ctx context.Context, tenantID string) ([]ErpDe
 			&i.ParentID,
 			&i.ManagerID,
 			&i.Active,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listEmployeeCompetencies = `-- name: ListEmployeeCompetencies :many
+SELECT ec.id, ec.tenant_id, ec.entity_id, ec.competency_id, ec.level, ec.certified, ec.certified_at, ec.notes, ec.updated_at, c.name AS competency_name, c.category AS competency_category
+FROM erp_employee_competencies ec
+JOIN erp_competencies c ON c.id = ec.competency_id AND c.tenant_id = ec.tenant_id
+WHERE ec.tenant_id = $1 AND ec.entity_id = $2
+ORDER BY c.category, c.name
+`
+
+type ListEmployeeCompetenciesParams struct {
+	TenantID string      `json:"tenant_id"`
+	EntityID pgtype.UUID `json:"entity_id"`
+}
+
+type ListEmployeeCompetenciesRow struct {
+	ID                 pgtype.UUID        `json:"id"`
+	TenantID           string             `json:"tenant_id"`
+	EntityID           pgtype.UUID        `json:"entity_id"`
+	CompetencyID       pgtype.UUID        `json:"competency_id"`
+	Level              int32              `json:"level"`
+	Certified          bool               `json:"certified"`
+	CertifiedAt        pgtype.Date        `json:"certified_at"`
+	Notes              string             `json:"notes"`
+	UpdatedAt          pgtype.Timestamptz `json:"updated_at"`
+	CompetencyName     string             `json:"competency_name"`
+	CompetencyCategory string             `json:"competency_category"`
+}
+
+func (q *Queries) ListEmployeeCompetencies(ctx context.Context, arg ListEmployeeCompetenciesParams) ([]ListEmployeeCompetenciesRow, error) {
+	rows, err := q.db.Query(ctx, listEmployeeCompetencies, arg.TenantID, arg.EntityID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListEmployeeCompetenciesRow{}
+	for rows.Next() {
+		var i ListEmployeeCompetenciesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.TenantID,
+			&i.EntityID,
+			&i.CompetencyID,
+			&i.Level,
+			&i.Certified,
+			&i.CertifiedAt,
+			&i.Notes,
+			&i.UpdatedAt,
+			&i.CompetencyName,
+			&i.CompetencyCategory,
 		); err != nil {
 			return nil, err
 		}
@@ -375,6 +666,137 @@ func (q *Queries) ListEmployeeDetails(ctx context.Context, arg ListEmployeeDetai
 	return items, nil
 }
 
+const listEvaluationScores = `-- name: ListEvaluationScores :many
+SELECT es.id, es.tenant_id, es.evaluation_id, es.competency_id, es.score, es.comments, c.name AS competency_name
+FROM erp_evaluation_scores es
+JOIN erp_competencies c ON c.id = es.competency_id AND c.tenant_id = es.tenant_id
+WHERE es.evaluation_id = $1 AND es.tenant_id = $2
+ORDER BY c.category, c.name
+`
+
+type ListEvaluationScoresParams struct {
+	EvaluationID pgtype.UUID `json:"evaluation_id"`
+	TenantID     string      `json:"tenant_id"`
+}
+
+type ListEvaluationScoresRow struct {
+	ID             pgtype.UUID    `json:"id"`
+	TenantID       string         `json:"tenant_id"`
+	EvaluationID   pgtype.UUID    `json:"evaluation_id"`
+	CompetencyID   pgtype.UUID    `json:"competency_id"`
+	Score          pgtype.Numeric `json:"score"`
+	Comments       string         `json:"comments"`
+	CompetencyName string         `json:"competency_name"`
+}
+
+func (q *Queries) ListEvaluationScores(ctx context.Context, arg ListEvaluationScoresParams) ([]ListEvaluationScoresRow, error) {
+	rows, err := q.db.Query(ctx, listEvaluationScores, arg.EvaluationID, arg.TenantID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListEvaluationScoresRow{}
+	for rows.Next() {
+		var i ListEvaluationScoresRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.TenantID,
+			&i.EvaluationID,
+			&i.CompetencyID,
+			&i.Score,
+			&i.Comments,
+			&i.CompetencyName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listEvaluations = `-- name: ListEvaluations :many
+
+SELECT ev.id, ev.tenant_id, ev.entity_id, ev.evaluator_id, ev.period, ev.eval_type, ev.overall_score, ev.strengths, ev.weaknesses, ev.goals, ev.comments, ev.status, ev.submitted_at, ev.reviewed_at, ev.created_at, e.name AS entity_name
+FROM erp_evaluations ev
+JOIN erp_entities e ON e.id = ev.entity_id AND e.tenant_id = ev.tenant_id
+WHERE ev.tenant_id = $1
+    AND ($4::TEXT = '' OR ev.period = $4::TEXT)
+ORDER BY ev.created_at DESC
+LIMIT $2 OFFSET $3
+`
+
+type ListEvaluationsParams struct {
+	TenantID     string `json:"tenant_id"`
+	Limit        int32  `json:"limit"`
+	Offset       int32  `json:"offset"`
+	PeriodFilter string `json:"period_filter"`
+}
+
+type ListEvaluationsRow struct {
+	ID           pgtype.UUID        `json:"id"`
+	TenantID     string             `json:"tenant_id"`
+	EntityID     pgtype.UUID        `json:"entity_id"`
+	EvaluatorID  string             `json:"evaluator_id"`
+	Period       string             `json:"period"`
+	EvalType     string             `json:"eval_type"`
+	OverallScore pgtype.Numeric     `json:"overall_score"`
+	Strengths    string             `json:"strengths"`
+	Weaknesses   string             `json:"weaknesses"`
+	Goals        string             `json:"goals"`
+	Comments     string             `json:"comments"`
+	Status       string             `json:"status"`
+	SubmittedAt  pgtype.Timestamptz `json:"submitted_at"`
+	ReviewedAt   pgtype.Timestamptz `json:"reviewed_at"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	EntityName   string             `json:"entity_name"`
+}
+
+// ─── Evaluations ───────────────────────────────────────────────────────────
+func (q *Queries) ListEvaluations(ctx context.Context, arg ListEvaluationsParams) ([]ListEvaluationsRow, error) {
+	rows, err := q.db.Query(ctx, listEvaluations,
+		arg.TenantID,
+		arg.Limit,
+		arg.Offset,
+		arg.PeriodFilter,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListEvaluationsRow{}
+	for rows.Next() {
+		var i ListEvaluationsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.TenantID,
+			&i.EntityID,
+			&i.EvaluatorID,
+			&i.Period,
+			&i.EvalType,
+			&i.OverallScore,
+			&i.Strengths,
+			&i.Weaknesses,
+			&i.Goals,
+			&i.Comments,
+			&i.Status,
+			&i.SubmittedAt,
+			&i.ReviewedAt,
+			&i.CreatedAt,
+			&i.EntityName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listHREvents = `-- name: ListHREvents :many
 SELECT id, tenant_id, entity_id, event_type, date_from, date_to, hours,
        reason_id, notes, user_id, created_at
@@ -431,6 +853,48 @@ func (q *Queries) ListHREvents(ctx context.Context, arg ListHREventsParams) ([]E
 	return items, nil
 }
 
+const listLeaveBalances = `-- name: ListLeaveBalances :many
+
+SELECT id, tenant_id, entity_id, leave_type, year, accrued, used, balance FROM erp_leave_balances
+WHERE tenant_id = $1 AND entity_id = $2
+ORDER BY year DESC, leave_type
+`
+
+type ListLeaveBalancesParams struct {
+	TenantID string      `json:"tenant_id"`
+	EntityID pgtype.UUID `json:"entity_id"`
+}
+
+// ─── Leave Balances ────────────────────────────────────────────────────────
+func (q *Queries) ListLeaveBalances(ctx context.Context, arg ListLeaveBalancesParams) ([]ErpLeaveBalance, error) {
+	rows, err := q.db.Query(ctx, listLeaveBalances, arg.TenantID, arg.EntityID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ErpLeaveBalance{}
+	for rows.Next() {
+		var i ErpLeaveBalance
+		if err := rows.Scan(
+			&i.ID,
+			&i.TenantID,
+			&i.EntityID,
+			&i.LeaveType,
+			&i.Year,
+			&i.Accrued,
+			&i.Used,
+			&i.Balance,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listTraining = `-- name: ListTraining :many
 SELECT id, tenant_id, name, description, instructor, date_from, date_to, status
 FROM erp_training WHERE tenant_id = $1 ORDER BY date_from DESC LIMIT $2 OFFSET $3
@@ -469,6 +933,85 @@ func (q *Queries) ListTraining(ctx context.Context, arg ListTrainingParams) ([]E
 		return nil, err
 	}
 	return items, nil
+}
+
+const submitEvaluation = `-- name: SubmitEvaluation :one
+UPDATE erp_evaluations SET overall_score = $3, status = 'submitted', submitted_at = now()
+WHERE id = $1 AND tenant_id = $2 AND status = 'draft'
+RETURNING id, tenant_id, entity_id, evaluator_id, period, eval_type, overall_score, strengths, weaknesses, goals, comments, status, submitted_at, reviewed_at, created_at
+`
+
+type SubmitEvaluationParams struct {
+	ID           pgtype.UUID    `json:"id"`
+	TenantID     string         `json:"tenant_id"`
+	OverallScore pgtype.Numeric `json:"overall_score"`
+}
+
+func (q *Queries) SubmitEvaluation(ctx context.Context, arg SubmitEvaluationParams) (ErpEvaluation, error) {
+	row := q.db.QueryRow(ctx, submitEvaluation, arg.ID, arg.TenantID, arg.OverallScore)
+	var i ErpEvaluation
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.EntityID,
+		&i.EvaluatorID,
+		&i.Period,
+		&i.EvalType,
+		&i.OverallScore,
+		&i.Strengths,
+		&i.Weaknesses,
+		&i.Goals,
+		&i.Comments,
+		&i.Status,
+		&i.SubmittedAt,
+		&i.ReviewedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const upsertEmployeeCompetency = `-- name: UpsertEmployeeCompetency :one
+INSERT INTO erp_employee_competencies (tenant_id, entity_id, competency_id, level, certified, certified_at, notes)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+ON CONFLICT (tenant_id, entity_id, competency_id) DO UPDATE SET
+    level = EXCLUDED.level, certified = EXCLUDED.certified,
+    certified_at = EXCLUDED.certified_at, notes = EXCLUDED.notes, updated_at = now()
+RETURNING id, tenant_id, entity_id, competency_id, level, certified, certified_at, notes, updated_at
+`
+
+type UpsertEmployeeCompetencyParams struct {
+	TenantID     string      `json:"tenant_id"`
+	EntityID     pgtype.UUID `json:"entity_id"`
+	CompetencyID pgtype.UUID `json:"competency_id"`
+	Level        int32       `json:"level"`
+	Certified    bool        `json:"certified"`
+	CertifiedAt  pgtype.Date `json:"certified_at"`
+	Notes        string      `json:"notes"`
+}
+
+func (q *Queries) UpsertEmployeeCompetency(ctx context.Context, arg UpsertEmployeeCompetencyParams) (ErpEmployeeCompetency, error) {
+	row := q.db.QueryRow(ctx, upsertEmployeeCompetency,
+		arg.TenantID,
+		arg.EntityID,
+		arg.CompetencyID,
+		arg.Level,
+		arg.Certified,
+		arg.CertifiedAt,
+		arg.Notes,
+	)
+	var i ErpEmployeeCompetency
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.EntityID,
+		&i.CompetencyID,
+		&i.Level,
+		&i.Certified,
+		&i.CertifiedAt,
+		&i.Notes,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const upsertEmployeeDetail = `-- name: UpsertEmployeeDetail :one
@@ -545,6 +1088,46 @@ func (q *Queries) UpsertEmployeeDetail(ctx context.Context, arg UpsertEmployeeDe
 		&i.Metadata,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const upsertLeaveBalance = `-- name: UpsertLeaveBalance :one
+INSERT INTO erp_leave_balances (tenant_id, entity_id, leave_type, year, accrued, used)
+VALUES ($1, $2, $3, $4, $5, $6)
+ON CONFLICT (tenant_id, entity_id, leave_type, year) DO UPDATE SET
+    accrued = EXCLUDED.accrued, used = EXCLUDED.used
+RETURNING id, tenant_id, entity_id, leave_type, year, accrued, used, balance
+`
+
+type UpsertLeaveBalanceParams struct {
+	TenantID  string         `json:"tenant_id"`
+	EntityID  pgtype.UUID    `json:"entity_id"`
+	LeaveType string         `json:"leave_type"`
+	Year      int32          `json:"year"`
+	Accrued   pgtype.Numeric `json:"accrued"`
+	Used      pgtype.Numeric `json:"used"`
+}
+
+func (q *Queries) UpsertLeaveBalance(ctx context.Context, arg UpsertLeaveBalanceParams) (ErpLeaveBalance, error) {
+	row := q.db.QueryRow(ctx, upsertLeaveBalance,
+		arg.TenantID,
+		arg.EntityID,
+		arg.LeaveType,
+		arg.Year,
+		arg.Accrued,
+		arg.Used,
+	)
+	var i ErpLeaveBalance
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.EntityID,
+		&i.LeaveType,
+		&i.Year,
+		&i.Accrued,
+		&i.Used,
+		&i.Balance,
 	)
 	return i, err
 }

@@ -522,6 +522,15 @@ type ErpCommunicationRecipient struct {
 	ReadAt          pgtype.Timestamptz `json:"read_at"`
 }
 
+type ErpCompetency struct {
+	ID          pgtype.UUID `json:"id"`
+	TenantID    string      `json:"tenant_id"`
+	Name        string      `json:"name"`
+	Description string      `json:"description"`
+	Category    string      `json:"category"`
+	Active      bool        `json:"active"`
+}
+
 type ErpControlledDocument struct {
 	ID         pgtype.UUID        `json:"id"`
 	TenantID   string             `json:"tenant_id"`
@@ -566,6 +575,18 @@ type ErpDepartment struct {
 	ParentID  pgtype.UUID `json:"parent_id"`
 	ManagerID pgtype.UUID `json:"manager_id"`
 	Active    bool        `json:"active"`
+}
+
+type ErpEmployeeCompetency struct {
+	ID           pgtype.UUID        `json:"id"`
+	TenantID     string             `json:"tenant_id"`
+	EntityID     pgtype.UUID        `json:"entity_id"`
+	CompetencyID pgtype.UUID        `json:"competency_id"`
+	Level        int32              `json:"level"`
+	Certified    bool               `json:"certified"`
+	CertifiedAt  pgtype.Date        `json:"certified_at"`
+	Notes        string             `json:"notes"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
 }
 
 type ErpEmployeeDetail struct {
@@ -643,6 +664,33 @@ type ErpEntityRelation struct {
 	Type      string             `json:"type"`
 	Metadata  []byte             `json:"metadata"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpEvaluation struct {
+	ID           pgtype.UUID        `json:"id"`
+	TenantID     string             `json:"tenant_id"`
+	EntityID     pgtype.UUID        `json:"entity_id"`
+	EvaluatorID  string             `json:"evaluator_id"`
+	Period       string             `json:"period"`
+	EvalType     string             `json:"eval_type"`
+	OverallScore pgtype.Numeric     `json:"overall_score"`
+	Strengths    string             `json:"strengths"`
+	Weaknesses   string             `json:"weaknesses"`
+	Goals        string             `json:"goals"`
+	Comments     string             `json:"comments"`
+	Status       string             `json:"status"`
+	SubmittedAt  pgtype.Timestamptz `json:"submitted_at"`
+	ReviewedAt   pgtype.Timestamptz `json:"reviewed_at"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpEvaluationScore struct {
+	ID           pgtype.UUID    `json:"id"`
+	TenantID     string         `json:"tenant_id"`
+	EvaluationID pgtype.UUID    `json:"evaluation_id"`
+	CompetencyID pgtype.UUID    `json:"competency_id"`
+	Score        pgtype.Numeric `json:"score"`
+	Comments     string         `json:"comments"`
 }
 
 type ErpFiscalYear struct {
@@ -750,6 +798,17 @@ type ErpJournalLine struct {
 	Credit       pgtype.Numeric `json:"credit"`
 	Description  string         `json:"description"`
 	SortOrder    int32          `json:"sort_order"`
+}
+
+type ErpLeaveBalance struct {
+	ID        pgtype.UUID    `json:"id"`
+	TenantID  string         `json:"tenant_id"`
+	EntityID  pgtype.UUID    `json:"entity_id"`
+	LeaveType string         `json:"leave_type"`
+	Year      int32          `json:"year"`
+	Accrued   pgtype.Numeric `json:"accrued"`
+	Used      pgtype.Numeric `json:"used"`
+	Balance   pgtype.Numeric `json:"balance"`
 }
 
 type ErpLegacyMapping struct {
@@ -1032,6 +1091,33 @@ type ErpQcInspection struct {
 	CreatedAt     pgtype.Timestamptz `json:"created_at"`
 }
 
+type ErpQualityIndicator struct {
+	ID            pgtype.UUID        `json:"id"`
+	TenantID      string             `json:"tenant_id"`
+	Period        string             `json:"period"`
+	IndicatorType string             `json:"indicator_type"`
+	Value         pgtype.Numeric     `json:"value"`
+	Target        pgtype.Numeric     `json:"target"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpQualityRisk struct {
+	ID            pgtype.UUID        `json:"id"`
+	TenantID      string             `json:"tenant_id"`
+	Title         string             `json:"title"`
+	Description   string             `json:"description"`
+	Category      string             `json:"category"`
+	Probability   string             `json:"probability"`
+	Impact        string             `json:"impact"`
+	Status        string             `json:"status"`
+	Mitigation    string             `json:"mitigation"`
+	ResponsibleID pgtype.UUID        `json:"responsible_id"`
+	ReviewDate    pgtype.Date        `json:"review_date"`
+	UserID        string             `json:"user_id"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+}
+
 type ErpQuotation struct {
 	ID         pgtype.UUID        `json:"id"`
 	TenantID   string             `json:"tenant_id"`
@@ -1164,6 +1250,19 @@ type ErpSupplierDemerit struct {
 	Points       int32              `json:"points"`
 	Reason       string             `json:"reason"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpSupplierScorecard struct {
+	ID            pgtype.UUID        `json:"id"`
+	TenantID      string             `json:"tenant_id"`
+	SupplierID    pgtype.UUID        `json:"supplier_id"`
+	Period        string             `json:"period"`
+	TotalReceipts int32              `json:"total_receipts"`
+	AcceptedQty   pgtype.Numeric     `json:"accepted_qty"`
+	RejectedQty   pgtype.Numeric     `json:"rejected_qty"`
+	TotalDemerits int32              `json:"total_demerits"`
+	QualityScore  pgtype.Numeric     `json:"quality_score"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
 }
 
 type ErpSurvey struct {

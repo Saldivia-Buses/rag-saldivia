@@ -472,6 +472,55 @@ func (q *Queries) AnalyticsCustomerConcentration(ctx context.Context, arg Analyt
 	return items, nil
 }
 
+const analyticsDepartmentalCost = `-- name: AnalyticsDepartmentalCost :many
+SELECT
+    COALESCE(d.name, 'Sin departamento') AS department,
+    COUNT(DISTINCT ed.entity_id) AS headcount,
+    SUM(COALESCE(ev.hours, 0)) AS total_overtime_hours
+FROM erp_employee_details ed
+JOIN erp_entities e ON e.id = ed.entity_id AND e.tenant_id = ed.tenant_id
+LEFT JOIN erp_departments d ON d.id = ed.department_id AND d.tenant_id = ed.tenant_id
+LEFT JOIN erp_hr_events ev ON ev.entity_id = ed.entity_id AND ev.tenant_id = ed.tenant_id
+    AND ev.event_type = 'overtime'
+    AND ev.date_from BETWEEN $2 AND $3
+WHERE ed.tenant_id = $1 AND e.active = true
+    AND (ed.termination_date IS NULL OR ed.termination_date > CURRENT_DATE)
+GROUP BY d.name
+ORDER BY headcount DESC
+`
+
+type AnalyticsDepartmentalCostParams struct {
+	TenantID string      `json:"tenant_id"`
+	DateFrom pgtype.Date `json:"date_from"`
+	DateTo   pgtype.Date `json:"date_to"`
+}
+
+type AnalyticsDepartmentalCostRow struct {
+	Department         string `json:"department"`
+	Headcount          int64  `json:"headcount"`
+	TotalOvertimeHours int64  `json:"total_overtime_hours"`
+}
+
+func (q *Queries) AnalyticsDepartmentalCost(ctx context.Context, arg AnalyticsDepartmentalCostParams) ([]AnalyticsDepartmentalCostRow, error) {
+	rows, err := q.db.Query(ctx, analyticsDepartmentalCost, arg.TenantID, arg.DateFrom, arg.DateTo)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []AnalyticsDepartmentalCostRow{}
+	for rows.Next() {
+		var i AnalyticsDepartmentalCostRow
+		if err := rows.Scan(&i.Department, &i.Headcount, &i.TotalOvertimeHours); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const analyticsHeadcount = `-- name: AnalyticsHeadcount :many
 
 SELECT
@@ -548,6 +597,50 @@ func (q *Queries) AnalyticsIncomeExpense(ctx context.Context, arg AnalyticsIncom
 	for rows.Next() {
 		var i AnalyticsIncomeExpenseRow
 		if err := rows.Scan(&i.Period, &i.Income, &i.Expense); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const analyticsMonthlyGrowth = `-- name: AnalyticsMonthlyGrowth :many
+SELECT
+    to_char(date, 'YYYY-MM') AS period,
+    SUM(total) AS revenue,
+    LAG(SUM(total)) OVER (ORDER BY to_char(date, 'YYYY-MM')) AS prev_revenue
+FROM erp_invoices
+WHERE tenant_id = $1 AND direction = 'issued' AND status IN ('posted', 'paid')
+    AND date BETWEEN $2 AND $3
+GROUP BY to_char(date, 'YYYY-MM')
+ORDER BY period
+`
+
+type AnalyticsMonthlyGrowthParams struct {
+	TenantID string      `json:"tenant_id"`
+	DateFrom pgtype.Date `json:"date_from"`
+	DateTo   pgtype.Date `json:"date_to"`
+}
+
+type AnalyticsMonthlyGrowthRow struct {
+	Period      string      `json:"period"`
+	Revenue     int64       `json:"revenue"`
+	PrevRevenue interface{} `json:"prev_revenue"`
+}
+
+func (q *Queries) AnalyticsMonthlyGrowth(ctx context.Context, arg AnalyticsMonthlyGrowthParams) ([]AnalyticsMonthlyGrowthRow, error) {
+	rows, err := q.db.Query(ctx, analyticsMonthlyGrowth, arg.TenantID, arg.DateFrom, arg.DateTo)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []AnalyticsMonthlyGrowthRow{}
+	for rows.Next() {
+		var i AnalyticsMonthlyGrowthRow
+		if err := rows.Scan(&i.Period, &i.Revenue, &i.PrevRevenue); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -965,6 +1058,125 @@ func (q *Queries) AnalyticsProductionEfficiency(ctx context.Context, arg Analyti
 	for rows.Next() {
 		var i AnalyticsProductionEfficiencyRow
 		if err := rows.Scan(&i.CenterName, &i.TotalOrders, &i.Completed); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const analyticsProfitabilityByCostCenter = `-- name: AnalyticsProfitabilityByCostCenter :many
+SELECT
+    COALESCE(cc.name, 'Sin centro') AS cost_center,
+    SUM(CASE WHEN a.account_type = 'income' THEN jl.credit - jl.debit ELSE 0 END) AS revenue,
+    SUM(CASE WHEN a.account_type = 'expense' THEN jl.debit - jl.credit ELSE 0 END) AS cost,
+    SUM(CASE WHEN a.account_type = 'income' THEN jl.credit - jl.debit ELSE 0 END) -
+    SUM(CASE WHEN a.account_type = 'expense' THEN jl.debit - jl.credit ELSE 0 END) AS margin
+FROM erp_journal_lines jl
+JOIN erp_journal_entries je ON je.id = jl.entry_id AND je.tenant_id = jl.tenant_id
+JOIN erp_accounts a ON a.id = jl.account_id AND a.tenant_id = jl.tenant_id
+LEFT JOIN erp_cost_centers cc ON cc.id = jl.cost_center_id AND cc.tenant_id = jl.tenant_id
+WHERE jl.tenant_id = $1 AND je.status = 'posted'
+    AND je.date BETWEEN $2 AND $3
+GROUP BY cc.name
+ORDER BY margin DESC
+`
+
+type AnalyticsProfitabilityByCostCenterParams struct {
+	TenantID string      `json:"tenant_id"`
+	DateFrom pgtype.Date `json:"date_from"`
+	DateTo   pgtype.Date `json:"date_to"`
+}
+
+type AnalyticsProfitabilityByCostCenterRow struct {
+	CostCenter string `json:"cost_center"`
+	Revenue    int64  `json:"revenue"`
+	Cost       int64  `json:"cost"`
+	Margin     int32  `json:"margin"`
+}
+
+func (q *Queries) AnalyticsProfitabilityByCostCenter(ctx context.Context, arg AnalyticsProfitabilityByCostCenterParams) ([]AnalyticsProfitabilityByCostCenterRow, error) {
+	rows, err := q.db.Query(ctx, analyticsProfitabilityByCostCenter, arg.TenantID, arg.DateFrom, arg.DateTo)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []AnalyticsProfitabilityByCostCenterRow{}
+	for rows.Next() {
+		var i AnalyticsProfitabilityByCostCenterRow
+		if err := rows.Scan(
+			&i.CostCenter,
+			&i.Revenue,
+			&i.Cost,
+			&i.Margin,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const analyticsProfitabilityByCustomer = `-- name: AnalyticsProfitabilityByCustomer :many
+
+SELECT
+    e.id AS entity_id, e.name AS entity_name,
+    SUM(CASE WHEN i.direction = 'issued' THEN i.total ELSE 0 END) AS revenue,
+    SUM(CASE WHEN i.direction = 'received' THEN i.total ELSE 0 END) AS cost,
+    SUM(CASE WHEN i.direction = 'issued' THEN i.total ELSE 0 END) -
+    SUM(CASE WHEN i.direction = 'received' THEN i.total ELSE 0 END) AS margin
+FROM erp_invoices i
+JOIN erp_entities e ON e.id = i.entity_id AND e.tenant_id = i.tenant_id
+WHERE i.tenant_id = $1 AND i.status IN ('posted', 'paid')
+    AND i.date BETWEEN $2 AND $3
+GROUP BY e.id, e.name
+ORDER BY margin DESC
+LIMIT $4
+`
+
+type AnalyticsProfitabilityByCustomerParams struct {
+	TenantID string      `json:"tenant_id"`
+	DateFrom pgtype.Date `json:"date_from"`
+	DateTo   pgtype.Date `json:"date_to"`
+	TopN     int32       `json:"top_n"`
+}
+
+type AnalyticsProfitabilityByCustomerRow struct {
+	EntityID   pgtype.UUID `json:"entity_id"`
+	EntityName string      `json:"entity_name"`
+	Revenue    int64       `json:"revenue"`
+	Cost       int64       `json:"cost"`
+	Margin     int32       `json:"margin"`
+}
+
+// ─── Dirección / Management Analytics ──────────────────────────────────────
+func (q *Queries) AnalyticsProfitabilityByCustomer(ctx context.Context, arg AnalyticsProfitabilityByCustomerParams) ([]AnalyticsProfitabilityByCustomerRow, error) {
+	rows, err := q.db.Query(ctx, analyticsProfitabilityByCustomer,
+		arg.TenantID,
+		arg.DateFrom,
+		arg.DateTo,
+		arg.TopN,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []AnalyticsProfitabilityByCustomerRow{}
+	for rows.Next() {
+		var i AnalyticsProfitabilityByCustomerRow
+		if err := rows.Scan(
+			&i.EntityID,
+			&i.EntityName,
+			&i.Revenue,
+			&i.Cost,
+			&i.Margin,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -1536,6 +1748,49 @@ func (q *Queries) AnalyticsWOCompletionRate(ctx context.Context, arg AnalyticsWO
 	for rows.Next() {
 		var i AnalyticsWOCompletionRateRow
 		if err := rows.Scan(&i.Period, &i.Total, &i.Completed); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const analyticsYoYComparison = `-- name: AnalyticsYoYComparison :many
+SELECT
+    to_char(date, 'MM') AS month,
+    SUM(CASE WHEN EXTRACT(YEAR FROM date) = $2::INT THEN total ELSE 0 END) AS current_year,
+    SUM(CASE WHEN EXTRACT(YEAR FROM date) = $2::INT - 1 THEN total ELSE 0 END) AS previous_year
+FROM erp_invoices
+WHERE tenant_id = $1 AND direction = 'issued' AND status IN ('posted', 'paid')
+    AND EXTRACT(YEAR FROM date) IN ($2::INT, $2::INT - 1)
+GROUP BY to_char(date, 'MM')
+ORDER BY month
+`
+
+type AnalyticsYoYComparisonParams struct {
+	TenantID    string `json:"tenant_id"`
+	CurrentYear int32  `json:"current_year"`
+}
+
+type AnalyticsYoYComparisonRow struct {
+	Month        string `json:"month"`
+	CurrentYear  int64  `json:"current_year"`
+	PreviousYear int64  `json:"previous_year"`
+}
+
+func (q *Queries) AnalyticsYoYComparison(ctx context.Context, arg AnalyticsYoYComparisonParams) ([]AnalyticsYoYComparisonRow, error) {
+	rows, err := q.db.Query(ctx, analyticsYoYComparison, arg.TenantID, arg.CurrentYear)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []AnalyticsYoYComparisonRow{}
+	for rows.Next() {
+		var i AnalyticsYoYComparisonRow
+		if err := rows.Scan(&i.Month, &i.CurrentYear, &i.PreviousYear); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
