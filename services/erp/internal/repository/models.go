@@ -752,6 +752,17 @@ type ErpJournalLine struct {
 	SortOrder    int32          `json:"sort_order"`
 }
 
+type ErpLegacyMapping struct {
+	ID              pgtype.UUID        `json:"id"`
+	TenantID        string             `json:"tenant_id"`
+	Domain          string             `json:"domain"`
+	LegacyTable     string             `json:"legacy_table"`
+	LegacyID        int64              `json:"legacy_id"`
+	SdaID           pgtype.UUID        `json:"sda_id"`
+	LegacyCreatedBy pgtype.Text        `json:"legacy_created_by"`
+	MigratedAt      pgtype.Timestamptz `json:"migrated_at"`
+}
+
 type ErpMaintenanceAsset struct {
 	ID        pgtype.UUID        `json:"id"`
 	TenantID  string             `json:"tenant_id"`
@@ -776,6 +787,51 @@ type ErpMaintenancePlan struct {
 	LastDone       pgtype.Date `json:"last_done"`
 	NextDue        pgtype.Date `json:"next_due"`
 	Active         bool        `json:"active"`
+}
+
+type ErpMigrationRun struct {
+	ID            pgtype.UUID        `json:"id"`
+	TenantID      string             `json:"tenant_id"`
+	StartedAt     pgtype.Timestamptz `json:"started_at"`
+	CompletedAt   pgtype.Timestamptz `json:"completed_at"`
+	Status        string             `json:"status"`
+	Mode          string             `json:"mode"`
+	CurrentDomain pgtype.Text        `json:"current_domain"`
+	CurrentTable  pgtype.Text        `json:"current_table"`
+	ErrorMessage  pgtype.Text        `json:"error_message"`
+	Stats         []byte             `json:"stats"`
+}
+
+type ErpMigrationTableProgress struct {
+	ID            pgtype.UUID        `json:"id"`
+	TenantID      string             `json:"tenant_id"`
+	RunID         pgtype.UUID        `json:"run_id"`
+	Domain        string             `json:"domain"`
+	LegacyTable   string             `json:"legacy_table"`
+	SdaTable      string             `json:"sda_table"`
+	Status        string             `json:"status"`
+	LastLegacyKey string             `json:"last_legacy_key"`
+	RowsRead      int32              `json:"rows_read"`
+	RowsWritten   int32              `json:"rows_written"`
+	RowsSkipped   int32              `json:"rows_skipped"`
+	StartedAt     pgtype.Timestamptz `json:"started_at"`
+	CompletedAt   pgtype.Timestamptz `json:"completed_at"`
+	ErrorMessage  pgtype.Text        `json:"error_message"`
+}
+
+type ErpMigrationValidationIssue struct {
+	ID             pgtype.UUID        `json:"id"`
+	TenantID       string             `json:"tenant_id"`
+	RunID          pgtype.UUID        `json:"run_id"`
+	Domain         string             `json:"domain"`
+	LegacyTable    string             `json:"legacy_table"`
+	LegacyID       int64              `json:"legacy_id"`
+	ConstraintName string             `json:"constraint_name"`
+	Details        []byte             `json:"details"`
+	Resolution     string             `json:"resolution"`
+	ResolvedBy     pgtype.Text        `json:"resolved_by"`
+	ResolvedAt     pgtype.Timestamptz `json:"resolved_at"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
 }
 
 type ErpNonconformity struct {
@@ -816,6 +872,24 @@ type ErpPaymentAllocation struct {
 	InvoiceID pgtype.UUID        `json:"invoice_id"`
 	Amount    pgtype.Numeric     `json:"amount"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpPendingExport struct {
+	ID          pgtype.UUID        `json:"id"`
+	TenantID    string             `json:"tenant_id"`
+	UserID      string             `json:"user_id"`
+	ExportName  string             `json:"export_name"`
+	Status      string             `json:"status"`
+	RowCount    int32              `json:"row_count"`
+	Format      string             `json:"format"`
+	Params      []byte             `json:"params"`
+	ColumnsDef  []byte             `json:"columns_def"`
+	FileKey     pgtype.Text        `json:"file_key"`
+	Error       pgtype.Text        `json:"error"`
+	RequestedAt pgtype.Timestamptz `json:"requested_at"`
+	StartedAt   pgtype.Timestamptz `json:"started_at"`
+	ReadyAt     pgtype.Timestamptz `json:"ready_at"`
+	ExpiresAt   pgtype.Timestamptz `json:"expires_at"`
 }
 
 type ErpPriceList struct {
