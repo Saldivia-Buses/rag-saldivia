@@ -985,6 +985,49 @@ type ErpQuotationLine struct {
 	Metadata    []byte         `json:"metadata"`
 }
 
+type ErpReceipt struct {
+	ID             pgtype.UUID        `json:"id"`
+	TenantID       string             `json:"tenant_id"`
+	Number         string             `json:"number"`
+	Date           pgtype.Date        `json:"date"`
+	ReceiptType    string             `json:"receipt_type"`
+	EntityID       pgtype.UUID        `json:"entity_id"`
+	Total          pgtype.Numeric     `json:"total"`
+	JournalEntryID pgtype.UUID        `json:"journal_entry_id"`
+	UserID         string             `json:"user_id"`
+	Notes          string             `json:"notes"`
+	Status         string             `json:"status"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpReceiptAllocation struct {
+	ID                pgtype.UUID    `json:"id"`
+	TenantID          string         `json:"tenant_id"`
+	ReceiptID         pgtype.UUID    `json:"receipt_id"`
+	InvoiceID         pgtype.UUID    `json:"invoice_id"`
+	Amount            pgtype.Numeric `json:"amount"`
+	AccountMovementID pgtype.UUID    `json:"account_movement_id"`
+}
+
+type ErpReceiptPayment struct {
+	ID                 pgtype.UUID    `json:"id"`
+	TenantID           string         `json:"tenant_id"`
+	ReceiptID          pgtype.UUID    `json:"receipt_id"`
+	PaymentMethod      string         `json:"payment_method"`
+	Amount             pgtype.Numeric `json:"amount"`
+	TreasuryMovementID pgtype.UUID    `json:"treasury_movement_id"`
+	CheckID            pgtype.UUID    `json:"check_id"`
+	BankAccountID      pgtype.UUID    `json:"bank_account_id"`
+	Notes              string         `json:"notes"`
+}
+
+type ErpReceiptWithholding struct {
+	ID            pgtype.UUID `json:"id"`
+	TenantID      string      `json:"tenant_id"`
+	ReceiptID     pgtype.UUID `json:"receipt_id"`
+	WithholdingID pgtype.UUID `json:"withholding_id"`
+}
+
 type ErpSequence struct {
 	ID        pgtype.UUID `json:"id"`
 	TenantID  string      `json:"tenant_id"`

@@ -42,6 +42,19 @@ func (h *Treasury) Routes(authWrite func(http.Handler) http.Handler) chi.Router 
 		r.Post("/cash-counts", h.CreateCashCount)
 	})
 
+	// Receipts
+	r.Group(func(r chi.Router) {
+		r.Use(sdamw.RequirePermission("erp.treasury.read"))
+		r.Get("/receipts", h.ListReceiptsH)
+		r.Get("/receipts/{id}", h.GetReceiptH)
+	})
+	r.Group(func(r chi.Router) {
+		r.Use(authWrite)
+		r.Use(sdamw.RequirePermission("erp.treasury.receipt"))
+		r.Post("/receipts", h.CreateReceiptH)
+		r.Post("/receipts/{id}/void", h.VoidReceiptH)
+	})
+
 	// Reconciliation
 	r.Group(func(r chi.Router) {
 		r.Use(sdamw.RequirePermission("erp.treasury.read"))
@@ -370,6 +383,82 @@ func (h *Treasury) CreateCashCount(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(cc)
+}
+
+// ============================================================
+// Receipt handlers (Plan 18 Fase 4)
+// ============================================================
+
+func (h *Treasury) ListReceiptsH(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	p := pagination.Parse(r)
+	q := r.URL.Query()
+	receipts, err := h.svc.ListReceipts(r.Context(), slug, q.Get("type"),
+		pgDate(q.Get("date_from")), pgDate(q.Get("date_to")), p.Limit(), p.Offset())
+	if err != nil {
+		slog.Error("list receipts failed", "error", err)
+		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]any{"receipts": receipts})
+}
+
+func (h *Treasury) GetReceiptH(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	id, err := parseUUID(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		return
+	}
+	detail, err := h.svc.GetReceipt(r.Context(), slug, id)
+	if err != nil {
+		slog.Error("get receipt failed", "error", err)
+		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(detail)
+}
+
+func (h *Treasury) CreateReceiptH(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	r.Body = http.MaxBytesReader(w, r.Body, 64<<10)
+	var body service.ReceiptInput
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		return
+	}
+	detail, err := h.svc.CreateReceipt(r.Context(), slug, body,
+		r.Header.Get("X-User-ID"), r.RemoteAddr)
+	if err != nil {
+		slog.Error("create receipt failed", "error", err)
+		if strings.Contains(err.Error(), "don't balance") {
+			http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusBadRequest)
+		} else {
+			http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		}
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(detail)
+}
+
+func (h *Treasury) VoidReceiptH(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	id, err := parseUUID(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		return
+	}
+	if err := h.svc.VoidReceipt(r.Context(), slug, id,
+		r.Header.Get("X-User-ID"), r.RemoteAddr); err != nil {
+		slog.Error("void receipt failed", "error", err)
+		http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // ============================================================

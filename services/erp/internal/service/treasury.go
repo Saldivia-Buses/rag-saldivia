@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
@@ -410,6 +411,353 @@ func (s *Treasury) ConfirmReconciliation(ctx context.Context, tenantID string, r
 		"action": "reconciliation_confirmed", "reconciliation_id": uuidStr(reconID),
 	})
 	return nil
+}
+
+// ============================================================
+// Receipts (Plan 18 Fase 4)
+// ============================================================
+
+// ReceiptInput holds data for creating a receipt.
+type ReceiptInput struct {
+	ReceiptType  string                `json:"receipt_type"`  // "collection" | "payment"
+	EntityID     string                `json:"entity_id"`
+	Date         string                `json:"date"`
+	Notes        string                `json:"notes"`
+	Payments     []ReceiptPaymentInput `json:"payments"`
+	Allocations  []ReceiptAllocInput   `json:"allocations"`
+	Withholdings []ReceiptWHInput      `json:"withholdings"`
+}
+
+type ReceiptPaymentInput struct {
+	PaymentMethod string  `json:"payment_method"` // 'cash','check','transfer','echeq'
+	Amount        string  `json:"amount"`
+	BankAccountID *string `json:"bank_account_id,omitempty"`
+	CheckID       *string `json:"check_id,omitempty"`
+	Notes         string  `json:"notes"`
+}
+
+type ReceiptAllocInput struct {
+	InvoiceID string `json:"invoice_id"`
+	Amount    string `json:"amount"`
+}
+
+type ReceiptWHInput struct {
+	Type           string `json:"type"`
+	EntityID       string `json:"entity_id"`
+	Rate           string `json:"rate"`
+	BaseAmount     string `json:"base_amount"`
+	Amount         string `json:"amount"`
+	CertificateNum string `json:"certificate_num"`
+	Date           string `json:"date"`
+}
+
+// ReceiptDetail bundles a receipt with its payments, allocations, and withholdings.
+type ReceiptDetail struct {
+	Receipt     repository.GetReceiptRow             `json:"receipt"`
+	Payments    []repository.ErpReceiptPayment       `json:"payments"`
+	Allocations []repository.ListReceiptAllocationsRow `json:"allocations"`
+}
+
+func (s *Treasury) ListReceipts(ctx context.Context, tenantID, typeFilter string, dateFrom, dateTo pgtype.Date, limit, offset int) ([]repository.ListReceiptsRow, error) {
+	return s.repo.ListReceipts(ctx, repository.ListReceiptsParams{
+		TenantID: tenantID, TypeFilter: typeFilter,
+		DateFrom: dateFrom, DateTo: dateTo,
+		Limit: int32(limit), Offset: int32(offset),
+	})
+}
+
+func (s *Treasury) GetReceipt(ctx context.Context, tenantID string, id pgtype.UUID) (*ReceiptDetail, error) {
+	receipt, err := s.repo.GetReceipt(ctx, repository.GetReceiptParams{ID: id, TenantID: tenantID})
+	if err != nil {
+		return nil, fmt.Errorf("get receipt: %w", err)
+	}
+	payments, err := s.repo.ListReceiptPayments(ctx, repository.ListReceiptPaymentsParams{
+		TenantID: tenantID, ReceiptID: id,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("list payments: %w", err)
+	}
+	allocs, err := s.repo.ListReceiptAllocations(ctx, repository.ListReceiptAllocationsParams{
+		TenantID: tenantID, ReceiptID: id,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("list allocations: %w", err)
+	}
+	return &ReceiptDetail{Receipt: receipt, Payments: payments, Allocations: allocs}, nil
+}
+
+// ErrReceiptUnbalanced is returned when sum(payments)+sum(withholdings) != sum(allocations).
+var ErrReceiptUnbalanced = fmt.Errorf("receipt totals don't balance: sum(payments) + sum(withholdings) must equal sum(allocations)")
+
+// CreateReceipt creates a receipt with payments, allocations, and withholdings in one TX.
+// Generates treasury movements for each payment + account movements for each allocation.
+func (s *Treasury) CreateReceipt(ctx context.Context, tenantID string, inp ReceiptInput, userID, ip string) (*ReceiptDetail, error) {
+	if inp.ReceiptType != "collection" && inp.ReceiptType != "payment" {
+		return nil, fmt.Errorf("receipt_type must be 'collection' or 'payment'")
+	}
+	if len(inp.Payments) == 0 || len(inp.Allocations) == 0 {
+		return nil, fmt.Errorf("at least one payment and one allocation required")
+	}
+
+	// Validate balance: sum(payments) + sum(withholdings) == sum(allocations)
+	var payTotal, whTotal, allocTotal float64
+	for _, p := range inp.Payments {
+		payTotal += parseFloatTreasury(p.Amount)
+	}
+	for _, w := range inp.Withholdings {
+		whTotal += parseFloatTreasury(w.Amount)
+	}
+	for _, a := range inp.Allocations {
+		allocTotal += parseFloatTreasury(a.Amount)
+	}
+	diff := (payTotal + whTotal) - allocTotal
+	if diff > 0.01 || diff < -0.01 {
+		return nil, fmt.Errorf("%w: payments=%.2f withholdings=%.2f allocations=%.2f diff=%.2f",
+			ErrReceiptUnbalanced, payTotal, whTotal, allocTotal, diff)
+	}
+
+	entityID, err := parseUUIDStr(inp.EntityID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid entity_id: %w", err)
+	}
+
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback(ctx)
+	qtx := s.repo.WithTx(tx)
+
+	// Get next receipt number
+	nextNum, err := qtx.GetNextReceiptNumber(ctx, repository.GetNextReceiptNumberParams{
+		TenantID: tenantID, ReceiptType: inp.ReceiptType,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("get next receipt number: %w", err)
+	}
+	number := fmt.Sprintf("REC-%s-%06d", inp.ReceiptType[:3], nextNum)
+
+	var d pgtype.Date
+	_ = d.Scan(inp.Date)
+
+	// 1. Create receipt
+	receipt, err := qtx.CreateReceipt(ctx, repository.CreateReceiptParams{
+		TenantID:    tenantID,
+		Number:      number,
+		Date:        d,
+		ReceiptType: inp.ReceiptType,
+		EntityID:    entityID,
+		Total:       pgNumeric(fmt.Sprintf("%.2f", allocTotal)),
+		UserID:      userID,
+		Notes:       inp.Notes,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("create receipt: %w", err)
+	}
+
+	// 2. Create treasury movements for each payment
+	for i, pay := range inp.Payments {
+		movType := "cash_in"
+		if inp.ReceiptType == "payment" {
+			movType = "cash_out"
+		}
+		if pay.PaymentMethod == "transfer" {
+			movType = "bank_deposit"
+			if inp.ReceiptType == "payment" {
+				movType = "bank_withdrawal"
+			}
+		} else if pay.PaymentMethod == "check" {
+			movType = "check_received"
+			if inp.ReceiptType == "payment" {
+				movType = "check_issued"
+			}
+		}
+
+		mov, err := qtx.CreateTreasuryMovement(ctx, repository.CreateTreasuryMovementParams{
+			TenantID:       tenantID,
+			Date:           d,
+			Number:         fmt.Sprintf("%s-P%d", number, i+1),
+			MovementType:   movType,
+			Amount:         pgNumeric(pay.Amount),
+			BankAccountID:  optUUIDFromPtr(pay.BankAccountID),
+			EntityID:       entityID,
+			PaymentMethod:  pgText(pay.PaymentMethod),
+			ReferenceType:  pgText("receipt"),
+			ReferenceID:    receipt.ID,
+			UserID:         userID,
+			Notes:          pay.Notes,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("create treasury movement %d: %w", i, err)
+		}
+
+		_, err = qtx.CreateReceiptPayment(ctx, repository.CreateReceiptPaymentParams{
+			TenantID:           tenantID,
+			ReceiptID:          receipt.ID,
+			PaymentMethod:      pay.PaymentMethod,
+			Amount:             pgNumeric(pay.Amount),
+			TreasuryMovementID: mov.ID,
+			CheckID:            optUUIDFromPtr(pay.CheckID),
+			BankAccountID:      optUUIDFromPtr(pay.BankAccountID),
+			Notes:              pay.Notes,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("create receipt payment %d: %w", i, err)
+		}
+	}
+
+	// 3. Create allocations (impute payments to invoices in current accounts)
+	direction := "receivable"
+	if inp.ReceiptType == "payment" {
+		direction = "payable"
+	}
+	for i, alloc := range inp.Allocations {
+		invID, err := parseUUIDStr(alloc.InvoiceID)
+		if err != nil {
+			return nil, fmt.Errorf("invalid invoice_id in allocation %d: %w", i, err)
+		}
+
+		// Create account movement for the payment
+		acctMov, err := qtx.CreateAccountMovement(ctx, repository.CreateAccountMovementParams{
+			TenantID:    tenantID,
+			EntityID:    entityID,
+			Date:        d,
+			MovementType: "payment",
+			Direction:   direction,
+			Amount:      negateNumeric(pgNumeric(alloc.Amount)), // payment reduces balance
+			Balance:     zeroNumeric(),
+			InvoiceID:   invID,
+			Notes:       fmt.Sprintf("Recibo %s", number),
+			UserID:      userID,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("create account movement %d: %w", i, err)
+		}
+
+		_, err = qtx.CreateReceiptAllocation(ctx, repository.CreateReceiptAllocationParams{
+			TenantID:          tenantID,
+			ReceiptID:         receipt.ID,
+			InvoiceID:         invID,
+			Amount:            pgNumeric(alloc.Amount),
+			AccountMovementID: acctMov.ID,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("create allocation %d: %w", i, err)
+		}
+
+		// Reduce invoice balance in account movements
+		qtx.UpdateMovementBalance(ctx, repository.UpdateMovementBalanceParams{
+			ID: acctMov.ID, TenantID: tenantID,
+			Balance: pgNumeric(alloc.Amount),
+		})
+	}
+
+	// 4. Create withholdings (inline, within same TX)
+	for i, wh := range inp.Withholdings {
+		whEntityID, _ := parseUUIDStr(wh.EntityID)
+		var certNum pgtype.Text
+		if wh.CertificateNum != "" {
+			certNum = pgText(wh.CertificateNum)
+		}
+		var whDate pgtype.Date
+		_ = whDate.Scan(wh.Date)
+
+		withholding, err := qtx.CreateWithholding(ctx, repository.CreateWithholdingParams{
+			TenantID:       tenantID,
+			EntityID:       whEntityID,
+			Type:           wh.Type,
+			Rate:           pgNumeric(wh.Rate),
+			BaseAmount:     pgNumeric(wh.BaseAmount),
+			Amount:         pgNumeric(wh.Amount),
+			CertificateNum: certNum,
+			Date:           whDate,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("create withholding %d: %w", i, err)
+		}
+
+		_, err = qtx.CreateReceiptWithholding(ctx, repository.CreateReceiptWithholdingParams{
+			TenantID:      tenantID,
+			ReceiptID:     receipt.ID,
+			WithholdingID: withholding.ID,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("create receipt withholding %d: %w", i, err)
+		}
+	}
+
+	// StrictLogger
+	if err := s.audit.WriteStrict(ctx, audit.Entry{
+		TenantID: tenantID, UserID: userID,
+		Action: "erp.receipt.created", Resource: uuidStr(receipt.ID),
+		Details: map[string]any{
+			"type":         inp.ReceiptType,
+			"number":       number,
+			"total":        allocTotal,
+			"payments":     len(inp.Payments),
+			"allocations":  len(inp.Allocations),
+			"withholdings": len(inp.Withholdings),
+		}, IP: ip,
+	}); err != nil {
+		return nil, fmt.Errorf("strict audit failed, aborting: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("commit receipt: %w", err)
+	}
+
+	s.publisher.Broadcast(tenantID, "erp_treasury", map[string]any{
+		"action": "receipt_created", "receipt_id": uuidStr(receipt.ID),
+	})
+
+	// Fetch detail for response
+	detail, _ := s.GetReceipt(ctx, tenantID, receipt.ID)
+	return detail, nil
+}
+
+// VoidReceipt cancels a confirmed receipt.
+func (s *Treasury) VoidReceipt(ctx context.Context, tenantID string, receiptID pgtype.UUID, userID, ip string) error {
+	rows, err := s.repo.VoidReceipt(ctx, repository.VoidReceiptParams{
+		ID: receiptID, TenantID: tenantID,
+	})
+	if err != nil {
+		return fmt.Errorf("void receipt: %w", err)
+	}
+	if rows == 0 {
+		return fmt.Errorf("receipt not found or already cancelled")
+	}
+
+	if err := s.audit.WriteStrict(ctx, audit.Entry{
+		TenantID: tenantID, UserID: userID,
+		Action: "erp.receipt.voided", Resource: uuidStr(receiptID), IP: ip,
+	}); err != nil {
+		return fmt.Errorf("strict audit failed: %w", err)
+	}
+
+	s.publisher.Broadcast(tenantID, "erp_treasury", map[string]any{
+		"action": "receipt_voided", "receipt_id": uuidStr(receiptID),
+	})
+	return nil
+}
+
+func parseFloatTreasury(s string) float64 {
+	if s == "" {
+		return 0
+	}
+	var f float64
+	fmt.Sscanf(s, "%f", &f)
+	return f
+}
+
+func optUUIDFromPtr(s *string) pgtype.UUID {
+	if s == nil || *s == "" {
+		return pgtype.UUID{}
+	}
+	id, err := uuid.Parse(*s)
+	if err != nil {
+		return pgtype.UUID{}
+	}
+	return pgtype.UUID{Bytes: id, Valid: true}
 }
 
 // amountsMatch compares a statement line amount against a treasury movement.

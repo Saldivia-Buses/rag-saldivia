@@ -195,6 +195,158 @@ func (q *Queries) CreateCheck(ctx context.Context, arg CreateCheckParams) (ErpCh
 	return i, err
 }
 
+const createReceipt = `-- name: CreateReceipt :one
+
+INSERT INTO erp_receipts (tenant_id, number, date, receipt_type, entity_id, total, user_id, notes)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+RETURNING id, tenant_id, number, date, receipt_type, entity_id, total, journal_entry_id, user_id, notes, status, created_at
+`
+
+type CreateReceiptParams struct {
+	TenantID    string         `json:"tenant_id"`
+	Number      string         `json:"number"`
+	Date        pgtype.Date    `json:"date"`
+	ReceiptType string         `json:"receipt_type"`
+	EntityID    pgtype.UUID    `json:"entity_id"`
+	Total       pgtype.Numeric `json:"total"`
+	UserID      string         `json:"user_id"`
+	Notes       string         `json:"notes"`
+}
+
+// ============================================================
+// Receipt queries (Plan 18 Fase 4)
+// ============================================================
+func (q *Queries) CreateReceipt(ctx context.Context, arg CreateReceiptParams) (ErpReceipt, error) {
+	row := q.db.QueryRow(ctx, createReceipt,
+		arg.TenantID,
+		arg.Number,
+		arg.Date,
+		arg.ReceiptType,
+		arg.EntityID,
+		arg.Total,
+		arg.UserID,
+		arg.Notes,
+	)
+	var i ErpReceipt
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.Number,
+		&i.Date,
+		&i.ReceiptType,
+		&i.EntityID,
+		&i.Total,
+		&i.JournalEntryID,
+		&i.UserID,
+		&i.Notes,
+		&i.Status,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const createReceiptAllocation = `-- name: CreateReceiptAllocation :one
+INSERT INTO erp_receipt_allocations (tenant_id, receipt_id, invoice_id, amount, account_movement_id)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id, tenant_id, receipt_id, invoice_id, amount, account_movement_id
+`
+
+type CreateReceiptAllocationParams struct {
+	TenantID          string         `json:"tenant_id"`
+	ReceiptID         pgtype.UUID    `json:"receipt_id"`
+	InvoiceID         pgtype.UUID    `json:"invoice_id"`
+	Amount            pgtype.Numeric `json:"amount"`
+	AccountMovementID pgtype.UUID    `json:"account_movement_id"`
+}
+
+func (q *Queries) CreateReceiptAllocation(ctx context.Context, arg CreateReceiptAllocationParams) (ErpReceiptAllocation, error) {
+	row := q.db.QueryRow(ctx, createReceiptAllocation,
+		arg.TenantID,
+		arg.ReceiptID,
+		arg.InvoiceID,
+		arg.Amount,
+		arg.AccountMovementID,
+	)
+	var i ErpReceiptAllocation
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.ReceiptID,
+		&i.InvoiceID,
+		&i.Amount,
+		&i.AccountMovementID,
+	)
+	return i, err
+}
+
+const createReceiptPayment = `-- name: CreateReceiptPayment :one
+INSERT INTO erp_receipt_payments (tenant_id, receipt_id, payment_method, amount,
+    treasury_movement_id, check_id, bank_account_id, notes)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+RETURNING id, tenant_id, receipt_id, payment_method, amount, treasury_movement_id, check_id, bank_account_id, notes
+`
+
+type CreateReceiptPaymentParams struct {
+	TenantID           string         `json:"tenant_id"`
+	ReceiptID          pgtype.UUID    `json:"receipt_id"`
+	PaymentMethod      string         `json:"payment_method"`
+	Amount             pgtype.Numeric `json:"amount"`
+	TreasuryMovementID pgtype.UUID    `json:"treasury_movement_id"`
+	CheckID            pgtype.UUID    `json:"check_id"`
+	BankAccountID      pgtype.UUID    `json:"bank_account_id"`
+	Notes              string         `json:"notes"`
+}
+
+func (q *Queries) CreateReceiptPayment(ctx context.Context, arg CreateReceiptPaymentParams) (ErpReceiptPayment, error) {
+	row := q.db.QueryRow(ctx, createReceiptPayment,
+		arg.TenantID,
+		arg.ReceiptID,
+		arg.PaymentMethod,
+		arg.Amount,
+		arg.TreasuryMovementID,
+		arg.CheckID,
+		arg.BankAccountID,
+		arg.Notes,
+	)
+	var i ErpReceiptPayment
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.ReceiptID,
+		&i.PaymentMethod,
+		&i.Amount,
+		&i.TreasuryMovementID,
+		&i.CheckID,
+		&i.BankAccountID,
+		&i.Notes,
+	)
+	return i, err
+}
+
+const createReceiptWithholding = `-- name: CreateReceiptWithholding :one
+INSERT INTO erp_receipt_withholdings (tenant_id, receipt_id, withholding_id)
+VALUES ($1, $2, $3)
+RETURNING id, tenant_id, receipt_id, withholding_id
+`
+
+type CreateReceiptWithholdingParams struct {
+	TenantID      string      `json:"tenant_id"`
+	ReceiptID     pgtype.UUID `json:"receipt_id"`
+	WithholdingID pgtype.UUID `json:"withholding_id"`
+}
+
+func (q *Queries) CreateReceiptWithholding(ctx context.Context, arg CreateReceiptWithholdingParams) (ErpReceiptWithholding, error) {
+	row := q.db.QueryRow(ctx, createReceiptWithholding, arg.TenantID, arg.ReceiptID, arg.WithholdingID)
+	var i ErpReceiptWithholding
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.ReceiptID,
+		&i.WithholdingID,
+	)
+	return i, err
+}
+
 const createReconciliation = `-- name: CreateReconciliation :one
 
 INSERT INTO erp_bank_reconciliations (tenant_id, bank_account_id, period, statement_balance, book_balance, user_id)
@@ -402,6 +554,74 @@ func (q *Queries) GetCheck(ctx context.Context, arg GetCheckParams) (ErpCheck, e
 		&i.MovementID,
 		&i.Notes,
 		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getNextReceiptNumber = `-- name: GetNextReceiptNumber :one
+SELECT COALESCE(MAX(CAST(SUBSTRING(number FROM '[0-9]+$') AS INT)), 0) + 1 AS next_number
+FROM erp_receipts WHERE tenant_id = $1 AND receipt_type = $2
+`
+
+type GetNextReceiptNumberParams struct {
+	TenantID    string `json:"tenant_id"`
+	ReceiptType string `json:"receipt_type"`
+}
+
+func (q *Queries) GetNextReceiptNumber(ctx context.Context, arg GetNextReceiptNumberParams) (int32, error) {
+	row := q.db.QueryRow(ctx, getNextReceiptNumber, arg.TenantID, arg.ReceiptType)
+	var next_number int32
+	err := row.Scan(&next_number)
+	return next_number, err
+}
+
+const getReceipt = `-- name: GetReceipt :one
+SELECT r.id, r.tenant_id, r.number, r.date, r.receipt_type, r.entity_id, r.total,
+       r.journal_entry_id, r.user_id, r.notes, r.status, r.created_at,
+       e.name AS entity_name
+FROM erp_receipts r
+JOIN erp_entities e ON e.id = r.entity_id
+WHERE r.id = $1 AND r.tenant_id = $2
+`
+
+type GetReceiptParams struct {
+	ID       pgtype.UUID `json:"id"`
+	TenantID string      `json:"tenant_id"`
+}
+
+type GetReceiptRow struct {
+	ID             pgtype.UUID        `json:"id"`
+	TenantID       string             `json:"tenant_id"`
+	Number         string             `json:"number"`
+	Date           pgtype.Date        `json:"date"`
+	ReceiptType    string             `json:"receipt_type"`
+	EntityID       pgtype.UUID        `json:"entity_id"`
+	Total          pgtype.Numeric     `json:"total"`
+	JournalEntryID pgtype.UUID        `json:"journal_entry_id"`
+	UserID         string             `json:"user_id"`
+	Notes          string             `json:"notes"`
+	Status         string             `json:"status"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	EntityName     string             `json:"entity_name"`
+}
+
+func (q *Queries) GetReceipt(ctx context.Context, arg GetReceiptParams) (GetReceiptRow, error) {
+	row := q.db.QueryRow(ctx, getReceipt, arg.ID, arg.TenantID)
+	var i GetReceiptRow
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.Number,
+		&i.Date,
+		&i.ReceiptType,
+		&i.EntityID,
+		&i.Total,
+		&i.JournalEntryID,
+		&i.UserID,
+		&i.Notes,
+		&i.Status,
+		&i.CreatedAt,
+		&i.EntityName,
 	)
 	return i, err
 }
@@ -663,6 +883,171 @@ func (q *Queries) ListChecks(ctx context.Context, arg ListChecksParams) ([]ErpCh
 			&i.MovementID,
 			&i.Notes,
 			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listReceiptAllocations = `-- name: ListReceiptAllocations :many
+SELECT ra.id, ra.tenant_id, ra.receipt_id, ra.invoice_id, ra.amount,
+       i.number AS invoice_number, i.total AS invoice_total
+FROM erp_receipt_allocations ra
+JOIN erp_invoices i ON i.id = ra.invoice_id
+WHERE ra.tenant_id = $1 AND ra.receipt_id = $2
+`
+
+type ListReceiptAllocationsParams struct {
+	TenantID  string      `json:"tenant_id"`
+	ReceiptID pgtype.UUID `json:"receipt_id"`
+}
+
+type ListReceiptAllocationsRow struct {
+	ID            pgtype.UUID    `json:"id"`
+	TenantID      string         `json:"tenant_id"`
+	ReceiptID     pgtype.UUID    `json:"receipt_id"`
+	InvoiceID     pgtype.UUID    `json:"invoice_id"`
+	Amount        pgtype.Numeric `json:"amount"`
+	InvoiceNumber string         `json:"invoice_number"`
+	InvoiceTotal  pgtype.Numeric `json:"invoice_total"`
+}
+
+func (q *Queries) ListReceiptAllocations(ctx context.Context, arg ListReceiptAllocationsParams) ([]ListReceiptAllocationsRow, error) {
+	rows, err := q.db.Query(ctx, listReceiptAllocations, arg.TenantID, arg.ReceiptID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListReceiptAllocationsRow{}
+	for rows.Next() {
+		var i ListReceiptAllocationsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.TenantID,
+			&i.ReceiptID,
+			&i.InvoiceID,
+			&i.Amount,
+			&i.InvoiceNumber,
+			&i.InvoiceTotal,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listReceiptPayments = `-- name: ListReceiptPayments :many
+SELECT id, tenant_id, receipt_id, payment_method, amount,
+       treasury_movement_id, check_id, bank_account_id, notes
+FROM erp_receipt_payments WHERE tenant_id = $1 AND receipt_id = $2
+`
+
+type ListReceiptPaymentsParams struct {
+	TenantID  string      `json:"tenant_id"`
+	ReceiptID pgtype.UUID `json:"receipt_id"`
+}
+
+func (q *Queries) ListReceiptPayments(ctx context.Context, arg ListReceiptPaymentsParams) ([]ErpReceiptPayment, error) {
+	rows, err := q.db.Query(ctx, listReceiptPayments, arg.TenantID, arg.ReceiptID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ErpReceiptPayment{}
+	for rows.Next() {
+		var i ErpReceiptPayment
+		if err := rows.Scan(
+			&i.ID,
+			&i.TenantID,
+			&i.ReceiptID,
+			&i.PaymentMethod,
+			&i.Amount,
+			&i.TreasuryMovementID,
+			&i.CheckID,
+			&i.BankAccountID,
+			&i.Notes,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listReceipts = `-- name: ListReceipts :many
+SELECT r.id, r.tenant_id, r.number, r.date, r.receipt_type, r.entity_id, r.total,
+       r.status, r.created_at, e.name AS entity_name
+FROM erp_receipts r
+JOIN erp_entities e ON e.id = r.entity_id
+WHERE r.tenant_id = $1
+  AND ($4::TEXT = '' OR r.receipt_type = $4::TEXT)
+  AND ($5::DATE IS NULL OR r.date >= $5::DATE)
+  AND ($6::DATE IS NULL OR r.date <= $6::DATE)
+ORDER BY r.date DESC, r.created_at DESC
+LIMIT $2 OFFSET $3
+`
+
+type ListReceiptsParams struct {
+	TenantID   string      `json:"tenant_id"`
+	Limit      int32       `json:"limit"`
+	Offset     int32       `json:"offset"`
+	TypeFilter string      `json:"type_filter"`
+	DateFrom   pgtype.Date `json:"date_from"`
+	DateTo     pgtype.Date `json:"date_to"`
+}
+
+type ListReceiptsRow struct {
+	ID          pgtype.UUID        `json:"id"`
+	TenantID    string             `json:"tenant_id"`
+	Number      string             `json:"number"`
+	Date        pgtype.Date        `json:"date"`
+	ReceiptType string             `json:"receipt_type"`
+	EntityID    pgtype.UUID        `json:"entity_id"`
+	Total       pgtype.Numeric     `json:"total"`
+	Status      string             `json:"status"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	EntityName  string             `json:"entity_name"`
+}
+
+func (q *Queries) ListReceipts(ctx context.Context, arg ListReceiptsParams) ([]ListReceiptsRow, error) {
+	rows, err := q.db.Query(ctx, listReceipts,
+		arg.TenantID,
+		arg.Limit,
+		arg.Offset,
+		arg.TypeFilter,
+		arg.DateFrom,
+		arg.DateTo,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListReceiptsRow{}
+	for rows.Next() {
+		var i ListReceiptsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.TenantID,
+			&i.Number,
+			&i.Date,
+			&i.ReceiptType,
+			&i.EntityID,
+			&i.Total,
+			&i.Status,
+			&i.CreatedAt,
+			&i.EntityName,
 		); err != nil {
 			return nil, err
 		}
@@ -1006,6 +1391,25 @@ func (q *Queries) MatchStatementLine(ctx context.Context, arg MatchStatementLine
 	return result.RowsAffected(), nil
 }
 
+const setReceiptJournalEntry = `-- name: SetReceiptJournalEntry :execrows
+UPDATE erp_receipts SET journal_entry_id = $3
+WHERE id = $1 AND tenant_id = $2
+`
+
+type SetReceiptJournalEntryParams struct {
+	ID             pgtype.UUID `json:"id"`
+	TenantID       string      `json:"tenant_id"`
+	JournalEntryID pgtype.UUID `json:"journal_entry_id"`
+}
+
+func (q *Queries) SetReceiptJournalEntry(ctx context.Context, arg SetReceiptJournalEntryParams) (int64, error) {
+	result, err := q.db.Exec(ctx, setReceiptJournalEntry, arg.ID, arg.TenantID, arg.JournalEntryID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const updateCheckStatus = `-- name: UpdateCheckStatus :execrows
 UPDATE erp_checks SET status = $3
 WHERE id = $1 AND tenant_id = $2
@@ -1019,6 +1423,24 @@ type UpdateCheckStatusParams struct {
 
 func (q *Queries) UpdateCheckStatus(ctx context.Context, arg UpdateCheckStatusParams) (int64, error) {
 	result, err := q.db.Exec(ctx, updateCheckStatus, arg.ID, arg.TenantID, arg.Status)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const voidReceipt = `-- name: VoidReceipt :execrows
+UPDATE erp_receipts SET status = 'cancelled'
+WHERE id = $1 AND tenant_id = $2 AND status = 'confirmed'
+`
+
+type VoidReceiptParams struct {
+	ID       pgtype.UUID `json:"id"`
+	TenantID string      `json:"tenant_id"`
+}
+
+func (q *Queries) VoidReceipt(ctx context.Context, arg VoidReceiptParams) (int64, error) {
+	result, err := q.db.Exec(ctx, voidReceipt, arg.ID, arg.TenantID)
 	if err != nil {
 		return 0, err
 	}

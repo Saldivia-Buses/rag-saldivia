@@ -150,3 +150,72 @@ WHERE id = $1 AND tenant_id = $2 AND reconciled = false;
 -- name: ConfirmReconciliation :execrows
 UPDATE erp_bank_reconciliations SET status = 'confirmed', confirmed_at = now()
 WHERE id = $1 AND tenant_id = $2 AND status = 'draft';
+
+-- ============================================================
+-- Receipt queries (Plan 18 Fase 4)
+-- ============================================================
+
+-- name: CreateReceipt :one
+INSERT INTO erp_receipts (tenant_id, number, date, receipt_type, entity_id, total, user_id, notes)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+RETURNING *;
+
+-- name: GetReceipt :one
+SELECT r.id, r.tenant_id, r.number, r.date, r.receipt_type, r.entity_id, r.total,
+       r.journal_entry_id, r.user_id, r.notes, r.status, r.created_at,
+       e.name AS entity_name
+FROM erp_receipts r
+JOIN erp_entities e ON e.id = r.entity_id
+WHERE r.id = $1 AND r.tenant_id = $2;
+
+-- name: ListReceipts :many
+SELECT r.id, r.tenant_id, r.number, r.date, r.receipt_type, r.entity_id, r.total,
+       r.status, r.created_at, e.name AS entity_name
+FROM erp_receipts r
+JOIN erp_entities e ON e.id = r.entity_id
+WHERE r.tenant_id = $1
+  AND (sqlc.arg(type_filter)::TEXT = '' OR r.receipt_type = sqlc.arg(type_filter)::TEXT)
+  AND (sqlc.arg(date_from)::DATE IS NULL OR r.date >= sqlc.arg(date_from)::DATE)
+  AND (sqlc.arg(date_to)::DATE IS NULL OR r.date <= sqlc.arg(date_to)::DATE)
+ORDER BY r.date DESC, r.created_at DESC
+LIMIT $2 OFFSET $3;
+
+-- name: SetReceiptJournalEntry :execrows
+UPDATE erp_receipts SET journal_entry_id = $3
+WHERE id = $1 AND tenant_id = $2;
+
+-- name: VoidReceipt :execrows
+UPDATE erp_receipts SET status = 'cancelled'
+WHERE id = $1 AND tenant_id = $2 AND status = 'confirmed';
+
+-- name: CreateReceiptPayment :one
+INSERT INTO erp_receipt_payments (tenant_id, receipt_id, payment_method, amount,
+    treasury_movement_id, check_id, bank_account_id, notes)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+RETURNING *;
+
+-- name: ListReceiptPayments :many
+SELECT id, tenant_id, receipt_id, payment_method, amount,
+       treasury_movement_id, check_id, bank_account_id, notes
+FROM erp_receipt_payments WHERE tenant_id = $1 AND receipt_id = $2;
+
+-- name: CreateReceiptAllocation :one
+INSERT INTO erp_receipt_allocations (tenant_id, receipt_id, invoice_id, amount, account_movement_id)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING *;
+
+-- name: ListReceiptAllocations :many
+SELECT ra.id, ra.tenant_id, ra.receipt_id, ra.invoice_id, ra.amount,
+       i.number AS invoice_number, i.total AS invoice_total
+FROM erp_receipt_allocations ra
+JOIN erp_invoices i ON i.id = ra.invoice_id
+WHERE ra.tenant_id = $1 AND ra.receipt_id = $2;
+
+-- name: CreateReceiptWithholding :one
+INSERT INTO erp_receipt_withholdings (tenant_id, receipt_id, withholding_id)
+VALUES ($1, $2, $3)
+RETURNING *;
+
+-- name: GetNextReceiptNumber :one
+SELECT COALESCE(MAX(CAST(SUBSTRING(number FROM '[0-9]+$') AS INT)), 0) + 1 AS next_number
+FROM erp_receipts WHERE tenant_id = $1 AND receipt_type = $2;
