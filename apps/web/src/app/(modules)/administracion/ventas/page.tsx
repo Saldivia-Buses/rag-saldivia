@@ -1,40 +1,36 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
-import { wsManager } from "@/lib/ws/manager";
+import { erpKeys } from "@/lib/erp/queries";
+import { fmtMoney, fmtDateShort } from "@/lib/erp/format";
+import { ErrorState } from "@/components/erp/error-state";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileTextIcon, ShoppingBagIcon, TagIcon } from "lucide-react";
+import { FileTextIcon, ShoppingBagIcon } from "lucide-react";
 
 interface Quotation { id: string; number: string; date: string; customer_name: string; status: string; total: number; }
 interface Order { id: string; number: string; date: string; order_type: string; customer_name: string; status: string; total: number; }
 
-const fmtMoney = (n: number) => n === 0 ? "—" : new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(n);
-const fmtDate = (s: string) => new Date(s).toLocaleDateString("es-AR", { day: "2-digit", month: "short" });
 const statusColors: Record<string, "default" | "secondary" | "outline"> = { draft: "secondary", sent: "outline", approved: "default", rejected: "secondary", expired: "secondary", pending: "secondary", in_progress: "outline", shipped: "outline", delivered: "default", cancelled: "secondary" };
 
 export default function VentasPage() {
-  const [quotations, setQuotations] = useState<Quotation[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: quotations = [], isLoading, error } = useQuery({
+    queryKey: erpKeys.quotations(),
+    queryFn: () => api.get<{ quotations: Quotation[] }>("/v1/erp/sales/quotations?page_size=50"),
+    select: (d) => d.quotations,
+  });
 
-  const fetch = useCallback(async () => {
-    try {
-      const [q, o] = await Promise.all([
-        api.get<{ quotations: Quotation[] }>("/v1/erp/sales/quotations?page_size=50"),
-        api.get<{ orders: Order[] }>("/v1/erp/sales/orders?page_size=50"),
-      ]);
-      setQuotations(q.quotations); setOrders(o.orders);
-    } catch (err) { console.error(err); } finally { setLoading(false); }
-  }, []);
+  const { data: orders = [] } = useQuery({
+    queryKey: [...erpKeys.all, "sales", "orders"] as const,
+    queryFn: () => api.get<{ orders: Order[] }>("/v1/erp/sales/orders?page_size=50"),
+    select: (d) => d.orders,
+  });
 
-  useEffect(() => { fetch(); }, [fetch]);
-  useEffect(() => { const unsub = wsManager.subscribe("erp_sales", fetch); return unsub; }, [fetch]);
-
-  if (loading) return <div className="flex-1 p-8"><Skeleton className="h-[600px]" /></div>;
+  if (error) return <ErrorState message="Error cargando ventas" onRetry={() => window.location.reload()} />;
+  if (isLoading) return <div className="flex-1 p-8"><Skeleton className="h-[600px]" /></div>;
 
   return (
     <div className="flex-1 overflow-y-auto">
@@ -54,17 +50,15 @@ export default function VentasPage() {
             <div className="rounded-xl border border-border/40 bg-card overflow-hidden">
               <Table>
                 <TableHeader><TableRow>
-                  <TableHead className="w-24">Nro</TableHead>
-                  <TableHead className="w-28">Fecha</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead className="text-right w-28">Total</TableHead>
+                  <TableHead className="w-24">Nro</TableHead><TableHead className="w-28">Fecha</TableHead>
+                  <TableHead>Cliente</TableHead><TableHead className="text-right w-28">Total</TableHead>
                   <TableHead className="w-28">Estado</TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
                   {quotations.map((q) => (
                     <TableRow key={q.id}>
                       <TableCell className="font-mono text-sm">{q.number}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{fmtDate(q.date)}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{fmtDateShort(q.date)}</TableCell>
                       <TableCell className="text-sm">{q.customer_name}</TableCell>
                       <TableCell className="text-right font-mono text-sm">{fmtMoney(q.total)}</TableCell>
                       <TableCell><Badge variant={statusColors[q.status] || "secondary"}>{q.status}</Badge></TableCell>
@@ -80,20 +74,17 @@ export default function VentasPage() {
             <div className="rounded-xl border border-border/40 bg-card overflow-hidden">
               <Table>
                 <TableHeader><TableRow>
-                  <TableHead className="w-24">Nro</TableHead>
-                  <TableHead className="w-28">Fecha</TableHead>
-                  <TableHead className="w-24">Tipo</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead className="text-right w-28">Total</TableHead>
-                  <TableHead className="w-28">Estado</TableHead>
+                  <TableHead className="w-24">Nro</TableHead><TableHead className="w-28">Fecha</TableHead>
+                  <TableHead className="w-24">Tipo</TableHead><TableHead>Cliente</TableHead>
+                  <TableHead className="text-right w-28">Total</TableHead><TableHead className="w-28">Estado</TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
                   {orders.map((o) => (
                     <TableRow key={o.id}>
                       <TableCell className="font-mono text-sm">{o.number}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{fmtDate(o.date)}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{fmtDateShort(o.date)}</TableCell>
                       <TableCell><Badge variant="secondary">{o.order_type === "customer" ? "Cliente" : "Interno"}</Badge></TableCell>
-                      <TableCell className="text-sm">{o.customer_name || "—"}</TableCell>
+                      <TableCell className="text-sm">{o.customer_name || "\u2014"}</TableCell>
                       <TableCell className="text-right font-mono text-sm">{fmtMoney(o.total)}</TableCell>
                       <TableCell><Badge variant={statusColors[o.status] || "secondary"}>{o.status}</Badge></TableCell>
                     </TableRow>
