@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api/client";
+import { api, getApiBaseUrl } from "@/lib/api/client";
+import { useAuthStore } from "@/lib/auth/store";
 import { erpKeys } from "@/lib/erp/queries";
 import { fmtMoney } from "@/lib/erp/format";
 import { ErrorState } from "@/components/erp/error-state";
@@ -53,15 +54,31 @@ function DateFilter({ from, to, setFrom, setTo }: ReturnType<typeof useDateRange
 }
 
 function ExportButtons({ report, from, to }: { report: string; from: string; to: string }) {
-  const base = `/v1/erp/analytics/${report}?date_from=${from}&date_to=${to}`;
+  const handleDownload = async (format: "csv" | "excel") => {
+    const base = getApiBaseUrl();
+    const token = useAuthStore.getState().accessToken;
+    const url = `${base}/v1/erp/analytics/${report}?date_from=${from}&date_to=${to}&format=${format}`;
+    const res = await fetch(url, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      credentials: "include",
+    });
+    if (!res.ok) return;
+    const blob = await res.blob();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${report.replace(/\//g, "-")}.${format === "excel" ? "xlsx" : "csv"}`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
   return (
     <div className="flex gap-2">
-      <a href={base + "&format=csv"} download>
-        <Button variant="outline" size="sm"><DownloadIcon className="size-3.5 mr-1" />CSV</Button>
-      </a>
-      <a href={base + "&format=excel"} download>
-        <Button variant="outline" size="sm"><DownloadIcon className="size-3.5 mr-1" />Excel</Button>
-      </a>
+      <Button variant="outline" size="sm" onClick={() => handleDownload("csv")}>
+        <DownloadIcon className="size-3.5 mr-1" />CSV
+      </Button>
+      <Button variant="outline" size="sm" onClick={() => handleDownload("excel")}>
+        <DownloadIcon className="size-3.5 mr-1" />Excel
+      </Button>
     </div>
   );
 }
@@ -77,8 +94,17 @@ function useAnalytics(domain: string, report: string, from: string, to: string, 
   });
 }
 
+const kpiMoneyFmt = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
+
 function KPICard({ label, value, color }: { label: string; value: any; color?: string }) {
-  const display = typeof value === "number" ? (value > 1000 ? fmtMoney(value) : String(value)) : "\u2014";
+  let display: string;
+  if (value == null) {
+    display = "\u2014"; // no permission or no data
+  } else if (typeof value === "number") {
+    display = value > 999 || value < -999 ? kpiMoneyFmt.format(value) : String(value);
+  } else {
+    display = String(value);
+  }
   return (
     <div className="rounded-xl border border-border/40 bg-card p-4">
       <p className="text-xs text-muted-foreground mb-1">{label}</p>
@@ -225,7 +251,6 @@ function FinancieroTab({ from, to }: { from: string; to: string }) {
 
 function OperativoTab({ from, to }: { from: string; to: string }) {
   const { data: prodByMonth = [] } = useAnalytics("production", "output-by-month", from, to);
-  const { data: stockRotation = [] } = useAnalytics("stock", "rotation", from, to);
   const { data: belowMin = [] } = useAnalytics("stock", "below-minimum", from, to);
 
   return (

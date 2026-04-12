@@ -66,8 +66,8 @@ SELECT
     SUM(CASE WHEN am.balance > 0 AND i.due_date BETWEEN CURRENT_DATE - 90 AND CURRENT_DATE - 61 THEN am.balance ELSE 0 END) AS days_61_90,
     SUM(CASE WHEN am.balance > 0 AND i.due_date < CURRENT_DATE - 90 THEN am.balance ELSE 0 END) AS days_over_90
 FROM erp_account_movements am
-JOIN erp_entities e ON e.id = am.entity_id
-LEFT JOIN erp_invoices i ON i.id = am.invoice_id
+JOIN erp_entities e ON e.id = am.entity_id AND e.tenant_id = am.tenant_id
+LEFT JOIN erp_invoices i ON i.id = am.invoice_id AND i.tenant_id = am.tenant_id
 WHERE am.tenant_id = $1 AND am.direction = $2 AND am.balance > 0
 GROUP BY e.id, e.name
 ORDER BY SUM(am.balance) DESC
@@ -128,7 +128,7 @@ SELECT
     SUM(jl.debit - jl.credit) AS net
 FROM erp_journal_entries je
 JOIN erp_journal_lines jl ON jl.entry_id = je.id AND jl.tenant_id = je.tenant_id
-JOIN erp_accounts a ON a.id = jl.account_id
+JOIN erp_accounts a ON a.id = jl.account_id AND a.tenant_id = jl.tenant_id
 WHERE je.tenant_id = $1 AND je.status = 'posted'
     AND je.date BETWEEN $2 AND $3
 GROUP BY to_char(je.date, 'YYYY-MM'), a.account_type
@@ -326,8 +326,8 @@ SELECT
 FROM erp_maintenance_assets ma
 LEFT JOIN erp_work_orders wo ON wo.asset_id = ma.id AND wo.tenant_id = ma.tenant_id
     AND wo.date BETWEEN $2 AND $3
-LEFT JOIN erp_work_order_parts p ON p.work_order_id = wo.id
-LEFT JOIN erp_articles a ON a.id = p.article_id
+LEFT JOIN erp_work_order_parts p ON p.work_order_id = wo.id AND p.tenant_id = wo.tenant_id
+LEFT JOIN erp_articles a ON a.id = p.article_id AND a.tenant_id = p.tenant_id
 WHERE ma.tenant_id = $1 AND ma.active = true
 GROUP BY ma.id, ma.code, ma.name
 ORDER BY total_cost DESC
@@ -380,8 +380,8 @@ SELECT
     SUM(jl.debit - jl.credit) AS total
 FROM erp_journal_lines jl
 JOIN erp_journal_entries je ON je.id = jl.entry_id AND je.tenant_id = jl.tenant_id
-JOIN erp_accounts a ON a.id = jl.account_id
-LEFT JOIN erp_cost_centers cc ON cc.id = jl.cost_center_id
+JOIN erp_accounts a ON a.id = jl.account_id AND a.tenant_id = jl.tenant_id
+LEFT JOIN erp_cost_centers cc ON cc.id = jl.cost_center_id AND cc.tenant_id = jl.tenant_id
 WHERE jl.tenant_id = $1 AND je.status = 'posted'
     AND je.date BETWEEN $2 AND $3
     AND a.account_type = 'expense'
@@ -426,7 +426,7 @@ SELECT
     e.id AS entity_id, e.name AS entity_name,
     SUM(o.total) AS total_sales
 FROM erp_orders o
-JOIN erp_entities e ON e.id = o.customer_id
+JOIN erp_entities e ON e.id = o.customer_id AND e.tenant_id = o.tenant_id
 WHERE o.tenant_id = $1 AND o.customer_id IS NOT NULL
     AND o.date BETWEEN $2 AND $3
 GROUP BY e.id, e.name
@@ -479,7 +479,7 @@ SELECT
     COUNT(*) AS headcount
 FROM erp_employee_details ed
 JOIN erp_entities e ON e.id = ed.entity_id AND e.tenant_id = ed.tenant_id
-LEFT JOIN erp_departments d ON d.id = ed.department_id
+LEFT JOIN erp_departments d ON d.id = ed.department_id AND d.tenant_id = ed.tenant_id
 WHERE ed.tenant_id = $1 AND e.active = true
     AND (ed.termination_date IS NULL OR ed.termination_date > CURRENT_DATE)
 GROUP BY d.name
@@ -519,7 +519,7 @@ SELECT
     SUM(CASE WHEN a.account_type = 'expense' THEN jl.debit - jl.credit ELSE 0 END) AS expense
 FROM erp_journal_entries je
 JOIN erp_journal_lines jl ON jl.entry_id = je.id AND jl.tenant_id = je.tenant_id
-JOIN erp_accounts a ON a.id = jl.account_id
+JOIN erp_accounts a ON a.id = jl.account_id AND a.tenant_id = jl.tenant_id
 WHERE je.tenant_id = $1 AND je.status = 'posted'
     AND je.date BETWEEN $2 AND $3
 GROUP BY to_char(je.date, 'YYYY-MM')
@@ -936,7 +936,7 @@ SELECT
     COUNT(*)::INT AS total_orders,
     COUNT(CASE WHEN po.status = 'completed' THEN 1 END)::INT AS completed
 FROM erp_production_orders po
-LEFT JOIN erp_production_centers pc ON pc.id = po.center_id
+LEFT JOIN erp_production_centers pc ON pc.id = po.center_id AND pc.tenant_id = po.tenant_id
 WHERE po.tenant_id = $1
     AND po.date BETWEEN $2 AND $3
 GROUP BY pc.name
@@ -1231,7 +1231,7 @@ SELECT
     SUM(po.total) AS total_purchased,
     COALESCE(SUM(sd.points), 0) AS total_demerits
 FROM erp_purchase_orders po
-JOIN erp_entities e ON e.id = po.supplier_id
+JOIN erp_entities e ON e.id = po.supplier_id AND e.tenant_id = po.tenant_id
 LEFT JOIN erp_supplier_demerits sd ON sd.supplier_id = e.id AND sd.tenant_id = e.tenant_id
 WHERE po.tenant_id = $1
     AND po.date BETWEEN $2 AND $3
@@ -1344,7 +1344,7 @@ SELECT
     COUNT(*) AS invoice_count,
     SUM(i.total) AS total
 FROM erp_invoices i
-JOIN erp_entities e ON e.id = i.entity_id
+JOIN erp_entities e ON e.id = i.entity_id AND e.tenant_id = i.tenant_id
 WHERE i.tenant_id = $1 AND i.direction = 'issued' AND i.status IN ('posted', 'paid')
     AND i.date BETWEEN $2 AND $3
 GROUP BY e.id, e.name
@@ -1403,7 +1403,7 @@ SELECT
     COUNT(*) AS invoice_count,
     SUM(i.total) AS total
 FROM erp_invoices i
-JOIN erp_entities e ON e.id = i.entity_id
+JOIN erp_entities e ON e.id = i.entity_id AND e.tenant_id = i.tenant_id
 WHERE i.tenant_id = $1 AND i.direction = 'received' AND i.status IN ('posted', 'paid')
     AND i.date BETWEEN $2 AND $3
 GROUP BY e.id, e.name
@@ -1461,7 +1461,7 @@ SELECT
     ba.bank_name,
     SUM(CASE WHEN tm.movement_type IN ('bank_deposit', 'check_received') THEN tm.amount ELSE -tm.amount END) AS net
 FROM erp_treasury_movements tm
-JOIN erp_bank_accounts ba ON ba.id = tm.bank_account_id
+JOIN erp_bank_accounts ba ON ba.id = tm.bank_account_id AND ba.tenant_id = tm.tenant_id
 WHERE tm.tenant_id = $1 AND tm.status = 'confirmed' AND tm.bank_account_id IS NOT NULL
     AND tm.date BETWEEN $2 AND $3
 GROUP BY to_char(date, 'YYYY-MM'), ba.bank_name
@@ -1596,11 +1596,11 @@ func (q *Queries) CreatePendingExport(ctx context.Context, arg CreatePendingExpo
 }
 
 const deleteExpiredExports = `-- name: DeleteExpiredExports :exec
-DELETE FROM erp_pending_exports WHERE expires_at < now()
+DELETE FROM erp_pending_exports WHERE tenant_id = $1 AND expires_at < now()
 `
 
-func (q *Queries) DeleteExpiredExports(ctx context.Context) error {
-	_, err := q.db.Exec(ctx, deleteExpiredExports)
+func (q *Queries) DeleteExpiredExports(ctx context.Context, tenantID string) error {
+	_, err := q.db.Exec(ctx, deleteExpiredExports, tenantID)
 	return err
 }
 
@@ -1818,11 +1818,16 @@ func (q *Queries) KPIStockBelowMin(ctx context.Context, tenantID string) (int64,
 
 const listStaleRunningExports = `-- name: ListStaleRunningExports :many
 SELECT id, tenant_id, user_id, export_name, status, row_count, format, params, columns_def, file_key, error, requested_at, started_at, ready_at, expires_at FROM erp_pending_exports
-WHERE status = 'running' AND started_at < now() - $1::INTERVAL
+WHERE tenant_id = $1 AND status = 'running' AND started_at < now() - $2::INTERVAL
 `
 
-func (q *Queries) ListStaleRunningExports(ctx context.Context, staleThreshold pgtype.Interval) ([]ErpPendingExport, error) {
-	rows, err := q.db.Query(ctx, listStaleRunningExports, staleThreshold)
+type ListStaleRunningExportsParams struct {
+	TenantID       string          `json:"tenant_id"`
+	StaleThreshold pgtype.Interval `json:"stale_threshold"`
+}
+
+func (q *Queries) ListStaleRunningExports(ctx context.Context, arg ListStaleRunningExportsParams) ([]ErpPendingExport, error) {
+	rows, err := q.db.Query(ctx, listStaleRunningExports, arg.TenantID, arg.StaleThreshold)
 	if err != nil {
 		return nil, err
 	}
@@ -1906,38 +1911,45 @@ func (q *Queries) ListUserExports(ctx context.Context, arg ListUserExportsParams
 }
 
 const markExportFailed = `-- name: MarkExportFailed :exec
-UPDATE erp_pending_exports SET status = 'failed', error = $2 WHERE id = $1
+UPDATE erp_pending_exports SET status = 'failed', error = $2 WHERE id = $1 AND tenant_id = $3
 `
 
 type MarkExportFailedParams struct {
-	ID    pgtype.UUID `json:"id"`
-	Error pgtype.Text `json:"error"`
+	ID       pgtype.UUID `json:"id"`
+	Error    pgtype.Text `json:"error"`
+	TenantID string      `json:"tenant_id"`
 }
 
 func (q *Queries) MarkExportFailed(ctx context.Context, arg MarkExportFailedParams) error {
-	_, err := q.db.Exec(ctx, markExportFailed, arg.ID, arg.Error)
+	_, err := q.db.Exec(ctx, markExportFailed, arg.ID, arg.Error, arg.TenantID)
 	return err
 }
 
 const markExportReady = `-- name: MarkExportReady :exec
-UPDATE erp_pending_exports SET status = 'ready', file_key = $2, ready_at = now() WHERE id = $1
+UPDATE erp_pending_exports SET status = 'ready', file_key = $2, ready_at = now() WHERE id = $1 AND tenant_id = $3
 `
 
 type MarkExportReadyParams struct {
-	ID      pgtype.UUID `json:"id"`
-	FileKey pgtype.Text `json:"file_key"`
+	ID       pgtype.UUID `json:"id"`
+	FileKey  pgtype.Text `json:"file_key"`
+	TenantID string      `json:"tenant_id"`
 }
 
 func (q *Queries) MarkExportReady(ctx context.Context, arg MarkExportReadyParams) error {
-	_, err := q.db.Exec(ctx, markExportReady, arg.ID, arg.FileKey)
+	_, err := q.db.Exec(ctx, markExportReady, arg.ID, arg.FileKey, arg.TenantID)
 	return err
 }
 
 const markExportRunning = `-- name: MarkExportRunning :exec
-UPDATE erp_pending_exports SET status = 'running', started_at = now() WHERE id = $1
+UPDATE erp_pending_exports SET status = 'running', started_at = now() WHERE id = $1 AND tenant_id = $2
 `
 
-func (q *Queries) MarkExportRunning(ctx context.Context, id pgtype.UUID) error {
-	_, err := q.db.Exec(ctx, markExportRunning, id)
+type MarkExportRunningParams struct {
+	ID       pgtype.UUID `json:"id"`
+	TenantID string      `json:"tenant_id"`
+}
+
+func (q *Queries) MarkExportRunning(ctx context.Context, arg MarkExportRunningParams) error {
+	_, err := q.db.Exec(ctx, markExportRunning, arg.ID, arg.TenantID)
 	return err
 }

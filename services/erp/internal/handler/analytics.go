@@ -85,7 +85,7 @@ func (h *Analytics) Routes(authWrite func(http.Handler) http.Handler) chi.Router
 		r.Use(sdamw.RequirePermission("erp.sales.read"))
 		r.Get("/sales/orders-by-month", h.wrap("sales_monthly", salesMonthlyCols, h.fetchSalesMonthly))
 		r.Get("/sales/quotation-conversion", h.wrap("quotation_conversion", conversionCols, h.fetchQuotationConversion))
-		r.Get("/sales/customer-concentration", h.wrap("customer_concentration", topEntityCols, h.fetchCustomerConcentration))
+		r.Get("/sales/customer-concentration", h.wrap("customer_concentration", customerConcentrationCols, h.fetchCustomerConcentration))
 	})
 
 	// HR reports
@@ -244,6 +244,10 @@ var (
 		{Header: "Entidad", Key: "entity_name", Format: "text"},
 		{Header: "Comprobantes", Key: "invoice_count", Format: "number"},
 		{Header: "Total", Key: "total", Format: "currency"},
+	}
+	customerConcentrationCols = []export.Column{
+		{Header: "Entidad", Key: "entity_name", Format: "text"},
+		{Header: "Total Ventas", Key: "total_sales", Format: "currency"},
 	}
 	agingCols = []export.Column{
 		{Header: "Entidad", Key: "entity_name", Format: "text"},
@@ -519,7 +523,7 @@ func (h *Analytics) fetchTopSuppliers(r *http.Request, slug string) ([]export.Ro
 
 func (h *Analytics) fetchAging(r *http.Request, slug string) ([]export.Row, error) {
 	direction := r.URL.Query().Get("direction")
-	if direction == "" {
+	if direction != "receivable" && direction != "payable" {
 		direction = "receivable"
 	}
 	rows, err := h.svc.Repo().AnalyticsAging(r.Context(), repository.AnalyticsAgingParams{
@@ -853,12 +857,23 @@ func (h *Analytics) DashboardKPIs(w http.ResponseWriter, r *http.Request) {
 	var wg sync.WaitGroup
 	var errList []string
 
+	sem := make(chan struct{}, 5) // H1: cap concurrent DB queries per request
+
 	run := func(name string, fn func()) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
 			fn()
 		}()
+	}
+
+	fail := func(name string, err error) {
+		slog.Error("dashboard kpi failed", "kpi", name, "error", err)
+		mu.Lock()
+		errList = append(errList, name) // C1: only return name, not raw DB error
+		mu.Unlock()
 	}
 
 	repo := h.svc.Repo()
@@ -867,98 +882,99 @@ func (h *Analytics) DashboardKPIs(w http.ResponseWriter, r *http.Request) {
 		if v, err := repo.KPIMonthRevenue(ctx, slug); err == nil {
 			mu.Lock(); result.MonthRevenue = v; mu.Unlock()
 		} else {
-			mu.Lock(); errList = append(errList, "month_revenue: "+err.Error()); mu.Unlock()
+			fail("month_revenue", err)
 		}
 	})
 	run("month_expense", func() {
 		if v, err := repo.KPIMonthExpense(ctx, slug); err == nil {
 			mu.Lock(); result.MonthExpense = v; mu.Unlock()
 		} else {
-			mu.Lock(); errList = append(errList, "month_expense: "+err.Error()); mu.Unlock()
+			fail("month_expense", err)
 		}
 	})
 	run("cash_balance", func() {
 		if v, err := repo.KPICashBalance(ctx, slug); err == nil {
 			mu.Lock(); result.CashBalance = v; mu.Unlock()
 		} else {
-			mu.Lock(); errList = append(errList, "cash_balance: "+err.Error()); mu.Unlock()
+			fail("cash_balance", err)
 		}
 	})
 	run("accounts_receivable", func() {
 		if v, err := repo.KPIAccountsReceivable(ctx, slug); err == nil {
 			mu.Lock(); result.AccountsReceivable = v; mu.Unlock()
 		} else {
-			mu.Lock(); errList = append(errList, "accounts_receivable: "+err.Error()); mu.Unlock()
+			fail("accounts_receivable", err)
 		}
 	})
 	run("accounts_payable", func() {
 		if v, err := repo.KPIAccountsPayable(ctx, slug); err == nil {
 			mu.Lock(); result.AccountsPayable = v; mu.Unlock()
 		} else {
-			mu.Lock(); errList = append(errList, "accounts_payable: "+err.Error()); mu.Unlock()
+			fail("accounts_payable", err)
 		}
 	})
 	run("active_prod_orders", func() {
 		if v, err := repo.KPIActiveProdOrders(ctx, slug); err == nil {
 			mu.Lock(); result.ActiveProdOrders = v; mu.Unlock()
 		} else {
-			mu.Lock(); errList = append(errList, "active_prod_orders: "+err.Error()); mu.Unlock()
+			fail("active_prod_orders", err)
 		}
 	})
 	run("pending_purchases", func() {
 		if v, err := repo.KPIPendingPurchases(ctx, slug); err == nil {
 			mu.Lock(); result.PendingPurchases = v; mu.Unlock()
 		} else {
-			mu.Lock(); errList = append(errList, "pending_purchases: "+err.Error()); mu.Unlock()
+			fail("pending_purchases", err)
 		}
 	})
 	run("open_quotations", func() {
 		if v, err := repo.KPIOpenQuotations(ctx, slug); err == nil {
 			mu.Lock(); result.OpenQuotations = v; mu.Unlock()
 		} else {
-			mu.Lock(); errList = append(errList, "open_quotations: "+err.Error()); mu.Unlock()
+			fail("open_quotations", err)
 		}
 	})
 	run("stock_below_min", func() {
 		if v, err := repo.KPIStockBelowMin(ctx, slug); err == nil {
 			mu.Lock(); result.StockBelowMin = v; mu.Unlock()
 		} else {
-			mu.Lock(); errList = append(errList, "stock_below_min: "+err.Error()); mu.Unlock()
+			fail("stock_below_min", err)
 		}
 	})
 	run("headcount", func() {
 		if v, err := repo.KPIHeadcount(ctx, slug); err == nil {
 			mu.Lock(); result.Headcount = v; mu.Unlock()
 		} else {
-			mu.Lock(); errList = append(errList, "headcount: "+err.Error()); mu.Unlock()
+			fail("headcount", err)
 		}
 	})
 	run("absences_this_month", func() {
 		if v, err := repo.KPIAbsencesThisMonth(ctx, slug); err == nil {
 			mu.Lock(); result.AbsencesThisMonth = v; mu.Unlock()
 		} else {
-			mu.Lock(); errList = append(errList, "absences_this_month: "+err.Error()); mu.Unlock()
+			fail("absences_this_month", err)
 		}
 	})
 	run("open_ncs", func() {
 		if v, err := repo.KPIOpenNonconformities(ctx, slug); err == nil {
 			mu.Lock(); result.OpenNCs = v; mu.Unlock()
 		} else {
-			mu.Lock(); errList = append(errList, "open_ncs: "+err.Error()); mu.Unlock()
+			fail("open_ncs", err)
 		}
 	})
 	run("pending_wos", func() {
 		if v, err := repo.KPIPendingWorkOrders(ctx, slug); err == nil {
 			mu.Lock(); result.PendingWOs = v; mu.Unlock()
 		} else {
-			mu.Lock(); errList = append(errList, "pending_wos: "+err.Error()); mu.Unlock()
+			fail("pending_wos", err)
 		}
 	})
 
 	wg.Wait()
 
+	const totalKPIs = 13
 	status := http.StatusOK
-	if len(errList) == 13 {
+	if len(errList) == totalKPIs {
 		http.Error(w, `{"error":"all dashboard queries failed"}`, http.StatusInternalServerError)
 		return
 	}
