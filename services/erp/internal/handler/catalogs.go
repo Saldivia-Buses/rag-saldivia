@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -9,16 +10,27 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	"github.com/Camionerou/rag-saldivia/services/erp/internal/repository"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/service"
 )
 
+// CatalogsService is the interface the Catalogs handler depends on.
+type CatalogsService interface {
+	List(ctx context.Context, tenantID, catalogType string, activeOnly bool) ([]repository.ErpCatalog, error)
+	ListTypes(ctx context.Context, tenantID string) ([]string, error)
+	Get(ctx context.Context, id pgtype.UUID, tenantID string) (repository.ErpCatalog, error)
+	Create(ctx context.Context, req service.CreateCatalogRequest) (repository.ErpCatalog, error)
+	Update(ctx context.Context, req service.UpdateCatalogRequest) (repository.ErpCatalog, error)
+	Delete(ctx context.Context, id pgtype.UUID, tenantID, userID, ip string) error
+}
+
 // Catalogs handles catalog endpoints.
 type Catalogs struct {
-	svc *service.Catalogs
+	svc CatalogsService
 }
 
 // NewCatalogs creates a catalog handler.
-func NewCatalogs(svc *service.Catalogs) *Catalogs {
+func NewCatalogs(svc CatalogsService) *Catalogs {
 	return &Catalogs{svc: svc}
 }
 

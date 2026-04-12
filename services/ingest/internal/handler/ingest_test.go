@@ -14,14 +14,34 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	"github.com/Camionerou/rag-saldivia/services/ingest/internal/repository"
 	"github.com/Camionerou/rag-saldivia/services/ingest/internal/service"
 )
 
 // --- mock ---
 
 type mockIngestService struct {
-	jobs []service.Job
-	err  error
+	jobs       []service.Job
+	collection repository.Collection
+	err        error
+}
+
+func (m *mockIngestService) ListCollections(_ context.Context) ([]repository.Collection, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+	return []repository.Collection{m.collection}, nil
+}
+
+func (m *mockIngestService) CreateCollection(_ context.Context, name, description string) (repository.Collection, error) {
+	if m.err != nil {
+		return repository.Collection{}, m.err
+	}
+	col := m.collection
+	if col.Name == "" {
+		col.Name = name
+	}
+	return col, nil
 }
 
 func (m *mockIngestService) Submit(_ context.Context, tenantSlug, userID, collection, fileName string, fileSize int64, _ multipart.File) (*service.Job, error) {

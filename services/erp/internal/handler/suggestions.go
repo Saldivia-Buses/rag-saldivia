@@ -2,6 +2,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -13,16 +14,27 @@ import (
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
+	"github.com/Camionerou/rag-saldivia/services/erp/internal/repository"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/service"
 )
 
+// SuggestionsService is the interface the Suggestions handler depends on.
+type SuggestionsService interface {
+	List(ctx context.Context, tenantID string, limit, offset int) ([]repository.ListSuggestionsRow, error)
+	Get(ctx context.Context, id pgtype.UUID, tenantID string) (repository.ErpSuggestion, []repository.ErpSuggestionResponse, error)
+	Create(ctx context.Context, req service.CreateRequest) (repository.ErpSuggestion, error)
+	Respond(ctx context.Context, req service.RespondRequest) (repository.ErpSuggestionResponse, error)
+	MarkRead(ctx context.Context, id pgtype.UUID, tenantID string) error
+	CountUnread(ctx context.Context, tenantID string) (int32, error)
+}
+
 // Suggestions handles suggestion endpoints.
 type Suggestions struct {
-	svc *service.Suggestions
+	svc SuggestionsService
 }
 
 // NewSuggestions creates a suggestion handler.
-func NewSuggestions(svc *service.Suggestions) *Suggestions {
+func NewSuggestions(svc SuggestionsService) *Suggestions {
 	return &Suggestions{svc: svc}
 }
 

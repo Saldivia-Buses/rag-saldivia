@@ -109,8 +109,16 @@ build-%: ## Build a specific service (e.g., make build-auth)
 
 # ── Testing ──────────────────────────────────────────────────────────────
 
-test: ## Run all Go tests
-	go test ./services/... ./pkg/... ./tools/... -count=1
+test: ## Run all Go tests (excludes astro — requires CGO; use make test-astro)
+	go test ./pkg/... -count=1
+	@for svc in agent auth bigbrother chat erp feedback ingest notification platform search traces ws; do \
+		echo "▸ testing services/$$svc"; \
+		(cd services/$$svc && go test ./... -count=1) || exit 1; \
+	done
+	@for tool in cli mcp pkg; do \
+		echo "▸ testing tools/$$tool"; \
+		(cd tools/$$tool && go test ./... -count=1) || exit 1; \
+	done
 
 test-astro: ## Run astro tests (requires CGO + EPHE_PATH)
 	cd $(SERVICES_DIR)/astro && CGO_ENABLED=1 go test ./... -count=1 -v
@@ -118,13 +126,43 @@ test-astro: ## Run astro tests (requires CGO + EPHE_PATH)
 test-%: ## Run tests for a specific service (e.g., make test-auth)
 	cd $(SERVICES_DIR)/$* && go test ./... -count=1 -v
 
-test-coverage: ## Run tests with coverage report
-	go test ./services/... ./pkg/... ./tools/... -count=1 -coverprofile=coverage.out
+test-coverage: ## Run tests with coverage report (excludes astro — requires CGO)
+	go test \
+		github.com/Camionerou/rag-saldivia/pkg/... \
+		github.com/Camionerou/rag-saldivia/services/agent/... \
+		github.com/Camionerou/rag-saldivia/services/auth/... \
+		github.com/Camionerou/rag-saldivia/services/bigbrother/... \
+		github.com/Camionerou/rag-saldivia/services/chat/... \
+		github.com/Camionerou/rag-saldivia/services/erp/... \
+		github.com/Camionerou/rag-saldivia/services/feedback/... \
+		github.com/Camionerou/rag-saldivia/services/ingest/... \
+		github.com/Camionerou/rag-saldivia/services/notification/... \
+		github.com/Camionerou/rag-saldivia/services/platform/... \
+		github.com/Camionerou/rag-saldivia/services/search/... \
+		github.com/Camionerou/rag-saldivia/services/traces/... \
+		github.com/Camionerou/rag-saldivia/services/ws/... \
+		github.com/Camionerou/rag-saldivia/tools/cli/... \
+		github.com/Camionerou/rag-saldivia/tools/mcp/... \
+		github.com/Camionerou/rag-saldivia/tools/pkg/... \
+		-count=1 -coverprofile=coverage.out
 	go tool cover -html=coverage.out -o cover.html
 	@echo "Coverage report → cover.html"
 
-test-integration: ## Run integration tests (requires Docker)
-	go test ./services/... -tags=integration -count=1 -v
+test-integration: ## Run integration tests (requires Docker; excludes astro)
+	go test \
+		github.com/Camionerou/rag-saldivia/services/agent/... \
+		github.com/Camionerou/rag-saldivia/services/auth/... \
+		github.com/Camionerou/rag-saldivia/services/bigbrother/... \
+		github.com/Camionerou/rag-saldivia/services/chat/... \
+		github.com/Camionerou/rag-saldivia/services/erp/... \
+		github.com/Camionerou/rag-saldivia/services/feedback/... \
+		github.com/Camionerou/rag-saldivia/services/ingest/... \
+		github.com/Camionerou/rag-saldivia/services/notification/... \
+		github.com/Camionerou/rag-saldivia/services/platform/... \
+		github.com/Camionerou/rag-saldivia/services/search/... \
+		github.com/Camionerou/rag-saldivia/services/traces/... \
+		github.com/Camionerou/rag-saldivia/services/ws/... \
+		-tags=integration -count=1 -v
 
 test-frontend: ## Run frontend tests
 	cd apps/web && bun test

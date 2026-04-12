@@ -1,19 +1,31 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgtype"
+
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
+	"github.com/Camionerou/rag-saldivia/services/erp/internal/repository"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/service"
-	"github.com/go-chi/chi/v5"
 )
 
-type CurrentAccounts struct{ svc *service.CurrentAccounts }
+// CurrentAccountsService is the interface the CurrentAccounts handler depends on.
+type CurrentAccountsService interface {
+	ListMovements(ctx context.Context, tenantID string, entityID pgtype.UUID, direction string, dateFrom, dateTo pgtype.Date, limit, offset int) ([]repository.ListAccountMovementsRow, error)
+	GetBalances(ctx context.Context, tenantID, direction string) ([]repository.GetEntityBalancesRow, error)
+	GetOverdue(ctx context.Context, tenantID string) ([]repository.GetOverdueInvoicesRow, error)
+	Allocate(ctx context.Context, req service.AllocateRequest) error
+}
 
-func NewCurrentAccounts(svc *service.CurrentAccounts) *CurrentAccounts {
+type CurrentAccounts struct{ svc CurrentAccountsService }
+
+func NewCurrentAccounts(svc CurrentAccountsService) *CurrentAccounts {
 	return &CurrentAccounts{svc: svc}
 }
 

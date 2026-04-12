@@ -1,21 +1,38 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/repository"
-	"github.com/Camionerou/rag-saldivia/services/erp/internal/service"
 )
 
-type Quality struct{ svc *service.Quality }
+// QualityService is the interface the Quality handler depends on.
+type QualityService interface {
+	ListNC(ctx context.Context, tenantID, status, severity string, limit, offset int) ([]repository.ListNonconformitiesRow, error)
+	GetNC(ctx context.Context, id pgtype.UUID, tenantID string) (repository.ErpNonconformity, error)
+	CreateNC(ctx context.Context, p repository.CreateNonconformityParams, ip string) (repository.ErpNonconformity, error)
+	UpdateNCStatus(ctx context.Context, id pgtype.UUID, tenantID, status, userID, ip string) error
+	ListCA(ctx context.Context, ncID pgtype.UUID, tenantID string) ([]repository.ErpCorrectiveAction, error)
+	CreateCA(ctx context.Context, p repository.CreateCorrectiveActionParams, userID, ip string) (repository.ErpCorrectiveAction, error)
+	ListAudits(ctx context.Context, tenantID string, limit, offset int) ([]repository.ErpAudit, error)
+	CreateAudit(ctx context.Context, p repository.CreateAuditParams, userID, ip string) (repository.ErpAudit, error)
+	ListAuditFindings(ctx context.Context, auditID pgtype.UUID, tenantID string) ([]repository.ErpAuditFinding, error)
+	CreateAuditFinding(ctx context.Context, p repository.CreateAuditFindingParams, userID, ip string) (repository.ErpAuditFinding, error)
+	ListDocuments(ctx context.Context, tenantID, status string, limit, offset int) ([]repository.ErpControlledDocument, error)
+	CreateDocument(ctx context.Context, p repository.CreateControlledDocumentParams, userID, ip string) (repository.ErpControlledDocument, error)
+}
 
-func NewQuality(svc *service.Quality) *Quality { return &Quality{svc: svc} }
+type Quality struct{ svc QualityService }
+
+func NewQuality(svc QualityService) *Quality { return &Quality{svc: svc} }
 
 func (h *Quality) Routes(authWrite func(http.Handler) http.Handler) chi.Router {
 	r := chi.NewRouter()

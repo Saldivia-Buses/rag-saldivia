@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -11,12 +12,21 @@ import (
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/repository"
-	"github.com/Camionerou/rag-saldivia/services/erp/internal/service"
 )
 
-type Admin struct{ svc *service.Admin }
+// AdminService is the interface the Admin handler depends on.
+type AdminService interface {
+	ListCommunications(ctx context.Context, tenantID string, limit, offset int) ([]repository.ErpCommunication, error)
+	CreateCommunication(ctx context.Context, tenantID, subject, body, senderID, priority, ip string) (repository.ErpCommunication, error)
+	ListCalendarEvents(ctx context.Context, tenantID string, dateFrom, dateTo pgtype.Timestamptz) ([]repository.ErpCalendarEvent, error)
+	CreateCalendarEvent(ctx context.Context, p repository.CreateCalendarEventParams, ip string) (repository.ErpCalendarEvent, error)
+	ListSurveys(ctx context.Context, tenantID string, limit, offset int) ([]repository.ErpSurvey, error)
+	CreateSurvey(ctx context.Context, tenantID, title, description, userID, ip string) (repository.ErpSurvey, error)
+}
 
-func NewAdmin(svc *service.Admin) *Admin { return &Admin{svc: svc} }
+type Admin struct{ svc AdminService }
+
+func NewAdmin(svc AdminService) *Admin { return &Admin{svc: svc} }
 
 func (h *Admin) Routes(authWrite func(http.Handler) http.Handler) chi.Router {
 	r := chi.NewRouter()

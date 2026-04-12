@@ -2,6 +2,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -14,9 +15,16 @@ import (
 	"github.com/Camionerou/rag-saldivia/services/traces/internal/service"
 )
 
+// TracesService is the narrow interface the handler needs.
+type TracesService interface {
+	ListTraces(ctx context.Context, tenantID string, limit, offset int) ([]service.Trace, error)
+	GetTraceDetail(ctx context.Context, traceID, tenantID string) (*service.Trace, []service.TraceEvent, error)
+	GetTenantCost(ctx context.Context, tenantID string, from, to time.Time) (*service.CostSummary, error)
+}
+
 // Handler wraps the Traces service for HTTP.
 type Handler struct {
-	svc *service.Traces
+	svc TracesService
 }
 
 // New creates a traces Handler.

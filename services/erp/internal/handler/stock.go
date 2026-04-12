@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -10,13 +11,27 @@ import (
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
+	"github.com/Camionerou/rag-saldivia/services/erp/internal/repository"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/service"
 )
 
-// Stock handles stock & warehouse endpoints.
-type Stock struct{ svc *service.Stock }
+// StockService is the interface the Stock handler depends on.
+type StockService interface {
+	ListArticles(ctx context.Context, tenantID, search, articleType string, activeOnly bool, limit, offset int) ([]repository.ErpArticle, error)
+	GetArticle(ctx context.Context, id pgtype.UUID, tenantID string) (repository.ErpArticle, error)
+	CreateArticle(ctx context.Context, req service.CreateArticleRequest) (repository.ErpArticle, error)
+	ListWarehouses(ctx context.Context, tenantID string, activeOnly bool) ([]repository.ErpWarehouse, error)
+	CreateWarehouse(ctx context.Context, tenantID, code, name, location, userID, ip string) (repository.ErpWarehouse, error)
+	GetStockLevels(ctx context.Context, tenantID string, articleID, warehouseID pgtype.UUID) ([]repository.GetStockLevelsRow, error)
+	ListMovements(ctx context.Context, tenantID string, articleID pgtype.UUID, limit, offset int) ([]repository.ListStockMovementsRow, error)
+	CreateMovement(ctx context.Context, req service.CreateMovementRequest) (repository.ErpStockMovement, error)
+	ListBOM(ctx context.Context, tenantID string, parentID pgtype.UUID) ([]repository.ListBOMRow, error)
+}
 
-func NewStock(svc *service.Stock) *Stock { return &Stock{svc: svc} }
+// Stock handles stock & warehouse endpoints.
+type Stock struct{ svc StockService }
+
+func NewStock(svc StockService) *Stock { return &Stock{svc: svc} }
 
 func (h *Stock) Routes(authWrite func(http.Handler) http.Handler) chi.Router {
 	r := chi.NewRouter()

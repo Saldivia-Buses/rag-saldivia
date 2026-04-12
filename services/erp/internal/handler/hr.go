@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -11,12 +12,26 @@ import (
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/repository"
-	"github.com/Camionerou/rag-saldivia/services/erp/internal/service"
 )
 
-type HR struct{ svc *service.HR }
+// HRService is the interface the HR handler depends on.
+type HRService interface {
+	ListDepartments(ctx context.Context, tenantID string) ([]repository.ErpDepartment, error)
+	CreateDepartment(ctx context.Context, p repository.CreateDepartmentParams, userID, ip string) (repository.ErpDepartment, error)
+	ListEmployees(ctx context.Context, tenantID string, limit, offset int) ([]repository.ListEmployeeDetailsRow, error)
+	GetEmployee(ctx context.Context, entityID pgtype.UUID, tenantID, userID, ip string) (repository.GetEmployeeDetailRow, error)
+	UpsertEmployee(ctx context.Context, p repository.UpsertEmployeeDetailParams, userID, ip string) (repository.UpsertEmployeeDetailRow, error)
+	ListEvents(ctx context.Context, tenantID string, entityID pgtype.UUID, typeFilter string, limit, offset int) ([]repository.ErpHrEvent, error)
+	CreateEvent(ctx context.Context, p repository.CreateHREventParams, ip string) (repository.ErpHrEvent, error)
+	ListTraining(ctx context.Context, tenantID string, limit, offset int) ([]repository.ErpTraining, error)
+	CreateTraining(ctx context.Context, p repository.CreateTrainingParams, userID, ip string) (repository.ErpTraining, error)
+	ListAttendance(ctx context.Context, tenantID string, entityID pgtype.UUID, dateFrom, dateTo pgtype.Date, limit, offset int) ([]repository.ErpAttendance, error)
+	CreateAttendance(ctx context.Context, p repository.CreateAttendanceParams, userID, ip string) (repository.ErpAttendance, error)
+}
 
-func NewHR(svc *service.HR) *HR { return &HR{svc: svc} }
+type HR struct{ svc HRService }
+
+func NewHR(svc HRService) *HR { return &HR{svc: svc} }
 
 func (h *HR) Routes(authWrite func(http.Handler) http.Handler) chi.Router {
 	r := chi.NewRouter()

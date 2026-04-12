@@ -333,3 +333,182 @@ func TestListTenants_ServiceError_Returns500(t *testing.T) {
 		t.Errorf("expected generic error, got %q", resp["error"])
 	}
 }
+
+// --- update / disable / enable tenant ---
+
+func TestUpdateTenant_Success_Returns204(t *testing.T) {
+	r := setupPlatformRouter(&mockPlatformService{})
+
+	body := `{"name":"New Name","plan_id":"p-2","settings":{}}`
+	req := withAdminAuth(httptest.NewRequest(http.MethodPut, "/v1/platform/tenants/t-1", strings.NewReader(body)), t)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("expected 204, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestUpdateTenant_InvalidJSON_Returns400(t *testing.T) {
+	r := setupPlatformRouter(&mockPlatformService{})
+
+	req := withAdminAuth(httptest.NewRequest(http.MethodPut, "/v1/platform/tenants/t-1", strings.NewReader("not json")), t)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d", rec.Code)
+	}
+}
+
+func TestDisableTenant_Success_Returns204(t *testing.T) {
+	r := setupPlatformRouter(&mockPlatformService{})
+
+	req := withAdminAuth(httptest.NewRequest(http.MethodPost, "/v1/platform/tenants/t-1/disable", nil), t)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("expected 204, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestEnableTenant_Success_Returns204(t *testing.T) {
+	r := setupPlatformRouter(&mockPlatformService{})
+
+	req := withAdminAuth(httptest.NewRequest(http.MethodPost, "/v1/platform/tenants/t-1/enable", nil), t)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("expected 204, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+// --- modules ---
+
+func TestListModules_Success(t *testing.T) {
+	mock := &mockPlatformService{modules: []db.Module{{ID: "m-1", Name: "Fleet"}}}
+	r := setupPlatformRouter(mock)
+
+	req := withAdminAuth(httptest.NewRequest(http.MethodGet, "/v1/platform/modules", nil), t)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestEnableModule_MissingModuleID_Returns400(t *testing.T) {
+	r := setupPlatformRouter(&mockPlatformService{})
+
+	body := `{"module_id":""}` // empty module_id
+	req := withAdminAuth(httptest.NewRequest(http.MethodPost, "/v1/platform/tenants/t-1/modules", strings.NewReader(body)), t)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for empty module_id, got %d", rec.Code)
+	}
+}
+
+func TestEnableModule_InvalidJSON_Returns400(t *testing.T) {
+	r := setupPlatformRouter(&mockPlatformService{})
+
+	req := withAdminAuth(httptest.NewRequest(http.MethodPost, "/v1/platform/tenants/t-1/modules", strings.NewReader("nope")), t)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for invalid JSON, got %d", rec.Code)
+	}
+}
+
+func TestEnableModule_Success_Returns204(t *testing.T) {
+	r := setupPlatformRouter(&mockPlatformService{})
+
+	body := `{"module_id":"fleet"}`
+	req := withAdminAuth(httptest.NewRequest(http.MethodPost, "/v1/platform/tenants/t-1/modules", strings.NewReader(body)), t)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("expected 204, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestDisableModule_Success_Returns204(t *testing.T) {
+	r := setupPlatformRouter(&mockPlatformService{})
+
+	req := withAdminAuth(httptest.NewRequest(http.MethodDelete, "/v1/platform/tenants/t-1/modules/fleet", nil), t)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("expected 204, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+// --- feature flags ---
+
+func TestListFeatureFlags_Success(t *testing.T) {
+	mock := &mockPlatformService{flags: []service.FeatureFlag{{ID: "f-1", Name: "dark_mode", Enabled: true}}}
+	r := setupPlatformRouter(mock)
+
+	req := withAdminAuth(httptest.NewRequest(http.MethodGet, "/v1/platform/flags", nil), t)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestToggleFlag_InvalidJSON_Returns400(t *testing.T) {
+	r := setupPlatformRouter(&mockPlatformService{})
+
+	req := withAdminAuth(httptest.NewRequest(http.MethodPatch, "/v1/platform/flags/f-1", strings.NewReader("nope")), t)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for invalid JSON, got %d", rec.Code)
+	}
+}
+
+// --- config ---
+
+func TestGetConfig_Success(t *testing.T) {
+	mock := &mockPlatformService{config: service.ConfigEntry{Key: "site_name", Value: []byte(`"SDA"`)}}
+	r := setupPlatformRouter(mock)
+
+	req := withAdminAuth(httptest.NewRequest(http.MethodGet, "/v1/platform/config/site_name", nil), t)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestSetConfig_Success_Returns204(t *testing.T) {
+	r := setupPlatformRouter(&mockPlatformService{})
+
+	body := `{"value":"new-value"}`
+	req := withAdminAuth(httptest.NewRequest(http.MethodPut, "/v1/platform/config/site_name", strings.NewReader(body)), t)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	// SetConfig may return 204 or 200 depending on handler
+	if rec.Code != http.StatusNoContent && rec.Code != http.StatusOK {
+		t.Fatalf("expected 204 or 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+}

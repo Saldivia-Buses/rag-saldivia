@@ -1,20 +1,34 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
+	"github.com/Camionerou/rag-saldivia/services/erp/internal/repository"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/service"
 )
 
-type Sales struct{ svc *service.Sales }
+// SalesService is the interface the Sales handler depends on.
+type SalesService interface {
+	ListQuotations(ctx context.Context, tenantID, status string, limit, offset int) ([]repository.ListQuotationsRow, error)
+	GetQuotation(ctx context.Context, id pgtype.UUID, tenantID string) (*service.QuotationDetail, error)
+	CreateQuotation(ctx context.Context, req service.CreateQuotationRequest) (*service.QuotationDetail, error)
+	ListOrders(ctx context.Context, tenantID, status, orderType string, limit, offset int) ([]repository.ListOrdersRow, error)
+	CreateOrder(ctx context.Context, tenantID, number string, date pgtype.Date, orderType string, customerID, quotationID pgtype.UUID, total pgtype.Numeric, notes, userID, ip string) (repository.ErpOrder, error)
+	UpdateOrderStatus(ctx context.Context, id pgtype.UUID, tenantID, status, userID, ip string) error
+	ListPriceLists(ctx context.Context, tenantID string) ([]repository.ErpPriceList, error)
+}
 
-func NewSales(svc *service.Sales) *Sales { return &Sales{svc: svc} }
+type Sales struct{ svc SalesService }
+
+func NewSales(svc SalesService) *Sales { return &Sales{svc: svc} }
 
 func (h *Sales) Routes(authWrite func(http.Handler) http.Handler) chi.Router {
 	r := chi.NewRouter()

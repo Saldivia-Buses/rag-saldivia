@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -8,11 +9,26 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
+	"github.com/Camionerou/rag-saldivia/services/erp/internal/repository"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/service"
 )
+
+// EntitiesService is the interface the Entities handler depends on.
+type EntitiesService interface {
+	List(ctx context.Context, tenantID, entityType, search string, activeOnly bool, limit, offset int) ([]repository.ListEntitiesRow, error)
+	Count(ctx context.Context, tenantID, entityType string, activeOnly bool) (int32, error)
+	Get(ctx context.Context, id pgtype.UUID, tenantID string) (*service.EntityDetail, error)
+	Create(ctx context.Context, req service.CreateEntityRequest) (repository.CreateEntityRow, error)
+	Update(ctx context.Context, req service.UpdateEntityRequest) (repository.UpdateEntityRow, error)
+	Delete(ctx context.Context, id pgtype.UUID, tenantID, userID, ip string) error
+	AddContact(ctx context.Context, tenantID string, entityID pgtype.UUID, contactType, label, value, userID, ip string, metadata []byte) (repository.ErpEntityContact, error)
+	AddNote(ctx context.Context, tenantID string, entityID pgtype.UUID, userID, noteType, body, ip string) (repository.ErpEntityNote, error)
+	AddDocument(ctx context.Context, tenantID string, entityID pgtype.UUID, name, docType, fileKey, userID, ip string) (repository.ErpEntityDocument, error)
+}
 
 // hashTaxID returns a SHA-256 hex hash of a tax ID for searchable storage.
 func hashTaxID(taxID string) string {
@@ -22,11 +38,11 @@ func hashTaxID(taxID string) string {
 
 // Entities handles entity endpoints (employees, customers, suppliers).
 type Entities struct {
-	svc *service.Entities
+	svc EntitiesService
 }
 
 // NewEntities creates an entities handler.
-func NewEntities(svc *service.Entities) *Entities {
+func NewEntities(svc EntitiesService) *Entities {
 	return &Entities{svc: svc}
 }
 

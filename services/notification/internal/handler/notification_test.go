@@ -260,3 +260,73 @@ func TestList_ServiceError_Returns500_GenericMessage(t *testing.T) {
 		t.Errorf("expected generic error, got %q", resp["error"])
 	}
 }
+
+func TestUnreadCount_ServiceError_Returns500(t *testing.T) {
+	mock := &mockNotificationService{err: errors.New("db error")}
+	r := setupNotifRouter(mock)
+
+	req := withUser(httptest.NewRequest(http.MethodGet, "/v1/notifications/count", nil), "u-1")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("expected 500, got %d", rec.Code)
+	}
+}
+
+func TestMarkAllRead_ServiceError_Returns500(t *testing.T) {
+	mock := &mockNotificationService{err: errors.New("db error")}
+	r := setupNotifRouter(mock)
+
+	req := withUser(httptest.NewRequest(http.MethodPost, "/v1/notifications/read-all", nil), "u-1")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("expected 500, got %d", rec.Code)
+	}
+}
+
+func TestGetPreferences_ServiceError_Returns500(t *testing.T) {
+	mock := &mockNotificationService{err: errors.New("db error")}
+	r := setupNotifRouter(mock)
+
+	req := withUser(httptest.NewRequest(http.MethodGet, "/v1/notifications/preferences", nil), "u-1")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("expected 500, got %d", rec.Code)
+	}
+}
+
+func TestUpdatePreferences_ServiceError_Returns500(t *testing.T) {
+	mock := &mockNotificationService{err: errors.New("db error")}
+	r := setupNotifRouter(mock)
+
+	body := `{"email_enabled":true,"in_app_enabled":true}`
+	req := withUser(httptest.NewRequest(http.MethodPut, "/v1/notifications/preferences", strings.NewReader(body)), "u-1")
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("expected 500, got %d", rec.Code)
+	}
+}
+
+func TestMarkRead_ServiceError_Returns500(t *testing.T) {
+	mock := &mockNotificationService{err: errors.New("db error")}
+	// Remove notifications so ErrNotificationNotFound won't fire — the general
+	// error path should return 500.
+	// But the mock MarkRead logic checks the err field first, so this is fine.
+	r := setupNotifRouter(mock)
+
+	req := withUser(httptest.NewRequest(http.MethodPatch, "/v1/notifications/n-1/read", nil), "u-1")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("expected 500 for service error, got %d", rec.Code)
+	}
+}

@@ -14,12 +14,16 @@ import (
 	"github.com/Camionerou/rag-saldivia/pkg/export"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/repository"
-	"github.com/Camionerou/rag-saldivia/services/erp/internal/service"
 )
 
-type Analytics struct{ svc *service.Analytics }
+// AnalyticsService is the interface the Analytics handler depends on.
+type AnalyticsService interface {
+	Repo() *repository.Queries
+}
 
-func NewAnalytics(svc *service.Analytics) *Analytics { return &Analytics{svc: svc} }
+type Analytics struct{ svc AnalyticsService }
+
+func NewAnalytics(svc AnalyticsService) *Analytics { return &Analytics{svc: svc} }
 
 func (h *Analytics) Routes(authWrite func(http.Handler) http.Handler) chi.Router {
 	r := chi.NewRouter()

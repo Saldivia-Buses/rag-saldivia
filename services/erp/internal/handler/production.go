@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -14,9 +15,24 @@ import (
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/service"
 )
 
-type Production struct{ svc *service.Production }
+// ProductionService is the interface the Production handler depends on.
+type ProductionService interface {
+	ListCenters(ctx context.Context, tenantID string) ([]repository.ErpProductionCenter, error)
+	CreateCenter(ctx context.Context, tenantID, code, name, userID, ip string) (repository.ErpProductionCenter, error)
+	ListOrders(ctx context.Context, tenantID, status string, limit, offset int) ([]repository.ListProductionOrdersRow, error)
+	GetOrder(ctx context.Context, id pgtype.UUID, tenantID string) (*service.ProductionOrderDetail, error)
+	CreateOrder(ctx context.Context, req service.CreateProductionOrderRequest) (repository.ErpProductionOrder, error)
+	StartOrder(ctx context.Context, id pgtype.UUID, tenantID, userID, ip string) error
+	UpdateStep(ctx context.Context, id pgtype.UUID, tenantID, status, notes, userID, ip string) error
+	CreateInspection(ctx context.Context, p repository.CreateProductionInspectionParams, userID, ip string) (repository.ErpProductionInspection, error)
+	ListUnits(ctx context.Context, tenantID, status string, limit, offset int) ([]repository.ListUnitsRow, error)
+	GetUnit(ctx context.Context, id pgtype.UUID, tenantID string) (repository.ErpUnit, error)
+	CreateUnit(ctx context.Context, p repository.CreateUnitParams, userID, ip string) (repository.ErpUnit, error)
+}
 
-func NewProduction(svc *service.Production) *Production { return &Production{svc: svc} }
+type Production struct{ svc ProductionService }
+
+func NewProduction(svc ProductionService) *Production { return &Production{svc: svc} }
 
 func (h *Production) Routes(authWrite func(http.Handler) http.Handler) chi.Router {
 	r := chi.NewRouter()

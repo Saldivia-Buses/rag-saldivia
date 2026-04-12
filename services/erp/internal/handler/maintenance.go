@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -14,9 +15,23 @@ import (
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/service"
 )
 
-type Maintenance struct{ svc *service.Maintenance }
+// MaintenanceService is the interface the Maintenance handler depends on.
+type MaintenanceService interface {
+	ListAssets(ctx context.Context, tenantID, assetType string, activeOnly bool) ([]repository.ErpMaintenanceAsset, error)
+	CreateAsset(ctx context.Context, p repository.CreateMaintenanceAssetParams, userID, ip string) (repository.ErpMaintenanceAsset, error)
+	ListPlans(ctx context.Context, tenantID string, assetID pgtype.UUID) ([]repository.ErpMaintenancePlan, error)
+	CreatePlan(ctx context.Context, p repository.CreateMaintenancePlanParams, userID, ip string) (repository.ErpMaintenancePlan, error)
+	ListWorkOrders(ctx context.Context, tenantID, status string, limit, offset int) ([]repository.ListWorkOrdersRow, error)
+	GetWorkOrder(ctx context.Context, id pgtype.UUID, tenantID string) (*service.WorkOrderDetail, error)
+	CreateWorkOrder(ctx context.Context, p repository.CreateWorkOrderParams, ip string) (repository.ErpWorkOrder, error)
+	UpdateWorkOrderStatus(ctx context.Context, id pgtype.UUID, tenantID, status, userID, ip string) error
+	ListFuelLogs(ctx context.Context, tenantID string, assetID pgtype.UUID, limit, offset int) ([]repository.ListFuelLogsRow, error)
+	CreateFuelLog(ctx context.Context, p repository.CreateFuelLogParams, ip string) (repository.ErpFuelLog, error)
+}
 
-func NewMaintenance(svc *service.Maintenance) *Maintenance { return &Maintenance{svc: svc} }
+type Maintenance struct{ svc MaintenanceService }
+
+func NewMaintenance(svc MaintenanceService) *Maintenance { return &Maintenance{svc: svc} }
 
 func (h *Maintenance) Routes(authWrite func(http.Handler) http.Handler) chi.Router {
 	r := chi.NewRouter()
