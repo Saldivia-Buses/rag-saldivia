@@ -402,6 +402,32 @@ type ErpBankAccount struct {
 	CreatedAt     pgtype.Timestamptz `json:"created_at"`
 }
 
+type ErpBankReconciliation struct {
+	ID               pgtype.UUID        `json:"id"`
+	TenantID         string             `json:"tenant_id"`
+	BankAccountID    pgtype.UUID        `json:"bank_account_id"`
+	Period           string             `json:"period"`
+	StatementBalance pgtype.Numeric     `json:"statement_balance"`
+	BookBalance      pgtype.Numeric     `json:"book_balance"`
+	Status           string             `json:"status"`
+	UserID           string             `json:"user_id"`
+	ConfirmedAt      pgtype.Timestamptz `json:"confirmed_at"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpBankStatementLine struct {
+	ID               pgtype.UUID        `json:"id"`
+	TenantID         string             `json:"tenant_id"`
+	ReconciliationID pgtype.UUID        `json:"reconciliation_id"`
+	Date             pgtype.Date        `json:"date"`
+	Description      string             `json:"description"`
+	Amount           pgtype.Numeric     `json:"amount"`
+	Reference        string             `json:"reference"`
+	Matched          bool               `json:"matched"`
+	MovementID       pgtype.UUID        `json:"movement_id"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+}
+
 type ErpBom struct {
 	ID        pgtype.UUID    `json:"id"`
 	TenantID  string         `json:"tenant_id"`
@@ -1045,25 +1071,27 @@ type ErpTrainingAttendee struct {
 }
 
 type ErpTreasuryMovement struct {
-	ID             pgtype.UUID        `json:"id"`
-	TenantID       string             `json:"tenant_id"`
-	Date           pgtype.Date        `json:"date"`
-	Number         string             `json:"number"`
-	MovementType   string             `json:"movement_type"`
-	Amount         pgtype.Numeric     `json:"amount"`
-	CurrencyID     pgtype.UUID        `json:"currency_id"`
-	BankAccountID  pgtype.UUID        `json:"bank_account_id"`
-	CashRegisterID pgtype.UUID        `json:"cash_register_id"`
-	EntityID       pgtype.UUID        `json:"entity_id"`
-	ConceptID      pgtype.UUID        `json:"concept_id"`
-	PaymentMethod  pgtype.Text        `json:"payment_method"`
-	ReferenceType  pgtype.Text        `json:"reference_type"`
-	ReferenceID    pgtype.UUID        `json:"reference_id"`
-	JournalEntryID pgtype.UUID        `json:"journal_entry_id"`
-	UserID         string             `json:"user_id"`
-	Notes          string             `json:"notes"`
-	Status         string             `json:"status"`
-	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	ID               pgtype.UUID        `json:"id"`
+	TenantID         string             `json:"tenant_id"`
+	Date             pgtype.Date        `json:"date"`
+	Number           string             `json:"number"`
+	MovementType     string             `json:"movement_type"`
+	Amount           pgtype.Numeric     `json:"amount"`
+	CurrencyID       pgtype.UUID        `json:"currency_id"`
+	BankAccountID    pgtype.UUID        `json:"bank_account_id"`
+	CashRegisterID   pgtype.UUID        `json:"cash_register_id"`
+	EntityID         pgtype.UUID        `json:"entity_id"`
+	ConceptID        pgtype.UUID        `json:"concept_id"`
+	PaymentMethod    pgtype.Text        `json:"payment_method"`
+	ReferenceType    pgtype.Text        `json:"reference_type"`
+	ReferenceID      pgtype.UUID        `json:"reference_id"`
+	JournalEntryID   pgtype.UUID        `json:"journal_entry_id"`
+	UserID           string             `json:"user_id"`
+	Notes            string             `json:"notes"`
+	Status           string             `json:"status"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+	Reconciled       bool               `json:"reconciled"`
+	ReconciliationID pgtype.UUID        `json:"reconciliation_id"`
 }
 
 type ErpUnit struct {

@@ -41,6 +41,23 @@ func (h *Treasury) Routes(authWrite func(http.Handler) http.Handler) chi.Router 
 		r.Patch("/checks/{id}/status", h.UpdateCheckStatus)
 		r.Post("/cash-counts", h.CreateCashCount)
 	})
+
+	// Reconciliation
+	r.Group(func(r chi.Router) {
+		r.Use(sdamw.RequirePermission("erp.treasury.read"))
+		r.Get("/reconciliations", h.ListReconciliations)
+		r.Get("/reconciliations/{id}", h.GetReconciliation)
+	})
+	r.Group(func(r chi.Router) {
+		r.Use(authWrite)
+		r.Use(sdamw.RequirePermission("erp.treasury.reconcile"))
+		r.Post("/reconciliations", h.CreateReconciliation)
+		r.Post("/reconciliations/{id}/import", h.ImportStatementLines)
+		r.Post("/reconciliations/{id}/auto-match", h.AutoMatch)
+		r.Patch("/reconciliations/{id}/lines/{lineId}/match", h.MatchManual)
+		r.Post("/reconciliations/{id}/confirm", h.ConfirmReconciliation)
+	})
+
 	return r
 }
 
@@ -353,6 +370,164 @@ func (h *Treasury) CreateCashCount(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(cc)
+}
+
+// ============================================================
+// Reconciliation handlers (Plan 18 Fase 1)
+// ============================================================
+
+func (h *Treasury) ListReconciliations(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	recons, err := h.svc.ListReconciliations(r.Context(), slug)
+	if err != nil {
+		slog.Error("list reconciliations failed", "error", err)
+		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]any{"reconciliations": recons})
+}
+
+func (h *Treasury) CreateReconciliation(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	r.Body = http.MaxBytesReader(w, r.Body, 8<<10)
+	var body struct {
+		BankAccountID    string `json:"bank_account_id"`
+		Period           string `json:"period"`
+		StatementBalance string `json:"statement_balance"`
+		BookBalance      string `json:"book_balance"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		return
+	}
+	baID, err := parseUUID(body.BankAccountID)
+	if err != nil {
+		http.Error(w, `{"error":"invalid bank_account_id"}`, http.StatusBadRequest)
+		return
+	}
+	recon, err := h.svc.CreateReconciliation(r.Context(), slug, baID, body.Period,
+		body.StatementBalance, body.BookBalance, r.Header.Get("X-User-ID"), r.RemoteAddr)
+	if err != nil {
+		slog.Error("create reconciliation failed", "error", err)
+		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(recon)
+}
+
+func (h *Treasury) GetReconciliation(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	id, err := parseUUID(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		return
+	}
+	detail, err := h.svc.GetReconciliation(r.Context(), slug, id)
+	if err != nil {
+		slog.Error("get reconciliation failed", "error", err)
+		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(detail)
+}
+
+func (h *Treasury) ImportStatementLines(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	reconID, err := parseUUID(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		return
+	}
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20) // 1MB for statement lines
+	var body struct {
+		Lines []service.StatementLineInput `json:"lines"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		return
+	}
+	count, err := h.svc.ImportStatementLines(r.Context(), slug, reconID, body.Lines)
+	if err != nil {
+		slog.Error("import statement lines failed", "error", err)
+		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]any{"imported": count})
+}
+
+func (h *Treasury) AutoMatch(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	reconID, err := parseUUID(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		return
+	}
+	result, err := h.svc.AutoMatch(r.Context(), slug, reconID)
+	if err != nil {
+		slog.Error("auto-match failed", "error", err)
+		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(result)
+}
+
+func (h *Treasury) MatchManual(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	reconID, err := parseUUID(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, `{"error":"invalid reconciliation id"}`, http.StatusBadRequest)
+		return
+	}
+	lineID, err := parseUUID(chi.URLParam(r, "lineId"))
+	if err != nil {
+		http.Error(w, `{"error":"invalid line id"}`, http.StatusBadRequest)
+		return
+	}
+	r.Body = http.MaxBytesReader(w, r.Body, 4<<10)
+	var body struct {
+		MovementID string `json:"movement_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.MovementID == "" {
+		http.Error(w, `{"error":"movement_id required"}`, http.StatusBadRequest)
+		return
+	}
+	movID, err := parseUUID(body.MovementID)
+	if err != nil {
+		http.Error(w, `{"error":"invalid movement_id"}`, http.StatusBadRequest)
+		return
+	}
+	if err := h.svc.MatchManual(r.Context(), slug, reconID, lineID, movID); err != nil {
+		slog.Error("manual match failed", "error", err)
+		if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "already matched") {
+			http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusBadRequest)
+		} else {
+			http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		}
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *Treasury) ConfirmReconciliation(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	reconID, err := parseUUID(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		return
+	}
+	if err := h.svc.ConfirmReconciliation(r.Context(), slug, reconID,
+		r.Header.Get("X-User-ID"), r.RemoteAddr); err != nil {
+		slog.Error("confirm reconciliation failed", "error", err)
+		http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // pgNumericH parses a numeric string in the handler layer.

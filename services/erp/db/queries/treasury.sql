@@ -22,7 +22,8 @@ RETURNING id, tenant_id, name, account_id, active, created_at;
 -- name: ListTreasuryMovements :many
 SELECT tm.id, tm.tenant_id, tm.date, tm.number, tm.movement_type, tm.amount,
        tm.currency_id, tm.bank_account_id, tm.cash_register_id, tm.entity_id,
-       tm.concept_id, tm.payment_method, tm.user_id, tm.notes, tm.status, tm.created_at,
+       tm.concept_id, tm.payment_method, tm.user_id, tm.notes, tm.status,
+       tm.reconciled, tm.reconciliation_id, tm.created_at,
        e.name AS entity_name
 FROM erp_treasury_movements tm
 LEFT JOIN erp_entities e ON e.id = tm.entity_id
@@ -86,3 +87,66 @@ LEFT JOIN erp_treasury_movements tm ON tm.bank_account_id = ba.id AND tm.status 
 WHERE ba.tenant_id = $1 AND ba.active = true
 GROUP BY ba.id, ba.bank_name, ba.account_number
 ORDER BY ba.bank_name;
+
+-- ============================================================
+-- Reconciliation queries (Plan 18 Fase 1)
+-- ============================================================
+
+-- name: CreateReconciliation :one
+INSERT INTO erp_bank_reconciliations (tenant_id, bank_account_id, period, statement_balance, book_balance, user_id)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING id, tenant_id, bank_account_id, period, statement_balance, book_balance, status, user_id, confirmed_at, created_at;
+
+-- name: GetReconciliation :one
+SELECT r.id, r.tenant_id, r.bank_account_id, r.period, r.statement_balance,
+       r.book_balance, r.status, r.user_id, r.confirmed_at, r.created_at,
+       ba.bank_name, ba.account_number
+FROM erp_bank_reconciliations r
+JOIN erp_bank_accounts ba ON ba.id = r.bank_account_id
+WHERE r.id = $1 AND r.tenant_id = $2;
+
+-- name: ListReconciliations :many
+SELECT r.id, r.tenant_id, r.bank_account_id, r.period, r.statement_balance,
+       r.book_balance, r.status, r.confirmed_at, r.created_at,
+       ba.bank_name, ba.account_number
+FROM erp_bank_reconciliations r
+JOIN erp_bank_accounts ba ON ba.id = r.bank_account_id
+WHERE r.tenant_id = $1
+ORDER BY r.period DESC, ba.bank_name;
+
+-- name: CreateStatementLine :one
+INSERT INTO erp_bank_statement_lines (tenant_id, reconciliation_id, date, description, amount, reference)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING id, tenant_id, reconciliation_id, date, description, amount, reference, matched, movement_id, created_at;
+
+-- name: ListStatementLines :many
+SELECT id, tenant_id, reconciliation_id, date, description, amount, reference, matched, movement_id, created_at
+FROM erp_bank_statement_lines
+WHERE tenant_id = $1 AND reconciliation_id = $2
+ORDER BY date, created_at;
+
+-- name: ListUnmatchedStatementLines :many
+SELECT id, tenant_id, reconciliation_id, date, description, amount, reference
+FROM erp_bank_statement_lines
+WHERE tenant_id = $1 AND reconciliation_id = $2 AND matched = false
+ORDER BY date;
+
+-- name: ListUnreconciledMovements :many
+SELECT tm.id, tm.date, tm.number, tm.movement_type, tm.amount, tm.notes
+FROM erp_treasury_movements tm
+WHERE tm.tenant_id = $1 AND tm.bank_account_id = $2 AND tm.reconciled = false
+  AND tm.status = 'confirmed'
+  AND to_char(tm.date, 'YYYY-MM') = sqlc.arg(period)::TEXT
+ORDER BY tm.date;
+
+-- name: MatchStatementLine :execrows
+UPDATE erp_bank_statement_lines SET matched = true, movement_id = $3
+WHERE id = $1 AND tenant_id = $2 AND matched = false;
+
+-- name: MarkMovementReconciled :execrows
+UPDATE erp_treasury_movements SET reconciled = true, reconciliation_id = $3
+WHERE id = $1 AND tenant_id = $2 AND reconciled = false;
+
+-- name: ConfirmReconciliation :execrows
+UPDATE erp_bank_reconciliations SET status = 'confirmed', confirmed_at = now()
+WHERE id = $1 AND tenant_id = $2 AND status = 'draft';

@@ -11,6 +11,24 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const confirmReconciliation = `-- name: ConfirmReconciliation :execrows
+UPDATE erp_bank_reconciliations SET status = 'confirmed', confirmed_at = now()
+WHERE id = $1 AND tenant_id = $2 AND status = 'draft'
+`
+
+type ConfirmReconciliationParams struct {
+	ID       pgtype.UUID `json:"id"`
+	TenantID string      `json:"tenant_id"`
+}
+
+func (q *Queries) ConfirmReconciliation(ctx context.Context, arg ConfirmReconciliationParams) (int64, error) {
+	result, err := q.db.Exec(ctx, confirmReconciliation, arg.ID, arg.TenantID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const createBankAccount = `-- name: CreateBankAccount :one
 INSERT INTO erp_bank_accounts (tenant_id, bank_name, branch, account_number, cbu, alias, currency_id, account_id)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -177,6 +195,90 @@ func (q *Queries) CreateCheck(ctx context.Context, arg CreateCheckParams) (ErpCh
 	return i, err
 }
 
+const createReconciliation = `-- name: CreateReconciliation :one
+
+INSERT INTO erp_bank_reconciliations (tenant_id, bank_account_id, period, statement_balance, book_balance, user_id)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING id, tenant_id, bank_account_id, period, statement_balance, book_balance, status, user_id, confirmed_at, created_at
+`
+
+type CreateReconciliationParams struct {
+	TenantID         string         `json:"tenant_id"`
+	BankAccountID    pgtype.UUID    `json:"bank_account_id"`
+	Period           string         `json:"period"`
+	StatementBalance pgtype.Numeric `json:"statement_balance"`
+	BookBalance      pgtype.Numeric `json:"book_balance"`
+	UserID           string         `json:"user_id"`
+}
+
+// ============================================================
+// Reconciliation queries (Plan 18 Fase 1)
+// ============================================================
+func (q *Queries) CreateReconciliation(ctx context.Context, arg CreateReconciliationParams) (ErpBankReconciliation, error) {
+	row := q.db.QueryRow(ctx, createReconciliation,
+		arg.TenantID,
+		arg.BankAccountID,
+		arg.Period,
+		arg.StatementBalance,
+		arg.BookBalance,
+		arg.UserID,
+	)
+	var i ErpBankReconciliation
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.BankAccountID,
+		&i.Period,
+		&i.StatementBalance,
+		&i.BookBalance,
+		&i.Status,
+		&i.UserID,
+		&i.ConfirmedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const createStatementLine = `-- name: CreateStatementLine :one
+INSERT INTO erp_bank_statement_lines (tenant_id, reconciliation_id, date, description, amount, reference)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING id, tenant_id, reconciliation_id, date, description, amount, reference, matched, movement_id, created_at
+`
+
+type CreateStatementLineParams struct {
+	TenantID         string         `json:"tenant_id"`
+	ReconciliationID pgtype.UUID    `json:"reconciliation_id"`
+	Date             pgtype.Date    `json:"date"`
+	Description      string         `json:"description"`
+	Amount           pgtype.Numeric `json:"amount"`
+	Reference        string         `json:"reference"`
+}
+
+func (q *Queries) CreateStatementLine(ctx context.Context, arg CreateStatementLineParams) (ErpBankStatementLine, error) {
+	row := q.db.QueryRow(ctx, createStatementLine,
+		arg.TenantID,
+		arg.ReconciliationID,
+		arg.Date,
+		arg.Description,
+		arg.Amount,
+		arg.Reference,
+	)
+	var i ErpBankStatementLine
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.ReconciliationID,
+		&i.Date,
+		&i.Description,
+		&i.Amount,
+		&i.Reference,
+		&i.Matched,
+		&i.MovementID,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const createTreasuryMovement = `-- name: CreateTreasuryMovement :one
 INSERT INTO erp_treasury_movements (tenant_id, date, number, movement_type, amount,
     currency_id, bank_account_id, cash_register_id, entity_id, concept_id,
@@ -206,7 +308,29 @@ type CreateTreasuryMovementParams struct {
 	Notes          string         `json:"notes"`
 }
 
-func (q *Queries) CreateTreasuryMovement(ctx context.Context, arg CreateTreasuryMovementParams) (ErpTreasuryMovement, error) {
+type CreateTreasuryMovementRow struct {
+	ID             pgtype.UUID        `json:"id"`
+	TenantID       string             `json:"tenant_id"`
+	Date           pgtype.Date        `json:"date"`
+	Number         string             `json:"number"`
+	MovementType   string             `json:"movement_type"`
+	Amount         pgtype.Numeric     `json:"amount"`
+	CurrencyID     pgtype.UUID        `json:"currency_id"`
+	BankAccountID  pgtype.UUID        `json:"bank_account_id"`
+	CashRegisterID pgtype.UUID        `json:"cash_register_id"`
+	EntityID       pgtype.UUID        `json:"entity_id"`
+	ConceptID      pgtype.UUID        `json:"concept_id"`
+	PaymentMethod  pgtype.Text        `json:"payment_method"`
+	ReferenceType  pgtype.Text        `json:"reference_type"`
+	ReferenceID    pgtype.UUID        `json:"reference_id"`
+	JournalEntryID pgtype.UUID        `json:"journal_entry_id"`
+	UserID         string             `json:"user_id"`
+	Notes          string             `json:"notes"`
+	Status         string             `json:"status"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+}
+
+func (q *Queries) CreateTreasuryMovement(ctx context.Context, arg CreateTreasuryMovementParams) (CreateTreasuryMovementRow, error) {
 	row := q.db.QueryRow(ctx, createTreasuryMovement,
 		arg.TenantID,
 		arg.Date,
@@ -225,7 +349,7 @@ func (q *Queries) CreateTreasuryMovement(ctx context.Context, arg CreateTreasury
 		arg.UserID,
 		arg.Notes,
 	)
-	var i ErpTreasuryMovement
+	var i CreateTreasuryMovementRow
 	err := row.Scan(
 		&i.ID,
 		&i.TenantID,
@@ -278,6 +402,55 @@ func (q *Queries) GetCheck(ctx context.Context, arg GetCheckParams) (ErpCheck, e
 		&i.MovementID,
 		&i.Notes,
 		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getReconciliation = `-- name: GetReconciliation :one
+SELECT r.id, r.tenant_id, r.bank_account_id, r.period, r.statement_balance,
+       r.book_balance, r.status, r.user_id, r.confirmed_at, r.created_at,
+       ba.bank_name, ba.account_number
+FROM erp_bank_reconciliations r
+JOIN erp_bank_accounts ba ON ba.id = r.bank_account_id
+WHERE r.id = $1 AND r.tenant_id = $2
+`
+
+type GetReconciliationParams struct {
+	ID       pgtype.UUID `json:"id"`
+	TenantID string      `json:"tenant_id"`
+}
+
+type GetReconciliationRow struct {
+	ID               pgtype.UUID        `json:"id"`
+	TenantID         string             `json:"tenant_id"`
+	BankAccountID    pgtype.UUID        `json:"bank_account_id"`
+	Period           string             `json:"period"`
+	StatementBalance pgtype.Numeric     `json:"statement_balance"`
+	BookBalance      pgtype.Numeric     `json:"book_balance"`
+	Status           string             `json:"status"`
+	UserID           string             `json:"user_id"`
+	ConfirmedAt      pgtype.Timestamptz `json:"confirmed_at"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+	BankName         string             `json:"bank_name"`
+	AccountNumber    string             `json:"account_number"`
+}
+
+func (q *Queries) GetReconciliation(ctx context.Context, arg GetReconciliationParams) (GetReconciliationRow, error) {
+	row := q.db.QueryRow(ctx, getReconciliation, arg.ID, arg.TenantID)
+	var i GetReconciliationRow
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.BankAccountID,
+		&i.Period,
+		&i.StatementBalance,
+		&i.BookBalance,
+		&i.Status,
+		&i.UserID,
+		&i.ConfirmedAt,
+		&i.CreatedAt,
+		&i.BankName,
+		&i.AccountNumber,
 	)
 	return i, err
 }
@@ -501,10 +674,110 @@ func (q *Queries) ListChecks(ctx context.Context, arg ListChecksParams) ([]ErpCh
 	return items, nil
 }
 
+const listReconciliations = `-- name: ListReconciliations :many
+SELECT r.id, r.tenant_id, r.bank_account_id, r.period, r.statement_balance,
+       r.book_balance, r.status, r.confirmed_at, r.created_at,
+       ba.bank_name, ba.account_number
+FROM erp_bank_reconciliations r
+JOIN erp_bank_accounts ba ON ba.id = r.bank_account_id
+WHERE r.tenant_id = $1
+ORDER BY r.period DESC, ba.bank_name
+`
+
+type ListReconciliationsRow struct {
+	ID               pgtype.UUID        `json:"id"`
+	TenantID         string             `json:"tenant_id"`
+	BankAccountID    pgtype.UUID        `json:"bank_account_id"`
+	Period           string             `json:"period"`
+	StatementBalance pgtype.Numeric     `json:"statement_balance"`
+	BookBalance      pgtype.Numeric     `json:"book_balance"`
+	Status           string             `json:"status"`
+	ConfirmedAt      pgtype.Timestamptz `json:"confirmed_at"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+	BankName         string             `json:"bank_name"`
+	AccountNumber    string             `json:"account_number"`
+}
+
+func (q *Queries) ListReconciliations(ctx context.Context, tenantID string) ([]ListReconciliationsRow, error) {
+	rows, err := q.db.Query(ctx, listReconciliations, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListReconciliationsRow{}
+	for rows.Next() {
+		var i ListReconciliationsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.TenantID,
+			&i.BankAccountID,
+			&i.Period,
+			&i.StatementBalance,
+			&i.BookBalance,
+			&i.Status,
+			&i.ConfirmedAt,
+			&i.CreatedAt,
+			&i.BankName,
+			&i.AccountNumber,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listStatementLines = `-- name: ListStatementLines :many
+SELECT id, tenant_id, reconciliation_id, date, description, amount, reference, matched, movement_id, created_at
+FROM erp_bank_statement_lines
+WHERE tenant_id = $1 AND reconciliation_id = $2
+ORDER BY date, created_at
+`
+
+type ListStatementLinesParams struct {
+	TenantID         string      `json:"tenant_id"`
+	ReconciliationID pgtype.UUID `json:"reconciliation_id"`
+}
+
+func (q *Queries) ListStatementLines(ctx context.Context, arg ListStatementLinesParams) ([]ErpBankStatementLine, error) {
+	rows, err := q.db.Query(ctx, listStatementLines, arg.TenantID, arg.ReconciliationID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ErpBankStatementLine{}
+	for rows.Next() {
+		var i ErpBankStatementLine
+		if err := rows.Scan(
+			&i.ID,
+			&i.TenantID,
+			&i.ReconciliationID,
+			&i.Date,
+			&i.Description,
+			&i.Amount,
+			&i.Reference,
+			&i.Matched,
+			&i.MovementID,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listTreasuryMovements = `-- name: ListTreasuryMovements :many
 SELECT tm.id, tm.tenant_id, tm.date, tm.number, tm.movement_type, tm.amount,
        tm.currency_id, tm.bank_account_id, tm.cash_register_id, tm.entity_id,
-       tm.concept_id, tm.payment_method, tm.user_id, tm.notes, tm.status, tm.created_at,
+       tm.concept_id, tm.payment_method, tm.user_id, tm.notes, tm.status,
+       tm.reconciled, tm.reconciliation_id, tm.created_at,
        e.name AS entity_name
 FROM erp_treasury_movements tm
 LEFT JOIN erp_entities e ON e.id = tm.entity_id
@@ -526,23 +799,25 @@ type ListTreasuryMovementsParams struct {
 }
 
 type ListTreasuryMovementsRow struct {
-	ID             pgtype.UUID        `json:"id"`
-	TenantID       string             `json:"tenant_id"`
-	Date           pgtype.Date        `json:"date"`
-	Number         string             `json:"number"`
-	MovementType   string             `json:"movement_type"`
-	Amount         pgtype.Numeric     `json:"amount"`
-	CurrencyID     pgtype.UUID        `json:"currency_id"`
-	BankAccountID  pgtype.UUID        `json:"bank_account_id"`
-	CashRegisterID pgtype.UUID        `json:"cash_register_id"`
-	EntityID       pgtype.UUID        `json:"entity_id"`
-	ConceptID      pgtype.UUID        `json:"concept_id"`
-	PaymentMethod  pgtype.Text        `json:"payment_method"`
-	UserID         string             `json:"user_id"`
-	Notes          string             `json:"notes"`
-	Status         string             `json:"status"`
-	CreatedAt      pgtype.Timestamptz `json:"created_at"`
-	EntityName     pgtype.Text        `json:"entity_name"`
+	ID               pgtype.UUID        `json:"id"`
+	TenantID         string             `json:"tenant_id"`
+	Date             pgtype.Date        `json:"date"`
+	Number           string             `json:"number"`
+	MovementType     string             `json:"movement_type"`
+	Amount           pgtype.Numeric     `json:"amount"`
+	CurrencyID       pgtype.UUID        `json:"currency_id"`
+	BankAccountID    pgtype.UUID        `json:"bank_account_id"`
+	CashRegisterID   pgtype.UUID        `json:"cash_register_id"`
+	EntityID         pgtype.UUID        `json:"entity_id"`
+	ConceptID        pgtype.UUID        `json:"concept_id"`
+	PaymentMethod    pgtype.Text        `json:"payment_method"`
+	UserID           string             `json:"user_id"`
+	Notes            string             `json:"notes"`
+	Status           string             `json:"status"`
+	Reconciled       bool               `json:"reconciled"`
+	ReconciliationID pgtype.UUID        `json:"reconciliation_id"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+	EntityName       pgtype.Text        `json:"entity_name"`
 }
 
 func (q *Queries) ListTreasuryMovements(ctx context.Context, arg ListTreasuryMovementsParams) ([]ListTreasuryMovementsRow, error) {
@@ -577,6 +852,8 @@ func (q *Queries) ListTreasuryMovements(ctx context.Context, arg ListTreasuryMov
 			&i.UserID,
 			&i.Notes,
 			&i.Status,
+			&i.Reconciled,
+			&i.ReconciliationID,
 			&i.CreatedAt,
 			&i.EntityName,
 		); err != nil {
@@ -588,6 +865,145 @@ func (q *Queries) ListTreasuryMovements(ctx context.Context, arg ListTreasuryMov
 		return nil, err
 	}
 	return items, nil
+}
+
+const listUnmatchedStatementLines = `-- name: ListUnmatchedStatementLines :many
+SELECT id, tenant_id, reconciliation_id, date, description, amount, reference
+FROM erp_bank_statement_lines
+WHERE tenant_id = $1 AND reconciliation_id = $2 AND matched = false
+ORDER BY date
+`
+
+type ListUnmatchedStatementLinesParams struct {
+	TenantID         string      `json:"tenant_id"`
+	ReconciliationID pgtype.UUID `json:"reconciliation_id"`
+}
+
+type ListUnmatchedStatementLinesRow struct {
+	ID               pgtype.UUID    `json:"id"`
+	TenantID         string         `json:"tenant_id"`
+	ReconciliationID pgtype.UUID    `json:"reconciliation_id"`
+	Date             pgtype.Date    `json:"date"`
+	Description      string         `json:"description"`
+	Amount           pgtype.Numeric `json:"amount"`
+	Reference        string         `json:"reference"`
+}
+
+func (q *Queries) ListUnmatchedStatementLines(ctx context.Context, arg ListUnmatchedStatementLinesParams) ([]ListUnmatchedStatementLinesRow, error) {
+	rows, err := q.db.Query(ctx, listUnmatchedStatementLines, arg.TenantID, arg.ReconciliationID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListUnmatchedStatementLinesRow{}
+	for rows.Next() {
+		var i ListUnmatchedStatementLinesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.TenantID,
+			&i.ReconciliationID,
+			&i.Date,
+			&i.Description,
+			&i.Amount,
+			&i.Reference,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUnreconciledMovements = `-- name: ListUnreconciledMovements :many
+SELECT tm.id, tm.date, tm.number, tm.movement_type, tm.amount, tm.notes
+FROM erp_treasury_movements tm
+WHERE tm.tenant_id = $1 AND tm.bank_account_id = $2 AND tm.reconciled = false
+  AND tm.status = 'confirmed'
+  AND to_char(tm.date, 'YYYY-MM') = $3::TEXT
+ORDER BY tm.date
+`
+
+type ListUnreconciledMovementsParams struct {
+	TenantID      string      `json:"tenant_id"`
+	BankAccountID pgtype.UUID `json:"bank_account_id"`
+	Period        string      `json:"period"`
+}
+
+type ListUnreconciledMovementsRow struct {
+	ID           pgtype.UUID    `json:"id"`
+	Date         pgtype.Date    `json:"date"`
+	Number       string         `json:"number"`
+	MovementType string         `json:"movement_type"`
+	Amount       pgtype.Numeric `json:"amount"`
+	Notes        string         `json:"notes"`
+}
+
+func (q *Queries) ListUnreconciledMovements(ctx context.Context, arg ListUnreconciledMovementsParams) ([]ListUnreconciledMovementsRow, error) {
+	rows, err := q.db.Query(ctx, listUnreconciledMovements, arg.TenantID, arg.BankAccountID, arg.Period)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListUnreconciledMovementsRow{}
+	for rows.Next() {
+		var i ListUnreconciledMovementsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Date,
+			&i.Number,
+			&i.MovementType,
+			&i.Amount,
+			&i.Notes,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const markMovementReconciled = `-- name: MarkMovementReconciled :execrows
+UPDATE erp_treasury_movements SET reconciled = true, reconciliation_id = $3
+WHERE id = $1 AND tenant_id = $2 AND reconciled = false
+`
+
+type MarkMovementReconciledParams struct {
+	ID               pgtype.UUID `json:"id"`
+	TenantID         string      `json:"tenant_id"`
+	ReconciliationID pgtype.UUID `json:"reconciliation_id"`
+}
+
+func (q *Queries) MarkMovementReconciled(ctx context.Context, arg MarkMovementReconciledParams) (int64, error) {
+	result, err := q.db.Exec(ctx, markMovementReconciled, arg.ID, arg.TenantID, arg.ReconciliationID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const matchStatementLine = `-- name: MatchStatementLine :execrows
+UPDATE erp_bank_statement_lines SET matched = true, movement_id = $3
+WHERE id = $1 AND tenant_id = $2 AND matched = false
+`
+
+type MatchStatementLineParams struct {
+	ID         pgtype.UUID `json:"id"`
+	TenantID   string      `json:"tenant_id"`
+	MovementID pgtype.UUID `json:"movement_id"`
+}
+
+func (q *Queries) MatchStatementLine(ctx context.Context, arg MatchStatementLineParams) (int64, error) {
+	result, err := q.db.Exec(ctx, matchStatementLine, arg.ID, arg.TenantID, arg.MovementID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const updateCheckStatus = `-- name: UpdateCheckStatus :execrows
