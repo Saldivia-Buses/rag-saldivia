@@ -21,7 +21,7 @@ export function ModuleGuard({
   // Only enforce guard when API successfully returned a non-empty module list.
   // Otherwise fail-open (dev mode, backend offline, or no modules configured yet).
   if (isSuccess && modules && modules.length > 0) {
-    const allowed = modules.some((m) => m.id === moduleId) || !!MODULE_REGISTRY[moduleId];
+    const allowed = modules.some((m) => m.id === moduleId);
     if (!allowed) {
       redirect("/chat");
     }

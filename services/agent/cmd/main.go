@@ -55,6 +55,7 @@ func main() {
 	ingestURL := config.Env("INGEST_SERVICE_URL", "http://localhost:8007")
 	notificationURL := config.Env("NOTIFICATION_SERVICE_URL", "http://localhost:8005")
 	astroURL := config.Env("ASTRO_SERVICE_URL", "http://localhost:8011")
+	bigbrotherURL := config.Env("BIGBROTHER_SERVICE_URL", "http://localhost:8012")
 
 	// Core tools always available (not module-dependent)
 	toolDefs := []tools.Definition{
@@ -65,22 +66,21 @@ func main() {
 			Description: "Upload and process a new document into the knowledge base.",
 			Parameters:  json.RawMessage(`{"type":"object","required":["file_name","collection"],"properties":{"file_name":{"type":"string","description":"name of the file"},"collection":{"type":"string","description":"target collection"}}}`)},
 		{Name: "check_job_status", Service: "ingest", Endpoint: ingestURL + "/v1/ingest/jobs", Method: http.MethodGet, Type: "read",
-			Description: "Check the status of a document ingestion job.",
-			Parameters:  json.RawMessage(`{"type":"object","properties":{"job_id":{"type":"string","description":"the job ID to check"}}}`)},
-		{Name: "send_notification", Service: "notification", Endpoint: notificationURL + "/v1/notifications/send", Method: http.MethodPost, Type: "action", RequiresConfirmation: true,
-			Description: "Send a notification to a user or group.",
-			Parameters:  json.RawMessage(`{"type":"object","required":["message","recipients"],"properties":{"message":{"type":"string","description":"notification message"},"recipients":{"type":"array","description":"user IDs","items":{"type":"string"}}}}`)},
+			Description: "List document ingestion jobs and their statuses.",
+			Parameters:  json.RawMessage(`{"type":"object","properties":{"job_id":{"type":"string","description":"optional job ID filter"}}}`)},
+		// send_notification removed: notification service consumes NATS events, not HTTP POST.
+		// Notifications are triggered by NATS publish from other services, not by the agent directly.
 	}
 
 	// Load module tools from YAML manifests (extends core tools)
 	modulesDir := config.Env("MODULES_DIR", "modules")
 	serviceURLs := map[string]string{
 		"search": searchURL, "ingest": ingestURL, "notification": notificationURL,
-		"astro": astroURL,
+		"astro": astroURL, "bigbrother": bigbrotherURL,
 	}
 	// TODO: enabledModules should come from Platform DB per-tenant.
 	// For now, load all modules' tools as available.
-	moduleDefs, err := tools.LoadModuleTools(modulesDir, map[string]bool{"fleet": true, "astro": true}, serviceURLs)
+	moduleDefs, err := tools.LoadModuleTools(modulesDir, map[string]bool{"fleet": true, "astro": true, "bigbrother": true}, serviceURLs)
 	if err != nil {
 		slog.Warn("failed to load module tools", "error", err)
 	} else if len(moduleDefs) > 0 {
@@ -146,7 +146,7 @@ func main() {
 	aiRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 30, Window: time.Minute, KeyFunc: sdamw.ByUser})
 
 	r.Group(func(r chi.Router) {
-		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist, FailOpen: true}))
+		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist, FailOpen: false}))
 		r.Use(aiRL)
 		r.Mount("/v1/agent", agentHandler.Routes())
 	})

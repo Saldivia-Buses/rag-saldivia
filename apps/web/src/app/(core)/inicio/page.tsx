@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { MODULE_REGISTRY, type ModuleManifest } from "@/lib/modules/registry";
+import { useEnabledModules } from "@/lib/modules/hooks";
 import { useAuthStore } from "@/lib/auth/store";
 import {
   ArrowRight,
@@ -103,9 +104,10 @@ function CategorySection({
 export default function InicioPage() {
   const user = useAuthStore((s) => s.user);
 
-  // TODO: filter by useEnabledModules() once backend serves /v1/modules/enabled
+  const { data: enabledModules } = useEnabledModules();
+  const enabledIds = new Set(enabledModules?.map((m) => m.id) ?? []);
   const allModules = Object.values(MODULE_REGISTRY)
-    .filter((m) => !CORE_MODULE_IDS.includes(m.id))
+    .filter((m) => !CORE_MODULE_IDS.includes(m.id) && (enabledIds.size === 0 || enabledIds.has(m.id)))
     .sort((a, b) => a.nav.position - b.nav.position);
 
   const firstName = user?.name?.split(" ")[0] ?? "Usuario";

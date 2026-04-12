@@ -79,13 +79,13 @@ func main() {
 
 	// All chat routes require authentication
 	r.Group(func(r chi.Router) {
-		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist, FailOpen: true}))
+		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist, FailOpen: false}))
 		r.Mount("/v1/chat/sessions", chatHandler.Routes())
 	})
 
 	// gRPC server (internal inter-service communication)
 	grpcPort := config.Env("CHAT_GRPC_PORT", "50052")
-	grpcSrv := sdagrpc.NewServer(sdagrpc.InterceptorConfig{PublicKey: publicKey, Blacklist: blacklist, FailOpen: true})
+	grpcSrv := sdagrpc.NewServer(sdagrpc.InterceptorConfig{PublicKey: publicKey, Blacklist: blacklist, FailOpen: false})
 	chatv1.RegisterChatServiceServer(grpcSrv, handler.NewGRPC(chatSvc))
 	sdagrpc.RegisterHealthServer(grpcSrv)
 

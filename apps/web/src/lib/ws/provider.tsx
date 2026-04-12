@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useCallback, useRef } from "react";
+import { createContext, useContext, useEffect, useCallback, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { wsManager, type WsMessageHandler, type WsMessage } from "./manager";
 import { useAuthStore } from "@/lib/auth/store";
@@ -16,17 +16,18 @@ const WsContext = createContext<WsContextValue | null>(null);
 export function WsProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const stateRef = useRef(wsManager.state);
+  const [wsState, setWsState] = useState(wsManager.state);
 
-  // Connect/disconnect based on auth state
+  // Connect/disconnect based on auth state + track state changes
   useEffect(() => {
+    const unsubState = wsManager.onStateChange(setWsState);
     if (isAuthenticated) {
       wsManager.connect();
     } else {
       wsManager.disconnect();
     }
 
-    return () => wsManager.disconnect();
+    return () => { unsubState(); wsManager.disconnect(); };
   }, [isAuthenticated]);
 
   // Invalidate TanStack Query caches when WS events arrive
@@ -121,7 +122,7 @@ export function WsProvider({ children }: { children: React.ReactNode }) {
   const value: WsContextValue = {
     subscribe,
     send,
-    state: stateRef.current,
+    state: wsState,
   };
 
   return <WsContext.Provider value={value}>{children}</WsContext.Provider>;
