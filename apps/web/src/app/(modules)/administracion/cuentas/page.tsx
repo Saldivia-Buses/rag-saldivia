@@ -1,39 +1,31 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
-import { wsManager } from "@/lib/ws/manager";
-import { Badge } from "@/components/ui/badge";
+import { erpKeys } from "@/lib/erp/queries";
+import { fmtMoney, fmtDateShort } from "@/lib/erp/format";
+import type { EntityBalance, OverdueInvoice } from "@/lib/erp/types";
+import { ErrorState } from "@/components/erp/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileTextIcon, WalletIcon, AlertTriangleIcon } from "lucide-react";
-
-interface Balance { entity_name: string; entity_type: string; direction: string; open_balance: number; }
-interface Overdue { entity_name: string; invoice_number: string; due_date: string; amount: number; balance: number; }
-
-const fmtMoney = (n: number) => n === 0 ? "—" : new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(n);
-const fmtDate = (s: string) => new Date(s).toLocaleDateString("es-AR", { day: "2-digit", month: "short" });
+import { WalletIcon, AlertTriangleIcon } from "lucide-react";
 
 export default function CuentasPage() {
-  const [balances, setBalances] = useState<Balance[]>([]);
-  const [overdue, setOverdue] = useState<Overdue[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: balances = [], isLoading, error } = useQuery({
+    queryKey: erpKeys.accountBalances(),
+    queryFn: () => api.get<{ balances: EntityBalance[] }>("/v1/erp/accounts/balances"),
+    select: (d) => d.balances,
+  });
 
-  const fetch = useCallback(async () => {
-    try {
-      const [b, o] = await Promise.all([
-        api.get<{ balances: Balance[] }>("/v1/erp/accounts/balances"),
-        api.get<{ overdue: Overdue[] }>("/v1/erp/accounts/overdue"),
-      ]);
-      setBalances(b.balances); setOverdue(o.overdue);
-    } catch (err) { console.error(err); } finally { setLoading(false); }
-  }, []);
+  const { data: overdue = [] } = useQuery({
+    queryKey: erpKeys.accountOverdue(),
+    queryFn: () => api.get<{ overdue: OverdueInvoice[] }>("/v1/erp/accounts/overdue"),
+    select: (d) => d.overdue,
+  });
 
-  useEffect(() => { fetch(); }, [fetch]);
-  useEffect(() => { const unsub = wsManager.subscribe("erp_accounts", fetch); return unsub; }, [fetch]);
-
-  if (loading) return <div className="flex-1 p-8"><Skeleton className="h-[600px]" /></div>;
+  if (error) return <ErrorState message="Error cargando cuentas corrientes" onRetry={() => window.location.reload()} />;
+  if (isLoading) return <div className="flex-1 p-8"><Skeleton className="h-[600px]" /></div>;
 
   const receivable = balances.filter(b => b.direction === "receivable");
   const payable = balances.filter(b => b.direction === "payable");
@@ -106,7 +98,7 @@ export default function CuentasPage() {
                     <TableRow key={i}>
                       <TableCell className="text-sm">{o.entity_name}</TableCell>
                       <TableCell className="font-mono text-sm">{o.invoice_number}</TableCell>
-                      <TableCell className="text-sm text-red-500 font-medium">{fmtDate(o.due_date)}</TableCell>
+                      <TableCell className="text-sm text-red-500 font-medium">{fmtDateShort(o.due_date)}</TableCell>
                       <TableCell className="text-right font-mono text-sm">{fmtMoney(o.amount)}</TableCell>
                       <TableCell className="text-right font-mono text-sm font-medium text-red-500">{fmtMoney(o.balance)}</TableCell>
                     </TableRow>

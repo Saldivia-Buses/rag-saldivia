@@ -1,44 +1,48 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
-import { wsManager } from "@/lib/ws/manager";
+import { erpKeys } from "@/lib/erp/queries";
+import { fmtMoney, fmtDateShort } from "@/lib/erp/format";
+import type { TreasuryMovement, Check, BankBalance } from "@/lib/erp/types";
+import { ErrorState } from "@/components/erp/error-state";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BanknoteIcon, CreditCardIcon, LandmarkIcon, CalculatorIcon } from "lucide-react";
+import { BanknoteIcon, CreditCardIcon, LandmarkIcon } from "lucide-react";
 
-interface Movement { id: string; date: string; number: string; movement_type: string; amount: number; entity_name: string | null; notes: string; status: string; }
-interface Check { id: string; direction: string; number: string; bank_name: string; amount: number; issue_date: string; due_date: string; status: string; }
-interface BankBalance { bank_name: string; account_number: string; total_in: number; total_out: number; balance: number; }
-
-const fmtMoney = (n: number) => n === 0 ? "—" : new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(n);
-const fmtDate = (s: string) => new Date(s).toLocaleDateString("es-AR", { day: "2-digit", month: "short" });
-const moveLabel: Record<string, string> = { cash_in: "Ingreso caja", cash_out: "Egreso caja", bank_deposit: "Deposito", bank_withdrawal: "Retiro", check_issued: "Cheque emitido", check_received: "Cheque recibido", transfer: "Transferencia" };
-const checkStatus: Record<string, string> = { in_portfolio: "En cartera", deposited: "Depositado", cashed: "Cobrado", rejected: "Rechazado", endorsed: "Endosado" };
+const moveLabel: Record<string, string> = {
+  cash_in: "Ingreso caja", cash_out: "Egreso caja", bank_deposit: "Depósito",
+  bank_withdrawal: "Retiro", check_issued: "Cheque emitido",
+  check_received: "Cheque recibido", transfer: "Transferencia",
+};
+const checkStatus: Record<string, string> = {
+  in_portfolio: "En cartera", deposited: "Depositado", cashed: "Cobrado",
+  rejected: "Rechazado", endorsed: "Endosado",
+};
 
 export default function TesoreriaPage() {
-  const [movements, setMovements] = useState<Movement[]>([]);
-  const [checks, setChecks] = useState<Check[]>([]);
-  const [balances, setBalances] = useState<BankBalance[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: movements = [], isLoading, error } = useQuery({
+    queryKey: erpKeys.treasuryMovements(),
+    queryFn: () => api.get<{ movements: TreasuryMovement[] }>("/v1/erp/treasury/movements?page_size=50"),
+    select: (d) => d.movements,
+  });
 
-  const fetch = useCallback(async () => {
-    try {
-      const [m, c, b] = await Promise.all([
-        api.get<{ movements: Movement[] }>("/v1/erp/treasury/movements?page_size=50"),
-        api.get<{ checks: Check[] }>("/v1/erp/treasury/checks"),
-        api.get<{ balances: BankBalance[] }>("/v1/erp/treasury/balance"),
-      ]);
-      setMovements(m.movements); setChecks(c.checks); setBalances(b.balances);
-    } catch (err) { console.error(err); } finally { setLoading(false); }
-  }, []);
+  const { data: checks = [] } = useQuery({
+    queryKey: erpKeys.checks(),
+    queryFn: () => api.get<{ checks: Check[] }>("/v1/erp/treasury/checks"),
+    select: (d) => d.checks,
+  });
 
-  useEffect(() => { fetch(); }, [fetch]);
-  useEffect(() => { const unsub = wsManager.subscribe("erp_treasury", fetch); return unsub; }, [fetch]);
+  const { data: balances = [] } = useQuery({
+    queryKey: erpKeys.treasuryBalance(),
+    queryFn: () => api.get<{ balances: BankBalance[] }>("/v1/erp/treasury/balance"),
+    select: (d) => d.balances,
+  });
 
-  if (loading) return <div className="flex-1 p-8"><Skeleton className="h-[600px]" /></div>;
+  if (error) return <ErrorState message="Error cargando tesorería" onRetry={() => window.location.reload()} />;
+  if (isLoading) return <div className="flex-1 p-8"><Skeleton className="h-[600px]" /></div>;
 
   const totalBalance = balances.reduce((a, b) => a + (b.balance || 0), 0);
 
@@ -46,7 +50,7 @@ export default function TesoreriaPage() {
     <div className="flex-1 overflow-y-auto">
       <div className="mx-auto w-full max-w-6xl px-6 py-8 sm:px-8">
         <div className="mb-6">
-          <h1 className="text-xl font-semibold tracking-tight">Tesoreria</h1>
+          <h1 className="text-xl font-semibold tracking-tight">Tesorería</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Movimientos, cheques y saldos bancarios</p>
         </div>
 
@@ -86,10 +90,10 @@ export default function TesoreriaPage() {
                 <TableBody>
                   {movements.map((m) => (
                     <TableRow key={m.id}>
-                      <TableCell className="text-sm text-muted-foreground">{fmtDate(m.date)}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{fmtDateShort(m.date)}</TableCell>
                       <TableCell className="font-mono text-sm">{m.number}</TableCell>
                       <TableCell className="text-sm">{moveLabel[m.movement_type] || m.movement_type}</TableCell>
-                      <TableCell className="text-sm">{m.entity_name || "—"}</TableCell>
+                      <TableCell className="text-sm">{m.entity_name || "\u2014"}</TableCell>
                       <TableCell className={`text-right font-mono text-sm ${m.movement_type.includes("in") || m.movement_type.includes("deposit") || m.movement_type.includes("received") ? "text-green-600" : "text-red-500"}`}>{fmtMoney(m.amount)}</TableCell>
                       <TableCell><Badge variant={m.status === "confirmed" ? "default" : "secondary"}>{m.status}</Badge></TableCell>
                     </TableRow>
@@ -118,7 +122,7 @@ export default function TesoreriaPage() {
                       <TableCell className="text-sm">{c.bank_name}</TableCell>
                       <TableCell><Badge variant="secondary">{c.direction === "received" ? "Recibido" : "Emitido"}</Badge></TableCell>
                       <TableCell className="text-right font-mono text-sm">{fmtMoney(c.amount)}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{fmtDate(c.due_date)}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{fmtDateShort(c.due_date)}</TableCell>
                       <TableCell><Badge variant="outline">{checkStatus[c.status] || c.status}</Badge></TableCell>
                     </TableRow>
                   ))}

@@ -1,32 +1,18 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
-import { wsManager } from "@/lib/ws/manager";
+import { erpKeys } from "@/lib/erp/queries";
+import { fmtMoney, fmtDateShort } from "@/lib/erp/format";
+import type { Account, JournalEntry, JournalLine, AccountBalance } from "@/lib/erp/types";
+import { ErrorState } from "@/components/erp/error-state";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpenIcon, ListTreeIcon, BarChart3Icon } from "lucide-react";
 
-interface Account {
-  id: string; code: string; name: string; account_type: string;
-  is_detail: boolean; active: boolean; parent_id: string | null;
-}
-interface JournalEntry {
-  id: string; number: string; date: string; concept: string;
-  entry_type: string; status: string; user_id: string; created_at: string;
-}
-interface JournalLine {
-  account_code: string; account_name: string; debit: number;
-  credit: number; description: string;
-}
-interface Balance {
-  account_code: string; account_name: string;
-  total_debit: number; total_credit: number; balance: number;
-}
-
-const fmtMoney = (n: number) => n === 0 ? "—" : new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(n);
 const statusBadge: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
   draft: { label: "Borrador", variant: "secondary" },
   posted: { label: "Contabilizado", variant: "default" },
@@ -34,49 +20,34 @@ const statusBadge: Record<string, { label: string; variant: "default" | "seconda
 };
 
 export default function ContablePage() {
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [entries, setEntries] = useState<JournalEntry[]>([]);
-  const [selectedEntry, setSelectedEntry] = useState<{ entry: JournalEntry; lines: JournalLine[] } | null>(null);
-  const [balances, setBalances] = useState<Balance[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
 
-  const fetchAccounts = useCallback(async () => {
-    try {
-      const data = await api.get<{ accounts: Account[] }>("/v1/erp/accounting/accounts");
-      setAccounts(data.accounts);
-    } catch (err) { console.error(err); } finally { setLoading(false); }
-  }, []);
+  const { data: accounts = [], isLoading: loadingAccounts, error: errorAccounts } = useQuery({
+    queryKey: erpKeys.accounts(),
+    queryFn: () => api.get<{ accounts: Account[] }>("/v1/erp/accounting/accounts"),
+    select: (d) => d.accounts,
+  });
 
-  const fetchEntries = useCallback(async () => {
-    try {
-      const data = await api.get<{ entries: JournalEntry[] }>("/v1/erp/accounting/entries?page_size=50");
-      setEntries(data.entries);
-    } catch (err) { console.error(err); }
-  }, []);
+  const { data: entries = [], isLoading: loadingEntries } = useQuery({
+    queryKey: erpKeys.entries({ page_size: "50" }),
+    queryFn: () => api.get<{ entries: JournalEntry[] }>("/v1/erp/accounting/entries?page_size=50"),
+    select: (d) => d.entries,
+  });
 
-  const fetchBalance = useCallback(async () => {
-    try {
-      const data = await api.get<{ balances: Balance[] }>("/v1/erp/accounting/balance");
-      setBalances(data.balances);
-    } catch (err) { console.error(err); }
-  }, []);
+  const { data: balances = [] } = useQuery({
+    queryKey: erpKeys.balance(),
+    queryFn: () => api.get<{ balances: AccountBalance[] }>("/v1/erp/accounting/balance"),
+    select: (d) => d.balances,
+  });
 
-  const fetchEntryDetail = useCallback(async (id: string) => {
-    try {
-      const data = await api.get<{ entry: JournalEntry; lines: JournalLine[] }>(`/v1/erp/accounting/entries/${id}`);
-      setSelectedEntry(data);
-    } catch (err) { console.error(err); }
-  }, []);
+  const { data: selectedEntry } = useQuery({
+    queryKey: erpKeys.entry(selectedEntryId!),
+    queryFn: () => api.get<{ entry: JournalEntry; lines: JournalLine[] }>(`/v1/erp/accounting/entries/${selectedEntryId}`),
+    enabled: !!selectedEntryId,
+  });
 
-  useEffect(() => { fetchAccounts(); fetchEntries(); fetchBalance(); }, [fetchAccounts, fetchEntries, fetchBalance]);
-
-  useEffect(() => {
-    const handler = () => { fetchEntries(); fetchBalance(); };
-    const unsub = wsManager.subscribe("erp_accounting", handler);
-    return unsub;
-  }, [fetchEntries, fetchBalance]);
-
-  if (loading) return <div className="flex-1 p-8"><Skeleton className="h-[600px]" /></div>;
+  if (errorAccounts) return <ErrorState message="Error cargando contabilidad" onRetry={() => window.location.reload()} />;
+  if (loadingAccounts || loadingEntries) return <div className="flex-1 p-8"><Skeleton className="h-[600px]" /></div>;
 
   const totalDebit = balances.reduce((a, b) => a + (b.total_debit || 0), 0);
   const totalCredit = balances.reduce((a, b) => a + (b.total_credit || 0), 0);
@@ -125,9 +96,9 @@ export default function ContablePage() {
                     {entries.map((e) => {
                       const s = statusBadge[e.status] || statusBadge.draft;
                       return (
-                        <TableRow key={e.id} className="cursor-pointer" onClick={() => fetchEntryDetail(e.id)}>
+                        <TableRow key={e.id} className="cursor-pointer" onClick={() => setSelectedEntryId(e.id)}>
                           <TableCell className="font-mono text-sm">{e.number}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">{new Date(e.date).toLocaleDateString("es-AR", { day: "2-digit", month: "short" })}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground">{fmtDateShort(e.date)}</TableCell>
                           <TableCell className="text-sm">{e.concept}</TableCell>
                           <TableCell><Badge variant={s.variant}>{s.label}</Badge></TableCell>
                         </TableRow>
@@ -165,7 +136,7 @@ export default function ContablePage() {
             <div className="rounded-xl border border-border/40 bg-card overflow-hidden">
               <Table>
                 <TableHeader><TableRow>
-                  <TableHead className="w-32">Codigo</TableHead>
+                  <TableHead className="w-32">Código</TableHead>
                   <TableHead>Nombre</TableHead>
                   <TableHead className="w-28">Tipo</TableHead>
                   <TableHead className="w-28 text-center">Imputable</TableHead>
@@ -176,7 +147,7 @@ export default function ContablePage() {
                       <TableCell className="font-mono text-sm">{a.code}</TableCell>
                       <TableCell className={`text-sm ${!a.is_detail ? "font-semibold" : ""}`}>{a.name}</TableCell>
                       <TableCell><Badge variant="secondary">{a.account_type}</Badge></TableCell>
-                      <TableCell className="text-center text-sm">{a.is_detail ? "Si" : "No"}</TableCell>
+                      <TableCell className="text-center text-sm">{a.is_detail ? "Sí" : "No"}</TableCell>
                     </TableRow>
                   ))}
                   {accounts.length === 0 && <TableRow><TableCell colSpan={4} className="h-24 text-center text-muted-foreground">Sin cuentas.</TableCell></TableRow>}

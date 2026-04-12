@@ -1,20 +1,22 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
-import { wsManager } from "@/lib/ws/manager";
+import { erpKeys } from "@/lib/erp/queries";
+import { fmtMoney, fmtDateShort } from "@/lib/erp/format";
+import type { Invoice, Withholding } from "@/lib/erp/types";
+import { ErrorState } from "@/components/erp/error-state";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileTextIcon, BookOpenIcon, ShieldIcon } from "lucide-react";
+import { FileTextIcon, ShieldIcon } from "lucide-react";
 
-interface Invoice { id: string; number: string; date: string; invoice_type: string; direction: string; entity_name: string; total: number; status: string; }
-interface Withholding { id: string; entity_name: string; type: string; rate: number; base_amount: number; amount: number; date: string; }
-
-const fmtMoney = (n: number) => n === 0 ? "—" : new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(n);
-const fmtDate = (s: string) => new Date(s).toLocaleDateString("es-AR", { day: "2-digit", month: "short" });
-const typeLabel: Record<string, string> = { invoice_a: "Factura A", invoice_b: "Factura B", invoice_c: "Factura C", invoice_e: "Factura E", credit_note: "Nota Crédito", debit_note: "Nota Débito", delivery_note: "Remito" };
+const typeLabel: Record<string, string> = {
+  invoice_a: "Factura A", invoice_b: "Factura B", invoice_c: "Factura C",
+  invoice_e: "Factura E", credit_note: "Nota Crédito", debit_note: "Nota Débito",
+  delivery_note: "Remito",
+};
 const statusBadge: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
   draft: { label: "Borrador", variant: "secondary" },
   posted: { label: "Contabilizada", variant: "default" },
@@ -23,30 +25,26 @@ const statusBadge: Record<string, { label: string; variant: "default" | "seconda
 };
 
 export default function FacturacionPage() {
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [withholdings, setWithholdings] = useState<Withholding[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: invoices = [], isLoading, error } = useQuery({
+    queryKey: erpKeys.invoices({ page_size: "50" }),
+    queryFn: () => api.get<{ invoices: Invoice[] }>("/v1/erp/invoicing/invoices?page_size=50"),
+    select: (d) => d.invoices,
+  });
 
-  const fetch = useCallback(async () => {
-    try {
-      const [i, w] = await Promise.all([
-        api.get<{ invoices: Invoice[] }>("/v1/erp/invoicing/invoices?page_size=50"),
-        api.get<{ withholdings: Withholding[] }>("/v1/erp/invoicing/withholdings?page_size=50"),
-      ]);
-      setInvoices(i.invoices); setWithholdings(w.withholdings);
-    } catch (err) { console.error(err); } finally { setLoading(false); }
-  }, []);
+  const { data: withholdings = [] } = useQuery({
+    queryKey: erpKeys.withholdings(),
+    queryFn: () => api.get<{ withholdings: Withholding[] }>("/v1/erp/invoicing/withholdings?page_size=50"),
+    select: (d) => d.withholdings,
+  });
 
-  useEffect(() => { fetch(); }, [fetch]);
-  useEffect(() => { const unsub = wsManager.subscribe("erp_invoicing", fetch); return unsub; }, [fetch]);
-
-  if (loading) return <div className="flex-1 p-8"><Skeleton className="h-[600px]" /></div>;
+  if (error) return <ErrorState message="Error cargando facturación" onRetry={() => window.location.reload()} />;
+  if (isLoading) return <div className="flex-1 p-8"><Skeleton className="h-[600px]" /></div>;
 
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="mx-auto w-full max-w-6xl px-6 py-8 sm:px-8">
         <div className="mb-6">
-          <h1 className="text-xl font-semibold tracking-tight">Facturacion</h1>
+          <h1 className="text-xl font-semibold tracking-tight">Facturación</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Comprobantes, libro IVA y retenciones — {invoices.length} comprobantes</p>
         </div>
 
@@ -60,7 +58,7 @@ export default function FacturacionPage() {
             <div className="rounded-xl border border-border/40 bg-card overflow-hidden">
               <Table>
                 <TableHeader><TableRow>
-                  <TableHead className="w-36">Numero</TableHead>
+                  <TableHead className="w-36">Número</TableHead>
                   <TableHead className="w-28">Fecha</TableHead>
                   <TableHead className="w-28">Tipo</TableHead>
                   <TableHead>Entidad</TableHead>
@@ -73,7 +71,7 @@ export default function FacturacionPage() {
                     return (
                       <TableRow key={inv.id}>
                         <TableCell className="font-mono text-sm">{inv.number}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{fmtDate(inv.date)}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{fmtDateShort(inv.date)}</TableCell>
                         <TableCell><Badge variant="secondary">{typeLabel[inv.invoice_type] || inv.invoice_type}</Badge></TableCell>
                         <TableCell className="text-sm">{inv.entity_name}</TableCell>
                         <TableCell className="text-right font-mono text-sm">{fmtMoney(inv.total)}</TableCell>
@@ -101,7 +99,7 @@ export default function FacturacionPage() {
                 <TableBody>
                   {withholdings.map((w) => (
                     <TableRow key={w.id}>
-                      <TableCell className="text-sm text-muted-foreground">{fmtDate(w.date)}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{fmtDateShort(w.date)}</TableCell>
                       <TableCell className="text-sm">{w.entity_name}</TableCell>
                       <TableCell><Badge variant="outline">{w.type.toUpperCase()}</Badge></TableCell>
                       <TableCell className="text-right font-mono text-sm">{w.rate}%</TableCell>
