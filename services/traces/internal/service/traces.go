@@ -66,27 +66,28 @@ func (t *Traces) RecordTraceStart(ctx context.Context, evt TraceStartEvent) erro
 }
 
 // RecordTraceEnd updates an execution_trace with final stats.
+// Includes tenant_id in WHERE to enforce tenant isolation.
 func (t *Traces) RecordTraceEnd(ctx context.Context, evt TraceEndEvent) error {
 	_, err := t.pool.Exec(ctx,
 		`UPDATE execution_traces SET
 			status = $1, models_used = $2, total_duration_ms = $3,
 			total_input_tokens = $4, total_output_tokens = $5,
 			total_cost_usd = $6, tool_call_count = $7, error = $8
-		 WHERE id = $9`,
+		 WHERE id = $9 AND tenant_id = $10`,
 		evt.Status, evt.ModelsUsed, evt.TotalDurationMS,
 		evt.TotalInputTokens, evt.TotalOutputTokens,
 		evt.TotalCostUSD, evt.ToolCallCount, nilIfEmpty(evt.Error),
-		evt.TraceID,
+		evt.TraceID, evt.TenantID,
 	)
 	return err
 }
 
-// RecordEvent inserts a trace_event.
+// RecordEvent inserts a trace_event with tenant_id for isolation.
 func (t *Traces) RecordEvent(ctx context.Context, evt TraceEvent) error {
 	_, err := t.pool.Exec(ctx,
-		`INSERT INTO trace_events (trace_id, seq, event_type, data, duration_ms)
-		 VALUES ($1, $2, $3, $4, $5)`,
-		evt.TraceID, evt.Seq, evt.EventType, evt.Data, evt.DurationMS,
+		`INSERT INTO trace_events (trace_id, tenant_id, seq, event_type, data, duration_ms)
+		 VALUES ($1, $2, $3, $4, $5, $6)`,
+		evt.TraceID, evt.TenantID, evt.Seq, evt.EventType, evt.Data, evt.DurationMS,
 	)
 	return err
 }
@@ -164,7 +165,7 @@ func (t *Traces) GetTraceDetail(ctx context.Context, traceID, tenantID string) (
 
 	rows, err := t.pool.Query(ctx,
 		`SELECT trace_id, seq, event_type, data, duration_ms
-		 FROM trace_events WHERE trace_id = $1 ORDER BY seq`, traceID,
+		 FROM trace_events WHERE trace_id = $1 AND tenant_id = $2 ORDER BY seq`, traceID, tenantID,
 	)
 	if err != nil {
 		return &tr, nil, err
