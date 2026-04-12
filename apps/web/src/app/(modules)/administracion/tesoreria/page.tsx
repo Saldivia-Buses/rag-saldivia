@@ -4,13 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { erpKeys } from "@/lib/erp/queries";
 import { fmtMoney, fmtDateShort } from "@/lib/erp/format";
-import type { TreasuryMovement, Check, BankBalance } from "@/lib/erp/types";
+import type { TreasuryMovement, Check, BankBalance, Reconciliation, Receipt } from "@/lib/erp/types";
 import { ErrorState } from "@/components/erp/error-state";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BanknoteIcon, CreditCardIcon, LandmarkIcon } from "lucide-react";
+import { BanknoteIcon, CreditCardIcon, LandmarkIcon, ScaleIcon, ReceiptIcon } from "lucide-react";
 
 const moveLabel: Record<string, string> = {
   cash_in: "Ingreso caja", cash_out: "Egreso caja", bank_deposit: "Depósito",
@@ -39,6 +39,18 @@ export default function TesoreriaPage() {
     queryKey: erpKeys.treasuryBalance(),
     queryFn: () => api.get<{ balances: BankBalance[] }>("/v1/erp/treasury/balance"),
     select: (d) => d.balances,
+  });
+
+  const { data: reconciliations = [] } = useQuery({
+    queryKey: [...erpKeys.all, "treasury", "reconciliations"] as const,
+    queryFn: () => api.get<{ reconciliations: Reconciliation[] }>("/v1/erp/treasury/reconciliations"),
+    select: (d) => d.reconciliations,
+  });
+
+  const { data: receipts = [] } = useQuery({
+    queryKey: erpKeys.receipts(),
+    queryFn: () => api.get<{ receipts: Receipt[] }>("/v1/erp/treasury/receipts?page_size=50"),
+    select: (d) => d.receipts,
   });
 
   if (error) return <ErrorState message="Error cargando tesorería" onRetry={() => window.location.reload()} />;
@@ -74,6 +86,8 @@ export default function TesoreriaPage() {
             <TabsTrigger value="movements"><BanknoteIcon className="size-3.5 mr-1.5" />Movimientos</TabsTrigger>
             <TabsTrigger value="checks"><CreditCardIcon className="size-3.5 mr-1.5" />Cheques</TabsTrigger>
             <TabsTrigger value="banks"><LandmarkIcon className="size-3.5 mr-1.5" />Bancos</TabsTrigger>
+            <TabsTrigger value="reconciliation"><ScaleIcon className="size-3.5 mr-1.5" />Reconciliación</TabsTrigger>
+            <TabsTrigger value="receipts"><ReceiptIcon className="size-3.5 mr-1.5" />Recibos</TabsTrigger>
           </TabsList>
 
           <TabsContent value="movements">
@@ -153,6 +167,55 @@ export default function TesoreriaPage() {
                     </TableRow>
                   ))}
                   {balances.length === 0 && <TableRow><TableCell colSpan={5} className="h-24 text-center text-muted-foreground">Sin cuentas bancarias.</TableCell></TableRow>}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="reconciliation">
+            <div className="rounded-xl border border-border/40 bg-card overflow-hidden">
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead>Banco</TableHead><TableHead className="w-28">Período</TableHead>
+                  <TableHead className="text-right">Saldo extracto</TableHead><TableHead className="text-right">Saldo libros</TableHead>
+                  <TableHead className="w-28">Estado</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {reconciliations.map((r) => (
+                    <TableRow key={r.id}>
+                      <TableCell className="text-sm">{r.bank_name}</TableCell>
+                      <TableCell className="font-mono text-sm">{r.period}</TableCell>
+                      <TableCell className="text-right font-mono text-sm">{fmtMoney(r.statement_balance)}</TableCell>
+                      <TableCell className="text-right font-mono text-sm">{fmtMoney(r.book_balance)}</TableCell>
+                      <TableCell><Badge variant={r.status === "confirmed" ? "default" : "secondary"}>{r.status === "confirmed" ? "Confirmada" : "Borrador"}</Badge></TableCell>
+                    </TableRow>
+                  ))}
+                  {reconciliations.length === 0 && <TableRow><TableCell colSpan={5} className="h-24 text-center text-muted-foreground">Sin reconciliaciones.</TableCell></TableRow>}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="receipts">
+            <div className="rounded-xl border border-border/40 bg-card overflow-hidden">
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead className="w-28">Número</TableHead><TableHead className="w-28">Fecha</TableHead>
+                  <TableHead className="w-24">Tipo</TableHead><TableHead>Entidad</TableHead>
+                  <TableHead className="text-right w-28">Total</TableHead><TableHead className="w-28">Estado</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {receipts.map((r) => (
+                    <TableRow key={r.id}>
+                      <TableCell className="font-mono text-sm">{r.number}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{fmtDateShort(r.date)}</TableCell>
+                      <TableCell><Badge variant="secondary">{r.receipt_type === "collection" ? "Cobro" : "Pago"}</Badge></TableCell>
+                      <TableCell className="text-sm">{r.entity_name}</TableCell>
+                      <TableCell className="text-right font-mono text-sm">{fmtMoney(r.total)}</TableCell>
+                      <TableCell><Badge variant={r.status === "confirmed" ? "default" : "secondary"}>{r.status === "confirmed" ? "Confirmado" : r.status}</Badge></TableCell>
+                    </TableRow>
+                  ))}
+                  {receipts.length === 0 && <TableRow><TableCell colSpan={6} className="h-24 text-center text-muted-foreground">Sin recibos.</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </div>

@@ -4,14 +4,14 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { erpKeys } from "@/lib/erp/queries";
-import { fmtMoney, fmtDateShort } from "@/lib/erp/format";
-import type { Account, JournalEntry, JournalLine, AccountBalance } from "@/lib/erp/types";
+import { fmtMoney, fmtDate, fmtDateShort } from "@/lib/erp/format";
+import type { Account, JournalEntry, JournalLine, AccountBalance, FiscalYear, CostCenter } from "@/lib/erp/types";
 import { ErrorState } from "@/components/erp/error-state";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpenIcon, ListTreeIcon, BarChart3Icon } from "lucide-react";
+import { BookOpenIcon, ListTreeIcon, BarChart3Icon, CalendarIcon, TargetIcon } from "lucide-react";
 
 const statusBadge: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
   draft: { label: "Borrador", variant: "secondary" },
@@ -38,6 +38,18 @@ export default function ContablePage() {
     queryKey: erpKeys.balance(),
     queryFn: () => api.get<{ balances: AccountBalance[] }>("/v1/erp/accounting/balance"),
     select: (d) => d.balances,
+  });
+
+  const { data: fiscalYears = [] } = useQuery({
+    queryKey: erpKeys.fiscalYears(),
+    queryFn: () => api.get<{ fiscal_years: FiscalYear[] }>("/v1/erp/accounting/fiscal-years"),
+    select: (d) => d.fiscal_years,
+  });
+
+  const { data: costCenters = [] } = useQuery({
+    queryKey: [...erpKeys.all, "cost-centers"] as const,
+    queryFn: () => api.get<{ cost_centers: CostCenter[] }>("/v1/erp/accounting/cost-centers"),
+    select: (d) => d.cost_centers,
   });
 
   const { data: selectedEntry } = useQuery({
@@ -80,6 +92,8 @@ export default function ContablePage() {
             <TabsTrigger value="diary"><BookOpenIcon className="size-3.5 mr-1.5" />Libro Diario</TabsTrigger>
             <TabsTrigger value="accounts"><ListTreeIcon className="size-3.5 mr-1.5" />Plan de Cuentas</TabsTrigger>
             <TabsTrigger value="balance"><BarChart3Icon className="size-3.5 mr-1.5" />Balance</TabsTrigger>
+            <TabsTrigger value="fiscal-years"><CalendarIcon className="size-3.5 mr-1.5" />Ejercicios</TabsTrigger>
+            <TabsTrigger value="cost-centers"><TargetIcon className="size-3.5 mr-1.5" />Centros de Costo</TabsTrigger>
           </TabsList>
 
           <TabsContent value="diary">
@@ -177,6 +191,54 @@ export default function ContablePage() {
                     </TableRow>
                   ))}
                   {balances.length === 0 && <TableRow><TableCell colSpan={5} className="h-24 text-center text-muted-foreground">Sin datos de balance.</TableCell></TableRow>}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="fiscal-years">
+            <div className="rounded-xl border border-border/40 bg-card overflow-hidden">
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead className="w-20">Año</TableHead>
+                  <TableHead className="w-32">Inicio</TableHead>
+                  <TableHead className="w-32">Fin</TableHead>
+                  <TableHead className="w-28">Estado</TableHead>
+                  <TableHead className="w-36">Cerrado</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {fiscalYears.map((fy) => (
+                    <TableRow key={fy.id}>
+                      <TableCell className="font-mono text-sm font-medium">{fy.year}</TableCell>
+                      <TableCell className="text-sm">{fmtDate(fy.start_date)}</TableCell>
+                      <TableCell className="text-sm">{fmtDate(fy.end_date)}</TableCell>
+                      <TableCell><Badge variant={fy.status === "open" ? "default" : "secondary"}>{fy.status === "open" ? "Abierto" : "Cerrado"}</Badge></TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{fy.closed_at ? fmtDate(fy.closed_at) : "\u2014"}</TableCell>
+                    </TableRow>
+                  ))}
+                  {fiscalYears.length === 0 && <TableRow><TableCell colSpan={5} className="h-24 text-center text-muted-foreground">Sin ejercicios fiscales.</TableCell></TableRow>}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="cost-centers">
+            <div className="rounded-xl border border-border/40 bg-card overflow-hidden">
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead className="w-28">Código</TableHead>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead className="w-24 text-center">Estado</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {costCenters.map((cc) => (
+                    <TableRow key={cc.id}>
+                      <TableCell className="font-mono text-sm">{cc.code}</TableCell>
+                      <TableCell className="text-sm">{cc.name}</TableCell>
+                      <TableCell className="text-center"><Badge variant={cc.active ? "default" : "secondary"}>{cc.active ? "Activo" : "Inactivo"}</Badge></TableCell>
+                    </TableRow>
+                  ))}
+                  {costCenters.length === 0 && <TableRow><TableCell colSpan={3} className="h-24 text-center text-muted-foreground">Sin centros de costo.</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </div>

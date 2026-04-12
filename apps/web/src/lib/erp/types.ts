@@ -36,6 +36,22 @@ export interface AccountBalance {
   balance: number;
 }
 
+export interface FiscalYear {
+  id: string;
+  year: number;
+  start_date: string;
+  end_date: string;
+  status: string;
+  closed_at: string | null;
+}
+
+export interface CostCenter {
+  id: string;
+  code: string;
+  name: string;
+  active: boolean;
+}
+
 // Treasury
 export interface TreasuryMovement {
   id: string;
@@ -87,6 +103,46 @@ export interface Withholding {
   base_amount: number;
   amount: number;
   date: string;
+}
+
+export interface Reconciliation {
+  id: string;
+  bank_account_id: string;
+  bank_name: string;
+  period: string;
+  statement_balance: number;
+  book_balance: number;
+  status: string;
+}
+
+export interface Receipt {
+  id: string;
+  number: string;
+  date: string;
+  receipt_type: string;
+  entity_name: string;
+  total: number;
+  status: string;
+}
+
+export interface TaxBookEntry {
+  invoice_number: string;
+  date: string;
+  entity_name: string;
+  net_amount: number;
+  tax_amount: number;
+  total: number;
+  direction: string;
+}
+
+export interface QCInspection {
+  id: string;
+  receipt_number: string;
+  article_name: string;
+  quantity: number;
+  accepted_qty: number;
+  rejected_qty: number;
+  status: string;
 }
 
 // Current Accounts

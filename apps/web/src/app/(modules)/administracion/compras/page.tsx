@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ShoppingCartIcon, PackageCheckIcon } from "lucide-react";
+import { ShoppingCartIcon, PackageCheckIcon, ClipboardCheckIcon } from "lucide-react";
+import type { QCInspection } from "@/lib/erp/types";
 
 interface PurchaseOrder { id: string; number: string; date: string; supplier_name: string; status: string; total: number; }
 interface Receipt { id: string; order_number: string; date: string; number: string; user_id: string; }
@@ -40,6 +41,12 @@ export default function ComprasPage() {
     select: (d) => d.receipts,
   });
 
+  const { data: inspections = [] } = useQuery({
+    queryKey: [...erpKeys.all, "purchasing", "inspections"] as const,
+    queryFn: () => api.get<{ inspections: QCInspection[] }>("/v1/erp/purchasing/inspections?page_size=50"),
+    select: (d) => d.inspections,
+  });
+
   const { data: selected } = useQuery({
     queryKey: [...erpKeys.all, "purchasing", "orders", selectedId] as const,
     queryFn: () => api.get<OrderDetail>(`/v1/erp/purchasing/orders/${selectedId}`),
@@ -61,6 +68,7 @@ export default function ComprasPage() {
           <TabsList className="mb-4">
             <TabsTrigger value="orders"><ShoppingCartIcon className="size-3.5 mr-1.5" />Órdenes</TabsTrigger>
             <TabsTrigger value="receipts"><PackageCheckIcon className="size-3.5 mr-1.5" />Recepciones</TabsTrigger>
+            <TabsTrigger value="inspections"><ClipboardCheckIcon className="size-3.5 mr-1.5" />Inspecciones QC</TabsTrigger>
           </TabsList>
 
           <TabsContent value="orders">
@@ -128,6 +136,30 @@ export default function ComprasPage() {
                     </TableRow>
                   ))}
                   {receipts.length === 0 && <TableRow><TableCell colSpan={4} className="h-24 text-center text-muted-foreground">Sin recepciones.</TableCell></TableRow>}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="inspections">
+            <div className="rounded-xl border border-border/40 bg-card overflow-hidden">
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead>Artículo</TableHead><TableHead className="w-24 text-right">Cantidad</TableHead>
+                  <TableHead className="w-24 text-right">Aceptado</TableHead><TableHead className="w-24 text-right">Rechazado</TableHead>
+                  <TableHead className="w-28">Estado</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {inspections.map((insp) => (
+                    <TableRow key={insp.id}>
+                      <TableCell className="text-sm">{insp.article_name}</TableCell>
+                      <TableCell className="text-right font-mono text-sm">{insp.quantity}</TableCell>
+                      <TableCell className="text-right font-mono text-sm text-green-600">{insp.accepted_qty}</TableCell>
+                      <TableCell className="text-right font-mono text-sm text-red-500">{insp.rejected_qty}</TableCell>
+                      <TableCell><Badge variant={insp.status === "completed" ? "default" : "secondary"}>{insp.status === "completed" ? "Completada" : "Pendiente"}</Badge></TableCell>
+                    </TableRow>
+                  ))}
+                  {inspections.length === 0 && <TableRow><TableCell colSpan={5} className="h-24 text-center text-muted-foreground">Sin inspecciones.</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </div>
