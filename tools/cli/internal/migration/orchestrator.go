@@ -12,14 +12,18 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// SetupHook is a function called before migration starts, after run record creation.
+type SetupHook func(ctx context.Context, mapper *Mapper) error
+
 // Orchestrator coordinates the migration of legacy MySQL data to PostgreSQL.
 type Orchestrator struct {
-	mysql    *sql.DB
-	pg       *pgxpool.Pool
-	tenantID string
-	mapper   *Mapper
-	writer   *BatchWriter
-	readers  []TableMigrator
+	mysql      *sql.DB
+	pg         *pgxpool.Pool
+	tenantID   string
+	mapper     *Mapper
+	writer     *BatchWriter
+	readers    []TableMigrator
+	setupHooks []SetupHook
 }
 
 // TableMigrator defines how to migrate a single legacy table.
@@ -59,15 +63,34 @@ func (o *Orchestrator) RegisterMigrators(migrators ...TableMigrator) {
 	o.readers = append(o.readers, migrators...)
 }
 
+// AddSetupHook adds a function to run before migration starts (for building indexes, caches).
+func (o *Orchestrator) AddSetupHook(fn SetupHook) {
+	o.setupHooks = append(o.setupHooks, fn)
+}
+
+// GetMapper returns the mapper (for external setup hooks).
+func (o *Orchestrator) GetMapper() *Mapper {
+	return o.mapper
+}
+
 // Run executes the full migration for specified domains (empty = all).
 func (o *Orchestrator) Run(ctx context.Context, domains []string, dryRun bool) error {
+	return o.RunWithID(ctx, uuid.Nil, domains, dryRun)
+}
+
+// RunWithID executes the migration with an optional pre-created run ID.
+// If runID is Nil, a new one is created.
+func (o *Orchestrator) RunWithID(ctx context.Context, externalRunID uuid.UUID, domains []string, dryRun bool) error {
 	mode := "prod"
 	if dryRun {
 		mode = "dry_run"
 	}
 
-	// Create run record
-	runID := uuid.New()
+	// Use external run ID or create new one
+	runID := externalRunID
+	if runID == uuid.Nil {
+		runID = uuid.New()
+	}
 	_, err := o.pg.Exec(ctx,
 		`INSERT INTO erp_migration_runs (id, tenant_id, mode) VALUES ($1, $2, $3)`,
 		runID, o.tenantID, mode,
@@ -100,24 +123,36 @@ func (o *Orchestrator) Run(ctx context.Context, domains []string, dryRun bool) e
 		}
 	}
 
-	// Set tenant context for RLS on business tables
-	_, err = o.pg.Exec(ctx, fmt.Sprintf("SET app.tenant_id = '%s'", o.tenantID))
-	if err != nil {
-		slog.Warn("could not set app.tenant_id (RLS may block writes)", "err", err)
-	}
+	// Tenant context is set per-batch transaction via set_config (see runTable)
 
 	// Run each migrator
 	stats := make(map[string]TableStats)
+	hooksRan := false
 	for _, m := range o.readers {
 		if len(domains) > 0 && !contains(domains, m.Domain()) {
 			continue
 		}
 
+		// Run setup hooks once before the first table that needs them.
+		// Hooks build code indexes and date caches from already-migrated data.
+		// They run after base tables (accounts, entries) are migrated but before
+		// dependent tables (journal lines) start.
+		if !hooksRan && needsSetupHooks(m) {
+			for _, hook := range o.setupHooks {
+				if err := hook(ctx, o.mapper); err != nil {
+					return fmt.Errorf("setup hook: %w", err)
+				}
+			}
+			hooksRan = true
+		}
+
 		// Update run current position
-		o.pg.Exec(ctx,
+		if _, err := o.pg.Exec(ctx,
 			`UPDATE erp_migration_runs SET current_domain = $1, current_table = $2 WHERE id = $3`,
 			m.Domain(), m.LegacyTable(), runID,
-		)
+		); err != nil {
+			slog.Error("failed to update run position", "err", err)
+		}
 
 		if dryRun {
 			// In dry-run, only count and validate transformations
@@ -184,8 +219,7 @@ func (o *Orchestrator) Resume(ctx context.Context, resumeRunID string) error {
 		runID,
 	)
 
-	// Set tenant context
-	o.pg.Exec(ctx, fmt.Sprintf("SET app.tenant_id = '%s'", o.tenantID))
+	// Tenant context is set per-batch transaction via set_config (see runTable)
 
 	// Load pending/failed tables
 	rows, err := o.pg.Query(ctx,
@@ -312,11 +346,25 @@ func (o *Orchestrator) runTableResume(ctx context.Context, runID, progressID uui
 
 		stats.RowsRead += len(rows)
 
+		// Each batch runs in a transaction for atomicity (mapping + data + progress)
+		tx, err := o.pg.Begin(ctx)
+		if err != nil {
+			markTableFailed(ctx, o.pg, progressID, err.Error())
+			return stats, fmt.Errorf("begin tx: %w", err)
+		}
+
+		// Set tenant context for RLS on business tables (LOCAL = tx-scoped)
+		if _, err := tx.Exec(ctx, "SELECT set_config('app.tenant_id', $1, true)", o.tenantID); err != nil {
+			tx.Rollback(ctx)
+			slog.Warn("could not set app.tenant_id", "err", err)
+		}
+
 		// Transform and collect batch
 		var insertRows [][]any
 		for _, row := range rows {
 			vals, err := m.Transform(ctx, row, o.mapper)
 			if err != nil {
+				tx.Rollback(ctx)
 				markTableFailed(ctx, o.pg, progressID, err.Error())
 				return stats, fmt.Errorf("transform %s row: %w", m.LegacyTable(), err)
 			}
@@ -327,10 +375,11 @@ func (o *Orchestrator) runTableResume(ctx context.Context, runID, progressID uui
 			insertRows = append(insertRows, vals)
 		}
 
-		// Write batch
+		// Write batch within transaction
 		if len(insertRows) > 0 {
 			written, err := o.writer.WriteBatch(ctx, m.SDATable(), m.Columns(), m.ConflictColumn(), insertRows)
 			if err != nil {
+				tx.Rollback(ctx)
 				markTableFailed(ctx, o.pg, progressID, err.Error())
 				return stats, err
 			}
@@ -339,13 +388,20 @@ func (o *Orchestrator) runTableResume(ctx context.Context, runID, progressID uui
 
 		lastKey = nextKey
 
-		// Update progress checkpoint
-		o.pg.Exec(ctx,
+		// Update progress checkpoint within same transaction
+		if _, err := tx.Exec(ctx,
 			`UPDATE erp_migration_table_progress
 			 SET last_legacy_key = $1, rows_read = $2, rows_written = $3, rows_skipped = $4
 			 WHERE id = $5`,
 			lastKey, stats.RowsRead, stats.RowsWritten, stats.RowsSkipped, progressID,
-		)
+		); err != nil {
+			slog.Error("failed to update progress checkpoint", "err", err)
+		}
+
+		if err := tx.Commit(ctx); err != nil {
+			markTableFailed(ctx, o.pg, progressID, err.Error())
+			return stats, fmt.Errorf("commit batch: %w", err)
+		}
 	}
 
 	// Mark completed
@@ -479,6 +535,15 @@ func contains(slice []string, item string) bool {
 		if s == item {
 			return true
 		}
+	}
+	return false
+}
+
+// needsSetupHooks returns true for tables that depend on code indexes or date caches.
+func needsSetupHooks(m TableMigrator) bool {
+	switch m.SDATable() {
+	case "erp_journal_lines", "erp_stock_movements", "erp_purchase_order_lines", "erp_production_orders":
+		return true
 	}
 	return false
 }
