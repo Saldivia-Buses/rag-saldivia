@@ -70,6 +70,10 @@ WHERE a.tenant_id = $1
 GROUP BY a.id, a.code, a.name, a.account_type
 HAVING COALESCE(SUM(jl.debit), 0) - COALESCE(SUM(jl.credit), 0) != 0;
 
+-- name: MarkEntryReversed :execrows
+UPDATE erp_journal_entries SET status = 'reversed', reversed_by = $3
+WHERE id = $1 AND tenant_id = $2 AND status = 'posted';
+
 -- name: CloseFiscalYear :execrows
 UPDATE erp_fiscal_years
 SET status = 'closed', closed_by = $3, closed_at = now(),

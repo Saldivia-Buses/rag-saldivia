@@ -36,7 +36,29 @@ type CreateInvoiceParams struct {
 	UserID      string         `json:"user_id"`
 }
 
-func (q *Queries) CreateInvoice(ctx context.Context, arg CreateInvoiceParams) (ErpInvoice, error) {
+type CreateInvoiceRow struct {
+	ID             pgtype.UUID        `json:"id"`
+	TenantID       string             `json:"tenant_id"`
+	Number         string             `json:"number"`
+	Date           pgtype.Date        `json:"date"`
+	DueDate        pgtype.Date        `json:"due_date"`
+	InvoiceType    string             `json:"invoice_type"`
+	Direction      string             `json:"direction"`
+	EntityID       pgtype.UUID        `json:"entity_id"`
+	CurrencyID     pgtype.UUID        `json:"currency_id"`
+	Subtotal       pgtype.Numeric     `json:"subtotal"`
+	TaxAmount      pgtype.Numeric     `json:"tax_amount"`
+	Total          pgtype.Numeric     `json:"total"`
+	OrderID        pgtype.UUID        `json:"order_id"`
+	JournalEntryID pgtype.UUID        `json:"journal_entry_id"`
+	AfipCae        pgtype.Text        `json:"afip_cae"`
+	AfipCaeDue     pgtype.Date        `json:"afip_cae_due"`
+	Status         string             `json:"status"`
+	UserID         string             `json:"user_id"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+}
+
+func (q *Queries) CreateInvoice(ctx context.Context, arg CreateInvoiceParams) (CreateInvoiceRow, error) {
 	row := q.db.QueryRow(ctx, createInvoice,
 		arg.TenantID,
 		arg.Number,
@@ -52,7 +74,7 @@ func (q *Queries) CreateInvoice(ctx context.Context, arg CreateInvoiceParams) (E
 		arg.OrderID,
 		arg.UserID,
 	)
-	var i ErpInvoice
+	var i CreateInvoiceRow
 	err := row.Scan(
 		&i.ID,
 		&i.TenantID,
@@ -231,9 +253,31 @@ type GetInvoiceParams struct {
 	TenantID string      `json:"tenant_id"`
 }
 
-func (q *Queries) GetInvoice(ctx context.Context, arg GetInvoiceParams) (ErpInvoice, error) {
+type GetInvoiceRow struct {
+	ID             pgtype.UUID        `json:"id"`
+	TenantID       string             `json:"tenant_id"`
+	Number         string             `json:"number"`
+	Date           pgtype.Date        `json:"date"`
+	DueDate        pgtype.Date        `json:"due_date"`
+	InvoiceType    string             `json:"invoice_type"`
+	Direction      string             `json:"direction"`
+	EntityID       pgtype.UUID        `json:"entity_id"`
+	CurrencyID     pgtype.UUID        `json:"currency_id"`
+	Subtotal       pgtype.Numeric     `json:"subtotal"`
+	TaxAmount      pgtype.Numeric     `json:"tax_amount"`
+	Total          pgtype.Numeric     `json:"total"`
+	OrderID        pgtype.UUID        `json:"order_id"`
+	JournalEntryID pgtype.UUID        `json:"journal_entry_id"`
+	AfipCae        pgtype.Text        `json:"afip_cae"`
+	AfipCaeDue     pgtype.Date        `json:"afip_cae_due"`
+	Status         string             `json:"status"`
+	UserID         string             `json:"user_id"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+}
+
+func (q *Queries) GetInvoice(ctx context.Context, arg GetInvoiceParams) (GetInvoiceRow, error) {
 	row := q.db.QueryRow(ctx, getInvoice, arg.ID, arg.TenantID)
-	var i ErpInvoice
+	var i GetInvoiceRow
 	err := row.Scan(
 		&i.ID,
 		&i.TenantID,
@@ -464,6 +508,60 @@ func (q *Queries) ListInvoices(ctx context.Context, arg ListInvoicesParams) ([]L
 	return items, nil
 }
 
+const listTaxEntriesByInvoice = `-- name: ListTaxEntriesByInvoice :many
+
+SELECT id, tenant_id, invoice_id, period, direction, net_amount, tax_rate, tax_amount
+FROM erp_tax_entries WHERE tenant_id = $1 AND invoice_id = $2
+`
+
+type ListTaxEntriesByInvoiceParams struct {
+	TenantID  string      `json:"tenant_id"`
+	InvoiceID pgtype.UUID `json:"invoice_id"`
+}
+
+type ListTaxEntriesByInvoiceRow struct {
+	ID        pgtype.UUID    `json:"id"`
+	TenantID  string         `json:"tenant_id"`
+	InvoiceID pgtype.UUID    `json:"invoice_id"`
+	Period    string         `json:"period"`
+	Direction string         `json:"direction"`
+	NetAmount pgtype.Numeric `json:"net_amount"`
+	TaxRate   pgtype.Numeric `json:"tax_rate"`
+	TaxAmount pgtype.Numeric `json:"tax_amount"`
+}
+
+// ============================================================
+// Cascade void queries (Plan 18 Fase 2)
+// ============================================================
+func (q *Queries) ListTaxEntriesByInvoice(ctx context.Context, arg ListTaxEntriesByInvoiceParams) ([]ListTaxEntriesByInvoiceRow, error) {
+	rows, err := q.db.Query(ctx, listTaxEntriesByInvoice, arg.TenantID, arg.InvoiceID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListTaxEntriesByInvoiceRow{}
+	for rows.Next() {
+		var i ListTaxEntriesByInvoiceRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.TenantID,
+			&i.InvoiceID,
+			&i.Period,
+			&i.Direction,
+			&i.NetAmount,
+			&i.TaxRate,
+			&i.TaxAmount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listWithholdings = `-- name: ListWithholdings :many
 SELECT w.id, w.tenant_id, w.invoice_id, w.movement_id, w.entity_id, w.type,
        w.rate, w.base_amount, w.amount, w.certificate_num, w.date, w.created_at,
@@ -550,6 +648,31 @@ type PostInvoiceParams struct {
 
 func (q *Queries) PostInvoice(ctx context.Context, arg PostInvoiceParams) (int64, error) {
 	result, err := q.db.Exec(ctx, postInvoice, arg.ID, arg.TenantID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const voidInvoice = `-- name: VoidInvoice :execrows
+UPDATE erp_invoices SET status = 'cancelled', voided_by = $3, void_reason = $4
+WHERE id = $1 AND tenant_id = $2 AND status IN ('posted', 'paid')
+`
+
+type VoidInvoiceParams struct {
+	ID         pgtype.UUID `json:"id"`
+	TenantID   string      `json:"tenant_id"`
+	VoidedBy   pgtype.UUID `json:"voided_by"`
+	VoidReason pgtype.Text `json:"void_reason"`
+}
+
+func (q *Queries) VoidInvoice(ctx context.Context, arg VoidInvoiceParams) (int64, error) {
+	result, err := q.db.Exec(ctx, voidInvoice,
+		arg.ID,
+		arg.TenantID,
+		arg.VoidedBy,
+		arg.VoidReason,
+	)
 	if err != nil {
 		return 0, err
 	}

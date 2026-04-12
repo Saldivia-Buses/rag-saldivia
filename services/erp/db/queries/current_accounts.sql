@@ -39,6 +39,12 @@ WHERE am.tenant_id = $1 AND am.balance > 0 AND am.movement_type = 'invoice'
   AND i.due_date IS NOT NULL AND i.due_date < CURRENT_DATE
 ORDER BY i.due_date;
 
+-- name: ListAccountMovementsByInvoice :many
+SELECT id, tenant_id, entity_id, date, movement_type, direction, amount, balance,
+       invoice_id, treasury_id, journal_entry_id, notes, user_id
+FROM erp_account_movements
+WHERE tenant_id = $1 AND invoice_id = $2;
+
 -- name: CreatePaymentAllocation :one
 INSERT INTO erp_payment_allocations (tenant_id, payment_id, invoice_id, amount)
 VALUES ($1, $2, $3, $4)

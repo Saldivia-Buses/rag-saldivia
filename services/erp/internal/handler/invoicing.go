@@ -38,6 +38,18 @@ func (h *Invoicing) Routes(authWrite func(http.Handler) http.Handler) chi.Router
 		r.Use(sdamw.RequirePermission("erp.invoicing.post"))
 		r.Post("/invoices/{id}/post", h.PostInvoice)
 	})
+
+	// Void (cascade)
+	r.Group(func(r chi.Router) {
+		r.Use(sdamw.RequirePermission("erp.invoicing.read"))
+		r.Get("/invoices/{id}/void-preview", h.VoidPreview)
+	})
+	r.Group(func(r chi.Router) {
+		r.Use(authWrite)
+		r.Use(sdamw.RequirePermission("erp.invoicing.void"))
+		r.Post("/invoices/{id}/void", h.VoidInvoice)
+	})
+
 	return r
 }
 
@@ -225,5 +237,50 @@ func (h *Invoicing) CreateWithholding(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(w2)
+}
+
+// VoidPreview returns what voiding an invoice would do.
+func (h *Invoicing) VoidPreview(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	id, err := parseUUID(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		return
+	}
+	preview, err := h.svc.VoidPreview(r.Context(), id, slug)
+	if err != nil {
+		slog.Error("void preview failed", "error", err)
+		http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusBadRequest)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(preview)
+}
+
+// VoidInvoice performs cascade void on a posted/paid invoice.
+func (h *Invoicing) VoidInvoice(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	id, err := parseUUID(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		return
+	}
+	r.Body = http.MaxBytesReader(w, r.Body, 4<<10)
+	var body struct {
+		Reason string `json:"reason"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		return
+	}
+	result, err := h.svc.VoidInvoice(r.Context(), id, slug, body.Reason,
+		r.Header.Get("X-User-ID"), r.RemoteAddr)
+	if err != nil {
+		slog.Error("void invoice failed", "error", err)
+		http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusBadRequest)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(result)
 }
 

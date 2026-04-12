@@ -38,7 +38,7 @@ func (s *Invoicing) ListInvoices(ctx context.Context, tenantID string, typeFilte
 }
 
 type InvoiceDetail struct {
-	Invoice repository.ErpInvoice           `json:"invoice"`
+	Invoice repository.GetInvoiceRow        `json:"invoice"`
 	Lines   []repository.ErpInvoiceLine     `json:"lines"`
 }
 
@@ -170,13 +170,13 @@ func (s *Invoicing) CreateInvoice(ctx context.Context, req CreateInvoiceRequest)
 		"action": "invoice_created", "invoice_id": uuidStr(inv.ID),
 	})
 
-	inv, _ = s.repo.GetInvoice(ctx, repository.GetInvoiceParams{ID: inv.ID, TenantID: req.TenantID})
+	invFresh, _ := s.repo.GetInvoice(ctx, repository.GetInvoiceParams{ID: inv.ID, TenantID: req.TenantID})
 	lines, _ := s.repo.ListInvoiceLines(ctx, repository.ListInvoiceLinesParams{
 		InvoiceID: inv.ID, TenantID: req.TenantID,
 	})
 
 	slog.Info("invoice created", "id", uuidStr(inv.ID), "number", req.Number)
-	return &InvoiceDetail{Invoice: inv, Lines: lines}, nil
+	return &InvoiceDetail{Invoice: invFresh, Lines: lines}, nil
 }
 
 // PostInvoice posts a draft invoice: changes status, generates tax entries (libro IVA),
@@ -268,6 +268,298 @@ func (s *Invoicing) ListWithholdings(ctx context.Context, tenantID, typeFilter s
 	return s.repo.ListWithholdings(ctx, repository.ListWithholdingsParams{
 		TenantID: tenantID, TypeFilter: typeFilter, Limit: int32(limit), Offset: int32(offset),
 	})
+}
+
+// ============================================================
+// Cascade void (Plan 18 Fase 2)
+// ============================================================
+
+// VoidResult holds the result of a cascade void operation.
+type VoidResult struct {
+	ReversalEntryID      pgtype.UUID `json:"reversal_entry_id,omitempty"`
+	TaxEntriesReversed   int         `json:"tax_entries_reversed"`
+	AcctMovementsReversed int        `json:"acct_movements_reversed"`
+	StockMovementsReversed int       `json:"stock_movements_reversed"`
+}
+
+// VoidPreview returns what voiding an invoice would do.
+func (s *Invoicing) VoidPreview(ctx context.Context, id pgtype.UUID, tenantID string) (*VoidPreviewResult, error) {
+	inv, err := s.repo.GetInvoice(ctx, repository.GetInvoiceParams{ID: id, TenantID: tenantID})
+	if err != nil {
+		return nil, fmt.Errorf("get invoice: %w", err)
+	}
+	if inv.Status != "posted" && inv.Status != "paid" {
+		return nil, fmt.Errorf("solo se pueden anular facturas posted/paid (actual: %s)", inv.Status)
+	}
+	// Block if invoice has CAE (needs Plan 19 for NCA workflow)
+	if inv.AfipCae.Valid && inv.AfipCae.String != "" {
+		return nil, fmt.Errorf("factura con CAE no se puede anular sin Plan 19 (AFIP NCA)")
+	}
+
+	taxEntries, _ := s.repo.ListTaxEntriesByInvoice(ctx, repository.ListTaxEntriesByInvoiceParams{
+		TenantID: tenantID, InvoiceID: id,
+	})
+	acctMovs, _ := s.repo.ListAccountMovementsByInvoice(ctx, repository.ListAccountMovementsByInvoiceParams{
+		TenantID: tenantID, InvoiceID: id,
+	})
+	stockMovs, _ := s.repo.ListStockMovementsByRef(ctx, repository.ListStockMovementsByRefParams{
+		TenantID: tenantID, ReferenceType: pgText("invoice"), ReferenceID: id,
+	})
+
+	return &VoidPreviewResult{
+		Invoice:           inv,
+		HasJournalEntry:   inv.JournalEntryID.Valid,
+		TaxEntryCount:     len(taxEntries),
+		AcctMovementCount: len(acctMovs),
+		StockMovementCount: len(stockMovs),
+	}, nil
+}
+
+// VoidPreviewResult holds the preview data.
+type VoidPreviewResult struct {
+	Invoice            repository.GetInvoiceRow `json:"invoice"`
+	HasJournalEntry    bool                  `json:"has_journal_entry"`
+	TaxEntryCount      int                   `json:"tax_entry_count"`
+	AcctMovementCount  int                   `json:"acct_movement_count"`
+	StockMovementCount int                   `json:"stock_movement_count"`
+}
+
+// VoidInvoice performs cascade void: reverses journal entry, IVA entries,
+// account movements, and stock movements in a single atomic transaction.
+func (s *Invoicing) VoidInvoice(ctx context.Context, id pgtype.UUID, tenantID, reason, userID, ip string) (*VoidResult, error) {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback(ctx)
+	qtx := s.repo.WithTx(tx)
+
+	inv, err := qtx.GetInvoice(ctx, repository.GetInvoiceParams{ID: id, TenantID: tenantID})
+	if err != nil {
+		return nil, fmt.Errorf("get invoice: %w", err)
+	}
+	if inv.Status != "posted" && inv.Status != "paid" {
+		return nil, fmt.Errorf("solo se pueden anular facturas posted/paid")
+	}
+	// Block CAE invoices until Plan 19
+	if inv.AfipCae.Valid && inv.AfipCae.String != "" {
+		return nil, fmt.Errorf("factura con CAE requiere Nota de Crédito AFIP (Plan 19)")
+	}
+
+	result := &VoidResult{}
+
+	// 1. Reverse journal entry (if exists)
+	if inv.JournalEntryID.Valid {
+		reversalEntry, err := s.createReversalEntry(ctx, qtx, tenantID, inv.JournalEntryID, inv.Date, userID)
+		if err != nil {
+			return nil, fmt.Errorf("create reversal entry: %w", err)
+		}
+		result.ReversalEntryID = reversalEntry.ID
+
+		// Mark original as reversed
+		_, err = qtx.MarkEntryReversed(ctx, repository.MarkEntryReversedParams{
+			ID: inv.JournalEntryID, TenantID: tenantID, ReversedBy: reversalEntry.ID,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("mark entry reversed: %w", err)
+		}
+	}
+
+	// 2. Reverse tax entries (create negated copies)
+	taxEntries, err := qtx.ListTaxEntriesByInvoice(ctx, repository.ListTaxEntriesByInvoiceParams{
+		TenantID: tenantID, InvoiceID: id,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("list tax entries: %w", err)
+	}
+	for _, te := range taxEntries {
+		_, err := qtx.CreateTaxEntry(ctx, repository.CreateTaxEntryParams{
+			TenantID:  tenantID,
+			InvoiceID: id,
+			Period:    te.Period,
+			Direction: te.Direction,
+			NetAmount: negateNumeric(te.NetAmount),
+			TaxRate:   te.TaxRate,
+			TaxAmount: negateNumeric(te.TaxAmount),
+		})
+		if err != nil {
+			return nil, fmt.Errorf("reverse tax entry: %w", err)
+		}
+	}
+	result.TaxEntriesReversed = len(taxEntries)
+
+	// 3. Reverse account movements
+	acctMovs, err := qtx.ListAccountMovementsByInvoice(ctx, repository.ListAccountMovementsByInvoiceParams{
+		TenantID: tenantID, InvoiceID: id,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("list account movements: %w", err)
+	}
+	for _, am := range acctMovs {
+		_, err := qtx.CreateAccountMovement(ctx, repository.CreateAccountMovementParams{
+			TenantID:       tenantID,
+			EntityID:       am.EntityID,
+			Date:           am.Date,
+			MovementType:   "reversal",
+			Direction:      am.Direction,
+			Amount:         negateNumeric(am.Amount),
+			Balance:        zeroNumeric(),
+			InvoiceID:      am.InvoiceID,
+			JournalEntryID: result.ReversalEntryID,
+			Notes:          "Reversa por anulación de factura",
+			UserID:         userID,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("reverse account movement: %w", err)
+		}
+	}
+	result.AcctMovementsReversed = len(acctMovs)
+
+	// 4. Reverse stock movements (if any)
+	stockMovs, err := qtx.ListStockMovementsByRef(ctx, repository.ListStockMovementsByRefParams{
+		TenantID: tenantID, ReferenceType: pgText("invoice"), ReferenceID: id,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("list stock movements: %w", err)
+	}
+	for _, sm := range stockMovs {
+		reverseType := "in"
+		if sm.MovementType == "in" {
+			reverseType = "out"
+		}
+		newMov, err := qtx.CreateStockMovement(ctx, repository.CreateStockMovementParams{
+			TenantID:      tenantID,
+			ArticleID:     sm.ArticleID,
+			WarehouseID:   sm.WarehouseID,
+			MovementType:  reverseType,
+			Quantity:      sm.Quantity,
+			UnitCost:      sm.UnitCost,
+			ReferenceType: pgText("void"),
+			ReferenceID:   id,
+			UserID:        userID,
+			Notes:         fmt.Sprintf("Reversa por anulación de factura"),
+		})
+		if err != nil {
+			return nil, fmt.Errorf("reverse stock movement: %w", err)
+		}
+		// Update stock levels
+		qtyDelta := sm.Quantity
+		if reverseType == "out" {
+			qtyDelta = negateNumeric(sm.Quantity)
+		}
+		_ = qtx.UpsertStockLevel(ctx, repository.UpsertStockLevelParams{
+			TenantID: tenantID, ArticleID: sm.ArticleID,
+			WarehouseID: sm.WarehouseID, Quantity: qtyDelta,
+		})
+		_ = newMov // suppress unused
+	}
+	result.StockMovementsReversed = len(stockMovs)
+
+	// 5. Mark invoice as cancelled
+	rows, err := qtx.VoidInvoice(ctx, repository.VoidInvoiceParams{
+		ID: id, TenantID: tenantID,
+		VoidReason: pgText(reason),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("void invoice: %w", err)
+	}
+	if rows == 0 {
+		return nil, fmt.Errorf("invoice void failed (concurrent modification?)")
+	}
+
+	// StrictLogger
+	if err := s.audit.WriteStrict(ctx, audit.Entry{
+		TenantID: tenantID, UserID: userID,
+		Action: "erp.invoice.void_cascade", Resource: uuidStr(id),
+		Details: map[string]any{
+			"reason":             reason,
+			"reversal_entry":     uuidStr(result.ReversalEntryID),
+			"tax_reversed":       result.TaxEntriesReversed,
+			"acct_mov_reversed":  result.AcctMovementsReversed,
+			"stock_mov_reversed": result.StockMovementsReversed,
+		}, IP: ip,
+	}); err != nil {
+		return nil, fmt.Errorf("strict audit failed, aborting: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("commit void: %w", err)
+	}
+
+	s.publisher.Broadcast(tenantID, "erp_invoicing", map[string]any{
+		"action": "invoice_voided", "invoice_id": uuidStr(id),
+	})
+
+	return result, nil
+}
+
+// createReversalEntry creates a reversal journal entry with inverted debit/credit lines.
+func (s *Invoicing) createReversalEntry(ctx context.Context, qtx *repository.Queries, tenantID string, originalEntryID pgtype.UUID, date pgtype.Date, userID string) (repository.CreateJournalEntryRow, error) {
+	original, err := qtx.GetJournalEntry(ctx, repository.GetJournalEntryParams{
+		ID: originalEntryID, TenantID: tenantID,
+	})
+	if err != nil {
+		return repository.CreateJournalEntryRow{}, fmt.Errorf("get original entry: %w", err)
+	}
+
+	lines, err := qtx.ListJournalLines(ctx, repository.ListJournalLinesParams{
+		EntryID: originalEntryID, TenantID: tenantID,
+	})
+	if err != nil {
+		return repository.CreateJournalEntryRow{}, fmt.Errorf("list original lines: %w", err)
+	}
+
+	// Create reversal entry
+	entry, err := qtx.CreateJournalEntry(ctx, repository.CreateJournalEntryParams{
+		TenantID:     tenantID,
+		Number:       "REV-" + original.Number,
+		Date:         date,
+		FiscalYearID: original.FiscalYearID,
+		Concept:      "Reversa: " + original.Concept,
+		EntryType:    "reversal",
+		ReferenceType: pgText("reversal"),
+		ReferenceID:  originalEntryID,
+		UserID:       userID,
+	})
+	if err != nil {
+		return repository.CreateJournalEntryRow{}, fmt.Errorf("create reversal entry: %w", err)
+	}
+
+	// Invert debit/credit on each line
+	for i, l := range lines {
+		_, err := qtx.CreateJournalLine(ctx, repository.CreateJournalLineParams{
+			TenantID:     tenantID,
+			EntryID:      entry.ID,
+			AccountID:    l.AccountID,
+			CostCenterID: l.CostCenterID,
+			EntryDate:    date,
+			Debit:        l.Credit, // swap
+			Credit:       l.Debit,  // swap
+			Description:  "Reversa: " + l.Description,
+			SortOrder:    int32(i),
+		})
+		if err != nil {
+			return repository.CreateJournalEntryRow{}, fmt.Errorf("create reversal line %d: %w", i, err)
+		}
+	}
+
+	// Post immediately
+	_, err = qtx.PostJournalEntry(ctx, repository.PostJournalEntryParams{
+		ID: entry.ID, TenantID: tenantID,
+	})
+	if err != nil {
+		return repository.CreateJournalEntryRow{}, fmt.Errorf("post reversal entry: %w", err)
+	}
+
+	return entry, nil
+}
+
+// negateNumeric returns the negation of a pgtype.Numeric value.
+func negateNumeric(n pgtype.Numeric) pgtype.Numeric {
+	f, _ := n.Float64Value()
+	var result pgtype.Numeric
+	_ = result.Scan(fmt.Sprintf("%f", -f.Float64))
+	return result
 }
 
 func (s *Invoicing) CreateWithholding(ctx context.Context, p repository.CreateWithholdingParams, userID, ip string) (repository.ErpWithholding, error) {

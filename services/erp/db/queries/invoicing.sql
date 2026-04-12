@@ -73,6 +73,18 @@ WHERE w.tenant_id = $1
 ORDER BY w.date DESC
 LIMIT $2 OFFSET $3;
 
+-- ============================================================
+-- Cascade void queries (Plan 18 Fase 2)
+-- ============================================================
+
+-- name: ListTaxEntriesByInvoice :many
+SELECT id, tenant_id, invoice_id, period, direction, net_amount, tax_rate, tax_amount
+FROM erp_tax_entries WHERE tenant_id = $1 AND invoice_id = $2;
+
+-- name: VoidInvoice :execrows
+UPDATE erp_invoices SET status = 'cancelled', voided_by = $3, void_reason = $4
+WHERE id = $1 AND tenant_id = $2 AND status IN ('posted', 'paid');
+
 -- name: CreateWithholding :one
 INSERT INTO erp_withholdings (tenant_id, invoice_id, movement_id, entity_id, type, rate, base_amount, amount, certificate_num, date)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)

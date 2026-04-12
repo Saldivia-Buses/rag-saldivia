@@ -291,6 +291,68 @@ func (q *Queries) ListAccountMovements(ctx context.Context, arg ListAccountMovem
 	return items, nil
 }
 
+const listAccountMovementsByInvoice = `-- name: ListAccountMovementsByInvoice :many
+SELECT id, tenant_id, entity_id, date, movement_type, direction, amount, balance,
+       invoice_id, treasury_id, journal_entry_id, notes, user_id
+FROM erp_account_movements
+WHERE tenant_id = $1 AND invoice_id = $2
+`
+
+type ListAccountMovementsByInvoiceParams struct {
+	TenantID  string      `json:"tenant_id"`
+	InvoiceID pgtype.UUID `json:"invoice_id"`
+}
+
+type ListAccountMovementsByInvoiceRow struct {
+	ID             pgtype.UUID    `json:"id"`
+	TenantID       string         `json:"tenant_id"`
+	EntityID       pgtype.UUID    `json:"entity_id"`
+	Date           pgtype.Date    `json:"date"`
+	MovementType   string         `json:"movement_type"`
+	Direction      string         `json:"direction"`
+	Amount         pgtype.Numeric `json:"amount"`
+	Balance        pgtype.Numeric `json:"balance"`
+	InvoiceID      pgtype.UUID    `json:"invoice_id"`
+	TreasuryID     pgtype.UUID    `json:"treasury_id"`
+	JournalEntryID pgtype.UUID    `json:"journal_entry_id"`
+	Notes          string         `json:"notes"`
+	UserID         string         `json:"user_id"`
+}
+
+func (q *Queries) ListAccountMovementsByInvoice(ctx context.Context, arg ListAccountMovementsByInvoiceParams) ([]ListAccountMovementsByInvoiceRow, error) {
+	rows, err := q.db.Query(ctx, listAccountMovementsByInvoice, arg.TenantID, arg.InvoiceID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListAccountMovementsByInvoiceRow{}
+	for rows.Next() {
+		var i ListAccountMovementsByInvoiceRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.TenantID,
+			&i.EntityID,
+			&i.Date,
+			&i.MovementType,
+			&i.Direction,
+			&i.Amount,
+			&i.Balance,
+			&i.InvoiceID,
+			&i.TreasuryID,
+			&i.JournalEntryID,
+			&i.Notes,
+			&i.UserID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateMovementBalance = `-- name: UpdateMovementBalance :execrows
 UPDATE erp_account_movements SET balance = balance - $3
 WHERE id = $1 AND tenant_id = $2 AND balance >= $3

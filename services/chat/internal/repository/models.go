@@ -705,6 +705,8 @@ type ErpInvoice struct {
 	Status         string             `json:"status"`
 	UserID         string             `json:"user_id"`
 	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	VoidedBy       pgtype.UUID        `json:"voided_by"`
+	VoidReason     pgtype.Text        `json:"void_reason"`
 }
 
 type ErpInvoiceLine struct {
@@ -734,6 +736,7 @@ type ErpJournalEntry struct {
 	UserID        string             `json:"user_id"`
 	Status        string             `json:"status"`
 	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	ReversedBy    pgtype.UUID        `json:"reversed_by"`
 }
 
 type ErpJournalLine struct {

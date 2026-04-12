@@ -75,6 +75,12 @@ VALUES ($1, $2, $3, $4, now())
 ON CONFLICT (tenant_id, article_id, warehouse_id)
 DO UPDATE SET quantity = erp_stock_levels.quantity + $4, updated_at = now();
 
+-- name: ListStockMovementsByRef :many
+SELECT id, tenant_id, article_id, warehouse_id, movement_type, quantity, unit_cost,
+       reference_type, reference_id
+FROM erp_stock_movements
+WHERE tenant_id = $1 AND reference_type = $2 AND reference_id = $3;
+
 -- name: ListBOM :many
 SELECT b.id, b.tenant_id, b.parent_id, b.child_id, b.quantity, b.unit_id, b.sort_order, b.notes,
        a.code AS child_code, a.name AS child_name

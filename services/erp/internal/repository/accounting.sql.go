@@ -187,7 +187,22 @@ type CreateJournalEntryParams struct {
 	UserID        string      `json:"user_id"`
 }
 
-func (q *Queries) CreateJournalEntry(ctx context.Context, arg CreateJournalEntryParams) (ErpJournalEntry, error) {
+type CreateJournalEntryRow struct {
+	ID            pgtype.UUID        `json:"id"`
+	TenantID      string             `json:"tenant_id"`
+	Number        string             `json:"number"`
+	Date          pgtype.Date        `json:"date"`
+	FiscalYearID  pgtype.UUID        `json:"fiscal_year_id"`
+	Concept       string             `json:"concept"`
+	EntryType     string             `json:"entry_type"`
+	ReferenceType pgtype.Text        `json:"reference_type"`
+	ReferenceID   pgtype.UUID        `json:"reference_id"`
+	UserID        string             `json:"user_id"`
+	Status        string             `json:"status"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+}
+
+func (q *Queries) CreateJournalEntry(ctx context.Context, arg CreateJournalEntryParams) (CreateJournalEntryRow, error) {
 	row := q.db.QueryRow(ctx, createJournalEntry,
 		arg.TenantID,
 		arg.Number,
@@ -199,7 +214,7 @@ func (q *Queries) CreateJournalEntry(ctx context.Context, arg CreateJournalEntry
 		arg.ReferenceID,
 		arg.UserID,
 	)
-	var i ErpJournalEntry
+	var i CreateJournalEntryRow
 	err := row.Scan(
 		&i.ID,
 		&i.TenantID,
@@ -461,9 +476,24 @@ type GetJournalEntryParams struct {
 	TenantID string      `json:"tenant_id"`
 }
 
-func (q *Queries) GetJournalEntry(ctx context.Context, arg GetJournalEntryParams) (ErpJournalEntry, error) {
+type GetJournalEntryRow struct {
+	ID            pgtype.UUID        `json:"id"`
+	TenantID      string             `json:"tenant_id"`
+	Number        string             `json:"number"`
+	Date          pgtype.Date        `json:"date"`
+	FiscalYearID  pgtype.UUID        `json:"fiscal_year_id"`
+	Concept       string             `json:"concept"`
+	EntryType     string             `json:"entry_type"`
+	ReferenceType pgtype.Text        `json:"reference_type"`
+	ReferenceID   pgtype.UUID        `json:"reference_id"`
+	UserID        string             `json:"user_id"`
+	Status        string             `json:"status"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+}
+
+func (q *Queries) GetJournalEntry(ctx context.Context, arg GetJournalEntryParams) (GetJournalEntryRow, error) {
 	row := q.db.QueryRow(ctx, getJournalEntry, arg.ID, arg.TenantID)
-	var i ErpJournalEntry
+	var i GetJournalEntryRow
 	err := row.Scan(
 		&i.ID,
 		&i.TenantID,
@@ -736,7 +766,22 @@ type ListJournalEntriesParams struct {
 	StatusFilter string      `json:"status_filter"`
 }
 
-func (q *Queries) ListJournalEntries(ctx context.Context, arg ListJournalEntriesParams) ([]ErpJournalEntry, error) {
+type ListJournalEntriesRow struct {
+	ID            pgtype.UUID        `json:"id"`
+	TenantID      string             `json:"tenant_id"`
+	Number        string             `json:"number"`
+	Date          pgtype.Date        `json:"date"`
+	FiscalYearID  pgtype.UUID        `json:"fiscal_year_id"`
+	Concept       string             `json:"concept"`
+	EntryType     string             `json:"entry_type"`
+	ReferenceType pgtype.Text        `json:"reference_type"`
+	ReferenceID   pgtype.UUID        `json:"reference_id"`
+	UserID        string             `json:"user_id"`
+	Status        string             `json:"status"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+}
+
+func (q *Queries) ListJournalEntries(ctx context.Context, arg ListJournalEntriesParams) ([]ListJournalEntriesRow, error) {
 	rows, err := q.db.Query(ctx, listJournalEntries,
 		arg.TenantID,
 		arg.Limit,
@@ -749,9 +794,9 @@ func (q *Queries) ListJournalEntries(ctx context.Context, arg ListJournalEntries
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ErpJournalEntry{}
+	items := []ListJournalEntriesRow{}
 	for rows.Next() {
-		var i ErpJournalEntry
+		var i ListJournalEntriesRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.TenantID,
@@ -837,6 +882,25 @@ func (q *Queries) ListJournalLines(ctx context.Context, arg ListJournalLinesPara
 		return nil, err
 	}
 	return items, nil
+}
+
+const markEntryReversed = `-- name: MarkEntryReversed :execrows
+UPDATE erp_journal_entries SET status = 'reversed', reversed_by = $3
+WHERE id = $1 AND tenant_id = $2 AND status = 'posted'
+`
+
+type MarkEntryReversedParams struct {
+	ID         pgtype.UUID `json:"id"`
+	TenantID   string      `json:"tenant_id"`
+	ReversedBy pgtype.UUID `json:"reversed_by"`
+}
+
+func (q *Queries) MarkEntryReversed(ctx context.Context, arg MarkEntryReversedParams) (int64, error) {
+	result, err := q.db.Exec(ctx, markEntryReversed, arg.ID, arg.TenantID, arg.ReversedBy)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const postJournalEntry = `-- name: PostJournalEntry :execrows

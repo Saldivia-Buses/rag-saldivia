@@ -292,7 +292,7 @@ func (s *Accounting) CloseFiscalYear(ctx context.Context, tenantID string, yearI
 
 // createClosingEntry generates the closing entry that zeros out income/expense accounts
 // and moves the net result to the result equity account.
-func (s *Accounting) createClosingEntry(ctx context.Context, qtx *repository.Queries, tenantID string, fy repository.GetFiscalYearRow, balances []repository.GetAccountBalancesForCloseRow, userID string) (repository.ErpJournalEntry, error) {
+func (s *Accounting) createClosingEntry(ctx context.Context, qtx *repository.Queries, tenantID string, fy repository.GetFiscalYearRow, balances []repository.GetAccountBalancesForCloseRow, userID string) (repository.CreateJournalEntryRow, error) {
 	entry, err := qtx.CreateJournalEntry(ctx, repository.CreateJournalEntryParams{
 		TenantID: tenantID,
 		Number:   fmt.Sprintf("CIERRE-%d", fy.Year),
@@ -303,7 +303,7 @@ func (s *Accounting) createClosingEntry(ctx context.Context, qtx *repository.Que
 		UserID:   userID,
 	})
 	if err != nil {
-		return repository.ErpJournalEntry{}, fmt.Errorf("create closing entry header: %w", err)
+		return repository.CreateJournalEntryRow{}, fmt.Errorf("create closing entry header: %w", err)
 	}
 
 	// Zero out income and expense accounts
@@ -337,7 +337,7 @@ func (s *Accounting) createClosingEntry(ctx context.Context, qtx *repository.Que
 			SortOrder: sortOrder,
 		})
 		if err != nil {
-			return repository.ErpJournalEntry{}, fmt.Errorf("closing line for %s: %w", b.Code, err)
+			return repository.CreateJournalEntryRow{}, fmt.Errorf("closing line for %s: %w", b.Code, err)
 		}
 		netResult = addNumeric(netResult, b.Balance)
 		sortOrder++
@@ -366,7 +366,7 @@ func (s *Accounting) createClosingEntry(ctx context.Context, qtx *repository.Que
 		SortOrder: sortOrder,
 	})
 	if err != nil {
-		return repository.ErpJournalEntry{}, fmt.Errorf("result line: %w", err)
+		return repository.CreateJournalEntryRow{}, fmt.Errorf("result line: %w", err)
 	}
 
 	// Post the entry immediately (closing entries are always posted)
@@ -374,7 +374,7 @@ func (s *Accounting) createClosingEntry(ctx context.Context, qtx *repository.Que
 		ID: entry.ID, TenantID: tenantID,
 	})
 	if err != nil {
-		return repository.ErpJournalEntry{}, fmt.Errorf("post closing entry: %w", err)
+		return repository.CreateJournalEntryRow{}, fmt.Errorf("post closing entry: %w", err)
 	}
 
 	return entry, nil
@@ -382,7 +382,7 @@ func (s *Accounting) createClosingEntry(ctx context.Context, qtx *repository.Que
 
 // createOpeningEntry generates the opening entry for the new fiscal year,
 // carrying forward patrimonial (asset, liability, equity) balances.
-func (s *Accounting) createOpeningEntry(ctx context.Context, qtx *repository.Queries, tenantID string, newYear repository.CreateFiscalYearRow, balances []repository.GetAccountBalancesForCloseRow, userID string) (repository.ErpJournalEntry, error) {
+func (s *Accounting) createOpeningEntry(ctx context.Context, qtx *repository.Queries, tenantID string, newYear repository.CreateFiscalYearRow, balances []repository.GetAccountBalancesForCloseRow, userID string) (repository.CreateJournalEntryRow, error) {
 	entry, err := qtx.CreateJournalEntry(ctx, repository.CreateJournalEntryParams{
 		TenantID:     tenantID,
 		Number:       fmt.Sprintf("APERTURA-%d", newYear.Year),
@@ -393,7 +393,7 @@ func (s *Accounting) createOpeningEntry(ctx context.Context, qtx *repository.Que
 		UserID:       userID,
 	})
 	if err != nil {
-		return repository.ErpJournalEntry{}, fmt.Errorf("create opening entry header: %w", err)
+		return repository.CreateJournalEntryRow{}, fmt.Errorf("create opening entry header: %w", err)
 	}
 
 	sortOrder := int32(0)
@@ -422,7 +422,7 @@ func (s *Accounting) createOpeningEntry(ctx context.Context, qtx *repository.Que
 			SortOrder: sortOrder,
 		})
 		if err != nil {
-			return repository.ErpJournalEntry{}, fmt.Errorf("opening line for %s: %w", b.Code, err)
+			return repository.CreateJournalEntryRow{}, fmt.Errorf("opening line for %s: %w", b.Code, err)
 		}
 		sortOrder++
 	}
@@ -432,7 +432,7 @@ func (s *Accounting) createOpeningEntry(ctx context.Context, qtx *repository.Que
 		ID: entry.ID, TenantID: tenantID,
 	})
 	if err != nil {
-		return repository.ErpJournalEntry{}, fmt.Errorf("post opening entry: %w", err)
+		return repository.CreateJournalEntryRow{}, fmt.Errorf("post opening entry: %w", err)
 	}
 
 	return entry, nil
@@ -491,12 +491,12 @@ func addYear(d pgtype.Date) pgtype.Date {
 
 // EntryDetail bundles a journal entry with its lines.
 type EntryDetail struct {
-	Entry repository.ErpJournalEntry   `json:"entry"`
+	Entry repository.GetJournalEntryRow    `json:"entry"`
 	Lines []repository.ListJournalLinesRow `json:"lines"`
 }
 
 // ListEntries returns paginated journal entries.
-func (s *Accounting) ListEntries(ctx context.Context, tenantID string, dateFrom, dateTo pgtype.Date, status string, limit, offset int) ([]repository.ErpJournalEntry, error) {
+func (s *Accounting) ListEntries(ctx context.Context, tenantID string, dateFrom, dateTo pgtype.Date, status string, limit, offset int) ([]repository.ListJournalEntriesRow, error) {
 	return s.repo.ListJournalEntries(ctx, repository.ListJournalEntriesParams{
 		TenantID: tenantID, DateFrom: dateFrom, DateTo: dateTo,
 		StatusFilter: status, Limit: int32(limit), Offset: int32(offset),
@@ -614,7 +614,11 @@ func (s *Accounting) CreateEntry(ctx context.Context, req CreateEntryRequest) (*
 		"action": "entry_created", "entry_id": uuidStr(entry.ID),
 	})
 
-	return &EntryDetail{Entry: repository.ErpJournalEntry(entry), Lines: lines}, nil
+	// Re-fetch with full columns for the response
+	entryFull, _ := s.repo.GetJournalEntry(ctx, repository.GetJournalEntryParams{
+		ID: entry.ID, TenantID: req.TenantID,
+	})
+	return &EntryDetail{Entry: entryFull, Lines: lines}, nil
 }
 
 // PostEntry posts a draft journal entry (immutable after posting).

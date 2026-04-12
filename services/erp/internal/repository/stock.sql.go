@@ -514,6 +514,61 @@ func (q *Queries) ListStockMovements(ctx context.Context, arg ListStockMovements
 	return items, nil
 }
 
+const listStockMovementsByRef = `-- name: ListStockMovementsByRef :many
+SELECT id, tenant_id, article_id, warehouse_id, movement_type, quantity, unit_cost,
+       reference_type, reference_id
+FROM erp_stock_movements
+WHERE tenant_id = $1 AND reference_type = $2 AND reference_id = $3
+`
+
+type ListStockMovementsByRefParams struct {
+	TenantID      string      `json:"tenant_id"`
+	ReferenceType pgtype.Text `json:"reference_type"`
+	ReferenceID   pgtype.UUID `json:"reference_id"`
+}
+
+type ListStockMovementsByRefRow struct {
+	ID            pgtype.UUID    `json:"id"`
+	TenantID      string         `json:"tenant_id"`
+	ArticleID     pgtype.UUID    `json:"article_id"`
+	WarehouseID   pgtype.UUID    `json:"warehouse_id"`
+	MovementType  string         `json:"movement_type"`
+	Quantity      pgtype.Numeric `json:"quantity"`
+	UnitCost      pgtype.Numeric `json:"unit_cost"`
+	ReferenceType pgtype.Text    `json:"reference_type"`
+	ReferenceID   pgtype.UUID    `json:"reference_id"`
+}
+
+func (q *Queries) ListStockMovementsByRef(ctx context.Context, arg ListStockMovementsByRefParams) ([]ListStockMovementsByRefRow, error) {
+	rows, err := q.db.Query(ctx, listStockMovementsByRef, arg.TenantID, arg.ReferenceType, arg.ReferenceID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListStockMovementsByRefRow{}
+	for rows.Next() {
+		var i ListStockMovementsByRefRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.TenantID,
+			&i.ArticleID,
+			&i.WarehouseID,
+			&i.MovementType,
+			&i.Quantity,
+			&i.UnitCost,
+			&i.ReferenceType,
+			&i.ReferenceID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listWarehouses = `-- name: ListWarehouses :many
 SELECT id, tenant_id, code, name, location, active
 FROM erp_warehouses WHERE tenant_id = $1 AND ($2::BOOLEAN = false OR active = true)
