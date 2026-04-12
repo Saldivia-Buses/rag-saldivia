@@ -1,7 +1,5 @@
-export default function CalidadPostventaPage() {
-  return (
-    <div className="flex-1 p-8">
-      <h1 className="text-2xl font-semibold">Postventa</h1>
-    </div>
-  );
+"use client";
+import { ComingSoon } from "@/components/erp/coming-soon";
+export default function PostventaPage() {
+  return <ComingSoon title="Postventa" description="Gestión de garantías, reclamos y seguimiento de satisfacción del cliente. Próximamente." />;
 }
