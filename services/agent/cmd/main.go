@@ -56,6 +56,7 @@ func main() {
 	notificationURL := config.Env("NOTIFICATION_SERVICE_URL", "http://localhost:8005")
 	astroURL := config.Env("ASTRO_SERVICE_URL", "http://localhost:8011")
 	bigbrotherURL := config.Env("BIGBROTHER_SERVICE_URL", "http://localhost:8012")
+	erpURL := config.Env("ERP_SERVICE_URL", "http://localhost:8013")
 
 	// Core tools always available (not module-dependent)
 	toolDefs := []tools.Definition{
@@ -76,11 +77,11 @@ func main() {
 	modulesDir := config.Env("MODULES_DIR", "modules")
 	serviceURLs := map[string]string{
 		"search": searchURL, "ingest": ingestURL, "notification": notificationURL,
-		"astro": astroURL, "bigbrother": bigbrotherURL,
+		"astro": astroURL, "bigbrother": bigbrotherURL, "erp": erpURL,
 	}
 	// TODO: enabledModules should come from Platform DB per-tenant.
 	// For now, load all modules' tools as available.
-	moduleDefs, err := tools.LoadModuleTools(modulesDir, map[string]bool{"fleet": true, "astro": true, "bigbrother": true}, serviceURLs)
+	moduleDefs, err := tools.LoadModuleTools(modulesDir, map[string]bool{"fleet": true, "astro": true, "bigbrother": true, "erp": true}, serviceURLs)
 	if err != nil {
 		slog.Warn("failed to load module tools", "error", err)
 	} else if len(moduleDefs) > 0 {
