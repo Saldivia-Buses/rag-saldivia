@@ -405,6 +405,41 @@ check "no hardcoded API URLs in frontend source" bash -c '
     [ -z "$bad" ] || { echo "HARDCODED API URL: $bad"; exit 1; }
 '
 
+# ─── 17. Docs-Code Sync ───────────────────────────────────────────
+echo ""
+echo "▸ Docs-Code Sync"
+
+check "files referenced in CRITICAL_FLOWS.md exist" bash -c '
+    cd "'"$ROOT"'"
+    [ -f "docs/CRITICAL_FLOWS.md" ] || exit 0
+    files=$(grep -oP "services/[^\s|)\`]+\.go|pkg/[^\s|)\`]+\.go" docs/CRITICAL_FLOWS.md | sort -u)
+    for f in $files; do
+        [ -f "$f" ] || { echo "STALE REF: $f referenced in CRITICAL_FLOWS.md but does not exist"; exit 1; }
+    done
+'
+
+# ─── 18. Silent Failure Protection ────────────────────────────────
+echo ""
+echo "▸ Silent Failure Protection"
+
+check "no swallowed errors (_ = err pattern) in handlers" bash -c '
+    cd "'"$ROOT"'"
+    bad=$(grep -rn "_ = err\b\|_ = .*Error\|_ = .*error" services/*/internal/handler/ --include="*.go" \
+        | grep -v "_test.go" | grep -v "// " | head -5) || true
+    [ -z "$bad" ] || { echo "SWALLOWED ERROR: $bad"; exit 1; }
+'
+
+check "no excessive bare error returns (>8 per service file)" bash -c '
+    cd "'"$ROOT"'"
+    # Flag individual service files with many return-err patterns
+    # Includes "return X, err" — high count means missing error wrapping
+    for sfile in services/*/internal/service/*.go; do
+        [[ "$sfile" == *_test.go ]] && continue
+        count=$(grep -c "return.*err$" "$sfile" 2>/dev/null) || count=0
+        [ "$count" -le 8 ] || { echo "MANY UNWRAPPED ERRORS ($count) in $sfile — add context"; exit 1; }
+    done
+'
+
 # ─── Summary ───────────────────────────────────────────────────────
 echo ""
 echo "═══════════════════════════════════════════════"
