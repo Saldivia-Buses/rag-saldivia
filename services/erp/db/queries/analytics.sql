@@ -513,3 +513,74 @@ WHERE tenant_id = $1 AND status = 'running' AND started_at < now() - sqlc.arg(st
 
 -- name: DeleteExpiredExports :exec
 DELETE FROM erp_pending_exports WHERE tenant_id = $1 AND expires_at < now();
+
+-- ─── Dirección / Management Analytics ──────────────────────────────────────
+
+-- name: AnalyticsProfitabilityByCustomer :many
+SELECT
+    e.id AS entity_id, e.name AS entity_name,
+    SUM(CASE WHEN i.direction = 'issued' THEN i.total ELSE 0 END) AS revenue,
+    SUM(CASE WHEN i.direction = 'received' THEN i.total ELSE 0 END) AS cost,
+    SUM(CASE WHEN i.direction = 'issued' THEN i.total ELSE 0 END) -
+    SUM(CASE WHEN i.direction = 'received' THEN i.total ELSE 0 END) AS margin
+FROM erp_invoices i
+JOIN erp_entities e ON e.id = i.entity_id AND e.tenant_id = i.tenant_id
+WHERE i.tenant_id = $1 AND i.status IN ('posted', 'paid')
+    AND i.date BETWEEN sqlc.arg(date_from) AND sqlc.arg(date_to)
+GROUP BY e.id, e.name
+ORDER BY margin DESC
+LIMIT sqlc.arg(top_n);
+
+-- name: AnalyticsProfitabilityByCostCenter :many
+SELECT
+    COALESCE(cc.name, 'Sin centro') AS cost_center,
+    SUM(CASE WHEN a.account_type = 'income' THEN jl.credit - jl.debit ELSE 0 END) AS revenue,
+    SUM(CASE WHEN a.account_type = 'expense' THEN jl.debit - jl.credit ELSE 0 END) AS cost,
+    SUM(CASE WHEN a.account_type = 'income' THEN jl.credit - jl.debit ELSE 0 END) -
+    SUM(CASE WHEN a.account_type = 'expense' THEN jl.debit - jl.credit ELSE 0 END) AS margin
+FROM erp_journal_lines jl
+JOIN erp_journal_entries je ON je.id = jl.entry_id AND je.tenant_id = jl.tenant_id
+JOIN erp_accounts a ON a.id = jl.account_id AND a.tenant_id = jl.tenant_id
+LEFT JOIN erp_cost_centers cc ON cc.id = jl.cost_center_id AND cc.tenant_id = jl.tenant_id
+WHERE jl.tenant_id = $1 AND je.status = 'posted'
+    AND je.date BETWEEN sqlc.arg(date_from) AND sqlc.arg(date_to)
+GROUP BY cc.name
+ORDER BY margin DESC;
+
+-- name: AnalyticsYoYComparison :many
+SELECT
+    to_char(date, 'MM') AS month,
+    SUM(CASE WHEN EXTRACT(YEAR FROM date) = sqlc.arg(current_year)::INT THEN total ELSE 0 END) AS current_year,
+    SUM(CASE WHEN EXTRACT(YEAR FROM date) = sqlc.arg(current_year)::INT - 1 THEN total ELSE 0 END) AS previous_year
+FROM erp_invoices
+WHERE tenant_id = $1 AND direction = 'issued' AND status IN ('posted', 'paid')
+    AND EXTRACT(YEAR FROM date) IN (sqlc.arg(current_year)::INT, sqlc.arg(current_year)::INT - 1)
+GROUP BY to_char(date, 'MM')
+ORDER BY month;
+
+-- name: AnalyticsMonthlyGrowth :many
+SELECT
+    to_char(date, 'YYYY-MM') AS period,
+    SUM(total) AS revenue,
+    LAG(SUM(total)) OVER (ORDER BY to_char(date, 'YYYY-MM')) AS prev_revenue
+FROM erp_invoices
+WHERE tenant_id = $1 AND direction = 'issued' AND status IN ('posted', 'paid')
+    AND date BETWEEN sqlc.arg(date_from) AND sqlc.arg(date_to)
+GROUP BY to_char(date, 'YYYY-MM')
+ORDER BY period;
+
+-- name: AnalyticsDepartmentalCost :many
+SELECT
+    COALESCE(d.name, 'Sin departamento') AS department,
+    COUNT(DISTINCT ed.entity_id) AS headcount,
+    SUM(COALESCE(ev.hours, 0)) AS total_overtime_hours
+FROM erp_employee_details ed
+JOIN erp_entities e ON e.id = ed.entity_id AND e.tenant_id = ed.tenant_id
+LEFT JOIN erp_departments d ON d.id = ed.department_id AND d.tenant_id = ed.tenant_id
+LEFT JOIN erp_hr_events ev ON ev.entity_id = ed.entity_id AND ev.tenant_id = ed.tenant_id
+    AND ev.event_type = 'overtime'
+    AND ev.date_from BETWEEN sqlc.arg(date_from) AND sqlc.arg(date_to)
+WHERE ed.tenant_id = $1 AND e.active = true
+    AND (ed.termination_date IS NULL OR ed.termination_date > CURRENT_DATE)
+GROUP BY d.name
+ORDER BY headcount DESC;
