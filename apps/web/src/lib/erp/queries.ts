@@ -43,4 +43,7 @@ export const erpKeys = {
   employees: () => [...erpKeys.all, "hr", "employees"] as const,
   workOrders: (status?: string) =>
     [...erpKeys.all, "maintenance", "work-orders", { status }] as const,
+  analytics: (domain: string, report: string, params?: Record<string, string>) =>
+    [...erpKeys.all, "analytics", domain, report, params] as const,
+  dashboardKPIs: () => [...erpKeys.all, "analytics", "dashboard", "kpis"] as const,
 };
