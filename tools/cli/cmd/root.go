@@ -20,6 +20,7 @@ func Execute() error {
 
 func init() {
 	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(versionsCmd)
 	rootCmd.AddCommand(serviceCmd)
 	rootCmd.AddCommand(tenantCmd)
 	rootCmd.AddCommand(deployCmd)

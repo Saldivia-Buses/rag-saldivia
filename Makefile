@@ -13,6 +13,13 @@ DEPLOY_DIR := $(ROOT_DIR)/deploy
 GOBIN := $(ROOT_DIR)/bin
 GO_SERVICES := $(shell ls -d $(SERVICES_DIR)/*/go.mod 2>/dev/null | xargs -I{} dirname {} | xargs -I{} basename {})
 
+# Build info (injected via -ldflags)
+GIT_SHA := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+BUILD_TIME := $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
+LDFLAGS_BASE := -s -w \
+	-X github.com/Camionerou/rag-saldivia/pkg/build.GitSHA=$(GIT_SHA) \
+	-X github.com/Camionerou/rag-saldivia/pkg/build.BuildTime=$(BUILD_TIME)
+
 export GOBIN
 
 .PHONY: help dev stop test lint build proto migrate deploy new-service clean versions
@@ -81,15 +88,24 @@ stop: ## Stop all services (Docker + Go + frontend)
 build: ## Build all Go services
 	@for svc in $(GO_SERVICES); do \
 		echo "Building $$svc..."; \
-		cd $(SERVICES_DIR)/$$svc && go build -o $(GOBIN)/$$svc ./cmd/... || exit 1; \
+		ver=$$(cat $(SERVICES_DIR)/$$svc/VERSION 2>/dev/null | tr -d '[:space:]' || echo "dev"); \
+		cd $(SERVICES_DIR)/$$svc && go build \
+			-ldflags '$(LDFLAGS_BASE) -X github.com/Camionerou/rag-saldivia/pkg/build.Version='"$$ver" \
+			-o $(GOBIN)/$$svc ./cmd/... || exit 1; \
 	done
-	@echo "All services built → $(GOBIN)/"
+	@echo "All services built → $(GOBIN)/ (sha: $(GIT_SHA))"
 
 build-astro: ## Build astro service (requires CGO for Swiss Ephemeris)
-	cd $(SERVICES_DIR)/astro && CGO_ENABLED=1 go build -o $(GOBIN)/astro ./cmd/...
+	@ver=$$(cat $(SERVICES_DIR)/astro/VERSION 2>/dev/null | tr -d '[:space:]' || echo "dev"); \
+	cd $(SERVICES_DIR)/astro && CGO_ENABLED=1 go build \
+		-ldflags '$(LDFLAGS_BASE) -X github.com/Camionerou/rag-saldivia/pkg/build.Version='"$$ver" \
+		-o $(GOBIN)/astro ./cmd/...
 
 build-%: ## Build a specific service (e.g., make build-auth)
-	cd $(SERVICES_DIR)/$* && go build -o $(GOBIN)/$* ./cmd/...
+	@ver=$$(cat $(SERVICES_DIR)/$*/VERSION 2>/dev/null | tr -d '[:space:]' || echo "dev"); \
+	cd $(SERVICES_DIR)/$* && go build \
+		-ldflags '$(LDFLAGS_BASE) -X github.com/Camionerou/rag-saldivia/pkg/build.Version='"$$ver" \
+		-o $(GOBIN)/$* ./cmd/...
 
 # ── Testing ──────────────────────────────────────────────────────────────
 
@@ -181,8 +197,8 @@ deploy-preflight: ## Run pre-deploy validation checks
 deploy-dev: ## Start development stack (no gen — dev uses Docker Compose env substitution)
 	docker compose -f $(DEPLOY_DIR)/docker-compose.dev.yml up -d
 
-deploy-prod: deploy-preflight deploy-gen ## Start production stack
-	docker compose -f $(DEPLOY_DIR)/docker-compose.prod.yml up -d
+deploy-prod: deploy-preflight deploy-gen ## Build + deploy + verify all services
+	bash $(DEPLOY_DIR)/scripts/deploy.sh
 
 deploy-stop: ## Stop all running services
 	docker compose -f $(DEPLOY_DIR)/docker-compose.prod.yml down 2>/dev/null || true
@@ -197,8 +213,37 @@ deploy-%: ## Deploy a specific service
 rollback-%: ## Rollback a specific service
 	$(GOBIN)/sda rollback $*
 
-versions: ## Show running vs available versions
-	$(GOBIN)/sda versions
+versions: ## Show running vs expected service versions
+	@GIT_SHA=$$(git rev-parse --short HEAD 2>/dev/null || echo "unknown"); \
+	echo ""; \
+	echo "Current HEAD: $$GIT_SHA"; \
+	echo ""; \
+	printf "%-20s %-10s %-10s %-22s %s\n" "SERVICE" "VERSION" "GIT SHA" "BUILD TIME" "STATUS"; \
+	echo "────────────────────────────────────────────────────────────────────────────────"; \
+	for entry in \
+		"8001:auth" "8002:ws" "8003:chat" "8004:agent" \
+		"8005:notification" "8006:platform" "8007:ingest" \
+		"8008:feedback" "8009:traces" "8010:search" \
+		"8011:astro" "8012:bigbrother" "8013:erp"; do \
+		port=$$(echo $$entry | cut -d: -f1); \
+		name=$$(echo $$entry | cut -d: -f2); \
+		info=$$(curl -sf --max-time 2 http://localhost:$$port/v1/info 2>/dev/null || echo ""); \
+		if [ -z "$$info" ]; then \
+			printf "%-20s %-10s %-10s %-22s \033[31mDOWN\033[0m\n" "$$name" "-" "-" "-"; \
+		else \
+			ver=$$(echo "$$info" | grep -o '"version":"[^"]*"' | cut -d'"' -f4); \
+			sha=$$(echo "$$info" | grep -o '"git_sha":"[^"]*"' | cut -d'"' -f4); \
+			btime=$$(echo "$$info" | grep -o '"build_time":"[^"]*"' | cut -d'"' -f4); \
+			if [ "$$sha" = "$$GIT_SHA" ]; then \
+				status="\033[32mMATCH\033[0m"; \
+			elif [ "$$sha" = "unknown" ] || [ -z "$$sha" ]; then \
+				status="\033[33mNO INFO\033[0m"; \
+			else \
+				status="\033[31mSTALE\033[0m"; \
+			fi; \
+			printf "%-20s %-10s %-10s %-22s $$status\n" "$$name" "$$ver" "$$sha" "$$btime"; \
+		fi; \
+	done
 
 # ── Scaffolding ──────────────────────────────────────────────────────────
 

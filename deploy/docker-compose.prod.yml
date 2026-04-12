@@ -43,6 +43,10 @@ x-jwt-public: &jwt-public
 x-redis: &redis-url
   REDIS_URL: "redis:6379"
 
+x-build-args: &build-args
+  GIT_SHA: ${GIT_SHA:-unknown}
+  BUILD_TIME: ${BUILD_TIME:-unknown}
+
 services:
 
   # ── Docker Socket Proxy (L14) ──────────────────────────────────────────
@@ -214,10 +218,13 @@ services:
 
   auth:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-auth:${AUTH_VERSION:-latest}
+    image: ghcr.io/camionerou/sda-auth:${AUTH_VERSION:-local}
     build:
       context: ..
       dockerfile: services/auth/Dockerfile
+      args:
+        <<: *build-args
+        VERSION: ${AUTH_VERSION:-dev}
     depends_on:
       postgres-platform:
         condition: service_healthy
@@ -254,10 +261,13 @@ services:
 
   ws:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-ws:${WS_VERSION:-latest}
+    image: ghcr.io/camionerou/sda-ws:${WS_VERSION:-local}
     build:
       context: ..
       dockerfile: services/ws/Dockerfile
+      args:
+        <<: *build-args
+        VERSION: ${WS_VERSION:-dev}
     depends_on:
       redis:
         condition: service_healthy
@@ -294,10 +304,13 @@ services:
 
   chat:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-chat:${CHAT_VERSION:-latest}
+    image: ghcr.io/camionerou/sda-chat:${CHAT_VERSION:-local}
     build:
       context: ..
       dockerfile: services/chat/Dockerfile
+      args:
+        <<: *build-args
+        VERSION: ${CHAT_VERSION:-dev}
     depends_on:
       postgres-platform:
         condition: service_healthy
@@ -338,10 +351,13 @@ services:
 
   agent:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-agent:${AGENT_VERSION:-latest}
+    image: ghcr.io/camionerou/sda-agent:${AGENT_VERSION:-local}
     build:
       context: ..
       dockerfile: services/agent/Dockerfile
+      args:
+        <<: *build-args
+        VERSION: ${AGENT_VERSION:-dev}
     depends_on:
       postgres-platform:
         condition: service_healthy
@@ -388,10 +404,13 @@ services:
 
   search:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-search:${SEARCH_VERSION:-latest}
+    image: ghcr.io/camionerou/sda-search:${SEARCH_VERSION:-local}
     build:
       context: ..
       dockerfile: services/search/Dockerfile
+      args:
+        <<: *build-args
+        VERSION: ${SEARCH_VERSION:-dev}
     depends_on:
       postgres-platform:
         condition: service_healthy
@@ -429,10 +448,13 @@ services:
 
   traces:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-traces:${TRACES_VERSION:-latest}
+    image: ghcr.io/camionerou/sda-traces:${TRACES_VERSION:-local}
     build:
       context: ..
       dockerfile: services/traces/Dockerfile
+      args:
+        <<: *build-args
+        VERSION: ${TRACES_VERSION:-dev}
     depends_on:
       postgres-platform:
         condition: service_healthy
@@ -468,10 +490,13 @@ services:
 
   notification:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-notification:${NOTIFICATION_VERSION:-latest}
+    image: ghcr.io/camionerou/sda-notification:${NOTIFICATION_VERSION:-local}
     build:
       context: ..
       dockerfile: services/notification/Dockerfile
+      args:
+        <<: *build-args
+        VERSION: ${NOTIFICATION_VERSION:-dev}
     depends_on:
       postgres-platform:
         condition: service_healthy
@@ -509,10 +534,13 @@ services:
 
   platform:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-platform:${PLATFORM_VERSION:-latest}
+    image: ghcr.io/camionerou/sda-platform:${PLATFORM_VERSION:-local}
     build:
       context: ..
       dockerfile: services/platform/Dockerfile
+      args:
+        <<: *build-args
+        VERSION: ${PLATFORM_VERSION:-dev}
     depends_on:
       postgres-platform:
         condition: service_healthy
@@ -547,10 +575,13 @@ services:
 
   ingest:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-ingest:${INGEST_VERSION:-latest}
+    image: ghcr.io/camionerou/sda-ingest:${INGEST_VERSION:-local}
     build:
       context: ..
       dockerfile: services/ingest/Dockerfile
+      args:
+        <<: *build-args
+        VERSION: ${INGEST_VERSION:-dev}
     depends_on:
       postgres-platform:
         condition: service_healthy
@@ -587,10 +618,13 @@ services:
 
   feedback:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-feedback:${FEEDBACK_VERSION:-latest}
+    image: ghcr.io/camionerou/sda-feedback:${FEEDBACK_VERSION:-local}
     build:
       context: ..
       dockerfile: services/feedback/Dockerfile
+      args:
+        <<: *build-args
+        VERSION: ${FEEDBACK_VERSION:-dev}
     depends_on:
       postgres-platform:
         condition: service_healthy
@@ -628,10 +662,13 @@ services:
   # ── Astro (Plan 13 — astrological intelligence engine, CGO) ────────
   astro:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-astro:${ASTRO_VERSION:-latest}
+    image: ghcr.io/camionerou/sda-astro:${ASTRO_VERSION:-local}
     build:
       context: ..
       dockerfile: services/astro/Dockerfile
+      args:
+        <<: *build-args
+        VERSION: ${ASTRO_VERSION:-dev}
     depends_on:
       postgres-platform:
         condition: service_healthy
@@ -680,7 +717,7 @@ services:
 
   extractor:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-extractor:${EXTRACTOR_VERSION:-latest}
+    image: ghcr.io/camionerou/sda-extractor:${EXTRACTOR_VERSION:-local}
     build:
       context: ..
       dockerfile: services/extractor/Dockerfile
@@ -709,10 +746,13 @@ services:
 
   erp:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-erp:${ERP_VERSION:-latest}
+    image: ghcr.io/camionerou/sda-erp:${ERP_VERSION:-local}
     build:
       context: ..
       dockerfile: services/erp/Dockerfile
+      args:
+        <<: *build-args
+        VERSION: ${ERP_VERSION:-dev}
     depends_on:
       postgres-platform:
         condition: service_healthy
@@ -753,10 +793,13 @@ services:
 
   bigbrother:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-bigbrother:${BIGBROTHER_VERSION:-latest}
+    image: ghcr.io/camionerou/sda-bigbrother:${BIGBROTHER_VERSION:-local}
     build:
       context: ..
       dockerfile: services/bigbrother/Dockerfile
+      args:
+        <<: *build-args
+        VERSION: ${BIGBROTHER_VERSION:-dev}
     depends_on:
       postgres-platform:
         condition: service_healthy
