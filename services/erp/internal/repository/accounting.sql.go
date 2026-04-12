@@ -11,6 +11,35 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const closeFiscalYear = `-- name: CloseFiscalYear :execrows
+UPDATE erp_fiscal_years
+SET status = 'closed', closed_by = $3, closed_at = now(),
+    closing_entry_id = $4, opening_entry_id = $5
+WHERE id = $1 AND tenant_id = $2 AND status = 'open'
+`
+
+type CloseFiscalYearParams struct {
+	ID             pgtype.UUID `json:"id"`
+	TenantID       string      `json:"tenant_id"`
+	ClosedBy       pgtype.Text `json:"closed_by"`
+	ClosingEntryID pgtype.UUID `json:"closing_entry_id"`
+	OpeningEntryID pgtype.UUID `json:"opening_entry_id"`
+}
+
+func (q *Queries) CloseFiscalYear(ctx context.Context, arg CloseFiscalYearParams) (int64, error) {
+	result, err := q.db.Exec(ctx, closeFiscalYear,
+		arg.ID,
+		arg.TenantID,
+		arg.ClosedBy,
+		arg.ClosingEntryID,
+		arg.OpeningEntryID,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const createAccount = `-- name: CreateAccount :one
 INSERT INTO erp_accounts (tenant_id, code, name, parent_id, account_type, is_detail, cost_center_id)
 VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -85,26 +114,43 @@ func (q *Queries) CreateCostCenter(ctx context.Context, arg CreateCostCenterPara
 }
 
 const createFiscalYear = `-- name: CreateFiscalYear :one
-INSERT INTO erp_fiscal_years (tenant_id, year, start_date, end_date)
-VALUES ($1, $2, $3, $4)
-RETURNING id, tenant_id, year, start_date, end_date, status
+INSERT INTO erp_fiscal_years (tenant_id, year, start_date, end_date, result_account_id)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id, tenant_id, year, start_date, end_date, status, result_account_id,
+    closed_by, closed_at, closing_entry_id, opening_entry_id
 `
 
 type CreateFiscalYearParams struct {
-	TenantID  string      `json:"tenant_id"`
-	Year      int32       `json:"year"`
-	StartDate pgtype.Date `json:"start_date"`
-	EndDate   pgtype.Date `json:"end_date"`
+	TenantID        string      `json:"tenant_id"`
+	Year            int32       `json:"year"`
+	StartDate       pgtype.Date `json:"start_date"`
+	EndDate         pgtype.Date `json:"end_date"`
+	ResultAccountID pgtype.UUID `json:"result_account_id"`
 }
 
-func (q *Queries) CreateFiscalYear(ctx context.Context, arg CreateFiscalYearParams) (ErpFiscalYear, error) {
+type CreateFiscalYearRow struct {
+	ID              pgtype.UUID        `json:"id"`
+	TenantID        string             `json:"tenant_id"`
+	Year            int32              `json:"year"`
+	StartDate       pgtype.Date        `json:"start_date"`
+	EndDate         pgtype.Date        `json:"end_date"`
+	Status          string             `json:"status"`
+	ResultAccountID pgtype.UUID        `json:"result_account_id"`
+	ClosedBy        pgtype.Text        `json:"closed_by"`
+	ClosedAt        pgtype.Timestamptz `json:"closed_at"`
+	ClosingEntryID  pgtype.UUID        `json:"closing_entry_id"`
+	OpeningEntryID  pgtype.UUID        `json:"opening_entry_id"`
+}
+
+func (q *Queries) CreateFiscalYear(ctx context.Context, arg CreateFiscalYearParams) (CreateFiscalYearRow, error) {
 	row := q.db.QueryRow(ctx, createFiscalYear,
 		arg.TenantID,
 		arg.Year,
 		arg.StartDate,
 		arg.EndDate,
+		arg.ResultAccountID,
 	)
-	var i ErpFiscalYear
+	var i CreateFiscalYearRow
 	err := row.Scan(
 		&i.ID,
 		&i.TenantID,
@@ -112,6 +158,11 @@ func (q *Queries) CreateFiscalYear(ctx context.Context, arg CreateFiscalYearPara
 		&i.StartDate,
 		&i.EndDate,
 		&i.Status,
+		&i.ResultAccountID,
+		&i.ClosedBy,
+		&i.ClosedAt,
+		&i.ClosingEntryID,
+		&i.OpeningEntryID,
 	)
 	return i, err
 }
@@ -296,6 +347,109 @@ func (q *Queries) GetAccountBalance(ctx context.Context, arg GetAccountBalancePa
 	return items, nil
 }
 
+const getAccountBalancesForClose = `-- name: GetAccountBalancesForClose :many
+SELECT a.id, a.code, a.name, a.account_type,
+    COALESCE(SUM(jl.debit), 0)::NUMERIC(16,2) AS total_debit,
+    COALESCE(SUM(jl.credit), 0)::NUMERIC(16,2) AS total_credit,
+    (COALESCE(SUM(jl.debit), 0) - COALESCE(SUM(jl.credit), 0))::NUMERIC(16,2) AS balance
+FROM erp_accounts a
+JOIN erp_journal_lines jl ON jl.account_id = a.id AND jl.tenant_id = a.tenant_id
+JOIN erp_journal_entries je ON je.id = jl.entry_id AND je.tenant_id = jl.tenant_id
+WHERE a.tenant_id = $1
+    AND a.is_detail = true
+    AND je.fiscal_year_id = $2
+    AND je.status = 'posted'
+GROUP BY a.id, a.code, a.name, a.account_type
+HAVING COALESCE(SUM(jl.debit), 0) - COALESCE(SUM(jl.credit), 0) != 0
+`
+
+type GetAccountBalancesForCloseParams struct {
+	TenantID     string      `json:"tenant_id"`
+	FiscalYearID pgtype.UUID `json:"fiscal_year_id"`
+}
+
+type GetAccountBalancesForCloseRow struct {
+	ID          pgtype.UUID    `json:"id"`
+	Code        string         `json:"code"`
+	Name        string         `json:"name"`
+	AccountType string         `json:"account_type"`
+	TotalDebit  pgtype.Numeric `json:"total_debit"`
+	TotalCredit pgtype.Numeric `json:"total_credit"`
+	Balance     pgtype.Numeric `json:"balance"`
+}
+
+func (q *Queries) GetAccountBalancesForClose(ctx context.Context, arg GetAccountBalancesForCloseParams) ([]GetAccountBalancesForCloseRow, error) {
+	rows, err := q.db.Query(ctx, getAccountBalancesForClose, arg.TenantID, arg.FiscalYearID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetAccountBalancesForCloseRow{}
+	for rows.Next() {
+		var i GetAccountBalancesForCloseRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Code,
+			&i.Name,
+			&i.AccountType,
+			&i.TotalDebit,
+			&i.TotalCredit,
+			&i.Balance,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getFiscalYear = `-- name: GetFiscalYear :one
+SELECT id, tenant_id, year, start_date, end_date, status, result_account_id,
+       closed_by, closed_at, closing_entry_id, opening_entry_id
+FROM erp_fiscal_years WHERE id = $1 AND tenant_id = $2
+`
+
+type GetFiscalYearParams struct {
+	ID       pgtype.UUID `json:"id"`
+	TenantID string      `json:"tenant_id"`
+}
+
+type GetFiscalYearRow struct {
+	ID              pgtype.UUID        `json:"id"`
+	TenantID        string             `json:"tenant_id"`
+	Year            int32              `json:"year"`
+	StartDate       pgtype.Date        `json:"start_date"`
+	EndDate         pgtype.Date        `json:"end_date"`
+	Status          string             `json:"status"`
+	ResultAccountID pgtype.UUID        `json:"result_account_id"`
+	ClosedBy        pgtype.Text        `json:"closed_by"`
+	ClosedAt        pgtype.Timestamptz `json:"closed_at"`
+	ClosingEntryID  pgtype.UUID        `json:"closing_entry_id"`
+	OpeningEntryID  pgtype.UUID        `json:"opening_entry_id"`
+}
+
+func (q *Queries) GetFiscalYear(ctx context.Context, arg GetFiscalYearParams) (GetFiscalYearRow, error) {
+	row := q.db.QueryRow(ctx, getFiscalYear, arg.ID, arg.TenantID)
+	var i GetFiscalYearRow
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.Year,
+		&i.StartDate,
+		&i.EndDate,
+		&i.Status,
+		&i.ResultAccountID,
+		&i.ClosedBy,
+		&i.ClosedAt,
+		&i.ClosingEntryID,
+		&i.OpeningEntryID,
+	)
+	return i, err
+}
+
 const getJournalEntry = `-- name: GetJournalEntry :one
 SELECT id, tenant_id, number, date, fiscal_year_id, concept, entry_type,
        reference_type, reference_id, user_id, status, created_at
@@ -474,20 +628,70 @@ func (q *Queries) ListCostCenters(ctx context.Context, arg ListCostCentersParams
 	return items, nil
 }
 
+const listDraftEntriesInPeriod = `-- name: ListDraftEntriesInPeriod :many
+SELECT id, number FROM erp_journal_entries
+WHERE tenant_id = $1 AND fiscal_year_id = $2 AND status = 'draft'
+`
+
+type ListDraftEntriesInPeriodParams struct {
+	TenantID     string      `json:"tenant_id"`
+	FiscalYearID pgtype.UUID `json:"fiscal_year_id"`
+}
+
+type ListDraftEntriesInPeriodRow struct {
+	ID     pgtype.UUID `json:"id"`
+	Number string      `json:"number"`
+}
+
+func (q *Queries) ListDraftEntriesInPeriod(ctx context.Context, arg ListDraftEntriesInPeriodParams) ([]ListDraftEntriesInPeriodRow, error) {
+	rows, err := q.db.Query(ctx, listDraftEntriesInPeriod, arg.TenantID, arg.FiscalYearID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListDraftEntriesInPeriodRow{}
+	for rows.Next() {
+		var i ListDraftEntriesInPeriodRow
+		if err := rows.Scan(&i.ID, &i.Number); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listFiscalYears = `-- name: ListFiscalYears :many
-SELECT id, tenant_id, year, start_date, end_date, status
+SELECT id, tenant_id, year, start_date, end_date, status, result_account_id,
+       closed_by, closed_at, closing_entry_id, opening_entry_id
 FROM erp_fiscal_years WHERE tenant_id = $1 ORDER BY year DESC
 `
 
-func (q *Queries) ListFiscalYears(ctx context.Context, tenantID string) ([]ErpFiscalYear, error) {
+type ListFiscalYearsRow struct {
+	ID              pgtype.UUID        `json:"id"`
+	TenantID        string             `json:"tenant_id"`
+	Year            int32              `json:"year"`
+	StartDate       pgtype.Date        `json:"start_date"`
+	EndDate         pgtype.Date        `json:"end_date"`
+	Status          string             `json:"status"`
+	ResultAccountID pgtype.UUID        `json:"result_account_id"`
+	ClosedBy        pgtype.Text        `json:"closed_by"`
+	ClosedAt        pgtype.Timestamptz `json:"closed_at"`
+	ClosingEntryID  pgtype.UUID        `json:"closing_entry_id"`
+	OpeningEntryID  pgtype.UUID        `json:"opening_entry_id"`
+}
+
+func (q *Queries) ListFiscalYears(ctx context.Context, tenantID string) ([]ListFiscalYearsRow, error) {
 	rows, err := q.db.Query(ctx, listFiscalYears, tenantID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ErpFiscalYear{}
+	items := []ListFiscalYearsRow{}
 	for rows.Next() {
-		var i ErpFiscalYear
+		var i ListFiscalYearsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.TenantID,
@@ -495,6 +699,11 @@ func (q *Queries) ListFiscalYears(ctx context.Context, tenantID string) ([]ErpFi
 			&i.StartDate,
 			&i.EndDate,
 			&i.Status,
+			&i.ResultAccountID,
+			&i.ClosedBy,
+			&i.ClosedAt,
+			&i.ClosingEntryID,
+			&i.OpeningEntryID,
 		); err != nil {
 			return nil, err
 		}
@@ -642,6 +851,25 @@ type PostJournalEntryParams struct {
 
 func (q *Queries) PostJournalEntry(ctx context.Context, arg PostJournalEntryParams) (int64, error) {
 	result, err := q.db.Exec(ctx, postJournalEntry, arg.ID, arg.TenantID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const setFiscalYearResultAccount = `-- name: SetFiscalYearResultAccount :execrows
+UPDATE erp_fiscal_years SET result_account_id = $3
+WHERE id = $1 AND tenant_id = $2 AND status = 'open'
+`
+
+type SetFiscalYearResultAccountParams struct {
+	ID              pgtype.UUID `json:"id"`
+	TenantID        string      `json:"tenant_id"`
+	ResultAccountID pgtype.UUID `json:"result_account_id"`
+}
+
+func (q *Queries) SetFiscalYearResultAccount(ctx context.Context, arg SetFiscalYearResultAccountParams) (int64, error) {
+	result, err := q.db.Exec(ctx, setFiscalYearResultAccount, arg.ID, arg.TenantID, arg.ResultAccountID)
 	if err != nil {
 		return 0, err
 	}

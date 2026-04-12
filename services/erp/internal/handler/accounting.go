@@ -47,6 +47,18 @@ func (h *Accounting) Routes(authWrite func(http.Handler) http.Handler) chi.Route
 		r.Post("/entries/{id}/post", h.PostEntry)
 	})
 
+	// Fiscal year close
+	r.Group(func(r chi.Router) {
+		r.Use(sdamw.RequirePermission("erp.accounting.read"))
+		r.Get("/fiscal-years/{id}/preview-close", h.PreviewClose)
+	})
+	r.Group(func(r chi.Router) {
+		r.Use(authWrite)
+		r.Use(sdamw.RequirePermission("erp.accounting.close"))
+		r.Patch("/fiscal-years/{id}/result-account", h.SetResultAccount)
+		r.Post("/fiscal-years/{id}/close", h.CloseFiscalYear)
+	})
+
 	return r
 }
 
@@ -305,6 +317,73 @@ func (h *Accounting) GetLedger(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]any{"ledger": ledger})
+}
+
+// SetResultAccount sets the result account on a fiscal year (required before close).
+func (h *Accounting) SetResultAccount(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	yearID, err := parseUUID(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, `{"error":"invalid fiscal year id"}`, http.StatusBadRequest)
+		return
+	}
+	r.Body = http.MaxBytesReader(w, r.Body, 4<<10)
+	var body struct {
+		ResultAccountID string `json:"result_account_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.ResultAccountID == "" {
+		http.Error(w, `{"error":"result_account_id required"}`, http.StatusBadRequest)
+		return
+	}
+	accountID, err := parseUUID(body.ResultAccountID)
+	if err != nil {
+		http.Error(w, `{"error":"invalid account id"}`, http.StatusBadRequest)
+		return
+	}
+	if err := h.svc.SetFiscalYearResultAccount(r.Context(), slug, yearID, accountID,
+		r.Header.Get("X-User-ID"), r.RemoteAddr); err != nil {
+		slog.Error("set result account failed", "error", err)
+		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// PreviewClose returns what the fiscal year close would do.
+func (h *Accounting) PreviewClose(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	yearID, err := parseUUID(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, `{"error":"invalid fiscal year id"}`, http.StatusBadRequest)
+		return
+	}
+	preview, err := h.svc.PreviewClose(r.Context(), slug, yearID)
+	if err != nil {
+		slog.Error("preview close failed", "error", err)
+		http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusBadRequest)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(preview)
+}
+
+// CloseFiscalYear closes a fiscal year and creates the next one.
+func (h *Accounting) CloseFiscalYear(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	yearID, err := parseUUID(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, `{"error":"invalid fiscal year id"}`, http.StatusBadRequest)
+		return
+	}
+	result, err := h.svc.CloseFiscalYear(r.Context(), slug, yearID,
+		r.Header.Get("X-User-ID"), r.RemoteAddr)
+	if err != nil {
+		slog.Error("close fiscal year failed", "error", err)
+		http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusBadRequest)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(result)
 }
 
 // pgDate parses a date string into pgtype.Date. Returns invalid if empty.

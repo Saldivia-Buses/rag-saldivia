@@ -32,13 +32,49 @@ VALUES ($1, $2, $3, $4)
 RETURNING id, tenant_id, code, name, parent_id, active;
 
 -- name: ListFiscalYears :many
-SELECT id, tenant_id, year, start_date, end_date, status
+SELECT id, tenant_id, year, start_date, end_date, status, result_account_id,
+       closed_by, closed_at, closing_entry_id, opening_entry_id
 FROM erp_fiscal_years WHERE tenant_id = $1 ORDER BY year DESC;
 
+-- name: GetFiscalYear :one
+SELECT id, tenant_id, year, start_date, end_date, status, result_account_id,
+       closed_by, closed_at, closing_entry_id, opening_entry_id
+FROM erp_fiscal_years WHERE id = $1 AND tenant_id = $2;
+
 -- name: CreateFiscalYear :one
-INSERT INTO erp_fiscal_years (tenant_id, year, start_date, end_date)
-VALUES ($1, $2, $3, $4)
-RETURNING id, tenant_id, year, start_date, end_date, status;
+INSERT INTO erp_fiscal_years (tenant_id, year, start_date, end_date, result_account_id)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id, tenant_id, year, start_date, end_date, status, result_account_id,
+    closed_by, closed_at, closing_entry_id, opening_entry_id;
+
+-- name: SetFiscalYearResultAccount :execrows
+UPDATE erp_fiscal_years SET result_account_id = $3
+WHERE id = $1 AND tenant_id = $2 AND status = 'open';
+
+-- name: ListDraftEntriesInPeriod :many
+SELECT id, number FROM erp_journal_entries
+WHERE tenant_id = $1 AND fiscal_year_id = $2 AND status = 'draft';
+
+-- name: GetAccountBalancesForClose :many
+SELECT a.id, a.code, a.name, a.account_type,
+    COALESCE(SUM(jl.debit), 0)::NUMERIC(16,2) AS total_debit,
+    COALESCE(SUM(jl.credit), 0)::NUMERIC(16,2) AS total_credit,
+    (COALESCE(SUM(jl.debit), 0) - COALESCE(SUM(jl.credit), 0))::NUMERIC(16,2) AS balance
+FROM erp_accounts a
+JOIN erp_journal_lines jl ON jl.account_id = a.id AND jl.tenant_id = a.tenant_id
+JOIN erp_journal_entries je ON je.id = jl.entry_id AND je.tenant_id = jl.tenant_id
+WHERE a.tenant_id = $1
+    AND a.is_detail = true
+    AND je.fiscal_year_id = $2
+    AND je.status = 'posted'
+GROUP BY a.id, a.code, a.name, a.account_type
+HAVING COALESCE(SUM(jl.debit), 0) - COALESCE(SUM(jl.credit), 0) != 0;
+
+-- name: CloseFiscalYear :execrows
+UPDATE erp_fiscal_years
+SET status = 'closed', closed_by = $3, closed_at = now(),
+    closing_entry_id = $4, opening_entry_id = $5
+WHERE id = $1 AND tenant_id = $2 AND status = 'open';
 
 -- name: ListJournalEntries :many
 SELECT id, tenant_id, number, date, fiscal_year_id, concept, entry_type,

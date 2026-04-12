@@ -620,12 +620,17 @@ type ErpEntityRelation struct {
 }
 
 type ErpFiscalYear struct {
-	ID        pgtype.UUID `json:"id"`
-	TenantID  string      `json:"tenant_id"`
-	Year      int32       `json:"year"`
-	StartDate pgtype.Date `json:"start_date"`
-	EndDate   pgtype.Date `json:"end_date"`
-	Status    string      `json:"status"`
+	ID              pgtype.UUID        `json:"id"`
+	TenantID        string             `json:"tenant_id"`
+	Year            int32              `json:"year"`
+	StartDate       pgtype.Date        `json:"start_date"`
+	EndDate         pgtype.Date        `json:"end_date"`
+	Status          string             `json:"status"`
+	ClosedBy        pgtype.Text        `json:"closed_by"`
+	ClosedAt        pgtype.Timestamptz `json:"closed_at"`
+	ClosingEntryID  pgtype.UUID        `json:"closing_entry_id"`
+	OpeningEntryID  pgtype.UUID        `json:"opening_entry_id"`
+	ResultAccountID pgtype.UUID        `json:"result_account_id"`
 }
 
 type ErpFuelLog struct {

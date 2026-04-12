@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryProvider } from "@/lib/api/query-provider";
 import { AuthInitializer } from "@/lib/auth/auth-initializer";
@@ -36,6 +37,7 @@ export default function RootLayout({
             <AuthInitializer>
               <WsProvider>
                 {children}
+                <Toaster richColors closeButton position="bottom-right" />
               </WsProvider>
             </AuthInitializer>
           </TooltipProvider>
