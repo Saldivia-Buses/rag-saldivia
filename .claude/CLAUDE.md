@@ -8,14 +8,45 @@ On EVERY new session, before doing anything:
 3. Check `MEMORY.md` — feedback from past sessions
 4. If task involves a critical flow → read the relevant section of `docs/CRITICAL_FLOWS.md`
 
+## Code Intelligence (MANDATORY)
+
+Two MCP servers provide codebase intelligence. Use them — they prevent regressions.
+
+### CodeGraphContext (code graph — auto-updates on file changes)
+
+| When | Tool | Example |
+|------|------|---------|
+| **Before editing a function** | `analyze_code_relationships(find_callers, "FunctionName")` | See who calls it — if you change the signature, these break |
+| **Before editing `pkg/*`** | `analyze_code_relationships(find_importers, "pkg/tenant")` | Every service importing this package |
+| **Exploring code** | `find_code("query keyword")` | Find functions, types, or patterns |
+| **Checking blast radius** | `analyze_code_relationships(find_all_callers, "FunctionName")` | Full transitive caller tree |
+| **Finding dead code** | `find_dead_code(repo_path="/home/enzo/rag-saldivia")` | Unused functions to clean up |
+| **Complexity check** | `find_most_complex_functions()` | Top 10 most complex functions |
+| **After renaming** | `find_code("OldName")` | Verify no references remain |
+
+Graph stats: ~270 functions, ~108 files, ~83 modules. Watch enabled — auto-updates on every file change.
+
+### Repowise (documentation engine)
+
+| When | Tool |
+|------|------|
+| **First call on every task** | `get_overview()` |
+| **Before reading/editing a file** | `get_context(targets=["path/to/file"])` |
+| **Before changing hotspot files** | `get_risk(targets=["path/to/file"])` |
+| **Before architectural changes** | `get_why(query="why X over Y")` |
+| **Finding code** | `search_codebase(query="authentication flow")` |
+| **After code changes** | `update_decision_records(action="list")` then create/update |
+| **Tracing dependencies** | `get_dependency_path(source="src/auth", target="src/db")` |
+
 ## Regression Protection
 
 Before editing ANY Go file in `services/` or `pkg/`:
 1. `git log --oneline -5 -- {file}` — was it recently changed?
 2. If changed in last 48h: read the diff first (`git diff HEAD~5..HEAD -- {file}`)
-3. Use `get_context()` and `get_risk()` for hotspot files
-4. If changing a function signature → grep ALL callers project-wide before changing
-5. If changing `pkg/*` → check every service that imports it
+3. `analyze_code_relationships(find_callers, "FunctionName")` — who calls this?
+4. `get_context()` and `get_risk()` for hotspot files
+5. If changing a function signature → `find_all_callers` to see full blast radius
+6. If changing `pkg/*` → `find_importers` to check every consumer
 
 ## CRITICAL INVARIANTS (7 rules that MUST NOT break)
 
