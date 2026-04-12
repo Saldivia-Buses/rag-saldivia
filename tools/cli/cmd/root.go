@@ -25,6 +25,7 @@ func init() {
 	rootCmd.AddCommand(tenantCmd)
 	rootCmd.AddCommand(deployCmd)
 	rootCmd.AddCommand(dbCmd)
+	rootCmd.AddCommand(migrateLegacyCmd)
 }
 
 // env reads an environment variable with a fallback default.
