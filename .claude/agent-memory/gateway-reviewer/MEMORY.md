@@ -36,3 +36,4 @@
 - [PR #131 Plan 16 Polish](project_pr131_plan16_polish.md) -- pkg/server bootstrap + 12 main.go migrations, blockers: Timeout kills WS/SSE, compose broken, agent modules missing
 - [PR #138 Plan 17 Phases 7b+8](project_pr138_plan17_7b_8.md) -- ERP accounts+production+C2 fix, blockers: trigger crashes Allocate (no status col), balance update silent failure
 - [PR #141 Post-audit ERP](project_pr141_post_audit.md) -- Post-audit fixes, APPROVED, float64 precision in cash count diff is medium finding
+- [2.0.5 Execution Plan](project_plan205_execution.md) -- Pre-impl review, 4 blockers: sqlc collision, missing queries, cross-service wiring, undefined query SQL

@@ -1,7 +1,118 @@
 # CLAUDE.md
 
-<!-- Add your custom instructions below. Repowise will never modify anything outside the REPOWISE markers. -->
-<!-- Examples: coding style rules, test commands, workflow preferences, constraints -->
+## Session Start Protocol (MANDATORY)
+
+On EVERY new session, before doing anything:
+1. SessionStart hook runs automatically → shows recent commits, modified files, branch state
+2. Read `docs/bible.md` — permanent conventions
+3. Check `MEMORY.md` — feedback from past sessions
+4. If task involves a critical flow → read the relevant section of `docs/CRITICAL_FLOWS.md`
+
+## Regression Protection
+
+Before editing ANY Go file in `services/` or `pkg/`:
+1. `git log --oneline -5 -- {file}` — was it recently changed?
+2. If changed in last 48h: read the diff first (`git diff HEAD~5..HEAD -- {file}`)
+3. Use `get_context()` and `get_risk()` for hotspot files
+4. If changing a function signature → grep ALL callers project-wide before changing
+5. If changing `pkg/*` → check every service that imports it
+
+## CRITICAL INVARIANTS (7 rules that MUST NOT break)
+
+These are the SDA equivalent of astro-v2's domain invariants. Violations block commits.
+
+1. **Tenant isolation at every layer** — JWT claim tenant == request tenant. Every sqlc query for tenant data includes `tenant_id` in WHERE. No hardcoded tenant IDs anywhere. `tenant.Resolver` provides per-tenant DB pools — never share a pool across tenants.
+
+2. **JWT is the single source of identity** — UserID, TenantID, Slug, Role all come from JWT claims. Services verify JWT locally with ed25519 public key. Never trust client-supplied identity headers without middleware validation.
+
+3. **NATS subjects are tenant-namespaced** — ALL events follow `tenant.{slug}.{service}.{entity}[.{action}]` format. Never publish without slug prefix. Consumers use `tenant.*.{service}.>` wildcard.
+
+4. **Every write publishes a NATS event** — so the WebSocket Hub can push real-time updates. No polling in frontend. If you add a mutation endpoint, you MUST publish the corresponding NATS event.
+
+5. **Migration pairs are always complete** — every `.up.sql` has a matching `.down.sql`. Numbers are sequential with no gaps. sqlc generated code must match the current schema.
+
+6. **Service structure is uniform** — every Go service has `cmd/main.go`, `VERSION` (valid semver), `Dockerfile` (multi-stage, non-root), `README.md`. Every service is registered in `go.work`.
+
+7. **Error responses are JSON** — all `http.Error` calls in handlers must use JSON format: `` http.Error(w, `{"error":"msg"}`, code) `` or `writeJSON()`. Never plain text error responses on API endpoints.
+
+Run `bash .claude/hooks/check-invariants.sh` to verify all checks.
+
+## Known Staleness Risks
+
+- **`docs/CRITICAL_FLOWS.md` line numbers** drift on every edit — use function names to locate code, not line numbers
+- **Repowise index** can go stale — invariant check warns if >3 days old
+- **sqlc generated code** can drift — invariant check compares query vs generated timestamps
+
+## File-Specific Guards
+
+**READ `docs/CRITICAL_FLOWS.md` BEFORE modifying these files:**
+
+| If you're touching... | Read Flow # |
+|----------------------|-------------|
+| `services/auth/internal/` | Flow 1: Auth (login → JWT → refresh) |
+| `pkg/tenant/`, `pkg/middleware/`, `pkg/database/` | Flow 2: Multi-tenant routing |
+| `services/agent/internal/`, `services/chat/internal/` | Flow 3: Chat + Agent pipeline |
+| `services/ingest/internal/`, `services/extractor/` | Flow 4: Document ingestion |
+| `services/ws/internal/`, `pkg/nats/` | Flow 5: WebSocket real-time |
+
+## Hooks (automated)
+
+| Hook | Event | What it does |
+|------|-------|-------------|
+| Session briefing | `SessionStart` | Shows last 10 commits, modified files in 48h, uncommitted changes, service versions |
+| Pre-edit regression | `PreToolUse` on Edit/Write | Alerts if a Go file was modified in recent commits — read diff first |
+| Pre-commit invariants | `PreToolUse` on `git commit` | Runs 26 invariant checks — **blocks commit if any fail** (exit 2) |
+| Stop verification | `Stop` | Haiku verifies claims have evidence before session ends |
+
+## Skills (`.claude/skills/superpowers/`)
+
+14 specialized skills. Also available as `/command` slash commands.
+
+| Priority | Skill | When |
+|----------|-------|------|
+| ALWAYS | `using-superpowers` | Session start — establishes framework |
+| Before code | `brainstorming` | New feature, service, or module |
+| Before code | `writing-plans` | Clear spec, multi-step task |
+| During code | `test-driven-development` | EVERY implementation — test first |
+| During code | `systematic-debugging` | Bug, failure, unexpected behavior |
+| During code | `subagent-driven-development` | Dispatching per-task agents |
+| During code | `dispatching-parallel-agents` | 2+ independent tasks |
+| During code | `executing-plans` | Running multi-phase plans |
+| MANDATORY | `verification-before-completion` | Before EVERY "done" claim |
+| After code | `requesting-code-review` | Feature complete, before merge |
+| After code | `receiving-code-review` | Got review feedback |
+| After code | `finishing-a-development-branch` | Ready to PR/merge |
+| As needed | `using-git-worktrees` | Risky changes need isolation |
+| Meta | `writing-skills` | Creating/editing skills |
+
+## Specialized Agents (`.claude/agents/`)
+
+| Agent | Scope |
+|-------|-------|
+| `gateway-reviewer` | Go handlers, middleware, JWT, RBAC, sqlc, NATS, tenant isolation |
+| `frontend-reviewer` | React components, hooks, auth, backend communication |
+| `security-auditor` | Full security audit: JWT, tenant, SQL injection, NATS, Docker |
+| `test-writer` | Go tests (testify, testcontainers), frontend tests (bun, Playwright) |
+| `debugger` | Failure modes, logs, config, code tracing |
+| `deploy` | Preflight checks, Docker Compose, health verification |
+| `status` | Health checks, GPU, Docker, resource monitoring |
+| `doc-writer` | CLAUDE.md, bible, README, ADRs |
+| `plan-writer` | Plans with phases, migrations, NATS events |
+| `ingest` | Document pipeline, tree generation |
+
+## Self-Check Before Finishing
+
+Before declaring ANY task complete:
+```
+[ ] make build passes
+[ ] make test passes  
+[ ] make lint passes
+[ ] bash .claude/hooks/check-invariants.sh passes (26 checks)
+[ ] git diff --stat shows only expected changes
+[ ] No unresolved TODO/FIXME in changed files
+[ ] Documentation updated in same PR (bible.md rule)
+[ ] Evidence provided for EVERY claim (test output, build output, diff)
+```
 
 <!-- REPOWISE:START — Do not edit below this line. Auto-generated by Repowise. -->
 ## IMPORTANT: Codebase Intelligence Instructions for rag-saldivia
@@ -11,7 +122,7 @@
 > They deliver richer context — documentation, ownership, history, decisions —
 > in a single call. Raw `read_file` calls are a last resort only.
 
-Last indexed: 2026-04-08
+Last indexed: 2026-04-12
 ### Entry Points
 - `apps/web/src/components/supabase/server.ts`
 - `apps/web/src/components/tailgrids/core/index.tsx`

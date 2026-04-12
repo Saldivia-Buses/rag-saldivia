@@ -1,0 +1,57 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-briefing.sh\"",
+            "statusMessage": "Loading session briefing..."
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-edit-check.sh\"",
+            "statusMessage": "Checking recent modifications..."
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git commit*)",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-commit-check.sh\"",
+            "timeout": 30,
+            "statusMessage": "Running invariant checks..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/stop-verify.sh\"",
+            "timeout": 30,
+            "statusMessage": "Running stop verification..."
+          },
+          {
+            "type": "prompt",
+            "prompt": "The stop-verify hook just ran the invariant checks. Now check the CONVERSATION: Did you provide evidence (test output, build output, or diff) for every claim? Did you run make build/test/lint after code changes? Answer {\"ok\": true} if yes, {\"ok\": false, \"reason\": \"what's missing\"} if no. Be strict.",
+            "model": "claude-haiku-4-5-20251001"
+          }
+        ]
+      }
+    ]
+  }
+}
