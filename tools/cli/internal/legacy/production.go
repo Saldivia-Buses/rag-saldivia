@@ -15,6 +15,7 @@ func ProductionCenterReader(db *sql.DB) *GenericReader {
 }
 
 // ProductionOrderReader creates a reader for MRP_ORDEN_PRODUCCION.
+// Includes a subquery to get the first article from MRP_ORDEN_DETALLE.
 func ProductionOrderReader(db *sql.DB) *GenericReader {
 	return &GenericReader{
 		DB:         db,
@@ -22,6 +23,6 @@ func ProductionOrderReader(db *sql.DB) *GenericReader {
 		Target:     "erp_production_orders",
 		DomainName: "production",
 		PKColumn:   "id_mrporden",
-		Columns:    "id_mrporden, fecha_orden, fecha_cierre, mrpestado_id, centro_productivo_id, orden_comentarios, login_id",
+		Columns:    "id_mrporden, fecha_orden, fecha_cierre, mrpestado_id, centro_productivo_id, orden_comentarios, login_id, (SELECT stkarticulo_id FROM MRP_ORDEN_DETALLE WHERE mrporden_id = MRP_ORDEN_PRODUCCION.id_mrporden LIMIT 1) as first_article_code, (SELECT objetivo_ordendetalle FROM MRP_ORDEN_DETALLE WHERE mrporden_id = MRP_ORDEN_PRODUCCION.id_mrporden LIMIT 1) as first_quantity",
 	}
 }

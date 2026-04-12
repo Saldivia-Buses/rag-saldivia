@@ -52,7 +52,8 @@ func JournalEntryReader(db *sql.DB) *GenericReader {
 }
 
 // JournalLineReader creates a reader for CTB_DETALLES (asientos detalle).
-// Note: CTB_DETALLES.importe is varchar(45) — needs CAST in transform.
+// Note: CTB_DETALLES.importe is varchar(45) — needs CAST.
+// The entry date is resolved from the already-migrated journal entry in PostgreSQL.
 func JournalLineReader(db *sql.DB) *GenericReader {
 	return &GenericReader{
 		DB:         db,

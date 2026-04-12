@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"hash/fnv"
 	"time"
 
 	"github.com/google/uuid"
@@ -343,14 +344,15 @@ func NewJournalLineMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 			entryLegacyID := row.Int64("movimiento_id")
 			entryID, err := mapper.Resolve(ctx, "accounting", "CTB_MOVIMIENTOS", entryLegacyID)
 			if err != nil {
-				return nil, fmt.Errorf("journal line %d: entry %d not found: %w", legacyID, entryLegacyID, err)
+				return nil, nil // skip orphan lines (parent entry not migrated)
 			}
 
-			// Resolve account FK — CTB_CUENTAS uses id_ctbcuenta (AI) for mapping
-			// but the FK in CTB_DETALLES references cuenta_id (varchar code)
-			// We need to find the mapping by code. For now, skip if not found.
+			// Resolve account FK via code index (built after account migration)
 			accountCode := row.String("cuenta_id")
-			_ = accountCode // TODO: resolve by code lookup
+			accountID, err := mapper.ResolveByCode("accounting", "erp_accounts", accountCode)
+			if err != nil {
+				return nil, nil // skip lines with unknown account codes
+			}
 
 			// doh: 0=debe, 1=haber
 			doh := row.Int("doh")
@@ -368,14 +370,15 @@ func NewJournalLineMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				id = uuid.New()
 			}
 
-			// We need a valid account_id. Since CTB_CUENTAS FK is by varchar code,
-			// we'll need a code→UUID lookup. For now use a placeholder that will be
-			// resolved in a second pass or by the validator.
-			accountID := uuid.Nil // placeholder
+			// Resolve entry date from the already-migrated journal entry
+			entryDate := mapper.GetEntryDate(entryID)
+			if entryDate.IsZero() {
+				entryDate = SafeDateRequired(time.Time{})
+			}
 
 			return []any{
 				id, tenantID, entryID, accountID,
-				time.Now(), // entry_date — will be updated from parent entry
+				entryDate,
 				debit, credit,
 				row.String("referencia"),
 				row.Int("orden"),
@@ -792,9 +795,21 @@ func NewProductionOrderMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				status = "cancelled"
 			}
 
-			// product_id is required — we need at least one article from MRP_ORDEN_DETALLE
-			// For now, use a nil UUID that will need post-processing
-			productID := uuid.Nil
+			// Resolve product_id from first article in MRP_ORDEN_DETALLE (via subquery in reader)
+			artCode := row.String("first_article_code")
+			if artCode == "" {
+				return nil, nil // skip production orders with no articles
+			}
+			artLegacyID := int64(hashCode(artCode))
+			productID, err := mapper.ResolveOptional(ctx, "stock", "STK_ARTICULOS", artLegacyID)
+			if err != nil || productID == uuid.Nil {
+				return nil, nil // skip if article not migrated
+			}
+
+			quantity := ParseDecimal(row.Decimal("first_quantity"))
+			if quantity.IsZero() {
+				quantity = ParseDecimal("1")
+			}
 
 			id, err := mapper.Map(ctx, nil, "production", "MRP_ORDEN_PRODUCCION", legacyID, nil)
 			if err != nil {
@@ -807,7 +822,7 @@ func NewProductionOrderMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				SafeDateRequired(timeFromRow(row, "fecha_orden")),
 				productID,
 				status,
-				ParseDecimal("1"), // default quantity — actual comes from detail
+				quantity,
 				LegacyUserID,
 				row.String("orden_comentarios"),
 			}, nil
@@ -944,15 +959,15 @@ func timeFromRow(row legacy.LegacyRow, col string) time.Time {
 	}
 }
 
-// hashCode generates a stable int64 hash from a string code.
+// hashCode generates a stable int64 hash from a string code using FNV-1a 64-bit.
 // Used for STK_ARTICULOS where PK is varchar, not int.
-func hashCode(s string) uint32 {
-	var h uint32
-	for _, c := range s {
-		h = h*31 + uint32(c)
+// FNV-1a has much better collision resistance than DJB hash.
+func hashCode(s string) uint64 {
+	h := fnv.New64a()
+	h.Write([]byte(s))
+	v := h.Sum64()
+	if v == 0 {
+		v = 1
 	}
-	if h == 0 {
-		h = 1
-	}
-	return h
+	return v
 }
