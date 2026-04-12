@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"strings"
+	"regexp"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -42,7 +42,6 @@ func init() {
 	migrateLegacyCmd.Flags().String("resume-run-id", "", "UUID of the run to resume")
 	migrateLegacyCmd.Flags().StringSlice("skip-dry-run-for", nil, "Tenants allowed to skip dry-run requirement")
 	migrateLegacyCmd.Flags().Bool("validate-only", false, "Run post-migration validation without migrating")
-	migrateLegacyCmd.Flags().Int("mysql-rps", 0, "Rate limit MySQL reads (rows per second, 0=unlimited)")
 
 	migrateLegacyCmd.MarkFlagRequired("tenant")
 }
@@ -71,7 +70,7 @@ func runMigrateLegacy(cmd *cobra.Command, args []string) error {
 		pgDSN = os.Getenv("POSTGRES_TENANT_URL")
 	}
 	if pgDSN == "" {
-		pgDSN = env("POSTGRES_PLATFORM_URL", "postgres://sda:sda_dev@localhost:5432/sda_platform?sslmode=disable")
+		return fmt.Errorf("--pg-dsn or POSTGRES_TENANT_URL required")
 	}
 
 	slog.Info("connecting to MySQL", "dsn", maskDSN(mysqlDSN))
@@ -97,11 +96,10 @@ func runMigrateLegacy(cmd *cobra.Command, args []string) error {
 	if !dryRun && !resume {
 		allowList, _ := cmd.Flags().GetStringSlice("skip-dry-run-for")
 		if !containsStr(allowList, tenantSlug) {
-			return fmt.Errorf("tenant %q requires --dry-run first, or add to --skip-dry-run-for", tenantSlug)
-		}
-		lastStatus, err := migration.FindLastDryRun(ctx, pgPool, tenantSlug)
-		if err != nil || lastStatus != "dry_run_ok" {
-			return fmt.Errorf("no dry_run_ok found for tenant %q — run --dry-run first", tenantSlug)
+			lastStatus, err := migration.FindLastDryRun(ctx, pgPool, tenantSlug)
+			if err != nil || lastStatus != "dry_run_ok" {
+				return fmt.Errorf("no dry_run_ok found for tenant %q — run --dry-run first, or add to --skip-dry-run-for", tenantSlug)
+			}
 		}
 	}
 
@@ -112,14 +110,15 @@ func runMigrateLegacy(cmd *cobra.Command, args []string) error {
 	registerMigrators(orch, mysqlDB, tenantSlug)
 
 	// --- Pre-validation (dry-run only) ---
+	var dryRunID uuid.UUID
 	if dryRun {
-		runID := uuid.New()
+		dryRunID = uuid.New()
 		pgPool.Exec(ctx,
 			`INSERT INTO erp_migration_runs (id, tenant_id, mode) VALUES ($1, $2, 'dry_run')`,
-			runID, tenantSlug,
+			dryRunID, tenantSlug,
 		)
 
-		report, err := migration.RunPreValidation(ctx, mysqlDB, pgPool, tenantSlug, runID)
+		report, err := migration.RunPreValidation(ctx, mysqlDB, pgPool, tenantSlug, dryRunID)
 		if err != nil {
 			return fmt.Errorf("pre-validation: %w", err)
 		}
@@ -128,12 +127,11 @@ func runMigrateLegacy(cmd *cobra.Command, args []string) error {
 		if report.FixManual > 0 {
 			pgPool.Exec(ctx,
 				`UPDATE erp_migration_runs SET status = 'dry_run_failed', completed_at = now() WHERE id = $1`,
-				runID,
+				dryRunID,
 			)
 			return fmt.Errorf("%d blocking issues found — fix them and re-run", report.FixManual)
 		}
 
-		// Continue with dry-run migration (test transformations)
 		fmt.Println("\nPre-validation passed. Running dry-run migration...")
 	}
 
@@ -145,8 +143,8 @@ func runMigrateLegacy(cmd *cobra.Command, args []string) error {
 		return orch.Resume(ctx, resumeRunID)
 	}
 
-	// --- Run migration ---
-	if err := orch.Run(ctx, domains, dryRun); err != nil {
+	// --- Run migration (pass dryRunID so orchestrator reuses it instead of creating duplicate) ---
+	if err := orch.RunWithID(ctx, dryRunID, domains, dryRun); err != nil {
 		return err
 	}
 
@@ -176,6 +174,22 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 		migration.NewAccountMigrator(mysqlDB, tenantID),
 		migration.NewFiscalYearMigrator(mysqlDB, tenantID),
 		migration.NewJournalEntryMigrator(mysqlDB, tenantID),
+	)
+
+	// Setup hook: build code index for accounts (CTB_CUENTAS FK is by varchar code)
+	// and entry date cache (for journal line date resolution).
+	// These run after accounts + journal entries are migrated but before journal lines.
+	orch.AddSetupHook(func(ctx context.Context, mapper *migration.Mapper) error {
+		if err := mapper.BuildCodeIndex(ctx, "accounting", "erp_accounts", "code"); err != nil {
+			return fmt.Errorf("build account code index: %w", err)
+		}
+		if err := mapper.BuildEntryDateCache(ctx); err != nil {
+			return fmt.Errorf("build entry date cache: %w", err)
+		}
+		return nil
+	})
+
+	orch.RegisterMigrators(
 		migration.NewJournalLineMigrator(mysqlDB, tenantID),
 		migration.NewBankAccountMigrator(mysqlDB, tenantID),
 		migration.NewCashRegisterMigrator(mysqlDB, tenantID),
@@ -212,11 +226,12 @@ func containsStr(slice []string, item string) bool {
 }
 
 func maskDSN(dsn string) string {
-	// Hide password in DSN for logging
-	if idx := strings.Index(dsn, ":"); idx > 0 {
-		if end := strings.Index(dsn[idx:], "@"); end > 0 {
-			return dsn[:idx+1] + "***" + dsn[idx+end:]
-		}
+	// Hide password in DSN for logging.
+	// Handles both URI (postgres://user:pass@host) and MySQL (user:pass@tcp(host)) formats.
+	re := regexp.MustCompile(`(://[^:]+:|^[^:]+:)([^@]+)(@)`)
+	masked := re.ReplaceAllString(dsn, "${1}***${3}")
+	if masked != dsn {
+		return masked
 	}
 	return dsn
 }
