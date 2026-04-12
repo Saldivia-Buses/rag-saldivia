@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -28,6 +29,26 @@ func NewSuggestions(svc *service.Suggestions) *Suggestions {
 // tenantSlug reads the tenant slug from the request headers (injected by auth middleware).
 func tenantSlug(r *http.Request) string {
 	return r.Header.Get("X-Tenant-Slug")
+}
+
+// writeSafeErr writes a JSON error response without leaking internal details.
+// Known business errors pass through; unknown errors become "internal error".
+func writeSafeErr(w http.ResponseWriter, err error, status int) {
+	msg := err.Error()
+	safe := "internal error"
+	for _, prefix := range []string{
+		"fiscal year", "draft entries", "result_account",
+		"solo se pueden", "factura con CAE", "receipt",
+		"not found", "already", "balance", "don't balance",
+		"invalid transition", "warehouse_id required",
+		"allocation", "not open", "not confirmed",
+	} {
+		if strings.Contains(strings.ToLower(msg), strings.ToLower(prefix)) {
+			safe = msg
+			break
+		}
+	}
+	http.Error(w, `{"error":"`+safe+`"}`, status)
 }
 
 // parseUUID parses a string into pgtype.UUID.

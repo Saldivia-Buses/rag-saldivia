@@ -606,6 +606,60 @@ func (q *Queries) ListPurchaseOrders(ctx context.Context, arg ListPurchaseOrders
 	return items, nil
 }
 
+const listPurchaseReceiptLines = `-- name: ListPurchaseReceiptLines :many
+SELECT prl.id, prl.tenant_id, prl.receipt_id, prl.order_line_id, prl.article_id, prl.quantity,
+       a.code AS article_code, a.name AS article_name
+FROM erp_purchase_receipt_lines prl
+JOIN erp_articles a ON a.id = prl.article_id
+WHERE prl.tenant_id = $1 AND prl.receipt_id = $2
+ORDER BY prl.id
+`
+
+type ListPurchaseReceiptLinesParams struct {
+	TenantID  string      `json:"tenant_id"`
+	ReceiptID pgtype.UUID `json:"receipt_id"`
+}
+
+type ListPurchaseReceiptLinesRow struct {
+	ID          pgtype.UUID    `json:"id"`
+	TenantID    string         `json:"tenant_id"`
+	ReceiptID   pgtype.UUID    `json:"receipt_id"`
+	OrderLineID pgtype.UUID    `json:"order_line_id"`
+	ArticleID   pgtype.UUID    `json:"article_id"`
+	Quantity    pgtype.Numeric `json:"quantity"`
+	ArticleCode string         `json:"article_code"`
+	ArticleName string         `json:"article_name"`
+}
+
+func (q *Queries) ListPurchaseReceiptLines(ctx context.Context, arg ListPurchaseReceiptLinesParams) ([]ListPurchaseReceiptLinesRow, error) {
+	rows, err := q.db.Query(ctx, listPurchaseReceiptLines, arg.TenantID, arg.ReceiptID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListPurchaseReceiptLinesRow{}
+	for rows.Next() {
+		var i ListPurchaseReceiptLinesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.TenantID,
+			&i.ReceiptID,
+			&i.OrderLineID,
+			&i.ArticleID,
+			&i.Quantity,
+			&i.ArticleCode,
+			&i.ArticleName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listPurchaseReceipts = `-- name: ListPurchaseReceipts :many
 SELECT pr.id, pr.tenant_id, pr.order_id, pr.date, pr.number, pr.user_id, pr.notes, pr.created_at,
        po.number AS order_number

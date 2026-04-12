@@ -241,8 +241,16 @@ func (s *Accounting) CloseFiscalYear(ctx context.Context, tenantID string, yearI
 		return nil, fmt.Errorf("create new fiscal year: %w", err)
 	}
 
-	// 6. Generate opening entry: carry patrimonial balances
-	openingEntry, err := s.createOpeningEntry(ctx, qtx, tenantID, newYear, balances, userID)
+	// 6. Re-query balances AFTER closing entry to include result account effect
+	balancesPost, err := qtx.GetAccountBalancesForClose(ctx, repository.GetAccountBalancesForCloseParams{
+		TenantID: tenantID, FiscalYearID: yearID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("re-query balances post-close: %w", err)
+	}
+
+	// 7. Generate opening entry: carry patrimonial balances (with result account included)
+	openingEntry, err := s.createOpeningEntry(ctx, qtx, tenantID, newYear, balancesPost, userID)
 	if err != nil {
 		return nil, fmt.Errorf("create opening entry: %w", err)
 	}
@@ -436,41 +444,6 @@ func (s *Accounting) createOpeningEntry(ctx context.Context, qtx *repository.Que
 	}
 
 	return entry, nil
-}
-
-// Numeric helpers for fiscal year close operations.
-func zeroNumeric() pgtype.Numeric {
-	var n pgtype.Numeric
-	_ = n.Scan("0")
-	return n
-}
-
-func absNumeric(n pgtype.Numeric) pgtype.Numeric {
-	// pgtype.Numeric stores value internally — negate if negative
-	f, _ := n.Float64Value()
-	if f.Float64 < 0 {
-		var result pgtype.Numeric
-		_ = result.Scan(fmt.Sprintf("%f", -f.Float64))
-		return result
-	}
-	return n
-}
-
-func isPositive(n pgtype.Numeric) bool {
-	f, _ := n.Float64Value()
-	return f.Float64 > 0
-}
-
-func addNumeric(a, b pgtype.Numeric) pgtype.Numeric {
-	fa, _ := a.Float64Value()
-	fb, _ := b.Float64Value()
-	var result pgtype.Numeric
-	_ = result.Scan(fmt.Sprintf("%f", fa.Float64+fb.Float64))
-	return result
-}
-
-func pgText(s string) pgtype.Text {
-	return pgtype.Text{String: s, Valid: true}
 }
 
 func nextDay(d pgtype.Date) pgtype.Date {

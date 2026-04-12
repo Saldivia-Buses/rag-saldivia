@@ -11,7 +11,7 @@ CREATE TABLE erp_qc_inspections (
     quantity        NUMERIC(14,4) NOT NULL,
     accepted_qty    NUMERIC(14,4) NOT NULL DEFAULT 0,
     rejected_qty    NUMERIC(14,4) NOT NULL DEFAULT 0,
-    status          TEXT NOT NULL DEFAULT 'pending',  -- 'pending','completed'
+    status          TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'completed')),
     inspector_id    TEXT NOT NULL,
     notes           TEXT NOT NULL DEFAULT '',
     completed_at    TIMESTAMPTZ,

@@ -218,4 +218,5 @@ RETURNING *;
 
 -- name: GetNextReceiptNumber :one
 SELECT COALESCE(MAX(CAST(SUBSTRING(number FROM '[0-9]+$') AS INT)), 0) + 1 AS next_number
-FROM erp_receipts WHERE tenant_id = $1 AND receipt_type = $2;
+FROM erp_receipts WHERE tenant_id = $1 AND receipt_type = $2
+FOR UPDATE;

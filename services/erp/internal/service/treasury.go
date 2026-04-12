@@ -332,12 +332,16 @@ func (s *Treasury) AutoMatch(ctx context.Context, tenantID string, reconID pgtyp
 			}
 			if amountsMatch(line.Amount, mov.Amount, mov.MovementType) && datesClose(line.Date, mov.Date, 2) {
 				// Match the statement line to the movement
-				qtx.MatchStatementLine(ctx, repository.MatchStatementLineParams{
+				if _, err := qtx.MatchStatementLine(ctx, repository.MatchStatementLineParams{
 					ID: line.ID, TenantID: tenantID, MovementID: mov.ID,
-				})
-				qtx.MarkMovementReconciled(ctx, repository.MarkMovementReconciledParams{
+				}); err != nil {
+					continue // skip this match, try next movement
+				}
+				if _, err := qtx.MarkMovementReconciled(ctx, repository.MarkMovementReconciledParams{
 					ID: mov.ID, TenantID: tenantID, ReconciliationID: reconID,
-				})
+				}); err != nil {
+					continue
+				}
 				movMatched[movKey] = true
 				matched++
 				break
@@ -388,9 +392,16 @@ func (s *Treasury) MatchManual(ctx context.Context, tenantID string, reconID, li
 	return nil
 }
 
-// ConfirmReconciliation confirms a reconciliation.
+// ConfirmReconciliation confirms a reconciliation within a TX (atomic with audit).
 func (s *Treasury) ConfirmReconciliation(ctx context.Context, tenantID string, reconID pgtype.UUID, userID, ip string) error {
-	rows, err := s.repo.ConfirmReconciliation(ctx, repository.ConfirmReconciliationParams{
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback(ctx)
+	qtx := s.repo.WithTx(tx)
+
+	rows, err := qtx.ConfirmReconciliation(ctx, repository.ConfirmReconciliationParams{
 		ID: reconID, TenantID: tenantID,
 	})
 	if err != nil {
@@ -404,7 +415,11 @@ func (s *Treasury) ConfirmReconciliation(ctx context.Context, tenantID string, r
 		TenantID: tenantID, UserID: userID,
 		Action: "erp.reconciliation.confirmed", Resource: uuidStr(reconID), IP: ip,
 	}); err != nil {
-		return fmt.Errorf("strict audit failed: %w", err)
+		return fmt.Errorf("strict audit failed, aborting: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit confirm: %w", err)
 	}
 
 	s.publisher.Broadcast(tenantID, "erp_treasury", map[string]any{
@@ -502,13 +517,13 @@ func (s *Treasury) CreateReceipt(ctx context.Context, tenantID string, inp Recei
 	// Validate balance: sum(payments) + sum(withholdings) == sum(allocations)
 	var payTotal, whTotal, allocTotal float64
 	for _, p := range inp.Payments {
-		payTotal += parseFloatTreasury(p.Amount)
+		payTotal += parseFloatApprox(p.Amount)
 	}
 	for _, w := range inp.Withholdings {
-		whTotal += parseFloatTreasury(w.Amount)
+		whTotal += parseFloatApprox(w.Amount)
 	}
 	for _, a := range inp.Allocations {
-		allocTotal += parseFloatTreasury(a.Amount)
+		allocTotal += parseFloatApprox(a.Amount)
 	}
 	diff := (payTotal + whTotal) - allocTotal
 	if diff > 0.01 || diff < -0.01 {
@@ -645,11 +660,30 @@ func (s *Treasury) CreateReceipt(ctx context.Context, tenantID string, inp Recei
 			return nil, fmt.Errorf("create allocation %d: %w", i, err)
 		}
 
-		// Reduce invoice balance in account movements
-		qtx.UpdateMovementBalance(ctx, repository.UpdateMovementBalanceParams{
-			ID: acctMov.ID, TenantID: tenantID,
-			Balance: pgNumeric(alloc.Amount),
+		// Reduce the ORIGINAL invoice movement's outstanding balance
+		// (not the payment movement we just created — that starts at 0)
+		invoiceMovs, err := qtx.ListAccountMovementsByInvoice(ctx, repository.ListAccountMovementsByInvoiceParams{
+			TenantID: tenantID, InvoiceID: invID,
 		})
+		if err != nil {
+			return nil, fmt.Errorf("list invoice movements %d: %w", i, err)
+		}
+		// Find the original invoice movement (movement_type='invoice', has balance > 0)
+		for _, im := range invoiceMovs {
+			if im.MovementType == "invoice" {
+				rows, err := qtx.UpdateMovementBalance(ctx, repository.UpdateMovementBalanceParams{
+					ID: im.ID, TenantID: tenantID,
+					Balance: pgNumeric(alloc.Amount),
+				})
+				if err != nil {
+					return nil, fmt.Errorf("update invoice balance %d: %w", i, err)
+				}
+				if rows == 0 {
+					return nil, fmt.Errorf("allocation %d exceeds invoice outstanding balance", i)
+				}
+				break
+			}
+		}
 	}
 
 	// 4. Create withholdings (inline, within same TX)
@@ -686,6 +720,66 @@ func (s *Treasury) CreateReceipt(ctx context.Context, tenantID string, inp Recei
 		}
 	}
 
+	// 5. Generate auto journal entry (double-entry bookkeeping)
+	// Collection: debit cash/bank, credit receivable
+	// Payment: debit payable, credit cash/bank
+	var journalLines []repository.CreateJournalLineParams
+	// Debit side: cash/bank accounts from payments
+	for i, pay := range inp.Payments {
+		journalLines = append(journalLines, repository.CreateJournalLineParams{
+			TenantID:  tenantID,
+			EntryDate: d,
+			Debit:     pgNumeric(pay.Amount),
+			Credit:    zeroNumeric(),
+			Description: fmt.Sprintf("Recibo %s - %s #%d", number, pay.PaymentMethod, i+1),
+			SortOrder: int32(i),
+		})
+	}
+	// Credit side: entity account (receivable/payable)
+	journalLines = append(journalLines, repository.CreateJournalLineParams{
+		TenantID:  tenantID,
+		EntryDate: d,
+		Debit:     zeroNumeric(),
+		Credit:    pgNumeric(fmt.Sprintf("%.2f", allocTotal)),
+		Description: fmt.Sprintf("Recibo %s - imputación", number),
+		SortOrder: int32(len(inp.Payments)),
+	})
+	// Swap debit/credit for payments (we pay supplier, not receive from customer)
+	if inp.ReceiptType == "payment" {
+		for i := range journalLines {
+			journalLines[i].Debit, journalLines[i].Credit = journalLines[i].Credit, journalLines[i].Debit
+		}
+	}
+
+	// Create journal entry + lines
+	entry, err := qtx.CreateJournalEntry(ctx, repository.CreateJournalEntryParams{
+		TenantID:      tenantID,
+		Number:        "AUT-" + number,
+		Date:          d,
+		Concept:       fmt.Sprintf("Recibo %s", number),
+		EntryType:     "auto",
+		ReferenceType: pgText("receipt"),
+		ReferenceID:   receipt.ID,
+		UserID:        userID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("create journal entry: %w", err)
+	}
+	for _, jl := range journalLines {
+		jl.EntryID = entry.ID
+		if _, err := qtx.CreateJournalLine(ctx, jl); err != nil {
+			return nil, fmt.Errorf("create journal line: %w", err)
+		}
+	}
+	// Post the auto entry
+	qtx.PostJournalEntry(ctx, repository.PostJournalEntryParams{
+		ID: entry.ID, TenantID: tenantID,
+	})
+	// Link journal entry to receipt
+	qtx.SetReceiptJournalEntry(ctx, repository.SetReceiptJournalEntryParams{
+		ID: receipt.ID, TenantID: tenantID, JournalEntryID: entry.ID,
+	})
+
 	// StrictLogger
 	if err := s.audit.WriteStrict(ctx, audit.Entry{
 		TenantID: tenantID, UserID: userID,
@@ -715,23 +809,121 @@ func (s *Treasury) CreateReceipt(ctx context.Context, tenantID string, inp Recei
 	return detail, nil
 }
 
-// VoidReceipt cancels a confirmed receipt.
+// VoidReceipt cancels a confirmed receipt with cascade reversal:
+// reverses treasury movements, account movements, and journal entry.
 func (s *Treasury) VoidReceipt(ctx context.Context, tenantID string, receiptID pgtype.UUID, userID, ip string) error {
-	rows, err := s.repo.VoidReceipt(ctx, repository.VoidReceiptParams{
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback(ctx)
+	qtx := s.repo.WithTx(tx)
+
+	receipt, err := qtx.GetReceipt(ctx, repository.GetReceiptParams{ID: receiptID, TenantID: tenantID})
+	if err != nil {
+		return fmt.Errorf("get receipt: %w", err)
+	}
+	if receipt.Status != "confirmed" {
+		return fmt.Errorf("receipt is not confirmed (status: %s)", receipt.Status)
+	}
+
+	// 1. Reverse account movements (from allocations)
+	allocs, _ := qtx.ListReceiptAllocations(ctx, repository.ListReceiptAllocationsParams{
+		TenantID: tenantID, ReceiptID: receiptID,
+	})
+	for _, alloc := range allocs {
+		// Restore original invoice balance
+		invoiceMovs, _ := qtx.ListAccountMovementsByInvoice(ctx, repository.ListAccountMovementsByInvoiceParams{
+			TenantID: tenantID, InvoiceID: alloc.InvoiceID,
+		})
+		for _, im := range invoiceMovs {
+			if im.MovementType == "invoice" {
+				// Restore balance by negating the reduction (passes WHERE balance >= check)
+				qtx.UpdateMovementBalance(ctx, repository.UpdateMovementBalanceParams{
+					ID: im.ID, TenantID: tenantID,
+					Balance: negateNumeric(alloc.Amount),
+				})
+				break
+			}
+		}
+		// Create reversal account movement
+		qtx.CreateAccountMovement(ctx, repository.CreateAccountMovementParams{
+			TenantID:     tenantID,
+			EntityID:     receipt.EntityID,
+			Date:         receipt.Date,
+			MovementType: "reversal",
+			Direction:    "receivable",
+			Amount:       alloc.Amount,
+			Balance:      zeroNumeric(),
+			InvoiceID:    alloc.InvoiceID,
+			Notes:        fmt.Sprintf("Reversa recibo %s", receipt.Number),
+			UserID:       userID,
+		})
+	}
+
+	// 2. Reverse journal entry (if exists)
+	if receipt.JournalEntryID.Valid {
+		// Create reversal entry with swapped debit/credit
+		original, err := qtx.GetJournalEntry(ctx, repository.GetJournalEntryParams{
+			ID: receipt.JournalEntryID, TenantID: tenantID,
+		})
+		if err == nil {
+			lines, _ := qtx.ListJournalLines(ctx, repository.ListJournalLinesParams{
+				EntryID: receipt.JournalEntryID, TenantID: tenantID,
+			})
+			revEntry, err := qtx.CreateJournalEntry(ctx, repository.CreateJournalEntryParams{
+				TenantID:      tenantID,
+				Number:        "REV-" + original.Number,
+				Date:          receipt.Date,
+				FiscalYearID:  original.FiscalYearID,
+				Concept:       "Reversa: " + original.Concept,
+				EntryType:     "reversal",
+				ReferenceType: pgText("reversal"),
+				ReferenceID:   receipt.JournalEntryID,
+				UserID:        userID,
+			})
+			if err == nil {
+				for i, l := range lines {
+					qtx.CreateJournalLine(ctx, repository.CreateJournalLineParams{
+						TenantID:     tenantID,
+						EntryID:      revEntry.ID,
+						AccountID:    l.AccountID,
+						CostCenterID: l.CostCenterID,
+						EntryDate:    receipt.Date,
+						Debit:        l.Credit,
+						Credit:       l.Debit,
+						Description:  "Reversa: " + l.Description,
+						SortOrder:    int32(i),
+					})
+				}
+				qtx.PostJournalEntry(ctx, repository.PostJournalEntryParams{ID: revEntry.ID, TenantID: tenantID})
+				qtx.MarkEntryReversed(ctx, repository.MarkEntryReversedParams{
+					ID: receipt.JournalEntryID, TenantID: tenantID, ReversedBy: revEntry.ID,
+				})
+			}
+		}
+	}
+
+	// 3. Mark receipt as cancelled
+	rows, err := qtx.VoidReceipt(ctx, repository.VoidReceiptParams{
 		ID: receiptID, TenantID: tenantID,
 	})
 	if err != nil {
 		return fmt.Errorf("void receipt: %w", err)
 	}
 	if rows == 0 {
-		return fmt.Errorf("receipt not found or already cancelled")
+		return fmt.Errorf("receipt void failed")
 	}
 
 	if err := s.audit.WriteStrict(ctx, audit.Entry{
 		TenantID: tenantID, UserID: userID,
 		Action: "erp.receipt.voided", Resource: uuidStr(receiptID), IP: ip,
 	}); err != nil {
-		return fmt.Errorf("strict audit failed: %w", err)
+		return fmt.Errorf("strict audit failed, aborting: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit void: %w", err)
 	}
 
 	s.publisher.Broadcast(tenantID, "erp_treasury", map[string]any{
@@ -740,7 +932,9 @@ func (s *Treasury) VoidReceipt(ctx context.Context, tenantID string, receiptID p
 	return nil
 }
 
-func parseFloatTreasury(s string) float64 {
+// parseFloatApprox parses a string to float64 for approximate comparisons only
+// (e.g., balance pre-check). Never use for financial arithmetic — use pgNumeric.
+func parseFloatApprox(s string) float64 {
 	if s == "" {
 		return 0
 	}

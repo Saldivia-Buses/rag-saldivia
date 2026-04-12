@@ -239,17 +239,17 @@ func (s *Invoicing) PostInvoice(ctx context.Context, id pgtype.UUID, tenantID, u
 		}
 	}
 
-	if err := tx.Commit(ctx); err != nil {
-		return fmt.Errorf("commit post: %w", err)
-	}
-
-	// Audit after commit (avoids phantom entries)
+	// StrictLogger before commit — fail-closed (pattern P7)
 	if err := s.audit.WriteStrict(ctx, audit.Entry{
 		TenantID: tenantID, UserID: userID,
 		Action: "erp.invoice.posted", Resource: uuidStr(id),
 		Details: map[string]any{"period": period, "tax_entries": len(lines)}, IP: ip,
 	}); err != nil {
-		slog.Error("STRICT audit failed after invoice post", "error", err, "invoice_id", uuidStr(id))
+		return fmt.Errorf("strict audit failed, aborting: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit post: %w", err)
 	}
 
 	s.publisher.Broadcast(tenantID, "erp_invoicing", map[string]any{
@@ -552,14 +552,6 @@ func (s *Invoicing) createReversalEntry(ctx context.Context, qtx *repository.Que
 	}
 
 	return entry, nil
-}
-
-// negateNumeric returns the negation of a pgtype.Numeric value.
-func negateNumeric(n pgtype.Numeric) pgtype.Numeric {
-	f, _ := n.Float64Value()
-	var result pgtype.Numeric
-	_ = result.Scan(fmt.Sprintf("%f", -f.Float64))
-	return result
 }
 
 func (s *Invoicing) CreateWithholding(ctx context.Context, p repository.CreateWithholdingParams, userID, ip string) (repository.ErpWithholding, error) {

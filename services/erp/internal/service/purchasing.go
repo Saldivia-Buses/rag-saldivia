@@ -204,6 +204,7 @@ type ReceiveLineRequest struct {
 type InspectionInput struct {
 	ReceiptLineID string `json:"receipt_line_id"`
 	ArticleID     string `json:"article_id"`
+	WarehouseID   string `json:"warehouse_id"`
 	Quantity      string `json:"quantity"`
 	AcceptedQty   string `json:"accepted_qty"`
 	RejectedQty   string `json:"rejected_qty"`
@@ -254,7 +255,7 @@ func (s *Purchasing) InspectReceipt(ctx context.Context, tenantID string, receip
 			Quantity:      pgNumeric(inp.Quantity),
 			AcceptedQty:   pgNumeric(inp.AcceptedQty),
 			RejectedQty:   pgNumeric(inp.RejectedQty),
-			Status:        "completed",
+			Status:        "pending",
 			InspectorID:   inspectorID,
 			Notes:         inp.Notes,
 		})
@@ -262,32 +263,40 @@ func (s *Purchasing) InspectReceipt(ctx context.Context, tenantID string, receip
 			return nil, fmt.Errorf("create inspection %d: %w", i, err)
 		}
 
-		// Mark as completed
-		qtx.CompleteInspection(ctx, repository.CompleteInspectionParams{
+		// Mark as completed (sets completed_at timestamp)
+		if _, err := qtx.CompleteInspection(ctx, repository.CompleteInspectionParams{
 			ID: qc.ID, TenantID: tenantID,
-		})
+		}); err != nil {
+			return nil, fmt.Errorf("complete inspection %d: %w", i, err)
+		}
 
 		// Accepted qty → stock movement (in)
 		acceptedF := parseFloatStr(inp.AcceptedQty)
 		if acceptedF > 0 {
-			// Create stock movement for accepted goods
-			// We use the first warehouse (default) — in production this would
-			// come from the receipt or a warehouse selection in the UI
-			_, err := qtx.CreateStockMovement(ctx, repository.CreateStockMovementParams{
+			whID, err := parseUUIDStr(inp.WarehouseID)
+			if err != nil {
+				return nil, fmt.Errorf("warehouse_id required for accepted goods in inspection %d: %w", i, err)
+			}
+			_, err = qtx.CreateStockMovement(ctx, repository.CreateStockMovementParams{
 				TenantID:      tenantID,
 				ArticleID:     artID,
-				WarehouseID:   pgtype.UUID{}, // default warehouse
+				WarehouseID:   whID,
 				MovementType:  "in",
 				Quantity:      pgNumeric(inp.AcceptedQty),
-				UnitCost:      pgNumeric("0"), // cost from PO line
+				UnitCost:      pgNumeric("0"),
 				ReferenceType: pgText("qc_inspection"),
 				ReferenceID:   qc.ID,
 				UserID:        inspectorID,
 				Notes:         fmt.Sprintf("QC accepted: %s of %s", inp.AcceptedQty, inp.Quantity),
 			})
 			if err != nil {
-				slog.Warn("stock movement for QC accept failed (warehouse may not be set)", "error", err)
+				return nil, fmt.Errorf("stock movement for QC accept %d: %w", i, err)
 			}
+			// Update stock level
+			_ = qtx.UpsertStockLevel(ctx, repository.UpsertStockLevelParams{
+				TenantID: tenantID, ArticleID: artID,
+				WarehouseID: whID, Quantity: pgNumeric(inp.AcceptedQty),
+			})
 		}
 
 		// Rejected qty → demerit to supplier
@@ -362,14 +371,9 @@ func parseUUIDStr(s string) (pgtype.UUID, error) {
 	return pgtype.UUID{Bytes: id, Valid: true}, nil
 }
 
-func parseFloatStr(s string) float64 {
-	if s == "" {
-		return 0
-	}
-	var f float64
-	fmt.Sscanf(s, "%f", &f)
-	return f
-}
+// parseFloatStr is an alias for parseFloatApprox (defined in treasury.go).
+// Used only for approximate comparisons, never for financial arithmetic.
+func parseFloatStr(s string) float64 { return parseFloatApprox(s) }
 
 // Receive creates a receipt and updates received quantities in one transaction.
 // Order must be in 'approved' or 'partial' status.

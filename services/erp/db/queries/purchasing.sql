@@ -103,6 +103,14 @@ ORDER BY sd.created_at DESC;
 SELECT COALESCE(SUM(points), 0)::INT AS total_points
 FROM erp_supplier_demerits WHERE tenant_id = $1 AND supplier_id = $2;
 
+-- name: ListPurchaseReceiptLines :many
+SELECT prl.id, prl.tenant_id, prl.receipt_id, prl.order_line_id, prl.article_id, prl.quantity,
+       a.code AS article_code, a.name AS article_name
+FROM erp_purchase_receipt_lines prl
+JOIN erp_articles a ON a.id = prl.article_id
+WHERE prl.tenant_id = $1 AND prl.receipt_id = $2
+ORDER BY prl.id;
+
 -- name: ListPurchaseReceipts :many
 SELECT pr.id, pr.tenant_id, pr.order_id, pr.date, pr.number, pr.user_id, pr.notes, pr.created_at,
        po.number AS order_number

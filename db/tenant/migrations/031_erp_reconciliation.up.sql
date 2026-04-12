@@ -37,7 +37,7 @@ CREATE TABLE erp_bank_reconciliations (
     period          TEXT NOT NULL,           -- '2026-04'
     statement_balance NUMERIC(16,2) NOT NULL, -- saldo segun extracto
     book_balance    NUMERIC(16,2) NOT NULL,  -- saldo segun tesoreria
-    status          TEXT NOT NULL DEFAULT 'draft',  -- 'draft', 'confirmed'
+    status          TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'confirmed')),
     user_id         TEXT NOT NULL,
     confirmed_at    TIMESTAMPTZ,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),

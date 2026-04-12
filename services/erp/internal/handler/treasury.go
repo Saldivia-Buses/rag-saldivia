@@ -434,7 +434,7 @@ func (h *Treasury) CreateReceiptH(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Error("create receipt failed", "error", err)
 		if strings.Contains(err.Error(), "don't balance") {
-			http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusBadRequest)
+			writeSafeErr(w, err, http.StatusBadRequest)
 		} else {
 			http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
 		}
@@ -455,7 +455,7 @@ func (h *Treasury) VoidReceiptH(w http.ResponseWriter, r *http.Request) {
 	if err := h.svc.VoidReceipt(r.Context(), slug, id,
 		r.Header.Get("X-User-ID"), r.RemoteAddr); err != nil {
 		slog.Error("void receipt failed", "error", err)
-		http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusBadRequest)
+		writeSafeErr(w, err, http.StatusBadRequest)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -594,7 +594,7 @@ func (h *Treasury) MatchManual(w http.ResponseWriter, r *http.Request) {
 	if err := h.svc.MatchManual(r.Context(), slug, reconID, lineID, movID); err != nil {
 		slog.Error("manual match failed", "error", err)
 		if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "already matched") {
-			http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusBadRequest)
+			writeSafeErr(w, err, http.StatusBadRequest)
 		} else {
 			http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
 		}
@@ -613,7 +613,7 @@ func (h *Treasury) ConfirmReconciliation(w http.ResponseWriter, r *http.Request)
 	if err := h.svc.ConfirmReconciliation(r.Context(), slug, reconID,
 		r.Header.Get("X-User-ID"), r.RemoteAddr); err != nil {
 		slog.Error("confirm reconciliation failed", "error", err)
-		http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusBadRequest)
+		writeSafeErr(w, err, http.StatusBadRequest)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)

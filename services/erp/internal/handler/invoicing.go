@@ -250,7 +250,7 @@ func (h *Invoicing) VoidPreview(w http.ResponseWriter, r *http.Request) {
 	preview, err := h.svc.VoidPreview(r.Context(), id, slug)
 	if err != nil {
 		slog.Error("void preview failed", "error", err)
-		http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusBadRequest)
+		writeSafeErr(w, err, http.StatusBadRequest)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -277,7 +277,7 @@ func (h *Invoicing) VoidInvoice(w http.ResponseWriter, r *http.Request) {
 		r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
 		slog.Error("void invoice failed", "error", err)
-		http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusBadRequest)
+		writeSafeErr(w, err, http.StatusBadRequest)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")

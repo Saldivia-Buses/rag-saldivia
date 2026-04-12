@@ -225,16 +225,6 @@ func (s *Stock) ListBOM(ctx context.Context, tenantID string, parentID pgtype.UU
 	return s.repo.ListBOM(ctx, repository.ListBOMParams{TenantID: tenantID, ParentID: parentID})
 }
 
-// pgNumeric converts a string to pgtype.Numeric.
-func pgNumeric(s string) pgtype.Numeric {
-	var n pgtype.Numeric
-	if s == "" {
-		s = "0"
-	}
-	_ = n.Scan(s)
-	return n
-}
-
 func pgNumericNeg(s string) pgtype.Numeric {
 	var n pgtype.Numeric
 	if s == "" {

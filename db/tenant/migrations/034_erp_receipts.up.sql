@@ -8,13 +8,13 @@ CREATE TABLE erp_receipts (
     tenant_id       TEXT NOT NULL,
     number          TEXT NOT NULL,
     date            DATE NOT NULL,
-    receipt_type    TEXT NOT NULL,           -- 'collection' (cobro), 'payment' (pago)
+    receipt_type    TEXT NOT NULL CHECK (receipt_type IN ('collection', 'payment')),
     entity_id       UUID NOT NULL REFERENCES erp_entities(id),
     total           NUMERIC(16,2) NOT NULL CHECK (total > 0),
     journal_entry_id UUID REFERENCES erp_journal_entries(id),
     user_id         TEXT NOT NULL,
     notes           TEXT NOT NULL DEFAULT '',
-    status          TEXT NOT NULL DEFAULT 'confirmed',
+    status          TEXT NOT NULL DEFAULT 'confirmed' CHECK (status IN ('draft', 'confirmed', 'cancelled')),
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     UNIQUE(tenant_id, receipt_type, number)
 );
@@ -52,6 +52,8 @@ CREATE TABLE erp_receipt_withholdings (
     receipt_id      UUID NOT NULL REFERENCES erp_receipts(id) ON DELETE RESTRICT,
     withholding_id  UUID NOT NULL REFERENCES erp_withholdings(id)
 );
+
+CREATE INDEX idx_erp_receipt_withholdings ON erp_receipt_withholdings(tenant_id, receipt_id);
 
 -- Inmutabilidad: confirmed receipts can only transition to cancelled
 CREATE TRIGGER trg_receipt_immutable BEFORE UPDATE OR DELETE ON erp_receipts
