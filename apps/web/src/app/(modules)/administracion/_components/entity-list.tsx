@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { api } from "@/lib/api/client";
 import { erpKeys } from "@/lib/erp/queries";
 import { fmtDateShort } from "@/lib/erp/format";
+import { permissionErrorToast } from "@/lib/erp/permission-messages";
 import { ErrorState } from "@/components/erp/error-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -67,7 +68,7 @@ export function EntityList({ entityType, title, subtitle, codeLabel }: EntityLis
       queryClient.invalidateQueries({ queryKey: erpKeys.entities(entityType) });
       setCreateOpen(false);
     },
-    onError: (err) => toast.error("Error al crear", { description: err instanceof Error ? err.message : undefined }),
+    onError: permissionErrorToast,
   });
 
   if (error) return <ErrorState message={`Error cargando ${title.toLowerCase()}`} onRetry={() => window.location.reload()} />;

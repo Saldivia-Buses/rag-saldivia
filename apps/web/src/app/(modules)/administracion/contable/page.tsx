@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { erpKeys } from "@/lib/erp/queries";
 import { fmtMoney, fmtDate, fmtDateShort } from "@/lib/erp/format";
 import type { Account, JournalEntry, JournalLine, AccountBalance, FiscalYear, CostCenter } from "@/lib/erp/types";
 import { ErrorState } from "@/components/erp/error-state";
+import { ERPPagination } from "@/components/erp/pagination";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -21,6 +22,8 @@ const statusBadge: Record<string, { label: string; variant: "default" | "seconda
 
 export default function ContablePage() {
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const pageSize = 25;
 
   const { data: accounts = [], isLoading: loadingAccounts, error: errorAccounts } = useQuery({
     queryKey: erpKeys.accounts(),
@@ -28,11 +31,13 @@ export default function ContablePage() {
     select: (d) => d.accounts,
   });
 
-  const { data: entries = [], isLoading: loadingEntries } = useQuery({
-    queryKey: erpKeys.entries({ page_size: "50" }),
-    queryFn: () => api.get<{ entries: JournalEntry[] }>("/v1/erp/accounting/entries?page_size=50"),
-    select: (d) => d.entries,
+  const { data: entriesData } = useQuery({
+    queryKey: erpKeys.entries({ page: String(page), page_size: String(pageSize) }),
+    queryFn: () => api.get<{ entries: JournalEntry[]; total: number }>(`/v1/erp/accounting/entries?page=${page}&page_size=${pageSize}`),
+    placeholderData: keepPreviousData,
   });
+  const entries = entriesData?.entries ?? [];
+  const entriesTotal = entriesData?.total ?? 0;
 
   const { data: balances = [] } = useQuery({
     queryKey: erpKeys.balance(),
@@ -59,7 +64,7 @@ export default function ContablePage() {
   });
 
   if (errorAccounts) return <ErrorState message="Error cargando contabilidad" onRetry={() => window.location.reload()} />;
-  if (loadingAccounts || loadingEntries) return <div className="flex-1 p-8"><Skeleton className="h-[600px]" /></div>;
+  if (loadingAccounts) return <div className="flex-1 p-8"><Skeleton className="h-[600px]" /></div>;
 
   const totalDebit = balances.reduce((a, b) => a + (b.total_debit || 0), 0);
   const totalCredit = balances.reduce((a, b) => a + (b.total_credit || 0), 0);
@@ -121,6 +126,7 @@ export default function ContablePage() {
                     {entries.length === 0 && <TableRow><TableCell colSpan={4} className="h-24 text-center text-muted-foreground">Sin asientos.</TableCell></TableRow>}
                   </TableBody>
                 </Table>
+                <ERPPagination page={page} pageSize={pageSize} total={entriesTotal} onPageChange={setPage} />
               </div>
 
               {selectedEntry && (

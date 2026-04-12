@@ -59,7 +59,8 @@ export default function CatalogosPage() {
 
   const toggleMutation = useMutation({
     mutationFn: (catalog: Catalog) => api.put(`/v1/erp/catalogs/${catalog.id}`, { code: catalog.code, name: catalog.name, sort_order: catalog.sort_order, active: !catalog.active }),
-    onSuccess: () => {
+    onSuccess: (_data, catalog) => {
+      toast.success(catalog.active ? "Entrada desactivada" : "Entrada activada");
       queryClient.invalidateQueries({ queryKey: erpKeys.catalogs(selectedType ?? undefined) });
     },
     onError: (err) => toast.error("Error al actualizar", { description: err instanceof Error ? err.message : undefined }),

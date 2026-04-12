@@ -6,7 +6,10 @@ import { toast } from "sonner";
 import { api } from "@/lib/api/client";
 import { erpKeys } from "@/lib/erp/queries";
 import { fmtMoney, fmtNumber, fmtDateShort } from "@/lib/erp/format";
+import { useERPSearch } from "@/lib/erp/use-erp-search";
+import { permissionErrorToast } from "@/lib/erp/permission-messages";
 import { ErrorState } from "@/components/erp/error-state";
+import { EmptyState } from "@/components/erp/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -24,15 +27,15 @@ interface StockMovement { id: string; article_code: string; article_name: string
 const typeBadge: Record<string, string> = { in: "Ingreso", out: "Egreso", transfer: "Transferencia", adjustment: "Ajuste" };
 
 export default function AlmacenPage() {
-  const [search, setSearch] = useState("");
+  const { search, setSearch, deferredSearch } = useERPSearch(0);
   const [createOpen, setCreateOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: articles = [], isLoading, error } = useQuery({
-    queryKey: erpKeys.stockArticles(search ? { search } : undefined),
+    queryKey: erpKeys.stockArticles(deferredSearch ? { search: deferredSearch } : undefined),
     queryFn: () => {
       const q = new URLSearchParams({ page_size: "100" });
-      if (search) q.set("search", search);
+      if (deferredSearch) q.set("search", deferredSearch);
       return api.get<{ articles: Article[] }>(`/v1/erp/stock/articles?${q}`);
     },
     select: (d) => d.articles,
@@ -57,7 +60,7 @@ export default function AlmacenPage() {
       queryClient.invalidateQueries({ queryKey: erpKeys.stockArticles() });
       setCreateOpen(false);
     },
-    onError: (err) => toast.error("Error al crear artículo", { description: err instanceof Error ? err.message : undefined }),
+    onError: permissionErrorToast,
   });
 
   if (error) return <ErrorState message="Error cargando almacén" onRetry={() => window.location.reload()} />;
@@ -105,7 +108,7 @@ export default function AlmacenPage() {
                       <TableCell className="text-center"><Badge variant={a.active ? "default" : "secondary"}>{a.active ? "Activo" : "Inactivo"}</Badge></TableCell>
                     </TableRow>
                   ))}
-                  {articles.length === 0 && <TableRow><TableCell colSpan={5} className="h-24 text-center text-muted-foreground">Sin artículos.</TableCell></TableRow>}
+                  {articles.length === 0 && <TableRow><TableCell colSpan={5}><EmptyState icon={PackageIcon} title="Sin artículos" description="Creá el primer artículo para empezar." action={{ label: "Nuevo artículo", onClick: () => setCreateOpen(true) }} /></TableCell></TableRow>}
                 </TableBody>
               </Table>
             </div>

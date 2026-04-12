@@ -62,25 +62,31 @@ export function WsProvider({ children }: { children: React.ReactNode }) {
       }),
     );
 
-    // ERP domain events → invalidate corresponding TanStack Query caches
-    const erpHandlers: Record<string, readonly unknown[]> = {
-      erp_accounting: ["erp", "entries"],
-      erp_treasury: ["erp", "treasury"],
-      erp_invoicing: ["erp", "invoicing"],
-      erp_stock: ["erp", "stock"],
-      erp_purchasing: ["erp", "purchasing"],
-      erp_catalogs: ["erp", "catalogs"],
-      erp_accounts: ["erp", "accounts"],
-      erp_production: ["erp", "production"],
-      erp_hr: ["erp", "hr"],
-      erp_quality: ["erp", "quality"],
-      erp_maintenance: ["erp", "maintenance"],
+    // ERP domain events → invalidate corresponding TanStack Query caches.
+    // Some domains span multiple query key prefixes (e.g., accounting uses
+    // entries, accounts, balance, fiscal-years, cost-centers). Each handler
+    // invalidates all relevant prefixes for its domain.
+    const erpHandlers: Record<string, readonly (readonly unknown[])[]> = {
+      erp_accounting: [["erp", "entries"], ["erp", "accounts"], ["erp", "balance"], ["erp", "fiscal-years"], ["erp", "cost-centers"], ["erp", "ledger"]],
+      erp_treasury: [["erp", "treasury"]],
+      erp_invoicing: [["erp", "invoicing"]],
+      erp_stock: [["erp", "stock"]],
+      erp_purchasing: [["erp", "purchasing"]],
+      erp_catalogs: [["erp", "catalogs"]],
+      erp_accounts: [["erp", "accounts"]],
+      erp_production: [["erp", "production"]],
+      erp_hr: [["erp", "hr"]],
+      erp_quality: [["erp", "quality"]],
+      erp_maintenance: [["erp", "maintenance"]],
+      erp_suggestions: [["erp", "suggestions"]],
     };
 
-    for (const [event, queryKey] of Object.entries(erpHandlers)) {
+    for (const [event, queryKeys] of Object.entries(erpHandlers)) {
       unsubs.push(
         wsManager.subscribe(event, () => {
-          queryClient.invalidateQueries({ queryKey });
+          for (const queryKey of queryKeys) {
+            queryClient.invalidateQueries({ queryKey });
+          }
         }),
       );
     }

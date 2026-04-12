@@ -14,7 +14,18 @@ import { FileTextIcon, ShoppingBagIcon } from "lucide-react";
 interface Quotation { id: string; number: string; date: string; customer_name: string; status: string; total: number; }
 interface Order { id: string; number: string; date: string; order_type: string; customer_name: string; status: string; total: number; }
 
-const statusColors: Record<string, "default" | "secondary" | "outline"> = { draft: "secondary", sent: "outline", approved: "default", rejected: "secondary", expired: "secondary", pending: "secondary", in_progress: "outline", shipped: "outline", delivered: "default", cancelled: "secondary" };
+const statusBadge: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
+  draft: { label: "Borrador", variant: "secondary" },
+  sent: { label: "Enviada", variant: "outline" },
+  approved: { label: "Aprobada", variant: "default" },
+  rejected: { label: "Rechazada", variant: "secondary" },
+  expired: { label: "Vencida", variant: "secondary" },
+  pending: { label: "Pendiente", variant: "secondary" },
+  in_progress: { label: "En progreso", variant: "outline" },
+  shipped: { label: "Enviado", variant: "outline" },
+  delivered: { label: "Entregado", variant: "default" },
+  cancelled: { label: "Cancelado", variant: "secondary" },
+};
 
 export default function VentasPage() {
   const { data: quotations = [], isLoading, error } = useQuery({
@@ -61,7 +72,7 @@ export default function VentasPage() {
                       <TableCell className="text-sm text-muted-foreground">{fmtDateShort(q.date)}</TableCell>
                       <TableCell className="text-sm">{q.customer_name}</TableCell>
                       <TableCell className="text-right font-mono text-sm">{fmtMoney(q.total)}</TableCell>
-                      <TableCell><Badge variant={statusColors[q.status] || "secondary"}>{q.status}</Badge></TableCell>
+                      <TableCell><Badge variant={(statusBadge[q.status] || statusBadge.draft).variant}>{(statusBadge[q.status] || statusBadge.draft).label}</Badge></TableCell>
                     </TableRow>
                   ))}
                   {quotations.length === 0 && <TableRow><TableCell colSpan={5} className="h-24 text-center text-muted-foreground">Sin cotizaciones.</TableCell></TableRow>}
@@ -86,7 +97,7 @@ export default function VentasPage() {
                       <TableCell><Badge variant="secondary">{o.order_type === "customer" ? "Cliente" : "Interno"}</Badge></TableCell>
                       <TableCell className="text-sm">{o.customer_name || "\u2014"}</TableCell>
                       <TableCell className="text-right font-mono text-sm">{fmtMoney(o.total)}</TableCell>
-                      <TableCell><Badge variant={statusColors[o.status] || "secondary"}>{o.status}</Badge></TableCell>
+                      <TableCell><Badge variant={(statusBadge[o.status] || statusBadge.draft).variant}>{(statusBadge[o.status] || statusBadge.draft).label}</Badge></TableCell>
                     </TableRow>
                   ))}
                   {orders.length === 0 && <TableRow><TableCell colSpan={6} className="h-24 text-center text-muted-foreground">Sin pedidos.</TableCell></TableRow>}
