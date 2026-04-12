@@ -73,3 +73,85 @@ LIMIT $2 OFFSET $3;
 INSERT INTO erp_attendance (tenant_id, entity_id, date, clock_in, clock_out, hours, source)
 VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING id, tenant_id, entity_id, date, clock_in, clock_out, hours, source, created_at;
+
+-- ─── Competencies ──────────────────────────────────────────────────────────
+
+-- name: ListCompetencies :many
+SELECT * FROM erp_competencies WHERE tenant_id = $1 AND (sqlc.arg(active_only)::BOOLEAN = false OR active = true) ORDER BY category, name;
+
+-- name: CreateCompetency :one
+INSERT INTO erp_competencies (tenant_id, name, description, category) VALUES ($1, $2, $3, $4) RETURNING *;
+
+-- name: ListEmployeeCompetencies :many
+SELECT ec.*, c.name AS competency_name, c.category AS competency_category
+FROM erp_employee_competencies ec
+JOIN erp_competencies c ON c.id = ec.competency_id AND c.tenant_id = ec.tenant_id
+WHERE ec.tenant_id = $1 AND ec.entity_id = $2
+ORDER BY c.category, c.name;
+
+-- name: UpsertEmployeeCompetency :one
+INSERT INTO erp_employee_competencies (tenant_id, entity_id, competency_id, level, certified, certified_at, notes)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+ON CONFLICT (tenant_id, entity_id, competency_id) DO UPDATE SET
+    level = EXCLUDED.level, certified = EXCLUDED.certified,
+    certified_at = EXCLUDED.certified_at, notes = EXCLUDED.notes, updated_at = now()
+RETURNING *;
+
+-- ─── Evaluations ───────────────────────────────────────────────────────────
+
+-- name: ListEvaluations :many
+SELECT ev.*, e.name AS entity_name
+FROM erp_evaluations ev
+JOIN erp_entities e ON e.id = ev.entity_id AND e.tenant_id = ev.tenant_id
+WHERE ev.tenant_id = $1
+    AND (sqlc.arg(period_filter)::TEXT = '' OR ev.period = sqlc.arg(period_filter)::TEXT)
+ORDER BY ev.created_at DESC
+LIMIT $2 OFFSET $3;
+
+-- name: GetEvaluation :one
+SELECT ev.*, e.name AS entity_name
+FROM erp_evaluations ev
+JOIN erp_entities e ON e.id = ev.entity_id AND e.tenant_id = ev.tenant_id
+WHERE ev.id = $1 AND ev.tenant_id = $2;
+
+-- name: CreateEvaluation :one
+INSERT INTO erp_evaluations (tenant_id, entity_id, evaluator_id, period, eval_type, strengths, weaknesses, goals, comments)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+RETURNING *;
+
+-- name: SubmitEvaluation :one
+UPDATE erp_evaluations SET overall_score = $3, status = 'submitted', submitted_at = now()
+WHERE id = $1 AND tenant_id = $2 AND status = 'draft'
+RETURNING *;
+
+-- name: ListEvaluationScores :many
+SELECT es.*, c.name AS competency_name
+FROM erp_evaluation_scores es
+JOIN erp_competencies c ON c.id = es.competency_id AND c.tenant_id = es.tenant_id
+WHERE es.evaluation_id = $1 AND es.tenant_id = $2
+ORDER BY c.category, c.name;
+
+-- name: CreateEvaluationScore :one
+INSERT INTO erp_evaluation_scores (tenant_id, evaluation_id, competency_id, score, comments)
+VALUES ($1, $2, $3, $4, $5) RETURNING *;
+
+-- ─── Leave Balances ────────────────────────────────────────────────────────
+
+-- name: ListLeaveBalances :many
+SELECT * FROM erp_leave_balances
+WHERE tenant_id = $1 AND entity_id = $2
+ORDER BY year DESC, leave_type;
+
+-- name: UpsertLeaveBalance :one
+INSERT INTO erp_leave_balances (tenant_id, entity_id, leave_type, year, accrued, used)
+VALUES ($1, $2, $3, $4, $5, $6)
+ON CONFLICT (tenant_id, entity_id, leave_type, year) DO UPDATE SET
+    accrued = EXCLUDED.accrued, used = EXCLUDED.used
+RETURNING *;
+
+-- name: GetSeniorityYears :one
+SELECT
+    EXTRACT(YEAR FROM AGE(CURRENT_DATE, ed.hire_date))::INT AS seniority_years,
+    ed.hire_date
+FROM erp_employee_details ed
+WHERE ed.tenant_id = $1 AND ed.entity_id = $2 AND ed.hire_date IS NOT NULL;
