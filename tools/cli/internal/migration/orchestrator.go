@@ -1,0 +1,484 @@
+package migration
+
+import (
+	"context"
+	"database/sql"
+	"encoding/json"
+	"fmt"
+	"log/slog"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+// Orchestrator coordinates the migration of legacy MySQL data to PostgreSQL.
+type Orchestrator struct {
+	mysql    *sql.DB
+	pg       *pgxpool.Pool
+	tenantID string
+	mapper   *Mapper
+	writer   *BatchWriter
+	readers  []TableMigrator
+}
+
+// TableMigrator defines how to migrate a single legacy table.
+type TableMigrator interface {
+	// LegacyTable returns the MySQL table name.
+	LegacyTable() string
+	// SDATable returns the PostgreSQL table name.
+	SDATable() string
+	// Domain returns the migration domain.
+	Domain() string
+	// Columns returns the PostgreSQL column names for INSERT.
+	Columns() []string
+	// ConflictColumn returns the column name for ON CONFLICT.
+	ConflictColumn() string
+	// Transform converts a legacy row to PostgreSQL values.
+	// Returns the row values, or nil to skip the row.
+	Transform(ctx context.Context, row map[string]any, mapper *Mapper) ([]any, error)
+	// Reader returns the legacy reader for this table.
+	Reader() interface {
+		ReadBatch(ctx context.Context, resumeKey string, limit int) ([]map[string]any, string, error)
+	}
+}
+
+// NewOrchestrator creates a new migration orchestrator.
+func NewOrchestrator(mysql *sql.DB, pg *pgxpool.Pool, tenantID string) *Orchestrator {
+	return &Orchestrator{
+		mysql:    mysql,
+		pg:       pg,
+		tenantID: tenantID,
+		mapper:   NewMapper(pg, tenantID),
+		writer:   NewBatchWriter(pg, tenantID),
+	}
+}
+
+// RegisterMigrators adds table migrators in dependency order.
+func (o *Orchestrator) RegisterMigrators(migrators ...TableMigrator) {
+	o.readers = append(o.readers, migrators...)
+}
+
+// Run executes the full migration for specified domains (empty = all).
+func (o *Orchestrator) Run(ctx context.Context, domains []string, dryRun bool) error {
+	mode := "prod"
+	if dryRun {
+		mode = "dry_run"
+	}
+
+	// Create run record
+	runID := uuid.New()
+	_, err := o.pg.Exec(ctx,
+		`INSERT INTO erp_migration_runs (id, tenant_id, mode) VALUES ($1, $2, $3)`,
+		runID, o.tenantID, mode,
+	)
+	if err != nil {
+		return fmt.Errorf("create run: %w", err)
+	}
+
+	slog.Info("migration started",
+		"run_id", runID,
+		"tenant", o.tenantID,
+		"mode", mode,
+		"migrators", len(o.readers),
+	)
+
+	// Create progress records for each table
+	for _, m := range o.readers {
+		if len(domains) > 0 && !contains(domains, m.Domain()) {
+			continue
+		}
+		_, err := o.pg.Exec(ctx,
+			`INSERT INTO erp_migration_table_progress
+			 (tenant_id, run_id, domain, legacy_table, sda_table)
+			 VALUES ($1, $2, $3, $4, $5)
+			 ON CONFLICT (tenant_id, run_id, legacy_table) DO NOTHING`,
+			o.tenantID, runID, m.Domain(), m.LegacyTable(), m.SDATable(),
+		)
+		if err != nil {
+			return fmt.Errorf("create progress %s: %w", m.LegacyTable(), err)
+		}
+	}
+
+	// Set tenant context for RLS on business tables
+	_, err = o.pg.Exec(ctx, fmt.Sprintf("SET app.tenant_id = '%s'", o.tenantID))
+	if err != nil {
+		slog.Warn("could not set app.tenant_id (RLS may block writes)", "err", err)
+	}
+
+	// Run each migrator
+	stats := make(map[string]TableStats)
+	for _, m := range o.readers {
+		if len(domains) > 0 && !contains(domains, m.Domain()) {
+			continue
+		}
+
+		// Update run current position
+		o.pg.Exec(ctx,
+			`UPDATE erp_migration_runs SET current_domain = $1, current_table = $2 WHERE id = $3`,
+			m.Domain(), m.LegacyTable(), runID,
+		)
+
+		if dryRun {
+			// In dry-run, only count and validate transformations
+			s, err := o.dryRunTable(ctx, runID, m)
+			if err != nil {
+				o.failRun(ctx, runID, err)
+				return fmt.Errorf("dry-run %s: %w", m.LegacyTable(), err)
+			}
+			stats[m.LegacyTable()] = s
+		} else {
+			s, err := o.runTable(ctx, runID, m)
+			if err != nil {
+				o.failRun(ctx, runID, err)
+				return fmt.Errorf("migrate %s: %w", m.LegacyTable(), err)
+			}
+			stats[m.LegacyTable()] = s
+		}
+	}
+
+	// Update run stats and mark completed
+	statsJSON, _ := json.Marshal(stats)
+	status := "completed"
+	if dryRun {
+		status = "dry_run_ok"
+	}
+	_, err = o.pg.Exec(ctx,
+		`UPDATE erp_migration_runs
+		 SET status = $1, completed_at = now(), stats = $2, current_domain = NULL, current_table = NULL
+		 WHERE id = $3`,
+		status, statsJSON, runID,
+	)
+	if err != nil {
+		return fmt.Errorf("complete run: %w", err)
+	}
+
+	slog.Info("migration completed", "run_id", runID, "status", status)
+	printReport(stats, dryRun)
+	return nil
+}
+
+// Resume continues a failed migration from where it left off.
+func (o *Orchestrator) Resume(ctx context.Context, resumeRunID string) error {
+	runID, err := uuid.Parse(resumeRunID)
+	if err != nil {
+		return fmt.Errorf("invalid run ID: %w", err)
+	}
+
+	// Load run
+	var status, mode string
+	err = o.pg.QueryRow(ctx,
+		`SELECT status, mode FROM erp_migration_runs WHERE id = $1 AND tenant_id = $2`,
+		runID, o.tenantID,
+	).Scan(&status, &mode)
+	if err != nil {
+		return fmt.Errorf("load run %s: %w", runID, err)
+	}
+	if status != "failed" {
+		return fmt.Errorf("run %s has status %q, only failed runs can be resumed", runID, status)
+	}
+
+	// Mark as running again
+	o.pg.Exec(ctx,
+		`UPDATE erp_migration_runs SET status = 'running', error_message = NULL WHERE id = $1`,
+		runID,
+	)
+
+	// Set tenant context
+	o.pg.Exec(ctx, fmt.Sprintf("SET app.tenant_id = '%s'", o.tenantID))
+
+	// Load pending/failed tables
+	rows, err := o.pg.Query(ctx,
+		`SELECT id, domain, legacy_table, sda_table, last_legacy_key, rows_read, rows_written, rows_skipped
+		 FROM erp_migration_table_progress
+		 WHERE run_id = $1 AND status IN ('pending', 'in_progress', 'failed')
+		 ORDER BY id`,
+		runID,
+	)
+	if err != nil {
+		return fmt.Errorf("list pending: %w", err)
+	}
+	defer rows.Close()
+
+	type pendingTable struct {
+		ID           uuid.UUID
+		Domain       string
+		LegacyTable  string
+		SDATable     string
+		LastKey      string
+		RowsRead     int
+		RowsWritten  int
+		RowsSkipped  int
+	}
+	var pending []pendingTable
+	for rows.Next() {
+		var t pendingTable
+		if err := rows.Scan(&t.ID, &t.Domain, &t.LegacyTable, &t.SDATable, &t.LastKey, &t.RowsRead, &t.RowsWritten, &t.RowsSkipped); err != nil {
+			return fmt.Errorf("scan pending: %w", err)
+		}
+		pending = append(pending, t)
+	}
+
+	slog.Info("resuming migration", "run_id", runID, "pending_tables", len(pending))
+
+	stats := make(map[string]TableStats)
+	for _, t := range pending {
+		// Find the matching migrator
+		var migrator TableMigrator
+		for _, m := range o.readers {
+			if m.LegacyTable() == t.LegacyTable {
+				migrator = m
+				break
+			}
+		}
+		if migrator == nil {
+			slog.Warn("no migrator found for table, skipping", "table", t.LegacyTable)
+			continue
+		}
+
+		// Preload dependent domains for FK resolution
+		o.mapper.PreloadDomain(ctx, t.Domain)
+
+		s, err := o.runTableResume(ctx, runID, t.ID, migrator, t.LastKey, t.RowsRead, t.RowsWritten, t.RowsSkipped)
+		if err != nil {
+			o.failRun(ctx, runID, err)
+			return fmt.Errorf("resume %s: %w", t.LegacyTable, err)
+		}
+		stats[t.LegacyTable] = s
+	}
+
+	// Mark completed
+	statsJSON, _ := json.Marshal(stats)
+	o.pg.Exec(ctx,
+		`UPDATE erp_migration_runs
+		 SET status = 'completed', completed_at = now(), stats = $1
+		 WHERE id = $2`,
+		statsJSON, runID,
+	)
+
+	slog.Info("resume completed", "run_id", runID)
+	printReport(stats, false)
+	return nil
+}
+
+// TableStats tracks per-table migration statistics.
+type TableStats struct {
+	RowsRead    int `json:"rows_read"`
+	RowsWritten int `json:"rows_written"`
+	RowsSkipped int `json:"rows_skipped"`
+}
+
+const batchSize = 500
+
+func (o *Orchestrator) runTable(ctx context.Context, runID uuid.UUID, m TableMigrator) (TableStats, error) {
+	return o.runTableResume(ctx, runID, uuid.Nil, m, "", 0, 0, 0)
+}
+
+func (o *Orchestrator) runTableResume(ctx context.Context, runID, progressID uuid.UUID, m TableMigrator, resumeKey string, readSoFar, writtenSoFar, skippedSoFar int) (TableStats, error) {
+	slog.Info("migrating table", "legacy", m.LegacyTable(), "sda", m.SDATable(), "resume_key", resumeKey)
+	start := time.Now()
+
+	// Get or create progress record
+	if progressID == uuid.Nil {
+		err := o.pg.QueryRow(ctx,
+			`SELECT id FROM erp_migration_table_progress
+			 WHERE run_id = $1 AND legacy_table = $2 AND tenant_id = $3`,
+			runID, m.LegacyTable(), o.tenantID,
+		).Scan(&progressID)
+		if err != nil {
+			return TableStats{}, fmt.Errorf("get progress id: %w", err)
+		}
+	}
+
+	// Mark in_progress
+	o.pg.Exec(ctx,
+		`UPDATE erp_migration_table_progress SET status = 'in_progress', started_at = COALESCE(started_at, now()) WHERE id = $1`,
+		progressID,
+	)
+
+	stats := TableStats{RowsRead: readSoFar, RowsWritten: writtenSoFar, RowsSkipped: skippedSoFar}
+	reader := m.Reader()
+	lastKey := resumeKey
+
+	for {
+		rows, nextKey, err := reader.ReadBatch(ctx, lastKey, batchSize)
+		if err != nil {
+			markTableFailed(ctx, o.pg, progressID, err.Error())
+			return stats, err
+		}
+		if len(rows) == 0 {
+			break
+		}
+
+		stats.RowsRead += len(rows)
+
+		// Transform and collect batch
+		var insertRows [][]any
+		for _, row := range rows {
+			vals, err := m.Transform(ctx, row, o.mapper)
+			if err != nil {
+				markTableFailed(ctx, o.pg, progressID, err.Error())
+				return stats, fmt.Errorf("transform %s row: %w", m.LegacyTable(), err)
+			}
+			if vals == nil {
+				stats.RowsSkipped++
+				continue
+			}
+			insertRows = append(insertRows, vals)
+		}
+
+		// Write batch
+		if len(insertRows) > 0 {
+			written, err := o.writer.WriteBatch(ctx, m.SDATable(), m.Columns(), m.ConflictColumn(), insertRows)
+			if err != nil {
+				markTableFailed(ctx, o.pg, progressID, err.Error())
+				return stats, err
+			}
+			stats.RowsWritten += written
+		}
+
+		lastKey = nextKey
+
+		// Update progress checkpoint
+		o.pg.Exec(ctx,
+			`UPDATE erp_migration_table_progress
+			 SET last_legacy_key = $1, rows_read = $2, rows_written = $3, rows_skipped = $4
+			 WHERE id = $5`,
+			lastKey, stats.RowsRead, stats.RowsWritten, stats.RowsSkipped, progressID,
+		)
+	}
+
+	// Mark completed
+	o.pg.Exec(ctx,
+		`UPDATE erp_migration_table_progress
+		 SET status = 'completed', completed_at = now(),
+		     rows_read = $1, rows_written = $2, rows_skipped = $3
+		 WHERE id = $4`,
+		stats.RowsRead, stats.RowsWritten, stats.RowsSkipped, progressID,
+	)
+
+	slog.Info("table completed",
+		"table", m.LegacyTable(),
+		"read", stats.RowsRead,
+		"written", stats.RowsWritten,
+		"skipped", stats.RowsSkipped,
+		"duration", time.Since(start).Round(time.Millisecond),
+	)
+	return stats, nil
+}
+
+func (o *Orchestrator) dryRunTable(ctx context.Context, runID uuid.UUID, m TableMigrator) (TableStats, error) {
+	slog.Info("dry-run table", "legacy", m.LegacyTable(), "sda", m.SDATable())
+
+	var progressID uuid.UUID
+	o.pg.QueryRow(ctx,
+		`SELECT id FROM erp_migration_table_progress
+		 WHERE run_id = $1 AND legacy_table = $2 AND tenant_id = $3`,
+		runID, m.LegacyTable(), o.tenantID,
+	).Scan(&progressID)
+
+	o.pg.Exec(ctx,
+		`UPDATE erp_migration_table_progress SET status = 'in_progress', started_at = now() WHERE id = $1`,
+		progressID,
+	)
+
+	stats := TableStats{}
+	reader := m.Reader()
+	lastKey := ""
+
+	for {
+		rows, nextKey, err := reader.ReadBatch(ctx, lastKey, batchSize)
+		if err != nil {
+			return stats, err
+		}
+		if len(rows) == 0 {
+			break
+		}
+		stats.RowsRead += len(rows)
+
+		for _, row := range rows {
+			vals, err := m.Transform(ctx, row, o.mapper)
+			if err != nil {
+				return stats, fmt.Errorf("dry-run transform %s: %w", m.LegacyTable(), err)
+			}
+			if vals == nil {
+				stats.RowsSkipped++
+			} else {
+				stats.RowsWritten++ // would-be-written count
+			}
+		}
+		lastKey = nextKey
+	}
+
+	o.pg.Exec(ctx,
+		`UPDATE erp_migration_table_progress
+		 SET status = 'completed', completed_at = now(),
+		     rows_read = $1, rows_written = $2, rows_skipped = $3
+		 WHERE id = $4`,
+		stats.RowsRead, stats.RowsWritten, stats.RowsSkipped, progressID,
+	)
+
+	slog.Info("dry-run table done", "table", m.LegacyTable(), "read", stats.RowsRead, "would_write", stats.RowsWritten, "skip", stats.RowsSkipped)
+	return stats, nil
+}
+
+func (o *Orchestrator) failRun(ctx context.Context, runID uuid.UUID, err error) {
+	status := "failed"
+	o.pg.Exec(ctx,
+		`UPDATE erp_migration_runs SET status = $1, error_message = $2, completed_at = now() WHERE id = $3`,
+		status, err.Error(), runID,
+	)
+}
+
+func markTableFailed(ctx context.Context, pg *pgxpool.Pool, progressID uuid.UUID, errMsg string) {
+	pg.Exec(ctx,
+		`UPDATE erp_migration_table_progress SET status = 'failed', error_message = $1, completed_at = now() WHERE id = $2`,
+		errMsg, progressID,
+	)
+}
+
+// FindLastDryRun finds the most recent dry_run_ok for a tenant.
+func FindLastDryRun(ctx context.Context, pg *pgxpool.Pool, tenantID string) (string, error) {
+	var status string
+	err := pg.QueryRow(ctx,
+		`SELECT status FROM erp_migration_runs
+		 WHERE tenant_id = $1 AND mode = 'dry_run'
+		 ORDER BY started_at DESC LIMIT 1`,
+		tenantID,
+	).Scan(&status)
+	return status, err
+}
+
+func printReport(stats map[string]TableStats, dryRun bool) {
+	mode := "MIGRATION"
+	if dryRun {
+		mode = "DRY-RUN"
+	}
+	fmt.Printf("\n=== %s REPORT ===\n", mode)
+	totalRead, totalWritten, totalSkipped := 0, 0, 0
+	for table, s := range stats {
+		label := "written"
+		if dryRun {
+			label = "would_write"
+		}
+		fmt.Printf("  %-30s read=%-6d %s=%-6d skipped=%-4d\n", table, s.RowsRead, label, s.RowsWritten, s.RowsSkipped)
+		totalRead += s.RowsRead
+		totalWritten += s.RowsWritten
+		totalSkipped += s.RowsSkipped
+	}
+	fmt.Printf("\n  TOTAL: read=%d %s=%d skipped=%d\n", totalRead, func() string {
+		if dryRun {
+			return "would_write"
+		}
+		return "written"
+	}(), totalWritten, totalSkipped)
+}
+
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
+}
