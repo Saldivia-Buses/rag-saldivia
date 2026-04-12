@@ -62,6 +62,29 @@ export function WsProvider({ children }: { children: React.ReactNode }) {
       }),
     );
 
+    // ERP domain events → invalidate corresponding TanStack Query caches
+    const erpHandlers: Record<string, readonly unknown[]> = {
+      erp_accounting: ["erp", "entries"],
+      erp_treasury: ["erp", "treasury"],
+      erp_invoicing: ["erp", "invoicing"],
+      erp_stock: ["erp", "stock"],
+      erp_purchasing: ["erp", "purchasing"],
+      erp_catalogs: ["erp", "catalogs"],
+      erp_accounts: ["erp", "accounts"],
+      erp_production: ["erp", "production"],
+      erp_hr: ["erp", "hr"],
+      erp_quality: ["erp", "quality"],
+      erp_maintenance: ["erp", "maintenance"],
+    };
+
+    for (const [event, queryKey] of Object.entries(erpHandlers)) {
+      unsubs.push(
+        wsManager.subscribe(event, () => {
+          queryClient.invalidateQueries({ queryKey });
+        }),
+      );
+    }
+
     // Preload event → hydrate cache directly
     unsubs.push(
       wsManager.subscribe("preload", (data) => {
