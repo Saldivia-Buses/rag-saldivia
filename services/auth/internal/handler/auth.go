@@ -10,8 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-chi/chi/v5/middleware"
-
+	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
@@ -130,8 +129,7 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 
 	svc, err := h.resolveService(r)
 	if err != nil {
-		slog.Error("failed to resolve tenant for login", "error", err)
-		writeJSON(w, http.StatusBadGateway, errorResponse{Error: "tenant not available"})
+		httperr.WriteError(w, r, httperr.Wrap(err, httperr.CodeInternal, "tenant not available", http.StatusBadGateway))
 		return
 	}
 
@@ -148,9 +146,7 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, service.ErrAccountLocked):
 			writeJSON(w, http.StatusTooManyRequests, errorResponse{Error: "too many attempts, try again later"})
 		default:
-			reqID := middleware.GetReqID(r.Context())
-			slog.Error("login failed", "error", err, "request_id", reqID)
-			writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "internal error"})
+			httperr.WriteError(w, r, httperr.Internal(err))
 		}
 		return
 	}
@@ -194,7 +190,7 @@ func (h *Auth) Refresh(w http.ResponseWriter, r *http.Request) {
 
 	svc, err := h.resolveService(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadGateway, errorResponse{Error: "tenant not available"})
+		httperr.WriteError(w, r, httperr.Wrap(err, httperr.CodeInternal, "tenant not available", http.StatusBadGateway))
 		return
 	}
 
@@ -205,9 +201,7 @@ func (h *Auth) Refresh(w http.ResponseWriter, r *http.Request) {
 			clearRefreshCookie(w)
 			writeJSON(w, http.StatusUnauthorized, errorResponse{Error: "invalid or expired refresh token"})
 		default:
-			reqID := middleware.GetReqID(r.Context())
-			slog.Error("refresh failed", "error", err, "request_id", reqID)
-			writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "internal error"})
+			httperr.WriteError(w, r, httperr.Internal(err))
 		}
 		return
 	}
@@ -268,7 +262,7 @@ func (h *Auth) Me(w http.ResponseWriter, r *http.Request) {
 
 	svc, err := h.resolveService(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadGateway, errorResponse{Error: "tenant not available"})
+		httperr.WriteError(w, r, httperr.Wrap(err, httperr.CodeInternal, "tenant not available", http.StatusBadGateway))
 		return
 	}
 
@@ -276,11 +270,9 @@ func (h *Auth) Me(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrUserNotFound):
-			writeJSON(w, http.StatusNotFound, errorResponse{Error: "user not found"})
+			httperr.WriteError(w, r, httperr.NotFound("user"))
 		default:
-			reqID := middleware.GetReqID(r.Context())
-			slog.Error("me failed", "error", err, "request_id", reqID)
-			writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "internal error"})
+			httperr.WriteError(w, r, httperr.Internal(err))
 		}
 		return
 	}
@@ -297,7 +289,7 @@ func (h *Auth) EnabledModules(w http.ResponseWriter, r *http.Request) {
 	if h.resolver != nil && tenantID != "" {
 		modules, err := h.resolver.ListEnabledModules(r.Context(), tenantID)
 		if err != nil {
-			slog.Error("list enabled modules failed", "error", err)
+			slog.Warn("list enabled modules failed, using defaults", "error", err)
 		} else {
 			writeJSON(w, http.StatusOK, modules)
 			return
@@ -362,7 +354,7 @@ func (h *Auth) UpdateMe(w http.ResponseWriter, r *http.Request) {
 
 	svc, err := h.resolveService(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadGateway, errorResponse{Error: "tenant not available"})
+		httperr.WriteError(w, r, httperr.Wrap(err, httperr.CodeInternal, "tenant not available", http.StatusBadGateway))
 		return
 	}
 
@@ -370,12 +362,11 @@ func (h *Auth) UpdateMe(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrUserNotFound):
-			writeJSON(w, http.StatusNotFound, errorResponse{Error: "user not found"})
+			httperr.WriteError(w, r, httperr.NotFound("user"))
 		case errors.Is(err, service.ErrValidation):
-			writeJSON(w, http.StatusBadRequest, errorResponse{Error: err.Error()})
+			httperr.WriteError(w, r, httperr.InvalidInput(err.Error()))
 		default:
-			slog.Error("update profile failed", "error", err, "user_id", userID)
-			writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "internal error"})
+			httperr.WriteError(w, r, httperr.Internal(err))
 		}
 		return
 	}
@@ -387,16 +378,14 @@ func (h *Auth) UpdateMe(w http.ResponseWriter, r *http.Request) {
 func (h *Auth) ListUsers(w http.ResponseWriter, r *http.Request) {
 	svc, err := h.resolveService(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadGateway, errorResponse{Error: "tenant not available"})
+		httperr.WriteError(w, r, httperr.Wrap(err, httperr.CodeInternal, "tenant not available", http.StatusBadGateway))
 		return
 	}
 
 	pg := pagination.Parse(r)
 	users, err := svc.ListUsers(r.Context(), int32(pg.Limit()), int32(pg.Offset()))
 	if err != nil {
-		reqID := middleware.GetReqID(r.Context())
-		slog.Error("list users failed", "error", err, "request_id", reqID)
-		writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "internal error"})
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 
