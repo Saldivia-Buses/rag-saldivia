@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -11,6 +10,7 @@ import (
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
+	erperrors "github.com/Camionerou/rag-saldivia/services/erp/internal/errors"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/repository"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/service"
 )
@@ -60,8 +60,7 @@ func (h *Production) Routes(authWrite func(http.Handler) http.Handler) chi.Route
 func (h *Production) ListCenters(w http.ResponseWriter, r *http.Request) {
 	centers, err := h.svc.ListCenters(r.Context(), tenantSlug(r))
 	if err != nil {
-		slog.Error("list centers failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -73,13 +72,12 @@ func (h *Production) CreateCenter(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 16<<10)
 	var body struct{ Code, Name string }
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	c, err := h.svc.CreateCenter(r.Context(), slug, body.Code, body.Name, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create center failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -92,8 +90,7 @@ func (h *Production) ListOrders(w http.ResponseWriter, r *http.Request) {
 	p := pagination.Parse(r)
 	orders, err := h.svc.ListOrders(r.Context(), slug, r.URL.Query().Get("status"), p.Limit(), p.Offset())
 	if err != nil {
-		slog.Error("list production orders failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -104,12 +101,12 @@ func (h *Production) GetOrder(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	detail, err := h.svc.GetOrder(r.Context(), id, slug)
 	if err != nil {
-		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		erperrors.WriteError(w, r, erperrors.NotFound("production order"))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -132,12 +129,12 @@ func (h *Production) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		Notes     string  `json:"notes"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	prodID, err := parseUUID(body.ProductID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid product_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid product_id"))
 		return
 	}
 	var sd, ed string
@@ -151,8 +148,7 @@ func (h *Production) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		UserID: r.Header.Get("X-User-ID"), Notes: body.Notes, IP: r.RemoteAddr,
 	})
 	if err != nil {
-		slog.Error("create production order failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -164,11 +160,11 @@ func (h *Production) StartOrder(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	if err := h.svc.StartOrder(r.Context(), id, slug, r.Header.Get("X-User-ID"), r.RemoteAddr); err != nil {
-		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		erperrors.WriteError(w, r, erperrors.NotFound("production order"))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -179,7 +175,7 @@ func (h *Production) UpdateStep(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 16<<10)
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	var body struct {
@@ -187,11 +183,11 @@ func (h *Production) UpdateStep(w http.ResponseWriter, r *http.Request) {
 		Notes  string `json:"notes"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	if err := h.svc.UpdateStep(r.Context(), id, slug, body.Status, body.Notes, r.Header.Get("X-User-ID"), r.RemoteAddr); err != nil {
-		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		erperrors.WriteError(w, r, erperrors.NotFound("production step"))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -208,12 +204,12 @@ func (h *Production) CreateInspection(w http.ResponseWriter, r *http.Request) {
 		Observations string `json:"observations"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	orderID, err := parseUUID(body.OrderID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid order_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid order_id"))
 		return
 	}
 	insp, err := h.svc.CreateInspection(r.Context(), repository.CreateProductionInspectionParams{
@@ -222,8 +218,7 @@ func (h *Production) CreateInspection(w http.ResponseWriter, r *http.Request) {
 		Observations: body.Observations,
 	}, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create inspection failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -236,8 +231,7 @@ func (h *Production) ListUnits(w http.ResponseWriter, r *http.Request) {
 	p := pagination.Parse(r)
 	units, err := h.svc.ListUnits(r.Context(), slug, r.URL.Query().Get("status"), p.Limit(), p.Offset())
 	if err != nil {
-		slog.Error("list units failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -248,12 +242,12 @@ func (h *Production) GetUnit(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	unit, err := h.svc.GetUnit(r.Context(), id, slug)
 	if err != nil {
-		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		erperrors.WriteError(w, r, erperrors.NotFound("unit"))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -277,7 +271,7 @@ func (h *Production) CreateUnit(w http.ResponseWriter, r *http.Request) {
 		Year             *int32  `json:"year,omitempty"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	var sc, yr pgtype.Int4
@@ -300,12 +294,10 @@ func (h *Production) CreateUnit(w http.ResponseWriter, r *http.Request) {
 		Metadata:          []byte(`{}`),
 	}, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create unit failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(unit)
 }
-
