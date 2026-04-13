@@ -17,6 +17,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 	"github.com/Camionerou/rag-saldivia/pkg/llm"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/tenant"
@@ -170,11 +171,10 @@ func jsonError(w http.ResponseWriter, msg string, code int) {
 	json.NewEncoder(w).Encode(map[string]string{"error": msg})
 }
 
-// serverError logs a 500-class error with request context, then sends a generic message.
-// The msg is logged but NOT sent to the client (M1 fix — no operation name leak).
-func serverError(w http.ResponseWriter, r *http.Request, msg string, err error) {
-	slog.Error(msg, "error", err, "request_id", middleware.GetReqID(r.Context()))
-	jsonError(w, "internal error", http.StatusInternalServerError)
+// serverError writes a structured 500 error via httperr.
+// The msg parameter is retained for signature compatibility but not exposed to clients.
+func serverError(w http.ResponseWriter, r *http.Request, _ string, err error) {
+	httperr.WriteError(w, r, httperr.Internal(err))
 }
 
 func jsonOK(w http.ResponseWriter, data any) {
