@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -11,6 +10,7 @@ import (
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
+	erperrors "github.com/Camionerou/rag-saldivia/services/erp/internal/errors"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/repository"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/service"
 )
@@ -53,8 +53,7 @@ func (h *CurrentAccounts) ListMovements(w http.ResponseWriter, r *http.Request) 
 	movements, err := h.svc.ListMovements(r.Context(), slug, entityID, q.Get("direction"),
 		pgDate(q.Get("date_from")), pgDate(q.Get("date_to")), p.Limit(), p.Offset())
 	if err != nil {
-		slog.Error("list account movements failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -66,8 +65,7 @@ func (h *CurrentAccounts) GetBalances(w http.ResponseWriter, r *http.Request) {
 	direction := r.URL.Query().Get("direction")
 	balances, err := h.svc.GetBalances(r.Context(), slug, direction)
 	if err != nil {
-		slog.Error("get balances failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -78,8 +76,7 @@ func (h *CurrentAccounts) GetOverdue(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	overdue, err := h.svc.GetOverdue(r.Context(), slug)
 	if err != nil {
-		slog.Error("get overdue failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -95,25 +92,24 @@ func (h *CurrentAccounts) Allocate(w http.ResponseWriter, r *http.Request) {
 		Amount    string `json:"amount"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	payID, err := parseUUID(body.PaymentID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid payment_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid payment_id"))
 		return
 	}
 	invID, err := parseUUID(body.InvoiceID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid invoice_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid invoice_id"))
 		return
 	}
 	if err := h.svc.Allocate(r.Context(), service.AllocateRequest{
 		TenantID: slug, PaymentID: payID, InvoiceID: invID, Amount: body.Amount,
 		UserID: r.Header.Get("X-User-ID"), IP: r.RemoteAddr,
 	}); err != nil {
-		slog.Error("allocate failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
