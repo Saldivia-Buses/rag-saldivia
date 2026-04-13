@@ -1,9 +1,10 @@
 ---
 name: deploy
 description: "Deployar SDA Framework a la workstation física con preflight checks automáticos. Usar cuando se menciona 'deployar', 'subir a producción', 'deploy', o cuando se pide verificar que el sistema está listo para producción. NO usar para ver el estado de servicios (usar status), sino para ejecutar el proceso de deployment completo."
-model: opus
+model: sonnet
 tools: Bash, Read, Glob, Write, Edit
 permissionMode: default
+effort: high
 maxTurns: 25
 memory: project
 ---

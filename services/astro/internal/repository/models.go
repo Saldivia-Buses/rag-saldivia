@@ -653,6 +653,31 @@ type ErpCostCenter struct {
 	Active   bool        `json:"active"`
 }
 
+type ErpCustomerVehicle struct {
+	ID                  pgtype.UUID        `json:"id"`
+	TenantID            string             `json:"tenant_id"`
+	OwnerID             pgtype.UUID        `json:"owner_id"`
+	DriverID            pgtype.UUID        `json:"driver_id"`
+	ManufacturingUnitID pgtype.UUID        `json:"manufacturing_unit_id"`
+	Plate               string             `json:"plate"`
+	ChassisSerial       string             `json:"chassis_serial"`
+	BodySerial          string             `json:"body_serial"`
+	InternalNumber      pgtype.Int4        `json:"internal_number"`
+	Brand               string             `json:"brand"`
+	ModelYear           pgtype.Int4        `json:"model_year"`
+	SeatingCapacity     int32              `json:"seating_capacity"`
+	FuelType            string             `json:"fuel_type"`
+	Color               string             `json:"color"`
+	PurchaseDate        pgtype.Date        `json:"purchase_date"`
+	PurchasePrice       pgtype.Numeric     `json:"purchase_price"`
+	WarrantyMonths      int32              `json:"warranty_months"`
+	Destination         string             `json:"destination"`
+	Observations        string             `json:"observations"`
+	Active              bool               `json:"active"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
+}
+
 type ErpDepartment struct {
 	ID        pgtype.UUID `json:"id"`
 	TenantID  string      `json:"tenant_id"`
@@ -1675,6 +1700,29 @@ type ErpUnitPhoto struct {
 	PhotoType string             `json:"photo_type"`
 	FileKey   string             `json:"file_key"`
 	SortOrder int32              `json:"sort_order"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpVehicleIncident struct {
+	ID             pgtype.UUID        `json:"id"`
+	TenantID       string             `json:"tenant_id"`
+	VehicleID      pgtype.UUID        `json:"vehicle_id"`
+	IncidentTypeID pgtype.UUID        `json:"incident_type_id"`
+	IncidentDate   pgtype.Date        `json:"incident_date"`
+	Location       string             `json:"location"`
+	Responsible    string             `json:"responsible"`
+	Notes          string             `json:"notes"`
+	Status         string             `json:"status"`
+	ResolvedAt     pgtype.Timestamptz `json:"resolved_at"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
+}
+
+type ErpVehicleIncidentType struct {
+	ID        pgtype.UUID        `json:"id"`
+	TenantID  string             `json:"tenant_id"`
+	Name      string             `json:"name"`
+	Active    bool               `json:"active"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 

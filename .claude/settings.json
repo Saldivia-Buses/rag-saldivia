@@ -47,7 +47,7 @@
           },
           {
             "type": "prompt",
-            "prompt": "The stop-verify hook just ran the invariant checks. Now check the CONVERSATION: Did you provide evidence (test output, build output, or diff) for every claim? Did you run make build/test/lint after code changes? Answer {\"ok\": true} if yes, {\"ok\": false, \"reason\": \"what's missing\"} if no. Be strict.",
+            "prompt": "The stop-verify hook just ran the invariant checks. Now check the CONVERSATION: If NO code changes were made in this conversation (no Edit/Write tool calls that modified source files), answer {\"ok\": true} immediately — no evidence is needed when no code was changed. If code changes WERE made: Did you provide evidence (test output, build output, or diff) for every claim? Did you run make build/test/lint after code changes? Answer {\"ok\": true} if yes, {\"ok\": false, \"reason\": \"what's missing\"} if no. Be strict only when code was actually changed.",
             "model": "claude-haiku-4-5-20251001"
           }
         ]

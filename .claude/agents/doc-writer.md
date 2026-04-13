@@ -1,9 +1,10 @@
 ---
 name: doc-writer
 description: "Mantener la documentación de SDA Framework sincronizada con el código. Usar cuando se pide 'documentar X', 'actualizar README', 'update docs', 'CLAUDE.md está desactualizado', o tras cambios estructurales. Nunca inventa funcionalidad — lee el código antes de documentar."
-model: opus
+model: sonnet
 tools: Read, Write, Edit, Glob
 permissionMode: acceptEdits
+effort: high
 maxTurns: 30
 memory: project
 mcpServers:

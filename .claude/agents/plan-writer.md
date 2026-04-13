@@ -1,7 +1,7 @@
 ---
 name: plan-writer
 description: "Escribir planes de implementación para features nuevas en SDA Framework. Usar cuando se pide 'planear X', 'escribir plan para Y', 'quiero implementar Z', o antes de empezar cualquier feature no trivial. Conoce el formato de planes, la arquitectura de microservicios, y el spec del sistema."
-model: opus
+model: sonnet
 tools: Read, Write, Glob, Edit
 permissionMode: acceptEdits
 effort: high

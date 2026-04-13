@@ -1,9 +1,10 @@
 ---
 name: status
 description: "Ver el estado actual de todos los servicios de SDA Framework. Usar cuando se pregunta 'está funcionando?', 'cómo están los servicios?', 'ver logs', 'status', 'hay algo roto?'. NO usar para deployar (usar deploy) ni para debuggear un problema específico (usar debugger)."
-model: opus
+model: sonnet
 tools: Bash, Read, Write, Edit
 permissionMode: default
+effort: high
 maxTurns: 15
 memory: project
 ---

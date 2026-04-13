@@ -1,7 +1,7 @@
 ---
 name: frontend-reviewer
 description: "Code review especializado en el frontend Next.js de SDA Framework. Usar cuando hay cambios en apps/web/, apps/login/, hooks, componentes, o cuando se pide 'revisar el frontend', 'review de UI', 'validar componentes'. Conoce la arquitectura híbrida cloud/inhouse y cómo el frontend habla con los microservicios Go via Traefik."
-model: opus
+model: sonnet
 tools: Read, Grep, Glob, Write, Edit
 permissionMode: plan
 effort: high

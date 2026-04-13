@@ -1,10 +1,10 @@
 ---
 name: security-auditor
-description: "Auditoría de seguridad completa de SDA Framework. Usar cuando se pide 'revisar seguridad', 'security audit', 'es seguro esto?', antes de releases importantes, o cuando se sospecha de una vulnerabilidad. Audita JWT/auth, tenant isolation, RBAC, SQL injection, NATS, Docker, y exposición de información. IMPORTANTE: usa model opus y effort max — invocar deliberadamente, no en cada cambio pequeño."
-model: opus
+description: "Auditoría de seguridad completa de SDA Framework. Usar cuando se pide 'revisar seguridad', 'security audit', 'es seguro esto?', antes de releases importantes, o cuando se sospecha de una vulnerabilidad. Audita JWT/auth, tenant isolation, RBAC, SQL injection, NATS, Docker, y exposición de información. IMPORTANTE: usa model sonnet y effort high — invocar deliberadamente, no en cada cambio pequeño."
+model: sonnet
 tools: Read, Grep, Glob, Write, Edit
 permissionMode: plan
-effort: max
+effort: high
 memory: project
 mcpServers:
   - CodeGraphContext
