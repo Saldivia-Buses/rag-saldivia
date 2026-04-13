@@ -67,11 +67,19 @@ Agent({ description: "Task C", prompt: "..." })
 ### Step 6: Recolección e integración
 
 Cuando los agentes retornan:
-1. Verificar que commitaron (git log --oneline -5)
+1. Verificar que commitaron (`git log --oneline -5`)
 2. Si un agente NO commitó pero hizo cambios → están en el repo principal como unstaged
 3. `git diff --stat HEAD` para ver qué cambió
-4. `make test && make lint && make build` — verificar integración
-5. Resolver conflictos si los hay
+4. **Si el agente usó worktree**: revisar `.claude/worktrees/agent-XXXX/.claude/agent-memory/`
+   — los agentes con `memory: project` guardan aprendizajes ahí. Copiar al repo principal
+   antes de borrar el worktree:
+   ```bash
+   cp -r .claude/worktrees/agent-XXXX/.claude/agent-memory/[agente]/ .claude/agent-memory/
+   git add .claude/agent-memory/[agente]/
+   ```
+5. Limpiar worktrees: `git worktree remove .claude/worktrees/agent-XXXX --force`
+6. `make test && make lint && make build` — verificar integración
+7. Resolver conflictos si los hay
 
 ## Recuperar trabajo de un agente fallido
 
