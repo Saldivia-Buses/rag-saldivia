@@ -9,6 +9,7 @@ import { useERPSearch } from "@/lib/erp/use-erp-search";
 import { permissionErrorToast } from "@/lib/erp/permission-messages";
 import { ErrorState } from "@/components/erp/error-state";
 import { EmptyState } from "@/components/erp/empty-state";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -16,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PlusIcon, SearchIcon, UserIcon } from "lucide-react";
+import { PlusIcon, SearchIcon, UserIcon, PencilIcon, TrashIcon } from "lucide-react";
 
 interface Entity {
   id: string;
@@ -43,9 +44,20 @@ interface CreateEntityInput {
   city?: string;
 }
 
+interface UpdateEntityInput {
+  code: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  notes?: string;
+  active?: boolean;
+}
+
 export default function PersonalPage() {
   const { search, setSearch, deferredSearch } = useERPSearch(0);
   const [createOpen, setCreateOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<Entity | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Entity | null>(null);
   const queryClient = useQueryClient();
 
   const { data, isLoading, error } = useQuery({
@@ -66,6 +78,27 @@ export default function PersonalPage() {
       toast.success("Empleado creado exitosamente");
       queryClient.invalidateQueries({ queryKey: erpKeys.entities("employee") });
       setCreateOpen(false);
+    },
+    onError: permissionErrorToast,
+  });
+
+  const editMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateEntityInput }) =>
+      api.put(`/v1/erp/entities/${id}`, data),
+    onSuccess: () => {
+      toast.success("Empleado actualizado");
+      queryClient.invalidateQueries({ queryKey: erpKeys.entities("employee") });
+      setEditTarget(null);
+    },
+    onError: permissionErrorToast,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/v1/erp/entities/${id}`),
+    onSuccess: () => {
+      toast.success("Empleado eliminado");
+      queryClient.invalidateQueries({ queryKey: erpKeys.entities("employee") });
+      setDeleteTarget(null);
     },
     onError: permissionErrorToast,
   });
@@ -113,6 +146,7 @@ export default function PersonalPage() {
                 <TableHead className="w-48">Email</TableHead>
                 <TableHead className="w-36">Teléfono</TableHead>
                 <TableHead className="w-20 text-center">Estado</TableHead>
+                <TableHead className="w-20 text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -127,11 +161,21 @@ export default function PersonalPage() {
                       {e.active ? "Activo" : "Inactivo"}
                     </Badge>
                   </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button size="sm" variant="ghost" onClick={() => setEditTarget(e)}>
+                        <PencilIcon className="size-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setDeleteTarget(e)}>
+                        <TrashIcon className="size-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
               {entities.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5}>
+                  <TableCell colSpan={6}>
                     <EmptyState
                       icon={UserIcon}
                       title={search ? "Sin resultados" : "Sin empleados"}
@@ -146,27 +190,60 @@ export default function PersonalPage() {
         </div>
       </div>
 
-      <CreateEmpleadoDialog
+      <EmpleadoDialog
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         onSubmit={(d) => createMutation.mutate({ entity_type: "employee", ...d })}
         isPending={createMutation.isPending}
       />
+
+      <EmpleadoDialog
+        open={!!editTarget}
+        onClose={() => setEditTarget(null)}
+        initialValues={editTarget ?? undefined}
+        onSubmit={(d) => {
+          if (editTarget) editMutation.mutate({ id: editTarget.id, data: d });
+        }}
+        isPending={editMutation.isPending}
+      />
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar empleado {deleteTarget?.name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. El legajo será eliminado permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteMutation.isPending ? "Eliminando..." : "Eliminar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
 
-function CreateEmpleadoDialog({
+function EmpleadoDialog({
   open,
   onClose,
   onSubmit,
   isPending,
+  initialValues,
 }: {
   open: boolean;
   onClose: () => void;
   onSubmit: (d: { code: string; name: string; tax_id?: string; email?: string; phone?: string; address?: string; city?: string }) => void;
   isPending: boolean;
+  initialValues?: Pick<Entity, "code" | "name" | "tax_id" | "email" | "phone">;
 }) {
+  const isEdit = !!initialValues;
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const [taxId, setTaxId] = useState("");
@@ -175,14 +252,20 @@ function CreateEmpleadoDialog({
 
   useEffect(() => {
     if (open) {
-      setCode(""); setName(""); setTaxId(""); setEmail(""); setPhone("");
+      setCode(initialValues?.code ?? "");
+      setName(initialValues?.name ?? "");
+      setTaxId(initialValues?.tax_id ?? "");
+      setEmail(initialValues?.email ?? "");
+      setPhone(initialValues?.phone ?? "");
     }
-  }, [open]);
+  }, [open, initialValues]);
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-md">
-        <DialogHeader><DialogTitle>Nuevo empleado</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>{isEdit ? "Editar empleado" : "Nuevo empleado"}</DialogTitle>
+        </DialogHeader>
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -210,7 +293,7 @@ function CreateEmpleadoDialog({
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
             <Button type="submit" disabled={!code.trim() || !name.trim() || isPending}>
-              {isPending ? "Creando..." : "Crear empleado"}
+              {isPending ? (isEdit ? "Guardando..." : "Creando...") : (isEdit ? "Guardar cambios" : "Crear empleado")}
             </Button>
           </div>
         </form>
