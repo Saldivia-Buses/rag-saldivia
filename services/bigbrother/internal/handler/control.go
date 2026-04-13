@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 	"github.com/Camionerou/rag-saldivia/services/bigbrother/internal/service"
 )
 
@@ -23,13 +24,13 @@ func NewControl(plcSvc *service.PLCService) *Control {
 func (h *Control) ListRegisters(w http.ResponseWriter, r *http.Request) {
 	deviceID := chi.URLParam(r, "id")
 	if deviceID == "" {
-		http.Error(w, `{"error":"device id required"}`, http.StatusBadRequest)
+		httperr.WriteError(w, r, httperr.InvalidInput("device id required"))
 		return
 	}
 
 	regs, err := h.plcSvc.ListRegisters(r.Context(), deviceID)
 	if err != nil {
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 
@@ -48,7 +49,7 @@ func (h *Control) WriteRegister(w http.ResponseWriter, r *http.Request) {
 		Value float64 `json:"value"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid body"))
 		return
 	}
 
@@ -64,7 +65,7 @@ func (h *Control) WriteRegister(w http.ResponseWriter, r *http.Request) {
 		UserAgent: r.UserAgent(),
 	})
 	if err != nil {
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 
@@ -85,7 +86,7 @@ func (h *Control) WriteRegister(w http.ResponseWriter, r *http.Request) {
 func (h *Control) ApproveWrite(w http.ResponseWriter, r *http.Request) {
 	requestID := r.URL.Query().Get("request_id")
 	if requestID == "" {
-		http.Error(w, `{"error":"request_id required"}`, http.StatusBadRequest)
+		httperr.WriteError(w, r, httperr.InvalidInput("request_id required"))
 		return
 	}
 
@@ -93,7 +94,7 @@ func (h *Control) ApproveWrite(w http.ResponseWriter, r *http.Request) {
 
 	result, err := h.plcSvc.ApproveWrite(r.Context(), requestID, approverID, r.RemoteAddr, r.UserAgent())
 	if err != nil {
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 
