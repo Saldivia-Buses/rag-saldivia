@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -11,6 +10,7 @@ import (
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
+	erperrors "github.com/Camionerou/rag-saldivia/services/erp/internal/errors"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/repository"
 )
 
@@ -54,14 +54,13 @@ func (h *Workshop) Routes(authWrite func(http.Handler) http.Handler) chi.Router 
 	return r
 }
 
-// ─── Vehicles ──────────────────────────────────────────────────────────────
+// ─── Vehicles ──────────────────────────────────────────────────────────────────
 
 func (h *Workshop) ListVehicles(w http.ResponseWriter, r *http.Request) {
 	p := pagination.Parse(r)
 	vehicles, err := h.svc.ListCustomerVehicles(r.Context(), tenantSlug(r), r.URL.Query().Get("owner_id"), p.Limit(), p.Offset())
 	if err != nil {
-		slog.Error("list vehicles failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -71,12 +70,12 @@ func (h *Workshop) ListVehicles(w http.ResponseWriter, r *http.Request) {
 func (h *Workshop) GetVehicle(w http.ResponseWriter, r *http.Request) {
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	v, err := h.svc.GetCustomerVehicle(r.Context(), id, tenantSlug(r))
 	if err != nil {
-		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		erperrors.WriteError(w, r, erperrors.NotFound("vehicle"))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -103,11 +102,11 @@ func (h *Workshop) CreateVehicle(w http.ResponseWriter, r *http.Request) {
 		SeatingCapacity     int32   `json:"seating_capacity"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	if body.Brand == "" {
-		http.Error(w, `{"error":"brand is required"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("brand is required"))
 		return
 	}
 	validFuel := map[string]bool{"diesel": true, "gasolina": true, "gnc": true, "electric": true, "hybrid": true}
@@ -115,7 +114,7 @@ func (h *Workshop) CreateVehicle(w http.ResponseWriter, r *http.Request) {
 		body.FuelType = "diesel"
 	}
 	if !validFuel[body.FuelType] {
-		http.Error(w, `{"error":"invalid fuel_type (diesel, gasolina, gnc, electric, hybrid)"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid fuel_type (diesel, gasolina, gnc, electric, hybrid)"))
 		return
 	}
 	var intNum pgtype.Int4
@@ -144,8 +143,7 @@ func (h *Workshop) CreateVehicle(w http.ResponseWriter, r *http.Request) {
 		Observations:        body.Observations,
 	}, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create vehicle failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -158,23 +156,23 @@ func (h *Workshop) UpdateVehicle(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 16<<10)
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	var body struct {
-		Plate           string  `json:"plate"`
-		ChassisSerial   string  `json:"chassis_serial"`
-		BodySerial      string  `json:"body_serial"`
-		Brand           string  `json:"brand"`
-		Color           string  `json:"color"`
-		Destination     string  `json:"destination"`
-		Observations    string  `json:"observations"`
-		FuelType        string  `json:"fuel_type"`
-		ModelYear       *int32  `json:"model_year"`
-		SeatingCapacity int32   `json:"seating_capacity"`
+		Plate           string `json:"plate"`
+		ChassisSerial   string `json:"chassis_serial"`
+		BodySerial      string `json:"body_serial"`
+		Brand           string `json:"brand"`
+		Color           string `json:"color"`
+		Destination     string `json:"destination"`
+		Observations    string `json:"observations"`
+		FuelType        string `json:"fuel_type"`
+		ModelYear       *int32 `json:"model_year"`
+		SeatingCapacity int32  `json:"seating_capacity"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	if body.FuelType == "" {
@@ -182,7 +180,7 @@ func (h *Workshop) UpdateVehicle(w http.ResponseWriter, r *http.Request) {
 	}
 	validFuel := map[string]bool{"diesel": true, "gasolina": true, "gnc": true, "electric": true, "hybrid": true}
 	if !validFuel[body.FuelType] {
-		http.Error(w, `{"error":"invalid fuel_type (diesel, gasolina, gnc, electric, hybrid)"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid fuel_type (diesel, gasolina, gnc, electric, hybrid)"))
 		return
 	}
 	var modelYear pgtype.Int4
@@ -204,23 +202,21 @@ func (h *Workshop) UpdateVehicle(w http.ResponseWriter, r *http.Request) {
 		Observations:    body.Observations,
 	}, r.Header.Get("X-User-ID"), r.RemoteAddr); err != nil {
 		if err.Error() == "vehicle not found" {
-			http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+			erperrors.WriteError(w, r, erperrors.NotFound("vehicle"))
 		} else {
-			slog.Error("update vehicle failed", "error", err)
-			http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+			erperrors.WriteError(w, r, erperrors.Internal(err))
 		}
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// ─── Incident Types ────────────────────────────────────────────────────────
+// ─── Incident Types ────────────────────────────────────────────────────────────
 
 func (h *Workshop) ListIncidentTypes(w http.ResponseWriter, r *http.Request) {
 	types, err := h.svc.ListIncidentTypes(r.Context(), tenantSlug(r))
 	if err != nil {
-		slog.Error("list incident types failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -230,19 +226,20 @@ func (h *Workshop) ListIncidentTypes(w http.ResponseWriter, r *http.Request) {
 func (h *Workshop) CreateIncidentType(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	r.Body = http.MaxBytesReader(w, r.Body, 4<<10)
-	var body struct{ Name string `json:"name"` }
+	var body struct {
+		Name string `json:"name"`
+	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	if body.Name == "" {
-		http.Error(w, `{"error":"name is required"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("name is required"))
 		return
 	}
 	t, err := h.svc.CreateIncidentType(r.Context(), slug, body.Name, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create incident type failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -250,15 +247,14 @@ func (h *Workshop) CreateIncidentType(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(t)
 }
 
-// ─── Incidents ─────────────────────────────────────────────────────────────
+// ─── Incidents ─────────────────────────────────────────────────────────────────
 
 func (h *Workshop) ListIncidents(w http.ResponseWriter, r *http.Request) {
 	p := pagination.Parse(r)
 	q := r.URL.Query()
 	incidents, err := h.svc.ListVehicleIncidents(r.Context(), tenantSlug(r), q.Get("vehicle_id"), q.Get("status"), p.Limit(), p.Offset())
 	if err != nil {
-		slog.Error("list incidents failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -277,16 +273,16 @@ func (h *Workshop) CreateIncident(w http.ResponseWriter, r *http.Request) {
 		IncidentTypeID *string `json:"incident_type_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	if body.VehicleID == "" || body.IncidentDate == "" {
-		http.Error(w, `{"error":"vehicle_id and incident_date are required"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("vehicle_id and incident_date are required"))
 		return
 	}
 	vehicleID, err := parseUUID(body.VehicleID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid vehicle_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid vehicle_id"))
 		return
 	}
 	inc, err := h.svc.CreateVehicleIncident(r.Context(), repository.CreateVehicleIncidentParams{
@@ -299,8 +295,7 @@ func (h *Workshop) CreateIncident(w http.ResponseWriter, r *http.Request) {
 		Notes:          body.Notes,
 	}, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create incident failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -312,28 +307,26 @@ func (h *Workshop) ResolveIncident(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	if err := h.svc.ResolveVehicleIncident(r.Context(), id, slug, r.Header.Get("X-User-ID"), r.RemoteAddr); err != nil {
 		if err.Error() == "incident not found" {
-			http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+			erperrors.WriteError(w, r, erperrors.NotFound("incident"))
 		} else {
-			slog.Error("resolve incident failed", "error", err)
-			http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+			erperrors.WriteError(w, r, erperrors.Internal(err))
 		}
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// ─── KPIs ──────────────────────────────────────────────────────────────────
+// ─── KPIs ──────────────────────────────────────────────────────────────────────
 
 func (h *Workshop) GetKPIs(w http.ResponseWriter, r *http.Request) {
 	kpis, err := h.svc.GetKPIs(r.Context(), tenantSlug(r))
 	if err != nil {
-		slog.Error("get workshop kpis failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
