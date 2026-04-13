@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -13,6 +12,7 @@ import (
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
+	erperrors "github.com/Camionerou/rag-saldivia/services/erp/internal/errors"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/repository"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/service"
 )
@@ -75,7 +75,7 @@ func (h *Entities) List(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	entityType := r.URL.Query().Get("type")
 	if entityType == "" {
-		http.Error(w, `{"error":"type query param required (employee, customer, supplier)"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("type query param required (employee, customer, supplier)"))
 		return
 	}
 
@@ -85,14 +85,14 @@ func (h *Entities) List(w http.ResponseWriter, r *http.Request) {
 
 	entities, err := h.svc.List(r.Context(), slug, entityType, search, activeOnly, p.Limit(), p.Offset())
 	if err != nil {
-		slog.Error("list entities failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 
 	count, err := h.svc.Count(r.Context(), slug, entityType, activeOnly)
 	if err != nil {
-		slog.Error("count entities failed", "error", err)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -110,14 +110,13 @@ func (h *Entities) Get(w http.ResponseWriter, r *http.Request) {
 
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 
 	detail, err := h.svc.Get(r.Context(), id, slug)
 	if err != nil {
-		slog.Error("get entity failed", "error", err)
-		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		erperrors.WriteError(w, r, erperrors.NotFound("entity"))
 		return
 	}
 
@@ -141,7 +140,7 @@ func (h *Entities) Create(w http.ResponseWriter, r *http.Request) {
 		Metadata *json.RawMessage `json:"metadata,omitempty"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 
@@ -175,8 +174,7 @@ func (h *Entities) Create(w http.ResponseWriter, r *http.Request) {
 		IP:        r.RemoteAddr,
 	})
 	if err != nil {
-		slog.Error("create entity failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 
@@ -192,7 +190,7 @@ func (h *Entities) Update(w http.ResponseWriter, r *http.Request) {
 
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 
@@ -207,7 +205,7 @@ func (h *Entities) Update(w http.ResponseWriter, r *http.Request) {
 		Active   *bool   `json:"active,omitempty"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 
@@ -245,8 +243,7 @@ func (h *Entities) Update(w http.ResponseWriter, r *http.Request) {
 		IP:        r.RemoteAddr,
 	})
 	if err != nil {
-		slog.Error("update entity failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 
@@ -260,12 +257,12 @@ func (h *Entities) Delete(w http.ResponseWriter, r *http.Request) {
 
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 
 	if err := h.svc.Delete(r.Context(), id, slug, r.Header.Get("X-User-ID"), r.RemoteAddr); err != nil {
-		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		erperrors.WriteError(w, r, erperrors.NotFound("entity"))
 		return
 	}
 
@@ -279,7 +276,7 @@ func (h *Entities) AddContact(w http.ResponseWriter, r *http.Request) {
 
 	entityID, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 
@@ -289,14 +286,13 @@ func (h *Entities) AddContact(w http.ResponseWriter, r *http.Request) {
 		Value string `json:"value"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 
 	contact, err := h.svc.AddContact(r.Context(), slug, entityID, body.Type, body.Label, body.Value, r.Header.Get("X-User-ID"), r.RemoteAddr, nil)
 	if err != nil {
-		slog.Error("add contact failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 
@@ -312,7 +308,7 @@ func (h *Entities) AddNote(w http.ResponseWriter, r *http.Request) {
 
 	entityID, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 
@@ -321,7 +317,7 @@ func (h *Entities) AddNote(w http.ResponseWriter, r *http.Request) {
 		Body string `json:"body"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	if body.Type == "" {
@@ -330,8 +326,7 @@ func (h *Entities) AddNote(w http.ResponseWriter, r *http.Request) {
 
 	note, err := h.svc.AddNote(r.Context(), slug, entityID, r.Header.Get("X-User-ID"), body.Type, body.Body, r.RemoteAddr)
 	if err != nil {
-		slog.Error("add note failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 
@@ -347,7 +342,7 @@ func (h *Entities) AddDocument(w http.ResponseWriter, r *http.Request) {
 
 	entityID, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 
@@ -357,14 +352,13 @@ func (h *Entities) AddDocument(w http.ResponseWriter, r *http.Request) {
 		FileKey string `json:"file_key"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 
 	doc, err := h.svc.AddDocument(r.Context(), slug, entityID, body.Name, body.DocType, body.FileKey, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("add document failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 
