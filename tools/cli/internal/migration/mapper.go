@@ -2,7 +2,9 @@ package migration
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -12,15 +14,24 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// pendingMapping is a mapping waiting to be flushed to PG in batch.
+type pendingMapping struct {
+	domain, table string
+	legacyID      int64
+	sdaID         uuid.UUID
+}
+
 // Mapper handles legacy INT → SDA UUID mapping with in-memory cache.
 type Mapper struct {
-	pool      *pgxpool.Pool
-	tenantID  string
-	dryRun    bool
-	mu        sync.RWMutex
-	cache     map[string]map[int64]uuid.UUID   // "domain:table" → legacy_id → uuid
-	codeIndex map[string]map[string]uuid.UUID  // "domain:table" → code → uuid (for varchar PK tables)
-	dateCache map[uuid.UUID]time.Time          // entry UUID → date (for journal line date resolution)
+	pool          *pgxpool.Pool
+	tenantID      string
+	dryRun        bool
+	mu            sync.RWMutex
+	cache         map[string]map[int64]uuid.UUID   // "domain:table" → legacy_id → uuid
+	codeIndex     map[string]map[string]uuid.UUID  // "domain:table" → code → uuid (for varchar PK tables)
+	dateCache     map[uuid.UUID]time.Time          // entry UUID → date (for journal line date resolution)
+	regMovimIndex map[int64]uuid.UUID              // regmovim_id → invoice UUID (for FACDETAL FK resolution)
+	pending       []pendingMapping                  // batch of mappings to flush
 }
 
 // NewMapper creates a new ID mapper for a tenant.
@@ -63,49 +74,49 @@ func (m *Mapper) Map(ctx context.Context, tx pgx.Tx, domain, table string, legac
 	}
 	m.mu.RUnlock()
 
-	// Use tx if available, otherwise pool
-	var q querier = m.pool
-	if tx != nil {
-		q = tx
-	}
-
-	// Check DB
-	var sdaID uuid.UUID
-	err := q.QueryRow(ctx,
-		`SELECT sda_id FROM erp_legacy_mapping
-		 WHERE tenant_id = $1 AND domain = $2 AND legacy_table = $3 AND legacy_id = $4`,
-		m.tenantID, domain, table, legacyID,
-	).Scan(&sdaID)
-	if err == nil {
-		m.mu.Lock()
-		if m.cache[key] == nil {
-			m.cache[key] = make(map[int64]uuid.UUID)
-		}
-		m.cache[key][legacyID] = sdaID
-		m.mu.Unlock()
-		return sdaID, nil
-	}
-
-	// Generate new
+	// Generate new UUID, cache it, and queue for batch flush
 	newID := uuid.New()
-	_, err = q.Exec(ctx,
-		`INSERT INTO erp_legacy_mapping (tenant_id, domain, legacy_table, legacy_id, sda_id, legacy_created_by)
-		 VALUES ($1, $2, $3, $4, $5, $6)
-		 ON CONFLICT (tenant_id, domain, legacy_table, legacy_id) DO NOTHING`,
-		m.tenantID, domain, table, legacyID, newID, legacyCreatedBy,
-	)
-	if err != nil {
-		return uuid.Nil, fmt.Errorf("create mapping %s/%s/%d: %w", domain, table, legacyID, err)
-	}
-
 	m.mu.Lock()
 	if m.cache[key] == nil {
 		m.cache[key] = make(map[int64]uuid.UUID)
 	}
 	m.cache[key][legacyID] = newID
+	m.pending = append(m.pending, pendingMapping{domain: domain, table: table, legacyID: legacyID, sdaID: newID})
 	m.mu.Unlock()
 
 	return newID, nil
+}
+
+// FlushPending bulk-inserts all pending mappings into erp_legacy_mapping.
+// Call once per batch, inside the transaction.
+func (m *Mapper) FlushPending(ctx context.Context, q querier) error {
+	m.mu.Lock()
+	batch := m.pending
+	m.pending = nil
+	m.mu.Unlock()
+
+	if len(batch) == 0 {
+		return nil
+	}
+
+	var sb strings.Builder
+	sb.WriteString("INSERT INTO erp_legacy_mapping (tenant_id, domain, legacy_table, legacy_id, sda_id) VALUES ")
+	args := make([]any, 0, len(batch)*5)
+	for i, p := range batch {
+		if i > 0 {
+			sb.WriteString(",")
+		}
+		n := i * 5
+		sb.WriteString(fmt.Sprintf("($%d,$%d,$%d,$%d,$%d)", n+1, n+2, n+3, n+4, n+5))
+		args = append(args, m.tenantID, p.domain, p.table, p.legacyID, p.sdaID)
+	}
+	sb.WriteString(" ON CONFLICT (tenant_id, domain, legacy_table, legacy_id) DO NOTHING")
+
+	_, err := q.Exec(ctx, sb.String(), args...)
+	if err != nil {
+		return fmt.Errorf("flush %d mappings: %w", len(batch), err)
+	}
+	return nil
 }
 
 // Resolve looks up an existing mapping (for foreign keys). Returns error if not found.
@@ -232,6 +243,66 @@ func (m *Mapper) GetEntryDate(entryID uuid.UUID) time.Time {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return m.dateCache[entryID]
+}
+
+// BuildRegMovimIndex builds an in-memory index: MySQL regmovim_id → SDA invoice UUID.
+// Used to link FACDETAL rows to their parent invoice (IVAVENTAS/IVACOMPRAS share regmovim_id).
+// Must be called after IVAVENTAS and IVACOMPRAS are migrated.
+func (m *Mapper) BuildRegMovimIndex(ctx context.Context, mysqlDB *sql.DB) error {
+	m.mu.Lock()
+	m.regMovimIndex = make(map[int64]uuid.UUID)
+	m.mu.Unlock()
+
+	// Load from IVAVENTAS: regmovim_id → legacy_id, then legacy_id → UUID from cache
+	for _, spec := range []struct {
+		table  string
+		pk     string
+		query  string
+	}{
+		{"IVAVENTAS", "id_ivaventa", "SELECT id_ivaventa, regmovim_id FROM IVAVENTAS WHERE regmovim_id IS NOT NULL AND regmovim_id > 0"},
+		{"IVACOMPRAS", "id_ivacompra", "SELECT id_ivacompra, regmovim_id FROM IVACOMPRAS WHERE regmovim_id IS NOT NULL AND regmovim_id > 0"},
+	} {
+		rows, err := mysqlDB.QueryContext(ctx, spec.query)
+		if err != nil {
+			return fmt.Errorf("build regmovim index from %s: %w", spec.table, err)
+		}
+		count := 0
+		for rows.Next() {
+			var legacyID, regMovimID int64
+			if err := rows.Scan(&legacyID, &regMovimID); err != nil {
+				rows.Close()
+				return fmt.Errorf("scan regmovim index: %w", err)
+			}
+			// Look up the invoice UUID from cache
+			key := m.cacheKey("invoicing", spec.table)
+			m.mu.RLock()
+			invoiceUUID, ok := m.cache[key][legacyID]
+			m.mu.RUnlock()
+			if ok && regMovimID > 0 {
+				m.mu.Lock()
+				m.regMovimIndex[regMovimID] = invoiceUUID
+				m.mu.Unlock()
+				count++
+			}
+		}
+		rows.Close()
+		if err := rows.Err(); err != nil {
+			return fmt.Errorf("iterate regmovim index %s: %w", spec.table, err)
+		}
+		fmt.Printf("  regmovim index: loaded %d mappings from %s\n", count, spec.table)
+	}
+	return nil
+}
+
+// ResolveRegMovim looks up an invoice UUID by regmovim_id.
+func (m *Mapper) ResolveRegMovim(regMovimID int64) (uuid.UUID, bool) {
+	if m.dryRun {
+		return uuid.New(), true
+	}
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	id, ok := m.regMovimIndex[regMovimID]
+	return id, ok
 }
 
 // PreloadDomain loads all existing mappings for a domain into cache (for FK resolution performance).

@@ -119,5 +119,83 @@ func ParseDecimal(s string) decimal.Decimal {
 	return d
 }
 
+// directionMap maps Histrix subsistema_id to SDA direction.
+var directionMap = map[string]string{
+	"01": "received",
+	"1":  "received",
+	"02": "issued",
+	"2":  "issued",
+}
+
+// accountMovementTypeMap maps Histrix comprobante prefix to SDA movement type.
+var accountMovementTypeMap = map[string]string{
+	"FC": "invoice",
+	"RC": "payment",
+	"NC": "credit_note",
+	"ND": "debit_note",
+}
+
+// movementTypeMap maps Histrix treasury movement types to SDA.
+var movementTypeMap = map[string]string{
+	"ING":  "income",
+	"EGR":  "expense",
+	"TRF":  "transfer",
+	"AJU":  "adjustment",
+	"DEP":  "deposit",
+	"RET":  "withdrawal",
+	"CHQE": "check_issued",
+	"CHQR": "check_received",
+}
+
+// MapDirection maps Histrix subsistema_id to SDA direction ("received" or "issued").
+func MapDirection(subsistemaID string) (string, error) {
+	if v, ok := directionMap[subsistemaID]; ok {
+		return v, nil
+	}
+	return "", fmt.Errorf("unknown subsistema_id %q — add mapping to transformer.go", subsistemaID)
+}
+
+// MapAccountMovementType maps Histrix comprobante prefix (FC, RC, NC, ND) to SDA account movement type.
+func MapAccountMovementType(prefix string) (string, error) {
+	if v, ok := accountMovementTypeMap[prefix]; ok {
+		return v, nil
+	}
+	return "", fmt.Errorf("unknown account movement type %q — add mapping to transformer.go", prefix)
+}
+
+// MapMovementType maps Histrix treasury movement type to SDA.
+func MapMovementType(legacy string) (string, error) {
+	if v, ok := movementTypeMap[legacy]; ok {
+		return v, nil
+	}
+	return "", fmt.Errorf("unknown movement type %q — add mapping to transformer.go", legacy)
+}
+
+// MapInvoiceType maps Histrix (codcom, codlet) to SDA invoice_type string.
+// codcom: 1=Factura, 2=Nota de Débito, 3=Nota de Crédito.
+// codlet: A, B, C, E (fiscal letter).
+func MapInvoiceType(codcom int, codlet string) string {
+	key := fmt.Sprintf("%d:%s", codcom, codlet)
+	result, ok := invoiceTypeMap[key]
+	if !ok {
+		slog.Warn("unknown codcom+codlet combo, defaulting to invoice_a",
+			"codcom", codcom, "codlet", codlet)
+		return "invoice_a"
+	}
+	return result
+}
+
+var invoiceTypeMap = map[string]string{
+	"1:A": "invoice_a",
+	"1:B": "invoice_b",
+	"1:C": "invoice_c",
+	"1:E": "invoice_e",
+	"2:A": "debit_note_a",
+	"2:B": "debit_note_b",
+	"3:A": "credit_note_a",
+	"3:B": "credit_note_b",
+	"3:C": "credit_note_c",
+}
+
 // LegacyUserID is the constant user_id for migrated records.
 const LegacyUserID = "legacy-import"

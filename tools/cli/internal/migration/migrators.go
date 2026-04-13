@@ -354,9 +354,9 @@ func NewJournalLineMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				return nil, nil // skip lines with unknown account codes
 			}
 
-			// doh: 0=debe, 1=haber
+			// doh: 0=debe, 1=haber. Legacy can have negative amounts.
 			doh := row.Int("doh")
-			amount := ParseDecimal(row.Decimal("importe"))
+			amount := ParseDecimal(row.Decimal("importe")).Abs()
 
 			debit := amount
 			credit := ParseDecimal("0")
@@ -936,6 +936,646 @@ func NewTrainingMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 			}, nil
 		},
 	}
+}
+
+// --- Invoicing Migrators (Phase 6) ---
+
+// NewSalesInvoiceMigrator migrates IVAVENTAS (sales invoice headers, 9K rows) → erp_invoices.
+// IVAVENTAS is the real invoice master table, NOT FACREMIT (which is delivery notes).
+// Column mapping: id_ivaventa=PK, codcom+codlet→invoice_type, ctacod→entity,
+// feciva→date, totcom→total, nronpv+nrocom→number.
+func NewSalesInvoiceMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.SalesVATReader(db)
+	// Override the target: SalesVATReader targets erp_tax_entries, but for invoice headers
+	// we wrap it to target erp_invoices.
+	return &GenericMigrator{
+		reader:      &readerOverride{r: reader, target: "erp_invoices"},
+		columns:     []string{"id", "tenant_id", "number", "date", "due_date", "invoice_type", "direction", "entity_id", "currency_id", "subtotal", "tax_amount", "total", "afip_cae", "afip_cae_due", "status", "user_id"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_ivaventa")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			codcom := row.Int("codcom")
+			codlet := row.String("codlet")
+			invoiceType := MapInvoiceType(codcom, codlet)
+
+			// Entity FK: ctacod → REG_CUENTA
+			entityLegacyID := row.Int64("ctacod")
+			var entityID *uuid.UUID
+			if entityLegacyID > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "entity", "REG_CUENTA", entityLegacyID)
+				if err == nil && resolved != uuid.Nil {
+					entityID = &resolved
+				}
+			}
+
+			// Number: LETTER-PV-NUMERO (e.g., A-0001-00012345)
+			number := fmt.Sprintf("%s-%04d-%08d", codlet, row.Int64("nronpv"), row.Int64("nrocom"))
+
+			id, err := mapper.Map(ctx, nil, "invoicing", "IVAVENTAS", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID,
+				number,
+				SafeDateRequired(timeFromRow(row, "feciva")),
+				(*time.Time)(nil),     // no due date in IVAVENTAS
+				invoiceType,
+				"issued",              // fixed: IVAVENTAS = sales = issued
+				entityID,
+				(*uuid.UUID)(nil),     // no currency FK in IVAVENTAS
+				ParseDecimal(row.Decimal("totcom")), // subtotal ≈ total (tax detail in IVAIMPORTES)
+				ParseDecimal("0"),     // real tax comes from IVAIMPORTES
+				ParseDecimal(row.Decimal("totcom")),
+				(*string)(nil),        // no CAE in IVAVENTAS
+				(*time.Time)(nil),     // no CAE due
+				"posted",              // all IVA ledger entries are posted
+				LegacyUserID,
+			}, nil
+		},
+	}
+}
+
+// NewPurchaseInvoiceMigrator migrates IVACOMPRAS (purchase invoice headers, 124K rows) → erp_invoices.
+// Same structure as IVAVENTAS but direction = "received".
+func NewPurchaseInvoiceMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.PurchaseVATReader(db)
+	return &GenericMigrator{
+		reader:      &readerOverride{r: reader, target: "erp_invoices"},
+		columns:     []string{"id", "tenant_id", "number", "date", "due_date", "invoice_type", "direction", "entity_id", "currency_id", "subtotal", "tax_amount", "total", "afip_cae", "afip_cae_due", "status", "user_id"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_ivacompra")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			codcom := row.Int("codcom")
+			codlet := row.String("codlet")
+			invoiceType := MapInvoiceType(codcom, codlet)
+
+			// Entity FK: ctacod → REG_CUENTA
+			entityLegacyID := row.Int64("ctacod")
+			var entityID *uuid.UUID
+			if entityLegacyID > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "entity", "REG_CUENTA", entityLegacyID)
+				if err == nil && resolved != uuid.Nil {
+					entityID = &resolved
+				}
+			}
+
+			number := fmt.Sprintf("%s-%04d-%08d", codlet, row.Int64("nronpv"), row.Int64("nrocom"))
+
+			id, err := mapper.Map(ctx, nil, "invoicing", "IVACOMPRAS", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID,
+				number,
+				SafeDateRequired(timeFromRow(row, "feciva")),
+				(*time.Time)(nil),
+				invoiceType,
+				"received",            // fixed: IVACOMPRAS = purchases = received
+				entityID,
+				(*uuid.UUID)(nil),
+				ParseDecimal(row.Decimal("totcom")),
+				ParseDecimal("0"),
+				ParseDecimal(row.Decimal("totcom")),
+				(*string)(nil),
+				(*time.Time)(nil),
+				"posted",
+				LegacyUserID,
+			}, nil
+		},
+	}
+}
+
+// NewInvoiceLineMigrator migrates FACDETAL (invoice lines, 194K rows) → erp_invoice_lines.
+// FK resolution: FACDETAL.regmovim_id links to IVAVENTAS/IVACOMPRAS.regmovim_id.
+// The regmovim→invoice index must be built before this migrator runs (setup hook).
+func NewInvoiceLineMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.InvoiceLineReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "invoice_id", "article_id", "description", "quantity", "unit_price", "tax_rate", "tax_amount", "line_total", "sort_order"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_detal")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			// Resolve invoice FK via regmovim_id index
+			regMovimID := row.Int64("regmovim_id")
+			var invoiceID *uuid.UUID
+			if regMovimID > 0 {
+				resolved, ok := mapper.ResolveRegMovim(regMovimID)
+				if ok {
+					invoiceID = &resolved
+				}
+			}
+			if invoiceID == nil {
+				return nil, nil // skip orphan lines with no linked invoice
+			}
+
+			// Resolve article FK (optional — via code hash, same as stock)
+			var articleID *uuid.UUID
+			artCode := row.String("artcod")
+			if artCode != "" {
+				artLegacyID := int64(hashCode(artCode))
+				resolved, err := mapper.ResolveOptional(ctx, "stock", "STK_ARTICULOS", artLegacyID)
+				if err == nil && resolved != uuid.Nil {
+					articleID = &resolved
+				}
+			}
+
+			// Unit price: artnet is the net amount. If artcan > 1, divide to get per-unit.
+			quantity := row.Int64("artcan")
+			if quantity <= 0 {
+				quantity = 1
+			}
+			artNet := ParseDecimal(row.Decimal("artnet"))
+			unitPrice := artNet
+			if quantity > 1 {
+				unitPrice = artNet.Div(ParseDecimal(fmt.Sprintf("%d", quantity)))
+			}
+
+			id, err := mapper.Map(ctx, nil, "invoicing", "FACDETAL", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID, *invoiceID, articleID,
+				row.String("detalle"),
+				ParseDecimal(fmt.Sprintf("%d", quantity)),
+				unitPrice,
+				ParseDecimal(row.Decimal("artali")),
+				ParseDecimal(row.Decimal("artiva")),
+				ParseDecimal(row.Decimal("arttot")),
+				0, // no ordering column in FACDETAL
+			}, nil
+		},
+	}
+}
+
+// NewDeliveryNoteMigrator migrates FACREMIT (delivery notes, 4K rows) → erp_invoices.
+// FACREMIT is NOT an invoice table — it's delivery notes (remitos).
+// Composite PK: (ctacod, remfec, remnpv, remnro). We hash the composite key for legacy_id.
+func NewDeliveryNoteMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.InvoiceReader(db) // InvoiceReader reads FACREMIT
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "number", "date", "due_date", "invoice_type", "direction", "entity_id", "currency_id", "subtotal", "tax_amount", "total", "afip_cae", "afip_cae_due", "status", "user_id"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			// Composite PK → hash for legacy_id
+			ctacod := row.Int64("ctacod")
+			remnpv := row.Int64("remnpv")
+			remnro := row.Int64("remnro")
+			compositeKey := fmt.Sprintf("%d:%s:%d:%d", ctacod, row.String("remfec"), remnpv, remnro)
+			legacyID := int64(hashCode(compositeKey))
+			if legacyID == 0 {
+				legacyID = 1
+			}
+
+			// Entity FK: ctacod → REG_CUENTA
+			var entityID *uuid.UUID
+			if ctacod > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "entity", "REG_CUENTA", ctacod)
+				if err == nil && resolved != uuid.Nil {
+					entityID = &resolved
+				}
+			}
+
+			number := fmt.Sprintf("REM-%d-%d", remnpv, remnro)
+
+			id, err := mapper.Map(ctx, nil, "invoicing", "FACREMIT", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID,
+				number,
+				SafeDateRequired(timeFromRow(row, "remfec")),
+				(*time.Time)(nil),     // no due date
+				"delivery_note",       // fixed invoice_type
+				"issued",              // default direction
+				entityID,
+				(*uuid.UUID)(nil),     // no currency
+				ParseDecimal("0"),     // no subtotal
+				ParseDecimal("0"),     // no tax
+				ParseDecimal(row.Decimal("remval")),
+				(*string)(nil),        // no CAE
+				(*time.Time)(nil),     // no CAE due
+				"posted",
+				LegacyUserID,
+			}, nil
+		},
+	}
+}
+
+// NewDeliveryNoteAltMigrator migrates REMITO (alt delivery notes, 3.8K rows) → erp_invoices.
+// Composite PK: (numero, puesto). Links to entity via ctacod.
+func NewDeliveryNoteAltMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.DeliveryNoteReader(db) // reads REMITO
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "number", "date", "due_date", "invoice_type", "direction", "entity_id", "currency_id", "subtotal", "tax_amount", "total", "afip_cae", "afip_cae_due", "status", "user_id"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			numero := row.Int64("numero")
+			puesto := row.Int64("puesto")
+			compositeKey := fmt.Sprintf("REMITO:%d:%d", numero, puesto)
+			legacyID := int64(hashCode(compositeKey))
+			if legacyID == 0 {
+				legacyID = 1
+			}
+
+			// Entity FK
+			ctacod := row.Int64("ctacod")
+			var entityID *uuid.UUID
+			if ctacod > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "entity", "REG_CUENTA", ctacod)
+				if err == nil && resolved != uuid.Nil {
+					entityID = &resolved
+				}
+			}
+
+			number := fmt.Sprintf("REMITO-%d-%d", puesto, numero)
+
+			id, err := mapper.Map(ctx, nil, "invoicing", "REMITO", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID,
+				number,
+				SafeDateRequired(timeFromRow(row, "fecha")),
+				(*time.Time)(nil),
+				"delivery_note",
+				"issued",
+				entityID,
+				(*uuid.UUID)(nil),
+				ParseDecimal("0"),
+				ParseDecimal("0"),
+				ParseDecimal("0"), // REMITO has no total column
+				(*string)(nil),
+				(*time.Time)(nil),
+				"posted",
+				LegacyUserID,
+			}, nil
+		},
+	}
+}
+
+// NewDeliveryNoteLineMigrator migrates REMDETAL (delivery note lines, 5K rows) → erp_invoice_lines.
+// PK: idRemdet. Links to REMITO via idRemito.
+func NewDeliveryNoteLineMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.DeliveryNoteLineReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "invoice_id", "article_id", "description", "quantity", "unit_price", "tax_rate", "tax_amount", "line_total", "sort_order"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("idRemdet")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			// idRemito is the FK to REMITO. Since REMITO has composite PK,
+			// idRemito may be a reference number. Try resolving via REMITO mapping.
+			// If not found, skip the line.
+			remitoID := row.Int64("idRemito")
+			if remitoID == 0 {
+				return nil, nil
+			}
+			// Try to resolve — REMITO uses hash-based IDs, so we can't resolve by int directly.
+			// Skip this line if we can't find the parent (orphan).
+			// Note: for REMITO, the legacy_id in the mapper is hash("REMITO:numero:puesto"),
+			// which we don't know here. Skip FK resolution for now.
+			// TODO: build REMITO idRemito→UUID index if needed.
+			var invoiceID *uuid.UUID
+			resolved, err := mapper.ResolveOptional(ctx, "invoicing", "REMDETAL_PARENT", remitoID)
+			if err == nil && resolved != uuid.Nil {
+				invoiceID = &resolved
+			}
+			if invoiceID == nil {
+				return nil, nil // skip orphan lines
+			}
+
+			// Article FK (optional)
+			var articleID *uuid.UUID
+			artCode := row.String("artcod")
+			if artCode != "" {
+				artLegacyID := int64(hashCode(artCode))
+				resolved, err := mapper.ResolveOptional(ctx, "stock", "STK_ARTICULOS", artLegacyID)
+				if err == nil && resolved != uuid.Nil {
+					articleID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "invoicing", "REMDETAL", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			qty := ParseDecimal(row.Decimal("cantCompra"))
+			if qty.IsZero() {
+				qty = ParseDecimal("1")
+			}
+
+			return []any{
+				id, tenantID, *invoiceID, articleID,
+				row.String("artcod"), // no description column — use article code
+				qty,
+				ParseDecimal("0"), // no unit price in REMDETAL
+				ParseDecimal("0"), // no tax rate
+				ParseDecimal("0"), // no tax amount
+				ParseDecimal("0"), // no line total
+				0,                 // no ordering
+			}, nil
+		},
+	}
+}
+
+// --- Tax Entry Migrators (Phase 7: IVAIMPORTES) ---
+
+// NewTaxEntrySalesMigrator migrates IVAIMPORTES rows for sales (tipoiva=1) → erp_tax_entries.
+// IVAIMPORTES has one row per tax-rate per invoice. ivacv_id links to IVAVENTAS.id_ivaventa.
+func NewTaxEntrySalesMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.VATAmountReader(db)
+	return &GenericMigrator{
+		reader:      &readerOverride{r: reader, target: "erp_tax_entries", source: "IVAIMPORTES_SALES"},
+		columns:     []string{"id", "tenant_id", "invoice_id", "period", "direction", "net_amount", "tax_rate", "tax_amount"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_ivaimporte")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			// Filter: only sales (tipoiva=1)
+			tipoiva := row.Int("tipoiva")
+			if tipoiva != 1 {
+				return nil, nil // skip purchases — handled by NewTaxEntryPurchasesMigrator
+			}
+
+			// Resolve invoice FK: ivacv_id → IVAVENTAS
+			ivacvID := row.Int64("ivacv_id")
+			var invoiceID *uuid.UUID
+			if ivacvID > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "invoicing", "IVAVENTAS", ivacvID)
+				if err == nil && resolved != uuid.Nil {
+					invoiceID = &resolved
+				}
+			}
+
+			// Period from feciva (YYYYMM)
+			feciva := timeFromRow(row, "feciva")
+			period := ""
+			if !feciva.IsZero() {
+				period = fmt.Sprintf("%d%02d", feciva.Year(), feciva.Month())
+			}
+
+			id, err := mapper.Map(ctx, nil, "invoicing", "IVAIMPORTES_SALES", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID,
+				invoiceID,
+				period,
+				"sales",
+				ParseDecimal(row.Decimal("impgra")),
+				ParseDecimal(row.Decimal("impali")),
+				ParseDecimal(row.Decimal("impimp")),
+			}, nil
+		},
+	}
+}
+
+// NewTaxEntryPurchasesMigrator migrates IVAIMPORTES rows for purchases (tipoiva=2) → erp_tax_entries.
+// ivacv_id links to IVACOMPRAS.id_ivacompra.
+func NewTaxEntryPurchasesMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.VATAmountReader(db)
+	return &GenericMigrator{
+		reader:      &readerOverride{r: reader, target: "erp_tax_entries", source: "IVAIMPORTES_PURCHASES"},
+		columns:     []string{"id", "tenant_id", "invoice_id", "period", "direction", "net_amount", "tax_rate", "tax_amount"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_ivaimporte")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			// Filter: only purchases (tipoiva=2)
+			tipoiva := row.Int("tipoiva")
+			if tipoiva != 2 {
+				return nil, nil
+			}
+
+			// Resolve invoice FK: ivacv_id → IVACOMPRAS
+			ivacvID := row.Int64("ivacv_id")
+			var invoiceID *uuid.UUID
+			if ivacvID > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "invoicing", "IVACOMPRAS", ivacvID)
+				if err == nil && resolved != uuid.Nil {
+					invoiceID = &resolved
+				}
+			}
+
+			feciva := timeFromRow(row, "feciva")
+			period := ""
+			if !feciva.IsZero() {
+				period = fmt.Sprintf("%d%02d", feciva.Year(), feciva.Month())
+			}
+
+			id, err := mapper.Map(ctx, nil, "invoicing", "IVAIMPORTES_PURCHASES", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID,
+				invoiceID,
+				period,
+				"purchases",
+				ParseDecimal(row.Decimal("impgra")),
+				ParseDecimal(row.Decimal("impali")),
+				ParseDecimal(row.Decimal("impimp")),
+			}, nil
+		},
+	}
+}
+
+// --- Withholding Migrators (Phase 8) ---
+
+// NewWithholdingGainsMigrator migrates RETGANAN (gains withholding, 9.8K rows) → erp_withholdings.
+// Columns: id_retganan=PK, ctacod=entity, ganfec=date, ganpor=rate%, ganbru=base, gantot=total.
+func NewWithholdingGainsMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.WithholdingGainsReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "invoice_id", "movement_id", "entity_id", "type", "rate", "base_amount", "amount", "certificate_num", "date"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_retganan")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			// Entity FK
+			entityLegacyID := row.Int64("ctacod")
+			var entityID *uuid.UUID
+			if entityLegacyID > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "entity", "REG_CUENTA", entityLegacyID)
+				if err == nil && resolved != uuid.Nil {
+					entityID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "invoicing", "RETGANAN", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID,
+				(*uuid.UUID)(nil), // no invoice FK in RETGANAN
+				(*uuid.UUID)(nil), // no movement FK
+				entityID,
+				"gains",
+				ParseDecimal(row.Decimal("ganpor")),
+				ParseDecimal(row.Decimal("ganbru")),
+				ParseDecimal(row.Decimal("gantot")),
+				row.NullString("gannro"),
+				SafeDate(timeFromRow(row, "ganfec")),
+			}, nil
+		},
+	}
+}
+
+// NewWithholdingIVAMigrator migrates RETIVA (IVA withholding, 33 rows) → erp_withholdings.
+// Columns: id_retiva=PK, ctacod=entity, ivafec=date, ivapor=rate%, ivabru=base, ivatot=total.
+func NewWithholdingIVAMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.WithholdingIVAReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "invoice_id", "movement_id", "entity_id", "type", "rate", "base_amount", "amount", "certificate_num", "date"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_retiva")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			// Entity FK
+			entityLegacyID := row.Int64("ctacod")
+			var entityID *uuid.UUID
+			if entityLegacyID > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "entity", "REG_CUENTA", entityLegacyID)
+				if err == nil && resolved != uuid.Nil {
+					entityID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "invoicing", "RETIVA", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID,
+				(*uuid.UUID)(nil),
+				(*uuid.UUID)(nil),
+				entityID,
+				"iva",
+				ParseDecimal(row.Decimal("ivapor")),
+				ParseDecimal(row.Decimal("ivabru")),
+				ParseDecimal(row.Decimal("ivatot")),
+				row.NullString("ivanro"),
+				SafeDate(timeFromRow(row, "ivafec")),
+			}, nil
+		},
+	}
+}
+
+// NewWithholding1598Migrator migrates RET1598 (IIBB reg 1598, 8.7K rows) → erp_withholdings.
+// Columns: id_ret1598=PK, ctacod=entity, fecret=date, alicuota=rate%, totimpon=base, totret=total.
+func NewWithholding1598Migrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.Withholding1598Reader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "invoice_id", "movement_id", "entity_id", "type", "rate", "base_amount", "amount", "certificate_num", "date"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_ret1598")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			// Entity FK
+			entityLegacyID := row.Int64("ctacod")
+			var entityID *uuid.UUID
+			if entityLegacyID > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "entity", "REG_CUENTA", entityLegacyID)
+				if err == nil && resolved != uuid.Nil {
+					entityID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "invoicing", "RET1598", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID,
+				(*uuid.UUID)(nil),
+				(*uuid.UUID)(nil),
+				entityID,
+				"iibb",
+				ParseDecimal(row.Decimal("alicuota")),
+				ParseDecimal(row.Decimal("totimpon")),
+				ParseDecimal(row.Decimal("totret")),
+				row.NullString("nroret"),
+				SafeDate(timeFromRow(row, "fecret")),
+			}, nil
+		},
+	}
+}
+
+// --- Reader adapters ---
+
+// readerOverride wraps a legacy.Reader to override the target and/or source table names.
+// Used when a single MySQL table feeds multiple SDA tables (e.g., IVAIMPORTES → sales + purchases).
+type readerOverride struct {
+	r      legacy.Reader
+	target string // override SDA table name
+	source string // override legacy table name (for progress tracking uniqueness)
+}
+
+func (o *readerOverride) LegacyTable() string {
+	if o.source != "" {
+		return o.source
+	}
+	return o.r.LegacyTable()
+}
+func (o *readerOverride) SDATable() string { return o.target }
+func (o *readerOverride) Domain() string   { return o.r.Domain() }
+func (o *readerOverride) ReadBatch(ctx context.Context, resumeKey string, limit int) ([]legacy.LegacyRow, string, error) {
+	return o.r.ReadBatch(ctx, resumeKey, limit)
 }
 
 // --- Helpers ---

@@ -82,6 +82,7 @@ func (o *Orchestrator) Run(ctx context.Context, domains []string, dryRun bool) e
 // RunWithID executes the migration with an optional pre-created run ID.
 // If runID is Nil, a new one is created.
 func (o *Orchestrator) RunWithID(ctx context.Context, externalRunID uuid.UUID, domains []string, dryRun bool) error {
+	runStart := time.Now()
 	mode := "prod"
 	if dryRun {
 		mode = "dry_run"
@@ -175,6 +176,13 @@ func (o *Orchestrator) RunWithID(ctx context.Context, externalRunID uuid.UUID, d
 		}
 	} else {
 		// Prod: sequential with FK ordering + setup hooks
+		// Disable FK checks during bulk load (re-enabled after completion)
+		if _, err := o.pg.Exec(ctx, "SET session_replication_role = 'replica'"); err != nil {
+			slog.Warn("could not disable FK checks", "err", err)
+		} else {
+			defer o.pg.Exec(ctx, "SET session_replication_role = 'origin'")
+			slog.Info("FK checks disabled for bulk load")
+		}
 		hooksRan := false
 		for _, m := range o.readers {
 			if len(domains) > 0 && !contains(domains, m.Domain()) {
@@ -223,7 +231,7 @@ func (o *Orchestrator) RunWithID(ctx context.Context, externalRunID uuid.UUID, d
 	}
 
 	slog.Info("migration completed", "run_id", runID, "status", status)
-	printReport(stats, dryRun)
+	printReport(stats, dryRun, time.Since(runStart))
 	return nil
 }
 
@@ -325,7 +333,7 @@ func (o *Orchestrator) Resume(ctx context.Context, resumeRunID string) error {
 	)
 
 	slog.Info("resume completed", "run_id", runID)
-	printReport(stats, false)
+	printReport(stats, false, 0)
 	return nil
 }
 
@@ -392,6 +400,10 @@ func (o *Orchestrator) runTableResume(ctx context.Context, runID, progressID uui
 			tx.Rollback(ctx)
 			slog.Warn("could not set app.tenant_id", "err", err)
 		}
+		// Disable FK checks within this TX for bulk load
+		if _, err := tx.Exec(ctx, "SET LOCAL session_replication_role = 'replica'"); err != nil {
+			slog.Warn("could not disable FK checks in tx", "err", err)
+		}
 
 		// Transform and collect batch
 		var insertRows [][]any
@@ -409,9 +421,16 @@ func (o *Orchestrator) runTableResume(ctx context.Context, runID, progressID uui
 			insertRows = append(insertRows, vals)
 		}
 
-		// Write batch within transaction
+		// Flush pending mapper inserts in batch (instead of per-row)
+		if err := o.mapper.FlushPending(ctx, tx); err != nil {
+			tx.Rollback(ctx)
+			markTableFailed(ctx, o.pg, progressID, err.Error())
+			return stats, err
+		}
+
+		// Write batch within transaction (tx has FK checks disabled)
 		if len(insertRows) > 0 {
-			written, err := o.writer.WriteBatch(ctx, m.SDATable(), m.Columns(), m.ConflictColumn(), insertRows)
+			written, err := o.writer.WriteBatch(ctx, tx, m.SDATable(), m.Columns(), m.ConflictColumn(), insertRows)
 			if err != nil {
 				tx.Rollback(ctx)
 				markTableFailed(ctx, o.pg, progressID, err.Error())
@@ -436,6 +455,18 @@ func (o *Orchestrator) runTableResume(ctx context.Context, runID, progressID uui
 			markTableFailed(ctx, o.pg, progressID, err.Error())
 			return stats, fmt.Errorf("commit batch: %w", err)
 		}
+
+		// Log batch speed
+		elapsed := time.Since(start)
+		rowsPerSec := float64(stats.RowsRead) / elapsed.Seconds()
+		slog.Info("batch progress",
+			"table", m.LegacyTable(),
+			"read", stats.RowsRead,
+			"written", stats.RowsWritten,
+			"skipped", stats.RowsSkipped,
+			"rows/sec", int(rowsPerSec),
+			"elapsed", elapsed.Round(time.Millisecond),
+		)
 	}
 
 	// Mark completed
@@ -539,7 +570,7 @@ func FindLastDryRun(ctx context.Context, pg *pgxpool.Pool, tenantID string) (str
 	return status, err
 }
 
-func printReport(stats map[string]TableStats, dryRun bool) {
+func printReport(stats map[string]TableStats, dryRun bool, totalDuration time.Duration) {
 	mode := "MIGRATION"
 	if dryRun {
 		mode = "DRY-RUN"
@@ -551,17 +582,22 @@ func printReport(stats map[string]TableStats, dryRun bool) {
 		if dryRun {
 			label = "would_write"
 		}
-		fmt.Printf("  %-30s read=%-6d %s=%-6d skipped=%-4d\n", table, s.RowsRead, label, s.RowsWritten, s.RowsSkipped)
+		fmt.Printf("  %-30s read=%-8d %s=%-8d skipped=%-6d\n", table, s.RowsRead, label, s.RowsWritten, s.RowsSkipped)
 		totalRead += s.RowsRead
 		totalWritten += s.RowsWritten
 		totalSkipped += s.RowsSkipped
 	}
-	fmt.Printf("\n  TOTAL: read=%d %s=%d skipped=%d\n", totalRead, func() string {
-		if dryRun {
-			return "would_write"
-		}
-		return "written"
-	}(), totalWritten, totalSkipped)
+	label := "written"
+	if dryRun {
+		label = "would_write"
+	}
+	fmt.Printf("\n  TOTAL: read=%d %s=%d skipped=%d\n", totalRead, label, totalWritten, totalSkipped)
+	fmt.Printf("  DURATION: %s\n", totalDuration.Round(time.Millisecond))
+	if totalDuration.Seconds() > 0 {
+		fmt.Printf("  THROUGHPUT: %.0f rows/sec read, %.0f rows/sec written\n",
+			float64(totalRead)/totalDuration.Seconds(),
+			float64(totalWritten)/totalDuration.Seconds())
+	}
 }
 
 func contains(slice []string, item string) bool {
@@ -577,6 +613,10 @@ func contains(slice []string, item string) bool {
 func needsSetupHooks(m TableMigrator) bool {
 	switch m.SDATable() {
 	case "erp_journal_lines", "erp_stock_movements", "erp_purchase_order_lines", "erp_production_orders":
+		return true
+	}
+	// FACDETAL (invoice lines) needs the regmovim index built after IVAVENTAS/IVACOMPRAS.
+	if m.LegacyTable() == "FACDETAL" {
 		return true
 	}
 	return false

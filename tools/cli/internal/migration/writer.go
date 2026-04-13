@@ -21,8 +21,9 @@ func NewBatchWriter(pool *pgxpool.Pool, tenantID string) *BatchWriter {
 
 // WriteBatch inserts rows into the target table.
 // columns lists the column names, conflictColumn is the unique column for ON CONFLICT.
+// q is the executor (pool or transaction).
 // Returns (rows written, error).
-func (w *BatchWriter) WriteBatch(ctx context.Context, table string, columns []string, conflictColumn string, rows [][]any) (int, error) {
+func (w *BatchWriter) WriteBatch(ctx context.Context, q querier, table string, columns []string, conflictColumn string, rows [][]any) (int, error) {
 	if len(rows) == 0 {
 		return 0, nil
 	}
@@ -53,7 +54,7 @@ func (w *BatchWriter) WriteBatch(ctx context.Context, table string, columns []st
 		sb.WriteString(" ON CONFLICT DO NOTHING")
 	}
 
-	tag, err := w.pool.Exec(ctx, sb.String(), args...)
+	tag, err := q.Exec(ctx, sb.String(), args...)
 	if err != nil {
 		return 0, fmt.Errorf("write batch %s: %w", table, err)
 	}

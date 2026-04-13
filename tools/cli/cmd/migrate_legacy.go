@@ -214,6 +214,40 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 		migration.NewAbsenceMigrator(mysqlDB, tenantID),
 		migration.NewTrainingMigrator(mysqlDB, tenantID),
 	)
+
+	// Phase 6: Invoicing — headers (depends on entities)
+	// IVAVENTAS/IVACOMPRAS are the invoice masters, NOT FACREMIT.
+	orch.RegisterMigrators(
+		migration.NewSalesInvoiceMigrator(mysqlDB, tenantID),
+		migration.NewPurchaseInvoiceMigrator(mysqlDB, tenantID),
+	)
+
+	// Setup hook: build regmovim_id → invoice UUID index (FACDETAL needs it).
+	// Must run AFTER IVAVENTAS + IVACOMPRAS migration, BEFORE FACDETAL.
+	orch.AddSetupHook(func(ctx context.Context, mapper *migration.Mapper) error {
+		return mapper.BuildRegMovimIndex(ctx, mysqlDB)
+	})
+
+	// Phase 6b: Invoice lines + delivery notes (depends on invoice headers)
+	orch.RegisterMigrators(
+		migration.NewInvoiceLineMigrator(mysqlDB, tenantID),
+		migration.NewDeliveryNoteMigrator(mysqlDB, tenantID),
+		migration.NewDeliveryNoteAltMigrator(mysqlDB, tenantID),
+		migration.NewDeliveryNoteLineMigrator(mysqlDB, tenantID),
+	)
+
+	// Phase 7: Tax entries from IVAIMPORTES (depends on invoice headers)
+	orch.RegisterMigrators(
+		migration.NewTaxEntrySalesMigrator(mysqlDB, tenantID),
+		migration.NewTaxEntryPurchasesMigrator(mysqlDB, tenantID),
+	)
+
+	// Phase 8: Withholdings (depends on entities)
+	orch.RegisterMigrators(
+		migration.NewWithholdingGainsMigrator(mysqlDB, tenantID),
+		migration.NewWithholdingIVAMigrator(mysqlDB, tenantID),
+		migration.NewWithholding1598Migrator(mysqlDB, tenantID),
+	)
 }
 
 func containsStr(slice []string, item string) bool {

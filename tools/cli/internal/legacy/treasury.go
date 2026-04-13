@@ -26,10 +26,6 @@ func CashRegisterReader(db *sql.DB) *GenericReader {
 	}
 }
 
-// CashMovementReader and BankMovementReader are deferred — treasury movement migration
-// requires mapping CAJ_MOVIMIENTOS + CAR_MOVIMIENTOS into a unified erp_treasury_movements
-// table with complex movement_type resolution. Will be implemented alongside invoicing.
-
 // CheckReader creates a reader for CARCHEQU (cheques).
 // PK is composite (carint, siscod, succod) but we use carint for ordering.
 func CheckReader(db *sql.DB) *GenericReader {
@@ -40,5 +36,67 @@ func CheckReader(db *sql.DB) *GenericReader {
 		DomainName: "treasury",
 		PKColumn:   "carint",
 		Columns:    "carint, cartip, carnro, carbco, carimp, carfec, caracr, ctacod, cardes, carobv, fecha_emision, siscod",
+	}
+}
+
+// CashMovementReader creates a reader for CAJMOVIM (cash register movements).
+// ~116K rows. PK is composite (cajcod, cajcta, cajfec, cajnpv, cajnro, concod, regmin, siscod, succod).
+// Maps to erp_treasury_movements with movement_type resolution from cajcod/concod.
+func CashMovementReader(db *sql.DB) *CompositeKeyReader {
+	return &CompositeKeyReader{
+		DB:         db,
+		Table:      "CAJMOVIM",
+		Target:     "erp_treasury_movements",
+		DomainName: "treasury",
+		PKColumns:  []string{"cajcod", "cajcta", "cajfec", "cajnpv", "cajnro", "concod", "regmin", "siscod", "succod"},
+		Columns: "cajcod, cajcta, cajest, cajfec, cajhor, cajimp, cajnom, cajnpv, cajnro, " +
+			"cajpla, cajref__1, cajref__2, cajref__3, codent, concod, coscod, impcod, " +
+			"opecla, opecod, regmin, siscod, succod",
+	}
+}
+
+// CashVoucherReader creates a reader for CAJCOMPR (cash voucher references).
+// ~108K rows. PK is composite (nrocom, movord).
+// Links voucher numbers to cash movements in erp_treasury_movements.
+func CashVoucherReader(db *sql.DB) *CompositeKeyReader {
+	return &CompositeKeyReader{
+		DB:         db,
+		Table:      "CAJCOMPR",
+		Target:     "erp_treasury_movements",
+		DomainName: "treasury",
+		PKColumns:  []string{"nrocom", "movord"},
+		Columns: "concod, condic, ctaant, ctacod, ctanom, entreg, movco1, movco2, movcta, " +
+			"movfec, movicc, movict, movim1, movim2, movimp, movinc, movipv, movlet, " +
+			"movnet, movnpv, movnro, movord, movref__1, movref__2, movref__3, movsa1, " +
+			"movsa2, movsal, movuni, movvto, nrocom, opecla, prineg, regmin, siscod, " +
+			"succod, vencod, zoncod",
+	}
+}
+
+// BankMovementReader creates a reader for CAR_MOVIMIENTOS (bank movements).
+// ~162 rows. PK is id_carmovimiento (auto_increment).
+// Maps to erp_treasury_movements linking bank account, cash, and check references.
+func BankMovementReader(db *sql.DB) *GenericReader {
+	return &GenericReader{
+		DB:         db,
+		Table:      "CAR_MOVIMIENTOS",
+		Target:     "erp_treasury_movements",
+		DomainName: "treasury",
+		PKColumn:   "id_carmovimiento",
+		Columns:    "id_carmovimiento, tipo_movimiento, referencia_movimiento, fecha_movimiento, cajmovimiento_id, carvalor_id, regcuenta_id",
+	}
+}
+
+// CashCountReader creates a reader for CAJ_PUESTO_ARQUEOS (cash register counts/reconciliation).
+// ~14 rows. PK is id_cajpuestoarqueo (auto_increment).
+// Maps to erp_cash_counts for cash register balancing records.
+func CashCountReader(db *sql.DB) *GenericReader {
+	return &GenericReader{
+		DB:         db,
+		Table:      "CAJ_PUESTO_ARQUEOS",
+		Target:     "erp_cash_counts",
+		DomainName: "treasury",
+		PKColumn:   "id_cajpuestoarqueo",
+		Columns:    "id_cajpuestoarqueo, cajpuesto_id, cajformapago_id, orden_arqueo",
 	}
 }
