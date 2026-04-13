@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -11,6 +10,7 @@ import (
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
+	erperrors "github.com/Camionerou/rag-saldivia/services/erp/internal/errors"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/repository"
 )
 
@@ -59,8 +59,7 @@ func (h *HR) Routes(authWrite func(http.Handler) http.Handler) chi.Router {
 func (h *HR) ListDepartments(w http.ResponseWriter, r *http.Request) {
 	depts, err := h.svc.ListDepartments(r.Context(), tenantSlug(r))
 	if err != nil {
-		slog.Error("list departments failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -72,11 +71,11 @@ func (h *HR) CreateDepartment(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 16<<10)
 	var body struct{ Code, Name string; ParentID, ManagerID *string }
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	if body.Code == "" || body.Name == "" {
-		http.Error(w, `{"error":"code and name are required"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("code and name are required"))
 		return
 	}
 	d, err := h.svc.CreateDepartment(r.Context(), repository.CreateDepartmentParams{
@@ -84,8 +83,7 @@ func (h *HR) CreateDepartment(w http.ResponseWriter, r *http.Request) {
 		ParentID: optUUID(body.ParentID), ManagerID: optUUID(body.ManagerID),
 	}, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create department failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -97,8 +95,7 @@ func (h *HR) ListEmployees(w http.ResponseWriter, r *http.Request) {
 	p := pagination.Parse(r)
 	employees, err := h.svc.ListEmployees(r.Context(), tenantSlug(r), p.Limit(), p.Offset())
 	if err != nil {
-		slog.Error("list employees failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -108,12 +105,12 @@ func (h *HR) ListEmployees(w http.ResponseWriter, r *http.Request) {
 func (h *HR) GetEmployee(w http.ResponseWriter, r *http.Request) {
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	ed, err := h.svc.GetEmployee(r.Context(), id, tenantSlug(r), r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		erperrors.WriteError(w, r, erperrors.NotFound("employee"))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -134,12 +131,12 @@ func (h *HR) UpsertEmployee(w http.ResponseWriter, r *http.Request) {
 		CategoryID   *string `json:"category_id,omitempty"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	entityID, err := parseUUID(body.EntityID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid entity_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid entity_id"))
 		return
 	}
 	var hd string
@@ -147,7 +144,7 @@ func (h *HR) UpsertEmployee(w http.ResponseWriter, r *http.Request) {
 	if body.ScheduleType == "" { body.ScheduleType = "full_time" }
 	validSchedule := map[string]bool{"full_time": true, "part_time": true, "shifts": true}
 	if !validSchedule[body.ScheduleType] {
-		http.Error(w, `{"error":"invalid schedule_type (full_time, part_time, shifts)"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid schedule_type (full_time, part_time, shifts)"))
 		return
 	}
 	ed, err := h.svc.UpsertEmployee(r.Context(), repository.UpsertEmployeeDetailParams{
@@ -158,8 +155,7 @@ func (h *HR) UpsertEmployee(w http.ResponseWriter, r *http.Request) {
 		Metadata: []byte(`{}`),
 	}, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("upsert employee failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -173,8 +169,7 @@ func (h *HR) ListEvents(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	events, err := h.svc.ListEvents(r.Context(), slug, optUUID(ptrStr(q.Get("entity_id"))), q.Get("type"), p.Limit(), p.Offset())
 	if err != nil {
-		slog.Error("list hr events failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -194,21 +189,21 @@ func (h *HR) CreateEvent(w http.ResponseWriter, r *http.Request) {
 		Notes     string  `json:"notes"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	validEventTypes := map[string]bool{"absence": true, "leave": true, "accident": true, "transfer": true, "promotion": true, "sanction": true, "overtime": true, "vacation": true}
 	if !validEventTypes[body.EventType] {
-		http.Error(w, `{"error":"invalid event_type"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid event_type"))
 		return
 	}
 	if body.DateFrom == "" {
-		http.Error(w, `{"error":"date_from is required"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("date_from is required"))
 		return
 	}
 	entityID, err := parseUUID(body.EntityID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid entity_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid entity_id"))
 		return
 	}
 	var dt string
@@ -222,8 +217,7 @@ func (h *HR) CreateEvent(w http.ResponseWriter, r *http.Request) {
 		Notes: body.Notes, UserID: r.Header.Get("X-User-ID"),
 	}, r.RemoteAddr)
 	if err != nil {
-		slog.Error("create hr event failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -235,8 +229,7 @@ func (h *HR) ListTraining(w http.ResponseWriter, r *http.Request) {
 	p := pagination.Parse(r)
 	training, err := h.svc.ListTraining(r.Context(), tenantSlug(r), p.Limit(), p.Offset())
 	if err != nil {
-		slog.Error("list training failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -251,7 +244,7 @@ func (h *HR) CreateTraining(w http.ResponseWriter, r *http.Request) {
 		DateFrom, DateTo *string
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	var df, dt string
@@ -262,8 +255,7 @@ func (h *HR) CreateTraining(w http.ResponseWriter, r *http.Request) {
 		Instructor: body.Instructor, DateFrom: pgDate(df), DateTo: pgDate(dt),
 	}, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create training failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -278,8 +270,7 @@ func (h *HR) ListAttendance(w http.ResponseWriter, r *http.Request) {
 	att, err := h.svc.ListAttendance(r.Context(), slug, optUUID(ptrStr(q.Get("entity_id"))),
 		pgDate(q.Get("date_from")), pgDate(q.Get("date_to")), p.Limit(), p.Offset())
 	if err != nil {
-		slog.Error("list attendance failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -298,12 +289,12 @@ func (h *HR) CreateAttendance(w http.ResponseWriter, r *http.Request) {
 		Source   string  `json:"source"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	entityID, err := parseUUID(body.EntityID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid entity_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid entity_id"))
 		return
 	}
 	if body.Source == "" { body.Source = "manual" }
@@ -318,8 +309,7 @@ func (h *HR) CreateAttendance(w http.ResponseWriter, r *http.Request) {
 		ClockIn: ci.t, ClockOut: co.t, Hours: hrs.n, Source: body.Source,
 	}, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create attendance failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
