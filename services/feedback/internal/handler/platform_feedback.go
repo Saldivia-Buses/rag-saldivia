@@ -6,6 +6,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 )
 
 // PlatformFeedback handles platform-admin feedback endpoints (read-only, cross-tenant).
@@ -33,7 +35,7 @@ func (h *PlatformFeedback) Tenants(w http.ResponseWriter, r *http.Request) {
 	role := r.Header.Get("X-User-Role")
 	slug := r.Header.Get("X-Tenant-Slug")
 	if role != "admin" || (slug != "" && slug != "platform") {
-		writeJSON(w, http.StatusForbidden, map[string]string{"error": "platform admin required"})
+		httperr.WriteError(w, r, httperr.Forbidden("platform admin required"))
 		return
 	}
 
@@ -49,7 +51,7 @@ func (h *PlatformFeedback) Tenants(w http.ResponseWriter, r *http.Request) {
 		 ORDER BY hs.overall_score ASC`, // worst first
 	)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	defer rows.Close()
@@ -89,7 +91,7 @@ func (h *PlatformFeedback) Alerts(w http.ResponseWriter, r *http.Request) {
 	role := r.Header.Get("X-User-Role")
 	slug := r.Header.Get("X-Tenant-Slug")
 	if role != "admin" || (slug != "" && slug != "platform") {
-		writeJSON(w, http.StatusForbidden, map[string]string{"error": "platform admin required"})
+		httperr.WriteError(w, r, httperr.Forbidden("platform admin required"))
 		return
 	}
 
@@ -110,7 +112,7 @@ func (h *PlatformFeedback) Alerts(w http.ResponseWriter, r *http.Request) {
 		 ORDER BY a.created_at DESC LIMIT $2`, status, limit,
 	)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	defer rows.Close()
@@ -162,7 +164,7 @@ func (h *PlatformFeedback) Quality(w http.ResponseWriter, r *http.Request) {
 	role := r.Header.Get("X-User-Role")
 	slug := r.Header.Get("X-Tenant-Slug")
 	if role != "admin" || (slug != "" && slug != "platform") {
-		writeJSON(w, http.StatusForbidden, map[string]string{"error": "platform admin required"})
+		httperr.WriteError(w, r, httperr.Forbidden("platform admin required"))
 		return
 	}
 
@@ -181,7 +183,7 @@ func (h *PlatformFeedback) Quality(w http.ResponseWriter, r *http.Request) {
 		 ORDER BY SUM(fm.negative) DESC`, hours,
 	)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	defer rows.Close()
