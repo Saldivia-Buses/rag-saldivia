@@ -123,6 +123,10 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "email and password are required"})
 		return
 	}
+	if len(req.Email) > 254 {
+		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "email too long"})
+		return
+	}
 
 	svc, err := h.resolveService(r)
 	if err != nil {

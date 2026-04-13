@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -209,6 +210,54 @@ func TestMatchPermission(t *testing.T) {
 		if got != tt.want {
 			t.Errorf("matchPermission(%q, %q) = %v, want %v", tt.userPerm, tt.required, got, tt.want)
 		}
+	}
+}
+
+// TestRequirePermission_NoJWTClaims_Returns403 simulates a route that is missing
+// the Auth middleware in its chain — no role or permissions are in context.
+// RequirePermission must return 403, not panic or 401.
+func TestRequirePermission_NoJWTClaims_Returns403(t *testing.T) {
+	handler := RequirePermission("chat.read")(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Fatal("handler must not be called when no claims in context")
+	}))
+
+	// Plain request — no Auth middleware, no context values
+	req := httptest.NewRequest(http.MethodGet, "/v1/chat/sessions", nil)
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 when no claims in context, got %d", rec.Code)
+	}
+}
+
+// TestRequirePermission_Returns403WithJSONBody verifies that the 403 response
+// has Content-Type: application/json and a JSON body with an "error" key.
+// INVARIANT #7: all API error responses must be JSON.
+func TestRequirePermission_Returns403WithJSONBody(t *testing.T) {
+	handler := RequirePermission("erp.write")(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Fatal("handler must not be called")
+	}))
+
+	req := httptest.NewRequest(http.MethodPost, "/v1/erp/entries", nil)
+	ctx := WithRole(req.Context(), "viewer")
+	ctx = WithPermissions(ctx, []string{"erp.read"})
+	req = req.WithContext(ctx)
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("expected 403, got %d", rec.Code)
+	}
+	if ct := rec.Header().Get("Content-Type"); ct != "application/json" {
+		t.Errorf("expected Content-Type application/json, got %q", ct)
+	}
+	var body map[string]string
+	if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
+		t.Fatalf("response body is not valid JSON: %v", err)
+	}
+	if _, ok := body["error"]; !ok {
+		t.Errorf("JSON body must contain 'error' key, got %v", body)
 	}
 }
 

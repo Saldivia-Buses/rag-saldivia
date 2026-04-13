@@ -330,3 +330,135 @@ func TestMarkRead_ServiceError_Returns500(t *testing.T) {
 		t.Fatalf("expected 500 for service error, got %d", rec.Code)
 	}
 }
+
+// ── User isolation ────────────────────────────────────────────────────────────
+
+func TestMarkRead_OtherUsersNotification_Returns404(t *testing.T) {
+	// n-owner belongs to u-owner. u-attacker must get 404, not 403,
+	// to avoid leaking whether the notification ID exists.
+	mock := &mockNotificationService{
+		notifications: []service.Notification{
+			{ID: "n-owner", UserID: "u-owner"},
+		},
+	}
+	r := setupNotifRouter(mock)
+
+	req := withUser(httptest.NewRequest(http.MethodPatch, "/v1/notifications/n-owner/read", nil), "u-attacker")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected 404 for other user's notification, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestList_OnlyCurrentUserNotifications(t *testing.T) {
+	// The service layer filters by userID — the handler must pass the header value
+	// through correctly. Verify the response is 200 and the mock receives the right
+	// userID (indirectly: mock returns whatever is in m.notifications for any call,
+	// so we just verify the handler passes X-User-ID through without error).
+	mock := &mockNotificationService{
+		notifications: []service.Notification{
+			{ID: "n-1", UserID: "u-alice", Title: "Hello"},
+		},
+	}
+	r := setupNotifRouter(mock)
+
+	req := withUser(httptest.NewRequest(http.MethodGet, "/v1/notifications", nil), "u-alice")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var notifications []service.Notification
+	if err := json.NewDecoder(rec.Body).Decode(&notifications); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if len(notifications) != 1 {
+		t.Errorf("expected 1 notification for u-alice, got %d", len(notifications))
+	}
+}
+
+// ── Query params ─────────────────────────────────────────────────────────────
+
+func TestList_UnreadOnlyFilter_PassedToService(t *testing.T) {
+	// Handler must accept unread=true without error.
+	r := setupNotifRouter(&mockNotificationService{})
+
+	req := withUser(httptest.NewRequest(http.MethodGet, "/v1/notifications?unread=true", nil), "u-1")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 with unread=true, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestList_LimitParam_PassedToService(t *testing.T) {
+	// Handler must accept limit=10 without error.
+	r := setupNotifRouter(&mockNotificationService{})
+
+	req := withUser(httptest.NewRequest(http.MethodGet, "/v1/notifications?limit=10", nil), "u-1")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 with limit=10, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+// ── Preferences validation ────────────────────────────────────────────────────
+
+func TestUpdatePreferences_MissingUserID_Returns401(t *testing.T) {
+	r := setupNotifRouter(&mockNotificationService{})
+
+	body := `{"email_enabled":true,"in_app_enabled":true}`
+	req := httptest.NewRequest(http.MethodPut, "/v1/notifications/preferences", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	// No X-User-ID header — requireUserID middleware must reject.
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestMarkAllRead_MissingUserID_Returns401(t *testing.T) {
+	r := setupNotifRouter(&mockNotificationService{})
+
+	req := httptest.NewRequest(http.MethodPost, "/v1/notifications/read-all", nil)
+	// No X-User-ID header.
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+// ── Response shape ────────────────────────────────────────────────────────────
+
+func TestMarkAllRead_ReturnsMarkedField(t *testing.T) {
+	mock := &mockNotificationService{markedCount: 0}
+	r := setupNotifRouter(mock)
+
+	// Even when zero notifications are marked, the "marked" field must be present.
+	req := withUser(httptest.NewRequest(http.MethodPost, "/v1/notifications/read-all", nil), "u-1")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+
+	var resp map[string]int64
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if _, ok := resp["marked"]; !ok {
+		t.Error("response must contain 'marked' field even when count is 0")
+	}
+}

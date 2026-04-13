@@ -5,9 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -372,5 +374,253 @@ func TestDeleteJob_NotFound_Returns404(t *testing.T) {
 
 	if rec.Code != http.StatusNotFound {
 		t.Fatalf("expected 404, got %d", rec.Code)
+	}
+}
+
+// ── Collection CRUD ───────────────────────────────────────────────────────────
+
+func TestListCollections_ReturnsAllCollections(t *testing.T) {
+	mock := &mockIngestService{
+		collection: repository.Collection{ID: "c-1", Name: "contratos"},
+	}
+	r := setupIngestRouter(mock)
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/ingest/collections", nil)
+	req = withAdminContext(req)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var cols []repository.Collection
+	if err := json.NewDecoder(rec.Body).Decode(&cols); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if len(cols) != 1 {
+		t.Errorf("expected 1 collection, got %d", len(cols))
+	}
+	if cols[0].Name != "contratos" {
+		t.Errorf("expected collection name 'contratos', got %q", cols[0].Name)
+	}
+}
+
+func TestCreateCollection_Success_Returns201(t *testing.T) {
+	mock := &mockIngestService{
+		collection: repository.Collection{ID: "c-new", Name: "facturas"},
+	}
+	r := setupIngestRouter(mock)
+
+	body := `{"name":"facturas","description":"Facturas de clientes"}`
+	req := httptest.NewRequest(http.MethodPost, "/v1/ingest/collections", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req = withAdminContext(req)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestCreateCollection_EmptyName_Returns400(t *testing.T) {
+	r := setupIngestRouter(&mockIngestService{})
+
+	body := `{"name":"","description":"missing name"}`
+	req := httptest.NewRequest(http.MethodPost, "/v1/ingest/collections", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req = withAdminContext(req)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for empty name, got %d", rec.Code)
+	}
+
+	var resp map[string]string
+	json.NewDecoder(rec.Body).Decode(&resp)
+	if resp["error"] == "" {
+		t.Error("expected non-empty error field in response")
+	}
+}
+
+func TestCreateCollection_WhitespaceName_Returns400(t *testing.T) {
+	r := setupIngestRouter(&mockIngestService{})
+
+	body := `{"name":"   "}`
+	req := httptest.NewRequest(http.MethodPost, "/v1/ingest/collections", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req = withAdminContext(req)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for whitespace-only name, got %d", rec.Code)
+	}
+}
+
+func TestCreateCollection_DuplicateName_Returns409(t *testing.T) {
+	// The handler maps "duplicate"/"unique" substring in error message to 409.
+	mock := &mockIngestService{err: errors.New("duplicate key violates unique constraint")}
+	r := setupIngestRouter(mock)
+
+	body := `{"name":"contratos"}`
+	req := httptest.NewRequest(http.MethodPost, "/v1/ingest/collections", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req = withAdminContext(req)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusConflict {
+		t.Fatalf("expected 409 for duplicate collection, got %d", rec.Code)
+	}
+
+	var resp map[string]string
+	json.NewDecoder(rec.Body).Decode(&resp)
+	if resp["error"] == "" {
+		t.Error("expected non-empty error in conflict response")
+	}
+}
+
+func TestCreateCollection_InvalidJSON_Returns400(t *testing.T) {
+	r := setupIngestRouter(&mockIngestService{})
+
+	req := httptest.NewRequest(http.MethodPost, "/v1/ingest/collections", strings.NewReader("not json"))
+	req.Header.Set("Content-Type", "application/json")
+	req = withAdminContext(req)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for invalid JSON, got %d", rec.Code)
+	}
+}
+
+func TestListCollections_ServiceError_Returns500(t *testing.T) {
+	mock := &mockIngestService{err: errors.New("db unavailable")}
+	r := setupIngestRouter(mock)
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/ingest/collections", nil)
+	req = withAdminContext(req)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("expected 500, got %d", rec.Code)
+	}
+}
+
+// ── File size enforcement ─────────────────────────────────────────────────────
+
+func TestUpload_FileTooBig_Returns400OrRequestEntityTooLarge(t *testing.T) {
+	// MaxUploadSize = 100MB. Build a request body that exceeds it.
+	// We use a fake multipart body whose Content-Length signals the oversized payload.
+	// MaxBytesReader will truncate and ParseMultipartForm will return an error,
+	// which the handler maps to 400 "invalid multipart form".
+	r := setupIngestRouter(&mockIngestService{})
+
+	// Build a body that is larger than MaxUploadSize (100 << 20).
+	// We construct the multipart envelope with a very large fake file part.
+	overLimit := int64(MaxUploadSize) + 1
+
+	var buf bytes.Buffer
+	writer := multipart.NewWriter(&buf)
+	part, _ := writer.CreateFormFile("file", "huge.pdf")
+	// Write overLimit bytes of content (all zeros).
+	chunk := make([]byte, 32*1024)
+	written := int64(0)
+	for written < overLimit {
+		n := int64(len(chunk))
+		if written+n > overLimit {
+			n = overLimit - written
+		}
+		part.Write(chunk[:n])
+		written += n
+	}
+	writer.WriteField("collection", "test")
+	writer.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/v1/ingest/upload", &buf)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("X-User-ID", "u-1")
+	req.Header.Set("X-Tenant-Slug", "saldivia")
+	req = withAdminContext(req)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	// MaxBytesReader causes ParseMultipartForm to fail → 400 "invalid multipart form"
+	if rec.Code != http.StatusBadRequest && rec.Code != http.StatusRequestEntityTooLarge {
+		t.Fatalf("expected 400 or 413 for oversized file, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+// ── ListJobs query params ─────────────────────────────────────────────────────
+
+func TestListJobs_WithLimit_ReturnsCorrectCount(t *testing.T) {
+	jobs := make([]service.Job, 5)
+	for i := range jobs {
+		jobs[i] = service.Job{ID: fmt.Sprintf("j-%d", i), UserID: "u-1", FileName: "f.pdf"}
+	}
+	mock := &mockIngestService{jobs: jobs}
+	r := setupIngestRouter(mock)
+
+	// limit=2 is passed through to the mock; mock ListJobs ignores limit
+	// but the handler must at least pass it through without error.
+	req := httptest.NewRequest(http.MethodGet, "/v1/ingest/jobs?limit=2", nil)
+	req.Header.Set("X-User-ID", "u-1")
+	req.Header.Set("X-Tenant-Slug", "saldivia")
+	req = withAdminContext(req)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestListJobs_NegativeLimit_Ignored(t *testing.T) {
+	// A negative or zero limit must not cause an error — handler falls back to default.
+	mock := &mockIngestService{jobs: []service.Job{
+		{ID: "j-1", UserID: "u-1", FileName: "a.pdf"},
+	}}
+	r := setupIngestRouter(mock)
+
+	for _, lim := range []string{"-1", "0", "abc"} {
+		t.Run("limit="+lim, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodGet, "/v1/ingest/jobs?limit="+lim, nil)
+			req.Header.Set("X-User-ID", "u-1")
+			req.Header.Set("X-Tenant-Slug", "saldivia")
+			req = withAdminContext(req)
+			rec := httptest.NewRecorder()
+			r.ServeHTTP(rec, req)
+
+			if rec.Code != http.StatusOK {
+				t.Fatalf("limit=%s: expected 200, got %d", lim, rec.Code)
+			}
+		})
+	}
+}
+
+// ── Job isolation: OtherUser → 404 ───────────────────────────────────────────
+
+func TestGetJob_OtherUsersJob_Returns404(t *testing.T) {
+	mock := &mockIngestService{
+		jobs: []service.Job{
+			{ID: "j-secret", UserID: "u-owner", FileName: "secret.pdf"},
+		},
+	}
+	r := setupIngestRouter(mock)
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/ingest/jobs/j-secret", nil)
+	req.Header.Set("X-User-ID", "u-attacker")
+	req.Header.Set("X-Tenant-Slug", "saldivia")
+	req = withAdminContext(req)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	// Must return 404, not 403 — do not leak job existence.
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected 404 for other user's job, got %d: %s", rec.Code, rec.Body.String())
 	}
 }

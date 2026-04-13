@@ -3,7 +3,11 @@ package jwt
 import (
 	"crypto/ed25519"
 	"crypto/x509"
+	"encoding/base64"
+	"encoding/json"
 	"encoding/pem"
+	"errors"
+	"strings"
 	"testing"
 	"time"
 )
@@ -268,4 +272,302 @@ func TestVerifyOnlyConfig_CannotSign(t *testing.T) {
 	if err == nil {
 		t.Fatal("VerifyOnlyConfig should not be able to sign tokens")
 	}
+}
+
+// --- Edge cases: empty required claim fields ---
+
+// TestCreateAccess_EmptyUserID_Fails verifies that a token with an empty UserID
+// is rejected at Verify time with ErrMissingClaim. CreateAccess itself doesn't
+// validate claims — the guard lives in Verify so all code paths are protected.
+func TestCreateAccess_EmptyUserID_Fails(t *testing.T) {
+	cfg := testConfig(t)
+	token, err := CreateAccess(cfg, Claims{TenantID: "t-1", Slug: "test", Role: "user"})
+	if err != nil {
+		t.Fatalf("CreateAccess: %v", err)
+	}
+	_, err = Verify(cfg.PublicKey, token)
+	if err == nil {
+		t.Fatal("expected error for empty UserID")
+	}
+	if !isErr(err, ErrMissingClaim) {
+		t.Errorf("expected ErrMissingClaim, got %v", err)
+	}
+}
+
+func TestCreateAccess_EmptyTenantID_Fails(t *testing.T) {
+	cfg := testConfig(t)
+	token, err := CreateAccess(cfg, Claims{UserID: "u-1", Slug: "test", Role: "user"})
+	if err != nil {
+		t.Fatalf("CreateAccess: %v", err)
+	}
+	_, err = Verify(cfg.PublicKey, token)
+	if err == nil {
+		t.Fatal("expected error for empty TenantID")
+	}
+	if !isErr(err, ErrMissingClaim) {
+		t.Errorf("expected ErrMissingClaim, got %v", err)
+	}
+}
+
+func TestCreateAccess_EmptySlug_Fails(t *testing.T) {
+	cfg := testConfig(t)
+	token, err := CreateAccess(cfg, Claims{UserID: "u-1", TenantID: "t-1", Role: "user"})
+	if err != nil {
+		t.Fatalf("CreateAccess: %v", err)
+	}
+	_, err = Verify(cfg.PublicKey, token)
+	if err == nil {
+		t.Fatal("expected error for empty Slug")
+	}
+	if !isErr(err, ErrMissingClaim) {
+		t.Errorf("expected ErrMissingClaim, got %v", err)
+	}
+}
+
+// TestVerify_NoneAlgorithm_Rejected ensures that a token crafted with alg:"none"
+// (a known JWT attack vector) is always rejected, even if the payload is valid.
+func TestVerify_NoneAlgorithm_Rejected(t *testing.T) {
+	pub, _ := generateTestKeys(t)
+
+	// Craft a "none" algorithm token manually: header.payload.empty-signature
+	header := base64.RawURLEncoding.EncodeToString([]byte(`{"alg":"none","typ":"JWT"}`))
+	payload, _ := json.Marshal(map[string]any{
+		"uid":  "u-1",
+		"tid":  "t-1",
+		"slug": "test",
+		"role": "user",
+		"sub":  "u-1",
+		"iss":  "sda",
+		"iat":  time.Now().Unix(),
+		"exp":  time.Now().Add(15 * time.Minute).Unix(),
+	})
+	payloadB64 := base64.RawURLEncoding.EncodeToString(payload)
+	noneToken := header + "." + payloadB64 + "."
+
+	_, err := Verify(pub, noneToken)
+	if err == nil {
+		t.Fatal("alg:none token must be rejected")
+	}
+}
+
+// TestVerify_HS256Algorithm_Rejected ensures HMAC-signed tokens are not accepted.
+// The middleware only accepts EdDSA (Ed25519). An attacker might craft an HS256
+// token using the public key as the HMAC secret (algorithm confusion attack).
+func TestVerify_HS256Algorithm_Rejected(t *testing.T) {
+	pub, _ := generateTestKeys(t)
+
+	// We can't easily sign with HS256 here without a shared secret, but we can
+	// craft a well-formed HS256 header with a dummy signature and verify rejection.
+	header := base64.RawURLEncoding.EncodeToString([]byte(`{"alg":"HS256","typ":"JWT"}`))
+	payload, _ := json.Marshal(map[string]any{
+		"uid":  "u-1",
+		"tid":  "t-1",
+		"slug": "test",
+		"role": "user",
+		"sub":  "u-1",
+		"iss":  "sda",
+		"iat":  time.Now().Unix(),
+		"exp":  time.Now().Add(15 * time.Minute).Unix(),
+	})
+	payloadB64 := base64.RawURLEncoding.EncodeToString(payload)
+	fakeSig := base64.RawURLEncoding.EncodeToString([]byte("fake-hmac-signature"))
+	hs256Token := header + "." + payloadB64 + "." + fakeSig
+
+	_, err := Verify(pub, hs256Token)
+	if err == nil {
+		t.Fatal("HS256 token must be rejected — only EdDSA accepted")
+	}
+}
+
+// TestVerify_TamperedPayload_Rejected verifies that flipping a byte in the payload
+// section of a valid token causes signature validation failure.
+func TestVerify_TamperedPayload_Rejected(t *testing.T) {
+	cfg := testConfig(t)
+	claims := Claims{UserID: "u-1", TenantID: "t-1", Slug: "test", Role: "user"}
+	token, err := CreateAccess(cfg, claims)
+	if err != nil {
+		t.Fatalf("CreateAccess: %v", err)
+	}
+
+	parts := strings.Split(token, ".")
+	if len(parts) != 3 {
+		t.Fatalf("unexpected token structure: %q", token)
+	}
+
+	// Decode, flip a byte, re-encode
+	payloadBytes, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		t.Fatalf("decode payload: %v", err)
+	}
+	payloadBytes[len(payloadBytes)/2] ^= 0xFF // flip bits in the middle
+	parts[1] = base64.RawURLEncoding.EncodeToString(payloadBytes)
+	tamperedToken := strings.Join(parts, ".")
+
+	_, err = Verify(cfg.PublicKey, tamperedToken)
+	if err == nil {
+		t.Fatal("tampered payload must be rejected")
+	}
+}
+
+// TestVerify_ExpiredToken_ReturnsErrInvalidToken confirms the sentinel error value
+// for expired tokens — callers should handle ErrInvalidToken specifically.
+func TestVerify_ExpiredToken_ReturnsErrInvalidToken(t *testing.T) {
+	pub, priv := generateTestKeys(t)
+	cfg := Config{
+		PrivateKey:   priv,
+		PublicKey:    pub,
+		AccessExpiry: -1 * time.Hour,
+		Issuer:       "sda",
+	}
+	claims := Claims{UserID: "u-1", TenantID: "t-1", Slug: "test", Role: "user"}
+	token, _ := CreateAccess(cfg, claims)
+
+	_, err := Verify(pub, token)
+	if !isErr(err, ErrInvalidToken) {
+		t.Errorf("expected ErrInvalidToken for expired token, got %v", err)
+	}
+}
+
+// TestVerify_WrongKey_ReturnsError already tested above but this variant
+// explicitly checks error is ErrInvalidToken (not some other error).
+func TestVerify_WrongKey_ReturnsErrInvalidToken(t *testing.T) {
+	cfg := testConfig(t)
+	claims := Claims{UserID: "u-1", TenantID: "t-1", Slug: "test", Role: "user"}
+	token, _ := CreateAccess(cfg, claims)
+
+	otherPub, _ := generateTestKeys(t)
+	_, err := Verify(otherPub, token)
+	if !isErr(err, ErrInvalidToken) {
+		t.Errorf("expected ErrInvalidToken for wrong key, got %v", err)
+	}
+}
+
+// TestVerify_ValidToken_ExtractsAllClaims is a full happy-path test verifying
+// every claim field is preserved through sign → verify.
+func TestVerify_ValidToken_ExtractsAllClaims(t *testing.T) {
+	cfg := testConfig(t)
+	in := Claims{
+		UserID:      "u-abc",
+		Email:       "user@example.com",
+		Name:        "Test User",
+		TenantID:    "t-xyz",
+		Slug:        "example",
+		Role:        "manager",
+		Permissions: []string{"erp.read", "chat.write"},
+	}
+
+	token, err := CreateAccess(cfg, in)
+	if err != nil {
+		t.Fatalf("CreateAccess: %v", err)
+	}
+
+	got, err := Verify(cfg.PublicKey, token)
+	if err != nil {
+		t.Fatalf("Verify: %v", err)
+	}
+
+	if got.UserID != in.UserID {
+		t.Errorf("UserID: got %q, want %q", got.UserID, in.UserID)
+	}
+	if got.Email != in.Email {
+		t.Errorf("Email: got %q, want %q", got.Email, in.Email)
+	}
+	if got.Name != in.Name {
+		t.Errorf("Name: got %q, want %q", got.Name, in.Name)
+	}
+	if got.TenantID != in.TenantID {
+		t.Errorf("TenantID: got %q, want %q", got.TenantID, in.TenantID)
+	}
+	if got.Slug != in.Slug {
+		t.Errorf("Slug: got %q, want %q", got.Slug, in.Slug)
+	}
+	if got.Role != in.Role {
+		t.Errorf("Role: got %q, want %q", got.Role, in.Role)
+	}
+	if len(got.Permissions) != 2 || got.Permissions[0] != "erp.read" {
+		t.Errorf("Permissions: got %v, want [erp.read chat.write]", got.Permissions)
+	}
+	if got.Issuer != "sda" {
+		t.Errorf("Issuer: got %q, want sda", got.Issuer)
+	}
+	if got.Subject != in.UserID {
+		t.Errorf("Subject: got %q, want %q", got.Subject, in.UserID)
+	}
+	if got.ID == "" {
+		t.Error("JTI (ID) must be auto-generated and non-empty")
+	}
+}
+
+// TestCreateRefresh_DifferentExpiryFromAccess verifies that refresh tokens have
+// a meaningfully longer lifetime than access tokens, caught at the Claims level.
+func TestCreateRefresh_DifferentExpiryFromAccess(t *testing.T) {
+	cfg := testConfig(t)
+	claims := Claims{UserID: "u-1", TenantID: "t-1", Slug: "test", Role: "user"}
+
+	accessToken, err := CreateAccess(cfg, claims)
+	if err != nil {
+		t.Fatalf("CreateAccess: %v", err)
+	}
+	refreshToken, err := CreateRefresh(cfg, claims)
+	if err != nil {
+		t.Fatalf("CreateRefresh: %v", err)
+	}
+
+	accessClaims, err := Verify(cfg.PublicKey, accessToken)
+	if err != nil {
+		t.Fatalf("Verify access: %v", err)
+	}
+	refreshClaims, err := Verify(cfg.PublicKey, refreshToken)
+	if err != nil {
+		t.Fatalf("Verify refresh: %v", err)
+	}
+
+	accessExpiry := accessClaims.ExpiresAt.Time.Sub(accessClaims.IssuedAt.Time)
+	refreshExpiry := refreshClaims.ExpiresAt.Time.Sub(refreshClaims.IssuedAt.Time)
+
+	if refreshExpiry <= accessExpiry {
+		t.Errorf("refresh expiry (%v) must be longer than access expiry (%v)", refreshExpiry, accessExpiry)
+	}
+	// Access token should be ~15min
+	if accessExpiry < 10*time.Minute || accessExpiry > 20*time.Minute {
+		t.Errorf("access expiry %v not in expected range [10m, 20m]", accessExpiry)
+	}
+	// Refresh token should be ~7d
+	if refreshExpiry < 6*24*time.Hour || refreshExpiry > 8*24*time.Hour {
+		t.Errorf("refresh expiry %v not in expected range [6d, 8d]", refreshExpiry)
+	}
+}
+
+// TestVerify_RefreshToken_ValidatesCorrectly checks that a refresh token passes
+// verification and all identity claims survive the round-trip.
+func TestVerify_RefreshToken_ValidatesCorrectly(t *testing.T) {
+	cfg := testConfig(t)
+	claims := Claims{UserID: "u-99", TenantID: "t-99", Slug: "refresh-test", Role: "user"}
+
+	token, err := CreateRefresh(cfg, claims)
+	if err != nil {
+		t.Fatalf("CreateRefresh: %v", err)
+	}
+
+	got, err := Verify(cfg.PublicKey, token)
+	if err != nil {
+		t.Fatalf("Verify refresh token: %v", err)
+	}
+	if got.UserID != "u-99" {
+		t.Errorf("UserID: got %q, want u-99", got.UserID)
+	}
+	if got.TenantID != "t-99" {
+		t.Errorf("TenantID: got %q, want t-99", got.TenantID)
+	}
+	if got.Slug != "refresh-test" {
+		t.Errorf("Slug: got %q, want refresh-test", got.Slug)
+	}
+	if got.ID == "" {
+		t.Error("JTI must be non-empty on refresh token")
+	}
+}
+
+// isErr wraps errors.Is for readable table-driven assertions.
+func isErr(err, target error) bool {
+	return errors.Is(err, target)
 }

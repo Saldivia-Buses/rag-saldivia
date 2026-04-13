@@ -208,6 +208,69 @@ func TestGetDefinition_NotFound(t *testing.T) {
 	}
 }
 
+// TestExecute_EmptyToolName_ReturnsErrorResult verifies that an empty string
+// tool name is treated as an unknown tool and returns a graceful error result,
+// not a panic or nil pointer.
+func TestExecute_EmptyToolName_ReturnsErrorResult(t *testing.T) {
+	t.Parallel()
+	exec := NewExecutor(testDefs())
+	ctx := context.Background()
+
+	result, err := exec.Execute(ctx, "tok", "", nil)
+	if err != nil {
+		t.Fatalf("expected nil error, got %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected non-nil result")
+	}
+	if result.Status != "error" {
+		t.Fatalf("expected status %q for empty tool name, got %q", "error", result.Status)
+	}
+	if result.Error == "" {
+		t.Fatal("expected non-empty error message")
+	}
+}
+
+// TestExecuteConfirmed_EmptyToolName_ReturnsErrorResult mirrors the Execute check
+// for the confirmed execution path.
+func TestExecuteConfirmed_EmptyToolName_ReturnsErrorResult(t *testing.T) {
+	t.Parallel()
+	exec := NewExecutor(testDefs())
+	ctx := context.Background()
+
+	result, err := exec.ExecuteConfirmed(ctx, "tok", "", nil)
+	if err != nil {
+		t.Fatalf("expected nil error, got %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected non-nil result")
+	}
+	if result.Status != "error" {
+		t.Fatalf("expected status %q for empty tool name, got %q", "error", result.Status)
+	}
+}
+
+// TestExecute_NilParams_DoesNotPanic verifies that nil params are forwarded
+// without panicking (the HTTP body becomes an empty reader).
+func TestExecute_NilParams_DoesNotPanic(t *testing.T) {
+	t.Parallel()
+	exec := NewExecutor(testDefs())
+	ctx := context.Background()
+
+	// nil params should not panic — just attempt execution with empty body
+	result, err := exec.Execute(ctx, "tok", "read_tool", nil)
+	if err != nil {
+		t.Fatalf("expected nil error, got %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected non-nil result")
+	}
+	// With no server, should timeout (connection refused), not panic
+	if result.Status == "pending_confirmation" {
+		t.Fatal("read_tool should not require confirmation")
+	}
+}
+
 func TestNewExecutor_DuplicateNames_LastWins(t *testing.T) {
 	// If two definitions have the same name, the last one wins (map semantics).
 	t.Parallel()

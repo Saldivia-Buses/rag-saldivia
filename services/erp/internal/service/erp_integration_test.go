@@ -1253,3 +1253,787 @@ func TestTreasury_ReconciliationAutoMatch_Integration(t *testing.T) {
 		t.Errorf("expected 2 statement lines, got %d", len(detail.Lines))
 	}
 }
+
+// ============================================================
+// Test 7: Accounting — CloseFiscalYear fails without result account
+// ============================================================
+
+func TestCloseFiscalYear_WithoutResultAccount_Fails(t *testing.T) {
+	pool, cleanup := setupERPTestDB(t)
+	defer cleanup()
+
+	ctx := context.Background()
+	svc := makeAccounting(pool)
+
+	// Create fiscal year without setting result account
+	fy, err := svc.CreateFiscalYear(ctx, testTenantID, 2025, "2025-01-01", "2025-12-31", testUserID, testIP)
+	if err != nil {
+		t.Fatalf("create fiscal year: %v", err)
+	}
+
+	// Attempt close — must fail because result_account_id is not set
+	_, err = svc.CloseFiscalYear(ctx, testTenantID, fy.ID, testUserID, testIP)
+	if err == nil {
+		t.Fatal("expected error when closing without result_account_id, got nil")
+	}
+	if !strings.Contains(err.Error(), "result_account_id") {
+		t.Errorf("expected error to mention 'result_account_id', got: %v", err)
+	}
+}
+
+// ============================================================
+// Test 8: Accounting — CloseFiscalYear fails on already-closed year
+// ============================================================
+
+func TestCloseFiscalYear_AlreadyClosed_Fails(t *testing.T) {
+	pool, cleanup := setupERPTestDB(t)
+	defer cleanup()
+
+	ctx := context.Background()
+	svc := makeAccounting(pool)
+
+	// Full close setup
+	resultAcct, err := svc.CreateAccount(ctx,
+		testTenantID, "3-01-002", "Resultado cierre doble",
+		pgtype.UUID{}, "equity", true, pgtype.UUID{},
+		testUserID, testIP,
+	)
+	if err != nil {
+		t.Fatalf("create result account: %v", err)
+	}
+
+	fy, err := svc.CreateFiscalYear(ctx, testTenantID, 2020, "2020-01-01", "2020-12-31", testUserID, testIP)
+	if err != nil {
+		t.Fatalf("create fiscal year: %v", err)
+	}
+
+	if err := svc.SetFiscalYearResultAccount(ctx, testTenantID, fy.ID, resultAcct.ID, testUserID, testIP); err != nil {
+		t.Fatalf("set result account: %v", err)
+	}
+
+	// First close — must succeed
+	if _, err := svc.CloseFiscalYear(ctx, testTenantID, fy.ID, testUserID, testIP); err != nil {
+		t.Fatalf("first close: %v", err)
+	}
+
+	// Second close on the same (now closed) year — must fail
+	_, err = svc.CloseFiscalYear(ctx, testTenantID, fy.ID, testUserID, testIP)
+	if err == nil {
+		t.Fatal("expected error when closing an already-closed fiscal year, got nil")
+	}
+	// Service returns "fiscal year is not open"
+	if !strings.Contains(err.Error(), "not open") && !strings.Contains(err.Error(), "closed") {
+		t.Errorf("expected error to mention 'not open' or 'closed', got: %v", err)
+	}
+}
+
+// ============================================================
+// Test 9: Accounting — PreviewClose on empty fiscal year
+// ============================================================
+
+func TestPreviewClose_EmptyFiscalYear(t *testing.T) {
+	pool, cleanup := setupERPTestDB(t)
+	defer cleanup()
+
+	ctx := context.Background()
+	svc := makeAccounting(pool)
+
+	// Create result account and fiscal year with no entries
+	resultAcct, err := svc.CreateAccount(ctx,
+		testTenantID, "3-01-003", "Resultado preview",
+		pgtype.UUID{}, "equity", true, pgtype.UUID{},
+		testUserID, testIP,
+	)
+	if err != nil {
+		t.Fatalf("create result account: %v", err)
+	}
+
+	fy, err := svc.CreateFiscalYear(ctx, testTenantID, 2021, "2021-01-01", "2021-12-31", testUserID, testIP)
+	if err != nil {
+		t.Fatalf("create fiscal year: %v", err)
+	}
+
+	if err := svc.SetFiscalYearResultAccount(ctx, testTenantID, fy.ID, resultAcct.ID, testUserID, testIP); err != nil {
+		t.Fatalf("set result account: %v", err)
+	}
+
+	preview, err := svc.PreviewClose(ctx, testTenantID, fy.ID)
+	if err != nil {
+		t.Fatalf("preview close: %v", err)
+	}
+	if preview == nil {
+		t.Fatal("expected non-nil preview result")
+	}
+	if !preview.CanClose {
+		t.Errorf("expected CanClose=true for empty fiscal year, blocked_reason=%q", preview.BlockedReason)
+	}
+	if len(preview.DraftEntries) != 0 {
+		t.Errorf("expected 0 draft entries, got %d", len(preview.DraftEntries))
+	}
+	if len(preview.Balances) != 0 {
+		t.Errorf("expected 0 account balances for empty fiscal year, got %d", len(preview.Balances))
+	}
+}
+
+// ============================================================
+// Test 10: Accounting — PostEntry happy path (draft → posted)
+// ============================================================
+
+func TestPostEntry_HappyPath(t *testing.T) {
+	pool, cleanup := setupERPTestDB(t)
+	defer cleanup()
+
+	ctx := context.Background()
+	svc := makeAccounting(pool)
+	repo := repository.New(pool)
+
+	// Create accounts
+	debitAcct, err := svc.CreateAccount(ctx,
+		testTenantID, "4-02-001", "Gasto post test",
+		pgtype.UUID{}, "expense", true, pgtype.UUID{},
+		testUserID, testIP,
+	)
+	if err != nil {
+		t.Fatalf("create debit account: %v", err)
+	}
+	creditAcct, err := svc.CreateAccount(ctx,
+		testTenantID, "2-02-001", "Pasivo post test",
+		pgtype.UUID{}, "liability", true, pgtype.UUID{},
+		testUserID, testIP,
+	)
+	if err != nil {
+		t.Fatalf("create credit account: %v", err)
+	}
+
+	fy, err := svc.CreateFiscalYear(ctx, testTenantID, 2022, "2022-01-01", "2022-12-31", testUserID, testIP)
+	if err != nil {
+		t.Fatalf("create fiscal year: %v", err)
+	}
+
+	// Create a draft entry
+	detail, err := svc.CreateEntry(ctx, CreateEntryRequest{
+		TenantID:     testTenantID,
+		Number:       "J-POST-001",
+		Date:         pgDate("2022-03-15"),
+		FiscalYearID: fy.ID,
+		Concept:      "Asiento de prueba",
+		EntryType:    "manual",
+		UserID:       testUserID,
+		IP:           testIP,
+		Lines: []CreateLineRequest{
+			{AccountID: debitAcct.ID, Debit: "500.00", Credit: "0", Description: "Debe"},
+			{AccountID: creditAcct.ID, Debit: "0", Credit: "500.00", Description: "Haber"},
+		},
+	})
+	if err != nil {
+		t.Fatalf("create entry: %v", err)
+	}
+	if detail.Entry.Status != "draft" {
+		t.Errorf("expected status 'draft' after create, got %q", detail.Entry.Status)
+	}
+
+	// Post it
+	if err := svc.PostEntry(ctx, detail.Entry.ID, testTenantID, testUserID, testIP); err != nil {
+		t.Fatalf("post entry: %v", err)
+	}
+
+	// Verify status in DB
+	posted, err := repo.GetJournalEntry(ctx, repository.GetJournalEntryParams{
+		ID: detail.Entry.ID, TenantID: testTenantID,
+	})
+	if err != nil {
+		t.Fatalf("get posted entry: %v", err)
+	}
+	if posted.Status != "posted" {
+		t.Errorf("expected status 'posted', got %q", posted.Status)
+	}
+}
+
+// ============================================================
+// Test 11: Accounting — PostEntry on already-posted entry fails
+// ============================================================
+
+func TestPostEntry_AlreadyPosted_Fails(t *testing.T) {
+	pool, cleanup := setupERPTestDB(t)
+	defer cleanup()
+
+	ctx := context.Background()
+	svc := makeAccounting(pool)
+
+	debitAcct, err := svc.CreateAccount(ctx,
+		testTenantID, "4-03-001", "Gasto double post",
+		pgtype.UUID{}, "expense", true, pgtype.UUID{},
+		testUserID, testIP,
+	)
+	if err != nil {
+		t.Fatalf("create debit account: %v", err)
+	}
+	creditAcct, err := svc.CreateAccount(ctx,
+		testTenantID, "2-03-001", "Pasivo double post",
+		pgtype.UUID{}, "liability", true, pgtype.UUID{},
+		testUserID, testIP,
+	)
+	if err != nil {
+		t.Fatalf("create credit account: %v", err)
+	}
+
+	fy, err := svc.CreateFiscalYear(ctx, testTenantID, 2023, "2023-01-01", "2023-12-31", testUserID, testIP)
+	if err != nil {
+		t.Fatalf("create fiscal year: %v", err)
+	}
+
+	detail, err := svc.CreateEntry(ctx, CreateEntryRequest{
+		TenantID:     testTenantID,
+		Number:       "J-DPOST-001",
+		Date:         pgDate("2023-01-10"),
+		FiscalYearID: fy.ID,
+		Concept:      "Asiento double post",
+		EntryType:    "manual",
+		UserID:       testUserID,
+		IP:           testIP,
+		Lines: []CreateLineRequest{
+			{AccountID: debitAcct.ID, Debit: "200.00", Credit: "0", Description: "D"},
+			{AccountID: creditAcct.ID, Debit: "0", Credit: "200.00", Description: "C"},
+		},
+	})
+	if err != nil {
+		t.Fatalf("create entry: %v", err)
+	}
+
+	// First post — must succeed
+	if err := svc.PostEntry(ctx, detail.Entry.ID, testTenantID, testUserID, testIP); err != nil {
+		t.Fatalf("first post: %v", err)
+	}
+
+	// Second post on the same (already posted) entry — must fail
+	err = svc.PostEntry(ctx, detail.Entry.ID, testTenantID, testUserID, testIP)
+	if err == nil {
+		t.Fatal("expected error when posting an already-posted entry, got nil")
+	}
+	// Service returns "entry not found or already posted"
+	if !strings.Contains(err.Error(), "already posted") && !strings.Contains(err.Error(), "not found") {
+		t.Errorf("expected error to mention 'already posted', got: %v", err)
+	}
+}
+
+// ============================================================
+// Test 12: Invoicing — VoidInvoice on draft invoice fails
+// ============================================================
+
+func TestVoidInvoice_OnDraftInvoice_Fails(t *testing.T) {
+	pool, cleanup := setupERPTestDB(t)
+	defer cleanup()
+
+	ctx := context.Background()
+	svc := makeInvoicing(pool)
+	repo := repository.New(pool)
+
+	entity, err := repo.CreateEntity(ctx, repository.CreateEntityParams{
+		TenantID: testTenantID,
+		Type:     "customer",
+		Code:     "CLI-VOID-DRAFT",
+		Name:     "Customer Draft Void",
+	})
+	if err != nil {
+		t.Fatalf("create entity: %v", err)
+	}
+
+	// Create invoice but do NOT post it — stays draft
+	inv, err := svc.CreateInvoice(ctx, CreateInvoiceRequest{
+		TenantID:    testTenantID,
+		Number:      "FA-DRAFT-VOID",
+		Date:        pgDate("2024-09-01"),
+		InvoiceType: "invoice_a",
+		Direction:   "issued",
+		EntityID:    entity.ID,
+		UserID:      testUserID,
+		IP:          testIP,
+		Lines: []CreateInvoiceLineRequest{
+			{Description: "Producto draft", Quantity: "1", UnitPrice: "100.00", TaxRate: "21.00"},
+		},
+	})
+	if err != nil {
+		t.Fatalf("create invoice: %v", err)
+	}
+
+	// VoidInvoice on a draft must fail
+	_, err = svc.VoidInvoice(ctx, inv.Invoice.ID, testTenantID, "intento de anular borrador", testUserID, testIP)
+	if err == nil {
+		t.Fatal("expected error when voiding a draft invoice, got nil")
+	}
+	// Service returns "solo se pueden anular facturas posted/paid"
+	if !strings.Contains(err.Error(), "posted") && !strings.Contains(err.Error(), "draft") {
+		t.Errorf("expected error to mention status restriction, got: %v", err)
+	}
+}
+
+// ============================================================
+// Test 13: Invoicing — VoidInvoice on already-voided invoice fails
+// ============================================================
+
+func TestVoidInvoice_AlreadyVoided_Fails(t *testing.T) {
+	pool, cleanup := setupERPTestDB(t)
+	defer cleanup()
+
+	ctx := context.Background()
+	svc := makeInvoicing(pool)
+	repo := repository.New(pool)
+
+	entity, err := repo.CreateEntity(ctx, repository.CreateEntityParams{
+		TenantID: testTenantID,
+		Type:     "customer",
+		Code:     "CLI-DOUBLE-VOID",
+		Name:     "Customer Double Void",
+	})
+	if err != nil {
+		t.Fatalf("create entity: %v", err)
+	}
+
+	// Create → post → void
+	inv, err := svc.CreateInvoice(ctx, CreateInvoiceRequest{
+		TenantID:    testTenantID,
+		Number:      "FA-DOUBLE-VOID",
+		Date:        pgDate("2024-10-01"),
+		InvoiceType: "invoice_b",
+		Direction:   "issued",
+		EntityID:    entity.ID,
+		UserID:      testUserID,
+		IP:          testIP,
+		Lines: []CreateInvoiceLineRequest{
+			{Description: "Item doble void", Quantity: "2", UnitPrice: "50.00", TaxRate: "21.00"},
+		},
+	})
+	if err != nil {
+		t.Fatalf("create invoice: %v", err)
+	}
+
+	if err := svc.PostInvoice(ctx, inv.Invoice.ID, testTenantID, testUserID, testIP); err != nil {
+		t.Fatalf("post invoice: %v", err)
+	}
+
+	// First void — must succeed
+	if _, err := svc.VoidInvoice(ctx, inv.Invoice.ID, testTenantID, "primer void", testUserID, testIP); err != nil {
+		t.Fatalf("first void: %v", err)
+	}
+
+	// Second void on the same (already cancelled) invoice — must fail
+	_, err = svc.VoidInvoice(ctx, inv.Invoice.ID, testTenantID, "segundo void", testUserID, testIP)
+	if err == nil {
+		t.Fatal("expected error when voiding an already-voided invoice, got nil")
+	}
+	if !strings.Contains(err.Error(), "posted") && !strings.Contains(err.Error(), "cancelled") &&
+		!strings.Contains(err.Error(), "anular") {
+		t.Errorf("expected error to mention status restriction, got: %v", err)
+	}
+}
+
+// ============================================================
+// Test 14: Treasury — CreateReceipt fails when payments don't balance allocations
+// ============================================================
+
+func TestCreateReceipt_UnbalancedPayments_Fails(t *testing.T) {
+	pool, cleanup := setupERPTestDB(t)
+	defer cleanup()
+
+	ctx := context.Background()
+	svc := makeTreasury(pool)
+	repo := repository.New(pool)
+
+	entity, err := repo.CreateEntity(ctx, repository.CreateEntityParams{
+		TenantID: testTenantID,
+		Type:     "customer",
+		Code:     "CLI-UNBALANCED",
+		Name:     "Customer Unbalanced",
+	})
+	if err != nil {
+		t.Fatalf("create entity: %v", err)
+	}
+
+	// Create a posted invoice to allocate to
+	invSvc := makeInvoicing(pool)
+	inv, err := invSvc.CreateInvoice(ctx, CreateInvoiceRequest{
+		TenantID:    testTenantID,
+		Number:      "FA-UNBAL-001",
+		Date:        pgDate("2024-11-01"),
+		InvoiceType: "invoice_a",
+		Direction:   "issued",
+		EntityID:    entity.ID,
+		UserID:      testUserID,
+		IP:          testIP,
+		Lines: []CreateInvoiceLineRequest{
+			{Description: "Item", Quantity: "1", UnitPrice: "1000.00", TaxRate: "0"},
+		},
+	})
+	if err != nil {
+		t.Fatalf("create invoice: %v", err)
+	}
+	if err := invSvc.PostInvoice(ctx, inv.Invoice.ID, testTenantID, testUserID, testIP); err != nil {
+		t.Fatalf("post invoice: %v", err)
+	}
+
+	invIDStr := uuidStr(inv.Invoice.ID)
+
+	// Payment = 500, allocation = 1000 — diff = 500, exceeds the 0.01 tolerance
+	_, err = svc.CreateReceipt(ctx, testTenantID, ReceiptInput{
+		ReceiptType: "collection",
+		EntityID:    uuidStr(entity.ID),
+		Date:        "2024-11-05",
+		Payments: []ReceiptPaymentInput{
+			{PaymentMethod: "cash", Amount: "500.00"},
+		},
+		Allocations: []ReceiptAllocInput{
+			{InvoiceID: invIDStr, Amount: "1000.00"},
+		},
+	}, testUserID, testIP)
+	if err == nil {
+		t.Fatal("expected error for unbalanced receipt, got nil")
+	}
+	if !strings.Contains(err.Error(), "balance") && !strings.Contains(err.Error(), "balanc") {
+		t.Errorf("expected ErrReceiptUnbalanced, got: %v", err)
+	}
+}
+
+// ============================================================
+// Test 15: Treasury — CreateReceipt happy path
+// ============================================================
+
+func TestCreateReceipt_HappyPath(t *testing.T) {
+	pool, cleanup := setupERPTestDB(t)
+	defer cleanup()
+
+	ctx := context.Background()
+	svc := makeTreasury(pool)
+	repo := repository.New(pool)
+
+	entity, err := repo.CreateEntity(ctx, repository.CreateEntityParams{
+		TenantID: testTenantID,
+		Type:     "customer",
+		Code:     "CLI-REC-HP",
+		Name:     "Customer Receipt Happy",
+	})
+	if err != nil {
+		t.Fatalf("create entity: %v", err)
+	}
+
+	// Create + post an invoice to allocate against
+	invSvc := makeInvoicing(pool)
+	inv, err := invSvc.CreateInvoice(ctx, CreateInvoiceRequest{
+		TenantID:    testTenantID,
+		Number:      "FA-REC-HP-001",
+		Date:        pgDate("2024-08-01"),
+		InvoiceType: "invoice_a",
+		Direction:   "issued",
+		EntityID:    entity.ID,
+		UserID:      testUserID,
+		IP:          testIP,
+		Lines: []CreateInvoiceLineRequest{
+			{Description: "Servicio", Quantity: "1", UnitPrice: "2000.00", TaxRate: "0"},
+		},
+	})
+	if err != nil {
+		t.Fatalf("create invoice: %v", err)
+	}
+	if err := invSvc.PostInvoice(ctx, inv.Invoice.ID, testTenantID, testUserID, testIP); err != nil {
+		t.Fatalf("post invoice: %v", err)
+	}
+
+	invIDStr := uuidStr(inv.Invoice.ID)
+
+	// Create receipt: payment = allocation = 2000
+	detail, err := svc.CreateReceipt(ctx, testTenantID, ReceiptInput{
+		ReceiptType: "collection",
+		EntityID:    uuidStr(entity.ID),
+		Date:        "2024-08-10",
+		Notes:       "Cobro FA-REC-HP-001",
+		Payments: []ReceiptPaymentInput{
+			{PaymentMethod: "cash", Amount: "2000.00"},
+		},
+		Allocations: []ReceiptAllocInput{
+			{InvoiceID: invIDStr, Amount: "2000.00"},
+		},
+	}, testUserID, testIP)
+	if err != nil {
+		t.Fatalf("create receipt: %v", err)
+	}
+	if detail == nil {
+		t.Fatal("expected non-nil receipt detail")
+	}
+
+	// Verify receipt exists in DB with confirmed status
+	var status string
+	if err := pool.QueryRow(ctx,
+		`SELECT status FROM erp_receipts WHERE id = $1 AND tenant_id = $2`,
+		detail.Receipt.ID, testTenantID,
+	).Scan(&status); err != nil {
+		t.Fatalf("query receipt status: %v", err)
+	}
+	if status != "confirmed" {
+		t.Errorf("expected receipt status 'confirmed', got %q", status)
+	}
+
+	// Verify one receipt payment was created
+	if len(detail.Payments) != 1 {
+		t.Errorf("expected 1 payment, got %d", len(detail.Payments))
+	}
+
+	// Verify one allocation was created
+	if len(detail.Allocations) != 1 {
+		t.Errorf("expected 1 allocation, got %d", len(detail.Allocations))
+	}
+}
+
+// ============================================================
+// Test 16: Treasury — VoidReceipt fails when receipt is not confirmed
+// ============================================================
+
+func TestVoidReceipt_AlreadyVoided_Fails(t *testing.T) {
+	pool, cleanup := setupERPTestDB(t)
+	defer cleanup()
+
+	ctx := context.Background()
+	svc := makeTreasury(pool)
+	repo := repository.New(pool)
+
+	entity, err := repo.CreateEntity(ctx, repository.CreateEntityParams{
+		TenantID: testTenantID,
+		Type:     "customer",
+		Code:     "CLI-VOID-REC",
+		Name:     "Customer Void Receipt",
+	})
+	if err != nil {
+		t.Fatalf("create entity: %v", err)
+	}
+
+	// Create + post invoice
+	invSvc := makeInvoicing(pool)
+	inv, err := invSvc.CreateInvoice(ctx, CreateInvoiceRequest{
+		TenantID:    testTenantID,
+		Number:      "FA-VREC-001",
+		Date:        pgDate("2024-09-15"),
+		InvoiceType: "invoice_a",
+		Direction:   "issued",
+		EntityID:    entity.ID,
+		UserID:      testUserID,
+		IP:          testIP,
+		Lines: []CreateInvoiceLineRequest{
+			{Description: "Item void rec", Quantity: "1", UnitPrice: "300.00", TaxRate: "0"},
+		},
+	})
+	if err != nil {
+		t.Fatalf("create invoice: %v", err)
+	}
+	if err := invSvc.PostInvoice(ctx, inv.Invoice.ID, testTenantID, testUserID, testIP); err != nil {
+		t.Fatalf("post invoice: %v", err)
+	}
+
+	// Create receipt
+	detail, err := svc.CreateReceipt(ctx, testTenantID, ReceiptInput{
+		ReceiptType: "collection",
+		EntityID:    uuidStr(entity.ID),
+		Date:        "2024-09-20",
+		Payments: []ReceiptPaymentInput{
+			{PaymentMethod: "cash", Amount: "300.00"},
+		},
+		Allocations: []ReceiptAllocInput{
+			{InvoiceID: uuidStr(inv.Invoice.ID), Amount: "300.00"},
+		},
+	}, testUserID, testIP)
+	if err != nil {
+		t.Fatalf("create receipt: %v", err)
+	}
+
+	// First void — must succeed
+	if err := svc.VoidReceipt(ctx, testTenantID, detail.Receipt.ID, testUserID, testIP); err != nil {
+		t.Fatalf("first void: %v", err)
+	}
+
+	// Verify receipt status is now cancelled
+	var status string
+	if err := pool.QueryRow(ctx,
+		`SELECT status FROM erp_receipts WHERE id = $1 AND tenant_id = $2`,
+		detail.Receipt.ID, testTenantID,
+	).Scan(&status); err != nil {
+		t.Fatalf("query receipt status: %v", err)
+	}
+	if status != "cancelled" {
+		t.Errorf("expected status 'cancelled' after void, got %q", status)
+	}
+
+	// Second void on the already-cancelled receipt — must fail
+	err = svc.VoidReceipt(ctx, testTenantID, detail.Receipt.ID, testUserID, testIP)
+	if err == nil {
+		t.Fatal("expected error when voiding an already-cancelled receipt, got nil")
+	}
+	// Service returns "receipt is not confirmed (status: cancelled)"
+	if !strings.Contains(err.Error(), "confirmed") && !strings.Contains(err.Error(), "cancelled") {
+		t.Errorf("expected error to mention status restriction, got: %v", err)
+	}
+}
+
+// ============================================================
+// Test 17: Purchasing — InspectReceipt with rejection creates demerit record
+// ============================================================
+
+func TestInspectReceipt_Reject_CreatesDemeritRecord(t *testing.T) {
+	pool, cleanup := setupERPTestDB(t)
+	defer cleanup()
+
+	ctx := context.Background()
+	svcPurch := makePurchasing(pool)
+	repo := repository.New(pool)
+
+	// Create supplier
+	supplier, err := repo.CreateEntity(ctx, repository.CreateEntityParams{
+		TenantID: testTenantID,
+		Type:     "supplier",
+		Code:     "PROV-DEMERIT",
+		Name:     "Proveedor Demerit SRL",
+	})
+	if err != nil {
+		t.Fatalf("create supplier: %v", err)
+	}
+
+	// Create article + warehouse
+	article, err := repo.CreateArticle(ctx, repository.CreateArticleParams{
+		TenantID:    testTenantID,
+		Code:        "ART-DEMERIT",
+		Name:        "Artículo Demerit",
+		ArticleType: "product",
+		Metadata:    []byte("{}"),
+	})
+	if err != nil {
+		t.Fatalf("create article: %v", err)
+	}
+
+	warehouse, err := repo.CreateWarehouse(ctx, repository.CreateWarehouseParams{
+		TenantID: testTenantID,
+		Code:     "DEP-DEMERIT",
+		Name:     "Depósito Demerit",
+	})
+	if err != nil {
+		t.Fatalf("create warehouse: %v", err)
+	}
+
+	// Create + approve order
+	order, err := svcPurch.CreateOrder(ctx, CreateOrderRequest{
+		TenantID:   testTenantID,
+		Number:     "OC-DEMERIT",
+		Date:       pgDate("2024-04-01"),
+		SupplierID: supplier.ID,
+		UserID:     testUserID,
+		IP:         testIP,
+		Lines: []CreateOrderLineRequest{
+			{ArticleID: article.ID, Quantity: "50", UnitPrice: "10.00"},
+		},
+	})
+	if err != nil {
+		t.Fatalf("create order: %v", err)
+	}
+
+	if err := svcPurch.ApproveOrder(ctx, order.Order.ID, testTenantID, testUserID, testIP); err != nil {
+		t.Fatalf("approve order: %v", err)
+	}
+
+	// Receive
+	orderLines, err := repo.ListPurchaseOrderLines(ctx, repository.ListPurchaseOrderLinesParams{
+		OrderID: order.Order.ID, TenantID: testTenantID,
+	})
+	if err != nil || len(orderLines) == 0 {
+		t.Fatalf("list order lines: %v (count=%d)", err, len(orderLines))
+	}
+
+	if err := svcPurch.Receive(ctx, ReceiveRequest{
+		TenantID: testTenantID,
+		OrderID:  order.Order.ID,
+		Date:     pgDate("2024-04-10"),
+		Number:   "REC-DEMERIT",
+		UserID:   testUserID,
+		IP:       testIP,
+		Lines: []ReceiveLineRequest{
+			{OrderLineID: orderLines[0].ID, ArticleID: article.ID, Quantity: "50"},
+		},
+	}); err != nil {
+		t.Fatalf("receive order: %v", err)
+	}
+
+	// Fetch receipt and its lines
+	receipts, err := repo.ListPurchaseReceipts(ctx, repository.ListPurchaseReceiptsParams{
+		TenantID: testTenantID, Limit: 10, Offset: 0,
+	})
+	if err != nil || len(receipts) == 0 {
+		t.Fatalf("list receipts: %v (count=%d)", err, len(receipts))
+	}
+	receiptID := receipts[len(receipts)-1].ID
+
+	receiptLines, err := repo.ListPurchaseReceiptLines(ctx, repository.ListPurchaseReceiptLinesParams{
+		TenantID: testTenantID, ReceiptID: receiptID,
+	})
+	if err != nil || len(receiptLines) == 0 {
+		t.Fatalf("list receipt lines: %v (count=%d)", err, len(receiptLines))
+	}
+
+	// Count demerits BEFORE inspection
+	var demeritsBefore int
+	if err := pool.QueryRow(ctx,
+		`SELECT COUNT(*) FROM erp_supplier_demerits WHERE tenant_id = $1 AND supplier_id = $2`,
+		testTenantID, supplier.ID,
+	).Scan(&demeritsBefore); err != nil {
+		t.Fatalf("count demerits before: %v", err)
+	}
+
+	// Inspect: accept 30, reject 20
+	_, err = svcPurch.InspectReceipt(ctx, testTenantID, receiptID,
+		[]InspectionInput{
+			{
+				ReceiptLineID: uuidStr(receiptLines[0].ID),
+				ArticleID:     uuidStr(article.ID),
+				WarehouseID:   uuidStr(warehouse.ID),
+				Quantity:      "50",
+				AcceptedQty:   "30",
+				RejectedQty:   "20",
+				Notes:         "20 units defective",
+			},
+		},
+		testUserID, testIP,
+	)
+	if err != nil {
+		t.Fatalf("inspect receipt: %v", err)
+	}
+
+	// Verify demerit record was created for the supplier
+	var demeritsAfter int
+	if err := pool.QueryRow(ctx,
+		`SELECT COUNT(*) FROM erp_supplier_demerits WHERE tenant_id = $1 AND supplier_id = $2`,
+		testTenantID, supplier.ID,
+	).Scan(&demeritsAfter); err != nil {
+		t.Fatalf("count demerits after: %v", err)
+	}
+	if demeritsAfter <= demeritsBefore {
+		t.Errorf("expected demerit count to increase after rejection (before=%d, after=%d)",
+			demeritsBefore, demeritsAfter)
+	}
+
+	// Verify demerit points = rejected quantity (1 point per unit)
+	var points int
+	if err := pool.QueryRow(ctx,
+		`SELECT points FROM erp_supplier_demerits WHERE tenant_id = $1 AND supplier_id = $2 ORDER BY created_at DESC LIMIT 1`,
+		testTenantID, supplier.ID,
+	).Scan(&points); err != nil {
+		t.Fatalf("query demerit points: %v", err)
+	}
+	if points != 20 {
+		t.Errorf("expected 20 demerit points (1 per rejected unit), got %d", points)
+	}
+
+	// Verify stock level reflects accepted qty only (30, not 50)
+	var stockQty string
+	if err := pool.QueryRow(ctx,
+		`SELECT quantity::text FROM erp_stock_levels WHERE tenant_id = $1 AND article_id = $2 AND warehouse_id = $3`,
+		testTenantID, article.ID, warehouse.ID,
+	).Scan(&stockQty); err != nil {
+		t.Fatalf("query stock level: %v", err)
+	}
+	if stockQty != "30" {
+		t.Errorf("expected stock quantity 30 (accepted only), got %q", stockQty)
+	}
+}
