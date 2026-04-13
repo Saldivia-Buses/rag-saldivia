@@ -248,6 +248,72 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 		migration.NewWithholdingIVAMigrator(mysqlDB, tenantID),
 		migration.NewWithholding1598Migrator(mysqlDB, tenantID),
 	)
+
+	// Phase 9: Stock extended — BOM, stock levels, price lists
+	orch.RegisterMigrators(
+		migration.NewBOMMigrator(mysqlDB, tenantID),
+		migration.NewBOMHistoryMigrator(mysqlDB, tenantID),
+		migration.NewStockLevelMigrator(mysqlDB, tenantID),
+		migration.NewPriceListMigrator(mysqlDB, tenantID),
+		migration.NewPriceListItemMigrator(mysqlDB, tenantID),
+	)
+
+	// Phase 10: Purchasing extended — internal requisitions, receipts
+	orch.RegisterMigrators(
+		migration.NewInternalRequisitionMigrator(mysqlDB, tenantID),
+		migration.NewPurchaseReceiptMigrator(mysqlDB, tenantID),
+	)
+
+	// Phase 11: Sales & Production extended
+	orch.RegisterMigrators(
+		migration.NewQuotationLineMigrator(mysqlDB, tenantID),
+		migration.NewCustomerOrderMigrator(mysqlDB, tenantID),
+		migration.NewVehicleMigrator(mysqlDB, tenantID),
+		migration.NewProductionRequestMigrator(mysqlDB, tenantID),
+		migration.NewProductionStepMigrator(mysqlDB, tenantID),
+		migration.NewProductionInspectionMigrator(mysqlDB, tenantID),
+	)
+
+	// Phase 12: Quality (ISO 9001)
+	orch.RegisterMigrators(
+		migration.NewNonconformityMigrator(mysqlDB, tenantID),
+		migration.NewCorrectiveActionMigrator(mysqlDB, tenantID),
+		migration.NewAuditMigrator(mysqlDB, tenantID),
+		migration.NewAuditFindingMigrator(mysqlDB, tenantID),
+		migration.NewControlledDocumentMigrator(mysqlDB, tenantID),
+	)
+
+	// Phase 13: HR extended — departments, attendance, events
+	orch.RegisterMigrators(
+		migration.NewDepartmentMigrator(mysqlDB, tenantID),
+		migration.NewAttendanceMigrator(mysqlDB, tenantID),
+		migration.NewTrainingAttendeeMigrator(mysqlDB, tenantID),
+		migration.NewDemeritEventMigrator(mysqlDB, tenantID),
+		migration.NewDeductionEventMigrator(mysqlDB, tenantID),
+		migration.NewAdditionalPayEventMigrator(mysqlDB, tenantID),
+	)
+
+	// Phase 14: Maintenance & Fleet
+	orch.RegisterMigrators(
+		migration.NewMaintenanceAssetMigrator(mysqlDB, tenantID),
+		migration.NewMaintenancePlanMigrator(mysqlDB, tenantID),
+		migration.NewMaintenanceEventMigrator(mysqlDB, tenantID),
+		migration.NewVehicleWorkMigrator(mysqlDB, tenantID),
+		migration.NewFuelLogMigrator(mysqlDB, tenantID),
+	)
+
+	// Phase 15: Safety — risk agents first (catalog), then exposures
+	orch.RegisterMigrators(
+		migration.NewRiskAgentMigrator(mysqlDB, tenantID),
+		migration.NewAccidentMigrator(mysqlDB, tenantID),
+		migration.NewRiskExposureMigrator(mysqlDB, tenantID),
+		migration.NewMedicalLeaveMigrator(mysqlDB, tenantID),
+	)
+
+	// Phase 16: Auth — legacy users
+	orch.RegisterMigrators(
+		migration.NewLegacyUserMigrator(mysqlDB, tenantID),
+	)
 }
 
 func containsStr(slice []string, item string) bool {

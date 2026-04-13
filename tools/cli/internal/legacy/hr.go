@@ -38,5 +38,5 @@ func TrainingReader(db *sql.DB) *GenericReader {
 	}
 }
 
-// TrainingAttendeeReader is deferred — needs FK resolution to both training and entity.
-// Will be implemented when training attendee migration is prioritized.
+// TrainingAttendeeReader, DepartmentReader, AttendanceReader, DemeritReader,
+// DeductionReader, AdditionalPayReader are in hr_extended.go.

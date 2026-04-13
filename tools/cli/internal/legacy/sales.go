@@ -14,5 +14,5 @@ func QuotationReader(db *sql.DB) *GenericReader {
 	}
 }
 
-// OrderReader is deferred — PEDIDOINT has complex state machine and cross-references.
-// Will be implemented when order migration is prioritized.
+// QuotationLineReader, QuotationOtherReader, CustomerOrderReader
+// are in sales_extended.go.

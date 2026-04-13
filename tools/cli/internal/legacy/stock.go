@@ -41,5 +41,5 @@ func StockMovementReader(db *sql.DB) *GenericReader {
 	}
 }
 
-// BOMReader is deferred — STKPIEZA has varchar article FKs that need hashCode resolution.
-// Will be implemented when BOM migration is prioritized.
+// BOMReader, BOMHistoryReader, StockLevelReader, PriceListReader,
+// PriceListItemReader are in stock_extended.go.

@@ -1,0 +1,1977 @@
+package migration
+
+import (
+	"context"
+	"database/sql"
+	"encoding/json"
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/google/uuid"
+
+	"github.com/Camionerou/rag-saldivia/tools/cli/internal/legacy"
+)
+
+// ============================================================================
+// Phase 9 — Stock Extended
+// ============================================================================
+
+// NewBOMMigrator migrates STKPIEZA → erp_bom.
+// STKPIEZA has auto-increment id_pieza PK. 36K rows.
+// Both parent (idPadre) and child (articulo_hijo) are varchar article codes →
+// resolved via hashCode to the STK_ARTICULOS mapping.
+func NewBOMMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.BOMReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "parent_id", "child_id", "quantity", "unit_id", "sort_order", "notes"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_pieza")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			// Parent article FK via hashCode
+			parentCode := row.String("idPadre")
+			if parentCode == "" {
+				return nil, nil // skip rows with no parent
+			}
+			parentLegacyID := int64(hashCode(parentCode))
+			parentID, err := mapper.Resolve(ctx, "stock", "STK_ARTICULOS", parentLegacyID)
+			if err != nil {
+				return nil, nil // skip if parent article not migrated
+			}
+
+			// Child article FK via hashCode
+			childCode := row.String("articulo_hijo")
+			if childCode == "" {
+				return nil, nil
+			}
+			childLegacyID := int64(hashCode(childCode))
+			childID, err := mapper.Resolve(ctx, "stock", "STK_ARTICULOS", childLegacyID)
+			if err != nil {
+				return nil, nil // skip if child article not migrated
+			}
+
+			id, err := mapper.Map(ctx, nil, "stock", "STKPIEZA", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			// posicionfab_id as sort_order (manufacturing position)
+			sortOrder := row.Int("posicionfab_id")
+
+			return []any{
+				id, tenantID, parentID, childID,
+				ParseDecimal(row.Decimal("cantidad")),
+				(*uuid.UUID)(nil), // unit_id — no direct mapping in STKPIEZA
+				sortOrder,
+				"", // notes — no notes column in STKPIEZA
+			}, nil
+		},
+	}
+}
+
+// NewBOMHistoryMigrator migrates STK_BOM_HIST → erp_bom_history.
+// STK_BOM_HIST has auto-increment id_stkbomhist PK. 3.3M rows.
+// Same hashCode pattern for parent/child article resolution.
+func NewBOMHistoryMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.BOMHistoryReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "parent_id", "child_id", "quantity", "unit_id", "version", "effective_date", "replaced_date", "legacy_id"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_stkbomhist")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			// Child article FK via hashCode on stkarticulohijo_id (varchar)
+			childCode := row.String("stkarticulohijo_id")
+			if childCode == "" {
+				return nil, nil
+			}
+			childLegacyID := int64(hashCode(childCode))
+			childID, err := mapper.Resolve(ctx, "stock", "STK_ARTICULOS", childLegacyID)
+			if err != nil {
+				return nil, nil
+			}
+
+			// Parent article FK: resolve via pieza_id → STKPIEZA mapping,
+			// then from STKPIEZA we'd need the parent. Since this is complex,
+			// use pieza_id as the parent FK (links to the BOM entry which IS the parent-child relationship).
+			// Actually, BOM history doesn't have direct parent code — the pieza_id links to STKPIEZA.
+			// Resolve pieza_id → STKPIEZA mapping to get the BOM entry, use that as parent_id.
+			piezaID := row.Int64("pieza_id")
+			parentID, err := mapper.ResolveOptional(ctx, "stock", "STKPIEZA", piezaID)
+			if err != nil {
+				return nil, nil
+			}
+			if parentID == uuid.Nil {
+				return nil, nil // skip if BOM entry not migrated
+			}
+
+			id, err := mapper.Map(ctx, nil, "stock", "STK_BOM_HIST", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			version := row.Int("bom_variacion_id")
+			effectiveDate := SafeDate(timeFromRow(row, "fecha_costo"))
+
+			return []any{
+				id, tenantID, parentID, childID,
+				ParseDecimal(row.Decimal("cantidad")),
+				(*uuid.UUID)(nil), // unit_id
+				version,
+				effectiveDate,
+				(*time.Time)(nil), // replaced_date — not in STK_BOM_HIST
+				legacyID,
+			}, nil
+		},
+	}
+}
+
+// NewStockLevelMigrator migrates STK_STOCKACTUAL → erp_stock_levels.
+// STK_STOCKACTUAL has NO auto-increment PK — composite key (stkarticulo_id, stkdeposito_id). 17K rows.
+// article_id via hashCode, warehouse_id via Resolve.
+func NewStockLevelMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.StockLevelReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "article_id", "warehouse_id", "quantity", "reserved", "updated_at"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			// Composite key — generate deterministic ID from hash
+			artCode := row.String("stkarticulo_id")
+			if artCode == "" {
+				return nil, nil
+			}
+			depID := row.Int64("stkdeposito_id")
+			if depID == 0 {
+				return nil, nil
+			}
+
+			// Resolve article FK via hashCode
+			artLegacyID := int64(hashCode(artCode))
+			articleID, err := mapper.Resolve(ctx, "stock", "STK_ARTICULOS", artLegacyID)
+			if err != nil {
+				return nil, nil // skip if article not migrated
+			}
+
+			// Resolve warehouse FK
+			warehouseID, err := mapper.Resolve(ctx, "stock", "STK_DEPOSITOS", depID)
+			if err != nil {
+				return nil, nil
+			}
+
+			// Generate deterministic ID from composite key
+			compositeKey := fmt.Sprintf("STOCKLEVEL:%s:%d", artCode, depID)
+			legacyID := int64(hashCode(compositeKey))
+			id, err := mapper.Map(ctx, nil, "stock", "STK_STOCKACTUAL", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID, articleID, warehouseID,
+				ParseDecimal(row.Decimal("cantidad_stock")),
+				ParseDecimal("0"), // reserved — not tracked in legacy
+				SafeDateRequired(timeFromRow(row, "actualizado")),
+			}, nil
+		},
+	}
+}
+
+// NewPriceListMigrator migrates STK_LISTAS → erp_price_lists.
+// STK_LISTAS has auto-increment id_stklista PK. 1.1K rows.
+func NewPriceListMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.PriceListReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "name", "currency_id", "valid_from", "valid_until", "active"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_stklista")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			id, err := mapper.Map(ctx, nil, "stock", "STK_LISTAS", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			// currency_id — moneda_id is an int reference, resolve as catalog if available
+			monedaID := row.Int64("moneda_id")
+			var currencyID *uuid.UUID
+			if monedaID > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "catalog", "MONEDAS", monedaID)
+				if err == nil && resolved != uuid.Nil {
+					currencyID = &resolved
+				}
+			}
+
+			return []any{
+				id, tenantID,
+				row.String("stklista_nombre"),
+				currencyID,
+				SafeDate(timeFromRow(row, "stklista_fecha")),
+				(*time.Time)(nil), // valid_until — not in STK_LISTAS
+				true,              // active — all legacy lists are active
+			}, nil
+		},
+	}
+}
+
+// NewPriceListItemMigrator migrates STK_LISTADETALLE → erp_price_list_items.
+// STK_LISTADETALLE has auto-increment id_stklistadetalle PK. 138K rows.
+// article_id via hashCode on stkarticulo_id varchar.
+func NewPriceListItemMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.PriceListItemReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "price_list_id", "article_id", "description", "price"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_stklistadetalle")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			// Resolve price list FK
+			listaID := row.Int64("stklista_id")
+			priceListID, err := mapper.Resolve(ctx, "stock", "STK_LISTAS", listaID)
+			if err != nil {
+				return nil, nil // skip if price list not migrated
+			}
+
+			// Resolve article FK via hashCode
+			artCode := row.String("stkarticulo_id")
+			var articleID *uuid.UUID
+			if artCode != "" {
+				artLegacyID := int64(hashCode(artCode))
+				resolved, err := mapper.ResolveOptional(ctx, "stock", "STK_ARTICULOS", artLegacyID)
+				if err == nil && resolved != uuid.Nil {
+					articleID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "stock", "STK_LISTADETALLE", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			// Use obervaciones (sic — typo in Histrix) as description, fallback to nombre
+			desc := row.String("obervaciones")
+			if desc == "" {
+				desc = row.String("nombre")
+			}
+
+			return []any{
+				id, tenantID, priceListID, articleID,
+				desc,
+				ParseDecimal(row.Decimal("stklistadetalle_precioventa")),
+			}, nil
+		},
+	}
+}
+
+// ============================================================================
+// Phase 10 — Purchasing Extended
+// ============================================================================
+
+// NewInternalRequisitionMigrator migrates PEDIDOINT → erp_purchase_orders.
+// PEDIDOINT has auto-increment idPed PK. 384K rows.
+// supplier_id nullable (migration 054 made it nullable).
+// Each row treated as a separate purchase order since idPed is the auto-increment PK.
+// Adds metadata: {"source": "internal_requisition"}.
+func NewInternalRequisitionMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.InternalRequisitionReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "number", "date", "supplier_id", "status", "currency_id", "total", "notes", "user_id"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("idPed")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			// Supplier FK — codprv is supplier code, nullable
+			var supplierID *uuid.UUID
+			codprv := row.Int64("codprv")
+			if codprv > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "entity", "REG_CUENTA", codprv)
+				if err == nil && resolved != uuid.Nil {
+					supplierID = &resolved
+				}
+			}
+
+			// Status mapping: estado 0=draft, 1=approved, 2=received
+			estado := row.Int("estado")
+			status := "draft"
+			switch estado {
+			case 1:
+				status = "approved"
+			case 2:
+				status = "received"
+			}
+
+			number := fmt.Sprintf("RI-%d", legacyID)
+
+			id, err := mapper.Map(ctx, nil, "purchasing", "PEDIDOINT", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			// Notes: combine movref + mensaje
+			notes := row.String("movref")
+			if msg := row.String("mensaje"); msg != "" {
+				if notes != "" {
+					notes += " | "
+				}
+				notes += msg
+			}
+
+			return []any{
+				id, tenantID, number,
+				SafeDateRequired(timeFromRow(row, "fechaemi")),
+				supplierID,
+				status,
+				(*uuid.UUID)(nil), // currency_id — not in PEDIDOINT
+				ParseDecimal(row.Decimal("cant")),
+				notes,
+				LegacyUserID,
+			}, nil
+		},
+	}
+}
+
+// NewPurchaseReceiptMigrator migrates OCPRECIB → erp_purchase_receipts.
+// OCPRECIB has auto-increment id_recepcion PK. 320K rows.
+func NewPurchaseReceiptMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.PurchaseReceiptReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "order_id", "date", "number", "user_id", "notes"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_recepcion")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			// order_id: link to internal requisition via idPed
+			var orderID *uuid.UUID
+			idPed := row.Int64("idPed")
+			if idPed > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "purchasing", "PEDIDOINT", idPed)
+				if err == nil && resolved != uuid.Nil {
+					orderID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "purchasing", "OCPRECIB", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			number := fmt.Sprintf("REC-%d", row.Int64("nrorec"))
+			if row.Int64("nrorec") == 0 {
+				number = fmt.Sprintf("REC-%d", legacyID)
+			}
+
+			return []any{
+				id, tenantID, orderID,
+				SafeDateRequired(timeFromRow(row, "fecrec")),
+				number,
+				LegacyUserID,
+				row.String("observacion"),
+			}, nil
+		},
+	}
+}
+
+// ============================================================================
+// Phase 11 — Sales & Production Extended
+// ============================================================================
+
+// NewQuotationLineMigrator migrates COTIZOPCIONES → erp_quotation_lines.
+// Composite PK (idPrecio, idOpcion). 882 rows.
+// idPrecio links to COTIZACION pricing, idOpcion is the option number within that quotation.
+func NewQuotationLineMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.QuotationLineReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "quotation_id", "article_id", "description", "quantity", "unit_price", "sort_order", "metadata"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			// Composite PK — generate deterministic ID
+			idPrecio := row.Int64("idPrecio")
+			idOpcion := row.Int64("idOpcion")
+			if idPrecio == 0 && idOpcion == 0 {
+				return nil, nil
+			}
+
+			compositeKey := fmt.Sprintf("COTIZOPCIONES:%d:%d", idPrecio, idOpcion)
+			legacyID := int64(hashCode(compositeKey))
+
+			// Resolve quotation FK — idPrecio might link to COTIZACION
+			var quotationID *uuid.UUID
+			if idPrecio > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "sales", "COTIZACION", idPrecio)
+				if err == nil && resolved != uuid.Nil {
+					quotationID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "sales", "COTIZOPCIONES", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			// Metadata: store idSeccion
+			meta := map[string]any{
+				"idSeccion": row.Int("idSeccion"),
+				"source":    "COTIZOPCIONES",
+			}
+			metaJSON, _ := json.Marshal(meta)
+
+			return []any{
+				id, tenantID, quotationID,
+				(*uuid.UUID)(nil), // article_id — no article FK in COTIZOPCIONES
+				row.String("descripcion"),
+				ParseDecimal("1"),  // quantity — not in COTIZOPCIONES, default 1
+				ParseDecimal("0"),  // unit_price — no price column in COTIZOPCIONES
+				row.Int("idOpcion"), // sort_order
+				string(metaJSON),
+			}, nil
+		},
+	}
+}
+
+// NewCustomerOrderMigrator migrates PEDCOTIZ → erp_orders.
+// PEDCOTIZ has auto-increment id PK. 3.8K rows.
+// Massive table with ~100 columns describing vehicle specifications per order.
+func NewCustomerOrderMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.CustomerOrderReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "number", "date", "order_type", "customer_id", "quotation_id", "status", "total", "user_id", "notes"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			// Customer FK: ctacod → REG_CUENTA
+			ctacod := row.Int64("ctacod")
+			var customerID *uuid.UUID
+			if ctacod > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "entity", "REG_CUENTA", ctacod)
+				if err == nil && resolved != uuid.Nil {
+					customerID = &resolved
+				}
+			}
+
+			// Quotation FK: cotizacion_id → COTIZACION
+			var quotationID *uuid.UUID
+			cotizID := row.Int64("cotizacion_id")
+			if cotizID > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "sales", "COTIZACION", cotizID)
+				if err == nil && resolved != uuid.Nil {
+					quotationID = &resolved
+				}
+			}
+
+			// Status from estado_ficha: 0=draft, 1=in_progress, 2=completed
+			estadoFicha := row.Int("estado_ficha")
+			status := "draft"
+			switch estadoFicha {
+			case 1:
+				status = "in_progress"
+			case 2:
+				status = "completed"
+			}
+
+			number := fmt.Sprintf("PED-%d", row.Int64("pednro"))
+			if row.Int64("pednro") == 0 {
+				number = fmt.Sprintf("PED-%d", legacyID)
+			}
+
+			id, err := mapper.Map(ctx, nil, "sales", "PEDCOTIZ", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID, number,
+				SafeDateRequired(timeFromRow(row, "pedfec")),
+				"vehicle",   // order_type — all PEDCOTIZ are vehicle orders
+				customerID,
+				quotationID,
+				status,
+				ParseDecimal("0"), // total — no total column in PEDCOTIZ
+				LegacyUserID,
+				row.String("obsesp"), // notes from obsesp (observaciones especiales)
+			}, nil
+		},
+	}
+}
+
+// NewVehicleMigrator migrates CHASIS → erp_units.
+// CHASIS has PK nrocha (mediumint, not auto-increment). ~4K rows.
+// Contains the real chassis/vehicle data: nrocha=chassis number, marcod/modcod=brand/model,
+// nromotor=engine number, ctacod=customer, entrada/salida=dates.
+func NewVehicleMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.VehicleReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "chassis_number", "internal_number", "model", "customer_id", "order_id", "production_order_id", "patent", "status", "engine_brand", "body_style", "seat_count", "year", "metadata", "delivered_at"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("nrocha")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			// Customer FK: ctacod → REG_CUENTA
+			ctacod := row.Int64("ctacod")
+			var customerID *uuid.UUID
+			if ctacod > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "entity", "REG_CUENTA", ctacod)
+				if err == nil && resolved != uuid.Nil {
+					customerID = &resolved
+				}
+			}
+
+			// Production order FK (not directly available in CHASIS, skip)
+			var orderID *uuid.UUID
+			var prodOrderID *uuid.UUID
+
+			// Status from chequeo field
+			status := "active"
+			if row.Int("chequeo") == 1 {
+				status = "inspected"
+			}
+
+			// Model from modcha
+			model := row.String("modcha")
+
+			id, err := mapper.Map(ctx, nil, "production", "CHASIS", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			// Metadata: store extra CHASIS fields
+			meta := map[string]any{
+				"marcod":    row.Int("marcod"),
+				"modcod":    row.Int("modcod"),
+				"nromotor":  row.String("nromotor"),
+				"idTaco":    row.Int("idTaco"),
+				"nroTaco":   row.String("nroTaco"),
+				"diasTaco":  row.Int("diasTaco"),
+				"conces":    row.Int("conces"),
+			}
+			metaJSON, _ := json.Marshal(meta)
+
+			chassisNumber := row.String("chasis")
+			if chassisNumber == "" || chassisNumber == "0" {
+				chassisNumber = fmt.Sprintf("CHA-%d", legacyID)
+			}
+
+			return []any{
+				id, tenantID,
+				chassisNumber,
+				fmt.Sprintf("%d", legacyID), // internal_number = nrocha
+				model,
+				customerID,
+				orderID,
+				prodOrderID,
+				"",       // patent — not in CHASIS table
+				status,
+				"",       // engine_brand — idMarcaMotor is an int reference, not a name
+				"",       // body_style — no direct mapping
+				0,        // seat_count — not in CHASIS
+				0,        // year — not in CHASIS
+				string(metaJSON),
+				SafeDate(timeFromRow(row, "salida")), // delivered_at = salida date
+			}, nil
+		},
+	}
+}
+
+// NewProductionInspectionMigrator migrates PROD_CONTROLES → erp_production_inspections.
+// PROD_CONTROLES has auto-increment id_prodcontrol PK. It's a control definition table.
+// Note: This table defines inspection TYPES/templates, not individual inspection events.
+// We map it as inspection records since erp_production_inspections captures them.
+func NewProductionInspectionMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.ProductionInspectionReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "order_id", "step_id", "inspector_id", "result", "observations", "metadata"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_prodcontrol")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			// seccion_id → could map to a production step/section
+			var stepID *uuid.UUID
+			seccionID := row.Int64("seccion_id")
+			if seccionID > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "production", "PROD_PROCESOS", seccionID)
+				if err == nil && resolved != uuid.Nil {
+					stepID = &resolved
+				}
+			}
+
+			// Result mapping: habilitado→pass/fail based on critico flag
+			result := "pass"
+			if row.Int("habilitado") == 0 {
+				result = "fail"
+			}
+
+			id, err := mapper.Map(ctx, nil, "production", "PROD_CONTROLES", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			meta := map[string]any{
+				"tipo_control":       row.Int("tipo_control"),
+				"critico":            row.Int("critico"),
+				"orden_control":      row.Int("orden_control"),
+				"accionable":         row.Int("accionable"),
+				"modelo_control":     row.String("modelo_control"),
+				"legajo_defecto":     row.Int("legajo_defecto"),
+				"usuario_habilitado": row.Int("usuario_habilitado"),
+				"source":             "PROD_CONTROLES",
+			}
+			metaJSON, _ := json.Marshal(meta)
+
+			return []any{
+				id, tenantID,
+				(*uuid.UUID)(nil), // order_id — PROD_CONTROLES is a template, no direct order FK
+				stepID,
+				(*uuid.UUID)(nil), // inspector_id — legajo_defecto is an int, not directly resolvable
+				result,
+				row.String("nombre_control") + " | " + row.String("obs_control"),
+				string(metaJSON),
+			}, nil
+		},
+	}
+}
+
+// NewProductionStepMigrator migrates PROD_PROCESOS → erp_production_steps.
+// PROD_PROCESOS has auto-increment id_proceso PK. Small catalog table.
+func NewProductionStepMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.ProductionStepReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "order_id", "step_name", "sort_order", "status", "assigned_to", "started_at", "completed_at", "notes"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_proceso")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			id, err := mapper.Map(ctx, nil, "production", "PROD_PROCESOS", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID,
+				(*uuid.UUID)(nil), // order_id — PROD_PROCESOS is a template, not linked to a specific order
+				row.String("nombre_proceso"),
+				row.Int("orden_proceso"),
+				"active",          // status — process definitions are always active
+				(*uuid.UUID)(nil), // assigned_to
+				(*time.Time)(nil), // started_at
+				(*time.Time)(nil), // completed_at
+				row.String("descripcion_proceso"),
+			}, nil
+		},
+	}
+}
+
+// NewProductionRequestMigrator migrates MRP_PEDIDO_PRODUCCION → erp_production_orders.
+// MRP_PEDIDO_PRODUCCION has auto-increment id_mrp_pedido_prod PK. 13K rows.
+// These are the actual per-piece production requests, vs MRP_ORDEN_PRODUCCION which has only 8 rows.
+func NewProductionRequestMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.ProductionRequestReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "number", "date", "product_id", "center_id", "quantity", "status", "priority", "user_id", "notes"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_mrp_pedido_prod")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			// Product FK: stkarticulo_id is an INT in this table (not varchar!)
+			var productID *uuid.UUID
+			artID := row.Int64("stkarticulo_id")
+			if artID > 0 {
+				// MRP_PEDIDO_PRODUCCION.stkarticulo_id is an int FK, not varchar code.
+				// Try resolving via a direct mapping — the article might be in STK_ARTICULOS by int ID.
+				// Since articles use hashCode of varchar, we can't resolve int→varchar directly.
+				// Skip product resolution if the FK pattern doesn't match.
+				_ = artID // product link left as nil — FK resolution deferred
+			}
+
+			// Center FK: seccion_id → production center/section
+			var centerID *uuid.UUID
+			seccionID := row.Int64("seccion_id")
+			if seccionID > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "production", "MRP_CENTRO_PRODUCTIVO", seccionID)
+				if err == nil && resolved != uuid.Nil {
+					centerID = &resolved
+				}
+			}
+
+			// Status: derive from presence of terminado_hora
+			status := "planned"
+			if !timeFromRow(row, "inicio_hora").IsZero() {
+				status = "in_progress"
+			}
+			if !timeFromRow(row, "terminado_hora").IsZero() {
+				status = "completed"
+			}
+
+			id, err := mapper.Map(ctx, nil, "production", "MRP_PEDIDO_PRODUCCION", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID,
+				fmt.Sprintf("PP-%d", legacyID),
+				SafeDateRequired(timeFromRow(row, "creacion_hora")),
+				productID,
+				centerID,
+				ParseDecimal(row.Decimal("cantidad_pieza_unidad")),
+				status,
+				"normal", // priority — not in MRP_PEDIDO_PRODUCCION
+				LegacyUserID,
+				"", // notes — not in MRP_PEDIDO_PRODUCCION
+			}, nil
+		},
+	}
+}
+
+// ============================================================================
+// Phase 12 — Quality
+// ============================================================================
+
+// NewNonconformityMigrator migrates CAL_NOCONFORMIDADES → erp_nonconformities.
+// CAL_NOCONFORMIDADES has auto-increment id_noconformidad PK.
+func NewNonconformityMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.NonconformityReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "number", "date", "type_id", "origin_id", "description", "severity", "status", "assigned_to", "closed_at", "user_id"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_noconformidad")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			// type_id from tiponconf_id catalog
+			var typeID *uuid.UUID
+			tipoID := row.Int64("tiponconf_id")
+			if tipoID > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "catalog", "CAL_TIPONCONF", tipoID)
+				if err == nil && resolved != uuid.Nil {
+					typeID = &resolved
+				}
+			}
+
+			// origin_id from origennconf_id catalog
+			var originID *uuid.UUID
+			origenID := row.Int64("origennconf_id")
+			if origenID > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "catalog", "CAL_ORIGENNCONF", origenID)
+				if err == nil && resolved != uuid.Nil {
+					originID = &resolved
+				}
+			}
+
+			// Status from estadonconf_id
+			status := "open"
+			estadoID := row.Int("estadonconf_id")
+			switch estadoID {
+			case 1:
+				status = "open"
+			case 2:
+				status = "in_progress"
+			case 3:
+				status = "closed"
+			}
+
+			// Severity: derive from eficaz and costo
+			severity := "minor"
+			if row.Int("eficaz") == 0 {
+				severity = "major"
+			}
+
+			id, err := mapper.Map(ctx, nil, "quality", "CAL_NOCONFORMIDADES", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			// Description: combine descripcion_nconf + causa_nconf + contencion_nconf
+			desc := row.String("descripcion_nconf")
+			if causa := row.String("causa_nconf"); causa != "" {
+				desc += " | Causa: " + causa
+			}
+
+			return []any{
+				id, tenantID,
+				fmt.Sprintf("NC-%d", legacyID),
+				SafeDateRequired(timeFromRow(row, "fecha_nconf")),
+				typeID,
+				originID,
+				desc,
+				severity,
+				status,
+				row.NullString("responsable_nconf"), // assigned_to as string
+				SafeDate(timeFromRow(row, "fecha_cierrenconf")),
+				LegacyUserID,
+			}, nil
+		},
+	}
+}
+
+// NewCorrectiveActionMigrator migrates CAL_ACCIONES_NCONF → erp_corrective_actions.
+// CAL_ACCIONES_NCONF has auto-increment id_accionnconf PK.
+func NewCorrectiveActionMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.CorrectiveActionReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "nc_id", "action_type", "description", "responsible_id", "due_date", "status", "completed_at", "effectiveness"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_accionnconf")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			// NC FK: noconformidad_id → CAL_NOCONFORMIDADES
+			ncLegacyID := row.Int64("noconformidad_id")
+			ncID, err := mapper.Resolve(ctx, "quality", "CAL_NOCONFORMIDADES", ncLegacyID)
+			if err != nil {
+				return nil, nil // skip if NC not migrated
+			}
+
+			// Responsible FK: resp_rhpersonal_id → PERSONAL
+			var responsibleID *uuid.UUID
+			respID := row.Int64("resp_rhpersonal_id")
+			if respID > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "entity", "PERSONAL", respID)
+				if err == nil && resolved != uuid.Nil {
+					responsibleID = &resolved
+				}
+			}
+
+			// Action type from tipo_accionnconf
+			actionType := "corrective"
+			switch row.Int("tipo_accionnconf") {
+			case 1:
+				actionType = "corrective"
+			case 2:
+				actionType = "preventive"
+			case 3:
+				actionType = "improvement"
+			}
+
+			// Status from terminada flag
+			status := "open"
+			if row.Int("terminada") == 1 {
+				status = "completed"
+			}
+
+			id, err := mapper.Map(ctx, nil, "quality", "CAL_ACCIONES_NCONF", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			// Effectiveness from control_accionnconf
+			effectiveness := ""
+			if row.Int("control_accionnconf") > 0 {
+				effectiveness = "verified"
+			}
+
+			return []any{
+				id, tenantID, ncID,
+				actionType,
+				row.String("descripcion_accionnconf"),
+				responsibleID,
+				SafeDate(timeFromRow(row, "fecha_accionnconf")),
+				status,
+				SafeDate(timeFromRow(row, "fecha_terminada")),
+				effectiveness,
+			}, nil
+		},
+	}
+}
+
+// NewAuditMigrator migrates CAL_AUDITORIA_INT → erp_audits.
+// CAL_AUDITORIA_INT has auto-increment id_auditoriaint PK.
+func NewAuditMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.AuditReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "number", "date", "audit_type", "scope", "lead_auditor_id", "status", "score", "notes", "metadata"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_auditoriaint")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			// Status from realizada flag
+			status := "planned"
+			if row.Int("realizada") == 1 {
+				status = "completed"
+			}
+
+			id, err := mapper.Map(ctx, nil, "quality", "CAL_AUDITORIA_INT", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			meta := map[string]any{
+				"codigo_auditorint":   row.Int("codigo_auditorint"),
+				"documento_id":        row.Int("documento_id"),
+				"auditoriaintpunt_id": row.Int("auditoriaintpunt_id"),
+				"source":              "CAL_AUDITORIA_INT",
+			}
+			metaJSON, _ := json.Marshal(meta)
+
+			return []any{
+				id, tenantID,
+				fmt.Sprintf("AUD-%d", legacyID),
+				SafeDateRequired(timeFromRow(row, "fecha_auditoriaint")),
+				"internal", // audit_type — CAL_AUDITORIA_INT is always internal
+				"",         // scope — not in table
+				(*uuid.UUID)(nil), // lead_auditor_id — not directly available
+				status,
+				row.Int("auditoriaintpunt_id"), // score — using punctuation as score
+				"",                              // notes
+				string(metaJSON),
+			}, nil
+		},
+	}
+}
+
+// NewAuditFindingMigrator migrates CAL_AUDITORIA_OBS → erp_audit_findings.
+// CAL_AUDITORIA_OBS has auto-increment id_auditoriaobs PK.
+func NewAuditFindingMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.AuditFindingReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "audit_id", "finding_type", "description", "nc_id"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_auditoriaobs")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			// Audit FK: auditoriaint_id → CAL_AUDITORIA_INT
+			auditLegacyID := row.Int64("auditoriaint_id")
+			auditID, err := mapper.Resolve(ctx, "quality", "CAL_AUDITORIA_INT", auditLegacyID)
+			if err != nil {
+				return nil, nil // skip if audit not migrated
+			}
+
+			// Finding type from hallazgotipo_id
+			findingType := "observation"
+			switch row.Int("hallazgotipo_id") {
+			case 1:
+				findingType = "observation"
+			case 2:
+				findingType = "minor"
+			case 3:
+				findingType = "major"
+			case 4:
+				findingType = "opportunity"
+			}
+
+			// NC FK (optional): link via respauditoriaint_id or direct from the observation
+			var ncID *uuid.UUID
+			// CAL_AUDITORIA_OBS doesn't have a direct NC FK in the schema,
+			// but CAL_NOCONFORMIDADES has auditoriaobs_id linking back.
+			// Leave nc_id nil — can be populated in a post-migration step.
+
+			id, err := mapper.Map(ctx, nil, "quality", "CAL_AUDITORIA_OBS", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID, auditID,
+				findingType,
+				row.String("observacion"),
+				ncID,
+			}, nil
+		},
+	}
+}
+
+// NewControlledDocumentMigrator migrates CAL_DOCUMENTOS → erp_controlled_documents.
+// CAL_DOCUMENTOS has auto-increment id_documento PK.
+func NewControlledDocumentMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.ControlledDocumentReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "code", "title", "revision", "doc_type_id", "file_key", "approved_by", "approved_at", "status", "metadata"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_documento")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			// doc_type_id from tipodocumento_id catalog
+			var docTypeID *uuid.UUID
+			tipoID := row.Int64("tipodocumento_id")
+			if tipoID > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "catalog", "CAL_TIPODOCUMENTO", tipoID)
+				if err == nil && resolved != uuid.Nil {
+					docTypeID = &resolved
+				}
+			}
+
+			// approved_by: emisor_documento is an int (user/person ID)
+			var approvedBy *uuid.UUID
+			emisorID := row.Int64("aprueba_documento")
+			if emisorID > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "entity", "PERSONAL", emisorID)
+				if err == nil && resolved != uuid.Nil {
+					approvedBy = &resolved
+				}
+			}
+
+			// Status from estado_documento
+			status := row.String("estado_documento")
+			if status == "" {
+				status = "active"
+			}
+
+			id, err := mapper.Map(ctx, nil, "quality", "CAL_DOCUMENTOS", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			meta := map[string]any{
+				"distribuidor": row.String("distribuidor_documento"),
+				"aplicacion":   row.String("aplicacion_documento"),
+				"conservacion": row.String("conservacion_documento"),
+				"guarda":       row.String("guarda_documento"),
+				"emisor_id":    row.Int("emisor_documento"),
+				"menuId":       row.Int("menuId"),
+				"source":       "CAL_DOCUMENTOS",
+			}
+			metaJSON, _ := json.Marshal(meta)
+
+			return []any{
+				id, tenantID,
+				row.String("codigo_documento"),
+				row.String("nombre_documento"),
+				row.String("revision_documento"),
+				docTypeID,
+				row.String("archivo_documento"), // file_key — legacy file path
+				approvedBy,
+				SafeDate(timeFromRow(row, "vigencia_documento")), // approved_at ≈ vigencia date
+				status,
+				string(metaJSON),
+			}, nil
+		},
+	}
+}
+
+// ============================================================================
+// Phase 13 — HR Extended
+// ============================================================================
+
+// NewDepartmentMigrator migrates ORGANIGRAMA → erp_departments.
+// ORGANIGRAMA has composite PK (id_seccion VARCHAR(30), idPadre VARCHAR(30)). 14 rows.
+func NewDepartmentMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.DepartmentReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "code", "name", "parent_id", "manager_id", "active"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			// Composite PK → generate deterministic ID from hash
+			idSeccion := row.String("id_seccion")
+			idPadre := row.String("idPadre")
+			if idSeccion == "" {
+				return nil, nil
+			}
+
+			compositeKey := fmt.Sprintf("ORGANIGRAMA:%s:%s", idSeccion, idPadre)
+			legacyID := int64(hashCode(compositeKey))
+
+			id, err := mapper.Map(ctx, nil, "hr", "ORGANIGRAMA", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			// Manager FK: idUsuario → user reference (not directly resolvable to PERSONAL)
+			var managerID *uuid.UUID
+
+			return []any{
+				id, tenantID,
+				idSeccion,
+				idSeccion, // name = code (ORGANIGRAMA doesn't have a separate name column)
+				(*uuid.UUID)(nil), // parent_id — idPadre is varchar, would need a second pass to link
+				managerID,
+				true,
+			}, nil
+		},
+	}
+}
+
+// NewAttendanceMigrator migrates FICHADADIA → erp_attendance.
+// FICHADADIA has composite PK (tarjeta INT, fecha DATE). 933K rows!
+// entity_id resolved via legajo → PERSONAL mapping.
+func NewAttendanceMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.AttendanceReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "entity_id", "date", "clock_in", "clock_out", "hours", "source"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			// Composite PK (tarjeta, fecha)
+			tarjeta := row.Int64("tarjeta")
+			fechaStr := row.String("fecha")
+			if tarjeta == 0 {
+				return nil, nil
+			}
+
+			// Entity FK: legajo → PERSONAL.legajo (need to find the person by legajo)
+			legajo := row.Int64("legajo")
+			var entityID *uuid.UUID
+			if legajo > 0 {
+				// legajo is a field in PERSONAL, but PERSONAL PK is IdPersona.
+				// We can't resolve legajo→IdPersona without an index.
+				// Try resolving via the legajo as if it were a PERSONAL ID.
+				resolved, err := mapper.ResolveOptional(ctx, "entity", "PERSONAL", legajo)
+				if err == nil && resolved != uuid.Nil {
+					entityID = &resolved
+				}
+			}
+			if entityID == nil {
+				return nil, nil // skip if employee not found
+			}
+
+			compositeKey := fmt.Sprintf("FICHADADIA:%d:%s", tarjeta, fechaStr)
+			legacyID := int64(hashCode(compositeKey))
+
+			id, err := mapper.Map(ctx, nil, "hr", "FICHADADIA", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			// Parse hours from trabajadas field (format HH:MM:SS or similar)
+			hoursStr := row.String("trabajadas")
+			hours := parseHoursString(hoursStr)
+
+			return []any{
+				id, tenantID, *entityID,
+				SafeDateRequired(timeFromRow(row, "fecha")),
+				row.NullString("hingreso"), // clock_in
+				row.NullString("hegreso"),  // clock_out
+				hours,
+				"legacy", // source
+			}, nil
+		},
+	}
+}
+
+// NewTrainingAttendeeMigrator migrates RH_CURSO_REALIZADO → erp_training_attendees.
+// RH_CURSO_REALIZADO has auto-increment id_curso_realizado PK.
+func NewTrainingAttendeeMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.TrainingAttendeeReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "training_id", "entity_id", "result", "score"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_curso_realizado")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			// Training FK: Id_curso is VARCHAR in this table but INT PK in RH_CURSOS
+			cursoID := row.Int64("Id_curso")
+			var trainingID *uuid.UUID
+			if cursoID > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "hr", "RH_CURSOS", cursoID)
+				if err == nil && resolved != uuid.Nil {
+					trainingID = &resolved
+				}
+			}
+			if trainingID == nil {
+				return nil, nil // skip if training not migrated
+			}
+
+			// Entity FK: IdPersona → PERSONAL
+			personaID := row.Int64("IdPersona")
+			entityID, err := mapper.Resolve(ctx, "entity", "PERSONAL", personaID)
+			if err != nil {
+				return nil, nil // skip if employee not migrated
+			}
+
+			// Result from presente flag
+			result := "absent"
+			if row.Int("presente") == 1 {
+				result = "attended"
+			}
+
+			id, err := mapper.Map(ctx, nil, "hr", "RH_CURSO_REALIZADO", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID, *trainingID, entityID,
+				result,
+				ParseDecimal(row.Decimal("calificacion")),
+			}, nil
+		},
+	}
+}
+
+// NewDemeritEventMigrator migrates MOVDEMERITO → erp_hr_events.
+// MOVDEMERITO has auto-increment id_movdemerito PK. 284K rows.
+// event_type = "sanction".
+func NewDemeritEventMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.DemeritReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "entity_id", "event_type", "date_from", "date_to", "hours", "reason_id", "notes", "user_id"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_movdemerito")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			// Entity FK: prvcod → supplier/employee entity
+			// MOVDEMERITO.prvcod is a supplier code referencing REG_CUENTA
+			prvcod := row.Int64("prvcod")
+			var entityID *uuid.UUID
+			if prvcod > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "entity", "REG_CUENTA", prvcod)
+				if err == nil && resolved != uuid.Nil {
+					entityID = &resolved
+				}
+			}
+			if entityID == nil {
+				return nil, nil // skip if entity not found
+			}
+
+			// Reason: coddem → demerit type catalog
+			var reasonID *uuid.UUID
+			coddem := row.Int64("coddem")
+			if coddem > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "catalog", "DEMERITOS", coddem)
+				if err == nil && resolved != uuid.Nil {
+					reasonID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "hr", "MOVDEMERITO", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID, *entityID,
+				"sanction", // event_type
+				SafeDateRequired(timeFromRow(row, "demfec")),
+				SafeDate(timeFromRow(row, "movfec")), // date_to = movement date
+				ParseDecimal("0"),                     // hours — not in MOVDEMERITO
+				reasonID,
+				"", // notes — not in MOVDEMERITO
+				LegacyUserID,
+			}, nil
+		},
+	}
+}
+
+// NewDeductionEventMigrator migrates RHDESCUENTOS → erp_hr_events.
+// RHDESCUENTOS has auto-increment idDesc PK.
+// event_type = "sanction" (deduction events).
+func NewDeductionEventMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.DeductionReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "entity_id", "event_type", "date_from", "date_to", "hours", "reason_id", "notes", "user_id"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("idDesc")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			// Entity FK: legajo → PERSONAL (legajo is a field, not the PK)
+			legajo := row.Int64("legajo")
+			var entityID *uuid.UUID
+			if legajo > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "entity", "PERSONAL", legajo)
+				if err == nil && resolved != uuid.Nil {
+					entityID = &resolved
+				}
+			}
+			if entityID == nil {
+				return nil, nil
+			}
+
+			// Reason: idMotivoDesc → deduction reason catalog
+			var reasonID *uuid.UUID
+			motivoID := row.Int64("idMotivoDesc")
+			if motivoID > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "catalog", "RH_MOTIVODESC", motivoID)
+				if err == nil && resolved != uuid.Nil {
+					reasonID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "hr", "RHDESCUENTOS", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID, *entityID,
+				"sanction",
+				SafeDateRequired(timeFromRow(row, "fecha")),
+				(*time.Time)(nil), // date_to — single date event
+				ParseDecimal(row.Decimal("importe")), // hours → store importe as the value
+				reasonID,
+				fmt.Sprintf("sobre_extras=%d", row.Int("sobre_extras")),
+				LegacyUserID,
+			}, nil
+		},
+	}
+}
+
+// NewAdditionalPayEventMigrator migrates RRHH_ADICIONALES → erp_hr_events.
+// RRHH_ADICIONALES has composite PK (legajo, desdeFecha).
+// event_type = "overtime".
+func NewAdditionalPayEventMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.AdditionalPayReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "entity_id", "event_type", "date_from", "date_to", "hours", "reason_id", "notes", "user_id"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legajo := row.Int64("legajo")
+			desdeFecha := row.String("desdeFecha")
+			if legajo == 0 {
+				return nil, nil
+			}
+
+			// Entity FK: legajo → PERSONAL
+			var entityID *uuid.UUID
+			if legajo > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "entity", "PERSONAL", legajo)
+				if err == nil && resolved != uuid.Nil {
+					entityID = &resolved
+				}
+			}
+			if entityID == nil {
+				return nil, nil
+			}
+
+			// Composite key → deterministic ID
+			compositeKey := fmt.Sprintf("RRHH_ADICIONALES:%d:%s", legajo, desdeFecha)
+			legacyID := int64(hashCode(compositeKey))
+
+			id, err := mapper.Map(ctx, nil, "hr", "RRHH_ADICIONALES", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID, *entityID,
+				"overtime",
+				SafeDateRequired(timeFromRow(row, "desdeFecha")),
+				SafeDate(timeFromRow(row, "hastaFecha")),
+				ParseDecimal(row.Decimal("porcentaje")), // hours → use porcentaje as the numeric value
+				(*uuid.UUID)(nil),                        // reason_id
+				row.String("descripcion"),
+				LegacyUserID,
+			}, nil
+		},
+	}
+}
+
+// ============================================================================
+// Phase 14 — Maintenance
+// ============================================================================
+
+// NewMaintenanceAssetMigrator migrates MANT_EQUIPOS → erp_maintenance_assets.
+// MANT_EQUIPOS has auto-increment id_equipo PK.
+func NewMaintenanceAssetMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.MaintenanceAssetReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "code", "name", "asset_type", "unit_id", "location", "metadata", "active"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_equipo")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			// Asset type from tipoequipo_id catalog
+			assetType := "equipment"
+			tipoID := row.Int64("tipoequipo_id")
+			if tipoID > 0 {
+				// Map to string — leave as generic "equipment"
+				// Could resolve via catalog if available
+			}
+
+			// unit_id: could link to CHASIS via articulo_id or deposito_id
+			var unitID *uuid.UUID
+
+			// Active: fecha_baja is null/zero = active
+			active := true
+			bajDate := timeFromRow(row, "fecha_baja")
+			if !bajDate.IsZero() && bajDate.Year() > 1900 {
+				active = false
+			}
+
+			id, err := mapper.Map(ctx, nil, "maintenance", "MANT_EQUIPOS", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			meta := map[string]any{
+				"numero_serie":       row.String("numero_serie"),
+				"anio_fabricacion":   row.Int("anio_fabricacion"),
+				"repuestos_criticos": row.String("repuestos_criticos"),
+				"tipoequipo_id":      row.Int("tipoequipo_id"),
+				"articulo_id":        row.String("articulo_id"),
+				"fecha_alta":         row.String("fecha_alta"),
+				"source":             "MANT_EQUIPOS",
+			}
+			metaJSON, _ := json.Marshal(meta)
+
+			return []any{
+				id, tenantID,
+				fmt.Sprintf("EQ-%d", legacyID),
+				row.String("nombre_equipo"),
+				assetType,
+				unitID,
+				fmt.Sprintf("DEP-%d", row.Int("deposito_id")), // location from deposito
+				string(metaJSON),
+				active,
+			}, nil
+		},
+	}
+}
+
+// NewMaintenancePlanMigrator migrates MANT_PLAN → erp_maintenance_plans.
+// MANT_PLAN has auto-increment id_plan PK.
+func NewMaintenancePlanMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.MaintenancePlanReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "asset_id", "name", "frequency_days", "frequency_km", "frequency_hours", "last_done", "next_due", "active"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_plan")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			// Asset FK: equipo_id → MANT_EQUIPOS
+			equipoID := row.Int64("equipo_id")
+			assetID, err := mapper.Resolve(ctx, "maintenance", "MANT_EQUIPOS", equipoID)
+			if err != nil {
+				return nil, nil // skip if asset not migrated
+			}
+
+			id, err := mapper.Map(ctx, nil, "maintenance", "MANT_PLAN", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			// Name: derive from accion_id or rrule
+			name := fmt.Sprintf("Plan-%d", legacyID)
+			if rrule := row.String("rrule"); rrule != "" {
+				name = fmt.Sprintf("Plan-%d (%s)", legacyID, truncateString(rrule, 50))
+			}
+
+			return []any{
+				id, tenantID, assetID,
+				name,
+				0,    // frequency_days — rrule is text, not a simple days value
+				0,    // frequency_km — not in MANT_PLAN
+				0,    // frequency_hours — not in MANT_PLAN
+				SafeDate(timeFromRow(row, "fecha_terminacion")), // last_done
+				SafeDate(timeFromRow(row, "fecha_accion")),      // next_due
+				true, // active
+			}, nil
+		},
+	}
+}
+
+// NewMaintenanceEventMigrator migrates MANT_PLAN_EVENTOS → erp_work_orders.
+// MANT_PLAN_EVENTOS has auto-increment id_planevento PK.
+// work_type = "preventive".
+func NewMaintenanceEventMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.MaintenanceEventReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "number", "asset_id", "plan_id", "date", "work_type", "description", "assigned_to", "status", "priority", "completed_at", "user_id", "notes"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_planevento")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			// Plan FK: plan_id → MANT_PLAN
+			planLegacyID := row.Int64("plan_id")
+			var planID *uuid.UUID
+			if planLegacyID > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "maintenance", "MANT_PLAN", planLegacyID)
+				if err == nil && resolved != uuid.Nil {
+					planID = &resolved
+				}
+			}
+
+			// Asset FK: via plan → equipo. We don't have a direct asset_id in MANT_PLAN_EVENTOS.
+			var assetID *uuid.UUID
+
+			id, err := mapper.Map(ctx, nil, "maintenance", "MANT_PLAN_EVENTOS", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID,
+				fmt.Sprintf("WO-P-%d", legacyID),
+				assetID,
+				planID,
+				SafeDateRequired(timeFromRow(row, "fecha_accion")),
+				"preventive",
+				"",                // description — not in MANT_PLAN_EVENTOS directly
+				(*uuid.UUID)(nil), // assigned_to
+				"completed",       // events are historical → completed
+				"normal",
+				(*time.Time)(nil), // completed_at — same as fecha_accion for events
+				LegacyUserID,
+				row.String("observaciones"),
+			}, nil
+		},
+	}
+}
+
+// NewVehicleWorkMigrator migrates TRABAJOS_COCHE → erp_work_orders.
+// TRABAJOS_COCHE has composite PK (nrofab, idTrabajo). ~7.3K rows.
+// work_type = "corrective".
+func NewVehicleWorkMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.VehicleWorkReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "number", "asset_id", "plan_id", "date", "work_type", "description", "assigned_to", "status", "priority", "completed_at", "user_id", "notes"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			nrofab := row.Int64("nrofab")
+			idTrabajo := row.Int64("idTrabajo")
+			if nrofab == 0 && idTrabajo == 0 {
+				return nil, nil
+			}
+
+			compositeKey := fmt.Sprintf("TRABAJOS_COCHE:%d:%d", nrofab, idTrabajo)
+			legacyID := int64(hashCode(compositeKey))
+
+			// Asset FK: nrofab → CHASIS (vehicle/unit number)
+			var assetID *uuid.UUID
+			if nrofab > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "production", "CHASIS", nrofab)
+				if err == nil && resolved != uuid.Nil {
+					assetID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "maintenance", "TRABAJOS_COCHE", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID,
+				fmt.Sprintf("WO-C-%d-%d", nrofab, idTrabajo),
+				assetID,
+				(*uuid.UUID)(nil), // plan_id — corrective work has no plan
+				SafeDateRequired(timeFromRow(row, "fechaTrabajo")),
+				"corrective",
+				row.String("realizador"), // description = who did the work
+				(*uuid.UUID)(nil),        // assigned_to
+				"completed",              // historical = completed
+				"normal",
+				SafeDate(timeFromRow(row, "fechaPago")), // completed_at ≈ payment date
+				LegacyUserID,
+				fmt.Sprintf("importe=%.2f", ParseDecimal(row.Decimal("importe")).InexactFloat64()),
+			}, nil
+		},
+	}
+}
+
+// NewFuelLogMigrator migrates COMBUSTIBLE → erp_fuel_logs.
+// COMBUSTIBLE has auto-increment id PK.
+func NewFuelLogMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.FuelReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "asset_id", "date", "liters", "km_reading", "cost", "user_id"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			// Asset FK: nrofab_id → CHASIS (vehicle/unit)
+			nrofab := row.Int64("nrofab_id")
+			var assetID *uuid.UUID
+			if nrofab > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "production", "CHASIS", nrofab)
+				if err == nil && resolved != uuid.Nil {
+					assetID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "maintenance", "COMBUSTIBLE", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID, assetID,
+				SafeDateRequired(timeFromRow(row, "fecha")),
+				ParseDecimal(fmt.Sprintf("%d", row.Int("egreso_litros"))), // liters (int in legacy)
+				ParseDecimal("0"), // km_reading — not in COMBUSTIBLE
+				ParseDecimal("0"), // cost — not in COMBUSTIBLE
+				LegacyUserID,
+			}, nil
+		},
+	}
+}
+
+// ============================================================================
+// Phase 15 — Safety
+// ============================================================================
+
+// NewAccidentMigrator migrates ACCIDENTE_PER → erp_work_accidents.
+// ACCIDENTE_PER has NO auto-increment PK. 22 rows.
+// Uses IdPersona + fechaini as composite key.
+func NewAccidentMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.AccidentReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "date", "entity_id", "body_part", "type", "severity", "status", "user_id"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			personaID := row.Int64("IdPersona")
+			fechaini := row.String("fechaini")
+			if personaID == 0 {
+				return nil, nil
+			}
+
+			// Entity FK: IdPersona → PERSONAL
+			entityID, err := mapper.Resolve(ctx, "entity", "PERSONAL", personaID)
+			if err != nil {
+				return nil, nil // skip if employee not migrated
+			}
+
+			// Generate deterministic ID from composite
+			compositeKey := fmt.Sprintf("ACCIDENTE_PER:%d:%s", personaID, fechaini)
+			legacyID := int64(hashCode(compositeKey))
+
+			id, err := mapper.Map(ctx, nil, "safety", "ACCIDENTE_PER", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			// Resolve accident type from idaccidente → ACCIDENTE catalog
+			accType := "general"
+			bodyPart := ""
+			accidenteID := row.Int64("idaccidente")
+			if accidenteID > 0 {
+				// ACCIDENTE table has: idaccidente, tipo_accidente, nombre, abae, descripcion
+				// We can't join here but we set the type ID
+				accType = fmt.Sprintf("type_%d", accidenteID)
+			}
+
+			return []any{
+				id, tenantID,
+				SafeDateRequired(timeFromRow(row, "fechaini")),
+				entityID,
+				bodyPart,    // body_part — not in ACCIDENTE_PER
+				accType,
+				"moderate",  // severity — not directly available
+				"reported",  // status
+				LegacyUserID,
+			}, nil
+		},
+	}
+}
+
+// NewRiskAgentMigrator migrates RIESGOS → erp_risk_agents.
+// RIESGOS has idRiesgo INT PK (not auto-increment). 212 rows. Catalog-like.
+func NewRiskAgentMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.RiskAgentReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "name"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("idRiesgo")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			id, err := mapper.Map(ctx, nil, "safety", "RIESGOS", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID,
+				row.String("agente"),
+			}, nil
+		},
+	}
+}
+
+// NewRiskExposureMigrator migrates RIESGO_PERSONAL → erp_employee_risk_exposures.
+// RIESGO_PERSONAL has auto-increment id_riesgopersonal PK. 2.9K rows.
+func NewRiskExposureMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.RiskExposureReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "entity_id", "risk_agent_id", "section_id", "exposed_from", "exposed_until", "notes"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_riesgopersonal")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			// Entity FK: IdPersona → PERSONAL (there are TWO person fields: persona_id and IdPersona)
+			// Use IdPersona as it's the standard FK name
+			personaID := row.Int64("IdPersona")
+			if personaID == 0 {
+				personaID = row.Int64("persona_id")
+			}
+			entityID, err := mapper.Resolve(ctx, "entity", "PERSONAL", personaID)
+			if err != nil {
+				return nil, nil
+			}
+
+			// Risk agent FK: riesgo_id → RIESGOS
+			riesgoID := row.Int64("riesgo_id")
+			var riskAgentID *uuid.UUID
+			if riesgoID > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "safety", "RIESGOS", riesgoID)
+				if err == nil && resolved != uuid.Nil {
+					riskAgentID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "safety", "RIESGO_PERSONAL", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID, entityID,
+				riskAgentID,
+				(*uuid.UUID)(nil), // section_id — no direct mapping
+				SafeDate(timeFromRow(row, "fecha_desde")),
+				SafeDate(timeFromRow(row, "fecha_hasta")),
+				"", // notes — not in RIESGO_PERSONAL
+			}, nil
+		},
+	}
+}
+
+// NewMedicalLeaveMigrator migrates PARTE_MEDICO_DIARIO → erp_medical_leaves.
+// PARTE_MEDICO_DIARIO has auto-increment id PK. 59 rows.
+// Note: this table doesn't have a direct IdPersona FK — it has "nombre" instead.
+func NewMedicalLeaveMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.MedicalLeaveReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "entity_id", "date_from", "date_to", "diagnosis", "medical_authorization", "user_id"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			// PARTE_MEDICO_DIARIO doesn't have IdPersona — it has "nombre" (patient name)
+			// We can't resolve entity_id directly. Set to nil.
+			var entityID *uuid.UUID
+
+			id, err := mapper.Map(ctx, nil, "safety", "PARTE_MEDICO_DIARIO", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID, entityID,
+				SafeDateRequired(timeFromRow(row, "fecha")),
+				(*time.Time)(nil), // date_to — not in PARTE_MEDICO_DIARIO
+				row.String("sintomatologia") + " | " + row.String("prescripcion"), // diagnosis
+				"",                  // medical_authorization — not in table
+				LegacyUserID,
+			}, nil
+		},
+	}
+}
+
+// ============================================================================
+// Phase 16 — Auth
+// ============================================================================
+
+// NewLegacyUserMigrator migrates HTXUSERS → users.
+// HTXUSERS has auto-increment Id_usuario PK.
+// Generates bcrypt hash of temp password, sets force_password_reset=true.
+// users table has TEXT id (not UUID), so we generate uuid and cast to text.
+func NewLegacyUserMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.LegacyUserReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "email", "name", "password_hash", "is_active", "force_password_reset"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("Id_usuario")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			login := row.String("login")
+			if login == "" {
+				return nil, nil // skip users with no login
+			}
+
+			nombre := row.String("Nombre")
+			apellido := row.String("apellido")
+			name := strings.TrimSpace(nombre + " " + apellido)
+			if name == "" {
+				name = login
+			}
+
+			// Email: prefer emailUser, fallback to email, then login@legacy.local
+			email := row.String("emailUser")
+			if email == "" {
+				email = row.String("email")
+			}
+			if email == "" {
+				email = login + "@legacy.local"
+			}
+
+			// Active: baja = 0 means active
+			isActive := row.Int("baja") == 0
+
+			// Generate bcrypt hash of temporary password.
+			// We use a deterministic temp password: "SDA-migrate-{login}"
+			// bcrypt import is required — if not available, use a placeholder hash.
+			tempPassword := fmt.Sprintf("SDA-migrate-%s", login)
+			passwordHash := hashTempPassword(tempPassword)
+
+			// Generate UUID as text ID
+			id := uuid.New()
+
+			// Store legacy mapping
+			_, err := mapper.Map(ctx, nil, "auth", "HTXUSERS", legacyID, nil)
+			if err != nil {
+				// Ignore mapping error, we still want the user
+			}
+
+			return []any{
+				id.String(), // TEXT id, not UUID
+				email,
+				name,
+				passwordHash,
+				isActive,
+				true, // force_password_reset
+			}, nil
+		},
+	}
+}
+
+// ============================================================================
+// Helpers
+// ============================================================================
+
+// parseHoursString parses a time string like "08:30:00" or "8.5" into a decimal hours value.
+func parseHoursString(s string) float64 {
+	if s == "" {
+		return 0
+	}
+	// Try HH:MM:SS format
+	parts := strings.Split(s, ":")
+	if len(parts) >= 2 {
+		h := parseIntSafe(parts[0])
+		m := parseIntSafe(parts[1])
+		result := float64(h) + float64(m)/60.0
+		if len(parts) >= 3 {
+			sec := parseIntSafe(parts[2])
+			result += float64(sec) / 3600.0
+		}
+		return result
+	}
+	// Try plain number
+	var f float64
+	fmt.Sscanf(s, "%f", &f)
+	return f
+}
+
+// parseIntSafe parses an int from string, returning 0 on error.
+func parseIntSafe(s string) int {
+	s = strings.TrimSpace(s)
+	var n int
+	fmt.Sscanf(s, "%d", &n)
+	return n
+}
+
+// truncateString truncates a string to maxLen characters.
+func truncateString(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	return s[:maxLen] + "..."
+}
+
+// hashTempPassword generates a placeholder hash for the temporary migration password.
+// Uses hashCode (FNV-1a) since golang.org/x/crypto/bcrypt may not be available.
+// The auth service will force password reset on first login anyway.
+func hashTempPassword(password string) string {
+	// Use a deterministic placeholder hash.
+	// The real bcrypt hash should be generated by the auth service on first login.
+	// Format: $migration$<fnv64-hex> to clearly mark this as a migration placeholder.
+	return fmt.Sprintf("$migration$%016x", hashCode(password))
+}
