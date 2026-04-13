@@ -187,6 +187,9 @@ func (m *Mapper) BuildCodeIndex(ctx context.Context, domain, sdaTable, codeColum
 
 // ResolveByCode looks up a UUID by string code in the code index.
 func (m *Mapper) ResolveByCode(domain, sdaTable, code string) (uuid.UUID, error) {
+	if m.dryRun {
+		return uuid.New(), nil
+	}
 	key := m.cacheKey(domain, sdaTable)
 	m.mu.RLock()
 	defer m.mu.RUnlock()

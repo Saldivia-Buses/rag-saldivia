@@ -59,7 +59,7 @@ func NewCatalogMigrator(db *sql.DB, cm legacy.CatalogMapping, tenantID string) *
 	return &GenericMigrator{
 		reader:      reader,
 		columns:     []string{"id", "tenant_id", "type", "code", "name", "active"},
-		conflictCol: "id",
+		conflictCol: "",
 		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
 			legacyID := row.Int64(cm.PKColumn)
 			if legacyID == 0 {
@@ -87,7 +87,7 @@ func NewEntityMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 	return &GenericMigrator{
 		reader:      reader,
 		columns:     []string{"id", "tenant_id", "type", "code", "name", "email", "phone", "active"},
-		conflictCol: "id",
+		conflictCol: "",
 		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
 			legacyID := row.Int64("id_regcuenta")
 			if legacyID == 0 {
@@ -134,7 +134,7 @@ func NewEmployeeMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 	return &GenericMigrator{
 		reader:      reader,
 		columns:     []string{"id", "tenant_id", "type", "code", "name", "email", "phone", "active"},
-		conflictCol: "id",
+		conflictCol: "",
 		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
 			legacyID := row.Int64("IdPersona")
 			if legacyID == 0 {
@@ -179,7 +179,7 @@ func NewCostCenterMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 	return &GenericMigrator{
 		reader:      reader,
 		columns:     []string{"id", "tenant_id", "code", "name", "active"},
-		conflictCol: "id",
+		conflictCol: "",
 		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
 			legacyID := row.Int64("id_ctbcentro")
 			if legacyID == 0 {
@@ -204,7 +204,7 @@ func NewAccountMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 	return &GenericMigrator{
 		reader:      reader,
 		columns:     []string{"id", "tenant_id", "code", "name", "account_type", "is_detail", "active"},
-		conflictCol: "id",
+		conflictCol: "",
 		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
 			legacyID := row.Int64("id_ctbcuenta")
 			if legacyID == 0 {
@@ -248,7 +248,7 @@ func NewFiscalYearMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 	return &GenericMigrator{
 		reader:      reader,
 		columns:     []string{"id", "tenant_id", "year", "start_date", "end_date", "status"},
-		conflictCol: "id",
+		conflictCol: "",
 		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
 			legacyID := row.Int64("id_ejercicio")
 			if legacyID == 0 {
@@ -291,7 +291,7 @@ func NewJournalEntryMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 	return &GenericMigrator{
 		reader:      reader,
 		columns:     []string{"id", "tenant_id", "number", "date", "fiscal_year_id", "concept", "entry_type", "user_id", "status"},
-		conflictCol: "id",
+		conflictCol: "",
 		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
 			legacyID := row.Int64("id_movimiento")
 			if legacyID == 0 {
@@ -333,7 +333,7 @@ func NewJournalLineMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 	return &GenericMigrator{
 		reader:      reader,
 		columns:     []string{"id", "tenant_id", "entry_id", "account_id", "entry_date", "debit", "credit", "description", "sort_order"},
-		conflictCol: "id",
+		conflictCol: "",
 		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
 			legacyID := row.Int64("id_detalle")
 			if legacyID == 0 {
@@ -394,7 +394,7 @@ func NewBankAccountMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 	return &GenericMigrator{
 		reader:      reader,
 		columns:     []string{"id", "tenant_id", "bank_name", "account_number", "active"},
-		conflictCol: "id",
+		conflictCol: "",
 		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
 			legacyID := row.Int64("id_carbanco")
 			if legacyID == 0 {
@@ -419,7 +419,7 @@ func NewCashRegisterMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 	return &GenericMigrator{
 		reader:      reader,
 		columns:     []string{"id", "tenant_id", "name", "active"},
-		conflictCol: "id",
+		conflictCol: "",
 		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
 			legacyID := row.Int64("id_cajpuesto")
 			if legacyID == 0 {
@@ -443,7 +443,7 @@ func NewCheckMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 	return &GenericMigrator{
 		reader:      reader,
 		columns:     []string{"id", "tenant_id", "direction", "number", "bank_name", "amount", "issue_date", "due_date", "status", "notes"},
-		conflictCol: "id",
+		conflictCol: "",
 		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
 			legacyID := row.Int64("carint")
 			if legacyID == 0 {
@@ -487,7 +487,7 @@ func NewWarehouseMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 	return &GenericMigrator{
 		reader:      reader,
 		columns:     []string{"id", "tenant_id", "code", "name", "location", "active"},
-		conflictCol: "id",
+		conflictCol: "",
 		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
 			legacyID := row.Int64("id_stkdeposito")
 			if legacyID == 0 {
@@ -514,7 +514,7 @@ func NewArticleMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 	return &GenericMigrator{
 		reader:      reader,
 		columns:     []string{"id", "tenant_id", "code", "name", "article_type", "min_stock", "max_stock", "reorder_point", "last_cost", "avg_cost", "active"},
-		conflictCol: "id",
+		conflictCol: "",
 		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
 			code := row.String("id_stkarticulo")
 			if code == "" {
@@ -562,7 +562,7 @@ func NewStockMovementMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 	return &GenericMigrator{
 		reader:      reader,
 		columns:     []string{"id", "tenant_id", "article_id", "warehouse_id", "movement_type", "quantity", "unit_cost", "user_id", "notes", "created_at"},
-		conflictCol: "id",
+		conflictCol: "",
 		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
 			legacyID := row.Int64("id_stkmovimiento")
 			if legacyID == 0 {
@@ -618,7 +618,7 @@ func NewPurchaseOrderMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 	return &GenericMigrator{
 		reader:      reader,
 		columns:     []string{"id", "tenant_id", "number", "date", "supplier_id", "status", "total", "notes", "user_id"},
-		conflictCol: "id",
+		conflictCol: "",
 		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
 			legacyID := row.Int64("id_cpsmovimiento")
 			if legacyID == 0 {
@@ -668,7 +668,7 @@ func NewPurchaseOrderLineMigrator(db *sql.DB, tenantID string) *GenericMigrator 
 	return &GenericMigrator{
 		reader:      reader,
 		columns:     []string{"id", "tenant_id", "order_id", "article_id", "quantity", "unit_price", "received_qty"},
-		conflictCol: "id",
+		conflictCol: "",
 		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
 			legacyID := row.Int64("id_cpsdetalle")
 			if legacyID == 0 {
@@ -714,7 +714,7 @@ func NewQuotationMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 	return &GenericMigrator{
 		reader:      reader,
 		columns:     []string{"id", "tenant_id", "number", "date", "customer_id", "status", "total", "user_id"},
-		conflictCol: "id",
+		conflictCol: "",
 		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
 			legacyID := row.Int64("idCotiz")
 			if legacyID == 0 {
@@ -752,7 +752,7 @@ func NewProductionCenterMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 	return &GenericMigrator{
 		reader:      reader,
 		columns:     []string{"id", "tenant_id", "code", "name", "active"},
-		conflictCol: "id",
+		conflictCol: "",
 		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
 			legacyID := row.Int64("id_centro_productivo")
 			if legacyID == 0 {
@@ -777,7 +777,7 @@ func NewProductionOrderMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 	return &GenericMigrator{
 		reader:      reader,
 		columns:     []string{"id", "tenant_id", "number", "date", "product_id", "status", "quantity", "user_id", "notes"},
-		conflictCol: "id",
+		conflictCol: "",
 		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
 			legacyID := row.Int64("id_mrporden")
 			if legacyID == 0 {
@@ -837,7 +837,7 @@ func NewEmployeeDetailMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 	return &GenericMigrator{
 		reader:      reader,
 		columns:     []string{"id", "tenant_id", "entity_id", "position", "hire_date", "termination_date", "schedule_type"},
-		conflictCol: "id",
+		conflictCol: "",
 		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
 			legacyID := row.Int64("IdPersona")
 			if legacyID == 0 {
@@ -876,7 +876,7 @@ func NewAbsenceMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 	return &GenericMigrator{
 		reader:      reader,
 		columns:     []string{"id", "tenant_id", "entity_id", "event_type", "date_from", "date_to", "notes", "user_id"},
-		conflictCol: "id",
+		conflictCol: "",
 		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
 			legacyID := row.Int64("id")
 			if legacyID == 0 {
@@ -911,7 +911,7 @@ func NewTrainingMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 	return &GenericMigrator{
 		reader:      reader,
 		columns:     []string{"id", "tenant_id", "name", "description", "status"},
-		conflictCol: "id",
+		conflictCol: "",
 		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
 			legacyID := row.Int64("Id_curso")
 			if legacyID == 0 {

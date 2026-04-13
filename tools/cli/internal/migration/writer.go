@@ -47,7 +47,11 @@ func (w *BatchWriter) WriteBatch(ctx context.Context, table string, columns []st
 		}
 		sb.WriteString(")")
 	}
-	sb.WriteString(fmt.Sprintf(" ON CONFLICT (%s) DO NOTHING", conflictColumn))
+	if conflictColumn != "" {
+		sb.WriteString(fmt.Sprintf(" ON CONFLICT (%s) DO NOTHING", conflictColumn))
+	} else {
+		sb.WriteString(" ON CONFLICT DO NOTHING")
+	}
 
 	tag, err := w.pool.Exec(ctx, sb.String(), args...)
 	if err != nil {
