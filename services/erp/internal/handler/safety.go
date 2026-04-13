@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -11,6 +10,7 @@ import (
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
+	erperrors "github.com/Camionerou/rag-saldivia/services/erp/internal/errors"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/repository"
 )
 
@@ -69,8 +69,7 @@ func (h *Safety) Routes(authWrite func(http.Handler) http.Handler) chi.Router {
 func (h *Safety) ListAccidentTypes(w http.ResponseWriter, r *http.Request) {
 	types, err := h.svc.ListAccidentTypes(r.Context(), tenantSlug(r))
 	if err != nil {
-		slog.Error("list accident types failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -80,8 +79,7 @@ func (h *Safety) ListAccidentTypes(w http.ResponseWriter, r *http.Request) {
 func (h *Safety) ListBodyParts(w http.ResponseWriter, r *http.Request) {
 	parts, err := h.svc.ListBodyParts(r.Context(), tenantSlug(r))
 	if err != nil {
-		slog.Error("list body parts failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -91,8 +89,7 @@ func (h *Safety) ListBodyParts(w http.ResponseWriter, r *http.Request) {
 func (h *Safety) ListRiskAgents(w http.ResponseWriter, r *http.Request) {
 	agents, err := h.svc.ListRiskAgents(r.Context(), tenantSlug(r), r.URL.Query().Get("risk_type"))
 	if err != nil {
-		slog.Error("list risk agents failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -105,8 +102,7 @@ func (h *Safety) ListAccidents(w http.ResponseWriter, r *http.Request) {
 	p := pagination.Parse(r)
 	accidents, err := h.svc.ListWorkAccidents(r.Context(), tenantSlug(r), r.URL.Query().Get("status"), p.Limit(), p.Offset())
 	if err != nil {
-		slog.Error("list accidents failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -116,12 +112,12 @@ func (h *Safety) ListAccidents(w http.ResponseWriter, r *http.Request) {
 func (h *Safety) GetAccident(w http.ResponseWriter, r *http.Request) {
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	wa, err := h.svc.GetWorkAccident(r.Context(), id, tenantSlug(r))
 	if err != nil {
-		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		erperrors.WriteError(w, r, erperrors.NotFound("work accident"))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -143,11 +139,11 @@ func (h *Safety) CreateAccident(w http.ResponseWriter, r *http.Request) {
 		SectionID      *string `json:"section_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	if body.IncidentDate == "" {
-		http.Error(w, `{"error":"incident_date is required"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("incident_date is required"))
 		return
 	}
 	var rd string
@@ -167,8 +163,7 @@ func (h *Safety) CreateAccident(w http.ResponseWriter, r *http.Request) {
 		ReportedBy:     body.ReportedBy,
 	}, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create accident failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -181,27 +176,26 @@ func (h *Safety) UpdateAccidentStatus(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 4<<10)
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	var body struct {
 		Status string `json:"status"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	validStatus := map[string]bool{"open": true, "investigating": true, "closed": true}
 	if !validStatus[body.Status] {
-		http.Error(w, `{"error":"invalid status (open, investigating, closed)"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid status (open, investigating, closed)"))
 		return
 	}
 	if err := h.svc.UpdateAccidentStatus(r.Context(), id, slug, body.Status, r.Header.Get("X-User-ID"), r.RemoteAddr); err != nil {
 		if err.Error() == "accident not found" {
-			http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+			erperrors.WriteError(w, r, erperrors.NotFound("accident"))
 		} else {
-			slog.Error("update accident status failed", "error", err)
-			http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+			erperrors.WriteError(w, r, erperrors.Internal(err))
 		}
 		return
 	}
@@ -213,8 +207,7 @@ func (h *Safety) UpdateAccidentStatus(w http.ResponseWriter, r *http.Request) {
 func (h *Safety) ListRiskExposures(w http.ResponseWriter, r *http.Request) {
 	exposures, err := h.svc.ListEmployeeRiskExposures(r.Context(), tenantSlug(r), r.URL.Query().Get("entity_id"))
 	if err != nil {
-		slog.Error("list risk exposures failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -233,21 +226,21 @@ func (h *Safety) CreateRiskExposure(w http.ResponseWriter, r *http.Request) {
 		Notes        string  `json:"notes"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	if body.EntityID == "" || body.RiskAgentID == "" || body.ExposedFrom == "" {
-		http.Error(w, `{"error":"entity_id, risk_agent_id and exposed_from are required"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("entity_id, risk_agent_id and exposed_from are required"))
 		return
 	}
 	entityID, err := parseUUID(body.EntityID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid entity_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid entity_id"))
 		return
 	}
 	riskAgentID, err := parseUUID(body.RiskAgentID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid risk_agent_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid risk_agent_id"))
 		return
 	}
 	var eu string
@@ -264,8 +257,7 @@ func (h *Safety) CreateRiskExposure(w http.ResponseWriter, r *http.Request) {
 		Notes:        body.Notes,
 	}, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create risk exposure failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -280,8 +272,7 @@ func (h *Safety) ListMedicalLog(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	consultations, err := h.svc.ListMedicalConsultations(r.Context(), tenantSlug(r), q.Get("date_from"), q.Get("date_to"), p.Limit(), p.Offset())
 	if err != nil {
-		slog.Error("list medical log failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -301,11 +292,11 @@ func (h *Safety) CreateMedicalConsultation(w http.ResponseWriter, r *http.Reques
 		EntityID     *string `json:"entity_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	if body.ConsultDate == "" {
-		http.Error(w, `{"error":"consult_date is required"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("consult_date is required"))
 		return
 	}
 	mc, err := h.svc.CreateMedicalConsultation(r.Context(), repository.CreateMedicalConsultationParams{
@@ -319,8 +310,7 @@ func (h *Safety) CreateMedicalConsultation(w http.ResponseWriter, r *http.Reques
 		MedicUser:    body.MedicUser,
 	}, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create medical consultation failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -335,8 +325,7 @@ func (h *Safety) ListMedicalLeaves(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	leaves, err := h.svc.ListMedicalLeaves(r.Context(), tenantSlug(r), q.Get("entity_id"), q.Get("leave_type"), q.Get("status"), p.Limit(), p.Offset())
 	if err != nil {
-		slog.Error("list medical leaves failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -357,16 +346,16 @@ func (h *Safety) CreateMedicalLeave(w http.ResponseWriter, r *http.Request) {
 		AccidentID   *string `json:"accident_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	if body.EntityID == "" || body.DateFrom == "" || body.DateTo == "" {
-		http.Error(w, `{"error":"entity_id, date_from and date_to are required"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("entity_id, date_from and date_to are required"))
 		return
 	}
 	validLeaveType := map[string]bool{"illness": true, "accident": true, "vacation": true, "leave": true, "other": true}
 	if body.LeaveType != "" && !validLeaveType[body.LeaveType] {
-		http.Error(w, `{"error":"invalid leave_type (illness, accident, vacation, leave, other)"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid leave_type (illness, accident, vacation, leave, other)"))
 		return
 	}
 	if body.LeaveType == "" {
@@ -374,7 +363,7 @@ func (h *Safety) CreateMedicalLeave(w http.ResponseWriter, r *http.Request) {
 	}
 	entityID, err := parseUUID(body.EntityID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid entity_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid entity_id"))
 		return
 	}
 	ml, err := h.svc.CreateMedicalLeave(r.Context(), repository.CreateMedicalLeaveParams{
@@ -389,8 +378,7 @@ func (h *Safety) CreateMedicalLeave(w http.ResponseWriter, r *http.Request) {
 		Observations: body.Observations,
 	}, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create medical leave failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -403,14 +391,14 @@ func (h *Safety) ApproveMedicalLeave(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 4<<10)
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	var body struct {
 		ApprovedBy string `json:"approved_by"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	if body.ApprovedBy == "" {
@@ -418,10 +406,9 @@ func (h *Safety) ApproveMedicalLeave(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := h.svc.ApproveMedicalLeave(r.Context(), id, slug, body.ApprovedBy, r.Header.Get("X-User-ID"), r.RemoteAddr); err != nil {
 		if err.Error() == "medical leave not found" {
-			http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+			erperrors.WriteError(w, r, erperrors.NotFound("medical leave"))
 		} else {
-			slog.Error("approve medical leave failed", "error", err)
-			http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+			erperrors.WriteError(w, r, erperrors.Internal(err))
 		}
 		return
 	}
@@ -434,8 +421,7 @@ func (h *Safety) GetKPIs(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	kpis, err := h.svc.GetSafetyKPIs(r.Context(), tenantSlug(r), q.Get("date_from"), q.Get("date_to"))
 	if err != nil {
-		slog.Error("get safety KPIs failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
