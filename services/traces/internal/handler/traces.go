@@ -4,13 +4,13 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 	"github.com/Camionerou/rag-saldivia/pkg/tenant"
 	"github.com/Camionerou/rag-saldivia/services/traces/internal/service"
 )
@@ -47,7 +47,7 @@ func (h *Handler) ListTraces(w http.ResponseWriter, r *http.Request) {
 	ti, err := tenant.FromContext(r.Context())
 	tenantID := ti.ID
 	if err != nil || tenantID == "" {
-		http.Error(w, `{"error":"tenant context missing"}`, http.StatusUnauthorized)
+		httperr.WriteError(w, r, httperr.Unauthorized("tenant context missing"))
 		return
 	}
 
@@ -56,8 +56,7 @@ func (h *Handler) ListTraces(w http.ResponseWriter, r *http.Request) {
 
 	traces, err := h.svc.ListTraces(r.Context(), tenantID, limit, offset)
 	if err != nil {
-		slog.Error("list traces failed", "error", err)
-		http.Error(w, `{"error":"failed to list traces"}`, http.StatusInternalServerError)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	if traces == nil {
@@ -74,7 +73,7 @@ func (h *Handler) GetTraceDetail(w http.ResponseWriter, r *http.Request) {
 	ti, err := tenant.FromContext(r.Context())
 	tenantID := ti.ID
 	if err != nil || tenantID == "" {
-		http.Error(w, `{"error":"tenant context missing"}`, http.StatusUnauthorized)
+		httperr.WriteError(w, r, httperr.Unauthorized("tenant context missing"))
 		return
 	}
 
@@ -82,8 +81,7 @@ func (h *Handler) GetTraceDetail(w http.ResponseWriter, r *http.Request) {
 
 	trace, events, err := h.svc.GetTraceDetail(r.Context(), traceID, tenantID)
 	if err != nil {
-		slog.Error("get trace failed", "error", err, "trace_id", traceID)
-		http.Error(w, `{"error":"trace not found"}`, http.StatusNotFound)
+		httperr.WriteError(w, r, httperr.NotFound("trace"))
 		return
 	}
 
@@ -101,7 +99,7 @@ func (h *Handler) GetTenantCost(w http.ResponseWriter, r *http.Request) {
 	ti, err := tenant.FromContext(r.Context())
 	tenantID := ti.ID
 	if err != nil || tenantID == "" {
-		http.Error(w, `{"error":"tenant context missing"}`, http.StatusUnauthorized)
+		httperr.WriteError(w, r, httperr.Unauthorized("tenant context missing"))
 		return
 	}
 
@@ -116,8 +114,7 @@ func (h *Handler) GetTenantCost(w http.ResponseWriter, r *http.Request) {
 
 	cost, err := h.svc.GetTenantCost(r.Context(), tenantID, from, to)
 	if err != nil {
-		slog.Error("get cost failed", "error", err, "tenant_id", tenantID)
-		http.Error(w, `{"error":"failed to get costs"}`, http.StatusInternalServerError)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 
