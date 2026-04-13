@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -11,6 +10,7 @@ import (
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
+	erperrors "github.com/Camionerou/rag-saldivia/services/erp/internal/errors"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/repository"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/service"
 )
@@ -55,8 +55,7 @@ func (h *Sales) ListQuotations(w http.ResponseWriter, r *http.Request) {
 	status := r.URL.Query().Get("status")
 	quotations, err := h.svc.ListQuotations(r.Context(), slug, status, p.Limit(), p.Offset())
 	if err != nil {
-		slog.Error("list quotations failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -67,12 +66,12 @@ func (h *Sales) GetQuotation(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	detail, err := h.svc.GetQuotation(r.Context(), id, slug)
 	if err != nil {
-		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		erperrors.WriteError(w, r, erperrors.NotFound("quotation"))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -83,12 +82,12 @@ func (h *Sales) CreateQuotation(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	r.Body = http.MaxBytesReader(w, r.Body, 64<<10)
 	var body struct {
-		Number     string `json:"number"`
-		Date       string `json:"date"`
-		CustomerID string `json:"customer_id"`
+		Number     string  `json:"number"`
+		Date       string  `json:"date"`
+		CustomerID string  `json:"customer_id"`
 		CurrencyID *string `json:"currency_id,omitempty"`
 		ValidUntil *string `json:"valid_until,omitempty"`
-		Notes      string `json:"notes"`
+		Notes      string  `json:"notes"`
 		Lines      []struct {
 			ArticleID   *string `json:"article_id,omitempty"`
 			Description string  `json:"description"`
@@ -97,12 +96,12 @@ func (h *Sales) CreateQuotation(w http.ResponseWriter, r *http.Request) {
 		} `json:"lines"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid request body"))
 		return
 	}
 	custID, err := parseUUID(body.CustomerID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid customer_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID("customer_id"))
 		return
 	}
 	var lines []service.CreateQuotationLineRequest
@@ -123,8 +122,7 @@ func (h *Sales) CreateQuotation(w http.ResponseWriter, r *http.Request) {
 		UserID: r.Header.Get("X-User-ID"), IP: r.RemoteAddr, Lines: lines,
 	})
 	if err != nil {
-		slog.Error("create quotation failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -137,8 +135,7 @@ func (h *Sales) ListOrders(w http.ResponseWriter, r *http.Request) {
 	p := pagination.Parse(r)
 	orders, err := h.svc.ListOrders(r.Context(), slug, r.URL.Query().Get("status"), r.URL.Query().Get("type"), p.Limit(), p.Offset())
 	if err != nil {
-		slog.Error("list orders failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -158,15 +155,14 @@ func (h *Sales) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		Notes       string  `json:"notes"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid request body"))
 		return
 	}
 	order, err := h.svc.CreateOrder(r.Context(), slug, body.Number, pgDate(body.Date),
 		body.OrderType, optUUID(body.CustomerID), optUUID(body.QuotationID),
 		pgNumericH(body.Total), body.Notes, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create order failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -179,16 +175,16 @@ func (h *Sales) UpdateOrderStatus(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 4<<10)
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	var body struct{ Status string `json:"status"` }
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid request body"))
 		return
 	}
 	if err := h.svc.UpdateOrderStatus(r.Context(), id, slug, body.Status, r.Header.Get("X-User-ID"), r.RemoteAddr); err != nil {
-		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		erperrors.WriteError(w, r, erperrors.NotFound("order"))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -198,8 +194,7 @@ func (h *Sales) ListPriceLists(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	lists, err := h.svc.ListPriceLists(r.Context(), slug)
 	if err != nil {
-		slog.Error("list price lists failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
