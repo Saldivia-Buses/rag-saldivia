@@ -1,15 +1,23 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { api } from "@/lib/api/client";
 import { erpKeys } from "@/lib/erp/queries";
 import { fmtDateShort } from "@/lib/erp/format";
+import { permissionErrorToast } from "@/lib/erp/permission-messages";
 import { ErrorState } from "@/components/erp/error-state";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertTriangleIcon, ClipboardCheckIcon, FileTextIcon } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { AlertTriangleIcon, ClipboardCheckIcon, FileTextIcon, PlusIcon } from "lucide-react";
 
 interface NC { id: string; number: string; date: string; description: string; severity: string; status: string; assigned_name: string; }
 interface QualityAudit { id: string; number: string; date: string; audit_type: string; scope: string; status: string; }
@@ -19,6 +27,10 @@ const sevColor: Record<string, "default" | "secondary" | "destructive"> = { mino
 const statusColor: Record<string, "default" | "secondary" | "outline"> = { open: "secondary", investigating: "outline", corrective_action: "outline", closed: "default", planned: "secondary", in_progress: "outline", completed: "default", draft: "secondary", approved: "default", obsolete: "secondary" };
 
 export default function CalidadPage() {
+  const queryClient = useQueryClient();
+  const [ncOpen, setNcOpen] = useState(false);
+  const [auditOpen, setAuditOpen] = useState(false);
+
   const { data: ncs = [], isLoading, error } = useQuery({
     queryKey: [...erpKeys.all, "quality", "nc"] as const,
     queryFn: () => api.get<{ nonconformities: NC[] }>("/v1/erp/quality/nc?page_size=50"),
@@ -37,15 +49,40 @@ export default function CalidadPage() {
     select: (d) => d.documents,
   });
 
+  const createNCMutation = useMutation({
+    mutationFn: (data: { Number: string; Date: string; Description: string; Severity: string }) =>
+      api.post("/v1/erp/quality/nc", data),
+    onSuccess: () => {
+      toast.success("No conformidad registrada");
+      queryClient.invalidateQueries({ queryKey: [...erpKeys.all, "quality", "nc"] });
+      setNcOpen(false);
+    },
+    onError: permissionErrorToast,
+  });
+
+  const createAuditMutation = useMutation({
+    mutationFn: (data: { Number: string; Date: string; AuditType: string; Scope: string }) =>
+      api.post("/v1/erp/quality/audits", data),
+    onSuccess: () => {
+      toast.success("Auditoría creada");
+      queryClient.invalidateQueries({ queryKey: [...erpKeys.all, "quality", "audits"] });
+      setAuditOpen(false);
+    },
+    onError: permissionErrorToast,
+  });
+
   if (error) return <ErrorState message="Error cargando calidad" onRetry={() => window.location.reload()} />;
   if (isLoading) return <div className="flex-1 p-8"><Skeleton className="h-[600px]" /></div>;
 
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="mx-auto w-full max-w-6xl px-6 py-8 sm:px-8">
-        <div className="mb-6">
-          <h1 className="text-xl font-semibold tracking-tight">Calidad</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">No conformidades, auditorías y documentos controlados</p>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-xl font-semibold tracking-tight">Calidad</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">No conformidades, auditorías y documentos controlados</p>
+          </div>
+          <Button size="sm" onClick={() => setNcOpen(true)}><PlusIcon className="size-4 mr-1.5" />Nueva NC</Button>
         </div>
         <Tabs defaultValue="nc">
           <TabsList className="mb-4">
@@ -61,6 +98,9 @@ export default function CalidadPage() {
             </div>
           </TabsContent>
           <TabsContent value="audits">
+            <div className="flex justify-end mb-4">
+              <Button size="sm" onClick={() => setAuditOpen(true)}><PlusIcon className="size-4 mr-1.5" />Nueva auditoría</Button>
+            </div>
             <div className="rounded-xl border border-border/40 bg-card overflow-hidden">
               <Table><TableHeader><TableRow><TableHead className="w-20">Nro</TableHead><TableHead className="w-28">Fecha</TableHead><TableHead className="w-24">Tipo</TableHead><TableHead>Alcance</TableHead><TableHead className="w-28">Estado</TableHead></TableRow></TableHeader>
                 <TableBody>{audits.map((a) => (<TableRow key={a.id}><TableCell className="font-mono text-sm">{a.number}</TableCell><TableCell className="text-sm text-muted-foreground">{fmtDateShort(a.date)}</TableCell><TableCell><Badge variant="secondary">{a.audit_type}</Badge></TableCell><TableCell className="text-sm">{a.scope || "\u2014"}</TableCell><TableCell><Badge variant={statusColor[a.status] || "secondary"}>{a.status}</Badge></TableCell></TableRow>))}
@@ -76,6 +116,151 @@ export default function CalidadPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <Dialog open={ncOpen} onOpenChange={(v) => !v && setNcOpen(false)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Nueva No Conformidad</DialogTitle></DialogHeader>
+          <CreateNCForm
+            onSubmit={(data) => createNCMutation.mutate(data)}
+            isPending={createNCMutation.isPending}
+            onClose={() => setNcOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={auditOpen} onOpenChange={(v) => !v && setAuditOpen(false)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Nueva Auditoría</DialogTitle></DialogHeader>
+          <CreateAuditForm
+            onSubmit={(data) => createAuditMutation.mutate(data)}
+            isPending={createAuditMutation.isPending}
+            onClose={() => setAuditOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+}
+
+function CreateNCForm({
+  onSubmit,
+  isPending,
+  onClose,
+}: {
+  onSubmit: (data: { Number: string; Date: string; Description: string; Severity: string }) => void;
+  isPending: boolean;
+  onClose: () => void;
+}) {
+  const today = new Date().toISOString().slice(0, 10);
+  const [number, setNumber] = useState("");
+  const [date, setDate] = useState(today);
+  const [severity, setSeverity] = useState("minor");
+  const [description, setDescription] = useState("");
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (number && date && description) onSubmit({ Number: number, Date: date, Description: description, Severity: severity });
+      }}
+      className="space-y-4"
+    >
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Número</Label>
+          <Input value={number} onChange={(e) => setNumber(e.target.value)} placeholder="NC-001" />
+        </div>
+        <div className="space-y-2">
+          <Label>Fecha</Label>
+          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label>Severidad</Label>
+        <select
+          className="w-full rounded-md border px-3 py-2 text-sm bg-card"
+          value={severity}
+          onChange={(e) => setSeverity(e.target.value)}
+        >
+          <option value="minor">Menor</option>
+          <option value="major">Mayor</option>
+          <option value="critical">Crítica</option>
+        </select>
+      </div>
+      <div className="space-y-2">
+        <Label>Descripción</Label>
+        <Textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Describa la no conformidad..."
+          rows={3}
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
+        <Button type="submit" disabled={!number || !date || !description || isPending}>
+          {isPending ? "Registrando..." : "Registrar"}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+function CreateAuditForm({
+  onSubmit,
+  isPending,
+  onClose,
+}: {
+  onSubmit: (data: { Number: string; Date: string; AuditType: string; Scope: string }) => void;
+  isPending: boolean;
+  onClose: () => void;
+}) {
+  const today = new Date().toISOString().slice(0, 10);
+  const [number, setNumber] = useState("");
+  const [date, setDate] = useState(today);
+  const [auditType, setAuditType] = useState("internal");
+  const [scope, setScope] = useState("");
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (number && date) onSubmit({ Number: number, Date: date, AuditType: auditType, Scope: scope });
+      }}
+      className="space-y-4"
+    >
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Número</Label>
+          <Input value={number} onChange={(e) => setNumber(e.target.value)} placeholder="AUD-001" />
+        </div>
+        <div className="space-y-2">
+          <Label>Fecha</Label>
+          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label>Tipo</Label>
+        <select
+          className="w-full rounded-md border px-3 py-2 text-sm bg-card"
+          value={auditType}
+          onChange={(e) => setAuditType(e.target.value)}
+        >
+          <option value="internal">Interna</option>
+          <option value="external">Externa</option>
+          <option value="supplier">Proveedor</option>
+        </select>
+      </div>
+      <div className="space-y-2">
+        <Label>Alcance</Label>
+        <Input value={scope} onChange={(e) => setScope(e.target.value)} placeholder="Área o proceso auditado" />
+      </div>
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
+        <Button type="submit" disabled={!number || !date || isPending}>
+          {isPending ? "Creando..." : "Crear"}
+        </Button>
+      </div>
+    </form>
   );
 }
