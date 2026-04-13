@@ -5,14 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log/slog"
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/Camionerou/rag-saldivia/pkg/guardrails"
+	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
 	"github.com/Camionerou/rag-saldivia/services/chat/internal/service"
@@ -81,7 +80,7 @@ func (h *Chat) ListSessions(w http.ResponseWriter, r *http.Request) {
 	pg := pagination.Parse(r)
 	sessions, err := h.chatSvc.ListSessions(r.Context(), userID, int32(pg.Limit()), int32(pg.Offset()))
 	if err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusOK, sessions)
@@ -105,7 +104,7 @@ func (h *Chat) CreateSession(w http.ResponseWriter, r *http.Request) {
 
 	session, err := h.chatSvc.CreateSession(r.Context(), userID, title, req.Collection)
 	if err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusCreated, session)
@@ -119,10 +118,10 @@ func (h *Chat) GetSession(w http.ResponseWriter, r *http.Request) {
 	session, err := h.chatSvc.GetSession(r.Context(), sessionID, userID)
 	if err != nil {
 		if errors.Is(err, service.ErrSessionNotFound) || errors.Is(err, service.ErrNotOwner) {
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": "session not found"})
+			httperr.WriteError(w, r, httperr.NotFound("session"))
 			return
 		}
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusOK, session)
@@ -135,10 +134,10 @@ func (h *Chat) DeleteSession(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.chatSvc.DeleteSession(r.Context(), sessionID, userID); err != nil {
 		if errors.Is(err, service.ErrSessionNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": "session not found"})
+			httperr.WriteError(w, r, httperr.NotFound("session"))
 			return
 		}
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -158,10 +157,10 @@ func (h *Chat) RenameSession(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.chatSvc.RenameSession(r.Context(), sessionID, userID, req.Title); err != nil {
 		if errors.Is(err, service.ErrSessionNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": "session not found"})
+			httperr.WriteError(w, r, httperr.NotFound("session"))
 			return
 		}
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -175,10 +174,10 @@ func (h *Chat) GetMessages(w http.ResponseWriter, r *http.Request) {
 	// Verify ownership before returning messages
 	if _, err := h.chatSvc.GetSession(r.Context(), sessionID, userID); err != nil {
 		if errors.Is(err, service.ErrSessionNotFound) || errors.Is(err, service.ErrNotOwner) {
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": "session not found"})
+			httperr.WriteError(w, r, httperr.NotFound("session"))
 			return
 		}
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 
@@ -191,7 +190,7 @@ func (h *Chat) GetMessages(w http.ResponseWriter, r *http.Request) {
 	}
 	messages, err := h.chatSvc.GetMessages(r.Context(), sessionID, limit)
 	if err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusOK, messages)
@@ -238,16 +237,16 @@ func (h *Chat) AddMessage(w http.ResponseWriter, r *http.Request) {
 	// Verify ownership before adding message
 	if _, err := h.chatSvc.GetSession(r.Context(), sessionID, userID); err != nil {
 		if errors.Is(err, service.ErrSessionNotFound) || errors.Is(err, service.ErrNotOwner) {
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": "session not found"})
+			httperr.WriteError(w, r, httperr.NotFound("session"))
 			return
 		}
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 
 	msg, err := h.chatSvc.AddMessage(r.Context(), sessionID, userID, req.Role, req.Content, req.Thinking, req.Sources, req.Metadata)
 	if err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusCreated, msg)
@@ -269,8 +268,3 @@ func requireUserID(next http.Handler) http.Handler {
 	})
 }
 
-func serverError(w http.ResponseWriter, r *http.Request, err error) {
-	reqID := middleware.GetReqID(r.Context())
-	slog.Error("internal error", "error", err, "request_id", reqID)
-	writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
-}
