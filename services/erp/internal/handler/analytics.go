@@ -13,6 +13,7 @@ import (
 
 	"github.com/Camionerou/rag-saldivia/pkg/export"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	erperrors "github.com/Camionerou/rag-saldivia/services/erp/internal/errors"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/repository"
 )
 
@@ -132,8 +133,7 @@ func (h *Analytics) wrap(name string, cols []export.Column, fn fetchFn) http.Han
 		slug := tenantSlug(r)
 		rows, err := fn(r, slug)
 		if err != nil {
-			slog.Error("analytics query failed", "report", name, "error", err)
-			http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+			erperrors.WriteError(w, r, erperrors.Internal(err))
 			return
 		}
 
@@ -979,7 +979,7 @@ func (h *Analytics) DashboardKPIs(w http.ResponseWriter, r *http.Request) {
 	const totalKPIs = 13
 	status := http.StatusOK
 	if len(errList) == totalKPIs {
-		http.Error(w, `{"error":"all dashboard queries failed"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Wrap(nil, erperrors.CodeInternal, "all dashboard queries failed", http.StatusInternalServerError))
 		return
 	}
 	if len(errList) > 0 {
