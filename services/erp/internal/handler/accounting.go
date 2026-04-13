@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -11,6 +10,7 @@ import (
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
+	erperrors "github.com/Camionerou/rag-saldivia/services/erp/internal/errors"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/repository"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/service"
 )
@@ -88,8 +88,7 @@ func (h *Accounting) ListAccounts(w http.ResponseWriter, r *http.Request) {
 	activeOnly := r.URL.Query().Get("active") != "false"
 	accounts, err := h.svc.ListAccounts(r.Context(), slug, activeOnly)
 	if err != nil {
-		slog.Error("list accounts failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -109,7 +108,7 @@ func (h *Accounting) CreateAccount(w http.ResponseWriter, r *http.Request) {
 		CostCenterID *string `json:"cost_center_id,omitempty"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid request body"))
 		return
 	}
 
@@ -117,8 +116,7 @@ func (h *Accounting) CreateAccount(w http.ResponseWriter, r *http.Request) {
 		optUUID(body.ParentID), body.AccountType, body.IsDetail, optUUID(body.CostCenterID),
 		r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create account failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -131,8 +129,7 @@ func (h *Accounting) ListCostCenters(w http.ResponseWriter, r *http.Request) {
 	activeOnly := r.URL.Query().Get("active") != "false"
 	centers, err := h.svc.ListCostCenters(r.Context(), slug, activeOnly)
 	if err != nil {
-		slog.Error("list cost centers failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -149,14 +146,13 @@ func (h *Accounting) CreateCostCenter(w http.ResponseWriter, r *http.Request) {
 		ParentID *string `json:"parent_id,omitempty"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid request body"))
 		return
 	}
 	cc, err := h.svc.CreateCostCenter(r.Context(), slug, body.Code, body.Name,
 		optUUID(body.ParentID), r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create cost center failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -168,8 +164,7 @@ func (h *Accounting) ListFiscalYears(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	years, err := h.svc.ListFiscalYears(r.Context(), slug)
 	if err != nil {
-		slog.Error("list fiscal years failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -186,13 +181,12 @@ func (h *Accounting) CreateFiscalYear(w http.ResponseWriter, r *http.Request) {
 		EndDate   string `json:"end_date"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid request body"))
 		return
 	}
 	fy, err := h.svc.CreateFiscalYear(r.Context(), slug, body.Year, body.StartDate, body.EndDate, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create fiscal year failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -209,8 +203,7 @@ func (h *Accounting) ListEntries(w http.ResponseWriter, r *http.Request) {
 
 	entries, err := h.svc.ListEntries(r.Context(), slug, dateFrom, dateTo, status, p.Limit(), p.Offset())
 	if err != nil {
-		slog.Error("list entries failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -221,12 +214,12 @@ func (h *Accounting) GetEntry(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	detail, err := h.svc.GetEntry(r.Context(), id, slug)
 	if err != nil {
-		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		erperrors.WriteError(w, r, erperrors.NotFound("entry"))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -252,7 +245,7 @@ func (h *Accounting) CreateEntry(w http.ResponseWriter, r *http.Request) {
 		} `json:"lines"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid request body"))
 		return
 	}
 
@@ -260,7 +253,7 @@ func (h *Accounting) CreateEntry(w http.ResponseWriter, r *http.Request) {
 	for _, l := range body.Lines {
 		acctID, err := parseUUID(l.AccountID)
 		if err != nil {
-			http.Error(w, `{"error":"invalid account_id in line"}`, http.StatusBadRequest)
+			erperrors.WriteError(w, r, erperrors.InvalidInput("invalid account_id in line"))
 			return
 		}
 		lines = append(lines, service.CreateLineRequest{
@@ -284,8 +277,7 @@ func (h *Accounting) CreateEntry(w http.ResponseWriter, r *http.Request) {
 		Lines:        lines,
 	})
 	if err != nil {
-		slog.Error("create entry failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -297,12 +289,11 @@ func (h *Accounting) PostEntry(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	if err := h.svc.PostEntry(r.Context(), id, slug, r.Header.Get("X-User-ID"), r.RemoteAddr); err != nil {
-		slog.Error("post entry failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -315,8 +306,7 @@ func (h *Accounting) GetBalance(w http.ResponseWriter, r *http.Request) {
 
 	balances, err := h.svc.GetBalance(r.Context(), slug, dateFrom, dateTo)
 	if err != nil {
-		slog.Error("get balance failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -332,8 +322,7 @@ func (h *Accounting) GetLedger(w http.ResponseWriter, r *http.Request) {
 
 	ledger, err := h.svc.GetLedger(r.Context(), slug, accountID, dateFrom, dateTo, p.Limit(), p.Offset())
 	if err != nil {
-		slog.Error("get ledger failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -345,7 +334,7 @@ func (h *Accounting) SetResultAccount(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	yearID, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid fiscal year id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid fiscal year id"))
 		return
 	}
 	r.Body = http.MaxBytesReader(w, r.Body, 4<<10)
@@ -353,18 +342,17 @@ func (h *Accounting) SetResultAccount(w http.ResponseWriter, r *http.Request) {
 		ResultAccountID string `json:"result_account_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.ResultAccountID == "" {
-		http.Error(w, `{"error":"result_account_id required"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("result_account_id required"))
 		return
 	}
 	accountID, err := parseUUID(body.ResultAccountID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid account id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid account id"))
 		return
 	}
 	if err := h.svc.SetFiscalYearResultAccount(r.Context(), slug, yearID, accountID,
 		r.Header.Get("X-User-ID"), r.RemoteAddr); err != nil {
-		slog.Error("set result account failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -375,13 +363,12 @@ func (h *Accounting) PreviewClose(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	yearID, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid fiscal year id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid fiscal year id"))
 		return
 	}
 	preview, err := h.svc.PreviewClose(r.Context(), slug, yearID)
 	if err != nil {
-		slog.Error("preview close failed", "error", err)
-		writeSafeErr(w, err, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -393,14 +380,13 @@ func (h *Accounting) CloseFiscalYear(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	yearID, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid fiscal year id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid fiscal year id"))
 		return
 	}
 	result, err := h.svc.CloseFiscalYear(r.Context(), slug, yearID,
 		r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("close fiscal year failed", "error", err)
-		writeSafeErr(w, err, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
