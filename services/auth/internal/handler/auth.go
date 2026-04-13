@@ -114,16 +114,16 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 
 	var req loginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "invalid request body"})
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid request body"))
 		return
 	}
 
 	if req.Email == "" || req.Password == "" {
-		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "email and password are required"})
+		httperr.WriteError(w, r, httperr.InvalidInput("email and password are required"))
 		return
 	}
 	if len(req.Email) > 254 {
-		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "email too long"})
+		httperr.WriteError(w, r, httperr.InvalidInput("email too long"))
 		return
 	}
 
@@ -142,9 +142,9 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidCredentials):
-			writeJSON(w, http.StatusUnauthorized, errorResponse{Error: "invalid email or password"})
+			httperr.WriteError(w, r, httperr.Unauthorized("invalid email or password"))
 		case errors.Is(err, service.ErrAccountLocked):
-			writeJSON(w, http.StatusTooManyRequests, errorResponse{Error: "too many attempts, try again later"})
+			httperr.WriteError(w, r, httperr.Wrap(nil, httperr.CodeForbidden, "too many attempts, try again later", http.StatusTooManyRequests))
 		default:
 			httperr.WriteError(w, r, httperr.Internal(err))
 		}
@@ -184,7 +184,7 @@ func (h *Auth) Refresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if refreshToken == "" {
-		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "refresh token is required"})
+		httperr.WriteError(w, r, httperr.InvalidInput("refresh token is required"))
 		return
 	}
 
@@ -199,7 +199,7 @@ func (h *Auth) Refresh(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case errors.Is(err, service.ErrInvalidRefreshToken):
 			clearRefreshCookie(w)
-			writeJSON(w, http.StatusUnauthorized, errorResponse{Error: "invalid or expired refresh token"})
+			httperr.WriteError(w, r, httperr.Unauthorized("invalid or expired refresh token"))
 		default:
 			httperr.WriteError(w, r, httperr.Internal(err))
 		}
@@ -256,7 +256,7 @@ func (h *Auth) Logout(w http.ResponseWriter, r *http.Request) {
 func (h *Auth) Me(w http.ResponseWriter, r *http.Request) {
 	userID := r.Header.Get("X-User-ID")
 	if userID == "" {
-		writeJSON(w, http.StatusUnauthorized, errorResponse{Error: "not authenticated"})
+		httperr.WriteError(w, r, httperr.Unauthorized("not authenticated"))
 		return
 	}
 
@@ -340,7 +340,7 @@ func (h *Auth) UpdateMe(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 	userID := r.Header.Get("X-User-ID")
 	if userID == "" {
-		writeJSON(w, http.StatusUnauthorized, errorResponse{Error: "not authenticated"})
+		httperr.WriteError(w, r, httperr.Unauthorized("not authenticated"))
 		return
 	}
 
@@ -348,7 +348,7 @@ func (h *Auth) UpdateMe(w http.ResponseWriter, r *http.Request) {
 		Name string `json:"name"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "invalid request body"})
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid request body"))
 		return
 	}
 

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 	"github.com/Camionerou/rag-saldivia/services/auth/internal/service"
 )
 
@@ -23,19 +24,19 @@ type mfaVerifyLoginRequest struct {
 func (h *Auth) SetupMFA(w http.ResponseWriter, r *http.Request) {
 	userID := r.Header.Get("X-User-ID")
 	if userID == "" {
-		writeJSON(w, http.StatusUnauthorized, errorResponse{Error: "authentication required"})
+		httperr.WriteError(w, r, httperr.Unauthorized("authentication required"))
 		return
 	}
 
 	svc, err := h.resolveService(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadGateway, errorResponse{Error: "tenant not available"})
+		httperr.WriteError(w, r, httperr.Wrap(err, httperr.CodeInternal, "tenant not available", http.StatusBadGateway))
 		return
 	}
 
 	result, err := svc.SetupMFA(r.Context(), userID)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "failed to setup MFA"})
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 
@@ -48,29 +49,29 @@ func (h *Auth) SetupMFA(w http.ResponseWriter, r *http.Request) {
 func (h *Auth) VerifySetup(w http.ResponseWriter, r *http.Request) {
 	userID := r.Header.Get("X-User-ID")
 	if userID == "" {
-		writeJSON(w, http.StatusUnauthorized, errorResponse{Error: "authentication required"})
+		httperr.WriteError(w, r, httperr.Unauthorized("authentication required"))
 		return
 	}
 
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 	var req mfaCodeRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Code == "" {
-		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "code is required"})
+		httperr.WriteError(w, r, httperr.InvalidInput("code is required"))
 		return
 	}
 
 	svc, err := h.resolveService(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadGateway, errorResponse{Error: "tenant not available"})
+		httperr.WriteError(w, r, httperr.Wrap(err, httperr.CodeInternal, "tenant not available", http.StatusBadGateway))
 		return
 	}
 
 	if err := svc.VerifySetup(r.Context(), userID, req.Code); err != nil {
 		if errors.Is(err, service.ErrInvalidMFACode) {
-			writeJSON(w, http.StatusUnauthorized, errorResponse{Error: "invalid code"})
+			httperr.WriteError(w, r, httperr.Unauthorized("invalid code"))
 			return
 		}
-		writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "failed to verify MFA"})
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 
@@ -85,23 +86,23 @@ func (h *Auth) VerifyMFALogin(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 	var req mfaVerifyLoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.MFAToken == "" || req.Code == "" {
-		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "mfa_token and code are required"})
+		httperr.WriteError(w, r, httperr.InvalidInput("mfa_token and code are required"))
 		return
 	}
 
 	svc, err := h.resolveService(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadGateway, errorResponse{Error: "tenant not available"})
+		httperr.WriteError(w, r, httperr.Wrap(err, httperr.CodeInternal, "tenant not available", http.StatusBadGateway))
 		return
 	}
 
 	tokens, err := svc.CompleteMFALogin(r.Context(), req.MFAToken, req.Code)
 	if err != nil {
 		if errors.Is(err, service.ErrInvalidMFACode) {
-			writeJSON(w, http.StatusUnauthorized, errorResponse{Error: "invalid MFA code"})
+			httperr.WriteError(w, r, httperr.Unauthorized("invalid MFA code"))
 			return
 		}
-		writeJSON(w, http.StatusUnauthorized, errorResponse{Error: "invalid or expired MFA token"})
+		httperr.WriteError(w, r, httperr.Unauthorized("invalid or expired MFA token"))
 		return
 	}
 
@@ -114,29 +115,29 @@ func (h *Auth) VerifyMFALogin(w http.ResponseWriter, r *http.Request) {
 func (h *Auth) DisableMFA(w http.ResponseWriter, r *http.Request) {
 	userID := r.Header.Get("X-User-ID")
 	if userID == "" {
-		writeJSON(w, http.StatusUnauthorized, errorResponse{Error: "authentication required"})
+		httperr.WriteError(w, r, httperr.Unauthorized("authentication required"))
 		return
 	}
 
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 	var req mfaCodeRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Code == "" {
-		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "code is required"})
+		httperr.WriteError(w, r, httperr.InvalidInput("code is required"))
 		return
 	}
 
 	svc, err := h.resolveService(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadGateway, errorResponse{Error: "tenant not available"})
+		httperr.WriteError(w, r, httperr.Wrap(err, httperr.CodeInternal, "tenant not available", http.StatusBadGateway))
 		return
 	}
 
 	if err := svc.DisableMFA(r.Context(), userID, req.Code); err != nil {
 		if errors.Is(err, service.ErrInvalidMFACode) {
-			writeJSON(w, http.StatusUnauthorized, errorResponse{Error: "invalid code"})
+			httperr.WriteError(w, r, httperr.Unauthorized("invalid code"))
 			return
 		}
-		writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "failed to disable MFA"})
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 
