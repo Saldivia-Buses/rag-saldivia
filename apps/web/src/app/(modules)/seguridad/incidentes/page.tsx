@@ -18,46 +18,102 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { AlertTriangleIcon, PlusIcon } from "lucide-react";
 
-interface Incident {
+interface Accident {
   id: string;
-  number: string;
-  date: string;
-  description: string;
-  severity: string;
+  entity_name: string;
+  accident_type_name: string;
+  body_part_description: string;
+  incident_date: string;
+  recovery_date: string;
+  lost_days: number;
   status: string;
+  observations: string;
+  reported_by: string;
 }
 
-const sevLabel: Record<string, string> = { minor: "Menor", major: "Mayor", critical: "Crítico" };
-const sevColor: Record<string, "default" | "secondary" | "destructive"> = { minor: "secondary", major: "default", critical: "destructive" };
-const statusLabel: Record<string, string> = { open: "Abierto", investigating: "Investigando", closed: "Cerrado" };
-const statusColor: Record<string, "default" | "secondary" | "outline"> = { open: "secondary", investigating: "outline", closed: "default" };
+interface AccidentType {
+  id: string;
+  name: string;
+  severity_idx: number;
+}
+
+interface BodyPart {
+  id: string;
+  description: string;
+}
+
+interface Entity {
+  id: string;
+  name: string;
+}
+
+const statusLabel: Record<string, string> = {
+  open: "Abierto",
+  investigating: "Investigando",
+  closed: "Cerrado",
+};
+const statusColor: Record<string, "default" | "secondary" | "outline"> = {
+  open: "secondary",
+  investigating: "outline",
+  closed: "default",
+};
 
 export default function IncidentesPage() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
 
-  const { data: incidents = [], isLoading, error } = useQuery({
-    queryKey: [...erpKeys.all, "quality", "nc", "seguridad"] as const,
-    queryFn: () => api.get<{ nonconformities: Incident[] }>("/v1/erp/quality/nc?source=seguridad&page_size=50"),
-    select: (d) => d.nonconformities,
+  const { data: accidents = [], isLoading, error } = useQuery({
+    queryKey: [...erpKeys.all, "safety", "accidents"] as const,
+    queryFn: () =>
+      api.get<{ accidents: Accident[] }>("/v1/erp/safety/accidents?page_size=50"),
+    select: (d) => d.accidents,
+  });
+
+  const { data: accidentTypes = [] } = useQuery({
+    queryKey: [...erpKeys.all, "safety", "accident-types"] as const,
+    queryFn: () =>
+      api.get<{ accident_types: AccidentType[] }>("/v1/erp/safety/accident-types"),
+    select: (d) => d.accident_types,
+  });
+
+  const { data: bodyParts = [] } = useQuery({
+    queryKey: [...erpKeys.all, "safety", "body-parts"] as const,
+    queryFn: () =>
+      api.get<{ body_parts: BodyPart[] }>("/v1/erp/safety/body-parts"),
+    select: (d) => d.body_parts,
+  });
+
+  const { data: entities = [] } = useQuery({
+    queryKey: erpKeys.entities("employee"),
+    queryFn: () =>
+      api.get<{ entities: Entity[] }>("/v1/erp/entities?type=employee&page_size=200"),
+    select: (d) => d.entities,
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: { Number: string; Date: string; Description: string; Severity: string; Source: string }) =>
-      api.post("/v1/erp/quality/nc", data),
+    mutationFn: (data: {
+      entity_id?: string;
+      accident_type_id?: string;
+      body_part_id?: string;
+      incident_date: string;
+      lost_days?: number;
+      observations?: string;
+      reported_by?: string;
+    }) => api.post("/v1/erp/safety/accidents", data),
     onSuccess: () => {
-      toast.success("Incidente registrado");
-      queryClient.invalidateQueries({ queryKey: [...erpKeys.all, "quality", "nc", "seguridad"] });
+      toast.success("Accidente registrado");
+      queryClient.invalidateQueries({ queryKey: [...erpKeys.all, "safety", "accidents"] });
       setOpen(false);
     },
     onError: permissionErrorToast,
   });
 
-  const closeMutation = useMutation({
-    mutationFn: (id: string) => api.patch(`/v1/erp/quality/nc/${id}/status`, { Status: "closed" }),
+  const statusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: string }) =>
+      api.patch(`/v1/erp/safety/accidents/${id}/status`, { status }),
     onSuccess: () => {
-      toast.success("Incidente cerrado");
-      queryClient.invalidateQueries({ queryKey: [...erpKeys.all, "quality", "nc", "seguridad"] });
+      toast.success("Estado actualizado");
+      queryClient.invalidateQueries({ queryKey: [...erpKeys.all, "safety", "accidents"] });
     },
     onError: permissionErrorToast,
   });
@@ -74,10 +130,12 @@ export default function IncidentesPage() {
               <AlertTriangleIcon className="size-5 text-destructive" />
               Incidentes
             </h1>
-            <p className="text-sm text-muted-foreground mt-0.5">Registro de accidentes e incidentes de seguridad vial</p>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Registro de accidentes e incidentes de seguridad laboral
+            </p>
           </div>
           <Button size="sm" onClick={() => setOpen(true)}>
-            <PlusIcon className="size-4 mr-1.5" />Registrar incidente
+            <PlusIcon className="size-4 mr-1.5" />Registrar accidente
           </Button>
         </div>
 
@@ -85,48 +143,62 @@ export default function IncidentesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-24">Número</TableHead>
+                <TableHead>Empleado</TableHead>
+                <TableHead className="w-40">Tipo de accidente</TableHead>
+                <TableHead className="w-36">Parte afectada</TableHead>
                 <TableHead className="w-28">Fecha</TableHead>
-                <TableHead>Descripción</TableHead>
-                <TableHead className="w-28">Gravedad</TableHead>
-                <TableHead className="w-28">Estado</TableHead>
-                <TableHead className="w-24">Acciones</TableHead>
+                <TableHead className="w-24">Días perdidos</TableHead>
+                <TableHead className="w-32">Estado</TableHead>
+                <TableHead>Reportado por</TableHead>
+                <TableHead className="w-28">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {incidents.map((inc) => (
-                <TableRow key={inc.id}>
-                  <TableCell className="font-mono text-sm">{inc.number}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{fmtDateShort(inc.date)}</TableCell>
-                  <TableCell className="text-sm truncate max-w-72">{inc.description}</TableCell>
+              {accidents.map((acc) => (
+                <TableRow key={acc.id}>
+                  <TableCell className="text-sm font-medium">{acc.entity_name || "—"}</TableCell>
+                  <TableCell className="text-sm">{acc.accident_type_name || "—"}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{acc.body_part_description || "—"}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{fmtDateShort(acc.incident_date)}</TableCell>
+                  <TableCell className="text-sm text-center">{acc.lost_days ?? "—"}</TableCell>
                   <TableCell>
-                    <Badge variant={sevColor[inc.severity] || "secondary"}>
-                      {sevLabel[inc.severity] || inc.severity}
+                    <Badge variant={statusColor[acc.status] ?? "secondary"}>
+                      {statusLabel[acc.status] ?? acc.status}
                     </Badge>
                   </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{acc.reported_by || "—"}</TableCell>
                   <TableCell>
-                    <Badge variant={statusColor[inc.status] || "secondary"}>
-                      {statusLabel[inc.status] || inc.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {inc.status !== "closed" && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => closeMutation.mutate(inc.id)}
-                        disabled={closeMutation.isPending}
-                      >
-                        Cerrar
-                      </Button>
-                    )}
+                    <div className="flex gap-1">
+                      {acc.status === "open" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs px-2"
+                          onClick={() => statusMutation.mutate({ id: acc.id, status: "investigating" })}
+                          disabled={statusMutation.isPending}
+                        >
+                          Investigar
+                        </Button>
+                      )}
+                      {acc.status === "investigating" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs px-2"
+                          onClick={() => statusMutation.mutate({ id: acc.id, status: "closed" })}
+                          disabled={statusMutation.isPending}
+                        >
+                          Cerrar
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
-              {incidents.length === 0 && (
+              {accidents.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                    Sin incidentes registrados.
+                  <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                    Sin accidentes registrados.
                   </TableCell>
                 </TableRow>
               )}
@@ -137,9 +209,12 @@ export default function IncidentesPage() {
 
       <Dialog open={open} onOpenChange={(v) => !v && setOpen(false)}>
         <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>Registrar Incidente</DialogTitle></DialogHeader>
-          <CreateIncidentForm
-            onSubmit={(data) => createMutation.mutate({ ...data, Source: "seguridad" })}
+          <DialogHeader><DialogTitle>Registrar Accidente</DialogTitle></DialogHeader>
+          <CreateAccidentForm
+            entities={entities}
+            accidentTypes={accidentTypes}
+            bodyParts={bodyParts}
+            onSubmit={(data) => createMutation.mutate(data)}
             isPending={createMutation.isPending}
             onClose={() => setOpen(false)}
           />
@@ -149,65 +224,132 @@ export default function IncidentesPage() {
   );
 }
 
-function CreateIncidentForm({
+function CreateAccidentForm({
+  entities,
+  accidentTypes,
+  bodyParts,
   onSubmit,
   isPending,
   onClose,
 }: {
-  onSubmit: (data: { Number: string; Date: string; Description: string; Severity: string }) => void;
+  entities: Entity[];
+  accidentTypes: AccidentType[];
+  bodyParts: BodyPart[];
+  onSubmit: (data: {
+    entity_id?: string;
+    accident_type_id?: string;
+    body_part_id?: string;
+    incident_date: string;
+    lost_days?: number;
+    observations?: string;
+    reported_by?: string;
+  }) => void;
   isPending: boolean;
   onClose: () => void;
 }) {
   const today = new Date().toISOString().slice(0, 10);
-  const [number, setNumber] = useState("");
-  const [date, setDate] = useState(today);
-  const [severity, setSeverity] = useState("minor");
-  const [description, setDescription] = useState("");
+  const [entityId, setEntityId] = useState("");
+  const [accidentTypeId, setAccidentTypeId] = useState("");
+  const [bodyPartId, setBodyPartId] = useState("");
+  const [incidentDate, setIncidentDate] = useState(today);
+  const [lostDays, setLostDays] = useState("");
+  const [observations, setObservations] = useState("");
+  const [reportedBy, setReportedBy] = useState("");
 
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        if (number && date && description) {
-          onSubmit({ Number: number, Date: date, Description: description, Severity: severity });
-        }
+        if (!incidentDate) return;
+        onSubmit({
+          entity_id: entityId || undefined,
+          accident_type_id: accidentTypeId || undefined,
+          body_part_id: bodyPartId || undefined,
+          incident_date: incidentDate,
+          lost_days: lostDays ? parseInt(lostDays, 10) : undefined,
+          observations: observations || undefined,
+          reported_by: reportedBy || undefined,
+        });
       }}
       className="space-y-4"
     >
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>Número</Label>
-          <Input value={number} onChange={(e) => setNumber(e.target.value)} placeholder="INC-001" />
-        </div>
-        <div className="space-y-2">
-          <Label>Fecha</Label>
-          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-        </div>
-      </div>
       <div className="space-y-2">
-        <Label>Gravedad</Label>
+        <Label>Empleado</Label>
         <select
           className="w-full rounded-md border px-3 py-2 text-sm bg-card"
-          value={severity}
-          onChange={(e) => setSeverity(e.target.value)}
+          value={entityId}
+          onChange={(e) => setEntityId(e.target.value)}
         >
-          <option value="minor">Menor</option>
-          <option value="major">Mayor</option>
-          <option value="critical">Crítico</option>
+          <option value="">Sin especificar</option>
+          {entities.map((ent) => (
+            <option key={ent.id} value={ent.id}>{ent.name}</option>
+          ))}
         </select>
       </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Tipo de accidente</Label>
+          <select
+            className="w-full rounded-md border px-3 py-2 text-sm bg-card"
+            value={accidentTypeId}
+            onChange={(e) => setAccidentTypeId(e.target.value)}
+          >
+            <option value="">Sin especificar</option>
+            {accidentTypes.map((at) => (
+              <option key={at.id} value={at.id}>{at.name}</option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-2">
+          <Label>Parte corporal</Label>
+          <select
+            className="w-full rounded-md border px-3 py-2 text-sm bg-card"
+            value={bodyPartId}
+            onChange={(e) => setBodyPartId(e.target.value)}
+          >
+            <option value="">Sin especificar</option>
+            {bodyParts.map((bp) => (
+              <option key={bp.id} value={bp.id}>{bp.description}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Fecha del accidente</Label>
+          <Input type="date" value={incidentDate} onChange={(e) => setIncidentDate(e.target.value)} required />
+        </div>
+        <div className="space-y-2">
+          <Label>Días perdidos</Label>
+          <Input
+            type="number"
+            min="0"
+            value={lostDays}
+            onChange={(e) => setLostDays(e.target.value)}
+            placeholder="0"
+          />
+        </div>
+      </div>
       <div className="space-y-2">
-        <Label>Descripción</Label>
+        <Label>Reportado por</Label>
+        <Input
+          value={reportedBy}
+          onChange={(e) => setReportedBy(e.target.value)}
+          placeholder="Nombre del responsable"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label>Notas</Label>
         <Textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Describa el incidente..."
+          value={observations}
+          onChange={(e) => setObservations(e.target.value)}
+          placeholder="Descripción del accidente..."
           rows={3}
         />
       </div>
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
-        <Button type="submit" disabled={!number || !date || !description || isPending}>
+        <Button type="submit" disabled={!incidentDate || isPending}>
           {isPending ? "Registrando..." : "Registrar"}
         </Button>
       </div>

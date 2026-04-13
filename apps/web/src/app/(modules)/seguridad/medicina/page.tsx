@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { api } from "@/lib/api/client";
 import { erpKeys } from "@/lib/erp/queries";
-import { fmtDate } from "@/lib/erp/format";
+import { fmtDateShort } from "@/lib/erp/format";
 import { permissionErrorToast } from "@/lib/erp/permission-messages";
 import { ErrorState } from "@/components/erp/error-state";
 import { Badge } from "@/components/ui/badge";
@@ -15,67 +15,157 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { HeartPulseIcon, PlusIcon } from "lucide-react";
 
-interface Employee {
+interface MedicalLeave {
   id: string;
-  first_name: string;
-  last_name: string;
-}
-
-interface MedicalEvent {
-  id: string;
-  entity_id: string;
-  entity_name?: string;
-  event_type: string;
+  entity_name: string;
+  leave_type: string;
   date_from: string;
   date_to: string;
-  notes: string;
+  working_days: number;
+  body_part_description: string;
+  status: string;
+  approved_by: string;
+  observations: string;
 }
 
-function certStatus(dateTo: string): "Vigente" | "Vencido" {
-  if (!dateTo) return "Vencido";
-  return new Date(dateTo) >= new Date() ? "Vigente" : "Vencido";
+interface MedicalConsultation {
+  id: string;
+  patient_name: string;
+  consult_date: string;
+  consult_time: string;
+  symptoms: string;
+  prescription: string;
+  medic_user: string;
 }
+
+interface Entity {
+  id: string;
+  name: string;
+}
+
+interface BodyPart {
+  id: string;
+  description: string;
+}
+
+const leaveTypeLabel: Record<string, string> = {
+  illness: "Enfermedad",
+  accident: "Accidente laboral",
+  vacation: "Vacaciones",
+  leave: "Licencia",
+  other: "Otro",
+};
+
+const leaveTypeVariant: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
+  illness: "destructive",
+  accident: "destructive",
+  vacation: "default",
+  leave: "secondary",
+  other: "outline",
+};
+
+const leaveStatusLabel: Record<string, string> = {
+  pending: "Pendiente",
+  approved: "Aprobada",
+  rejected: "Rechazada",
+};
+
+const leaveStatusVariant: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
+  pending: "outline",
+  approved: "default",
+  rejected: "destructive",
+};
 
 export default function MedicinaPage() {
   const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
+  const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
+  const [logDialogOpen, setLogDialogOpen] = useState(false);
 
-  const { data: events = [], isLoading, error } = useQuery({
-    queryKey: [...erpKeys.all, "hr", "events", "medical"] as const,
-    queryFn: () => api.get<{ events: MedicalEvent[] }>("/v1/erp/hr/events?event_type=medical&page_size=50"),
-    select: (d) => d.events,
+  // Medical Leaves
+  const { data: leaves = [], isLoading: leavesLoading, error: leavesError } = useQuery({
+    queryKey: [...erpKeys.all, "safety", "medical-leaves"] as const,
+    queryFn: () =>
+      api.get<{ medical_leaves: MedicalLeave[] }>("/v1/erp/safety/medical-leaves?page_size=50"),
+    select: (d) => d.medical_leaves,
   });
 
-  const { data: employees = [] } = useQuery({
-    queryKey: erpKeys.employees(),
-    queryFn: () => api.get<{ employees: Employee[] }>("/v1/erp/hr/employees?page_size=200"),
-    select: (d) => d.employees,
+  // Medical Log
+  const { data: consultations = [], isLoading: logLoading, error: logError } = useQuery({
+    queryKey: [...erpKeys.all, "safety", "medical-log"] as const,
+    queryFn: () =>
+      api.get<{ consultations: MedicalConsultation[] }>("/v1/erp/safety/medical-log?page_size=50"),
+    select: (d) => d.consultations,
   });
 
-  const createMutation = useMutation({
+  // Catalogs
+  const { data: entities = [] } = useQuery({
+    queryKey: erpKeys.entities("employee"),
+    queryFn: () =>
+      api.get<{ entities: Entity[] }>("/v1/erp/entities?type=employee&page_size=200"),
+    select: (d) => d.entities,
+  });
+
+  const { data: bodyParts = [] } = useQuery({
+    queryKey: [...erpKeys.all, "safety", "body-parts"] as const,
+    queryFn: () =>
+      api.get<{ body_parts: BodyPart[] }>("/v1/erp/safety/body-parts"),
+    select: (d) => d.body_parts,
+  });
+
+  // Mutations
+  const createLeaveMutation = useMutation({
     mutationFn: (data: {
       entity_id: string;
-      event_type: string;
+      leave_type: string;
       date_from: string;
       date_to: string;
-      hours: null;
-      notes: string;
-    }) => api.post("/v1/erp/hr/events", data),
+      working_days?: number;
+      observations?: string;
+      body_part_id?: string;
+    }) => api.post("/v1/erp/safety/medical-leaves", data),
     onSuccess: () => {
-      toast.success("Certificado registrado");
-      queryClient.invalidateQueries({ queryKey: [...erpKeys.all, "hr", "events", "medical"] });
-      setOpen(false);
+      toast.success("Licencia registrada");
+      queryClient.invalidateQueries({ queryKey: [...erpKeys.all, "safety", "medical-leaves"] });
+      setLeaveDialogOpen(false);
     },
     onError: permissionErrorToast,
   });
 
-  const employeeMap = new Map(employees.map((e) => [e.id, `${e.first_name} ${e.last_name}`]));
+  const approveLeaveMutation = useMutation({
+    mutationFn: ({ id, approved_by }: { id: string; approved_by: string }) =>
+      api.patch(`/v1/erp/safety/medical-leaves/${id}/approve`, { approved_by }),
+    onSuccess: () => {
+      toast.success("Licencia aprobada");
+      queryClient.invalidateQueries({ queryKey: [...erpKeys.all, "safety", "medical-leaves"] });
+    },
+    onError: permissionErrorToast,
+  });
 
-  if (error) return <ErrorState message="Error cargando certificados médicos" onRetry={() => window.location.reload()} />;
-  if (isLoading) return <div className="flex-1 p-8"><Skeleton className="h-[600px]" /></div>;
+  const createLogMutation = useMutation({
+    mutationFn: (data: {
+      consult_date: string;
+      patient_name?: string;
+      symptoms: string;
+      prescription: string;
+      medic_user?: string;
+    }) => api.post("/v1/erp/safety/medical-log", data),
+    onSuccess: () => {
+      toast.success("Consulta registrada");
+      queryClient.invalidateQueries({ queryKey: [...erpKeys.all, "safety", "medical-log"] });
+      setLogDialogOpen(false);
+    },
+    onError: permissionErrorToast,
+  });
+
+  const anyError = leavesError || logError;
+  const anyLoading = leavesLoading || logLoading;
+
+  if (anyError) return <ErrorState message="Error cargando medicina laboral" onRetry={() => window.location.reload()} />;
+  if (anyLoading) return <div className="flex-1 p-8"><Skeleton className="h-[600px]" /></div>;
 
   return (
     <div className="flex-1 overflow-y-auto">
@@ -86,75 +176,153 @@ export default function MedicinaPage() {
               <HeartPulseIcon className="size-5 text-rose-500" />
               Medicina Laboral
             </h1>
-            <p className="text-sm text-muted-foreground mt-0.5">Certificados psicofísicos y aptitud médica de conductores</p>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Licencias médicas y libro de consultas diarias
+            </p>
           </div>
-          <Button size="sm" onClick={() => setOpen(true)}>
-            <PlusIcon className="size-4 mr-1.5" />Nuevo certificado
-          </Button>
         </div>
 
-        <div className="rounded-xl border border-border/40 bg-card overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Empleado</TableHead>
-                <TableHead className="w-28">Tipo</TableHead>
-                <TableHead className="w-28">Válido desde</TableHead>
-                <TableHead className="w-28">Válido hasta</TableHead>
-                <TableHead>Notas</TableHead>
-                <TableHead className="w-24">Estado</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {events.map((ev) => {
-                const status = certStatus(ev.date_to);
-                const empName = ev.entity_name || employeeMap.get(ev.entity_id) || ev.entity_id;
-                return (
-                  <TableRow key={ev.id}>
-                    <TableCell className="text-sm font-medium">{empName}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">Psicofísico</Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{fmtDate(ev.date_from)}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{fmtDate(ev.date_to)}</TableCell>
-                    <TableCell className="text-sm truncate max-w-56">{ev.notes || "—"}</TableCell>
-                    <TableCell>
-                      <Badge variant={status === "Vigente" ? "default" : "destructive"}>
-                        {status}
-                      </Badge>
-                    </TableCell>
+        <Tabs defaultValue="licencias">
+          <TabsList className="mb-4">
+            <TabsTrigger value="licencias">Licencias</TabsTrigger>
+            <TabsTrigger value="libro">Libro médico</TabsTrigger>
+          </TabsList>
+
+          {/* TAB 1: Licencias */}
+          <TabsContent value="licencias">
+            <div className="flex justify-end mb-3">
+              <Button size="sm" onClick={() => setLeaveDialogOpen(true)}>
+                <PlusIcon className="size-4 mr-1.5" />Nueva licencia
+              </Button>
+            </div>
+            <div className="rounded-xl border border-border/40 bg-card overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Empleado</TableHead>
+                    <TableHead className="w-36">Tipo</TableHead>
+                    <TableHead className="w-28">Desde</TableHead>
+                    <TableHead className="w-28">Hasta</TableHead>
+                    <TableHead className="w-20">Días</TableHead>
+                    <TableHead>Parte corporal</TableHead>
+                    <TableHead className="w-28">Estado</TableHead>
+                    <TableHead className="w-28">Acciones</TableHead>
                   </TableRow>
-                );
-              })}
-              {events.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                    Sin certificados registrados.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                </TableHeader>
+                <TableBody>
+                  {leaves.map((lv) => (
+                    <TableRow key={lv.id}>
+                      <TableCell className="text-sm font-medium">{lv.entity_name || "—"}</TableCell>
+                      <TableCell>
+                        <Badge variant={leaveTypeVariant[lv.leave_type] ?? "secondary"}>
+                          {leaveTypeLabel[lv.leave_type] ?? lv.leave_type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{fmtDateShort(lv.date_from)}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{fmtDateShort(lv.date_to)}</TableCell>
+                      <TableCell className="text-sm text-center">{lv.working_days ?? "—"}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{lv.body_part_description || "—"}</TableCell>
+                      <TableCell>
+                        <Badge variant={leaveStatusVariant[lv.status] ?? "outline"}>
+                          {leaveStatusLabel[lv.status] ?? lv.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {lv.status === "pending" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-xs px-2"
+                            onClick={() =>
+                              approveLeaveMutation.mutate({ id: lv.id, approved_by: "admin" })
+                            }
+                            disabled={approveLeaveMutation.isPending}
+                          >
+                            Aprobar
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {leaves.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                        Sin licencias registradas.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
+
+          {/* TAB 2: Libro médico */}
+          <TabsContent value="libro">
+            <div className="flex justify-end mb-3">
+              <Button size="sm" onClick={() => setLogDialogOpen(true)}>
+                <PlusIcon className="size-4 mr-1.5" />Nueva consulta
+              </Button>
+            </div>
+            <div className="rounded-xl border border-border/40 bg-card overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-28">Fecha</TableHead>
+                    <TableHead>Paciente</TableHead>
+                    <TableHead>Síntomas</TableHead>
+                    <TableHead>Prescripción</TableHead>
+                    <TableHead className="w-36">Médico/Enfermero</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {consultations.map((c) => (
+                    <TableRow key={c.id}>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {fmtDateShort(c.consult_date)}
+                        {c.consult_time ? ` ${c.consult_time.slice(0, 5)}` : ""}
+                      </TableCell>
+                      <TableCell className="text-sm font-medium">{c.patient_name || "—"}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground truncate max-w-48">{c.symptoms || "—"}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground truncate max-w-48">{c.prescription || "—"}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{c.medic_user || "—"}</TableCell>
+                    </TableRow>
+                  ))}
+                  {consultations.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                        Sin consultas registradas.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
 
-      <Dialog open={open} onOpenChange={(v) => !v && setOpen(false)}>
+      {/* Dialog: Nueva licencia */}
+      <Dialog open={leaveDialogOpen} onOpenChange={(v) => !v && setLeaveDialogOpen(false)}>
         <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>Nuevo Certificado Médico</DialogTitle></DialogHeader>
-          <CreateCertForm
-            employees={employees}
-            onSubmit={(data) =>
-              createMutation.mutate({
-                entity_id: data.entity_id,
-                event_type: "leave",
-                date_from: data.date_from,
-                date_to: data.date_to,
-                hours: null,
-                notes: data.notes,
-              })
-            }
-            isPending={createMutation.isPending}
-            onClose={() => setOpen(false)}
+          <DialogHeader><DialogTitle>Nueva Licencia Médica</DialogTitle></DialogHeader>
+          <CreateLeaveForm
+            entities={entities}
+            bodyParts={bodyParts}
+            onSubmit={(data) => createLeaveMutation.mutate(data)}
+            isPending={createLeaveMutation.isPending}
+            onClose={() => setLeaveDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Nueva consulta */}
+      <Dialog open={logDialogOpen} onOpenChange={(v) => !v && setLogDialogOpen(false)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Nueva Consulta Médica</DialogTitle></DialogHeader>
+          <CreateConsultationForm
+            onSubmit={(data) => createLogMutation.mutate(data)}
+            isPending={createLogMutation.isPending}
+            onClose={() => setLogDialogOpen(false)}
           />
         </DialogContent>
       </Dialog>
@@ -162,30 +330,50 @@ export default function MedicinaPage() {
   );
 }
 
-function CreateCertForm({
-  employees,
+function CreateLeaveForm({
+  entities,
+  bodyParts,
   onSubmit,
   isPending,
   onClose,
 }: {
-  employees: Employee[];
-  onSubmit: (data: { entity_id: string; date_from: string; date_to: string; notes: string }) => void;
+  entities: Entity[];
+  bodyParts: BodyPart[];
+  onSubmit: (data: {
+    entity_id: string;
+    leave_type: string;
+    date_from: string;
+    date_to: string;
+    working_days?: number;
+    observations?: string;
+    body_part_id?: string;
+  }) => void;
   isPending: boolean;
   onClose: () => void;
 }) {
   const today = new Date().toISOString().slice(0, 10);
   const [entityId, setEntityId] = useState("");
+  const [leaveType, setLeaveType] = useState("illness");
   const [dateFrom, setDateFrom] = useState(today);
   const [dateTo, setDateTo] = useState("");
-  const [notes, setNotes] = useState("");
+  const [workingDays, setWorkingDays] = useState("");
+  const [observations, setObservations] = useState("");
+  const [bodyPartId, setBodyPartId] = useState("");
 
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        if (entityId && dateFrom && dateTo) {
-          onSubmit({ entity_id: entityId, date_from: dateFrom, date_to: dateTo, notes });
-        }
+        if (!entityId || !dateFrom || !dateTo) return;
+        onSubmit({
+          entity_id: entityId,
+          leave_type: leaveType,
+          date_from: dateFrom,
+          date_to: dateTo,
+          working_days: workingDays ? parseInt(workingDays, 10) : undefined,
+          observations: observations || undefined,
+          body_part_id: bodyPartId || undefined,
+        });
       }}
       className="space-y-4"
     >
@@ -195,37 +383,163 @@ function CreateCertForm({
           className="w-full rounded-md border px-3 py-2 text-sm bg-card"
           value={entityId}
           onChange={(e) => setEntityId(e.target.value)}
+          required
         >
           <option value="">Seleccionar empleado...</option>
-          {employees.map((emp) => (
-            <option key={emp.id} value={emp.id}>
-              {emp.first_name} {emp.last_name}
-            </option>
+          {entities.map((ent) => (
+            <option key={ent.id} value={ent.id}>{ent.name}</option>
           ))}
+        </select>
+      </div>
+      <div className="space-y-2">
+        <Label>Tipo de licencia</Label>
+        <select
+          className="w-full rounded-md border px-3 py-2 text-sm bg-card"
+          value={leaveType}
+          onChange={(e) => setLeaveType(e.target.value)}
+        >
+          <option value="illness">Enfermedad</option>
+          <option value="accident">Accidente laboral</option>
+          <option value="vacation">Vacaciones</option>
+          <option value="leave">Licencia</option>
+          <option value="other">Otro</option>
         </select>
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Válido desde</Label>
-          <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+          <Label>Desde</Label>
+          <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} required />
         </div>
         <div className="space-y-2">
-          <Label>Válido hasta</Label>
-          <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+          <Label>Hasta</Label>
+          <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} required />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Días hábiles</Label>
+          <Input
+            type="number"
+            min="0"
+            value={workingDays}
+            onChange={(e) => setWorkingDays(e.target.value)}
+            placeholder="0"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Parte corporal</Label>
+          <select
+            className="w-full rounded-md border px-3 py-2 text-sm bg-card"
+            value={bodyPartId}
+            onChange={(e) => setBodyPartId(e.target.value)}
+          >
+            <option value="">Sin especificar</option>
+            {bodyParts.map((bp) => (
+              <option key={bp.id} value={bp.id}>{bp.description}</option>
+            ))}
+          </select>
         </div>
       </div>
       <div className="space-y-2">
         <Label>Notas</Label>
         <Textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Ej: Apto psicofísico certificado Nro 1234"
+          value={observations}
+          onChange={(e) => setObservations(e.target.value)}
+          placeholder="Observaciones adicionales..."
           rows={2}
         />
       </div>
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
         <Button type="submit" disabled={!entityId || !dateFrom || !dateTo || isPending}>
+          {isPending ? "Registrando..." : "Registrar"}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+function CreateConsultationForm({
+  onSubmit,
+  isPending,
+  onClose,
+}: {
+  onSubmit: (data: {
+    consult_date: string;
+    patient_name?: string;
+    symptoms: string;
+    prescription: string;
+    medic_user?: string;
+  }) => void;
+  isPending: boolean;
+  onClose: () => void;
+}) {
+  const today = new Date().toISOString().slice(0, 10);
+  const [consultDate, setConsultDate] = useState(today);
+  const [patientName, setPatientName] = useState("");
+  const [symptoms, setSymptoms] = useState("");
+  const [prescription, setPrescription] = useState("");
+  const [medicUser, setMedicUser] = useState("");
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!consultDate || !symptoms) return;
+        onSubmit({
+          consult_date: consultDate,
+          patient_name: patientName || undefined,
+          symptoms,
+          prescription,
+          medic_user: medicUser || undefined,
+        });
+      }}
+      className="space-y-4"
+    >
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Fecha</Label>
+          <Input type="date" value={consultDate} onChange={(e) => setConsultDate(e.target.value)} required />
+        </div>
+        <div className="space-y-2">
+          <Label>Médico/Enfermero</Label>
+          <Input
+            value={medicUser}
+            onChange={(e) => setMedicUser(e.target.value)}
+            placeholder="Nombre"
+          />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label>Nombre del paciente</Label>
+        <Input
+          value={patientName}
+          onChange={(e) => setPatientName(e.target.value)}
+          placeholder="Nombre completo"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label>Síntomas</Label>
+        <Textarea
+          value={symptoms}
+          onChange={(e) => setSymptoms(e.target.value)}
+          placeholder="Descripción de síntomas..."
+          rows={2}
+          required
+        />
+      </div>
+      <div className="space-y-2">
+        <Label>Prescripción</Label>
+        <Textarea
+          value={prescription}
+          onChange={(e) => setPrescription(e.target.value)}
+          placeholder="Tratamiento indicado..."
+          rows={2}
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
+        <Button type="submit" disabled={!consultDate || !symptoms || isPending}>
           {isPending ? "Registrando..." : "Registrar"}
         </Button>
       </div>
