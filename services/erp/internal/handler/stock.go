@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -11,6 +10,7 @@ import (
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
+	erperrors "github.com/Camionerou/rag-saldivia/services/erp/internal/errors"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/repository"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/service"
 )
@@ -66,8 +66,7 @@ func (h *Stock) ListArticles(w http.ResponseWriter, r *http.Request) {
 
 	articles, err := h.svc.ListArticles(r.Context(), slug, search, artType, activeOnly, p.Limit(), p.Offset())
 	if err != nil {
-		slog.Error("list articles failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -78,12 +77,12 @@ func (h *Stock) GetArticle(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	article, err := h.svc.GetArticle(r.Context(), id, slug)
 	if err != nil {
-		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		erperrors.WriteError(w, r, erperrors.NotFound("article"))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -106,7 +105,7 @@ func (h *Stock) CreateArticle(w http.ResponseWriter, r *http.Request) {
 		ReorderPt   string  `json:"reorder_point"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid request body"))
 		return
 	}
 
@@ -125,8 +124,7 @@ func (h *Stock) CreateArticle(w http.ResponseWriter, r *http.Request) {
 		IP:          r.RemoteAddr,
 	})
 	if err != nil {
-		slog.Error("create article failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -139,8 +137,7 @@ func (h *Stock) ListWarehouses(w http.ResponseWriter, r *http.Request) {
 	activeOnly := r.URL.Query().Get("active") != "false"
 	warehouses, err := h.svc.ListWarehouses(r.Context(), slug, activeOnly)
 	if err != nil {
-		slog.Error("list warehouses failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -157,13 +154,12 @@ func (h *Stock) CreateWarehouse(w http.ResponseWriter, r *http.Request) {
 		Location string `json:"location"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid request body"))
 		return
 	}
 	wh, err := h.svc.CreateWarehouse(r.Context(), slug, body.Code, body.Name, body.Location, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create warehouse failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -178,8 +174,7 @@ func (h *Stock) GetStockLevels(w http.ResponseWriter, r *http.Request) {
 
 	levels, err := h.svc.GetStockLevels(r.Context(), slug, articleID, warehouseID)
 	if err != nil {
-		slog.Error("get stock levels failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -193,8 +188,7 @@ func (h *Stock) ListMovements(w http.ResponseWriter, r *http.Request) {
 
 	movements, err := h.svc.ListMovements(r.Context(), slug, articleID, p.Limit(), p.Offset())
 	if err != nil {
-		slog.Error("list movements failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -214,18 +208,18 @@ func (h *Stock) CreateMovement(w http.ResponseWriter, r *http.Request) {
 		Notes       string  `json:"notes"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid request body"))
 		return
 	}
 
 	artID, err := parseUUID(body.ArticleID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid article_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID("article_id"))
 		return
 	}
 	whID, err := parseUUID(body.WarehouseID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid warehouse_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID("warehouse_id"))
 		return
 	}
 
@@ -241,8 +235,7 @@ func (h *Stock) CreateMovement(w http.ResponseWriter, r *http.Request) {
 		IP:           r.RemoteAddr,
 	})
 	if err != nil {
-		slog.Error("create movement failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -254,13 +247,12 @@ func (h *Stock) ListBOM(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	bom, err := h.svc.ListBOM(r.Context(), slug, id)
 	if err != nil {
-		slog.Error("list bom failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
