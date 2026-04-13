@@ -93,7 +93,7 @@ func (h *Chat) CreateSession(w http.ResponseWriter, r *http.Request) {
 
 	var req createSessionRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid request body"))
 		return
 	}
 
@@ -151,7 +151,7 @@ func (h *Chat) RenameSession(w http.ResponseWriter, r *http.Request) {
 
 	var req renameRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Title == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "title is required"})
+		httperr.WriteError(w, r, httperr.InvalidInput("title is required"))
 		return
 	}
 
@@ -206,21 +206,21 @@ func (h *Chat) AddMessage(w http.ResponseWriter, r *http.Request) {
 
 	var req addMessageRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid request body"))
 		return
 	}
 
 	if req.Role == "" || req.Content == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "role and content are required"})
+		httperr.WriteError(w, r, httperr.InvalidInput("role and content are required"))
 		return
 	}
 	if !validRoles[req.Role] {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "role must be user, assistant, or system"})
+		httperr.WriteError(w, r, httperr.InvalidInput("role must be user, assistant, or system"))
 		return
 	}
 	// C4: block system role from external clients — only internal services should set system messages
 	if req.Role == "system" {
-		writeJSON(w, http.StatusForbidden, map[string]string{"error": "system messages cannot be added via API"})
+		httperr.WriteError(w, r, httperr.Forbidden("system messages cannot be added via API"))
 		return
 	}
 
@@ -228,7 +228,7 @@ func (h *Chat) AddMessage(w http.ResponseWriter, r *http.Request) {
 	if req.Role == "user" {
 		sanitized, err := guardrails.ValidateInput(r.Context(), req.Content, guardrails.DefaultInputConfig(50000), nil)
 		if err != nil {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "message blocked by guardrails"})
+			httperr.WriteError(w, r, httperr.InvalidInput("message blocked by guardrails"))
 			return
 		}
 		req.Content = sanitized
@@ -261,7 +261,7 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 func requireUserID(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("X-User-ID") == "" {
-			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "missing user identity"})
+			httperr.WriteError(w, r, httperr.Unauthorized("missing user identity"))
 			return
 		}
 		next.ServeHTTP(w, r)
