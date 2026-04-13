@@ -18,17 +18,21 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { PlusIcon, SearchIcon, PackageIcon, WarehouseIcon, ArrowRightLeftIcon } from "lucide-react";
 
 interface Article { id: string; code: string; name: string; article_type: string; min_stock: number; avg_cost: number; active: boolean; }
 interface StockLevel { article_code: string; article_name: string; warehouse_code: string; warehouse_name: string; quantity: number; reserved: number; }
 interface StockMovement { id: string; article_code: string; article_name: string; movement_type: string; quantity: number; unit_cost: number; user_id: string; notes: string; created_at: string; }
+interface Warehouse { id: string; code: string; name: string; }
 
 const typeBadge: Record<string, string> = { in: "Ingreso", out: "Egreso", transfer: "Transferencia", adjustment: "Ajuste" };
 
 export default function AlmacenPage() {
   const { search, setSearch, deferredSearch } = useERPSearch(0);
   const [createOpen, setCreateOpen] = useState(false);
+  const [movementOpen, setMovementOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: articles = [], isLoading, error } = useQuery({
@@ -53,12 +57,29 @@ export default function AlmacenPage() {
     select: (d) => d.movements,
   });
 
+  const { data: warehouses = [] } = useQuery({
+    queryKey: erpKeys.warehouses(),
+    queryFn: () => api.get<{ warehouses: Warehouse[] }>("/v1/erp/stock/warehouses"),
+    select: (d) => d.warehouses,
+  });
+
   const createMutation = useMutation({
     mutationFn: (data: { code: string; name: string; article_type: string }) => api.post("/v1/erp/stock/articles", data),
     onSuccess: () => {
       toast.success("Artículo creado exitosamente");
       queryClient.invalidateQueries({ queryKey: erpKeys.stockArticles() });
       setCreateOpen(false);
+    },
+    onError: permissionErrorToast,
+  });
+
+  const createMovementMutation = useMutation({
+    mutationFn: (data: { article_id: string; warehouse_id: string; movement_type: string; quantity: string; unit_cost?: string; notes?: string }) =>
+      api.post("/v1/erp/stock/movements", data),
+    onSuccess: () => {
+      toast.success("Movimiento registrado");
+      queryClient.invalidateQueries({ queryKey: [...erpKeys.all, "stock", "movements"] });
+      setMovementOpen(false);
     },
     onError: permissionErrorToast,
   });
@@ -139,6 +160,9 @@ export default function AlmacenPage() {
           </TabsContent>
 
           <TabsContent value="movements">
+            <div className="flex justify-end mb-4">
+              <Button size="sm" onClick={() => setMovementOpen(true)}><PlusIcon className="size-4 mr-1.5" />Registrar movimiento</Button>
+            </div>
             <div className="rounded-xl border border-border/40 bg-card overflow-hidden">
               <Table>
                 <TableHeader><TableRow>
@@ -170,7 +194,105 @@ export default function AlmacenPage() {
           <CreateArticleForm onSubmit={(code, name, type) => createMutation.mutate({ code, name, article_type: type || "material" })} isPending={createMutation.isPending} onClose={() => setCreateOpen(false)} />
         </DialogContent>
       </Dialog>
+
+      <Dialog open={movementOpen} onOpenChange={(v) => !v && setMovementOpen(false)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Registrar movimiento</DialogTitle></DialogHeader>
+          <CreateMovementForm
+            articles={articles}
+            warehouses={warehouses}
+            onSubmit={(data) => createMovementMutation.mutate(data)}
+            isPending={createMovementMutation.isPending}
+            onClose={() => setMovementOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+}
+
+function CreateMovementForm({
+  articles,
+  warehouses,
+  onSubmit,
+  isPending,
+  onClose,
+}: {
+  articles: Article[];
+  warehouses: Warehouse[];
+  onSubmit: (data: { article_id: string; warehouse_id: string; movement_type: string; quantity: string; unit_cost?: string; notes?: string }) => void;
+  isPending: boolean;
+  onClose: () => void;
+}) {
+  const [articleID, setArticleID] = useState("");
+  const [warehouseID, setWarehouseID] = useState("");
+  const [movementType, setMovementType] = useState("in");
+  const [quantity, setQuantity] = useState("");
+  const [unitCost, setUnitCost] = useState("");
+  const [notes, setNotes] = useState("");
+
+  const canSubmit = articleID && warehouseID && quantity;
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (canSubmit) {
+          const data: { article_id: string; warehouse_id: string; movement_type: string; quantity: string; unit_cost?: string; notes?: string } = {
+            article_id: articleID,
+            warehouse_id: warehouseID,
+            movement_type: movementType,
+            quantity,
+          };
+          if (unitCost) data.unit_cost = unitCost;
+          if (notes) data.notes = notes;
+          onSubmit(data);
+        }
+      }}
+      className="space-y-4"
+    >
+      <div className="space-y-2">
+        <Label>Artículo</Label>
+        <select className="w-full rounded-md border px-3 py-2 text-sm bg-card" value={articleID} onChange={(e) => setArticleID(e.target.value)}>
+          <option value="">Seleccionar artículo...</option>
+          {articles.map((a) => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}
+        </select>
+      </div>
+      <div className="space-y-2">
+        <Label>Depósito</Label>
+        <select className="w-full rounded-md border px-3 py-2 text-sm bg-card" value={warehouseID} onChange={(e) => setWarehouseID(e.target.value)}>
+          <option value="">Seleccionar depósito...</option>
+          {warehouses.map((w) => <option key={w.id} value={w.id}>{w.code} — {w.name}</option>)}
+        </select>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Tipo</Label>
+          <select className="w-full rounded-md border px-3 py-2 text-sm bg-card" value={movementType} onChange={(e) => setMovementType(e.target.value)}>
+            <option value="in">Ingreso</option>
+            <option value="out">Egreso</option>
+            <option value="transfer">Transferencia</option>
+            <option value="adjustment">Ajuste</option>
+          </select>
+        </div>
+        <div className="space-y-2">
+          <Label>Cantidad</Label>
+          <Input type="number" step="0.001" min="0" value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="0" />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label>Costo unitario <span className="text-muted-foreground">(opcional)</span></Label>
+        <Input type="number" step="0.01" min="0" value={unitCost} onChange={(e) => setUnitCost(e.target.value)} placeholder="0.00" />
+      </div>
+      <div className="space-y-2">
+        <Label>Notas <span className="text-muted-foreground">(opcional)</span></Label>
+        <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Observaciones..." />
+      </div>
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
+        <Button type="submit" disabled={!canSubmit || isPending}>{isPending ? "Registrando..." : "Registrar"}</Button>
+      </div>
+    </form>
   );
 }
 
