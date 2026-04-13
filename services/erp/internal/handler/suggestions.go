@@ -60,7 +60,9 @@ func writeSafeErr(w http.ResponseWriter, err error, status int) {
 			break
 		}
 	}
-	http.Error(w, `{"error":"`+safe+`"}`, status)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(map[string]string{"error": safe})
 }
 
 // parseUUID parses a string into pgtype.UUID.
