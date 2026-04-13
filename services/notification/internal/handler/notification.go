@@ -5,13 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log/slog"
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 
+	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 	"github.com/Camionerou/rag-saldivia/services/notification/internal/service"
 )
 
@@ -62,7 +61,7 @@ func (h *Notification) List(w http.ResponseWriter, r *http.Request) {
 
 	notifications, err := h.svc.List(r.Context(), userID, unreadOnly, limit)
 	if err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusOK, notifications)
@@ -74,7 +73,7 @@ func (h *Notification) UnreadCount(w http.ResponseWriter, r *http.Request) {
 
 	count, err := h.svc.UnreadCount(r.Context(), userID)
 	if err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]int{"count": count})
@@ -87,10 +86,10 @@ func (h *Notification) MarkRead(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.svc.MarkRead(r.Context(), notifID, userID); err != nil {
 		if errors.Is(err, service.ErrNotificationNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": "notification not found"})
+			httperr.WriteError(w, r, httperr.NotFound("notification"))
 			return
 		}
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -102,7 +101,7 @@ func (h *Notification) MarkAllRead(w http.ResponseWriter, r *http.Request) {
 
 	count, err := h.svc.MarkAllRead(r.Context(), userID)
 	if err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]int64{"marked": count})
@@ -114,7 +113,7 @@ func (h *Notification) GetPreferences(w http.ResponseWriter, r *http.Request) {
 
 	prefs, err := h.svc.GetPreferences(r.Context(), userID)
 	if err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusOK, prefs)
@@ -135,13 +134,13 @@ func (h *Notification) UpdatePreferences(w http.ResponseWriter, r *http.Request)
 
 	var req updatePreferencesRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid request body"))
 		return
 	}
 
 	prefs, err := h.svc.UpdatePreferences(r.Context(), userID, req.EmailEnabled, req.InAppEnabled, req.QuietStart, req.QuietEnd, req.MutedTypes)
 	if err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusOK, prefs)
@@ -156,15 +155,9 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 func requireUserID(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("X-User-ID") == "" {
-			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "missing user identity"})
+			httperr.WriteError(w, r, httperr.Unauthorized("missing user identity"))
 			return
 		}
 		next.ServeHTTP(w, r)
 	})
-}
-
-func serverError(w http.ResponseWriter, r *http.Request, err error) {
-	reqID := middleware.GetReqID(r.Context())
-	slog.Error("internal error", "error", err, "request_id", reqID)
-	writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 }
