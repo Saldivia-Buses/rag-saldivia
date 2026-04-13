@@ -1,18 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { api } from "@/lib/api/client";
 import { erpKeys } from "@/lib/erp/queries";
 import { fmtMoney, fmtDate, fmtDateShort } from "@/lib/erp/format";
+import { permissionErrorToast } from "@/lib/erp/permission-messages";
 import type { Account, JournalEntry, JournalLine, AccountBalance, FiscalYear, CostCenter } from "@/lib/erp/types";
 import { ErrorState } from "@/components/erp/error-state";
 import { ERPPagination } from "@/components/erp/pagination";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpenIcon, ListTreeIcon, BarChart3Icon, CalendarIcon, TargetIcon } from "lucide-react";
+import { BookOpenIcon, ListTreeIcon, BarChart3Icon, CalendarIcon, TargetIcon, PlusIcon } from "lucide-react";
 
 const statusBadge: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
   draft: { label: "Borrador", variant: "secondary" },
@@ -20,10 +26,27 @@ const statusBadge: Record<string, { label: string; variant: "default" | "seconda
   reversed: { label: "Reversado", variant: "outline" },
 };
 
+interface EntryLine {
+  account_id: string;
+  debit: string;
+  credit: string;
+  description: string;
+}
+
+interface CreateEntryBody {
+  date: string;
+  concept: string;
+  entry_type: string;
+  cost_center_id?: string | null;
+  lines: EntryLine[];
+}
+
 export default function ContablePage() {
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [createOpen, setCreateOpen] = useState(false);
   const pageSize = 25;
+  const queryClient = useQueryClient();
 
   const { data: accounts = [], isLoading: loadingAccounts, error: errorAccounts } = useQuery({
     queryKey: erpKeys.accounts(),
@@ -63,6 +86,34 @@ export default function ContablePage() {
     enabled: !!selectedEntryId,
   });
 
+  const createEntryMutation = useMutation({
+    mutationFn: (data: CreateEntryBody) => api.post("/v1/erp/accounting/entries", data),
+    onSuccess: () => {
+      toast.success("Asiento creado");
+      queryClient.invalidateQueries({ queryKey: erpKeys.entries() });
+      setCreateOpen(false);
+    },
+    onError: permissionErrorToast,
+  });
+
+  const postEntryMutation = useMutation({
+    mutationFn: (id: string) => api.post(`/v1/erp/accounting/entries/${id}/post`, {}),
+    onSuccess: () => {
+      toast.success("Asiento contabilizado");
+      queryClient.invalidateQueries({ queryKey: erpKeys.entries() });
+    },
+    onError: permissionErrorToast,
+  });
+
+  const closeFiscalYearMutation = useMutation({
+    mutationFn: (id: string) => api.post(`/v1/erp/accounting/fiscal-years/${id}/close`, {}),
+    onSuccess: () => {
+      toast.success("Ejercicio cerrado");
+      queryClient.invalidateQueries({ queryKey: erpKeys.fiscalYears() });
+    },
+    onError: permissionErrorToast,
+  });
+
   if (errorAccounts) return <ErrorState message="Error cargando contabilidad" onRetry={() => window.location.reload()} />;
   if (loadingAccounts) return <div className="flex-1 p-8"><Skeleton className="h-[600px]" /></div>;
 
@@ -72,11 +123,16 @@ export default function ContablePage() {
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="mx-auto w-full max-w-6xl px-6 py-8 sm:px-8">
-        <div className="mb-6">
-          <h1 className="text-xl font-semibold tracking-tight">Contabilidad</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Plan de cuentas, libro diario y balance — {accounts.length} cuentas, {entries.length} asientos
-          </p>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-xl font-semibold tracking-tight">Contabilidad</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Plan de cuentas, libro diario y balance — {accounts.length} cuentas, {entries.length} asientos
+            </p>
+          </div>
+          <Button size="sm" onClick={() => setCreateOpen(true)}>
+            <PlusIcon className="size-4 mr-1.5" />Nuevo asiento
+          </Button>
         </div>
 
         <div className="grid grid-cols-3 gap-3 mb-6">
@@ -110,6 +166,7 @@ export default function ContablePage() {
                     <TableHead className="w-28">Fecha</TableHead>
                     <TableHead>Concepto</TableHead>
                     <TableHead className="w-28">Estado</TableHead>
+                    <TableHead className="w-32"></TableHead>
                   </TableRow></TableHeader>
                   <TableBody>
                     {entries.map((e) => {
@@ -120,10 +177,22 @@ export default function ContablePage() {
                           <TableCell className="text-sm text-muted-foreground">{fmtDateShort(e.date)}</TableCell>
                           <TableCell className="text-sm">{e.concept}</TableCell>
                           <TableCell><Badge variant={s.variant}>{s.label}</Badge></TableCell>
+                          <TableCell onClick={(ev) => ev.stopPropagation()}>
+                            {e.status === "draft" && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={postEntryMutation.isPending}
+                                onClick={() => postEntryMutation.mutate(e.id)}
+                              >
+                                Contabilizar
+                              </Button>
+                            )}
+                          </TableCell>
                         </TableRow>
                       );
                     })}
-                    {entries.length === 0 && <TableRow><TableCell colSpan={4} className="h-24 text-center text-muted-foreground">Sin asientos.</TableCell></TableRow>}
+                    {entries.length === 0 && <TableRow><TableCell colSpan={5} className="h-24 text-center text-muted-foreground">Sin asientos.</TableCell></TableRow>}
                   </TableBody>
                 </Table>
                 <ERPPagination page={page} pageSize={pageSize} total={entriesTotal} onPageChange={setPage} />
@@ -211,6 +280,7 @@ export default function ContablePage() {
                   <TableHead className="w-32">Fin</TableHead>
                   <TableHead className="w-28">Estado</TableHead>
                   <TableHead className="w-36">Cerrado</TableHead>
+                  <TableHead className="w-28"></TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
                   {fiscalYears.map((fy) => (
@@ -220,9 +290,21 @@ export default function ContablePage() {
                       <TableCell className="text-sm">{fmtDate(fy.end_date)}</TableCell>
                       <TableCell><Badge variant={fy.status === "open" ? "default" : "secondary"}>{fy.status === "open" ? "Abierto" : "Cerrado"}</Badge></TableCell>
                       <TableCell className="text-sm text-muted-foreground">{fy.closed_at ? fmtDate(fy.closed_at) : "\u2014"}</TableCell>
+                      <TableCell>
+                        {fy.status === "open" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={closeFiscalYearMutation.isPending}
+                            onClick={() => closeFiscalYearMutation.mutate(fy.id)}
+                          >
+                            Cerrar
+                          </Button>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
-                  {fiscalYears.length === 0 && <TableRow><TableCell colSpan={5} className="h-24 text-center text-muted-foreground">Sin ejercicios fiscales.</TableCell></TableRow>}
+                  {fiscalYears.length === 0 && <TableRow><TableCell colSpan={6} className="h-24 text-center text-muted-foreground">Sin ejercicios fiscales.</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </div>
@@ -251,6 +333,205 @@ export default function ContablePage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <Dialog open={createOpen} onOpenChange={(v) => !v && setCreateOpen(false)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader><DialogTitle>Nuevo asiento</DialogTitle></DialogHeader>
+          <CreateEntryForm
+            accounts={accounts}
+            costCenters={costCenters}
+            onSubmit={(data) => createEntryMutation.mutate(data)}
+            isPending={createEntryMutation.isPending}
+            onClose={() => setCreateOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
+function CreateEntryForm({
+  accounts,
+  costCenters,
+  onSubmit,
+  isPending,
+  onClose,
+}: {
+  accounts: Account[];
+  costCenters: CostCenter[];
+  onSubmit: (data: CreateEntryBody) => void;
+  isPending: boolean;
+  onClose: () => void;
+}) {
+  const today = new Date().toISOString().split("T")[0];
+  const [date, setDate] = useState(today);
+  const [concept, setConcept] = useState("");
+  const [entryType, setEntryType] = useState("general");
+  const [costCenterId, setCostCenterId] = useState("");
+  const [lines, setLines] = useState<EntryLine[]>([
+    { account_id: "", debit: "", credit: "", description: "" },
+    { account_id: "", debit: "", credit: "", description: "" },
+  ]);
+
+  const detailAccounts = accounts.filter((a) => a.is_detail);
+
+  function updateLine(index: number, field: keyof EntryLine, value: string) {
+    setLines((prev) => prev.map((l, i) => i === index ? { ...l, [field]: value } : l));
+  }
+
+  function addLine() {
+    setLines((prev) => [...prev, { account_id: "", debit: "", credit: "", description: "" }]);
+  }
+
+  function removeLine(index: number) {
+    if (lines.length <= 2) return;
+    setLines((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!date || !concept) return;
+    const validLines = lines.filter((l) => l.account_id && (l.debit || l.credit));
+    if (validLines.length < 2) return;
+    onSubmit({
+      date,
+      concept,
+      entry_type: entryType,
+      cost_center_id: costCenterId || null,
+      lines: validLines,
+    });
+  }
+
+  const canSubmit = date && concept && lines.filter((l) => l.account_id && (l.debit || l.credit)).length >= 2;
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Fecha</Label>
+          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label>Tipo de asiento</Label>
+          <select
+            className="w-full rounded-md border px-3 py-2 text-sm bg-card"
+            value={entryType}
+            onChange={(e) => setEntryType(e.target.value)}
+          >
+            <option value="general">General</option>
+            <option value="payroll">Sueldos y jornales</option>
+            <option value="depreciation">Amortizaciones</option>
+            <option value="adjustment">Ajuste</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Concepto</Label>
+        <Input value={concept} onChange={(e) => setConcept(e.target.value)} placeholder="Descripción del asiento..." />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Centro de costo (opcional)</Label>
+        <select
+          className="w-full rounded-md border px-3 py-2 text-sm bg-card"
+          value={costCenterId}
+          onChange={(e) => setCostCenterId(e.target.value)}
+        >
+          <option value="">— Sin centro de costo —</option>
+          {costCenters.map((cc) => (
+            <option key={cc.id} value={cc.id}>{cc.code} — {cc.name}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label>Líneas del asiento</Label>
+          <Button type="button" variant="outline" size="sm" onClick={addLine}>
+            <PlusIcon className="size-3.5 mr-1" />Agregar línea
+          </Button>
+        </div>
+        <div className="rounded-md border">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/30">
+                <th className="text-left px-3 py-2 font-medium text-muted-foreground">Cuenta</th>
+                <th className="text-right px-3 py-2 font-medium text-muted-foreground w-28">Debe</th>
+                <th className="text-right px-3 py-2 font-medium text-muted-foreground w-28">Haber</th>
+                <th className="text-left px-3 py-2 font-medium text-muted-foreground">Descripción</th>
+                <th className="w-8"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {lines.map((line, i) => (
+                <tr key={i} className="border-b last:border-0">
+                  <td className="px-2 py-1.5">
+                    <select
+                      className="w-full rounded border px-2 py-1 text-sm bg-card"
+                      value={line.account_id}
+                      onChange={(e) => updateLine(i, "account_id", e.target.value)}
+                    >
+                      <option value="">Seleccionar cuenta...</option>
+                      {detailAccounts.map((a) => (
+                        <option key={a.id} value={a.id}>{a.code} — {a.name}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="px-2 py-1.5">
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="text-right"
+                      value={line.debit}
+                      onChange={(e) => updateLine(i, "debit", e.target.value)}
+                      placeholder="0.00"
+                    />
+                  </td>
+                  <td className="px-2 py-1.5">
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="text-right"
+                      value={line.credit}
+                      onChange={(e) => updateLine(i, "credit", e.target.value)}
+                      placeholder="0.00"
+                    />
+                  </td>
+                  <td className="px-2 py-1.5">
+                    <Input
+                      value={line.description}
+                      onChange={(e) => updateLine(i, "description", e.target.value)}
+                      placeholder="Descripción..."
+                    />
+                  </td>
+                  <td className="px-2 py-1.5">
+                    {lines.length > 2 && (
+                      <button
+                        type="button"
+                        className="text-muted-foreground hover:text-destructive text-xs px-1"
+                        onClick={() => removeLine(i)}
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
+        <Button type="submit" disabled={!canSubmit || isPending}>
+          {isPending ? "Creando..." : "Crear asiento"}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
