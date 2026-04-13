@@ -4,7 +4,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
 	"net/http"
 	"strings"
 
@@ -14,6 +13,7 @@ import (
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
+	erperrors "github.com/Camionerou/rag-saldivia/services/erp/internal/errors"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/repository"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/service"
 )
@@ -101,8 +101,7 @@ func (h *Suggestions) List(w http.ResponseWriter, r *http.Request) {
 
 	suggestions, err := h.svc.List(r.Context(), slug, p.Limit(), p.Offset())
 	if err != nil {
-		slog.Error("list suggestions failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 
@@ -120,14 +119,13 @@ func (h *Suggestions) Get(w http.ResponseWriter, r *http.Request) {
 
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 
 	suggestion, responses, err := h.svc.Get(r.Context(), id, slug)
 	if err != nil {
-		slog.Error("get suggestion failed", "error", err, "id", id)
-		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		erperrors.WriteError(w, r, erperrors.NotFound("suggestion"))
 		return
 	}
 
@@ -148,13 +146,13 @@ func (h *Suggestions) Create(w http.ResponseWriter, r *http.Request) {
 		Body   string `json:"body"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 
 	userID := r.Header.Get("X-User-ID")
 	if userID == "" {
-		http.Error(w, `{"error":"missing user identity"}`, http.StatusUnauthorized)
+		erperrors.WriteError(w, r, erperrors.Wrap(nil, erperrors.CodeUnauthorized, "missing user identity", http.StatusUnauthorized))
 		return
 	}
 
@@ -166,8 +164,7 @@ func (h *Suggestions) Create(w http.ResponseWriter, r *http.Request) {
 		IP:       r.RemoteAddr,
 	})
 	if err != nil {
-		slog.Error("create suggestion failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 
@@ -182,7 +179,7 @@ func (h *Suggestions) Respond(w http.ResponseWriter, r *http.Request) {
 
 	suggestionID, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 
@@ -192,13 +189,13 @@ func (h *Suggestions) Respond(w http.ResponseWriter, r *http.Request) {
 		Body string `json:"body"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 
 	userID := r.Header.Get("X-User-ID")
 	if userID == "" {
-		http.Error(w, `{"error":"missing user identity"}`, http.StatusUnauthorized)
+		erperrors.WriteError(w, r, erperrors.Wrap(nil, erperrors.CodeUnauthorized, "missing user identity", http.StatusUnauthorized))
 		return
 	}
 
@@ -210,8 +207,7 @@ func (h *Suggestions) Respond(w http.ResponseWriter, r *http.Request) {
 		IP:           r.RemoteAddr,
 	})
 	if err != nil {
-		slog.Error("respond to suggestion failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 
@@ -226,12 +222,12 @@ func (h *Suggestions) MarkRead(w http.ResponseWriter, r *http.Request) {
 
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 
 	if err := h.svc.MarkRead(r.Context(), id, slug); err != nil {
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 
@@ -244,7 +240,7 @@ func (h *Suggestions) CountUnread(w http.ResponseWriter, r *http.Request) {
 
 	count, err := h.svc.CountUnread(r.Context(), slug)
 	if err != nil {
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 
