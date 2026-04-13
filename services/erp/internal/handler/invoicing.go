@@ -257,7 +257,7 @@ func (h *Invoicing) VoidPreview(w http.ResponseWriter, r *http.Request) {
 	}
 	preview, err := h.svc.VoidPreview(r.Context(), id, slug)
 	if err != nil {
-		erperrors.WriteError(w, r, erperrors.Internal(err))
+		erperrors.WriteError(w, r, erperrors.InvalidInput(err.Error()))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")

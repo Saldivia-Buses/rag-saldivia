@@ -368,7 +368,7 @@ func (h *Accounting) PreviewClose(w http.ResponseWriter, r *http.Request) {
 	}
 	preview, err := h.svc.PreviewClose(r.Context(), slug, yearID)
 	if err != nil {
-		erperrors.WriteError(w, r, erperrors.Internal(err))
+		erperrors.WriteError(w, r, erperrors.InvalidInput(err.Error()))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -386,7 +386,7 @@ func (h *Accounting) CloseFiscalYear(w http.ResponseWriter, r *http.Request) {
 	result, err := h.svc.CloseFiscalYear(r.Context(), slug, yearID,
 		r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		erperrors.WriteError(w, r, erperrors.Internal(err))
+		erperrors.WriteError(w, r, erperrors.InvalidInput(err.Error()))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
