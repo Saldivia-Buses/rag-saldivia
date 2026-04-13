@@ -10,6 +10,7 @@ import (
 
 	"github.com/coder/websocket"
 
+	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
 	"github.com/Camionerou/rag-saldivia/services/ws/internal/hub"
@@ -35,21 +36,21 @@ func (h *WS) Upgrade(w http.ResponseWriter, r *http.Request) {
 	// Extract JWT from Authorization header only (not query param, to avoid log leakage)
 	token := extractBearerToken(r)
 	if token == "" {
-		http.Error(w, "missing Authorization: Bearer <token>", http.StatusUnauthorized)
+		httperr.WriteError(w, r, httperr.Unauthorized("missing authorization token"))
 		return
 	}
 
 	// Verify JWT
 	claims, err := sdajwt.Verify(h.publicKey, token)
 	if err != nil {
-		http.Error(w, "invalid token", http.StatusUnauthorized)
+		httperr.WriteError(w, r, httperr.Unauthorized("invalid token"))
 		return
 	}
 
 	// Check token blacklist (revoked tokens from logout/password change)
 	if h.blacklist != nil && claims.ID != "" {
 		if revoked, _ := h.blacklist.IsRevoked(r.Context(), claims.ID); revoked {
-			http.Error(w, "token revoked", http.StatusUnauthorized)
+			httperr.WriteError(w, r, httperr.Unauthorized("token revoked"))
 			return
 		}
 	}
