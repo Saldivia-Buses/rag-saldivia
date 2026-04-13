@@ -126,12 +126,12 @@ func (h *Platform) CreateTenant(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 	var req createTenantRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid request body"))
 		return
 	}
 
 	if req.Slug == "" || req.Name == "" || req.PlanID == "" || req.PostgresURL == "" || req.RedisURL == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "slug, name, plan_id, postgres_url, and redis_url are required"})
+		httperr.WriteError(w, r, httperr.InvalidInput("slug, name, plan_id, postgres_url, and redis_url are required"))
 		return
 	}
 
@@ -171,7 +171,7 @@ func (h *Platform) UpdateTenant(w http.ResponseWriter, r *http.Request) {
 
 	var req updateTenantRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid request body"))
 		return
 	}
 
@@ -248,12 +248,12 @@ func (h *Platform) EnableModule(w http.ResponseWriter, r *http.Request) {
 
 	var req enableModuleRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid request body"))
 		return
 	}
 
 	if req.ModuleID == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "module_id is required"})
+		httperr.WriteError(w, r, httperr.InvalidInput("module_id is required"))
 		return
 	}
 
@@ -309,7 +309,7 @@ func (h *Platform) ToggleFeatureFlag(w http.ResponseWriter, r *http.Request) {
 
 	var req toggleFlagRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid request body"))
 		return
 	}
 
@@ -353,7 +353,7 @@ func (h *Platform) SetConfig(w http.ResponseWriter, r *http.Request) {
 
 	var req setConfigRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid request body"))
 		return
 	}
 
@@ -379,13 +379,13 @@ func (h *Platform) requirePlatformAdmin(next http.Handler) http.Handler {
 
 		auth := r.Header.Get("Authorization")
 		if !strings.HasPrefix(auth, "Bearer ") {
-			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "missing authorization"})
+			httperr.WriteError(w, r, httperr.Unauthorized("missing authorization"))
 			return
 		}
 
 		claims, err := sdajwt.Verify(h.publicKey, strings.TrimPrefix(auth, "Bearer "))
 		if err != nil {
-			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid token"})
+			httperr.WriteError(w, r, httperr.Unauthorized("invalid token"))
 			return
 		}
 
@@ -393,13 +393,13 @@ func (h *Platform) requirePlatformAdmin(next http.Handler) http.Handler {
 		if h.blacklist != nil && claims.ID != "" {
 			revoked, err := h.blacklist.IsRevoked(r.Context(), claims.ID)
 			if err == nil && revoked {
-				writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "token revoked"})
+				httperr.WriteError(w, r, httperr.Unauthorized("token revoked"))
 				return
 			}
 		}
 
 		if claims.Role != "admin" || claims.Slug != h.platformSlug {
-			writeJSON(w, http.StatusForbidden, map[string]string{"error": "platform admin access required"})
+			httperr.WriteError(w, r, httperr.Forbidden("platform admin access required"))
 			return
 		}
 
