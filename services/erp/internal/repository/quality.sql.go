@@ -48,6 +48,119 @@ func (q *Queries) CalculateQualityKPIs(ctx context.Context, arg CalculateQuality
 	return i, err
 }
 
+const completeActionTask = `-- name: CompleteActionTask :execrows
+UPDATE erp_quality_action_tasks
+SET completed = true, closed_date = now()::DATE, updated_at = now()
+WHERE id = $1 AND tenant_id = $2
+`
+
+type CompleteActionTaskParams struct {
+	ID       pgtype.UUID `json:"id"`
+	TenantID string      `json:"tenant_id"`
+}
+
+func (q *Queries) CompleteActionTask(ctx context.Context, arg CompleteActionTaskParams) (int64, error) {
+	result, err := q.db.Exec(ctx, completeActionTask, arg.ID, arg.TenantID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const createActionPlan = `-- name: CreateActionPlan :one
+INSERT INTO erp_quality_action_plans (tenant_id, nonconformity_id, responsible_id, section_id, description, planned_start, target_date, time_savings_hours, cost_savings, created_by)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+RETURNING id, tenant_id, nonconformity_id, responsible_id, section_id, description, planned_start, target_date, closed_date, time_savings_hours, cost_savings, status, created_by, created_at, updated_at
+`
+
+type CreateActionPlanParams struct {
+	TenantID         string         `json:"tenant_id"`
+	NonconformityID  pgtype.UUID    `json:"nonconformity_id"`
+	ResponsibleID    pgtype.UUID    `json:"responsible_id"`
+	SectionID        pgtype.UUID    `json:"section_id"`
+	Description      string         `json:"description"`
+	PlannedStart     pgtype.Date    `json:"planned_start"`
+	TargetDate       pgtype.Date    `json:"target_date"`
+	TimeSavingsHours pgtype.Numeric `json:"time_savings_hours"`
+	CostSavings      pgtype.Numeric `json:"cost_savings"`
+	CreatedBy        string         `json:"created_by"`
+}
+
+func (q *Queries) CreateActionPlan(ctx context.Context, arg CreateActionPlanParams) (ErpQualityActionPlan, error) {
+	row := q.db.QueryRow(ctx, createActionPlan,
+		arg.TenantID,
+		arg.NonconformityID,
+		arg.ResponsibleID,
+		arg.SectionID,
+		arg.Description,
+		arg.PlannedStart,
+		arg.TargetDate,
+		arg.TimeSavingsHours,
+		arg.CostSavings,
+		arg.CreatedBy,
+	)
+	var i ErpQualityActionPlan
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.NonconformityID,
+		&i.ResponsibleID,
+		&i.SectionID,
+		&i.Description,
+		&i.PlannedStart,
+		&i.TargetDate,
+		&i.ClosedDate,
+		&i.TimeSavingsHours,
+		&i.CostSavings,
+		&i.Status,
+		&i.CreatedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const createActionTask = `-- name: CreateActionTask :one
+INSERT INTO erp_quality_action_tasks (tenant_id, plan_id, description, leader_id, planned_start, target_date)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING id, tenant_id, plan_id, description, leader_id, planned_start, target_date, closed_date, completed, created_at, updated_at
+`
+
+type CreateActionTaskParams struct {
+	TenantID     string      `json:"tenant_id"`
+	PlanID       pgtype.UUID `json:"plan_id"`
+	Description  string      `json:"description"`
+	LeaderID     pgtype.UUID `json:"leader_id"`
+	PlannedStart pgtype.Date `json:"planned_start"`
+	TargetDate   pgtype.Date `json:"target_date"`
+}
+
+func (q *Queries) CreateActionTask(ctx context.Context, arg CreateActionTaskParams) (ErpQualityActionTask, error) {
+	row := q.db.QueryRow(ctx, createActionTask,
+		arg.TenantID,
+		arg.PlanID,
+		arg.Description,
+		arg.LeaderID,
+		arg.PlannedStart,
+		arg.TargetDate,
+	)
+	var i ErpQualityActionTask
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.PlanID,
+		&i.Description,
+		&i.LeaderID,
+		&i.PlannedStart,
+		&i.TargetDate,
+		&i.ClosedDate,
+		&i.Completed,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const createAudit = `-- name: CreateAudit :one
 INSERT INTO erp_audits (tenant_id, number, date, audit_type, scope, lead_auditor_id, notes)
 VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -206,6 +319,28 @@ func (q *Queries) CreateCorrectiveAction(ctx context.Context, arg CreateCorrecti
 	return i, err
 }
 
+const createNCOrigin = `-- name: CreateNCOrigin :one
+INSERT INTO erp_nc_origins (tenant_id, name) VALUES ($1, $2) RETURNING id, tenant_id, name, active, created_at
+`
+
+type CreateNCOriginParams struct {
+	TenantID string `json:"tenant_id"`
+	Name     string `json:"name"`
+}
+
+func (q *Queries) CreateNCOrigin(ctx context.Context, arg CreateNCOriginParams) (ErpNcOrigin, error) {
+	row := q.db.QueryRow(ctx, createNCOrigin, arg.TenantID, arg.Name)
+	var i ErpNcOrigin
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.Name,
+		&i.Active,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const createNonconformity = `-- name: CreateNonconformity :one
 INSERT INTO erp_nonconformities (tenant_id, number, date, type_id, origin_id, description, severity, assigned_to, user_id)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
@@ -224,7 +359,23 @@ type CreateNonconformityParams struct {
 	UserID      string      `json:"user_id"`
 }
 
-func (q *Queries) CreateNonconformity(ctx context.Context, arg CreateNonconformityParams) (ErpNonconformity, error) {
+type CreateNonconformityRow struct {
+	ID          pgtype.UUID        `json:"id"`
+	TenantID    string             `json:"tenant_id"`
+	Number      string             `json:"number"`
+	Date        pgtype.Date        `json:"date"`
+	TypeID      pgtype.UUID        `json:"type_id"`
+	OriginID    pgtype.UUID        `json:"origin_id"`
+	Description string             `json:"description"`
+	Severity    string             `json:"severity"`
+	Status      string             `json:"status"`
+	AssignedTo  pgtype.UUID        `json:"assigned_to"`
+	ClosedAt    pgtype.Timestamptz `json:"closed_at"`
+	UserID      string             `json:"user_id"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+}
+
+func (q *Queries) CreateNonconformity(ctx context.Context, arg CreateNonconformityParams) (CreateNonconformityRow, error) {
 	row := q.db.QueryRow(ctx, createNonconformity,
 		arg.TenantID,
 		arg.Number,
@@ -236,7 +387,7 @@ func (q *Queries) CreateNonconformity(ctx context.Context, arg CreateNonconformi
 		arg.AssignedTo,
 		arg.UserID,
 	)
-	var i ErpNonconformity
+	var i CreateNonconformityRow
 	err := row.Scan(
 		&i.ID,
 		&i.TenantID,
@@ -307,6 +458,38 @@ func (q *Queries) CreateQualityRisk(ctx context.Context, arg CreateQualityRiskPa
 	return i, err
 }
 
+const getActionPlan = `-- name: GetActionPlan :one
+SELECT id, tenant_id, nonconformity_id, responsible_id, section_id, description, planned_start, target_date, closed_date, time_savings_hours, cost_savings, status, created_by, created_at, updated_at FROM erp_quality_action_plans WHERE id = $1 AND tenant_id = $2
+`
+
+type GetActionPlanParams struct {
+	ID       pgtype.UUID `json:"id"`
+	TenantID string      `json:"tenant_id"`
+}
+
+func (q *Queries) GetActionPlan(ctx context.Context, arg GetActionPlanParams) (ErpQualityActionPlan, error) {
+	row := q.db.QueryRow(ctx, getActionPlan, arg.ID, arg.TenantID)
+	var i ErpQualityActionPlan
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.NonconformityID,
+		&i.ResponsibleID,
+		&i.SectionID,
+		&i.Description,
+		&i.PlannedStart,
+		&i.TargetDate,
+		&i.ClosedDate,
+		&i.TimeSavingsHours,
+		&i.CostSavings,
+		&i.Status,
+		&i.CreatedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getNonconformity = `-- name: GetNonconformity :one
 SELECT id, tenant_id, number, date, type_id, origin_id, description, severity,
        status, assigned_to, closed_at, user_id, created_at
@@ -318,9 +501,25 @@ type GetNonconformityParams struct {
 	TenantID string      `json:"tenant_id"`
 }
 
-func (q *Queries) GetNonconformity(ctx context.Context, arg GetNonconformityParams) (ErpNonconformity, error) {
+type GetNonconformityRow struct {
+	ID          pgtype.UUID        `json:"id"`
+	TenantID    string             `json:"tenant_id"`
+	Number      string             `json:"number"`
+	Date        pgtype.Date        `json:"date"`
+	TypeID      pgtype.UUID        `json:"type_id"`
+	OriginID    pgtype.UUID        `json:"origin_id"`
+	Description string             `json:"description"`
+	Severity    string             `json:"severity"`
+	Status      string             `json:"status"`
+	AssignedTo  pgtype.UUID        `json:"assigned_to"`
+	ClosedAt    pgtype.Timestamptz `json:"closed_at"`
+	UserID      string             `json:"user_id"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+}
+
+func (q *Queries) GetNonconformity(ctx context.Context, arg GetNonconformityParams) (GetNonconformityRow, error) {
 	row := q.db.QueryRow(ctx, getNonconformity, arg.ID, arg.TenantID)
-	var i ErpNonconformity
+	var i GetNonconformityRow
 	err := row.Scan(
 		&i.ID,
 		&i.TenantID,
@@ -337,6 +536,159 @@ func (q *Queries) GetNonconformity(ctx context.Context, arg GetNonconformityPara
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const listActionPlans = `-- name: ListActionPlans :many
+
+SELECT ap.id, ap.tenant_id, ap.nonconformity_id, ap.responsible_id, ap.section_id, ap.description, ap.planned_start, ap.target_date, ap.closed_date, ap.time_savings_hours, ap.cost_savings, ap.status, ap.created_by, ap.created_at, ap.updated_at, e.name AS responsible_name, d.name AS section_name,
+       nc.number AS nc_number
+FROM erp_quality_action_plans ap
+LEFT JOIN erp_entities e ON e.id = ap.responsible_id AND e.tenant_id = ap.tenant_id
+LEFT JOIN erp_departments d ON d.id = ap.section_id AND d.tenant_id = ap.tenant_id
+LEFT JOIN erp_nonconformities nc ON nc.id = ap.nonconformity_id AND nc.tenant_id = ap.tenant_id
+WHERE ap.tenant_id = $1
+  AND ($4::TEXT = '' OR ap.nonconformity_id::TEXT = $4::TEXT)
+  AND ($5::TEXT = '' OR ap.status = $5::TEXT)
+ORDER BY ap.created_at DESC
+LIMIT $2 OFFSET $3
+`
+
+type ListActionPlansParams struct {
+	TenantID     string `json:"tenant_id"`
+	Limit        int32  `json:"limit"`
+	Offset       int32  `json:"offset"`
+	NcFilter     string `json:"nc_filter"`
+	StatusFilter string `json:"status_filter"`
+}
+
+type ListActionPlansRow struct {
+	ID               pgtype.UUID        `json:"id"`
+	TenantID         string             `json:"tenant_id"`
+	NonconformityID  pgtype.UUID        `json:"nonconformity_id"`
+	ResponsibleID    pgtype.UUID        `json:"responsible_id"`
+	SectionID        pgtype.UUID        `json:"section_id"`
+	Description      string             `json:"description"`
+	PlannedStart     pgtype.Date        `json:"planned_start"`
+	TargetDate       pgtype.Date        `json:"target_date"`
+	ClosedDate       pgtype.Date        `json:"closed_date"`
+	TimeSavingsHours pgtype.Numeric     `json:"time_savings_hours"`
+	CostSavings      pgtype.Numeric     `json:"cost_savings"`
+	Status           string             `json:"status"`
+	CreatedBy        string             `json:"created_by"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
+	ResponsibleName  pgtype.Text        `json:"responsible_name"`
+	SectionName      pgtype.Text        `json:"section_name"`
+	NcNumber         pgtype.Text        `json:"nc_number"`
+}
+
+// ─── Quality Action Plans ───────────────────────────────────────────────────
+func (q *Queries) ListActionPlans(ctx context.Context, arg ListActionPlansParams) ([]ListActionPlansRow, error) {
+	rows, err := q.db.Query(ctx, listActionPlans,
+		arg.TenantID,
+		arg.Limit,
+		arg.Offset,
+		arg.NcFilter,
+		arg.StatusFilter,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListActionPlansRow{}
+	for rows.Next() {
+		var i ListActionPlansRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.TenantID,
+			&i.NonconformityID,
+			&i.ResponsibleID,
+			&i.SectionID,
+			&i.Description,
+			&i.PlannedStart,
+			&i.TargetDate,
+			&i.ClosedDate,
+			&i.TimeSavingsHours,
+			&i.CostSavings,
+			&i.Status,
+			&i.CreatedBy,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.ResponsibleName,
+			&i.SectionName,
+			&i.NcNumber,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listActionTasks = `-- name: ListActionTasks :many
+
+SELECT at.id, at.tenant_id, at.plan_id, at.description, at.leader_id, at.planned_start, at.target_date, at.closed_date, at.completed, at.created_at, at.updated_at, e.name AS leader_name
+FROM erp_quality_action_tasks at
+LEFT JOIN erp_entities e ON e.id = at.leader_id AND e.tenant_id = at.tenant_id
+WHERE at.tenant_id = $1 AND at.plan_id = $2
+ORDER BY at.created_at ASC
+`
+
+type ListActionTasksParams struct {
+	TenantID string      `json:"tenant_id"`
+	PlanID   pgtype.UUID `json:"plan_id"`
+}
+
+type ListActionTasksRow struct {
+	ID           pgtype.UUID        `json:"id"`
+	TenantID     string             `json:"tenant_id"`
+	PlanID       pgtype.UUID        `json:"plan_id"`
+	Description  string             `json:"description"`
+	LeaderID     pgtype.UUID        `json:"leader_id"`
+	PlannedStart pgtype.Date        `json:"planned_start"`
+	TargetDate   pgtype.Date        `json:"target_date"`
+	ClosedDate   pgtype.Date        `json:"closed_date"`
+	Completed    bool               `json:"completed"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	LeaderName   pgtype.Text        `json:"leader_name"`
+}
+
+// ─── Quality Action Tasks ───────────────────────────────────────────────────
+func (q *Queries) ListActionTasks(ctx context.Context, arg ListActionTasksParams) ([]ListActionTasksRow, error) {
+	rows, err := q.db.Query(ctx, listActionTasks, arg.TenantID, arg.PlanID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListActionTasksRow{}
+	for rows.Next() {
+		var i ListActionTasksRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.TenantID,
+			&i.PlanID,
+			&i.Description,
+			&i.LeaderID,
+			&i.PlannedStart,
+			&i.TargetDate,
+			&i.ClosedDate,
+			&i.Completed,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.LeaderName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listAuditFindings = `-- name: ListAuditFindings :many
@@ -504,6 +856,38 @@ func (q *Queries) ListCorrectiveActions(ctx context.Context, arg ListCorrectiveA
 			&i.Status,
 			&i.CompletedAt,
 			&i.Effectiveness,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listNCOrigins = `-- name: ListNCOrigins :many
+
+SELECT id, tenant_id, name, active, created_at FROM erp_nc_origins WHERE tenant_id = $1 AND active = true ORDER BY name
+`
+
+// ─── NC Origins ────────────────────────────────────────────────────────────
+func (q *Queries) ListNCOrigins(ctx context.Context, tenantID string) ([]ErpNcOrigin, error) {
+	rows, err := q.db.Query(ctx, listNCOrigins, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ErpNcOrigin{}
+	for rows.Next() {
+		var i ErpNcOrigin
+		if err := rows.Scan(
+			&i.ID,
+			&i.TenantID,
+			&i.Name,
+			&i.Active,
+			&i.CreatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -772,6 +1156,26 @@ func (q *Queries) ListSupplierScorecards(ctx context.Context, arg ListSupplierSc
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateActionPlanStatus = `-- name: UpdateActionPlanStatus :execrows
+UPDATE erp_quality_action_plans
+SET status = $3, closed_date = CASE WHEN $3 IN ('closed','cancelled') THEN now()::DATE ELSE closed_date END, updated_at = now()
+WHERE id = $1 AND tenant_id = $2
+`
+
+type UpdateActionPlanStatusParams struct {
+	ID       pgtype.UUID `json:"id"`
+	TenantID string      `json:"tenant_id"`
+	Status   string      `json:"status"`
+}
+
+func (q *Queries) UpdateActionPlanStatus(ctx context.Context, arg UpdateActionPlanStatusParams) (int64, error) {
+	result, err := q.db.Exec(ctx, updateActionPlanStatus, arg.ID, arg.TenantID, arg.Status)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const updateNonconformityStatus = `-- name: UpdateNonconformityStatus :execrows

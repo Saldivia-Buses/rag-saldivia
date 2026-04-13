@@ -28,14 +28,14 @@ func (s *Quality) ListNC(ctx context.Context, tenantID, status, severity string,
 	})
 }
 
-func (s *Quality) GetNC(ctx context.Context, id pgtype.UUID, tenantID string) (repository.ErpNonconformity, error) {
+func (s *Quality) GetNC(ctx context.Context, id pgtype.UUID, tenantID string) (repository.GetNonconformityRow, error) {
 	return s.repo.GetNonconformity(ctx, repository.GetNonconformityParams{ID: id, TenantID: tenantID})
 }
 
-func (s *Quality) CreateNC(ctx context.Context, p repository.CreateNonconformityParams, ip string) (repository.ErpNonconformity, error) {
+func (s *Quality) CreateNC(ctx context.Context, p repository.CreateNonconformityParams, ip string) (repository.CreateNonconformityRow, error) {
 	nc, err := s.repo.CreateNonconformity(ctx, p)
 	if err != nil {
-		return repository.ErpNonconformity{}, fmt.Errorf("create NC: %w", err)
+		return repository.CreateNonconformityRow{}, fmt.Errorf("create NC: %w", err)
 	}
 	s.audit.Write(ctx, audit.Entry{TenantID: p.TenantID, UserID: p.UserID, Action: "erp.nc.created", Resource: uuidStr(nc.ID), IP: ip})
 	s.publisher.Broadcast(p.TenantID, "erp_quality", map[string]any{"action": "nc_created", "nc_id": uuidStr(nc.ID)})
@@ -108,4 +108,79 @@ func (s *Quality) CreateDocument(ctx context.Context, p repository.CreateControl
 	}
 	s.audit.Write(ctx, audit.Entry{TenantID: p.TenantID, UserID: userID, Action: "erp.document.created", Resource: uuidStr(d.ID), IP: ip})
 	return d, nil
+}
+
+func (s *Quality) ListNCOrigins(ctx context.Context, tenantID string) ([]repository.ErpNcOrigin, error) {
+	return s.repo.ListNCOrigins(ctx, tenantID)
+}
+
+func (s *Quality) CreateNCOrigin(ctx context.Context, tenantID, name, userID, ip string) (repository.ErpNcOrigin, error) {
+	o, err := s.repo.CreateNCOrigin(ctx, repository.CreateNCOriginParams{TenantID: tenantID, Name: name})
+	if err != nil {
+		return repository.ErpNcOrigin{}, fmt.Errorf("create nc origin: %w", err)
+	}
+	s.audit.Write(ctx, audit.Entry{TenantID: tenantID, UserID: userID, Action: "erp.nc_origin.created", Resource: uuidStr(o.ID), IP: ip})
+	return o, nil
+}
+
+func (s *Quality) ListActionPlans(ctx context.Context, tenantID, ncFilter, statusFilter string, limit, offset int) ([]repository.ListActionPlansRow, error) {
+	return s.repo.ListActionPlans(ctx, repository.ListActionPlansParams{
+		TenantID: tenantID, NcFilter: ncFilter, StatusFilter: statusFilter,
+		Limit: int32(limit), Offset: int32(offset),
+	})
+}
+
+func (s *Quality) GetActionPlan(ctx context.Context, id pgtype.UUID, tenantID string) (repository.ErpQualityActionPlan, error) {
+	p, err := s.repo.GetActionPlan(ctx, repository.GetActionPlanParams{ID: id, TenantID: tenantID})
+	if err != nil {
+		return repository.ErpQualityActionPlan{}, fmt.Errorf("get action plan: %w", err)
+	}
+	return p, nil
+}
+
+func (s *Quality) CreateActionPlan(ctx context.Context, p repository.CreateActionPlanParams, userID, ip string) (repository.ErpQualityActionPlan, error) {
+	plan, err := s.repo.CreateActionPlan(ctx, p)
+	if err != nil {
+		return repository.ErpQualityActionPlan{}, fmt.Errorf("create action plan: %w", err)
+	}
+	s.audit.Write(ctx, audit.Entry{TenantID: p.TenantID, UserID: userID, Action: "erp.action_plan.created", Resource: uuidStr(plan.ID), IP: ip})
+	s.publisher.Broadcast(p.TenantID, "erp_quality", map[string]any{"action": "action_plan_created", "plan_id": uuidStr(plan.ID)})
+	return plan, nil
+}
+
+func (s *Quality) UpdateActionPlanStatus(ctx context.Context, id pgtype.UUID, tenantID, status, userID, ip string) error {
+	rows, err := s.repo.UpdateActionPlanStatus(ctx, repository.UpdateActionPlanStatusParams{ID: id, TenantID: tenantID, Status: status})
+	if err != nil {
+		return fmt.Errorf("update action plan status: %w", err)
+	}
+	if rows == 0 {
+		return fmt.Errorf("action plan not found")
+	}
+	s.audit.Write(ctx, audit.Entry{TenantID: tenantID, UserID: userID, Action: "erp.action_plan.status_changed", Resource: uuidStr(id), Details: map[string]any{"status": status}, IP: ip})
+	return nil
+}
+
+func (s *Quality) ListActionTasks(ctx context.Context, tenantID string, planID pgtype.UUID) ([]repository.ListActionTasksRow, error) {
+	return s.repo.ListActionTasks(ctx, repository.ListActionTasksParams{TenantID: tenantID, PlanID: planID})
+}
+
+func (s *Quality) CreateActionTask(ctx context.Context, p repository.CreateActionTaskParams, userID, ip string) (repository.ErpQualityActionTask, error) {
+	t, err := s.repo.CreateActionTask(ctx, p)
+	if err != nil {
+		return repository.ErpQualityActionTask{}, fmt.Errorf("create action task: %w", err)
+	}
+	s.audit.Write(ctx, audit.Entry{TenantID: p.TenantID, UserID: userID, Action: "erp.action_task.created", Resource: uuidStr(t.ID), IP: ip})
+	return t, nil
+}
+
+func (s *Quality) CompleteActionTask(ctx context.Context, id pgtype.UUID, tenantID, userID, ip string) error {
+	rows, err := s.repo.CompleteActionTask(ctx, repository.CompleteActionTaskParams{ID: id, TenantID: tenantID})
+	if err != nil {
+		return fmt.Errorf("complete action task: %w", err)
+	}
+	if rows == 0 {
+		return fmt.Errorf("action task not found")
+	}
+	s.audit.Write(ctx, audit.Entry{TenantID: tenantID, UserID: userID, Action: "erp.action_task.completed", Resource: uuidStr(id), IP: ip})
+	return nil
 }

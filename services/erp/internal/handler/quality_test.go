@@ -17,35 +17,43 @@ import (
 // --- mock ---
 
 type mockQualityService struct {
-	ncs       []repository.ListNonconformitiesRow
-	nc        repository.ErpNonconformity
-	cas       []repository.ErpCorrectiveAction
-	ca        repository.ErpCorrectiveAction
-	audits    []repository.ErpAudit
-	audit     repository.ErpAudit
-	findings  []repository.ErpAuditFinding
-	finding   repository.ErpAuditFinding
-	documents []repository.ErpControlledDocument
-	document  repository.ErpControlledDocument
-	err       error
+	ncs        []repository.ListNonconformitiesRow
+	nc         repository.ErpNonconformity
+	ncRow      repository.GetNonconformityRow
+	ncCreated  repository.CreateNonconformityRow
+	cas        []repository.ErpCorrectiveAction
+	ca         repository.ErpCorrectiveAction
+	audits     []repository.ErpAudit
+	audit      repository.ErpAudit
+	findings   []repository.ErpAuditFinding
+	finding    repository.ErpAuditFinding
+	documents  []repository.ErpControlledDocument
+	document   repository.ErpControlledDocument
+	ncOrigins  []repository.ErpNcOrigin
+	ncOrigin   repository.ErpNcOrigin
+	plans      []repository.ListActionPlansRow
+	plan       repository.ErpQualityActionPlan
+	tasks      []repository.ListActionTasksRow
+	task       repository.ErpQualityActionTask
+	err        error
 }
 
 func (m *mockQualityService) ListNC(_ context.Context, _, _, _ string, _, _ int) ([]repository.ListNonconformitiesRow, error) {
 	return m.ncs, m.err
 }
 
-func (m *mockQualityService) GetNC(_ context.Context, _ pgtype.UUID, _ string) (repository.ErpNonconformity, error) {
+func (m *mockQualityService) GetNC(_ context.Context, _ pgtype.UUID, _ string) (repository.GetNonconformityRow, error) {
 	if m.err != nil {
-		return repository.ErpNonconformity{}, m.err
+		return repository.GetNonconformityRow{}, m.err
 	}
-	return m.nc, nil
+	return m.ncRow, nil
 }
 
-func (m *mockQualityService) CreateNC(_ context.Context, _ repository.CreateNonconformityParams, _ string) (repository.ErpNonconformity, error) {
+func (m *mockQualityService) CreateNC(_ context.Context, _ repository.CreateNonconformityParams, _ string) (repository.CreateNonconformityRow, error) {
 	if m.err != nil {
-		return repository.ErpNonconformity{}, m.err
+		return repository.CreateNonconformityRow{}, m.err
 	}
-	return m.nc, nil
+	return m.ncCreated, nil
 }
 
 func (m *mockQualityService) UpdateNCStatus(_ context.Context, _ pgtype.UUID, _, _, _, _ string) error {
@@ -94,6 +102,54 @@ func (m *mockQualityService) CreateDocument(_ context.Context, _ repository.Crea
 		return repository.ErpControlledDocument{}, m.err
 	}
 	return m.document, nil
+}
+
+func (m *mockQualityService) ListNCOrigins(_ context.Context, _ string) ([]repository.ErpNcOrigin, error) {
+	return m.ncOrigins, m.err
+}
+
+func (m *mockQualityService) CreateNCOrigin(_ context.Context, _, _, _, _ string) (repository.ErpNcOrigin, error) {
+	if m.err != nil {
+		return repository.ErpNcOrigin{}, m.err
+	}
+	return m.ncOrigin, nil
+}
+
+func (m *mockQualityService) ListActionPlans(_ context.Context, _, _, _ string, _, _ int) ([]repository.ListActionPlansRow, error) {
+	return m.plans, m.err
+}
+
+func (m *mockQualityService) GetActionPlan(_ context.Context, _ pgtype.UUID, _ string) (repository.ErpQualityActionPlan, error) {
+	if m.err != nil {
+		return repository.ErpQualityActionPlan{}, m.err
+	}
+	return m.plan, nil
+}
+
+func (m *mockQualityService) CreateActionPlan(_ context.Context, _ repository.CreateActionPlanParams, _, _ string) (repository.ErpQualityActionPlan, error) {
+	if m.err != nil {
+		return repository.ErpQualityActionPlan{}, m.err
+	}
+	return m.plan, nil
+}
+
+func (m *mockQualityService) UpdateActionPlanStatus(_ context.Context, _ pgtype.UUID, _, _, _, _ string) error {
+	return m.err
+}
+
+func (m *mockQualityService) ListActionTasks(_ context.Context, _ string, _ pgtype.UUID) ([]repository.ListActionTasksRow, error) {
+	return m.tasks, m.err
+}
+
+func (m *mockQualityService) CreateActionTask(_ context.Context, _ repository.CreateActionTaskParams, _, _ string) (repository.ErpQualityActionTask, error) {
+	if m.err != nil {
+		return repository.ErpQualityActionTask{}, m.err
+	}
+	return m.task, nil
+}
+
+func (m *mockQualityService) CompleteActionTask(_ context.Context, _ pgtype.UUID, _, _, _ string) error {
+	return m.err
 }
 
 // --- helpers ---
@@ -152,7 +208,7 @@ func TestQuality_CreateNC_InvalidBody_Returns400(t *testing.T) {
 }
 
 func TestQuality_CreateNC_Success(t *testing.T) {
-	mock := &mockQualityService{nc: repository.ErpNonconformity{Number: "NC-001"}}
+	mock := &mockQualityService{ncCreated: repository.CreateNonconformityRow{Number: "NC-001"}}
 	r := setupQualityRouter(mock)
 
 	body := `{"number":"NC-001","description":"Defective weld","severity":"minor","date":"2025-01-01"}`
@@ -248,5 +304,222 @@ func TestQuality_RequirePermission_WithoutRole_Returns403(t *testing.T) {
 
 	if rec.Code != http.StatusForbidden {
 		t.Fatalf("expected 403 without auth, got %d", rec.Code)
+	}
+}
+
+// ─── NC Origins ─────────────────────────────────────────────────────────────
+
+func TestQuality_ListNCOrigins_Success(t *testing.T) {
+	mock := &mockQualityService{
+		ncOrigins: []repository.ErpNcOrigin{{Name: "Internal"}},
+	}
+	r := setupQualityRouter(mock)
+
+	req := withAdmin(httptest.NewRequest(http.MethodGet, "/v1/erp/quality/nc-origins", nil))
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestQuality_CreateNCOrigin_Success(t *testing.T) {
+	mock := &mockQualityService{ncOrigin: repository.ErpNcOrigin{Name: "Supplier"}}
+	r := setupQualityRouter(mock)
+
+	body := `{"name":"Supplier"}`
+	req := withAdmin(httptest.NewRequest(http.MethodPost, "/v1/erp/quality/nc-origins", strings.NewReader(body)))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestQuality_CreateNCOrigin_MissingName_Returns400(t *testing.T) {
+	r := setupQualityRouter(&mockQualityService{})
+
+	body := `{"name":""}`
+	req := withAdmin(httptest.NewRequest(http.MethodPost, "/v1/erp/quality/nc-origins", strings.NewReader(body)))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d", rec.Code)
+	}
+}
+
+// ─── Action Plans ────────────────────────────────────────────────────────────
+
+func TestQuality_ListActionPlans_Success(t *testing.T) {
+	mock := &mockQualityService{
+		plans: []repository.ListActionPlansRow{{Description: "Fix welding"}},
+	}
+	r := setupQualityRouter(mock)
+
+	req := withAdmin(httptest.NewRequest(http.MethodGet, "/v1/erp/quality/action-plans", nil))
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestQuality_GetActionPlan_InvalidUUID_Returns400(t *testing.T) {
+	r := setupQualityRouter(&mockQualityService{})
+
+	req := withAdmin(httptest.NewRequest(http.MethodGet, "/v1/erp/quality/action-plans/bad-id", nil))
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d", rec.Code)
+	}
+}
+
+func TestQuality_GetActionPlan_NotFound_Returns404(t *testing.T) {
+	mock := &mockQualityService{err: errors.New("not found")}
+	r := setupQualityRouter(mock)
+
+	req := withAdmin(httptest.NewRequest(http.MethodGet, "/v1/erp/quality/action-plans/00000000-0000-0000-0000-000000000001", nil))
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d", rec.Code)
+	}
+}
+
+func TestQuality_CreateActionPlan_Success(t *testing.T) {
+	mock := &mockQualityService{plan: repository.ErpQualityActionPlan{Description: "Fix welding"}}
+	r := setupQualityRouter(mock)
+
+	body := `{"description":"Fix welding","planned_start":"2025-01-01","target_date":"2025-03-01"}`
+	req := withAdmin(httptest.NewRequest(http.MethodPost, "/v1/erp/quality/action-plans", strings.NewReader(body)))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestQuality_CreateActionPlan_MissingDescription_Returns400(t *testing.T) {
+	r := setupQualityRouter(&mockQualityService{})
+
+	body := `{"planned_start":"2025-01-01"}`
+	req := withAdmin(httptest.NewRequest(http.MethodPost, "/v1/erp/quality/action-plans", strings.NewReader(body)))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d", rec.Code)
+	}
+}
+
+func TestQuality_UpdateActionPlanStatus_Success(t *testing.T) {
+	r := setupQualityRouter(&mockQualityService{})
+
+	body := `{"status":"active"}`
+	req := withAdmin(httptest.NewRequest(http.MethodPatch, "/v1/erp/quality/action-plans/00000000-0000-0000-0000-000000000001/status", strings.NewReader(body)))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("expected 204, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestQuality_UpdateActionPlanStatus_InvalidStatus_Returns400(t *testing.T) {
+	r := setupQualityRouter(&mockQualityService{})
+
+	body := `{"status":"unknown"}`
+	req := withAdmin(httptest.NewRequest(http.MethodPatch, "/v1/erp/quality/action-plans/00000000-0000-0000-0000-000000000001/status", strings.NewReader(body)))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d", rec.Code)
+	}
+}
+
+// ─── Action Tasks ─────────────────────────────────────────────────────────────
+
+func TestQuality_ListActionTasks_Success(t *testing.T) {
+	mock := &mockQualityService{
+		tasks: []repository.ListActionTasksRow{{Description: "Inspect welds"}},
+	}
+	r := setupQualityRouter(mock)
+
+	req := withAdmin(httptest.NewRequest(http.MethodGet, "/v1/erp/quality/action-plans/00000000-0000-0000-0000-000000000001/tasks", nil))
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestQuality_CreateActionTask_Success(t *testing.T) {
+	mock := &mockQualityService{task: repository.ErpQualityActionTask{Description: "Inspect welds"}}
+	r := setupQualityRouter(mock)
+
+	body := `{"description":"Inspect welds","target_date":"2025-03-01"}`
+	req := withAdmin(httptest.NewRequest(http.MethodPost, "/v1/erp/quality/action-plans/00000000-0000-0000-0000-000000000001/tasks", strings.NewReader(body)))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestQuality_CreateActionTask_MissingDescription_Returns400(t *testing.T) {
+	r := setupQualityRouter(&mockQualityService{})
+
+	body := `{"target_date":"2025-03-01"}`
+	req := withAdmin(httptest.NewRequest(http.MethodPost, "/v1/erp/quality/action-plans/00000000-0000-0000-0000-000000000001/tasks", strings.NewReader(body)))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d", rec.Code)
+	}
+}
+
+func TestQuality_CompleteActionTask_Success(t *testing.T) {
+	r := setupQualityRouter(&mockQualityService{})
+
+	req := withAdmin(httptest.NewRequest(http.MethodPatch,
+		"/v1/erp/quality/action-plans/00000000-0000-0000-0000-000000000001/tasks/00000000-0000-0000-0000-000000000002/complete", nil))
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("expected 204, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestQuality_CompleteActionTask_InvalidTaskUUID_Returns400(t *testing.T) {
+	r := setupQualityRouter(&mockQualityService{})
+
+	req := withAdmin(httptest.NewRequest(http.MethodPatch,
+		"/v1/erp/quality/action-plans/00000000-0000-0000-0000-000000000001/tasks/bad-task-id/complete", nil))
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d", rec.Code)
 	}
 }

@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -17,8 +18,8 @@ import (
 // QualityService is the interface the Quality handler depends on.
 type QualityService interface {
 	ListNC(ctx context.Context, tenantID, status, severity string, limit, offset int) ([]repository.ListNonconformitiesRow, error)
-	GetNC(ctx context.Context, id pgtype.UUID, tenantID string) (repository.ErpNonconformity, error)
-	CreateNC(ctx context.Context, p repository.CreateNonconformityParams, ip string) (repository.ErpNonconformity, error)
+	GetNC(ctx context.Context, id pgtype.UUID, tenantID string) (repository.GetNonconformityRow, error)
+	CreateNC(ctx context.Context, p repository.CreateNonconformityParams, ip string) (repository.CreateNonconformityRow, error)
 	UpdateNCStatus(ctx context.Context, id pgtype.UUID, tenantID, status, userID, ip string) error
 	ListCA(ctx context.Context, ncID pgtype.UUID, tenantID string) ([]repository.ErpCorrectiveAction, error)
 	CreateCA(ctx context.Context, p repository.CreateCorrectiveActionParams, userID, ip string) (repository.ErpCorrectiveAction, error)
@@ -28,6 +29,18 @@ type QualityService interface {
 	CreateAuditFinding(ctx context.Context, p repository.CreateAuditFindingParams, userID, ip string) (repository.ErpAuditFinding, error)
 	ListDocuments(ctx context.Context, tenantID, status string, limit, offset int) ([]repository.ErpControlledDocument, error)
 	CreateDocument(ctx context.Context, p repository.CreateControlledDocumentParams, userID, ip string) (repository.ErpControlledDocument, error)
+	// NC Origins
+	ListNCOrigins(ctx context.Context, tenantID string) ([]repository.ErpNcOrigin, error)
+	CreateNCOrigin(ctx context.Context, tenantID, name, userID, ip string) (repository.ErpNcOrigin, error)
+	// Action Plans
+	ListActionPlans(ctx context.Context, tenantID, ncFilter, statusFilter string, limit, offset int) ([]repository.ListActionPlansRow, error)
+	GetActionPlan(ctx context.Context, id pgtype.UUID, tenantID string) (repository.ErpQualityActionPlan, error)
+	CreateActionPlan(ctx context.Context, p repository.CreateActionPlanParams, userID, ip string) (repository.ErpQualityActionPlan, error)
+	UpdateActionPlanStatus(ctx context.Context, id pgtype.UUID, tenantID, status, userID, ip string) error
+	// Action Tasks
+	ListActionTasks(ctx context.Context, tenantID string, planID pgtype.UUID) ([]repository.ListActionTasksRow, error)
+	CreateActionTask(ctx context.Context, p repository.CreateActionTaskParams, userID, ip string) (repository.ErpQualityActionTask, error)
+	CompleteActionTask(ctx context.Context, id pgtype.UUID, tenantID, userID, ip string) error
 }
 
 type Quality struct{ svc QualityService }
@@ -44,6 +57,10 @@ func (h *Quality) Routes(authWrite func(http.Handler) http.Handler) chi.Router {
 		r.Get("/audits", h.ListAudits)
 		r.Get("/audits/{id}/findings", h.ListFindings)
 		r.Get("/documents", h.ListDocuments)
+		r.Get("/nc-origins", h.ListNCOrigins)
+		r.Get("/action-plans", h.ListActionPlans)
+		r.Get("/action-plans/{id}", h.GetActionPlan)
+		r.Get("/action-plans/{id}/tasks", h.ListActionTasks)
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(authWrite)
@@ -54,6 +71,11 @@ func (h *Quality) Routes(authWrite func(http.Handler) http.Handler) chi.Router {
 		r.Post("/audits", h.CreateAudit)
 		r.Post("/audits/{id}/findings", h.CreateFinding)
 		r.Post("/documents", h.CreateDocument)
+		r.Post("/nc-origins", h.CreateNCOrigin)
+		r.Post("/action-plans", h.CreateActionPlan)
+		r.Patch("/action-plans/{id}/status", h.UpdateActionPlanStatus)
+		r.Post("/action-plans/{id}/tasks", h.CreateActionTask)
+		r.Patch("/action-plans/{id}/tasks/{taskId}/complete", h.CompleteActionTask)
 	})
 	return r
 }
@@ -74,9 +96,15 @@ func (h *Quality) ListNC(w http.ResponseWriter, r *http.Request) {
 
 func (h *Quality) GetNC(w http.ResponseWriter, r *http.Request) {
 	id, err := parseUUID(chi.URLParam(r, "id"))
-	if err != nil { http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest); return }
+	if err != nil {
+		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		return
+	}
 	nc, err := h.svc.GetNC(r.Context(), id, tenantSlug(r))
-	if err != nil { http.Error(w, `{"error":"not found"}`, http.StatusNotFound); return }
+	if err != nil {
+		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(nc)
 }
@@ -291,4 +319,240 @@ func (h *Quality) CreateDocument(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(d)
+}
+
+// ─── NC Origins ────────────────────────────────────────────────────────────
+
+func (h *Quality) ListNCOrigins(w http.ResponseWriter, r *http.Request) {
+	origins, err := h.svc.ListNCOrigins(r.Context(), tenantSlug(r))
+	if err != nil {
+		slog.Error("list nc origins failed", "error", err)
+		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]any{"nc_origins": origins})
+}
+
+func (h *Quality) CreateNCOrigin(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	r.Body = http.MaxBytesReader(w, r.Body, 4<<10)
+	var body struct{ Name string }
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		return
+	}
+	if body.Name == "" {
+		http.Error(w, `{"error":"name is required"}`, http.StatusBadRequest)
+		return
+	}
+	o, err := h.svc.CreateNCOrigin(r.Context(), slug, body.Name, r.Header.Get("X-User-ID"), r.RemoteAddr)
+	if err != nil {
+		slog.Error("create nc origin failed", "error", err)
+		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(o)
+}
+
+// ─── Action Plans ──────────────────────────────────────────────────────────
+
+func (h *Quality) ListActionPlans(w http.ResponseWriter, r *http.Request) {
+	p := pagination.Parse(r)
+	q := r.URL.Query()
+	plans, err := h.svc.ListActionPlans(r.Context(), tenantSlug(r), q.Get("nc_id"), q.Get("status"), p.Limit(), p.Offset())
+	if err != nil {
+		slog.Error("list action plans failed", "error", err)
+		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]any{"action_plans": plans})
+}
+
+func (h *Quality) GetActionPlan(w http.ResponseWriter, r *http.Request) {
+	id, err := parseUUID(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		return
+	}
+	plan, err := h.svc.GetActionPlan(r.Context(), id, tenantSlug(r))
+	if err != nil {
+		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(plan)
+}
+
+func (h *Quality) CreateActionPlan(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	r.Body = http.MaxBytesReader(w, r.Body, 16<<10)
+	var body struct {
+		Description        string
+		NonconformityID    *string
+		ResponsibleID      *string
+		SectionID          *string
+		PlannedStart       *string
+		TargetDate         *string
+		TimeSavingsHours   *float64
+		CostSavings        *float64
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		return
+	}
+	if body.Description == "" {
+		http.Error(w, `{"error":"description is required"}`, http.StatusBadRequest)
+		return
+	}
+	var plannedStart, targetDate string
+	if body.PlannedStart != nil { plannedStart = *body.PlannedStart }
+	if body.TargetDate != nil { targetDate = *body.TargetDate }
+	var timeSavings, costSavings pgtype.Numeric
+	if body.TimeSavingsHours != nil {
+		timeSavings = numericFromFloat(*body.TimeSavingsHours)
+	}
+	if body.CostSavings != nil {
+		costSavings = numericFromFloat(*body.CostSavings)
+	}
+	plan, err := h.svc.CreateActionPlan(r.Context(), repository.CreateActionPlanParams{
+		TenantID:        slug,
+		NonconformityID: optUUID(body.NonconformityID),
+		ResponsibleID:   optUUID(body.ResponsibleID),
+		SectionID:       optUUID(body.SectionID),
+		Description:     body.Description,
+		PlannedStart:    pgDate(plannedStart),
+		TargetDate:      pgDate(targetDate),
+		TimeSavingsHours: timeSavings,
+		CostSavings:     costSavings,
+		CreatedBy:       r.Header.Get("X-User-ID"),
+	}, r.Header.Get("X-User-ID"), r.RemoteAddr)
+	if err != nil {
+		slog.Error("create action plan failed", "error", err)
+		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(plan)
+}
+
+func (h *Quality) UpdateActionPlanStatus(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	r.Body = http.MaxBytesReader(w, r.Body, 4<<10)
+	id, err := parseUUID(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		return
+	}
+	var body struct{ Status string }
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		return
+	}
+	validStatus := map[string]bool{"draft": true, "active": true, "closed": true, "cancelled": true}
+	if !validStatus[body.Status] {
+		http.Error(w, `{"error":"invalid status (draft, active, closed, cancelled)"}`, http.StatusBadRequest)
+		return
+	}
+	if err := h.svc.UpdateActionPlanStatus(r.Context(), id, slug, body.Status, r.Header.Get("X-User-ID"), r.RemoteAddr); err != nil {
+		if err.Error() == "action plan not found" {
+			http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		} else {
+			slog.Error("update action plan status failed", "error", err)
+			http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		}
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// ─── Action Tasks ──────────────────────────────────────────────────────────
+
+func (h *Quality) ListActionTasks(w http.ResponseWriter, r *http.Request) {
+	planID, err := parseUUID(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		return
+	}
+	tasks, err := h.svc.ListActionTasks(r.Context(), tenantSlug(r), planID)
+	if err != nil {
+		slog.Error("list action tasks failed", "error", err)
+		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]any{"tasks": tasks})
+}
+
+func (h *Quality) CreateActionTask(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	r.Body = http.MaxBytesReader(w, r.Body, 16<<10)
+	planID, err := parseUUID(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		return
+	}
+	var body struct {
+		Description  string
+		LeaderID     *string
+		PlannedStart *string
+		TargetDate   *string
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		return
+	}
+	if body.Description == "" {
+		http.Error(w, `{"error":"description is required"}`, http.StatusBadRequest)
+		return
+	}
+	var plannedStart, targetDate string
+	if body.PlannedStart != nil { plannedStart = *body.PlannedStart }
+	if body.TargetDate != nil { targetDate = *body.TargetDate }
+	t, err := h.svc.CreateActionTask(r.Context(), repository.CreateActionTaskParams{
+		TenantID:     slug,
+		PlanID:       planID,
+		Description:  body.Description,
+		LeaderID:     optUUID(body.LeaderID),
+		PlannedStart: pgDate(plannedStart),
+		TargetDate:   pgDate(targetDate),
+	}, r.Header.Get("X-User-ID"), r.RemoteAddr)
+	if err != nil {
+		slog.Error("create action task failed", "error", err)
+		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(t)
+}
+
+func (h *Quality) CompleteActionTask(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	taskID, err := parseUUID(chi.URLParam(r, "taskId"))
+	if err != nil {
+		http.Error(w, `{"error":"invalid task id"}`, http.StatusBadRequest)
+		return
+	}
+	if err := h.svc.CompleteActionTask(r.Context(), taskID, slug, r.Header.Get("X-User-ID"), r.RemoteAddr); err != nil {
+		if err.Error() == "action task not found" {
+			http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		} else {
+			slog.Error("complete action task failed", "error", err)
+			http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		}
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// numericFromFloat converts float64 to pgtype.Numeric for action plan savings fields.
+func numericFromFloat(f float64) pgtype.Numeric {
+	var n pgtype.Numeric
+	_ = n.Scan(fmt.Sprintf("%.2f", f))
+	return n
 }
