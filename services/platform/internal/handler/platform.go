@@ -7,16 +7,15 @@ import (
 	"crypto/ed25519"
 	"encoding/json"
 	"errors"
-	"log/slog"
 	"net/http"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 
+	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
-	"github.com/Camionerou/rag-saldivia/pkg/security"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
+	"github.com/Camionerou/rag-saldivia/pkg/security"
 	"github.com/Camionerou/rag-saldivia/services/platform/db"
 	"github.com/Camionerou/rag-saldivia/services/platform/internal/service"
 )
@@ -93,7 +92,7 @@ func (h *Platform) ListTenants(w http.ResponseWriter, r *http.Request) {
 	pg := pagination.Parse(r)
 	tenants, err := h.svc.ListTenants(r.Context(), int32(pg.Limit()), int32(pg.Offset()))
 	if err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusOK, tenants)
@@ -105,10 +104,10 @@ func (h *Platform) GetTenant(w http.ResponseWriter, r *http.Request) {
 	tenant, err := h.svc.GetTenant(r.Context(), slug)
 	if err != nil {
 		if errors.Is(err, service.ErrTenantNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": "tenant not found"})
+			httperr.WriteError(w, r, httperr.NotFound("tenant"))
 			return
 		}
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusOK, tenant)
@@ -146,14 +145,14 @@ func (h *Platform) CreateTenant(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		if errors.Is(err, service.ErrInvalidSlug) {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "slug must be lowercase alphanumeric with hyphens, 2-63 chars"})
+			httperr.WriteError(w, r, httperr.InvalidInput("slug must be lowercase alphanumeric with hyphens, 2-63 chars"))
 			return
 		}
 		if errors.Is(err, service.ErrSlugTaken) {
-			writeJSON(w, http.StatusConflict, map[string]string{"error": "tenant slug already taken"})
+			httperr.WriteError(w, r, httperr.Conflict("tenant slug already taken"))
 			return
 		}
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusCreated, tenant)
@@ -187,7 +186,7 @@ func (h *Platform) UpdateTenant(w http.ResponseWriter, r *http.Request) {
 		PlanID:   req.PlanID,
 		Settings: settings,
 	}); err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -197,7 +196,7 @@ func (h *Platform) UpdateTenant(w http.ResponseWriter, r *http.Request) {
 func (h *Platform) DisableTenant(w http.ResponseWriter, r *http.Request) {
 	tenantID := chi.URLParam(r, "tenantID")
 	if err := h.svc.DisableTenant(r.Context(), tenantID); err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -207,7 +206,7 @@ func (h *Platform) DisableTenant(w http.ResponseWriter, r *http.Request) {
 func (h *Platform) EnableTenant(w http.ResponseWriter, r *http.Request) {
 	tenantID := chi.URLParam(r, "tenantID")
 	if err := h.svc.EnableTenant(r.Context(), tenantID); err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -219,7 +218,7 @@ func (h *Platform) EnableTenant(w http.ResponseWriter, r *http.Request) {
 func (h *Platform) ListModules(w http.ResponseWriter, r *http.Request) {
 	modules, err := h.svc.ListModules(r.Context())
 	if err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusOK, modules)
@@ -230,7 +229,7 @@ func (h *Platform) GetTenantModules(w http.ResponseWriter, r *http.Request) {
 	tenantID := chi.URLParam(r, "tenantID")
 	modules, err := h.svc.GetTenantModules(r.Context(), tenantID)
 	if err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusOK, modules)
@@ -269,7 +268,7 @@ func (h *Platform) EnableModule(w http.ResponseWriter, r *http.Request) {
 		Config:    config,
 		EnabledBy: adminID,
 	}); err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -281,7 +280,7 @@ func (h *Platform) DisableModule(w http.ResponseWriter, r *http.Request) {
 	moduleID := chi.URLParam(r, "moduleID")
 
 	if err := h.svc.DisableModule(r.Context(), tenantID, moduleID); err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -293,7 +292,7 @@ func (h *Platform) DisableModule(w http.ResponseWriter, r *http.Request) {
 func (h *Platform) ListFeatureFlags(w http.ResponseWriter, r *http.Request) {
 	flags, err := h.svc.ListFeatureFlags(r.Context())
 	if err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusOK, flags)
@@ -316,10 +315,10 @@ func (h *Platform) ToggleFeatureFlag(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.svc.ToggleFeatureFlag(r.Context(), flagID, req.Enabled); err != nil {
 		if errors.Is(err, service.ErrFlagNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": "feature flag not found"})
+			httperr.WriteError(w, r, httperr.NotFound("feature flag"))
 			return
 		}
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -333,10 +332,10 @@ func (h *Platform) GetConfig(w http.ResponseWriter, r *http.Request) {
 	config, err := h.svc.GetConfig(r.Context(), key)
 	if err != nil {
 		if errors.Is(err, service.ErrConfigNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": "config key not found"})
+			httperr.WriteError(w, r, httperr.NotFound("config key"))
 			return
 		}
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusOK, config)
@@ -359,7 +358,7 @@ func (h *Platform) SetConfig(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.svc.SetConfig(r.Context(), key, req.Value, adminID); err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -420,8 +419,3 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 	json.NewEncoder(w).Encode(v)
 }
 
-func serverError(w http.ResponseWriter, r *http.Request, err error) {
-	reqID := middleware.GetReqID(r.Context())
-	slog.Error("internal error", "error", err, "request_id", reqID)
-	writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
-}
