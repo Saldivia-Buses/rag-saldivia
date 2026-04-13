@@ -11,6 +11,42 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// ParseEnabledModules parses a comma-separated list of module IDs into a
+// map[string]bool suitable for LoadModuleTools.
+//
+// Special values:
+//   - "" (empty) or "all" → enable all known modules (fleet, astro, bigbrother, erp)
+//   - "none"              → disable all modules (empty map)
+//   - "fleet,erp"         → enable only the listed modules
+//
+// This is the Option B implementation for per-environment module control.
+// TODO (Option A): once the platform service exposes an internal/service-to-service
+// endpoint (e.g. GET /internal/tenants/{slug}/modules without platform-admin auth),
+// replace this with a per-request HTTP call to resolve enabled modules from the
+// platform DB and filter allModuleDefs at query time instead of at startup.
+func ParseEnabledModules(csv string) map[string]bool {
+	csv = strings.TrimSpace(csv)
+	if csv == "" || strings.EqualFold(csv, "all") {
+		return map[string]bool{
+			"fleet":       true,
+			"astro":       true,
+			"bigbrother":  true,
+			"erp":         true,
+		}
+	}
+	if strings.EqualFold(csv, "none") {
+		return map[string]bool{}
+	}
+	result := make(map[string]bool)
+	for _, part := range strings.Split(csv, ",") {
+		name := strings.TrimSpace(part)
+		if name != "" {
+			result[name] = true
+		}
+	}
+	return result
+}
+
 // ModuleManifest represents a module's tools.yaml file.
 type ModuleManifest struct {
 	Module string         `yaml:"module"`

@@ -79,9 +79,18 @@ func main() {
 		"search": searchURL, "ingest": ingestURL, "notification": notificationURL,
 		"astro": astroURL, "bigbrother": bigbrotherURL, "erp": erpURL,
 	}
-	// TODO: enabledModules should come from Platform DB per-tenant.
-	// For now, load all modules' tools as available.
-	moduleDefs, err := tools.LoadModuleTools(modulesDir, map[string]bool{"fleet": true, "astro": true, "bigbrother": true, "erp": true}, serviceURLs)
+	// ENABLED_MODULES controls which module tool manifests are loaded.
+	// Accepts a comma-separated list of module IDs (e.g. "fleet,erp") or
+	// "all" / "" to load everything. Set to "none" to load no module tools.
+	//
+	// TODO (Option A — per-tenant): once the platform service exposes an
+	// internal service-to-service endpoint for enabled modules (without
+	// platform-admin auth), load ALL module tools at startup here and filter
+	// them per-request in the handler/service based on the tenant's enabled
+	// modules fetched from platform. Track in: platform internal modules API.
+	enabledModules := tools.ParseEnabledModules(config.Env("ENABLED_MODULES", ""))
+	slog.Info("enabled module set", "modules", enabledModules)
+	moduleDefs, err := tools.LoadModuleTools(modulesDir, enabledModules, serviceURLs)
 	if err != nil {
 		slog.Warn("failed to load module tools", "error", err)
 	} else if len(moduleDefs) > 0 {

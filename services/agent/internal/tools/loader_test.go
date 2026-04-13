@@ -157,6 +157,66 @@ func TestLoadModuleTools_EmptyToolsList(t *testing.T) {
 	}
 }
 
+// --- ParseEnabledModules ---
+
+func TestParseEnabledModules_Empty(t *testing.T) {
+	m := ParseEnabledModules("")
+	if !m["fleet"] || !m["astro"] || !m["bigbrother"] || !m["erp"] {
+		t.Errorf("empty string should enable all known modules, got: %v", m)
+	}
+}
+
+func TestParseEnabledModules_All(t *testing.T) {
+	m := ParseEnabledModules("all")
+	if !m["fleet"] || !m["astro"] || !m["bigbrother"] || !m["erp"] {
+		t.Errorf("\"all\" should enable all known modules, got: %v", m)
+	}
+}
+
+func TestParseEnabledModules_AllCaseInsensitive(t *testing.T) {
+	m := ParseEnabledModules("ALL")
+	if !m["fleet"] || !m["astro"] {
+		t.Errorf("\"ALL\" should enable all known modules, got: %v", m)
+	}
+}
+
+func TestParseEnabledModules_None(t *testing.T) {
+	m := ParseEnabledModules("none")
+	if len(m) != 0 {
+		t.Errorf("\"none\" should return empty map, got: %v", m)
+	}
+}
+
+func TestParseEnabledModules_Subset(t *testing.T) {
+	m := ParseEnabledModules("fleet,erp")
+	if !m["fleet"] || !m["erp"] {
+		t.Errorf("expected fleet and erp enabled, got: %v", m)
+	}
+	if m["astro"] || m["bigbrother"] {
+		t.Errorf("astro and bigbrother should not be enabled, got: %v", m)
+	}
+	if len(m) != 2 {
+		t.Errorf("expected exactly 2 entries, got %d: %v", len(m), m)
+	}
+}
+
+func TestParseEnabledModules_Single(t *testing.T) {
+	m := ParseEnabledModules("astro")
+	if !m["astro"] {
+		t.Errorf("expected astro enabled, got: %v", m)
+	}
+	if len(m) != 1 {
+		t.Errorf("expected exactly 1 entry, got %d: %v", len(m), m)
+	}
+}
+
+func TestParseEnabledModules_WhitespaceIgnored(t *testing.T) {
+	m := ParseEnabledModules(" fleet , erp ")
+	if !m["fleet"] || !m["erp"] {
+		t.Errorf("expected fleet and erp enabled (with whitespace trimmed), got: %v", m)
+	}
+}
+
 // --- resolveEndpoint ---
 
 func TestResolveEndpoint_GRPCProtocol(t *testing.T) {
