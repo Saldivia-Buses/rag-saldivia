@@ -228,4 +228,5 @@ type TraceEvent struct {
 	Data       []byte             `json:"data"`
 	DurationMs pgtype.Int4        `json:"duration_ms"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	TenantID   string             `json:"tenant_id"`
 }

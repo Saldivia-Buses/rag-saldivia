@@ -92,6 +92,8 @@ func main() {
 	adminHandler := handler.NewAdmin(adminSvc)
 	analyticsSvc := service.NewAnalytics(repo)
 	analyticsHandler := handler.NewAnalytics(analyticsSvc)
+	safetySvc := service.NewSafety(repo, auditWriter, publisher)
+	safetyHandler := handler.NewSafety(safetySvc)
 
 	// Health
 	hc := health.New("erp")
@@ -133,6 +135,7 @@ func main() {
 		r.Mount("/v1/erp/manufacturing", mfgH.Routes(authWrite))
 		r.Mount("/v1/erp/admin", adminHandler.Routes(authWrite))
 		r.Mount("/v1/erp/analytics", analyticsHandler.Routes(authWrite))
+		r.Mount("/v1/erp/safety", safetyHandler.Routes(authWrite))
 	})
 
 	app.Run()

@@ -295,6 +295,16 @@ type DocumentTree struct {
 	CreatedAt      pgtype.Timestamptz `json:"created_at"`
 }
 
+type ErpAccidentType struct {
+	ID           pgtype.UUID        `json:"id"`
+	TenantID     string             `json:"tenant_id"`
+	Name         string             `json:"name"`
+	Abbreviation string             `json:"abbreviation"`
+	SeverityIdx  pgtype.Numeric     `json:"severity_idx"`
+	Active       bool               `json:"active"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+}
+
 type ErpAccount struct {
 	ID           pgtype.UUID `json:"id"`
 	TenantID     string      `json:"tenant_id"`
@@ -426,6 +436,13 @@ type ErpBankStatementLine struct {
 	Matched          bool               `json:"matched"`
 	MovementID       pgtype.UUID        `json:"movement_id"`
 	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpBodyPart struct {
+	ID          pgtype.UUID        `json:"id"`
+	TenantID    string             `json:"tenant_id"`
+	Description string             `json:"description"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 }
 
 type ErpBom struct {
@@ -674,6 +691,19 @@ type ErpEmployeeDetail struct {
 	Metadata        []byte             `json:"metadata"`
 	CreatedAt       pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+}
+
+type ErpEmployeeRiskExposure struct {
+	ID           pgtype.UUID        `json:"id"`
+	TenantID     string             `json:"tenant_id"`
+	EntityID     pgtype.UUID        `json:"entity_id"`
+	RiskAgentID  pgtype.UUID        `json:"risk_agent_id"`
+	SectionID    pgtype.UUID        `json:"section_id"`
+	ExposedFrom  pgtype.Date        `json:"exposed_from"`
+	ExposedUntil pgtype.Date        `json:"exposed_until"`
+	Notes        string             `json:"notes"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
 }
 
 type ErpEntity struct {
@@ -986,6 +1016,37 @@ type ErpManufacturingUnit struct {
 	Status             string             `json:"status"`
 	CreatedAt          pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt          pgtype.Timestamptz `json:"updated_at"`
+}
+
+type ErpMedicalConsultation struct {
+	ID           pgtype.UUID        `json:"id"`
+	TenantID     string             `json:"tenant_id"`
+	EntityID     pgtype.UUID        `json:"entity_id"`
+	PatientName  string             `json:"patient_name"`
+	ConsultDate  pgtype.Date        `json:"consult_date"`
+	ConsultTime  pgtype.Time        `json:"consult_time"`
+	Symptoms     string             `json:"symptoms"`
+	Prescription string             `json:"prescription"`
+	MedicUser    string             `json:"medic_user"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpMedicalLeafe struct {
+	ID           pgtype.UUID        `json:"id"`
+	TenantID     string             `json:"tenant_id"`
+	EntityID     pgtype.UUID        `json:"entity_id"`
+	BodyPartID   pgtype.UUID        `json:"body_part_id"`
+	AccidentID   pgtype.UUID        `json:"accident_id"`
+	LeaveType    string             `json:"leave_type"`
+	DateFrom     pgtype.Date        `json:"date_from"`
+	DateTo       pgtype.Date        `json:"date_to"`
+	WorkingDays  int32              `json:"working_days"`
+	Observations string             `json:"observations"`
+	Status       string             `json:"status"`
+	ApprovedBy   string             `json:"approved_by"`
+	ApprovedAt   pgtype.Timestamptz `json:"approved_at"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
 }
 
 type ErpMigrationRun struct {
@@ -1386,6 +1447,15 @@ type ErpReceiptWithholding struct {
 	WithholdingID pgtype.UUID `json:"withholding_id"`
 }
 
+type ErpRiskAgent struct {
+	ID        pgtype.UUID        `json:"id"`
+	TenantID  string             `json:"tenant_id"`
+	Name      string             `json:"name"`
+	RiskType  string             `json:"risk_type"`
+	Active    bool               `json:"active"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
 type ErpSequence struct {
 	ID        pgtype.UUID `json:"id"`
 	TenantID  string      `json:"tenant_id"`
@@ -1589,6 +1659,23 @@ type ErpWithholding struct {
 	CertificateNum pgtype.Text        `json:"certificate_num"`
 	Date           pgtype.Date        `json:"date"`
 	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpWorkAccident struct {
+	ID             pgtype.UUID        `json:"id"`
+	TenantID       string             `json:"tenant_id"`
+	EntityID       pgtype.UUID        `json:"entity_id"`
+	AccidentTypeID pgtype.UUID        `json:"accident_type_id"`
+	BodyPartID     pgtype.UUID        `json:"body_part_id"`
+	SectionID      pgtype.UUID        `json:"section_id"`
+	IncidentDate   pgtype.Date        `json:"incident_date"`
+	RecoveryDate   pgtype.Date        `json:"recovery_date"`
+	LostDays       int32              `json:"lost_days"`
+	Observations   string             `json:"observations"`
+	ReportedBy     string             `json:"reported_by"`
+	Status         string             `json:"status"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
 }
 
 type ErpWorkOrder struct {
