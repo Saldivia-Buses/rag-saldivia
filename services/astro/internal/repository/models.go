@@ -1094,6 +1094,14 @@ type ErpMigrationValidationIssue struct {
 	CreatedAt      pgtype.Timestamptz `json:"created_at"`
 }
 
+type ErpNcOrigin struct {
+	ID        pgtype.UUID        `json:"id"`
+	TenantID  string             `json:"tenant_id"`
+	Name      string             `json:"name"`
+	Active    bool               `json:"active"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
 type ErpNonconformity struct {
 	ID          pgtype.UUID        `json:"id"`
 	TenantID    string             `json:"tenant_id"`
@@ -1108,6 +1116,7 @@ type ErpNonconformity struct {
 	ClosedAt    pgtype.Timestamptz `json:"closed_at"`
 	UserID      string             `json:"user_id"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	CostImpact  pgtype.Numeric     `json:"cost_impact"`
 }
 
 type ErpOrder struct {
@@ -1348,6 +1357,38 @@ type ErpQcInspection struct {
 	Notes         string             `json:"notes"`
 	CompletedAt   pgtype.Timestamptz `json:"completed_at"`
 	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpQualityActionPlan struct {
+	ID               pgtype.UUID        `json:"id"`
+	TenantID         string             `json:"tenant_id"`
+	NonconformityID  pgtype.UUID        `json:"nonconformity_id"`
+	ResponsibleID    pgtype.UUID        `json:"responsible_id"`
+	SectionID        pgtype.UUID        `json:"section_id"`
+	Description      string             `json:"description"`
+	PlannedStart     pgtype.Date        `json:"planned_start"`
+	TargetDate       pgtype.Date        `json:"target_date"`
+	ClosedDate       pgtype.Date        `json:"closed_date"`
+	TimeSavingsHours pgtype.Numeric     `json:"time_savings_hours"`
+	CostSavings      pgtype.Numeric     `json:"cost_savings"`
+	Status           string             `json:"status"`
+	CreatedBy        string             `json:"created_by"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
+}
+
+type ErpQualityActionTask struct {
+	ID           pgtype.UUID        `json:"id"`
+	TenantID     string             `json:"tenant_id"`
+	PlanID       pgtype.UUID        `json:"plan_id"`
+	Description  string             `json:"description"`
+	LeaderID     pgtype.UUID        `json:"leader_id"`
+	PlannedStart pgtype.Date        `json:"planned_start"`
+	TargetDate   pgtype.Date        `json:"target_date"`
+	ClosedDate   pgtype.Date        `json:"closed_date"`
+	Completed    bool               `json:"completed"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
 }
 
 type ErpQualityIndicator struct {
