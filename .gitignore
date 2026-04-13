@@ -96,3 +96,5 @@ _archive/
 !apps/web/public/**/*.png
 !apps/login/public/**/*.png
 apps/web/.firecrawl/
+config/.env.saldivia
+config/.env.*
