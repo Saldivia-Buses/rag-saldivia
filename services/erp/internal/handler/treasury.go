@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -13,6 +12,7 @@ import (
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
+	erperrors "github.com/Camionerou/rag-saldivia/services/erp/internal/errors"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/repository"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/service"
 )
@@ -106,8 +106,7 @@ func (h *Treasury) ListBankAccounts(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	accounts, err := h.svc.ListBankAccounts(r.Context(), slug, r.URL.Query().Get("active") != "false")
 	if err != nil {
-		slog.Error("list bank accounts failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -127,20 +126,19 @@ func (h *Treasury) CreateBankAccount(w http.ResponseWriter, r *http.Request) {
 		AccountID     *string `json:"account_id,omitempty"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid request body"))
 		return
 	}
 	ba, err := h.svc.CreateBankAccount(r.Context(), repository.CreateBankAccountParams{
 		TenantID: slug, BankName: body.BankName, Branch: body.Branch,
 		AccountNumber: body.AccountNumber,
-		Cbu:         pgTextOpt(body.CBU),
-		Alias:       pgTextOpt(body.Alias),
-		CurrencyID:  optUUID(body.CurrencyID),
-		AccountID:   optUUID(body.AccountID),
+		Cbu:           pgTextOpt(body.CBU),
+		Alias:         pgTextOpt(body.Alias),
+		CurrencyID:    optUUID(body.CurrencyID),
+		AccountID:     optUUID(body.AccountID),
 	}, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create bank account failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -152,8 +150,7 @@ func (h *Treasury) ListCashRegisters(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	regs, err := h.svc.ListCashRegisters(r.Context(), slug)
 	if err != nil {
-		slog.Error("list cash registers failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -168,14 +165,13 @@ func (h *Treasury) CreateCashRegister(w http.ResponseWriter, r *http.Request) {
 		AccountID *string `json:"account_id,omitempty"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid request body"))
 		return
 	}
 	cr, err := h.svc.CreateCashRegister(r.Context(), slug, body.Name, optUUID(body.AccountID),
 		r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create cash register failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -191,8 +187,7 @@ func (h *Treasury) ListMovements(w http.ResponseWriter, r *http.Request) {
 	typeFilter := r.URL.Query().Get("type")
 	movements, err := h.svc.ListMovements(r.Context(), slug, dateFrom, dateTo, typeFilter, p.Limit(), p.Offset())
 	if err != nil {
-		slog.Error("list treasury movements failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -216,7 +211,7 @@ func (h *Treasury) CreateMovement(w http.ResponseWriter, r *http.Request) {
 		Notes          string  `json:"notes"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid request body"))
 		return
 	}
 	var pm pgtype.Text
@@ -243,8 +238,7 @@ func (h *Treasury) CreateMovement(w http.ResponseWriter, r *http.Request) {
 		IP:        r.RemoteAddr,
 	})
 	if err != nil {
-		slog.Error("create treasury movement failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -258,8 +252,7 @@ func (h *Treasury) ListChecks(w http.ResponseWriter, r *http.Request) {
 	status := r.URL.Query().Get("status")
 	checks, err := h.svc.ListChecks(r.Context(), slug, direction, status)
 	if err != nil {
-		slog.Error("list checks failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -281,7 +274,7 @@ func (h *Treasury) CreateCheck(w http.ResponseWriter, r *http.Request) {
 		Notes      string  `json:"notes"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid request body"))
 		return
 	}
 	chk, err := h.svc.CreateCheck(r.Context(), repository.CreateCheckParams{
@@ -297,8 +290,7 @@ func (h *Treasury) CreateCheck(w http.ResponseWriter, r *http.Request) {
 		Notes:      body.Notes,
 	}, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create check failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -311,25 +303,24 @@ func (h *Treasury) UpdateCheckStatus(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 4<<10)
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	var body struct {
 		Status string `json:"status"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid request body"))
 		return
 	}
 	if err := h.svc.UpdateCheckStatus(r.Context(), id, slug, body.Status, r.Header.Get("X-User-ID"), r.RemoteAddr); err != nil {
 		msg := err.Error()
 		if strings.Contains(msg, "invalid transition") {
-			http.Error(w, `{"error":"`+msg+`"}`, http.StatusBadRequest)
+			erperrors.WriteError(w, r, erperrors.InvalidInput(msg))
 		} else if strings.Contains(msg, "not found") {
-			http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+			erperrors.WriteError(w, r, erperrors.NotFound("check"))
 		} else {
-			slog.Error("update check status failed", "error", err)
-			http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+			erperrors.WriteError(w, r, erperrors.Internal(err))
 		}
 		return
 	}
@@ -340,8 +331,7 @@ func (h *Treasury) GetBalance(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	balances, err := h.svc.GetBalance(r.Context(), slug)
 	if err != nil {
-		slog.Error("get treasury balance failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -353,8 +343,7 @@ func (h *Treasury) ListCashCounts(w http.ResponseWriter, r *http.Request) {
 	p := pagination.Parse(r)
 	counts, err := h.svc.ListCashCounts(r.Context(), slug, p.Limit(), p.Offset())
 	if err != nil {
-		slog.Error("list cash counts failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -372,12 +361,12 @@ func (h *Treasury) CreateCashCount(w http.ResponseWriter, r *http.Request) {
 		Notes          string `json:"notes"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid request body"))
 		return
 	}
 	crID, err := parseUUID(body.CashRegisterID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid cash_register_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid cash_register_id"))
 		return
 	}
 	// Calculate difference server-side (counted - expected)
@@ -404,8 +393,7 @@ func (h *Treasury) CreateCashCount(w http.ResponseWriter, r *http.Request) {
 		Notes:          body.Notes,
 	}, r.RemoteAddr)
 	if err != nil {
-		slog.Error("create cash count failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -424,8 +412,7 @@ func (h *Treasury) ListReceiptsH(w http.ResponseWriter, r *http.Request) {
 	receipts, err := h.svc.ListReceipts(r.Context(), slug, q.Get("type"),
 		pgDate(q.Get("date_from")), pgDate(q.Get("date_to")), p.Limit(), p.Offset())
 	if err != nil {
-		slog.Error("list receipts failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -436,13 +423,12 @@ func (h *Treasury) GetReceiptH(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	detail, err := h.svc.GetReceipt(r.Context(), slug, id)
 	if err != nil {
-		slog.Error("get receipt failed", "error", err)
-		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		erperrors.WriteError(w, r, erperrors.NotFound("receipt"))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -454,17 +440,16 @@ func (h *Treasury) CreateReceiptH(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 64<<10)
 	var body service.ReceiptInput
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid request body"))
 		return
 	}
 	detail, err := h.svc.CreateReceipt(r.Context(), slug, body,
 		r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create receipt failed", "error", err)
 		if strings.Contains(err.Error(), "don't balance") {
 			writeSafeErr(w, err, http.StatusBadRequest)
 		} else {
-			http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+			erperrors.WriteError(w, r, erperrors.Internal(err))
 		}
 		return
 	}
@@ -477,12 +462,11 @@ func (h *Treasury) VoidReceiptH(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	if err := h.svc.VoidReceipt(r.Context(), slug, id,
 		r.Header.Get("X-User-ID"), r.RemoteAddr); err != nil {
-		slog.Error("void receipt failed", "error", err)
 		writeSafeErr(w, err, http.StatusBadRequest)
 		return
 	}
@@ -497,8 +481,7 @@ func (h *Treasury) ListReconciliations(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	recons, err := h.svc.ListReconciliations(r.Context(), slug)
 	if err != nil {
-		slog.Error("list reconciliations failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -515,19 +498,18 @@ func (h *Treasury) CreateReconciliation(w http.ResponseWriter, r *http.Request) 
 		BookBalance      string `json:"book_balance"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid request body"))
 		return
 	}
 	baID, err := parseUUID(body.BankAccountID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid bank_account_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid bank_account_id"))
 		return
 	}
 	recon, err := h.svc.CreateReconciliation(r.Context(), slug, baID, body.Period,
 		body.StatementBalance, body.BookBalance, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create reconciliation failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -539,13 +521,12 @@ func (h *Treasury) GetReconciliation(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	detail, err := h.svc.GetReconciliation(r.Context(), slug, id)
 	if err != nil {
-		slog.Error("get reconciliation failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -556,7 +537,7 @@ func (h *Treasury) ImportStatementLines(w http.ResponseWriter, r *http.Request) 
 	slug := tenantSlug(r)
 	reconID, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20) // 1MB for statement lines
@@ -564,13 +545,12 @@ func (h *Treasury) ImportStatementLines(w http.ResponseWriter, r *http.Request) 
 		Lines []service.StatementLineInput `json:"lines"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid request body"))
 		return
 	}
 	count, err := h.svc.ImportStatementLines(r.Context(), slug, reconID, body.Lines)
 	if err != nil {
-		slog.Error("import statement lines failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -581,13 +561,12 @@ func (h *Treasury) AutoMatch(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	reconID, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	result, err := h.svc.AutoMatch(r.Context(), slug, reconID)
 	if err != nil {
-		slog.Error("auto-match failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -598,12 +577,12 @@ func (h *Treasury) MatchManual(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	reconID, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid reconciliation id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid reconciliation id"))
 		return
 	}
 	lineID, err := parseUUID(chi.URLParam(r, "lineId"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid line id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid line id"))
 		return
 	}
 	r.Body = http.MaxBytesReader(w, r.Body, 4<<10)
@@ -611,20 +590,19 @@ func (h *Treasury) MatchManual(w http.ResponseWriter, r *http.Request) {
 		MovementID string `json:"movement_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.MovementID == "" {
-		http.Error(w, `{"error":"movement_id required"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("movement_id required"))
 		return
 	}
 	movID, err := parseUUID(body.MovementID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid movement_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid movement_id"))
 		return
 	}
 	if err := h.svc.MatchManual(r.Context(), slug, reconID, lineID, movID); err != nil {
-		slog.Error("manual match failed", "error", err)
 		if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "already matched") {
 			writeSafeErr(w, err, http.StatusBadRequest)
 		} else {
-			http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+			erperrors.WriteError(w, r, erperrors.Internal(err))
 		}
 		return
 	}
@@ -635,12 +613,11 @@ func (h *Treasury) ConfirmReconciliation(w http.ResponseWriter, r *http.Request)
 	slug := tenantSlug(r)
 	reconID, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	if err := h.svc.ConfirmReconciliation(r.Context(), slug, reconID,
 		r.Header.Get("X-User-ID"), r.RemoteAddr); err != nil {
-		slog.Error("confirm reconciliation failed", "error", err)
 		writeSafeErr(w, err, http.StatusBadRequest)
 		return
 	}
