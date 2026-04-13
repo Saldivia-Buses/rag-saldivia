@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
 	"net/http"
 	"time"
 
@@ -12,6 +11,7 @@ import (
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
+	erperrors "github.com/Camionerou/rag-saldivia/services/erp/internal/errors"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/repository"
 )
 
@@ -113,8 +113,7 @@ func (h *Manufacturing) Routes(authWrite func(http.Handler) http.Handler) chi.Ro
 func (h *Manufacturing) ListChassisBrands(w http.ResponseWriter, r *http.Request) {
 	brands, err := h.svc.ListChassisBrands(r.Context(), tenantSlug(r))
 	if err != nil {
-		slog.Error("list chassis brands failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -124,8 +123,7 @@ func (h *Manufacturing) ListChassisBrands(w http.ResponseWriter, r *http.Request
 func (h *Manufacturing) ListChassisModels(w http.ResponseWriter, r *http.Request) {
 	models, err := h.svc.ListChassisModels(r.Context(), tenantSlug(r), r.URL.Query().Get("brand_id"))
 	if err != nil {
-		slog.Error("list chassis models failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -135,8 +133,7 @@ func (h *Manufacturing) ListChassisModels(w http.ResponseWriter, r *http.Request
 func (h *Manufacturing) ListCarroceriaModels(w http.ResponseWriter, r *http.Request) {
 	models, err := h.svc.ListCarroceriaModels(r.Context(), tenantSlug(r))
 	if err != nil {
-		slog.Error("list carroceria models failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -146,13 +143,12 @@ func (h *Manufacturing) ListCarroceriaModels(w http.ResponseWriter, r *http.Requ
 func (h *Manufacturing) GetCarroceriaBOM(w http.ResponseWriter, r *http.Request) {
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	bom, err := h.svc.GetCarroceriaBOM(r.Context(), tenantSlug(r), id)
 	if err != nil {
-		slog.Error("get carroceria BOM failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -163,8 +159,7 @@ func (h *Manufacturing) ListUnits(w http.ResponseWriter, r *http.Request) {
 	p := pagination.Parse(r)
 	units, err := h.svc.ListUnits(r.Context(), tenantSlug(r), r.URL.Query().Get("status"), p.Limit(), p.Offset())
 	if err != nil {
-		slog.Error("list manufacturing units failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -174,12 +169,12 @@ func (h *Manufacturing) ListUnits(w http.ResponseWriter, r *http.Request) {
 func (h *Manufacturing) GetUnit(w http.ResponseWriter, r *http.Request) {
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	unit, err := h.svc.GetUnit(r.Context(), id, tenantSlug(r))
 	if err != nil {
-		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		erperrors.WriteError(w, r, erperrors.NotFound("manufacturing unit"))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -189,14 +184,13 @@ func (h *Manufacturing) GetUnit(w http.ResponseWriter, r *http.Request) {
 func (h *Manufacturing) ListUnitControls(w http.ResponseWriter, r *http.Request) {
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	p := pagination.Parse(r)
 	controls, err := h.svc.ListProductionControls(r.Context(), tenantSlug(r), id, r.URL.Query().Get("status"), p.Limit(), p.Offset())
 	if err != nil {
-		slog.Error("list production controls failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -206,13 +200,12 @@ func (h *Manufacturing) ListUnitControls(w http.ResponseWriter, r *http.Request)
 func (h *Manufacturing) GetUnitPendingControls(w http.ResponseWriter, r *http.Request) {
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	controls, err := h.svc.GetUnitPendingControls(r.Context(), tenantSlug(r), id)
 	if err != nil {
-		slog.Error("get pending controls failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -222,13 +215,12 @@ func (h *Manufacturing) GetUnitPendingControls(w http.ResponseWriter, r *http.Re
 func (h *Manufacturing) GetUnitControlExecutions(w http.ResponseWriter, r *http.Request) {
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	executions, err := h.svc.GetUnitControlExecutions(r.Context(), tenantSlug(r), id)
 	if err != nil {
-		slog.Error("get control executions failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -238,13 +230,12 @@ func (h *Manufacturing) GetUnitControlExecutions(w http.ResponseWriter, r *http.
 func (h *Manufacturing) ListLCM(w http.ResponseWriter, r *http.Request) {
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	lcms, err := h.svc.ListLCM(r.Context(), tenantSlug(r), id, r.URL.Query().Get("status"))
 	if err != nil {
-		slog.Error("list LCM failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -254,13 +245,12 @@ func (h *Manufacturing) ListLCM(w http.ResponseWriter, r *http.Request) {
 func (h *Manufacturing) ListCNRTWork(w http.ResponseWriter, r *http.Request) {
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	orders, err := h.svc.ListCNRTWork(r.Context(), tenantSlug(r), id)
 	if err != nil {
-		slog.Error("list CNRT work failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -270,12 +260,12 @@ func (h *Manufacturing) ListCNRTWork(w http.ResponseWriter, r *http.Request) {
 func (h *Manufacturing) GetCertificate(w http.ResponseWriter, r *http.Request) {
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	cert, err := h.svc.GetCertificate(r.Context(), tenantSlug(r), id)
 	if err != nil {
-		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		erperrors.WriteError(w, r, erperrors.NotFound("certificate"))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -292,17 +282,16 @@ func (h *Manufacturing) CreateChassisBrand(w http.ResponseWriter, r *http.Reques
 		Name string `json:"name"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	if body.Code == "" || body.Name == "" {
-		http.Error(w, `{"error":"code and name are required"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("code and name are required"))
 		return
 	}
 	brand, err := h.svc.CreateChassisBrand(r.Context(), slug, body.Code, body.Name, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create chassis brand failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -324,11 +313,11 @@ func (h *Manufacturing) CreateCarroceriaModel(w http.ResponseWriter, r *http.Req
 		TechSheetImage            string  `json:"tech_sheet_image"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	if body.Code == "" || body.Description == "" {
-		http.Error(w, `{"error":"code and description are required"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("code and description are required"))
 		return
 	}
 	model, err := h.svc.CreateCarroceriaModel(r.Context(), repository.CreateCarroceriaModelParams{
@@ -343,8 +332,7 @@ func (h *Manufacturing) CreateCarroceriaModel(w http.ResponseWriter, r *http.Req
 		TechSheetImage:            body.TechSheetImage,
 	}, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create carroceria model failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -357,7 +345,7 @@ func (h *Manufacturing) AddBOMItem(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 16<<10)
 	modelID, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	var body struct {
@@ -366,16 +354,16 @@ func (h *Manufacturing) AddBOMItem(w http.ResponseWriter, r *http.Request) {
 		UnitOfUse string `json:"unit_of_use"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	articleID, err := parseUUID(body.ArticleID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid article_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid article_id"))
 		return
 	}
 	if body.Quantity == "" || body.UnitOfUse == "" {
-		http.Error(w, `{"error":"quantity and unit_of_use are required"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("quantity and unit_of_use are required"))
 		return
 	}
 	item, err := h.svc.AddBOMItem(r.Context(), repository.AddBOMItemParams{
@@ -386,8 +374,7 @@ func (h *Manufacturing) AddBOMItem(w http.ResponseWriter, r *http.Request) {
 		UnitOfUse:         body.UnitOfUse,
 	}, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("add BOM item failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -399,15 +386,14 @@ func (h *Manufacturing) DeleteBOMItem(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	bomID, err := parseUUID(chi.URLParam(r, "bomId"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid bom_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid bom_id"))
 		return
 	}
 	if err := h.svc.DeleteBOMItem(r.Context(), slug, bomID, r.Header.Get("X-User-ID"), r.RemoteAddr); err != nil {
 		if err.Error() == "bom item not found" {
-			http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+			erperrors.WriteError(w, r, erperrors.NotFound("bom item"))
 		} else {
-			slog.Error("delete BOM item failed", "error", err)
-			http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+			erperrors.WriteError(w, r, erperrors.Internal(err))
 		}
 		return
 	}
@@ -433,35 +419,35 @@ func (h *Manufacturing) CreateUnit(w http.ResponseWriter, r *http.Request) {
 		Observations       string `json:"observations"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	if body.WorkOrderNumber == 0 {
-		http.Error(w, `{"error":"work_order_number required"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("work_order_number required"))
 		return
 	}
 	if body.ChassisSerial == "" {
-		http.Error(w, `{"error":"chassis_serial required"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("chassis_serial required"))
 		return
 	}
 	chassisBrandID, err := parseUUID(body.ChassisBrandID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid chassis_brand_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid chassis_brand_id"))
 		return
 	}
 	chassisModelID, err := parseUUID(body.ChassisModelID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid chassis_model_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid chassis_model_id"))
 		return
 	}
 	carroceriaModelID, err := parseUUID(body.CarroceriaModelID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid carroceria_model_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid carroceria_model_id"))
 		return
 	}
 	customerID, err := parseUUID(body.CustomerID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid customer_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid customer_id"))
 		return
 	}
 	var invoiceRef pgtype.Text
@@ -485,8 +471,7 @@ func (h *Manufacturing) CreateUnit(w http.ResponseWriter, r *http.Request) {
 		Observations:       body.Observations,
 	}, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create manufacturing unit failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -499,12 +484,14 @@ func (h *Manufacturing) UpdateUnitStatus(w http.ResponseWriter, r *http.Request)
 	r.Body = http.MaxBytesReader(w, r.Body, 4<<10)
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
-	var body struct{ Status string `json:"status"` }
+	var body struct {
+		Status string `json:"status"`
+	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	validStatus := map[string]bool{
@@ -512,15 +499,14 @@ func (h *Manufacturing) UpdateUnitStatus(w http.ResponseWriter, r *http.Request)
 		"delivered": true, "returned": true,
 	}
 	if !validStatus[body.Status] {
-		http.Error(w, `{"error":"invalid status (pending, in_production, completed, delivered, returned)"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid status (pending, in_production, completed, delivered, returned)"))
 		return
 	}
 	if err := h.svc.UpdateManufacturingUnitStatus(r.Context(), id, slug, body.Status, r.Header.Get("X-User-ID"), r.RemoteAddr); err != nil {
 		if err.Error() == "manufacturing unit not found" {
-			http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+			erperrors.WriteError(w, r, erperrors.NotFound("manufacturing unit"))
 		} else {
-			slog.Error("update unit status failed", "error", err)
-			http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+			erperrors.WriteError(w, r, erperrors.Internal(err))
 		}
 		return
 	}
@@ -532,7 +518,7 @@ func (h *Manufacturing) CreateLCM(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 16<<10)
 	unitID, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	var body struct {
@@ -542,17 +528,17 @@ func (h *Manufacturing) CreateLCM(w http.ResponseWriter, r *http.Request) {
 		Notes       string `json:"notes"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	issuedBy, err := parseUUID(body.IssuedBy)
 	if err != nil {
-		http.Error(w, `{"error":"invalid issued_by"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid issued_by"))
 		return
 	}
 	warehouseID, err := parseUUID(body.WarehouseID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid warehouse_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid warehouse_id"))
 		return
 	}
 	lcm, err := h.svc.CreateLCM(r.Context(), repository.CreateLCMParams{
@@ -564,8 +550,7 @@ func (h *Manufacturing) CreateLCM(w http.ResponseWriter, r *http.Request) {
 		Notes:       body.Notes,
 	}, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create LCM failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -578,7 +563,7 @@ func (h *Manufacturing) CreateCNRTWork(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 16<<10)
 	unitID, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	var body struct {
@@ -589,11 +574,11 @@ func (h *Manufacturing) CreateCNRTWork(w http.ResponseWriter, r *http.Request) {
 		Observations   string `json:"observations"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	if body.CnrtNumber == "" || body.InspectionType == "" {
-		http.Error(w, `{"error":"cnrt_number and inspection_type are required"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("cnrt_number and inspection_type are required"))
 		return
 	}
 	order, err := h.svc.CreateCNRTWork(r.Context(), repository.CreateCNRTWorkParams{
@@ -606,8 +591,7 @@ func (h *Manufacturing) CreateCNRTWork(w http.ResponseWriter, r *http.Request) {
 		Observations:   body.Observations,
 	}, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create CNRT work order failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -620,7 +604,7 @@ func (h *Manufacturing) CreateCertificate(w http.ResponseWriter, r *http.Request
 	r.Body = http.MaxBytesReader(w, r.Body, 16<<10)
 	unitID, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	var body struct {
@@ -634,16 +618,16 @@ func (h *Manufacturing) CreateCertificate(w http.ResponseWriter, r *http.Request
 		Observations      string `json:"observations"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	if body.CertificateNumber == "" || body.CertType == "" {
-		http.Error(w, `{"error":"certificate_number and cert_type are required"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("certificate_number and cert_type are required"))
 		return
 	}
 	issuedBy, err := parseUUID(body.IssuedBy)
 	if err != nil {
-		http.Error(w, `{"error":"invalid issued_by"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid issued_by"))
 		return
 	}
 	cert, err := h.svc.CreateCertificate(r.Context(), repository.CreateCertificateParams{
@@ -659,8 +643,7 @@ func (h *Manufacturing) CreateCertificate(w http.ResponseWriter, r *http.Request
 		Observations:      body.Observations,
 	}, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create certificate failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -683,21 +666,21 @@ func (h *Manufacturing) CreateControl(w http.ResponseWriter, r *http.Request) {
 		Notes         string `json:"notes"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	if body.Station == "" {
-		http.Error(w, `{"error":"station is required"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("station is required"))
 		return
 	}
 	unitID, err := parseUUID(body.UnitID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid unit_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid unit_id"))
 		return
 	}
 	responsibleID, err := parseUUID(body.ResponsibleID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid responsible_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid responsible_id"))
 		return
 	}
 	ctrl, err := h.svc.CreateProductionControl(r.Context(), repository.CreateProductionControlParams{
@@ -711,8 +694,7 @@ func (h *Manufacturing) CreateControl(w http.ResponseWriter, r *http.Request) {
 		Notes:         body.Notes,
 	}, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create production control failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -725,7 +707,7 @@ func (h *Manufacturing) ExecuteControl(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 16<<10)
 	controlID, err := parseUUID(chi.URLParam(r, "controlId"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid control_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid control_id"))
 		return
 	}
 	var body struct {
@@ -736,21 +718,21 @@ func (h *Manufacturing) ExecuteControl(w http.ResponseWriter, r *http.Request) {
 		Notes      string `json:"notes"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 	if body.ExecType == "" {
-		http.Error(w, `{"error":"exec_type is required"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("exec_type is required"))
 		return
 	}
 	operatorID, err := parseUUID(body.OperatorID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid operator_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid operator_id"))
 		return
 	}
 	causalID, err := parseUUID(body.CausalID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid causal_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid causal_id"))
 		return
 	}
 	startedAt := pgtype.Timestamptz{Time: time.Now(), Valid: true}
@@ -769,8 +751,7 @@ func (h *Manufacturing) ExecuteControl(w http.ResponseWriter, r *http.Request) {
 		Notes:      body.Notes,
 	}, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("execute control failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -784,15 +765,14 @@ func (h *Manufacturing) IssueCertificate(w http.ResponseWriter, r *http.Request)
 	slug := tenantSlug(r)
 	certID, err := parseUUID(chi.URLParam(r, "certId"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid cert_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid cert_id"))
 		return
 	}
 	if err := h.svc.IssueCertificate(r.Context(), slug, certID, r.Header.Get("X-User-ID"), r.RemoteAddr); err != nil {
 		if err.Error() == "certificate not found" {
-			http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+			erperrors.WriteError(w, r, erperrors.NotFound("certificate"))
 		} else {
-			slog.Error("issue certificate failed", "error", err)
-			http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+			erperrors.WriteError(w, r, erperrors.Internal(err))
 		}
 		return
 	}
