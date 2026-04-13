@@ -3,13 +3,13 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	erperrors "github.com/Camionerou/rag-saldivia/services/erp/internal/errors"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/repository"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/service"
 )
@@ -61,7 +61,7 @@ func (h *Catalogs) List(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	catalogType := r.URL.Query().Get("type")
 	if catalogType == "" {
-		http.Error(w, `{"error":"type query param required"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("type query param required"))
 		return
 	}
 
@@ -69,8 +69,7 @@ func (h *Catalogs) List(w http.ResponseWriter, r *http.Request) {
 
 	catalogs, err := h.svc.List(r.Context(), slug, catalogType, activeOnly)
 	if err != nil {
-		slog.Error("list catalogs failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 
@@ -84,8 +83,7 @@ func (h *Catalogs) ListTypes(w http.ResponseWriter, r *http.Request) {
 
 	types, err := h.svc.ListTypes(r.Context(), slug)
 	if err != nil {
-		slog.Error("list catalog types failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 
@@ -99,14 +97,13 @@ func (h *Catalogs) Get(w http.ResponseWriter, r *http.Request) {
 
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 
 	catalog, err := h.svc.Get(r.Context(), id, slug)
 	if err != nil {
-		slog.Error("get catalog failed", "error", err)
-		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		erperrors.WriteError(w, r, erperrors.NotFound("catalog"))
 		return
 	}
 
@@ -128,7 +125,7 @@ func (h *Catalogs) Create(w http.ResponseWriter, r *http.Request) {
 		Metadata *json.RawMessage `json:"metadata,omitempty"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 
@@ -136,7 +133,7 @@ func (h *Catalogs) Create(w http.ResponseWriter, r *http.Request) {
 	if body.ParentID != nil {
 		pid, err := parseUUID(*body.ParentID)
 		if err != nil {
-			http.Error(w, `{"error":"invalid parent_id"}`, http.StatusBadRequest)
+			erperrors.WriteError(w, r, erperrors.InvalidInput("invalid parent_id"))
 			return
 		}
 		parentID = pid
@@ -159,8 +156,7 @@ func (h *Catalogs) Create(w http.ResponseWriter, r *http.Request) {
 		IP:       r.RemoteAddr,
 	})
 	if err != nil {
-		slog.Error("create catalog failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 
@@ -176,7 +172,7 @@ func (h *Catalogs) Update(w http.ResponseWriter, r *http.Request) {
 
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 
@@ -189,7 +185,7 @@ func (h *Catalogs) Update(w http.ResponseWriter, r *http.Request) {
 		Metadata *json.RawMessage `json:"metadata,omitempty"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
 		return
 	}
 
@@ -197,7 +193,7 @@ func (h *Catalogs) Update(w http.ResponseWriter, r *http.Request) {
 	if body.ParentID != nil {
 		pid, err := parseUUID(*body.ParentID)
 		if err != nil {
-			http.Error(w, `{"error":"invalid parent_id"}`, http.StatusBadRequest)
+			erperrors.WriteError(w, r, erperrors.InvalidInput("invalid parent_id"))
 			return
 		}
 		parentID = pid
@@ -226,8 +222,7 @@ func (h *Catalogs) Update(w http.ResponseWriter, r *http.Request) {
 		IP:       r.RemoteAddr,
 	})
 	if err != nil {
-		slog.Error("update catalog failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 
@@ -241,12 +236,12 @@ func (h *Catalogs) Delete(w http.ResponseWriter, r *http.Request) {
 
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 
 	if err := h.svc.Delete(r.Context(), id, slug, r.Header.Get("X-User-ID"), r.RemoteAddr); err != nil {
-		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		erperrors.WriteError(w, r, erperrors.NotFound("catalog"))
 		return
 	}
 
