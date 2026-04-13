@@ -6,33 +6,31 @@ import { erpKeys } from "@/lib/erp/queries";
 import { fmtDateShort } from "@/lib/erp/format";
 import { ErrorState } from "@/components/erp/error-state";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ExternalLinkIcon, MessageSquareIcon } from "lucide-react";
-import Link from "next/link";
 
 interface Suggestion {
   id: string;
-  user_id: string;
-  origin: string;
-  body: string;
-  is_read: boolean;
+  title: string;
+  content: string;
+  category: string;
+  status: string;
+  priority: string;
   created_at: string;
-  response_count: number;
 }
 
-const originLabel: Record<string, string> = {
-  web: "Web",
-  email: "Email",
-  whatsapp: "WhatsApp",
-  internal: "Interno",
+const priorityBadge: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+  low: { label: "Baja", variant: "secondary" },
+  medium: { label: "Media", variant: "outline" },
+  high: { label: "Alta", variant: "default" },
+  critical: { label: "Crítica", variant: "destructive" },
 };
 
-const statusBadge = (s: Suggestion) => {
-  if (s.response_count > 0) return { label: "Respondido", variant: "default" as const };
-  if (!s.is_read) return { label: "Nuevo", variant: "destructive" as const };
-  return { label: "En revisión", variant: "secondary" as const };
+const statusBadge: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
+  open: { label: "Abierto", variant: "secondary" },
+  in_progress: { label: "En proceso", variant: "outline" },
+  resolved: { label: "Resuelto", variant: "default" },
+  closed: { label: "Cerrado", variant: "secondary" },
 };
 
 const suggestionsKey = [...erpKeys.all, "suggestions"] as const;
@@ -50,62 +48,46 @@ export default function PostventaPage() {
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="mx-auto w-full max-w-5xl px-6 py-8 sm:px-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-xl font-semibold tracking-tight">Postventa</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              Reclamos y observaciones — {suggestions.length} registros
-            </p>
-          </div>
-          <Link href="/administracion/sugerencias">
-            <Button size="sm" variant="outline">
-              <ExternalLinkIcon className="size-3.5 mr-1.5" />Ver detalle completo
-            </Button>
-          </Link>
+        <div className="mb-6">
+          <h1 className="text-xl font-semibold tracking-tight">Postventa</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Sugerencias y reclamos de clientes — {suggestions.length} registros
+          </p>
         </div>
 
         <div className="rounded-xl border border-border/40 bg-card overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-32">ID</TableHead>
-                <TableHead>Contenido</TableHead>
-                <TableHead className="w-28">Origen</TableHead>
+                <TableHead>Título</TableHead>
+                <TableHead className="w-36">Categoría</TableHead>
+                <TableHead className="w-28">Prioridad</TableHead>
                 <TableHead className="w-28">Estado</TableHead>
                 <TableHead className="w-28">Fecha</TableHead>
-                <TableHead className="w-24" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {suggestions.map((s) => {
-                const badge = statusBadge(s);
+                const prio = priorityBadge[s.priority] ?? { label: s.priority, variant: "secondary" as const };
+                const stat = statusBadge[s.status] ?? { label: s.status, variant: "secondary" as const };
                 return (
                   <TableRow key={s.id}>
-                    <TableCell className="font-mono text-xs text-muted-foreground">{s.id.slice(0, 8)}</TableCell>
-                    <TableCell className="text-sm max-w-xs">
-                      <p className="truncate">{s.body}</p>
-                      {s.response_count > 0 && (
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          <MessageSquareIcon className="size-3 inline mr-1" />{s.response_count} respuesta{s.response_count !== 1 ? "s" : ""}
-                        </p>
+                    <TableCell className="text-sm">
+                      <p className="font-medium truncate max-w-xs">{s.title}</p>
+                      {s.content && (
+                        <p className="text-xs text-muted-foreground truncate max-w-xs mt-0.5">{s.content}</p>
                       )}
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{originLabel[s.origin] ?? s.origin}</TableCell>
-                    <TableCell><Badge variant={badge.variant}>{badge.label}</Badge></TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{s.category || "—"}</TableCell>
+                    <TableCell><Badge variant={prio.variant}>{prio.label}</Badge></TableCell>
+                    <TableCell><Badge variant={stat.variant}>{stat.label}</Badge></TableCell>
                     <TableCell className="text-sm text-muted-foreground">{fmtDateShort(s.created_at)}</TableCell>
-                    <TableCell>
-                      <Link href="/administracion/sugerencias">
-                        <Button size="sm" variant="ghost">
-                          <ExternalLinkIcon className="size-3.5" />
-                        </Button>
-                      </Link>
-                    </TableCell>
                   </TableRow>
                 );
               })}
               {suggestions.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                  <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                     Sin reclamos registrados.
                   </TableCell>
                 </TableRow>

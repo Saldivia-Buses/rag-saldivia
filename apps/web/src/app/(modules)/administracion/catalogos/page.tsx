@@ -5,16 +5,18 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { api } from "@/lib/api/client";
 import { erpKeys } from "@/lib/erp/queries";
+import { permissionErrorToast } from "@/lib/erp/permission-messages";
 import { ErrorState } from "@/components/erp/error-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PlusIcon, SearchIcon, FolderIcon, TagIcon } from "lucide-react";
+import { PlusIcon, SearchIcon, FolderIcon, TagIcon, PencilIcon, TrashIcon } from "lucide-react";
 
 interface Catalog {
   id: string; type: string; code: string; name: string; parent_id: string | null;
@@ -26,6 +28,8 @@ export default function CatalogosPage() {
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<Catalog | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Catalog | null>(null);
   const queryClient = useQueryClient();
 
   const { data: types = [], isLoading, error } = useQuery({
@@ -54,16 +58,38 @@ export default function CatalogosPage() {
       queryClient.invalidateQueries({ queryKey: [...erpKeys.all, "catalogs", "types"] });
       setCreateOpen(false);
     },
-    onError: (err) => toast.error("Error al crear entrada", { description: err instanceof Error ? err.message : undefined }),
+    onError: permissionErrorToast,
   });
 
   const toggleMutation = useMutation({
-    mutationFn: (catalog: Catalog) => api.put(`/v1/erp/catalogs/${catalog.id}`, { code: catalog.code, name: catalog.name, sort_order: catalog.sort_order, active: !catalog.active }),
+    mutationFn: (catalog: Catalog) => api.put(`/v1/erp/catalogs/${catalog.id}`, { type: catalog.type, code: catalog.code, name: catalog.name, sort_order: catalog.sort_order, active: !catalog.active }),
     onSuccess: (_data, catalog) => {
       toast.success(catalog.active ? "Entrada desactivada" : "Entrada activada");
       queryClient.invalidateQueries({ queryKey: erpKeys.catalogs(selectedType ?? undefined) });
     },
-    onError: (err) => toast.error("Error al actualizar", { description: err instanceof Error ? err.message : undefined }),
+    onError: permissionErrorToast,
+  });
+
+  const editMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { type: string; code: string; name: string; sort_order?: number; active?: boolean } }) =>
+      api.put(`/v1/erp/catalogs/${id}`, data),
+    onSuccess: () => {
+      toast.success("Entrada actualizada");
+      queryClient.invalidateQueries({ queryKey: erpKeys.catalogs() });
+      setEditTarget(null);
+    },
+    onError: permissionErrorToast,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/v1/erp/catalogs/${id}`),
+    onSuccess: () => {
+      toast.success("Entrada eliminada");
+      queryClient.invalidateQueries({ queryKey: erpKeys.catalogs() });
+      queryClient.invalidateQueries({ queryKey: [...erpKeys.all, "catalogs", "types"] });
+      setDeleteTarget(null);
+    },
+    onError: permissionErrorToast,
   });
 
   const filtered = catalogs.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.code.toLowerCase().includes(search.toLowerCase()));
@@ -112,7 +138,7 @@ export default function CatalogosPage() {
                     <TableHeader><TableRow>
                       <TableHead className="w-28">Código</TableHead><TableHead>Nombre</TableHead>
                       <TableHead className="w-20 text-center">Orden</TableHead><TableHead className="w-24 text-center">Estado</TableHead>
-                      <TableHead className="w-24 text-right">Acción</TableHead>
+                      <TableHead className="w-32 text-right">Acciones</TableHead>
                     </TableRow></TableHeader>
                     <TableBody>
                       {filtered.length > 0 ? filtered.map((c) => (
@@ -121,7 +147,20 @@ export default function CatalogosPage() {
                           <TableCell className="text-sm">{c.name}</TableCell>
                           <TableCell className="text-center text-sm text-muted-foreground">{c.sort_order}</TableCell>
                           <TableCell className="text-center"><Badge variant={c.active ? "default" : "secondary"}>{c.active ? "Activo" : "Inactivo"}</Badge></TableCell>
-                          <TableCell className="text-right"><Button variant="ghost" size="sm" onClick={() => toggleMutation.mutate(c)}>{c.active ? "Desactivar" : "Activar"}</Button></TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => toggleMutation.mutate(c)} title={c.active ? "Desactivar" : "Activar"}>
+                                <span className="sr-only">{c.active ? "Desactivar" : "Activar"}</span>
+                                <span className="text-xs">{c.active ? "✕" : "✓"}</span>
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditTarget(c)} title="Editar">
+                                <PencilIcon className="size-3.5" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => setDeleteTarget(c)} title="Eliminar">
+                                <TrashIcon className="size-3.5" />
+                              </Button>
+                            </div>
+                          </TableCell>
                         </TableRow>
                       )) : (
                         <TableRow><TableCell colSpan={5} className="h-24 text-center text-muted-foreground">{search ? "No se encontraron entradas." : "Este catálogo está vacío."}</TableCell></TableRow>
@@ -143,6 +182,41 @@ export default function CatalogosPage() {
           <CreateCatalogForm types={types} defaultType={selectedType} onSubmit={(d) => createMutation.mutate(d)} isPending={createMutation.isPending} onClose={() => setCreateOpen(false)} />
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!editTarget} onOpenChange={(v) => !v && setEditTarget(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Editar entrada</DialogTitle></DialogHeader>
+          {editTarget && (
+            <EditCatalogForm
+              catalog={editTarget}
+              onSubmit={(d) => editMutation.mutate({ id: editTarget.id, data: { type: editTarget.type, ...d } })}
+              isPending={editMutation.isPending}
+              onClose={() => setEditTarget(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar entrada</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget ? `¿Eliminar "${deleteTarget.name}"? Esta acción no se puede deshacer.` : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? "Eliminando..." : "Eliminar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -165,6 +239,33 @@ function CreateCatalogForm({ types, defaultType, onSubmit, isPending, onClose }:
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
         <Button type="submit" disabled={!type.trim() || !code.trim() || !name.trim() || isPending}>{isPending ? "Creando..." : "Crear"}</Button>
+      </div>
+    </form>
+  );
+}
+
+function EditCatalogForm({ catalog, onSubmit, isPending, onClose }: {
+  catalog: Catalog;
+  onSubmit: (d: { code: string; name: string; sort_order?: number; active?: boolean }) => void;
+  isPending: boolean;
+  onClose: () => void;
+}) {
+  const [code, setCode] = useState(catalog.code);
+  const [name, setName] = useState(catalog.name);
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (code.trim() && name.trim()) onSubmit({ code: code.trim(), name: name.trim(), sort_order: catalog.sort_order, active: catalog.active });
+      }}
+      className="space-y-4"
+    >
+      <div className="space-y-2"><Label>Código</Label><Input value={code} onChange={(e) => setCode(e.target.value)} /></div>
+      <div className="space-y-2"><Label>Nombre</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
+        <Button type="submit" disabled={!code.trim() || !name.trim() || isPending}>{isPending ? "Guardando..." : "Guardar"}</Button>
       </div>
     </form>
   );

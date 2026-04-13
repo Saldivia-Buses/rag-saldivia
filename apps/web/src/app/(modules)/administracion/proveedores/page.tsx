@@ -9,6 +9,7 @@ import { useERPSearch } from "@/lib/erp/use-erp-search";
 import { permissionErrorToast } from "@/lib/erp/permission-messages";
 import { ErrorState } from "@/components/erp/error-state";
 import { EmptyState } from "@/components/erp/empty-state";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -16,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PlusIcon, SearchIcon, BuildingIcon } from "lucide-react";
+import { PlusIcon, SearchIcon, BuildingIcon, PencilIcon, TrashIcon } from "lucide-react";
 
 interface Entity {
   id: string;
@@ -32,8 +33,7 @@ interface Entity {
   created_at: string;
 }
 
-interface CreateEntityInput {
-  entity_type: string;
+interface EntityBody {
   code: string;
   name: string;
   tax_id?: string;
@@ -43,9 +43,15 @@ interface CreateEntityInput {
   city?: string;
 }
 
+interface CreateEntityInput extends EntityBody {
+  entity_type: string;
+}
+
 export default function ProveedoresPage() {
   const { search, setSearch, deferredSearch } = useERPSearch(0);
   const [createOpen, setCreateOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<Entity | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Entity | null>(null);
   const queryClient = useQueryClient();
 
   const { data, isLoading, error } = useQuery({
@@ -66,6 +72,27 @@ export default function ProveedoresPage() {
       toast.success("Proveedor creado exitosamente");
       queryClient.invalidateQueries({ queryKey: erpKeys.entities("supplier") });
       setCreateOpen(false);
+    },
+    onError: permissionErrorToast,
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, ...data }: { id: string } & EntityBody) =>
+      api.put(`/v1/erp/entities/${id}`, data),
+    onSuccess: () => {
+      toast.success("Proveedor actualizado");
+      queryClient.invalidateQueries({ queryKey: erpKeys.entities("supplier") });
+      setEditTarget(null);
+    },
+    onError: permissionErrorToast,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/v1/erp/entities/${id}`),
+    onSuccess: () => {
+      toast.success("Proveedor eliminado");
+      queryClient.invalidateQueries({ queryKey: erpKeys.entities("supplier") });
+      setDeleteTarget(null);
     },
     onError: permissionErrorToast,
   });
@@ -115,6 +142,7 @@ export default function ProveedoresPage() {
                 <TableHead className="w-36">Teléfono</TableHead>
                 <TableHead className="w-36">Ciudad</TableHead>
                 <TableHead className="w-20 text-center">Estado</TableHead>
+                <TableHead className="w-20 text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -131,11 +159,21 @@ export default function ProveedoresPage() {
                       {e.active ? "Activo" : "Inactivo"}
                     </Badge>
                   </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button size="sm" variant="ghost" onClick={() => setEditTarget(e)}>
+                        <PencilIcon className="size-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setDeleteTarget(e)}>
+                        <TrashIcon className="size-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
               {entities.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7}>
+                  <TableCell colSpan={8}>
                     <EmptyState
                       icon={BuildingIcon}
                       title={search ? "Sin resultados" : "Sin proveedores"}
@@ -150,27 +188,60 @@ export default function ProveedoresPage() {
         </div>
       </div>
 
-      <CreateProveedorDialog
+      <ProveedorDialog
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         onSubmit={(d) => createMutation.mutate({ entity_type: "supplier", ...d })}
         isPending={createMutation.isPending}
       />
+
+      <ProveedorDialog
+        open={!!editTarget}
+        onClose={() => setEditTarget(null)}
+        initialValues={editTarget ?? undefined}
+        onSubmit={(d) => {
+          if (editTarget) updateMutation.mutate({ id: editTarget.id, ...d });
+        }}
+        isPending={updateMutation.isPending}
+      />
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar proveedor {deleteTarget?.name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. El proveedor será eliminado permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteMutation.isPending ? "Eliminando..." : "Eliminar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
 
-function CreateProveedorDialog({
+function ProveedorDialog({
   open,
   onClose,
   onSubmit,
   isPending,
+  initialValues,
 }: {
   open: boolean;
   onClose: () => void;
-  onSubmit: (d: { code: string; name: string; tax_id?: string; email?: string; phone?: string; address?: string; city?: string }) => void;
+  onSubmit: (d: EntityBody) => void;
   isPending: boolean;
+  initialValues?: Pick<Entity, "code" | "name" | "tax_id" | "email" | "phone" | "address" | "city">;
 }) {
+  const isEdit = !!initialValues;
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const [taxId, setTaxId] = useState("");
@@ -181,14 +252,22 @@ function CreateProveedorDialog({
 
   useEffect(() => {
     if (open) {
-      setCode(""); setName(""); setTaxId(""); setEmail(""); setPhone(""); setAddress(""); setCity("");
+      setCode(initialValues?.code ?? "");
+      setName(initialValues?.name ?? "");
+      setTaxId(initialValues?.tax_id ?? "");
+      setEmail(initialValues?.email ?? "");
+      setPhone(initialValues?.phone ?? "");
+      setAddress(initialValues?.address ?? "");
+      setCity(initialValues?.city ?? "");
     }
-  }, [open]);
+  }, [open, initialValues]);
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-md">
-        <DialogHeader><DialogTitle>Nuevo proveedor</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>{isEdit ? "Editar proveedor" : "Nuevo proveedor"}</DialogTitle>
+        </DialogHeader>
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -222,7 +301,7 @@ function CreateProveedorDialog({
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
             <Button type="submit" disabled={!code.trim() || !name.trim() || isPending}>
-              {isPending ? "Creando..." : "Crear proveedor"}
+              {isPending ? (isEdit ? "Guardando..." : "Creando...") : (isEdit ? "Guardar cambios" : "Crear proveedor")}
             </Button>
           </div>
         </form>
