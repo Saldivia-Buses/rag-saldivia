@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -11,6 +10,7 @@ import (
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
+	erperrors "github.com/Camionerou/rag-saldivia/services/erp/internal/errors"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/repository"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/service"
 )
@@ -76,8 +76,7 @@ func (h *Invoicing) ListInvoices(w http.ResponseWriter, r *http.Request) {
 		pgDate(q.Get("date_from")), pgDate(q.Get("date_to")),
 		p.Limit(), p.Offset())
 	if err != nil {
-		slog.Error("list invoices failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -88,12 +87,12 @@ func (h *Invoicing) GetInvoice(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	detail, err := h.svc.GetInvoice(r.Context(), id, slug)
 	if err != nil {
-		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		erperrors.WriteError(w, r, erperrors.NotFound("invoice"))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -121,12 +120,12 @@ func (h *Invoicing) CreateInvoice(w http.ResponseWriter, r *http.Request) {
 		} `json:"lines"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid request body"))
 		return
 	}
 	entityID, err := parseUUID(body.EntityID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid entity_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid entity_id"))
 		return
 	}
 	var lines []service.CreateInvoiceLineRequest
@@ -148,8 +147,7 @@ func (h *Invoicing) CreateInvoice(w http.ResponseWriter, r *http.Request) {
 		UserID: r.Header.Get("X-User-ID"), IP: r.RemoteAddr, Lines: lines,
 	})
 	if err != nil {
-		slog.Error("create invoice failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -161,12 +159,11 @@ func (h *Invoicing) PostInvoice(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	if err := h.svc.PostInvoice(r.Context(), id, slug, r.Header.Get("X-User-ID"), r.RemoteAddr); err != nil {
-		slog.Error("post invoice failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -176,14 +173,13 @@ func (h *Invoicing) GetTaxBook(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	period := r.URL.Query().Get("period")
 	if period == "" {
-		http.Error(w, `{"error":"period query param required (YYYY-MM)"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("period query param required (YYYY-MM)"))
 		return
 	}
 	direction := r.URL.Query().Get("direction")
 	entries, err := h.svc.GetTaxBook(r.Context(), slug, period, direction)
 	if err != nil {
-		slog.Error("get tax book failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -196,8 +192,7 @@ func (h *Invoicing) ListWithholdings(w http.ResponseWriter, r *http.Request) {
 	typeFilter := r.URL.Query().Get("type")
 	withholdings, err := h.svc.ListWithholdings(r.Context(), slug, typeFilter, p.Limit(), p.Offset())
 	if err != nil {
-		slog.Error("list withholdings failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -219,12 +214,12 @@ func (h *Invoicing) CreateWithholding(w http.ResponseWriter, r *http.Request) {
 		Date           string  `json:"date"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid request body"))
 		return
 	}
 	entityID, err := parseUUID(body.EntityID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid entity_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid entity_id"))
 		return
 	}
 	var certNum pgtype.Text
@@ -244,8 +239,7 @@ func (h *Invoicing) CreateWithholding(w http.ResponseWriter, r *http.Request) {
 		Date:           pgDate(body.Date),
 	}, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("create withholding failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -258,13 +252,12 @@ func (h *Invoicing) VoidPreview(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	preview, err := h.svc.VoidPreview(r.Context(), id, slug)
 	if err != nil {
-		slog.Error("void preview failed", "error", err)
-		writeSafeErr(w, err, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -276,7 +269,7 @@ func (h *Invoicing) VoidInvoice(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	r.Body = http.MaxBytesReader(w, r.Body, 4<<10)
@@ -284,17 +277,15 @@ func (h *Invoicing) VoidInvoice(w http.ResponseWriter, r *http.Request) {
 		Reason string `json:"reason"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid request body"))
 		return
 	}
 	result, err := h.svc.VoidInvoice(r.Context(), id, slug, body.Reason,
 		r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("void invoice failed", "error", err)
 		writeSafeErr(w, err, http.StatusBadRequest)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(result)
 }
-
