@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -92,7 +93,8 @@ func (o *Orchestrator) RunWithID(ctx context.Context, externalRunID uuid.UUID, d
 		runID = uuid.New()
 	}
 	_, err := o.pg.Exec(ctx,
-		`INSERT INTO erp_migration_runs (id, tenant_id, mode) VALUES ($1, $2, $3)`,
+		`INSERT INTO erp_migration_runs (id, tenant_id, mode) VALUES ($1, $2, $3)
+		 ON CONFLICT (id) DO UPDATE SET mode = $3, status = 'running', started_at = now()`,
 		runID, o.tenantID, mode,
 	)
 	if err != nil {
@@ -127,42 +129,74 @@ func (o *Orchestrator) RunWithID(ctx context.Context, externalRunID uuid.UUID, d
 
 	// Run each migrator
 	stats := make(map[string]TableStats)
-	hooksRan := false
-	for _, m := range o.readers {
-		if len(domains) > 0 && !contains(domains, m.Domain()) {
-			continue
-		}
 
-		// Run setup hooks once before the first table that needs them.
-		// Hooks build code indexes and date caches from already-migrated data.
-		// They run after base tables (accounts, entries) are migrated but before
-		// dependent tables (journal lines) start.
-		if !hooksRan && needsSetupHooks(m) {
-			for _, hook := range o.setupHooks {
-				if err := hook(ctx, o.mapper); err != nil {
-					return fmt.Errorf("setup hook: %w", err)
+	if dryRun {
+		// Dry-run: parallel — no writes, no FK dependencies
+		// Skip PG lookups for mapper (no data in mapping table during dry-run)
+		o.mapper.SetDryRun(true)
+		var mu sync.Mutex
+		var wg sync.WaitGroup
+		sem := make(chan struct{}, 8) // max 8 concurrent readers
+		var firstErr error
+
+		for _, m := range o.readers {
+			if len(domains) > 0 && !contains(domains, m.Domain()) {
+				continue
+			}
+			wg.Add(1)
+			go func(m TableMigrator) {
+				defer wg.Done()
+				sem <- struct{}{}
+				defer func() { <-sem }()
+
+				mu.Lock()
+				if firstErr != nil {
+					mu.Unlock()
+					return
 				}
-			}
-			hooksRan = true
-		}
+				mu.Unlock()
 
-		// Update run current position
-		if _, err := o.pg.Exec(ctx,
-			`UPDATE erp_migration_runs SET current_domain = $1, current_table = $2 WHERE id = $3`,
-			m.Domain(), m.LegacyTable(), runID,
-		); err != nil {
-			slog.Error("failed to update run position", "err", err)
+				s, err := o.dryRunTable(ctx, runID, m)
+				mu.Lock()
+				defer mu.Unlock()
+				if err != nil {
+					if firstErr == nil {
+						firstErr = fmt.Errorf("dry-run %s: %w", m.LegacyTable(), err)
+					}
+					return
+				}
+				stats[m.LegacyTable()] = s
+			}(m)
 		}
-
-		if dryRun {
-			// In dry-run, only count and validate transformations
-			s, err := o.dryRunTable(ctx, runID, m)
-			if err != nil {
-				o.failRun(ctx, runID, err)
-				return fmt.Errorf("dry-run %s: %w", m.LegacyTable(), err)
+		wg.Wait()
+		if firstErr != nil {
+			o.failRun(ctx, runID, firstErr)
+			return firstErr
+		}
+	} else {
+		// Prod: sequential with FK ordering + setup hooks
+		hooksRan := false
+		for _, m := range o.readers {
+			if len(domains) > 0 && !contains(domains, m.Domain()) {
+				continue
 			}
-			stats[m.LegacyTable()] = s
-		} else {
+
+			if !hooksRan && needsSetupHooks(m) {
+				for _, hook := range o.setupHooks {
+					if err := hook(ctx, o.mapper); err != nil {
+						return fmt.Errorf("setup hook: %w", err)
+					}
+				}
+				hooksRan = true
+			}
+
+			if _, err := o.pg.Exec(ctx,
+				`UPDATE erp_migration_runs SET current_domain = $1, current_table = $2 WHERE id = $3`,
+				m.Domain(), m.LegacyTable(), runID,
+			); err != nil {
+				slog.Error("failed to update run position", "err", err)
+			}
+
 			s, err := o.runTable(ctx, runID, m)
 			if err != nil {
 				o.failRun(ctx, runID, err)
@@ -302,7 +336,7 @@ type TableStats struct {
 	RowsSkipped int `json:"rows_skipped"`
 }
 
-const batchSize = 500
+const batchSize = 5000
 
 func (o *Orchestrator) runTable(ctx context.Context, runID uuid.UUID, m TableMigrator) (TableStats, error) {
 	return o.runTableResume(ctx, runID, uuid.Nil, m, "", 0, 0, 0)

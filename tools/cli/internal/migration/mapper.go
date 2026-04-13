@@ -16,6 +16,7 @@ import (
 type Mapper struct {
 	pool      *pgxpool.Pool
 	tenantID  string
+	dryRun    bool
 	mu        sync.RWMutex
 	cache     map[string]map[int64]uuid.UUID   // "domain:table" → legacy_id → uuid
 	codeIndex map[string]map[string]uuid.UUID  // "domain:table" → code → uuid (for varchar PK tables)
@@ -33,6 +34,9 @@ func NewMapper(pool *pgxpool.Pool, tenantID string) *Mapper {
 	}
 }
 
+// SetDryRun enables dry-run mode: all lookups return deterministic UUIDs without hitting PG.
+func (m *Mapper) SetDryRun(v bool) { m.dryRun = v }
+
 func (m *Mapper) cacheKey(domain, table string) string {
 	return domain + ":" + table
 }
@@ -46,6 +50,10 @@ type querier interface {
 // Map returns the UUID for a legacy ID. If no mapping exists, generates a new one.
 // When tx is non-nil, uses the transaction; otherwise falls back to the pool.
 func (m *Mapper) Map(ctx context.Context, tx pgx.Tx, domain, table string, legacyID int64, legacyCreatedBy *string) (uuid.UUID, error) {
+	if m.dryRun {
+		return uuid.New(), nil
+	}
+
 	key := m.cacheKey(domain, table)
 
 	m.mu.RLock()
@@ -104,6 +112,10 @@ func (m *Mapper) Map(ctx context.Context, tx pgx.Tx, domain, table string, legac
 func (m *Mapper) Resolve(ctx context.Context, domain, table string, legacyID int64) (uuid.UUID, error) {
 	if legacyID == 0 {
 		return uuid.Nil, fmt.Errorf("resolve %s/%s: legacy_id is 0", domain, table)
+	}
+
+	if m.dryRun {
+		return uuid.New(), nil
 	}
 
 	key := m.cacheKey(domain, table)

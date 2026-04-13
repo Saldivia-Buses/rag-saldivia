@@ -30,7 +30,7 @@ func DefaultValidationRules() []ValidationRule {
 			Domain:      "global",
 			LegacyTable: "CTB_MOVIMIENTOS",
 			Constraint:  "date_not_zero",
-			Query:       "SELECT id_movimiento as legacy_id, fecha_movimiento as detail FROM CTB_MOVIMIENTOS WHERE fecha_movimiento = '0000-00-00'",
+			Query:       "SELECT id_movimiento as legacy_id, CAST(fecha_movimiento AS CHAR) as detail FROM CTB_MOVIMIENTOS WHERE CAST(fecha_movimiento AS CHAR) = '0000-00-00' LIMIT 1000",
 			Transform:   "auto_fix",
 		},
 		{
@@ -38,7 +38,7 @@ func DefaultValidationRules() []ValidationRule {
 			Domain:      "accounting",
 			LegacyTable: "CTB_MOVIMIENTOS",
 			Constraint:  "erp_journal_balance",
-			Query:       "SELECT id_movimiento as legacy_id, ABS(COALESCE(debe,0) - COALESCE(haber,0)) as detail FROM CTB_MOVIMIENTOS WHERE ABS(COALESCE(debe,0) - COALESCE(haber,0)) > 0.01",
+			Query:       "SELECT id_movimiento as legacy_id, CAST(ABS(COALESCE(debe,0) - COALESCE(haber,0)) AS CHAR) as detail FROM CTB_MOVIMIENTOS WHERE ABS(COALESCE(debe,0) - COALESCE(haber,0)) > 0.01 LIMIT 1000",
 			Transform:   "fix_manual",
 		},
 		{
@@ -46,7 +46,7 @@ func DefaultValidationRules() []ValidationRule {
 			Domain:      "treasury",
 			LegacyTable: "CARCHEQU",
 			Constraint:  "erp_checks_amount_check",
-			Query:       "SELECT carint as legacy_id, carimp as detail FROM CARCHEQU WHERE carimp <= 0",
+			Query:       "SELECT carint as legacy_id, CAST(carimp AS CHAR) as detail FROM CARCHEQU WHERE carimp <= 0 LIMIT 1000",
 			Transform:   "skip",
 		},
 		{
@@ -54,7 +54,7 @@ func DefaultValidationRules() []ValidationRule {
 			Domain:      "invoicing",
 			LegacyTable: "IVAVENTAS",
 			Constraint:  "date_not_zero",
-			Query:       "SELECT id_ivaventa as legacy_id, feciva as detail FROM IVAVENTAS WHERE feciva = '0000-00-00'",
+			Query:       "SELECT id_ivaventa as legacy_id, CAST(feciva AS CHAR) as detail FROM IVAVENTAS WHERE CAST(feciva AS CHAR) = '0000-00-00' LIMIT 1000",
 			Transform:   "auto_fix",
 		},
 		{
@@ -62,7 +62,7 @@ func DefaultValidationRules() []ValidationRule {
 			Domain:      "stock",
 			LegacyTable: "STK_MOVIMIENTOS",
 			Constraint:  "erp_stock_movements_quantity_check",
-			Query:       "SELECT id_stkmovimiento as legacy_id, cantidad as detail FROM STK_MOVIMIENTOS WHERE cantidad = 0",
+			Query:       "SELECT id_stkmovimiento as legacy_id, CAST(cantidad AS CHAR) as detail FROM STK_MOVIMIENTOS WHERE cantidad = 0 LIMIT 1000",
 			Transform:   "skip",
 		},
 		{
@@ -70,7 +70,7 @@ func DefaultValidationRules() []ValidationRule {
 			Domain:      "accounting",
 			LegacyTable: "CTB_DETALLES",
 			Constraint:  "erp_journal_lines_entry_id_fkey",
-			Query:       "SELECT d.id_detalle as legacy_id, d.movimiento_id as detail FROM CTB_DETALLES d LEFT JOIN CTB_MOVIMIENTOS m ON d.movimiento_id = m.id_movimiento WHERE m.id_movimiento IS NULL",
+			Query:       "SELECT d.id_detalle as legacy_id, CAST(d.movimiento_id AS CHAR) as detail FROM CTB_DETALLES d LEFT JOIN CTB_MOVIMIENTOS m ON d.movimiento_id = m.id_movimiento WHERE m.id_movimiento IS NULL LIMIT 1000",
 			Transform:   "skip",
 		},
 		{
@@ -78,7 +78,7 @@ func DefaultValidationRules() []ValidationRule {
 			Domain:      "accounting",
 			LegacyTable: "CTB_DETALLES",
 			Constraint:  "numeric_cast",
-			Query:       "SELECT id_detalle as legacy_id, importe as detail FROM CTB_DETALLES WHERE importe IS NOT NULL AND importe != '' AND importe NOT REGEXP '^-?[0-9]+(\\\\.[0-9]+)?$'",
+			Query:       "SELECT id_detalle as legacy_id, importe as detail FROM CTB_DETALLES WHERE importe IS NOT NULL AND importe != '' AND importe NOT REGEXP '^-?[0-9]+(\\\\.[0-9]+)?$' LIMIT 1000",
 			Transform:   "skip",
 		},
 	}
