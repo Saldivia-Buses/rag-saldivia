@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -11,6 +10,7 @@ import (
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
+	erperrors "github.com/Camionerou/rag-saldivia/services/erp/internal/errors"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/repository"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/service"
 )
@@ -76,8 +76,7 @@ func (h *Purchasing) ListOrders(w http.ResponseWriter, r *http.Request) {
 	status := r.URL.Query().Get("status")
 	orders, err := h.svc.ListOrders(r.Context(), slug, status, p.Limit(), p.Offset())
 	if err != nil {
-		slog.Error("list purchase orders failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -88,12 +87,12 @@ func (h *Purchasing) GetOrder(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	detail, err := h.svc.GetOrder(r.Context(), id, slug)
 	if err != nil {
-		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		erperrors.WriteError(w, r, erperrors.NotFound("order"))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -104,11 +103,11 @@ func (h *Purchasing) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	r.Body = http.MaxBytesReader(w, r.Body, 64<<10)
 	var body struct {
-		Number     string `json:"number"`
-		Date       string `json:"date"`
-		SupplierID string `json:"supplier_id"`
+		Number     string  `json:"number"`
+		Date       string  `json:"date"`
+		SupplierID string  `json:"supplier_id"`
 		CurrencyID *string `json:"currency_id,omitempty"`
-		Notes      string `json:"notes"`
+		Notes      string  `json:"notes"`
 		Lines      []struct {
 			ArticleID string `json:"article_id"`
 			Quantity  string `json:"quantity"`
@@ -116,19 +115,19 @@ func (h *Purchasing) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		} `json:"lines"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid request body"))
 		return
 	}
 	supplierID, err := parseUUID(body.SupplierID)
 	if err != nil {
-		http.Error(w, `{"error":"invalid supplier_id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID("supplier_id"))
 		return
 	}
 	var lines []service.CreateOrderLineRequest
 	for _, l := range body.Lines {
 		artID, err := parseUUID(l.ArticleID)
 		if err != nil {
-			http.Error(w, `{"error":"invalid article_id in line"}`, http.StatusBadRequest)
+			erperrors.WriteError(w, r, erperrors.InvalidID("article_id in line"))
 			return
 		}
 		lines = append(lines, service.CreateOrderLineRequest{
@@ -147,8 +146,7 @@ func (h *Purchasing) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		Lines:      lines,
 	})
 	if err != nil {
-		slog.Error("create purchase order failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -160,11 +158,11 @@ func (h *Purchasing) Approve(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	if err := h.svc.ApproveOrder(r.Context(), id, slug, r.Header.Get("X-User-ID"), r.RemoteAddr); err != nil {
-		http.Error(w, `{"error":"not found or not draft"}`, http.StatusNotFound)
+		erperrors.WriteError(w, r, erperrors.NotFound("order"))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -175,7 +173,7 @@ func (h *Purchasing) Receive(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 64<<10)
 	orderID, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	var body struct {
@@ -189,19 +187,19 @@ func (h *Purchasing) Receive(w http.ResponseWriter, r *http.Request) {
 		} `json:"lines"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid request body"))
 		return
 	}
 	var lines []service.ReceiveLineRequest
 	for _, l := range body.Lines {
 		olID, err := parseUUID(l.OrderLineID)
 		if err != nil {
-			http.Error(w, `{"error":"invalid order_line_id in line"}`, http.StatusBadRequest)
+			erperrors.WriteError(w, r, erperrors.InvalidID("order_line_id in line"))
 			return
 		}
 		aID, err := parseUUID(l.ArticleID)
 		if err != nil {
-			http.Error(w, `{"error":"invalid article_id in line"}`, http.StatusBadRequest)
+			erperrors.WriteError(w, r, erperrors.InvalidID("article_id in line"))
 			return
 		}
 		lines = append(lines, service.ReceiveLineRequest{
@@ -213,8 +211,7 @@ func (h *Purchasing) Receive(w http.ResponseWriter, r *http.Request) {
 		Number: body.Number, UserID: r.Header.Get("X-User-ID"),
 		Notes: body.Notes, IP: r.RemoteAddr, Lines: lines,
 	}); err != nil {
-		slog.Error("receive purchase order failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -224,7 +221,7 @@ func (h *Purchasing) InspectReceipt(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	receiptID, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid receipt id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	r.Body = http.MaxBytesReader(w, r.Body, 64<<10)
@@ -232,14 +229,13 @@ func (h *Purchasing) InspectReceipt(w http.ResponseWriter, r *http.Request) {
 		Inspections []service.InspectionInput `json:"inspections"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || len(body.Inspections) == 0 {
-		http.Error(w, `{"error":"inspections array required"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidInput("inspections array required"))
 		return
 	}
 	results, err := h.svc.InspectReceipt(r.Context(), slug, receiptID, body.Inspections,
 		r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
-		slog.Error("inspect receipt failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -252,8 +248,7 @@ func (h *Purchasing) ListInspections(w http.ResponseWriter, r *http.Request) {
 	status := r.URL.Query().Get("status")
 	inspections, err := h.svc.ListInspections(r.Context(), slug, status, p.Limit(), p.Offset())
 	if err != nil {
-		slog.Error("list inspections failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -264,12 +259,12 @@ func (h *Purchasing) GetInspection(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	insp, err := h.svc.GetInspection(r.Context(), id, slug)
 	if err != nil {
-		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		erperrors.WriteError(w, r, erperrors.NotFound("inspection"))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -280,13 +275,12 @@ func (h *Purchasing) ListSupplierDemerits(w http.ResponseWriter, r *http.Request
 	slug := tenantSlug(r)
 	supplierID, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, `{"error":"invalid supplier id"}`, http.StatusBadRequest)
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
 		return
 	}
 	demerits, err := h.svc.ListSupplierDemerits(r.Context(), slug, supplierID)
 	if err != nil {
-		slog.Error("list supplier demerits failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	total, _ := h.svc.GetSupplierDemeritTotal(r.Context(), slug, supplierID)
@@ -299,8 +293,7 @@ func (h *Purchasing) ListReceipts(w http.ResponseWriter, r *http.Request) {
 	p := pagination.Parse(r)
 	receipts, err := h.svc.ListReceipts(r.Context(), slug, p.Limit(), p.Offset())
 	if err != nil {
-		slog.Error("list receipts failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
