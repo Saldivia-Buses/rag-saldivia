@@ -232,6 +232,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      nats:
+        condition: service_healthy
     environment:
       AUTH_PORT: "8001"
       REDIS_URL: redis:6379
@@ -416,6 +418,10 @@ services:
     depends_on:
       postgres-platform:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
     environment:
       SEARCH_PORT: "8010"
       REDIS_URL: redis:6379
@@ -460,6 +466,8 @@ services:
     depends_on:
       postgres-platform:
         condition: service_healthy
+      redis:
+        condition: service_healthy
       nats:
         condition: service_healthy
     environment:
@@ -501,6 +509,8 @@ services:
         VERSION: ${NOTIFICATION_VERSION:-dev}
     depends_on:
       postgres-platform:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       nats:
         condition: service_healthy
@@ -549,6 +559,10 @@ services:
     depends_on:
       postgres-platform:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
     environment:
       PLATFORM_PORT: "8006"
       REDIS_URL: redis:6379
@@ -589,6 +603,8 @@ services:
         VERSION: ${INGEST_VERSION:-dev}
     depends_on:
       postgres-platform:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       nats:
         condition: service_healthy
@@ -632,6 +648,8 @@ services:
         VERSION: ${FEEDBACK_VERSION:-dev}
     depends_on:
       postgres-platform:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       nats:
         condition: service_healthy
