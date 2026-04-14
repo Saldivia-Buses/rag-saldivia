@@ -85,19 +85,29 @@ stop: ## Stop all services (Docker + Go + frontend)
 
 # ── Build ────────────────────────────────────────────────────────────────
 
-build: ## Build all Go services
+build: ## Build all Go services (including astro with CGO)
 	@for svc in $(GO_SERVICES); do \
 		echo "Building $$svc..."; \
 		ver=$$(cat $(SERVICES_DIR)/$$svc/VERSION 2>/dev/null | tr -d '[:space:]' || echo "dev"); \
-		cd $(SERVICES_DIR)/$$svc && go build \
-			-ldflags '$(LDFLAGS_BASE) -X github.com/Camionerou/rag-saldivia/pkg/build.Version='"$$ver" \
-			-o $(GOBIN)/$$svc ./cmd/... || exit 1; \
+		if [ "$$svc" = "astro" ]; then \
+			cd $(SERVICES_DIR)/$$svc && CGO_ENABLED=1 \
+				CGO_LDFLAGS="-L$(SERVICES_DIR)/astro -lm" \
+				go build \
+				-ldflags '$(LDFLAGS_BASE) -X github.com/Camionerou/rag-saldivia/pkg/build.Version='"$$ver" \
+				-o $(GOBIN)/$$svc ./cmd/... || exit 1; \
+		else \
+			cd $(SERVICES_DIR)/$$svc && go build \
+				-ldflags '$(LDFLAGS_BASE) -X github.com/Camionerou/rag-saldivia/pkg/build.Version='"$$ver" \
+				-o $(GOBIN)/$$svc ./cmd/... || exit 1; \
+		fi; \
 	done
 	@echo "All services built → $(GOBIN)/ (sha: $(GIT_SHA))"
 
 build-astro: ## Build astro service (requires CGO for Swiss Ephemeris)
 	@ver=$$(cat $(SERVICES_DIR)/astro/VERSION 2>/dev/null | tr -d '[:space:]' || echo "dev"); \
-	cd $(SERVICES_DIR)/astro && CGO_ENABLED=1 go build \
+	cd $(SERVICES_DIR)/astro && CGO_ENABLED=1 \
+		CGO_LDFLAGS="-L$(SERVICES_DIR)/astro -lm" \
+		go build \
 		-ldflags '$(LDFLAGS_BASE) -X github.com/Camionerou/rag-saldivia/pkg/build.Version='"$$ver" \
 		-o $(GOBIN)/astro ./cmd/...
 
@@ -121,7 +131,9 @@ test: ## Run all Go tests (excludes astro — requires CGO; use make test-astro)
 	done
 
 test-astro: ## Run astro tests (requires CGO + EPHE_PATH)
-	cd $(SERVICES_DIR)/astro && CGO_ENABLED=1 go test ./... -count=1 -v
+	cd $(SERVICES_DIR)/astro && CGO_ENABLED=1 \
+		CGO_LDFLAGS="-L$(SERVICES_DIR)/astro -lm" \
+		go test ./... -count=1 -v
 
 test-%: ## Run tests for a specific service (e.g., make test-auth)
 	cd $(SERVICES_DIR)/$* && go test ./... -count=1 -v
