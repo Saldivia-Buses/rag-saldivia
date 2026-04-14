@@ -43,12 +43,18 @@ func (h *Notification) Routes() chi.Router {
 	r.Get("/", h.List)
 	r.Get("/count", h.UnreadCount)
 	r.Post("/read-all", h.MarkAllRead)
-	r.Post("/send", h.Send)
 	r.Patch("/{notificationID}/read", h.MarkRead)
 
 	r.Route("/preferences", func(r chi.Router) {
 		r.Get("/", h.GetPreferences)
 		r.Put("/", h.UpdatePreferences)
+	})
+
+	// /send requires admin role — prevents arbitrary email relay.
+	// Called by triage workflow with platform admin service account JWT.
+	r.Group(func(r chi.Router) {
+		r.Use(requireAdmin)
+		r.Post("/send", h.Send)
 	})
 
 	return r
@@ -197,6 +203,18 @@ func requireUserID(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("X-User-ID") == "" {
 			httperr.WriteError(w, r, httperr.Unauthorized("missing user identity"))
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+// requireAdmin checks that the authenticated user has admin role.
+// Used for privileged operations like programmatic notification sending.
+func requireAdmin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("X-User-Role") != "admin" {
+			httperr.WriteError(w, r, httperr.Forbidden("admin access required"))
 			return
 		}
 		next.ServeHTTP(w, r)

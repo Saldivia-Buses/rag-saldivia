@@ -105,6 +105,12 @@ func withUser(req *http.Request, userID string) *http.Request {
 	return req
 }
 
+func withAdmin(req *http.Request, userID string) *http.Request {
+	req.Header.Set("X-User-ID", userID)
+	req.Header.Set("X-User-Role", "admin")
+	return req
+}
+
 // --- tests ---
 
 func TestList_MissingUserID_Returns401(t *testing.T) {
@@ -482,7 +488,7 @@ func TestSend_Email_Success(t *testing.T) {
 	r := setupNotifRouter(mock)
 
 	body := `{"type":"email","to":"enzo@saldivia.com","subject":"Test Subject","body":"Test body content"}`
-	req := withUser(httptest.NewRequest(http.MethodPost, "/v1/notifications/send", strings.NewReader(body)), "u-1")
+	req := withAdmin(httptest.NewRequest(http.MethodPost, "/v1/notifications/send", strings.NewReader(body)), "u-1")
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
@@ -512,7 +518,7 @@ func TestSend_InApp_Success(t *testing.T) {
 	r := setupNotifRouter(mock)
 
 	body := `{"type":"in_app","to":"user-123","subject":"New notification","body":"Hello"}`
-	req := withUser(httptest.NewRequest(http.MethodPost, "/v1/notifications/send", strings.NewReader(body)), "u-1")
+	req := withAdmin(httptest.NewRequest(http.MethodPost, "/v1/notifications/send", strings.NewReader(body)), "u-1")
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
@@ -540,7 +546,7 @@ func TestSend_MissingFields_Returns400(t *testing.T) {
 			mock := &mockNotificationService{}
 			r := setupNotifRouter(mock)
 
-			req := withUser(httptest.NewRequest(http.MethodPost, "/v1/notifications/send", strings.NewReader(tt.body)), "u-1")
+			req := withAdmin(httptest.NewRequest(http.MethodPost, "/v1/notifications/send", strings.NewReader(tt.body)), "u-1")
 			req.Header.Set("Content-Type", "application/json")
 			rec := httptest.NewRecorder()
 			r.ServeHTTP(rec, req)
@@ -560,7 +566,7 @@ func TestSend_InvalidType_Returns400(t *testing.T) {
 	r := setupNotifRouter(mock)
 
 	body := `{"type":"sms","to":"a@b.com","subject":"Test"}`
-	req := withUser(httptest.NewRequest(http.MethodPost, "/v1/notifications/send", strings.NewReader(body)), "u-1")
+	req := withAdmin(httptest.NewRequest(http.MethodPost, "/v1/notifications/send", strings.NewReader(body)), "u-1")
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
@@ -585,12 +591,32 @@ func TestSend_MissingUserID_Returns401(t *testing.T) {
 	}
 }
 
+func TestSend_NonAdmin_Returns403(t *testing.T) {
+	mock := &mockNotificationService{}
+	r := setupNotifRouter(mock)
+
+	body := `{"type":"email","to":"a@b.com","subject":"Test","body":"Body"}`
+	// User with role "member" (not admin) — must be rejected
+	req := withUser(httptest.NewRequest(http.MethodPost, "/v1/notifications/send", strings.NewReader(body)), "u-1")
+	req.Header.Set("X-User-Role", "member")
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 for non-admin, got %d: %s", rec.Code, rec.Body.String())
+	}
+	if mock.sendCalled {
+		t.Error("Send should not be called for non-admin")
+	}
+}
+
 func TestSend_ServiceError_Returns500(t *testing.T) {
 	mock := &mockNotificationService{sendErr: errors.New("smtp down")}
 	r := setupNotifRouter(mock)
 
 	body := `{"type":"email","to":"a@b.com","subject":"Test","body":"Body"}`
-	req := withUser(httptest.NewRequest(http.MethodPost, "/v1/notifications/send", strings.NewReader(body)), "u-1")
+	req := withAdmin(httptest.NewRequest(http.MethodPost, "/v1/notifications/send", strings.NewReader(body)), "u-1")
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)

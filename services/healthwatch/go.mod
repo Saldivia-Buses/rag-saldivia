@@ -6,6 +6,7 @@ require (
 	github.com/Camionerou/rag-saldivia/pkg v0.0.0-20260405035255-73a266b4a0d8
 	github.com/go-chi/chi/v5 v5.2.5
 	github.com/jackc/pgx/v5 v5.9.1
+	github.com/stretchr/testify v1.11.1
 )
 
 require (

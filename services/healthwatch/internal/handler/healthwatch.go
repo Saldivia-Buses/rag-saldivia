@@ -126,10 +126,14 @@ func (h *Healthwatch) requirePlatformAdmin(next http.Handler) http.Handler {
 			return
 		}
 
-		// Check blacklist (revoked tokens)
+		// Check blacklist (revoked tokens) — fail-closed for admin endpoints
 		if h.blacklist != nil && claims.ID != "" {
 			revoked, err := h.blacklist.IsRevoked(r.Context(), claims.ID)
-			if err == nil && revoked {
+			if err != nil {
+				httperr.WriteError(w, r, httperr.Wrap(err, httperr.CodeInternal, "auth check unavailable", 503))
+				return
+			}
+			if revoked {
 				httperr.WriteError(w, r, httperr.Unauthorized("token revoked"))
 				return
 			}

@@ -32,6 +32,7 @@ jobs:
         run: |
           # Get service account token for HealthWatch API
           TOKEN=$(bash deploy/scripts/get-service-token.sh healthwatch)
+          echo "::add-mask::$TOKEN"
 
           # Fetch per-service health from HealthWatch
           HEALTHY=$(curl -sf http://localhost:8014/v1/healthwatch/services \

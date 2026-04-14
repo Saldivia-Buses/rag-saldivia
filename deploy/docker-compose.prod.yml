@@ -920,6 +920,7 @@ services:
       - "traefik.http.routers.healthwatch.rule=PathPrefix(`/v1/healthwatch`)"
       - "traefik.http.routers.healthwatch.entrypoints=websecure"
       - "traefik.http.services.healthwatch.loadbalancer.server.port=8014"
+      - "traefik.docker.network=frontend"
     deploy:
       resources:
         limits:
