@@ -81,6 +81,95 @@ func DefaultValidationRules() []ValidationRule {
 			Query:       "SELECT id_detalle as legacy_id, importe as detail FROM CTB_DETALLES WHERE importe IS NOT NULL AND importe != '' AND importe NOT REGEXP '^-?[0-9]+(\\\\.[0-9]+)?$' LIMIT 1000",
 			Transform:   "skip",
 		},
+		// --- Phase 18 pre-validation rules (H7 fix) ---
+		{
+			Name:        "invoice_lines_qty_zero",
+			Domain:      "invoicing",
+			LegacyTable: "FACDETAL",
+			Constraint:  "erp_invoice_lines_quantity_check",
+			Query:       "SELECT CAST(remnro AS SIGNED) as legacy_id, CAST(artcan AS CHAR) as detail FROM FACDETAL WHERE artcan <= 0 LIMIT 1000",
+			Transform:   "auto_fix",
+		},
+		{
+			Name:        "invoice_total_zero",
+			Domain:      "invoicing",
+			LegacyTable: "IVAVENTAS",
+			Constraint:  "erp_invoices_total_check",
+			Query:       "SELECT id_ivaventa as legacy_id, CAST(totcom AS CHAR) as detail FROM IVAVENTAS WHERE totcom = 0 LIMIT 1000",
+			Transform:   "skip",
+		},
+		{
+			Name:        "withholding_gains_zero",
+			Domain:      "withholding",
+			LegacyTable: "RETGANAN",
+			Constraint:  "erp_withholdings_amount_check",
+			Query:       "SELECT id_retganan as legacy_id, CAST(gantot AS CHAR) as detail FROM RETGANAN WHERE gantot = 0 LIMIT 1000",
+			Transform:   "skip",
+		},
+		{
+			Name:        "withholding_iva_zero",
+			Domain:      "withholding",
+			LegacyTable: "RETIVA",
+			Constraint:  "erp_withholdings_amount_check",
+			Query:       "SELECT id_retiva as legacy_id, CAST(ivatot AS CHAR) as detail FROM RETIVA WHERE ivatot = 0 LIMIT 1000",
+			Transform:   "skip",
+		},
+		{
+			Name:        "treasury_amount_zero",
+			Domain:      "treasury",
+			LegacyTable: "CAJMOVIM",
+			Constraint:  "erp_treasury_movements_amount_check",
+			Query:       "SELECT CAST(cajnro AS SIGNED) as legacy_id, CAST(cajimp AS CHAR) as detail FROM CAJMOVIM WHERE cajimp = 0 LIMIT 1000",
+			Transform:   "skip",
+		},
+		{
+			Name:        "account_movement_amount_zero",
+			Domain:      "accounting",
+			LegacyTable: "REG_MOVIMIENTOS",
+			Constraint:  "erp_account_movements_amount_check",
+			Query:       "SELECT id_regmovim as legacy_id, CAST(importe_movimiento AS CHAR) as detail FROM REG_MOVIMIENTOS WHERE importe_movimiento = 0 LIMIT 1000",
+			Transform:   "skip",
+		},
+		{
+			Name:        "attendance_orphan_entity",
+			Domain:      "hr",
+			LegacyTable: "FICHADADIA",
+			Constraint:  "erp_attendance_entity_fkey",
+			Query:       "SELECT f.tarjeta as legacy_id, CAST(f.legajo AS CHAR) as detail FROM FICHADADIA f LEFT JOIN PERSONAL p ON f.legajo = p.legajo WHERE p.legajo IS NULL LIMIT 1000",
+			Transform:   "skip",
+		},
+		{
+			Name:        "production_inspection_result_invalid",
+			Domain:      "production",
+			LegacyTable: "PROD_CONTROL_MOVIM",
+			Constraint:  "erp_production_inspections_result_check",
+			Query:       "SELECT id_controlmovim as legacy_id, CONCAT('conforme=', conforme, ' no_conforme=', no_conforme) as detail FROM PROD_CONTROL_MOVIM WHERE conforme = 0 AND no_conforme = 0 AND no_aplica = 0 LIMIT 1000",
+			Transform:   "auto_fix",
+		},
+		{
+			Name:        "treasury_movement_type_unknown",
+			Domain:      "treasury",
+			LegacyTable: "CAJMOVIM",
+			Constraint:  "erp_treasury_movements_type_check",
+			Query:       "SELECT CAST(cajnro AS SIGNED) as legacy_id, CAST(concod AS CHAR) as detail FROM CAJMOVIM WHERE concod NOT IN (0,1,2,3,4,5,6,7,8,9) LIMIT 1000",
+			Transform:   "skip",
+		},
+		{
+			Name:        "requisition_number_empty",
+			Domain:      "purchasing",
+			LegacyTable: "PEDIDOINT",
+			Constraint:  "erp_purchase_orders_number_check",
+			Query:       "SELECT idPed as legacy_id, CAST(nrocom AS CHAR) as detail FROM PEDIDOINT WHERE nrocom = 0 OR nrocom IS NULL LIMIT 1000",
+			Transform:   "skip",
+		},
+		{
+			Name:        "article_hashcode_collision",
+			Domain:      "stock",
+			LegacyTable: "STK_ARTICULOS",
+			Constraint:  "hashcode_uniqueness",
+			Query:       "SELECT COUNT(*) as legacy_id, CAST(COUNT(DISTINCT id_stkarticulo) AS CHAR) as detail FROM STK_ARTICULOS HAVING COUNT(*) != COUNT(DISTINCT id_stkarticulo)",
+			Transform:   "fix_manual",
+		},
 	}
 }
 
@@ -183,6 +272,11 @@ func PostMigrationValidation(ctx context.Context, mysqlDB *sql.DB, pgPool *pgxpo
 		{"accounts", "SELECT COUNT(DISTINCT id_ctbcuenta) FROM CTB_CUENTAS", "SELECT COUNT(*) FROM erp_accounts WHERE tenant_id=$1"},
 		{"journal_entries", "SELECT COUNT(*) FROM CTB_MOVIMIENTOS", "SELECT COUNT(*) FROM erp_journal_entries WHERE tenant_id=$1"},
 		{"warehouses", "SELECT COUNT(*) FROM STK_DEPOSITOS", "SELECT COUNT(*) FROM erp_warehouses WHERE tenant_id=$1"},
+		// Phase 18 — extended post-validation checks
+		{"invoices", "SELECT (SELECT COUNT(*) FROM IVAVENTAS) + (SELECT COUNT(*) FROM IVACOMPRAS)", "SELECT COUNT(*) FROM erp_invoices WHERE tenant_id=$1 AND invoice_type != 'delivery_note'"},
+		{"bom_current", "SELECT COUNT(*) FROM STKPIEZA", "SELECT COUNT(*) FROM erp_bom WHERE tenant_id=$1"},
+		{"bom_history", "SELECT COUNT(*) FROM STK_BOM_HIST", "SELECT COUNT(*) FROM erp_bom_history WHERE tenant_id=$1"},
+		{"attendance", "SELECT COUNT(*) FROM FICHADADIA", "SELECT COUNT(*) FROM erp_attendance WHERE tenant_id=$1"},
 	}
 
 	fmt.Println("\n=== POST-MIGRATION VALIDATION ===")
@@ -218,6 +312,36 @@ func PostMigrationValidation(ctx context.Context, mysqlDB *sql.DB, pgPool *pgxpo
 		allOK = false
 	}
 	fmt.Printf("  %-25s diff=%s %s\n", "journal_debit_balance", diff.StringFixed(2), balanceStatus)
+
+	// Phase 18 — Tax entry balance (IVAIMPORTES.impimp vs erp_tax_entries.tax_amount)
+	var mysqlTaxSum, pgTaxSum decimal.Decimal
+	mysqlDB.QueryRowContext(ctx,
+		"SELECT COALESCE(SUM(ABS(impimp)),0) FROM IVAIMPORTES").Scan(&mysqlTaxSum)
+	pgPool.QueryRow(ctx,
+		"SELECT COALESCE(SUM(ABS(tax_amount)),0) FROM erp_tax_entries WHERE tenant_id=$1", tenantID).Scan(&pgTaxSum)
+
+	taxDiff := mysqlTaxSum.Sub(pgTaxSum).Abs()
+	taxStatus := "OK"
+	if taxDiff.GreaterThan(decimal.NewFromFloat(0.01)) {
+		taxStatus = "MISMATCH"
+		allOK = false
+	}
+	fmt.Printf("  %-25s diff=%s %s\n", "tax_entry_balance", taxDiff.StringFixed(2), taxStatus)
+
+	// Phase 18 — Treasury balance (CAJMOVIM absolute amounts vs erp_treasury_movements.amount)
+	var mysqlTreasurySum, pgTreasurySum decimal.Decimal
+	mysqlDB.QueryRowContext(ctx,
+		"SELECT COALESCE(SUM(ABS(cajimp)),0) FROM CAJMOVIM").Scan(&mysqlTreasurySum)
+	pgPool.QueryRow(ctx,
+		"SELECT COALESCE(SUM(ABS(amount)),0) FROM erp_treasury_movements WHERE tenant_id=$1", tenantID).Scan(&pgTreasurySum)
+
+	treasuryDiff := mysqlTreasurySum.Sub(pgTreasurySum).Abs()
+	treasuryStatus := "OK"
+	if treasuryDiff.GreaterThan(decimal.NewFromFloat(0.01)) {
+		treasuryStatus = "MISMATCH"
+		allOK = false
+	}
+	fmt.Printf("  %-25s diff=%s %s\n", "treasury_balance", treasuryDiff.StringFixed(2), treasuryStatus)
 
 	if allOK {
 		fmt.Println("\n  RESULT: ALL CHECKS PASSED")

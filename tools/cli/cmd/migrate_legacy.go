@@ -148,6 +148,15 @@ func runMigrateLegacy(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// --- Phase 17: Metadata enrichment (prod mode only) ---
+	if !dryRun {
+		fmt.Println("\nRunning Phase 17: metadata enrichment...")
+		if err := migration.RunMetadataEnrichment(ctx, mysqlDB, pgPool, tenantSlug, orch.GetMapper()); err != nil {
+			return fmt.Errorf("metadata enrichment: %w", err)
+		}
+		fmt.Println("Metadata enrichment completed.")
+	}
+
 	// --- Post-migration validation (prod mode) ---
 	if !dryRun {
 		fmt.Println("\nRunning post-migration validation...")
