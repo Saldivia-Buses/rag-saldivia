@@ -35,7 +35,7 @@ func (h *Control) ListRegisters(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"registers": regs})
+	_ = json.NewEncoder(w).Encode(map[string]any{"registers": regs})
 }
 
 // WriteRegister handles PLC register write with safety checks.
@@ -79,7 +79,7 @@ func (h *Control) WriteRegister(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(result)
+	_ = json.NewEncoder(w).Encode(result)
 }
 
 // ApproveWrite handles two-person approval for critical PLC writes.
@@ -105,5 +105,5 @@ func (h *Control) ApproveWrite(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(result)
+	_ = json.NewEncoder(w).Encode(result)
 }

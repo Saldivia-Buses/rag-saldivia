@@ -88,7 +88,7 @@ func (s *Treasury) CreateMovement(ctx context.Context, req CreateTreasuryMovemen
 	if err != nil {
 		return repository.CreateTreasuryMovementRow{}, fmt.Errorf("begin tx: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 	qtx := s.repo.WithTx(tx)
 
 	mov, err := qtx.CreateTreasuryMovement(ctx, req.CreateTreasuryMovementParams)
@@ -258,7 +258,7 @@ func (s *Treasury) ImportStatementLines(ctx context.Context, tenantID string, re
 	if err != nil {
 		return 0, fmt.Errorf("begin tx: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 	qtx := s.repo.WithTx(tx)
 
 	count := 0
@@ -297,7 +297,7 @@ func (s *Treasury) AutoMatch(ctx context.Context, tenantID string, reconID pgtyp
 	if err != nil {
 		return nil, fmt.Errorf("begin tx: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 	qtx := s.repo.WithTx(tx)
 
 	recon, err := qtx.GetReconciliation(ctx, repository.GetReconciliationParams{ID: reconID, TenantID: tenantID})
@@ -366,7 +366,7 @@ func (s *Treasury) MatchManual(ctx context.Context, tenantID string, reconID, li
 	if err != nil {
 		return fmt.Errorf("begin tx: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 	qtx := s.repo.WithTx(tx)
 
 	rows, err := qtx.MatchStatementLine(ctx, repository.MatchStatementLineParams{
@@ -398,7 +398,7 @@ func (s *Treasury) ConfirmReconciliation(ctx context.Context, tenantID string, r
 	if err != nil {
 		return fmt.Errorf("begin tx: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 	qtx := s.repo.WithTx(tx)
 
 	rows, err := qtx.ConfirmReconciliation(ctx, repository.ConfirmReconciliationParams{
@@ -540,7 +540,7 @@ func (s *Treasury) CreateReceipt(ctx context.Context, tenantID string, inp Recei
 	if err != nil {
 		return nil, fmt.Errorf("begin tx: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 	qtx := s.repo.WithTx(tx)
 
 	// Get next receipt number
@@ -576,12 +576,13 @@ func (s *Treasury) CreateReceipt(ctx context.Context, tenantID string, inp Recei
 		if inp.ReceiptType == "payment" {
 			movType = "cash_out"
 		}
-		if pay.PaymentMethod == "transfer" {
+		switch pay.PaymentMethod {
+		case "transfer":
 			movType = "bank_deposit"
 			if inp.ReceiptType == "payment" {
 				movType = "bank_withdrawal"
 			}
-		} else if pay.PaymentMethod == "check" {
+		case "check":
 			movType = "check_received"
 			if inp.ReceiptType == "payment" {
 				movType = "check_issued"
@@ -772,13 +773,16 @@ func (s *Treasury) CreateReceipt(ctx context.Context, tenantID string, inp Recei
 		}
 	}
 	// Post the auto entry
-	qtx.PostJournalEntry(ctx, repository.PostJournalEntryParams{
+	if _, err := qtx.PostJournalEntry(ctx, repository.PostJournalEntryParams{
 		ID: entry.ID, TenantID: tenantID,
-	})
-	// Link journal entry to receipt
-	qtx.SetReceiptJournalEntry(ctx, repository.SetReceiptJournalEntryParams{
+	}); err != nil {
+		return nil, fmt.Errorf("post journal entry: %w", err)
+	}
+	if _, err := qtx.SetReceiptJournalEntry(ctx, repository.SetReceiptJournalEntryParams{
 		ID: receipt.ID, TenantID: tenantID, JournalEntryID: entry.ID,
-	})
+	}); err != nil {
+		return nil, fmt.Errorf("set receipt journal entry: %w", err)
+	}
 
 	// StrictLogger
 	if err := s.audit.WriteStrict(ctx, audit.Entry{
@@ -816,7 +820,7 @@ func (s *Treasury) VoidReceipt(ctx context.Context, tenantID string, receiptID p
 	if err != nil {
 		return fmt.Errorf("begin tx: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 	qtx := s.repo.WithTx(tx)
 
 	receipt, err := qtx.GetReceipt(ctx, repository.GetReceiptParams{ID: receiptID, TenantID: tenantID})
@@ -839,15 +843,17 @@ func (s *Treasury) VoidReceipt(ctx context.Context, tenantID string, receiptID p
 		for _, im := range invoiceMovs {
 			if im.MovementType == "invoice" {
 				// Restore balance by negating the reduction (passes WHERE balance >= check)
-				qtx.UpdateMovementBalance(ctx, repository.UpdateMovementBalanceParams{
+				if _, err := qtx.UpdateMovementBalance(ctx, repository.UpdateMovementBalanceParams{
 					ID: im.ID, TenantID: tenantID,
 					Balance: negateNumeric(alloc.Amount),
-				})
+				}); err != nil {
+					return fmt.Errorf("restore invoice balance: %w", err)
+				}
 				break
 			}
 		}
 		// Create reversal account movement
-		qtx.CreateAccountMovement(ctx, repository.CreateAccountMovementParams{
+		if _, err := qtx.CreateAccountMovement(ctx, repository.CreateAccountMovementParams{
 			TenantID:     tenantID,
 			EntityID:     receipt.EntityID,
 			Date:         receipt.Date,
@@ -858,7 +864,9 @@ func (s *Treasury) VoidReceipt(ctx context.Context, tenantID string, receiptID p
 			InvoiceID:    alloc.InvoiceID,
 			Notes:        fmt.Sprintf("Reversa recibo %s", receipt.Number),
 			UserID:       userID,
-		})
+		}); err != nil {
+			return fmt.Errorf("create reversal movement: %w", err)
+		}
 	}
 
 	// 2. Reverse journal entry (if exists)
@@ -884,7 +892,7 @@ func (s *Treasury) VoidReceipt(ctx context.Context, tenantID string, receiptID p
 			})
 			if err == nil {
 				for i, l := range lines {
-					qtx.CreateJournalLine(ctx, repository.CreateJournalLineParams{
+					if _, err := qtx.CreateJournalLine(ctx, repository.CreateJournalLineParams{
 						TenantID:     tenantID,
 						EntryID:      revEntry.ID,
 						AccountID:    l.AccountID,
@@ -894,12 +902,18 @@ func (s *Treasury) VoidReceipt(ctx context.Context, tenantID string, receiptID p
 						Credit:       l.Debit,
 						Description:  "Reversa: " + l.Description,
 						SortOrder:    int32(i),
-					})
+					}); err != nil {
+						return fmt.Errorf("create reversal journal line: %w", err)
+					}
 				}
-				qtx.PostJournalEntry(ctx, repository.PostJournalEntryParams{ID: revEntry.ID, TenantID: tenantID})
-				qtx.MarkEntryReversed(ctx, repository.MarkEntryReversedParams{
+				if _, err := qtx.PostJournalEntry(ctx, repository.PostJournalEntryParams{ID: revEntry.ID, TenantID: tenantID}); err != nil {
+					return fmt.Errorf("post reversal journal entry: %w", err)
+				}
+				if _, err := qtx.MarkEntryReversed(ctx, repository.MarkEntryReversedParams{
 					ID: receipt.JournalEntryID, TenantID: tenantID, ReversedBy: revEntry.ID,
-				})
+				}); err != nil {
+					return fmt.Errorf("mark entry reversed: %w", err)
+				}
 			}
 		}
 	}
@@ -939,7 +953,7 @@ func parseFloatApprox(s string) float64 {
 		return 0
 	}
 	var f float64
-	fmt.Sscanf(s, "%f", &f)
+	_, _ = fmt.Sscanf(s, "%f", &f)
 	return f
 }
 

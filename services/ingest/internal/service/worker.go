@@ -116,20 +116,20 @@ func (w *Worker) processJob(msg jetstream.Msg) {
 	var im IngestMessage
 	if err := json.Unmarshal(msg.Data(), &im); err != nil {
 		slog.Warn("invalid ingest message", "error", err, "subject", msg.Subject())
-		msg.Term()
+		_ = msg.Term()
 		return
 	}
 
 	if im.JobID == "" || im.StagedPath == "" {
 		slog.Warn("ingest message missing required fields", "subject", msg.Subject())
-		msg.Term()
+		_ = msg.Term()
 		return
 	}
 
 	// S4: validate tenant from NATS subject matches payload
 	if subjectTenant := tenantFromSubject(msg.Subject()); subjectTenant != im.TenantSlug {
 		slog.Warn("tenant mismatch between subject and payload", "subject", subjectTenant, "payload", im.TenantSlug)
-		msg.Term()
+		_ = msg.Term()
 		return
 	}
 
@@ -137,7 +137,7 @@ func (w *Worker) processJob(msg jetstream.Msg) {
 	slog.Info("processing ingest job", "job_id", im.JobID, "file", im.FileName, "collection", im.Collection)
 
 	// Update status to processing
-	w.svc.UpdateJobStatus(ctx, im.JobID, "processing", nil)
+	_ = w.svc.UpdateJobStatus(ctx, im.JobID, "processing", nil)
 
 	// Forward to Blueprint
 	if err := w.forwardToBlueprint(ctx, im); err != nil {
@@ -147,23 +147,23 @@ func (w *Worker) processJob(msg jetstream.Msg) {
 		meta, _ := msg.Metadata()
 		if meta != nil && meta.NumDelivered >= maxDeliveries {
 			errMsg := fmt.Sprintf("failed after %d attempts: %v", maxDeliveries, err)
-			w.svc.UpdateJobStatus(ctx, im.JobID, "failed", &errMsg)
-			os.Remove(im.StagedPath)
-			msg.Term()
+			_ = w.svc.UpdateJobStatus(ctx, im.JobID, "failed", &errMsg)
+			_ = os.Remove(im.StagedPath)
+			_ = msg.Term()
 		} else {
-			msg.Nak() // retry — status stays as "processing"
+			_ = msg.Nak() // retry — status stays as "processing"
 		}
 		return
 	}
 
 	// Mark completed and clean up staged file
-	w.svc.UpdateJobStatus(ctx, im.JobID, "completed", nil)
-	os.Remove(im.StagedPath)
+	_ = w.svc.UpdateJobStatus(ctx, im.JobID, "completed", nil)
+	_ = os.Remove(im.StagedPath)
 
 	// Publish notification + WS event
 	w.publishCompletion(im)
 
-	msg.Ack()
+	_ = msg.Ack()
 	slog.Info("ingest job completed", "job_id", im.JobID, "file", im.FileName)
 }
 
@@ -172,7 +172,7 @@ func (w *Worker) forwardToBlueprint(ctx context.Context, im IngestMessage) error
 	if err != nil {
 		return fmt.Errorf("open staged file: %w", err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	namespacedCollection := im.TenantSlug + "-" + im.Collection
 
@@ -190,7 +190,9 @@ func (w *Worker) forwardToBlueprint(ctx context.Context, im IngestMessage) error
 	if err := writer.WriteField("collection_name", namespacedCollection); err != nil {
 		return fmt.Errorf("write collection field: %w", err)
 	}
-	writer.Close()
+	if err := writer.Close(); err != nil {
+		return fmt.Errorf("close writer: %w", err)
+	}
 
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost,
 		w.cfg.BlueprintURL+"/v1/documents", &body)
@@ -203,7 +205,7 @@ func (w *Worker) forwardToBlueprint(ctx context.Context, im IngestMessage) error
 	if err != nil {
 		return fmt.Errorf("blueprint request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		// D3: log full response body but don't expose to clients

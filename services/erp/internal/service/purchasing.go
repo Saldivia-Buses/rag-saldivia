@@ -80,7 +80,7 @@ func (s *Purchasing) CreateOrder(ctx context.Context, req CreateOrderRequest) (*
 	if err != nil {
 		return nil, fmt.Errorf("begin tx: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 	qtx := s.repo.WithTx(tx)
 
 	// Calculate total
@@ -218,7 +218,7 @@ func (s *Purchasing) InspectReceipt(ctx context.Context, tenantID string, receip
 	if err != nil {
 		return nil, fmt.Errorf("begin tx: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 	qtx := s.repo.WithTx(tx)
 
 	// Resolve supplier through receipt → order → supplier_id
@@ -386,7 +386,7 @@ func (s *Purchasing) Receive(ctx context.Context, req ReceiveRequest) error {
 	if err != nil {
 		return fmt.Errorf("begin tx: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 	qtx := s.repo.WithTx(tx)
 
 	// Verify order is receivable

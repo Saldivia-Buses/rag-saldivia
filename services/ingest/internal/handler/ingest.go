@@ -87,7 +87,7 @@ func (h *Ingest) Upload(w http.ResponseWriter, r *http.Request) {
 		httperr.WriteError(w, r, httperr.InvalidInput("file is required"))
 		return
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	// S6: validate file extension
 	ext := strings.ToLower(filepath.Ext(header.Filename))
@@ -185,7 +185,7 @@ func (h *Ingest) DeleteJob(w http.ResponseWriter, r *http.Request) {
 func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(v)
+	_ = json.NewEncoder(w).Encode(v)
 }
 
 // ListCollections handles GET /v1/ingest/collections.

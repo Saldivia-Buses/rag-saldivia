@@ -226,13 +226,13 @@ func (r *Resolver) createRedisClientLocked(ctx context.Context, slug string) (*r
 	r.mu.Lock()
 
 	if pingErr != nil {
-		client.Close()
+		_ = client.Close()
 		return nil, fmt.Errorf("ping tenant %q Redis: %w", slug, pingErr)
 	}
 
 	// Double-check
 	if existing, ok := r.redisClts[slug]; ok {
-		client.Close()
+		_ = client.Close()
 		return existing, nil
 	}
 
@@ -317,7 +317,7 @@ func (r *Resolver) Close() {
 		delete(r.pools, slug)
 	}
 	for slug, client := range r.redisClts {
-		client.Close()
+		_ = client.Close()
 		delete(r.redisClts, slug)
 	}
 	r.connCache = make(map[string]connEntry)

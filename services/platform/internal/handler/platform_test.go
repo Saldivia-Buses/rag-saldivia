@@ -50,6 +50,13 @@ func (m *mockPlatformService) GetTenant(_ context.Context, slug string) (service
 	return m.tenant, nil
 }
 
+func (m *mockPlatformService) GetTenantByID(_ context.Context, _ string) (service.TenantDetail, error) {
+	if m.err != nil {
+		return service.TenantDetail{}, m.err
+	}
+	return m.tenant, nil
+}
+
 func (m *mockPlatformService) CreateTenant(_ context.Context, arg db.CreateTenantParams) (service.TenantDetail, error) {
 	if m.err != nil {
 		return service.TenantDetail{}, m.err

@@ -25,7 +25,7 @@ func BulkInsertPages(ctx context.Context, pool *pgxpool.Pool, docID string, page
 	if err != nil {
 		return 0, err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	// Delete existing pages for this document (idempotent re-processing)
 	_, err = tx.Exec(ctx, "DELETE FROM document_pages WHERE document_id = $1", docID)

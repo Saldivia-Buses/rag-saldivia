@@ -129,7 +129,7 @@ func (a *Auth) Login(ctx context.Context, req LoginRequest) (*TokenPair, error) 
 		if errors.Is(err, pgx.ErrNoRows) {
 			// Timing-safe: run bcrypt even when user doesn't exist
 			// to prevent enumeration via response time
-			bcrypt.CompareHashAndPassword(dummyHash, []byte(req.Password))
+			_ = bcrypt.CompareHashAndPassword(dummyHash, []byte(req.Password))
 			return nil, ErrInvalidCredentials
 		}
 		return nil, fmt.Errorf("query user: %w", err)
@@ -143,7 +143,7 @@ func (a *Auth) Login(ctx context.Context, req LoginRequest) (*TokenPair, error) 
 	// Disabled and locked accounts return the same error as invalid credentials
 	// to prevent information leakage about account state
 	if !isActive {
-		bcrypt.CompareHashAndPassword(dummyHash, []byte(req.Password))
+		_ = bcrypt.CompareHashAndPassword(dummyHash, []byte(req.Password))
 		return nil, ErrInvalidCredentials
 	}
 

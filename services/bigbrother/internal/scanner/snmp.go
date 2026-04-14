@@ -55,7 +55,7 @@ func (s *SNMPScanner) Query(ctx context.Context, ip string) (*SNMPResult, error)
 	if err := client.ConnectIPv4(); err != nil {
 		return nil, fmt.Errorf("snmp connect %s: %w", ip, err)
 	}
-	defer client.Conn.Close()
+	defer func() { _ = client.Conn.Close() }()
 
 	oids := []string{oidSysDescr, oidSysName, oidSysUptime}
 	result, err := client.Get(oids)

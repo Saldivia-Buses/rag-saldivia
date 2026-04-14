@@ -64,7 +64,7 @@ func (c *Prometheus) QueryAlerts(ctx context.Context) ([]PrometheusAlert, error)
 	if err != nil {
 		return nil, fmt.Errorf("query alerts: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("prometheus alerts returned %d", resp.StatusCode)
@@ -116,7 +116,7 @@ func (c *Prometheus) queryScalar(ctx context.Context, query string) (float64, er
 	if err != nil {
 		return 0, fmt.Errorf("query prometheus: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return 0, fmt.Errorf("prometheus returned %d", resp.StatusCode)
@@ -144,7 +144,7 @@ func (c *Prometheus) queryScalar(ctx context.Context, query string) (float64, er
 		if err := json.Unmarshal(result.Data.Result[0].Value[1], &strVal); err != nil {
 			return 0, fmt.Errorf("parse value: %w", err)
 		}
-		fmt.Sscanf(strVal, "%f", &val)
+		_, _ = fmt.Sscanf(strVal, "%f", &val)
 	}
 
 	return val, nil

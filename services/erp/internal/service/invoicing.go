@@ -91,7 +91,7 @@ func (s *Invoicing) CreateInvoice(ctx context.Context, req CreateInvoiceRequest)
 	if err != nil {
 		return nil, fmt.Errorf("begin tx: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 	qtx := s.repo.WithTx(tx)
 
 	var subtotal, taxAmount, total pgtype.Numeric
@@ -186,7 +186,7 @@ func (s *Invoicing) PostInvoice(ctx context.Context, id pgtype.UUID, tenantID, u
 	if err != nil {
 		return fmt.Errorf("begin tx: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 	qtx := s.repo.WithTx(tx)
 
 	// 1. Flip status to posted
@@ -331,7 +331,7 @@ func (s *Invoicing) VoidInvoice(ctx context.Context, id pgtype.UUID, tenantID, r
 	if err != nil {
 		return nil, fmt.Errorf("begin tx: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 	qtx := s.repo.WithTx(tx)
 
 	inv, err := qtx.GetInvoice(ctx, repository.GetInvoiceParams{ID: id, TenantID: tenantID})
@@ -437,7 +437,7 @@ func (s *Invoicing) VoidInvoice(ctx context.Context, id pgtype.UUID, tenantID, r
 			ReferenceType: pgText("void"),
 			ReferenceID:   id,
 			UserID:        userID,
-			Notes:         fmt.Sprintf("Reversa por anulación de factura"),
+			Notes:         "Reversa por anulación de factura",
 		})
 		if err != nil {
 			return nil, fmt.Errorf("reverse stock movement: %w", err)

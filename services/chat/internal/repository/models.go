@@ -332,6 +332,7 @@ type ErpAccountMovement struct {
 	Notes          string             `json:"notes"`
 	UserID         string             `json:"user_id"`
 	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	Metadata       []byte             `json:"metadata"`
 }
 
 type ErpArticle struct {
@@ -387,6 +388,7 @@ type ErpAudit struct {
 	Score         pgtype.Numeric     `json:"score"`
 	Notes         string             `json:"notes"`
 	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	Metadata      []byte             `json:"metadata"`
 }
 
 type ErpAuditFinding struct {
@@ -454,6 +456,20 @@ type ErpBom struct {
 	UnitID    pgtype.UUID    `json:"unit_id"`
 	SortOrder int32          `json:"sort_order"`
 	Notes     string         `json:"notes"`
+}
+
+type ErpBomHistory struct {
+	ID            pgtype.UUID        `json:"id"`
+	TenantID      string             `json:"tenant_id"`
+	ParentID      pgtype.UUID        `json:"parent_id"`
+	ChildID       pgtype.UUID        `json:"child_id"`
+	Quantity      pgtype.Numeric     `json:"quantity"`
+	UnitID        pgtype.UUID        `json:"unit_id"`
+	Version       int32              `json:"version"`
+	EffectiveDate pgtype.Date        `json:"effective_date"`
+	ReplacedDate  pgtype.Date        `json:"replaced_date"`
+	LegacyID      pgtype.Int8        `json:"legacy_id"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
 }
 
 type ErpCalendarEvent struct {
@@ -629,6 +645,7 @@ type ErpControlledDocument struct {
 	ApprovedAt pgtype.Timestamptz `json:"approved_at"`
 	Status     string             `json:"status"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	Metadata   []byte             `json:"metadata"`
 }
 
 type ErpCorrectiveAction struct {
@@ -1264,6 +1281,7 @@ type ErpProductionInspection struct {
 	Result       string             `json:"result"`
 	Observations string             `json:"observations"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	Metadata     []byte             `json:"metadata"`
 }
 
 type ErpProductionMaterial struct {
@@ -1292,6 +1310,7 @@ type ErpProductionOrder struct {
 	UserID    string             `json:"user_id"`
 	Notes     string             `json:"notes"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	Metadata  []byte             `json:"metadata"`
 }
 
 type ErpProductionRework struct {
@@ -1456,6 +1475,7 @@ type ErpQuotation struct {
 	Notes      string             `json:"notes"`
 	UserID     string             `json:"user_id"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	Metadata   []byte             `json:"metadata"`
 }
 
 type ErpQuotationLine struct {
@@ -1650,9 +1670,10 @@ type ErpTrainingAttendee struct {
 }
 
 type ErpTreasuryMovement struct {
-	ID               pgtype.UUID        `json:"id"`
-	TenantID         string             `json:"tenant_id"`
-	Date             pgtype.Date        `json:"date"`
+	ID       pgtype.UUID `json:"id"`
+	TenantID string      `json:"tenant_id"`
+	Date     pgtype.Date `json:"date"`
+	// Unique movement number. Legacy migration uses MOV-{legacy_id} format.
 	Number           string             `json:"number"`
 	MovementType     string             `json:"movement_type"`
 	Amount           pgtype.Numeric     `json:"amount"`
@@ -1914,20 +1935,21 @@ type ToolCall struct {
 }
 
 type User struct {
-	ID           string             `json:"id"`
-	Email        string             `json:"email"`
-	Name         string             `json:"name"`
-	PasswordHash string             `json:"password_hash"`
-	AvatarUrl    pgtype.Text        `json:"avatar_url"`
-	MfaSecret    pgtype.Text        `json:"mfa_secret"`
-	MfaEnabled   bool               `json:"mfa_enabled"`
-	IsActive     bool               `json:"is_active"`
-	FailedLogins int32              `json:"failed_logins"`
-	LockedUntil  pgtype.Timestamptz `json:"locked_until"`
-	LastLoginAt  pgtype.Timestamptz `json:"last_login_at"`
-	LastLoginIp  pgtype.Text        `json:"last_login_ip"`
-	CreatedAt    pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	ID                 string             `json:"id"`
+	Email              string             `json:"email"`
+	Name               string             `json:"name"`
+	PasswordHash       string             `json:"password_hash"`
+	AvatarUrl          pgtype.Text        `json:"avatar_url"`
+	MfaSecret          pgtype.Text        `json:"mfa_secret"`
+	MfaEnabled         bool               `json:"mfa_enabled"`
+	IsActive           bool               `json:"is_active"`
+	FailedLogins       int32              `json:"failed_logins"`
+	LockedUntil        pgtype.Timestamptz `json:"locked_until"`
+	LastLoginAt        pgtype.Timestamptz `json:"last_login_at"`
+	LastLoginIp        pgtype.Text        `json:"last_login_ip"`
+	CreatedAt          pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt          pgtype.Timestamptz `json:"updated_at"`
+	ForcePasswordReset bool               `json:"force_password_reset"`
 }
 
 type UserRole struct {

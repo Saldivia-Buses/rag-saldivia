@@ -70,7 +70,9 @@ func hostKeyCallback(path string) (ssh.HostKeyCallback, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open known_hosts %s: %w", path, err)
 	}
-	f.Close()
+	if err := f.Close(); err != nil {
+		return nil, fmt.Errorf("close known_hosts %s: %w", path, err)
+	}
 
 	// Build a verifier from the current known_hosts contents.
 	checker, err := knownhosts.New(path)
@@ -119,7 +121,7 @@ func appendKnownHost(path, hostname string, _ net.Addr, key ssh.PublicKey) error
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	line := knownhosts.Line([]string{hostname}, key) + "\n"
 	_, err = fmt.Fprint(f, line)
 	return err
@@ -199,7 +201,7 @@ func (c *SSHClient) Exec(ctx context.Context, command string) (*ExecResult, erro
 	if err != nil {
 		return nil, fmt.Errorf("create SSH session: %w", err)
 	}
-	defer session.Close()
+	defer func() { _ = session.Close() }()
 
 	var stdout, stderr bytes.Buffer
 	session.Stdout = &stdout
@@ -212,7 +214,7 @@ func (c *SSHClient) Exec(ctx context.Context, command string) (*ExecResult, erro
 
 	select {
 	case <-ctx.Done():
-		session.Signal(ssh.SIGKILL)
+		_ = session.Signal(ssh.SIGKILL)
 		return nil, ctx.Err()
 	case err := <-done:
 		result := &ExecResult{
@@ -239,7 +241,7 @@ func (c *SSHClient) ReadFile(ctx context.Context, path string, maxSize int64) ([
 	if err != nil {
 		return nil, fmt.Errorf("create SFTP client: %w", err)
 	}
-	defer sftpClient.Close()
+	defer func() { _ = sftpClient.Close() }()
 
 	// Symlink protection: reject symlinks to prevent path traversal
 	info, err := sftpClient.Lstat(path)
@@ -254,7 +256,7 @@ func (c *SSHClient) ReadFile(ctx context.Context, path string, maxSize int64) ([
 	if err != nil {
 		return nil, fmt.Errorf("SFTP open %s: %w", path, err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	data, err := io.ReadAll(io.LimitReader(f, maxSize))
 	if err != nil {
@@ -284,6 +286,6 @@ func IsReachable(host string, port int, timeout time.Duration) bool {
 	if err != nil {
 		return false
 	}
-	conn.Close()
+	_ = conn.Close()
 	return true
 }

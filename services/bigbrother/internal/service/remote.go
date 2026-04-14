@@ -89,7 +89,7 @@ func (s *RemoteService) Exec(ctx context.Context, req ExecRequest) (*ExecRespons
 		"exit_code": 0,
 		"user_id":   req.UserID,
 	})
-	s.db.Exec(ctx,
+	_, _ = s.db.Exec(ctx,
 		`INSERT INTO bb_events (tenant_id, device_id, event_type, details)
 		 VALUES (
 			(SELECT id FROM tenants WHERE slug = $1 LIMIT 1),

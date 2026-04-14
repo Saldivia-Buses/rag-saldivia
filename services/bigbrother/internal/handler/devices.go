@@ -191,7 +191,6 @@ func (h *Devices) ListDevices(w http.ResponseWriter, r *http.Request) {
 	if search != "" {
 		query += fmt.Sprintf(` AND (hostname ILIKE $%d OR ip::TEXT ILIKE $%d OR vendor ILIKE $%d OR model ILIKE $%d)`, argN, argN, argN, argN)
 		args = append(args, "%"+search+"%")
-		argN++
 	}
 	query += ` ORDER BY last_seen DESC LIMIT 100`
 
@@ -295,7 +294,9 @@ func (h *Devices) ListEvents(w http.ResponseWriter, r *http.Request) {
 	var events []event
 	for rows.Next() {
 		var e event
-		rows.Scan(&e.ID, &e.DeviceID, &e.EventType, &e.Details, &e.CreatedAt)
+		if err := rows.Scan(&e.ID, &e.DeviceID, &e.EventType, &e.Details, &e.CreatedAt); err != nil {
+			continue
+		}
 		events = append(events, e)
 	}
 	if events == nil {

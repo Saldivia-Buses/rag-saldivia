@@ -48,7 +48,7 @@ func WriteCSV(w io.Writer, columns []Column, rows []Row) error {
 // WriteExcel writes rows as an XLSX file to the writer.
 func WriteExcel(w io.Writer, sheetName string, columns []Column, rows []Row) error {
 	f := excelize.NewFile()
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	sheet, err := f.NewSheet(sheetName)
 	if err != nil {
@@ -57,7 +57,7 @@ func WriteExcel(w io.Writer, sheetName string, columns []Column, rows []Row) err
 	f.SetActiveSheet(sheet)
 	// Remove default "Sheet1" if different
 	if sheetName != "Sheet1" {
-		f.DeleteSheet("Sheet1")
+		_ = f.DeleteSheet("Sheet1")
 	}
 
 	// Bold header style
@@ -69,8 +69,8 @@ func WriteExcel(w io.Writer, sheetName string, columns []Column, rows []Row) err
 	// Write headers
 	for i, c := range columns {
 		cell, _ := excelize.CoordinatesToCellName(i+1, 1)
-		f.SetCellValue(sheetName, cell, c.Header)
-		f.SetCellStyle(sheetName, cell, cell, headerStyle)
+		_ = f.SetCellValue(sheetName, cell, c.Header)
+		_ = f.SetCellStyle(sheetName, cell, cell, headerStyle)
 	}
 
 	// Write data
@@ -81,12 +81,12 @@ func WriteExcel(w io.Writer, sheetName string, columns []Column, rows []Row) err
 			switch c.Format {
 			case "currency", "number", "percent":
 				if n, ok := toFloat64(val); ok {
-					f.SetCellFloat(sheetName, cell, n, 2, 64)
+					_ = f.SetCellFloat(sheetName, cell, n, 2, 64)
 				} else {
-					f.SetCellValue(sheetName, cell, formatValue(val, c.Format))
+					_ = f.SetCellValue(sheetName, cell, formatValue(val, c.Format))
 				}
 			default:
-				f.SetCellValue(sheetName, cell, formatValue(val, c.Format))
+				_ = f.SetCellValue(sheetName, cell, formatValue(val, c.Format))
 			}
 		}
 	}
@@ -101,7 +101,7 @@ func WriteExcel(w io.Writer, sheetName string, columns []Column, rows []Row) err
 		if width > 40 {
 			width = 40
 		}
-		f.SetColWidth(sheetName, colName, colName, width)
+		_ = f.SetColWidth(sheetName, colName, colName, width)
 	}
 
 	return f.Write(w)

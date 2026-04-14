@@ -49,7 +49,7 @@ func main() {
 		slog.Error("failed to connect to NATS", "error", err)
 		os.Exit(1)
 	}
-	app.OnShutdown(func() { nc.Drain() })
+	app.OnShutdown(func() { _ = nc.Drain() })
 	slog.Info("connected to NATS", "url", config.RedactURL(config.Env("NATS_URL", "")))
 
 	// Core dependencies

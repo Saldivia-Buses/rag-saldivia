@@ -179,7 +179,7 @@ func (c *Chat) AddMessage(ctx context.Context, sessionID, userID, role, content 
 	}
 
 	// Touch session updated_at (user_id filter for defense-in-depth)
-	c.repo.TouchSession(ctx, repository.TouchSessionParams{
+	_ = c.repo.TouchSession(ctx, repository.TouchSessionParams{
 		ID:     sessionID,
 		UserID: userID,
 	})

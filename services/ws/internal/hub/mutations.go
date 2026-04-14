@@ -43,7 +43,7 @@ func NewMutationHandler(chatGRPCTarget string) *MutationHandler {
 // Close closes the underlying gRPC connection.
 func (h *MutationHandler) Close() {
 	if h.chatConn != nil {
-		h.chatConn.Close()
+		_ = h.chatConn.Close()
 	}
 }
 

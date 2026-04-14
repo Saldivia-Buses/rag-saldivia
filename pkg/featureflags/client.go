@@ -78,7 +78,7 @@ func (c *Client) evaluate(ctx context.Context, jwt string) (map[string]bool, err
 	if err != nil {
 		return nil, fmt.Errorf("evaluate flags: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("evaluate flags: status %d", resp.StatusCode)
