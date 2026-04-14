@@ -1,3 +1,0 @@
-[submodule "vendor/rag-blueprint"]
-	path = vendor/rag-blueprint
-	url = https://github.com/NVIDIA-AI-Blueprints/rag.git
