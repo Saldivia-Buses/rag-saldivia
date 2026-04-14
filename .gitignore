@@ -67,6 +67,9 @@ playwright-report/
 **/playwright-report/
 .playwright-mcp/
 
+# --- MCP config (contains API keys) ---
+.mcp.json
+
 # --- IDE ---
 .vscode/
 .idea/
