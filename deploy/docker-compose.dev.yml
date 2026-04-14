@@ -480,6 +480,27 @@ services:
       - "traefik.http.routers.feedback-docker.priority=100"
       - "traefik.http.services.feedback-docker.loadbalancer.server.port=8008"
 
+  healthwatch:
+    <<: *service-defaults
+    profiles: [full]
+    build:
+      context: ..
+      dockerfile: services/healthwatch/Dockerfile
+    environment:
+      <<: *env-common
+      HEALTHWATCH_PORT: "8014"
+      POSTGRES_PLATFORM_URL: postgres://sda:sda_dev@postgres:5432/sda_platform?sslmode=disable
+      PROMETHEUS_URL: http://host.docker.internal:9090
+      DOCKER_PROXY_URL: http://host.docker.internal:2375
+    ports:
+      - "8014:8014"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.healthwatch-docker.rule=PathPrefix(`/v1/healthwatch`)"
+      - "traefik.http.routers.healthwatch-docker.entrypoints=web"
+      - "traefik.http.routers.healthwatch-docker.priority=100"
+      - "traefik.http.services.healthwatch-docker.loadbalancer.server.port=8014"
+
   bigbrother:
     <<: *service-defaults
     profiles: [full]

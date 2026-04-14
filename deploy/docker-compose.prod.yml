@@ -877,6 +877,55 @@ services:
         reservations:
           memory: 128M
 
+  # ── HealthWatch (Plan 23 — health monitoring + AI triage) ──────────
+
+  healthwatch:
+    <<: *service-defaults
+    image: ghcr.io/camionerou/sda-healthwatch:${HEALTHWATCH_VERSION:-local}
+    build:
+      context: ..
+      dockerfile: services/healthwatch/Dockerfile
+      args:
+        <<: *build-args
+        VERSION: ${HEALTHWATCH_VERSION:-dev}
+    depends_on:
+      postgres-platform:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      HEALTHWATCH_PORT: "8014"
+      PROMETHEUS_URL: http://prometheus:9090
+      DOCKER_PROXY_URL: http://docker-socket-proxy:2375
+      PLATFORM_TENANT_SLUG: platform
+      REDIS_URL: redis:6379
+      <<: *jwt-public
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    secrets:
+      - jwt_public_key
+      - db_platform_url
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8014/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - frontend
+      - backend
+      - data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.healthwatch.rule=PathPrefix(`/v1/healthwatch`)"
+      - "traefik.http.routers.healthwatch.entrypoints=websecure"
+      - "traefik.http.services.healthwatch.loadbalancer.server.port=8014"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.5"
+
   # ── Self-Healing ────────────────────────────────────────────────────
   # Autoheal monitors Docker health checks and restarts unhealthy containers.
   # Docker restart policies only restart EXITED containers, not UNHEALTHY ones.
