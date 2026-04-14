@@ -37,6 +37,7 @@ CLOUD                                    INHOUSE (workstation)
                                          │    ├─► Platform (Go)          │
                                          │    ├─► Ingest (Go)            │
                                          │    ├─► Extractor (Python)     │
+                                         │    ├─► HealthWatch (Go)       │
                                          │    └─► [N modular services]   │
                                          │                                │
                                          │  SGLang (model server, GPU)   │
@@ -88,6 +89,7 @@ services/                    ← Go microservicios
   feedback/                  ← User feedback collection + aggregation
   ingest/                    ← Pipeline de documentos + tree generation
   bigbrother/                ← Network intelligence (ARP scan, PLC, SSH/WinRM, EXCEPTION: Alpine)
+  healthwatch/               ← System health monitoring + AI triage (port 8014)
   rag/                       ← [DEPRECATED — replaced by agent/]
   .scaffold/                 ← Template para make new-service
 

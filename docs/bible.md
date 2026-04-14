@@ -57,7 +57,9 @@
 | Logger | slog (Go stdlib) |
 | Testing | go test + testify + testcontainers |
 | Testing frontend | bun:test + Playwright |
-| CI/CD | GitHub Actions |
+| CI/CD | GitHub Actions (4 gates + 6-phase deploy + AI review) |
+| Monitoring | HealthWatch service (port 8014) + Alertmanager → notification |
+| Feature flags | Platform service (deterministic rollout, kill switch) |
 | CLI | Go (Cobra) |
 | MCP | Go |
 
@@ -93,17 +95,34 @@ Scopes: `auth`, `chat`, `agent`, `search`, `astro`, `traces`, `ingest`, `extract
 
 1. Feature branch desde `main`
 2. Implementar + tests + docs (en el mismo PR)
-3. Push → CI automatico
-4. Review (Opus o humano)
-5. CI verde + review aprobado → squash merge
-6. Post-merge: version bump + changelog + Docker image + GitHub Release
+3. Push → CI automatico (4 gates) + AI review (3 passes)
+4. CI verde + AI review sin critical/high → squash merge
+5. Post-merge: version bump + changelog + Docker image + GitHub Release
+
+### CI Pipeline (4 gates secuenciales)
+
+1. **Gate 1 — Verify:** commitlint, go build, go vet (paralelos)
+2. **Gate 2 — Test:** go test (necesita Gate 1)
+3. **Gate 3 — Security:** gosec + trivy (necesita Gate 1)
+4. **Gate 4 — Docker:** build todas las imagenes (necesita Gates 2+3)
+
+Service matrix generada dinamicamente desde `services/*/Dockerfile`.
+
+### AI Review Gates (3 passes paralelos en cada PR)
+
+1. **Quality:** logica, performance, invariantes SDA (Opus)
+2. **Security:** auth boundaries, tenant isolation, injection, secrets (Opus)
+3. **Dependencies:** vulnerabilidades, base images, migration pairs (Sonnet)
+
+Output en JSON estructurado, scoring via `jq`. Critical/high bloquean merge.
+`@claude` disponible en issues/PRs (restringido a org members).
 
 ### Quality gates
 
-1. `make test` (unit + contract del servicio afectado)
-2. `make lint` (golangci-lint)
-3. `make build` (compila)
-4. Review aprobado
+1. CI 4 gates verdes
+2. AI review sin findings critical/high
+3. `make test` local (unit + contract)
+4. `make lint` (golangci-lint)
 5. Docs actualizadas (checklist en PR)
 
 ---
@@ -187,11 +206,39 @@ entienda todo sin preguntar. Si un agente se confunde, el doc esta mal.
 
 ## Deploy
 
-- Deploy a prod es siempre manual: `sda deploy auth` o `make deploy-auth`
-- Nunca deploy automatico en merge a main
-- Servicios CPU: start-first (zero downtime, Railway-style)
-- Servicios GPU: drain-then-swap (5-15s buffer via WebSocket Hub)
-- Rollback: `sda rollback auth` (pull imagen anterior, re-start)
+### Pipeline (6 fases, `.github/workflows/deploy.yml`)
+
+1. **Preflight** (self-hosted) — `deploy/scripts/preflight.sh`
+2. **Build + Push** (GitHub-hosted) — SHA-pinned images a GHCR
+3. **Deploy Dev** (optional, continue-on-error)
+4. **Deploy Prod** (requires environment approval) — captura rollback state antes
+5. **Smoke tests** — `deploy/scripts/health-check.sh`
+6. **Record + Notify** — `POST /v1/platform/deploys` + notification
+
+**Circuit-breaker:** si smoke tests fallan → rollback automatico via `deploy/scripts/rollback.sh`
+(parser seguro, no usa `source`, valida con regex).
+
+### Reglas
+
+- Deploy a prod requiere approval via GitHub Environments
+- Images taggeadas por SHA (deterministic), no `latest`
+- Rollback captura versiones actuales antes de deployar
+- Dependency ordering en compose: postgres → redis → nats → Go services
+
+### Self-Healing Loop
+
+- **HealthWatch** (port 8014): monitorea servicios, Prometheus, Docker
+- **Daily triage** (7PM Argentina): AI analiza health summary → crea GitHub Issues
+- **Post-deploy verification**: auto-cierra issues si el servicio volvió a healthy
+- **Alertmanager → notification**: alertas criticas envian email inmediato
+
+### Comandos clave
+
+```bash
+make versions          # Ver versiones running vs expected
+make deploy            # Deploy a produccion (via workflow)
+make status            # Estado de servicios + GPU
+```
 
 ---
 
