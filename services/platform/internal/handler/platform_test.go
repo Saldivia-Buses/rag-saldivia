@@ -32,6 +32,7 @@ type mockPlatformService struct {
 	modules []db.Module
 	flags   []service.FeatureFlag
 	config  service.ConfigEntry
+	deploys []service.DeployRecord
 	err     error
 }
 
@@ -113,6 +114,25 @@ func (m *mockPlatformService) GetConfig(_ context.Context, key string) (service.
 
 func (m *mockPlatformService) SetConfig(_ context.Context, key string, value []byte, updatedBy string) error {
 	return m.err
+}
+
+func (m *mockPlatformService) RecordDeploy(_ context.Context, arg db.InsertDeployLogParams) (service.DeployRecord, error) {
+	if m.err != nil {
+		return service.DeployRecord{}, m.err
+	}
+	return service.DeployRecord{
+		ID: "d-new", Service: arg.Service,
+		VersionFrom: arg.VersionFrom, VersionTo: arg.VersionTo,
+		Status: arg.Status, DeployedBy: arg.DeployedBy,
+		StartedAt: "2026-04-14T10:00:00Z",
+	}, nil
+}
+
+func (m *mockPlatformService) ListDeploys(_ context.Context, _, _ int32) ([]service.DeployRecord, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+	return m.deploys, nil
 }
 
 // --- helpers ---
@@ -655,5 +675,176 @@ func TestListModules_ServiceError_Returns500(t *testing.T) {
 
 	if rec.Code != http.StatusInternalServerError {
 		t.Fatalf("expected 500, got %d", rec.Code)
+	}
+}
+
+// ── Deploy log ──────────────────────────────────────────────────────────────
+
+func TestRecordDeploy_Success_Returns201(t *testing.T) {
+	r := setupPlatformRouter(&mockPlatformService{})
+
+	body := `{"service":"auth","version_from":"1.0.0","version_to":"1.1.0","status":"success"}`
+	req := withAdminAuth(httptest.NewRequest(http.MethodPost, "/v1/platform/deploys", strings.NewReader(body)), t)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var resp service.DeployRecord
+	json.NewDecoder(rec.Body).Decode(&resp)
+	if resp.Service != "auth" {
+		t.Errorf("expected service auth, got %s", resp.Service)
+	}
+	if resp.VersionTo != "1.1.0" {
+		t.Errorf("expected version_to 1.1.0, got %s", resp.VersionTo)
+	}
+}
+
+func TestRecordDeploy_MissingService_Returns400(t *testing.T) {
+	r := setupPlatformRouter(&mockPlatformService{})
+
+	body := `{"version_to":"1.1.0"}`
+	req := withAdminAuth(httptest.NewRequest(http.MethodPost, "/v1/platform/deploys", strings.NewReader(body)), t)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestRecordDeploy_InvalidJSON_Returns400(t *testing.T) {
+	r := setupPlatformRouter(&mockPlatformService{})
+
+	req := withAdminAuth(httptest.NewRequest(http.MethodPost, "/v1/platform/deploys", strings.NewReader("nope")), t)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d", rec.Code)
+	}
+}
+
+func TestRecordDeploy_NoAuth_Returns401(t *testing.T) {
+	r := setupPlatformRouter(&mockPlatformService{})
+
+	body := `{"service":"auth","version_to":"1.1.0"}`
+	req := httptest.NewRequest(http.MethodPost, "/v1/platform/deploys", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d", rec.Code)
+	}
+}
+
+func TestRecordDeploy_ServiceError_Returns500(t *testing.T) {
+	mock := &mockPlatformService{err: errors.New("db exploded")}
+	r := setupPlatformRouter(mock)
+
+	body := `{"service":"auth","version_to":"1.1.0"}`
+	req := withAdminAuth(httptest.NewRequest(http.MethodPost, "/v1/platform/deploys", strings.NewReader(body)), t)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("expected 500, got %d", rec.Code)
+	}
+}
+
+func TestListDeploys_Success(t *testing.T) {
+	mock := &mockPlatformService{
+		deploys: []service.DeployRecord{
+			{ID: "d-1", Service: "auth", VersionTo: "1.0.0", Status: "success", StartedAt: "2026-04-14T10:00:00Z"},
+			{ID: "d-2", Service: "chat", VersionTo: "2.0.0", Status: "pending", StartedAt: "2026-04-14T11:00:00Z"},
+		},
+	}
+	r := setupPlatformRouter(mock)
+
+	req := withAdminAuth(httptest.NewRequest(http.MethodGet, "/v1/platform/deploys", nil), t)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var deploys []service.DeployRecord
+	json.NewDecoder(rec.Body).Decode(&deploys)
+	if len(deploys) != 2 {
+		t.Errorf("expected 2 deploys, got %d", len(deploys))
+	}
+}
+
+func TestListDeploys_Empty_ReturnsEmptyArray(t *testing.T) {
+	mock := &mockPlatformService{deploys: []service.DeployRecord{}}
+	r := setupPlatformRouter(mock)
+
+	req := withAdminAuth(httptest.NewRequest(http.MethodGet, "/v1/platform/deploys", nil), t)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var deploys []service.DeployRecord
+	json.NewDecoder(rec.Body).Decode(&deploys)
+	if len(deploys) != 0 {
+		t.Errorf("expected 0 deploys, got %d", len(deploys))
+	}
+}
+
+func TestListDeploys_NoAuth_Returns401(t *testing.T) {
+	r := setupPlatformRouter(&mockPlatformService{})
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/platform/deploys", nil)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d", rec.Code)
+	}
+}
+
+func TestListDeploys_ServiceError_Returns500(t *testing.T) {
+	mock := &mockPlatformService{err: errors.New("db down")}
+	r := setupPlatformRouter(mock)
+
+	req := withAdminAuth(httptest.NewRequest(http.MethodGet, "/v1/platform/deploys", nil), t)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("expected 500, got %d", rec.Code)
+	}
+}
+
+func TestRecordDeploy_DefaultStatus_Pending(t *testing.T) {
+	mock := &mockPlatformService{}
+	r := setupPlatformRouter(mock)
+
+	// No status field — handler should default to "pending"
+	body := `{"service":"auth","version_from":"1.0.0","version_to":"1.1.0"}`
+	req := withAdminAuth(httptest.NewRequest(http.MethodPost, "/v1/platform/deploys", strings.NewReader(body)), t)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var resp service.DeployRecord
+	json.NewDecoder(rec.Body).Decode(&resp)
+	if resp.Status != "pending" {
+		t.Errorf("expected default status pending, got %s", resp.Status)
 	}
 }

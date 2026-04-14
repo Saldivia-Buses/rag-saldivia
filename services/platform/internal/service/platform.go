@@ -369,6 +369,74 @@ func (p *Platform) SetConfig(ctx context.Context, key string, value []byte, upda
 	return nil
 }
 
+// ── Deploy Log ─────────────────────────────────────────────────────────
+
+// DeployRecord is a safe representation of a deploy log entry.
+type DeployRecord struct {
+	ID          string  `json:"id"`
+	Service     string  `json:"service"`
+	VersionFrom string  `json:"version_from"`
+	VersionTo   string  `json:"version_to"`
+	Status      string  `json:"status"`
+	DeployedBy  string  `json:"deployed_by"`
+	StartedAt   string  `json:"started_at"`
+	FinishedAt  *string `json:"finished_at,omitempty"`
+	Notes       string  `json:"notes,omitempty"`
+}
+
+func deployLogToRecord(d db.DeployLog) DeployRecord {
+	rec := DeployRecord{
+		ID:          d.ID,
+		Service:     d.Service,
+		VersionFrom: d.VersionFrom,
+		VersionTo:   d.VersionTo,
+		Status:      d.Status,
+		DeployedBy:  d.DeployedBy,
+	}
+	if d.StartedAt.Valid {
+		rec.StartedAt = d.StartedAt.Time.Format("2006-01-02T15:04:05Z")
+	}
+	if d.FinishedAt.Valid {
+		s := d.FinishedAt.Time.Format("2006-01-02T15:04:05Z")
+		rec.FinishedAt = &s
+	}
+	if d.Notes.Valid {
+		rec.Notes = d.Notes.String
+	}
+	return rec
+}
+
+// RecordDeploy inserts a deploy log entry and publishes a NATS lifecycle event.
+func (p *Platform) RecordDeploy(ctx context.Context, arg db.InsertDeployLogParams) (DeployRecord, error) {
+	row, err := p.queries.InsertDeployLog(ctx, arg)
+	if err != nil {
+		return DeployRecord{}, fmt.Errorf("record deploy: %w", err)
+	}
+	rec := deployLogToRecord(row)
+	p.publishLifecycleEvent("platform", "deploy.created", rec)
+	p.auditor.Write(ctx, audit.Entry{
+		UserID: arg.DeployedBy, Action: "deploy.created", Resource: rec.ID,
+		Details: map[string]any{"service": arg.Service, "from": arg.VersionFrom, "to": arg.VersionTo},
+	})
+	return rec, nil
+}
+
+// ListDeploys returns recent deploy log entries, newest first.
+func (p *Platform) ListDeploys(ctx context.Context, limit, offset int32) ([]DeployRecord, error) {
+	rows, err := p.queries.ListDeployLogs(ctx, db.ListDeployLogsParams{
+		Limit:  limit,
+		Offset: offset,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("list deploys: %w", err)
+	}
+	records := make([]DeployRecord, 0, len(rows))
+	for _, r := range rows {
+		records = append(records, deployLogToRecord(r))
+	}
+	return records, nil
+}
+
 // isDuplicateKey checks for unique constraint violation (PG error code 23505).
 func isDuplicateKey(err error) bool {
 	var pgErr *pgconn.PgError

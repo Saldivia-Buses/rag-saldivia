@@ -106,6 +106,22 @@ type GlobalConfig struct {
 	UpdatedBy string             `json:"updated_by"`
 }
 
+type InfraAlert struct {
+	ID          string             `json:"id"`
+	Fingerprint string             `json:"fingerprint"`
+	Status      string             `json:"status"`
+	Severity    string             `json:"severity"`
+	Alertname   string             `json:"alertname"`
+	Service     pgtype.Text        `json:"service"`
+	Summary     pgtype.Text        `json:"summary"`
+	Description pgtype.Text        `json:"description"`
+	Labels      []byte             `json:"labels"`
+	Annotations []byte             `json:"annotations"`
+	StartsAt    pgtype.Timestamptz `json:"starts_at"`
+	EndsAt      pgtype.Timestamptz `json:"ends_at"`
+	ReceivedAt  pgtype.Timestamptz `json:"received_at"`
+}
+
 type LlmModel struct {
 	ID              string             `json:"id"`
 	Name            string             `json:"name"`

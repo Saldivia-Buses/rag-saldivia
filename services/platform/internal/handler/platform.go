@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
@@ -36,6 +37,8 @@ type PlatformService interface {
 	ToggleFeatureFlag(ctx context.Context, id string, enabled bool) error
 	GetConfig(ctx context.Context, key string) (service.ConfigEntry, error)
 	SetConfig(ctx context.Context, key string, value []byte, updatedBy string) error
+	RecordDeploy(ctx context.Context, arg db.InsertDeployLogParams) (service.DeployRecord, error)
+	ListDeploys(ctx context.Context, limit, offset int32) ([]service.DeployRecord, error)
 }
 
 // Platform handles HTTP requests for platform operations.
@@ -81,6 +84,10 @@ func (h *Platform) Routes() chi.Router {
 	// Global config
 	r.Get("/config/{key}", h.GetConfig)
 	r.Put("/config/{key}", h.SetConfig)
+
+	// Deploy log
+	r.Post("/deploys", h.RecordDeploy)
+	r.Get("/deploys", h.ListDeploys)
 
 	return r
 }
@@ -362,6 +369,72 @@ func (h *Platform) SetConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// ── Deploy Log ──────────────────────────────────────────────────────────
+
+type recordDeployRequest struct {
+	Service     string `json:"service"`
+	VersionFrom string `json:"version_from"`
+	VersionTo   string `json:"version_to"`
+	Status      string `json:"status"`
+	Notes       string `json:"notes,omitempty"`
+}
+
+// RecordDeploy handles POST /v1/platform/deploys
+func (h *Platform) RecordDeploy(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+
+	var req recordDeployRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid request body"))
+		return
+	}
+
+	if req.Service == "" || req.VersionTo == "" {
+		httperr.WriteError(w, r, httperr.InvalidInput("service and version_to are required"))
+		return
+	}
+
+	deployedBy := r.Header.Get("X-User-ID")
+	if deployedBy == "" {
+		deployedBy = "system"
+	}
+
+	status := req.Status
+	if status == "" {
+		status = "pending"
+	}
+
+	var notes pgtype.Text
+	if req.Notes != "" {
+		notes = pgtype.Text{String: req.Notes, Valid: true}
+	}
+
+	record, err := h.svc.RecordDeploy(r.Context(), db.InsertDeployLogParams{
+		Service:     req.Service,
+		VersionFrom: req.VersionFrom,
+		VersionTo:   req.VersionTo,
+		Status:      status,
+		DeployedBy:  deployedBy,
+		Notes:       notes,
+	})
+	if err != nil {
+		httperr.WriteError(w, r, httperr.Internal(err))
+		return
+	}
+	writeJSON(w, http.StatusCreated, record)
+}
+
+// ListDeploys handles GET /v1/platform/deploys
+func (h *Platform) ListDeploys(w http.ResponseWriter, r *http.Request) {
+	pg := pagination.Parse(r)
+	deploys, err := h.svc.ListDeploys(r.Context(), int32(pg.Limit()), int32(pg.Offset()))
+	if err != nil {
+		httperr.WriteError(w, r, httperr.Internal(err))
+		return
+	}
+	writeJSON(w, http.StatusOK, deploys)
 }
 
 // ── Middleware & Helpers ─────────────────────────────────────────────────
