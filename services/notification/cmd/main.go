@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/nats-io/nats.go"
@@ -82,5 +83,50 @@ func main() {
 		r.Mount("/v1/notifications", notifHandler.Routes())
 	})
 
+	// ── Internal routes (no Traefik, no JWT — token-based auth) ────────
+	// The alert webhook is authenticated via a shared secret from Docker
+	// secrets, not JWT. It's only reachable from the Docker internal
+	// network (DS3).
+	setupAlertWebhook(ctx, app, r, mailer)
+
 	app.Run()
+}
+
+// setupAlertWebhook configures the internal alert webhook endpoint.
+// Requires POSTGRES_PLATFORM_URL for alert persistence and
+// ALERTMANAGER_WEBHOOK_TOKEN for auth. Both are optional — if not
+// configured, the webhook is disabled (useful for dev environments).
+func setupAlertWebhook(ctx context.Context, app *server.App, r chi.Router, mailer *service.SMTPMailer) {
+	platformURL := config.Env("POSTGRES_PLATFORM_URL", "")
+	webhookToken := loadSecret("/run/secrets/alertmanager_webhook_token",
+		config.Env("ALERTMANAGER_WEBHOOK_TOKEN", ""))
+
+	if platformURL == "" || webhookToken == "" {
+		slog.Info("alert webhook disabled (POSTGRES_PLATFORM_URL or webhook token not configured)")
+		return
+	}
+
+	platformPool, err := database.NewPool(ctx, platformURL)
+	if err != nil {
+		slog.Error("failed to connect to platform database for alerts", "error", err)
+		return
+	}
+	app.OnShutdown(platformPool.Close)
+
+	alertStore := service.NewPgAlertStore(platformPool)
+	alertTo := config.Env("ALERT_CRITICAL_EMAIL", "")
+
+	webhookHandler := handler.NewAlertWebhook(webhookToken, alertStore, mailer, alertTo)
+	r.Post("/internal/webhook/alert", webhookHandler.HandleAlertWebhook)
+
+	slog.Info("alert webhook enabled", "path", "/internal/webhook/alert")
+}
+
+// loadSecret reads a Docker secret file, falling back to a default value.
+func loadSecret(path, fallback string) string {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return fallback
+	}
+	return strings.TrimSpace(string(data))
 }

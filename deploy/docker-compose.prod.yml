@@ -28,6 +28,8 @@ secrets:
     file: ./secrets/db-platform-password
   bb_kek:
     file: ./secrets/bb-kek
+  alertmanager_webhook_token:
+    file: ./secrets/alertmanager-webhook-token
 
 x-service-defaults: &service-defaults
   restart: unless-stopped
@@ -509,9 +511,12 @@ services:
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_FROM: ${SMTP_FROM:-noreply@${SDA_DOMAIN:-sda.app}}
+      ALERT_CRITICAL_EMAIL: ${ALERT_CRITICAL_EMAIL:-}
     secrets:
       - jwt_public_key
       - db_tenant_template_url
+      - db_platform_url
+      - alertmanager_webhook_token
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8005/health || exit 1"]
       interval: 10s
@@ -872,7 +877,8 @@ services:
 
 networks:
   frontend:    # traefik ↔ Go services
-  backend:     # Go services ↔ NATS
+  backend:     # Go services ↔ NATS (named for cross-compose alertmanager access)
+    name: sda-backend
   data:        # Go services ↔ PostgreSQL, Redis
   lan:         # macvlan for BigBrother physical LAN access
     driver: macvlan
