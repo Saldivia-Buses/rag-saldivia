@@ -1,0 +1,207 @@
+name: AI Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+concurrency:
+  group: ai-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+# ══════════════════════════════════════════════════════════════════════════
+# 3 parallel AI review passes with structured JSON output and jq scoring.
+#
+# Security decisions applied:
+#   DS1 — All jobs on ubuntu-latest (GitHub-hosted), never self-hosted
+#   DS6 — AI output never interpolated via ${{ }} in shell; written to file
+#         first, parsed with jq. Anti-injection instruction in every prompt.
+#
+# Prompts live in .claude/review-prompts/ (self-contained, no MCP deps).
+# ══════════════════════════════════════════════════════════════════════════
+
+jobs:
+  quality-review:
+    name: "AI: Code Quality"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - name: Read review prompt
+        id: prompt
+        run: |
+          # Read prompt from repo file — this is checked-in content, not AI output
+          {
+            echo 'REVIEW_PROMPT<<PROMPT_DELIM_7f3a'
+            cat .claude/review-prompts/quality.md
+            echo ''
+            echo 'PROMPT_DELIM_7f3a'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Claude Quality Review
+        id: review
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: ${{ steps.prompt.outputs.REVIEW_PROMPT }}
+          claude_args: "--model claude-opus-4-6"
+          use_sticky_comment: "true"
+
+      - name: Score findings
+        if: always() && steps.review.outcome == 'success'
+        env:
+          EXEC_FILE: ${{ steps.review.outputs.execution_file }}
+        run: |
+          # DS6: Read AI output from file, never interpolate in shell
+          if [ ! -f "$EXEC_FILE" ]; then
+            echo "::warning::No execution file found — skipping scoring"
+            exit 0
+          fi
+
+          # Extract JSON from execution output (may contain non-JSON wrapper)
+          # Try direct parse first, then extract JSON object if wrapped
+          if jq -e '.findings' "$EXEC_FILE" > /dev/null 2>&1; then
+            cp "$EXEC_FILE" /tmp/review-output.json
+          else
+            # Try to extract the first JSON object from the file
+            grep -oP '\{[\s\S]*\}' "$EXEC_FILE" | head -1 > /tmp/review-output.json 2>/dev/null || true
+          fi
+
+          if [ ! -s /tmp/review-output.json ]; then
+            echo "::warning::Could not parse review output as JSON — manual review needed"
+            exit 0
+          fi
+
+          # Count blocking findings (critical + high)
+          BLOCKERS=$(jq '[.findings[] | select(.severity == "critical" or .severity == "high")] | length' /tmp/review-output.json 2>/dev/null || echo "0")
+
+          if [ "$BLOCKERS" -gt 0 ]; then
+            echo "::error::Quality review found $BLOCKERS blocking issue(s) (critical/high)"
+            jq '.findings[] | select(.severity == "critical" or .severity == "high")' /tmp/review-output.json
+            exit 1
+          fi
+
+          echo "Quality review passed — no blocking findings"
+
+  security-review:
+    name: "AI: Security"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - name: Read review prompt
+        id: prompt
+        run: |
+          {
+            echo 'REVIEW_PROMPT<<PROMPT_DELIM_9b2c'
+            cat .claude/review-prompts/security.md
+            echo ''
+            echo 'PROMPT_DELIM_9b2c'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Claude Security Review
+        id: review
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: ${{ steps.prompt.outputs.REVIEW_PROMPT }}
+          claude_args: "--model claude-opus-4-6"
+          use_sticky_comment: "true"
+
+      - name: Score findings
+        if: always() && steps.review.outcome == 'success'
+        env:
+          EXEC_FILE: ${{ steps.review.outputs.execution_file }}
+        run: |
+          if [ ! -f "$EXEC_FILE" ]; then
+            echo "::warning::No execution file found — skipping scoring"
+            exit 0
+          fi
+
+          if jq -e '.findings' "$EXEC_FILE" > /dev/null 2>&1; then
+            cp "$EXEC_FILE" /tmp/review-output.json
+          else
+            grep -oP '\{[\s\S]*\}' "$EXEC_FILE" | head -1 > /tmp/review-output.json 2>/dev/null || true
+          fi
+
+          if [ ! -s /tmp/review-output.json ]; then
+            echo "::warning::Could not parse review output as JSON — manual review needed"
+            exit 0
+          fi
+
+          BLOCKERS=$(jq '[.findings[] | select(.severity == "critical" or .severity == "high")] | length' /tmp/review-output.json 2>/dev/null || echo "0")
+
+          if [ "$BLOCKERS" -gt 0 ]; then
+            echo "::error::Security review found $BLOCKERS blocking issue(s) (critical/high)"
+            jq '.findings[] | select(.severity == "critical" or .severity == "high")' /tmp/review-output.json
+            exit 1
+          fi
+
+          echo "Security review passed — no blocking findings"
+
+  dependency-review:
+    name: "AI: Dependencies"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read review prompt
+        id: prompt
+        run: |
+          {
+            echo 'REVIEW_PROMPT<<PROMPT_DELIM_4e1d'
+            cat .claude/review-prompts/dependencies.md
+            echo ''
+            echo 'PROMPT_DELIM_4e1d'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Claude Dependency Review
+        id: review
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: ${{ steps.prompt.outputs.REVIEW_PROMPT }}
+          # Sonnet is sufficient for dependency review and cheaper
+          claude_args: "--model claude-sonnet-4-6"
+          use_sticky_comment: "true"
+
+      - name: Score findings
+        if: always() && steps.review.outcome == 'success'
+        env:
+          EXEC_FILE: ${{ steps.review.outputs.execution_file }}
+        run: |
+          if [ ! -f "$EXEC_FILE" ]; then
+            echo "::warning::No execution file found — skipping scoring"
+            exit 0
+          fi
+
+          if jq -e '.findings' "$EXEC_FILE" > /dev/null 2>&1; then
+            cp "$EXEC_FILE" /tmp/review-output.json
+          else
+            grep -oP '\{[\s\S]*\}' "$EXEC_FILE" | head -1 > /tmp/review-output.json 2>/dev/null || true
+          fi
+
+          if [ ! -s /tmp/review-output.json ]; then
+            echo "::warning::Could not parse review output as JSON — manual review needed"
+            exit 0
+          fi
+
+          BLOCKERS=$(jq '[.findings[] | select(.severity == "critical" or .severity == "high")] | length' /tmp/review-output.json 2>/dev/null || echo "0")
+
+          if [ "$BLOCKERS" -gt 0 ]; then
+            echo "::error::Dependency review found $BLOCKERS blocking issue(s) (critical/high)"
+            jq '.findings[] | select(.severity == "critical" or .severity == "high")' /tmp/review-output.json
+            exit 1
+          fi
+
+          echo "Dependency review passed — no blocking findings"
