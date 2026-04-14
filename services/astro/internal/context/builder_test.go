@@ -12,6 +12,10 @@ import (
 
 func TestMain(m *testing.M) {
 	p := os.Getenv("EPHE_PATH")
+	if p == "" {
+		// Ephemeris data not available — skip this package's tests (CGO/Linux-only).
+		os.Exit(0)
+	}
 	ephemeris.Init(p)
 	code := m.Run()
 	ephemeris.Close()
