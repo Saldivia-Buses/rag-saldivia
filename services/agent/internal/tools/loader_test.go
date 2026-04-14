@@ -10,7 +10,9 @@ func TestLoadModuleTools(t *testing.T) {
 	// Create temp modules dir with a test manifest
 	dir := t.TempDir()
 	modDir := filepath.Join(dir, "testmod")
-	os.MkdirAll(modDir, 0755)
+	if err := os.MkdirAll(modDir, 0755); err != nil {
+		t.Fatal(err)
+	}
 
 	manifest := `
 module: testmod
@@ -42,7 +44,9 @@ tools:
         target:
           type: string
 `
-	os.WriteFile(filepath.Join(modDir, "tools.yaml"), []byte(manifest), 0644)
+	if err := os.WriteFile(filepath.Join(modDir, "tools.yaml"), []byte(manifest), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	// Load with module enabled
 	defs, err := LoadModuleTools(dir, map[string]bool{"testmod": true}, map[string]string{"test": "http://test:8000"})
@@ -63,8 +67,12 @@ tools:
 func TestLoadModuleTools_DisabledModule(t *testing.T) {
 	dir := t.TempDir()
 	modDir := filepath.Join(dir, "disabled")
-	os.MkdirAll(modDir, 0755)
-	os.WriteFile(filepath.Join(modDir, "tools.yaml"), []byte("module: disabled\nname: X\ntools: []"), 0644)
+	if err := os.MkdirAll(modDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(modDir, "tools.yaml"), []byte("module: disabled\nname: X\ntools: []"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	defs, err := LoadModuleTools(dir, map[string]bool{}, map[string]string{})
 	if err != nil {
@@ -88,9 +96,13 @@ func TestLoadModuleTools_NoDir(t *testing.T) {
 func TestLoadModuleTools_InvalidYAML_Skips(t *testing.T) {
 	dir := t.TempDir()
 	modDir := filepath.Join(dir, "badmod")
-	os.MkdirAll(modDir, 0755)
+	if err := os.MkdirAll(modDir, 0755); err != nil {
+		t.Fatal(err)
+	}
 	// Invalid YAML — should be skipped, not fatal
-	os.WriteFile(filepath.Join(modDir, "tools.yaml"), []byte(":::invalid yaml:::"), 0644)
+	if err := os.WriteFile(filepath.Join(modDir, "tools.yaml"), []byte(":::invalid yaml:::"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	// Module is enabled but YAML is invalid — should be skipped gracefully
 	defs, err := LoadModuleTools(dir, map[string]bool{"badmod": true}, map[string]string{})
@@ -106,7 +118,9 @@ func TestLoadModuleTools_ToolMissingServiceURL_Skipped(t *testing.T) {
 	// A tool whose service has no URL configured must be skipped, not fatal.
 	dir := t.TempDir()
 	modDir := filepath.Join(dir, "mymod")
-	os.MkdirAll(modDir, 0755)
+	if err := os.MkdirAll(modDir, 0755); err != nil {
+		t.Fatal(err)
+	}
 	manifest := `
 module: mymod
 name: My Module
@@ -124,7 +138,9 @@ tools:
     type: read
     description: "missing service URL"
 `
-	os.WriteFile(filepath.Join(modDir, "tools.yaml"), []byte(manifest), 0644)
+	if err := os.WriteFile(filepath.Join(modDir, "tools.yaml"), []byte(manifest), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	defs, err := LoadModuleTools(
 		dir,
@@ -145,8 +161,12 @@ tools:
 func TestLoadModuleTools_EmptyToolsList(t *testing.T) {
 	dir := t.TempDir()
 	modDir := filepath.Join(dir, "emptymod")
-	os.MkdirAll(modDir, 0755)
-	os.WriteFile(filepath.Join(modDir, "tools.yaml"), []byte("module: emptymod\nname: Empty\ntools: []\n"), 0644)
+	if err := os.MkdirAll(modDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(modDir, "tools.yaml"), []byte("module: emptymod\nname: Empty\ntools: []\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	defs, err := LoadModuleTools(dir, map[string]bool{"emptymod": true}, map[string]string{})
 	if err != nil {
@@ -304,7 +324,9 @@ func TestLoadModuleTools_HTTPProtocolTool(t *testing.T) {
 	// Verify HTTP protocol tools get their endpoint resolved correctly
 	dir := t.TempDir()
 	modDir := filepath.Join(dir, "astromod")
-	os.MkdirAll(modDir, 0755)
+	if err := os.MkdirAll(modDir, 0755); err != nil {
+		t.Fatal(err)
+	}
 	manifest := `
 module: astromod
 name: Astro Module
@@ -316,7 +338,9 @@ tools:
     type: read
     description: "Build natal chart"
 `
-	os.WriteFile(filepath.Join(modDir, "tools.yaml"), []byte(manifest), 0644)
+	if err := os.WriteFile(filepath.Join(modDir, "tools.yaml"), []byte(manifest), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	defs, err := LoadModuleTools(
 		dir,

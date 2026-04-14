@@ -168,5 +168,5 @@ func TestDial_ReturnsConnection(t *testing.T) {
 	if conn == nil {
 		t.Fatal("expected non-nil connection")
 	}
-	conn.Close()
+	_ = conn.Close()
 }

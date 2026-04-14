@@ -21,7 +21,7 @@ func newTestBlacklist(t *testing.T) *security.TokenBlacklist {
 	if err := rdb.Ping(ctx).Err(); err != nil {
 		t.Skipf("Redis not available: %v", err)
 	}
-	t.Cleanup(func() { rdb.FlushDB(ctx); rdb.Close() })
+	t.Cleanup(func() { rdb.FlushDB(ctx); _ = rdb.Close() })
 	return security.NewTokenBlacklist(rdb)
 }
 
@@ -35,7 +35,7 @@ func TestRevoke_And_IsRevoked(t *testing.T) {
 		t.Fatal("should not be revoked initially")
 	}
 
-	bl.Revoke(ctx, jti, time.Now().Add(1*time.Hour))
+	_ = bl.Revoke(ctx, jti, time.Now().Add(1*time.Hour))
 
 	revoked, _ = bl.IsRevoked(ctx, jti)
 	if !revoked {
@@ -46,7 +46,7 @@ func TestRevoke_And_IsRevoked(t *testing.T) {
 func TestRevoke_ExpiredToken_NoOp(t *testing.T) {
 	bl := newTestBlacklist(t)
 	ctx := context.Background()
-	bl.Revoke(ctx, "expired", time.Now().Add(-1*time.Hour))
+	_ = bl.Revoke(ctx, "expired", time.Now().Add(-1*time.Hour))
 
 	revoked, _ := bl.IsRevoked(ctx, "expired")
 	if revoked {
@@ -58,7 +58,7 @@ func TestRevokeAll(t *testing.T) {
 	bl := newTestBlacklist(t)
 	ctx := context.Background()
 	jtis := []string{"a", "b", "c"}
-	bl.RevokeAll(ctx, jtis, time.Now().Add(1*time.Hour))
+	_ = bl.RevokeAll(ctx, jtis, time.Now().Add(1*time.Hour))
 
 	for _, jti := range jtis {
 		revoked, _ := bl.IsRevoked(ctx, jti)

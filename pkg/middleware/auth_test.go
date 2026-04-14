@@ -55,7 +55,7 @@ func echoHandler() http.HandlerFunc {
 			"ctx_tenant":  info.Slug,
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}
 }
 
@@ -72,7 +72,7 @@ func TestAuth_ValidToken_InjectsHeaders(t *testing.T) {
 	}
 
 	var got map[string]string
-	json.NewDecoder(rec.Body).Decode(&got)
+	_ = json.NewDecoder(rec.Body).Decode(&got)
 
 	if got["user_id"] != "u-123" {
 		t.Errorf("expected user_id u-123, got %q", got["user_id"])
@@ -189,7 +189,7 @@ func TestAuth_SpoofedHeadersStripped(t *testing.T) {
 	}
 
 	var got map[string]string
-	json.NewDecoder(rec.Body).Decode(&got)
+	_ = json.NewDecoder(rec.Body).Decode(&got)
 
 	// Must be from JWT, not from spoofed headers
 	if got["user_id"] != "u-123" {
@@ -489,7 +489,7 @@ func newTestRedisBlacklist(t *testing.T) *security.TokenBlacklist {
 	}
 	t.Cleanup(func() {
 		rdb.FlushDB(context.Background())
-		rdb.Close()
+		_ = rdb.Close()
 	})
 	return security.NewTokenBlacklist(rdb)
 }

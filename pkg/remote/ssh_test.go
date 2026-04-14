@@ -99,7 +99,7 @@ func TestHostKeyCallback_TOFU_SubsequentMatch(t *testing.T) {
 	if _, err := fmt.Fprintln(f, knownhosts.Line([]string{host}, pubKey)); err != nil {
 		t.Fatalf("write known host: %v", err)
 	}
-	f.Close()
+	_ = f.Close()
 
 	cb, err := hostKeyCallback(khPath)
 	if err != nil {
@@ -130,7 +130,7 @@ func TestHostKeyCallback_TOFU_KeyMismatch(t *testing.T) {
 	if _, err := fmt.Fprintln(f, knownhosts.Line([]string{host}, originalKey)); err != nil {
 		t.Fatalf("write known host: %v", err)
 	}
-	f.Close()
+	_ = f.Close()
 
 	cb, err := hostKeyCallback(khPath)
 	if err != nil {
@@ -197,7 +197,7 @@ func TestIsReachable_Unreachable(t *testing.T) {
 		t.Skip("cannot bind test listener")
 	}
 	port := l.Addr().(*net.TCPAddr).Port
-	l.Close() // close immediately so the port is not listening
+	_ = l.Close() // close immediately so the port is not listening
 
 	if IsReachable("127.0.0.1", port, 200e6) {
 		t.Error("expected IsReachable to return false for closed port")
