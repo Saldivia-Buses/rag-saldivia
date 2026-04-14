@@ -107,12 +107,22 @@ func setupTestDB(t *testing.T) (*pgxpool.Pool, func()) {
 		CREATE TABLE audit_log (
 			id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
 			user_id TEXT REFERENCES users(id),
+			tenant_id TEXT,
 			action TEXT NOT NULL,
 			resource TEXT,
 			details JSONB NOT NULL DEFAULT '{}',
 			ip_address TEXT,
 			user_agent TEXT,
 			created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+		);
+		CREATE TABLE permissions (
+			id TEXT PRIMARY KEY,
+			description TEXT
+		);
+		CREATE TABLE role_permissions (
+			role_id TEXT NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
+			permission_id TEXT NOT NULL REFERENCES permissions(id) ON DELETE CASCADE,
+			PRIMARY KEY (role_id, permission_id)
 		);
 		INSERT INTO roles (id, name, is_system) VALUES ('role-admin', 'admin', true);
 		INSERT INTO roles (id, name, is_system) VALUES ('role-user', 'user', true);
