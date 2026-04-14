@@ -6,11 +6,14 @@ ARG BUILD_TIME=unknown
 
 WORKDIR /app
 
-COPY go.work go.work.sum ./
+# Copy only the modules this service needs
 COPY pkg/ ./pkg/
 COPY gen/ ./gen/
 COPY modules/ ./modules/
 COPY services/agent/ ./services/agent/
+
+# Generate a minimal go.work with only the modules present in the container
+RUN printf 'go 1.25.0\n\nuse (\n\t./pkg\n\t./gen/go\n\t./services/agent\n)\n' > go.work
 
 WORKDIR /app/services/agent
 RUN go mod download
