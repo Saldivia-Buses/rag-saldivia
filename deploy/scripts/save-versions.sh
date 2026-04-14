@@ -25,6 +25,7 @@ declare -A SERVICES=(
   [astro]=8011
   [bigbrother]=8012
   [erp]=8013
+  [healthwatch]=8014
 )
 
 HOST="localhost"

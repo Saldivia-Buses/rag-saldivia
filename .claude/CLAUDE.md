@@ -85,6 +85,8 @@ Run `bash .claude/hooks/check-invariants.sh` to verify all checks.
 | `services/agent/internal/`, `services/chat/internal/` | Flow 3: Chat + Agent pipeline |
 | `services/ingest/internal/`, `services/extractor/` | Flow 4: Document ingestion |
 | `services/ws/internal/`, `pkg/nats/` | Flow 5: WebSocket real-time |
+| `deploy/`, `.github/workflows/deploy.yml` | Flow 6: Deploy Pipeline |
+| `services/healthwatch/`, `.github/workflows/daily-triage.yml` | Flow 7: Self-Healing Loop |
 
 ## Hooks (automated)
 

@@ -35,12 +35,31 @@ All routes under `/v1/platform/` require platform admin JWT (admin role + platfo
 |--------|------|------|-------------|
 | GET | `/v1/platform/modules` | Platform admin | List all available modules |
 
-### Feature Flags
+### Feature Flags (Admin)
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| GET | `/v1/platform/flags` | Platform admin | List all feature flags |
+| GET | `/v1/platform/flags` | Platform admin | List all feature flags (with rollout_pct) |
+| POST | `/v1/platform/flags` | Platform admin | Create flag (default enabled=false, rollout_pct=0) |
+| PUT | `/v1/platform/flags/{flagID}` | Platform admin | Update flag (enabled, rollout_pct) |
 | PATCH | `/v1/platform/flags/{flagID}` | Platform admin | Toggle feature flag |
+| DELETE | `/v1/platform/flags/{flagID}/kill` | Platform admin | Kill switch — disable immediately |
+
+### Feature Flags (Evaluate)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/v1/flags/evaluate` | Any JWT | Evaluate flags for caller (tenant/user from JWT, deterministic rollout) |
+
+Response: `{"flags": {"flag_name": true, ...}}` — booleans only, no metadata (DS7).
+Rollout: `fnv32(flagID + ":" + userID) % 100 < rollout_pct` (deterministic per user).
+
+### Deploy Log
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/v1/platform/deploys` | Platform admin | Record a deployment |
+| GET | `/v1/platform/deploys` | Platform admin | List recent deployments |
 
 ### Global Config
 
@@ -77,7 +96,12 @@ The `requirePlatformAdmin` middleware verifies:
 
 ## NATS Events
 
-None. The platform service does not publish or consume NATS events.
+**Published (lifecycle events):**
+- `tenant.platform.notify.platform_tenant_created` — new tenant registered
+- `tenant.platform.notify.platform_deploy_created` — deploy recorded
+- `tenant.platform.notify.platform_flag_created` — flag created
+- `tenant.platform.notify.platform_flag_updated` — flag updated/toggled
+- `tenant.platform.notify.platform_flag_killed` — flag killed
 
 ## Configuration
 
@@ -92,8 +116,11 @@ None. The platform service does not publish or consume NATS events.
 ## Dependencies
 
 - **PostgreSQL:** Platform DB (control plane metadata)
+- **NATS:** Lifecycle event publishing (tenant, deploy, flag changes)
+- **Redis:** Token blacklist for admin endpoints
 - **pkg/jwt:** Ed25519 key loading, token verification
-- **pkg/middleware:** SecureHeaders
+- **pkg/middleware:** Auth, SecureHeaders
+- **pkg/audit:** Immutable audit log
 
 ## Development
 
