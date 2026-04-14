@@ -175,7 +175,7 @@ func NewSSHClient(cfg SSHConfig) (*SSHClient, error) {
 		HostKeyCallback: hkc,
 	}
 
-	addr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
+	addr := net.JoinHostPort(cfg.Host, fmt.Sprintf("%d", cfg.Port))
 	client, err := ssh.Dial("tcp", addr, sshConfig)
 	if err != nil {
 		return nil, fmt.Errorf("SSH connect %s: %w", addr, err)
@@ -279,7 +279,7 @@ func IsReachable(host string, port int, timeout time.Duration) bool {
 	if port == 0 {
 		port = 22
 	}
-	addr := fmt.Sprintf("%s:%d", host, port)
+	addr := net.JoinHostPort(host, fmt.Sprintf("%d", port))
 	conn, err := net.DialTimeout("tcp", addr, timeout)
 	if err != nil {
 		return false
