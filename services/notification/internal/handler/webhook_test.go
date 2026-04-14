@@ -336,6 +336,27 @@ func TestAlertWebhook_MultipleAlerts_PersistsAll(t *testing.T) {
 	}
 }
 
+func TestAlertWebhook_MailerError_StillReturns200(t *testing.T) {
+	store := &mockAlertStore{}
+	mailer := &mockWebhookMailer{err: errSentinel("smtp connection refused")}
+	h := NewAlertWebhook("test-secret", store, mailer, "ops@sda.app")
+
+	// Critical alert triggers email, but mailer fails
+	req := httptest.NewRequest(http.MethodPost, "/internal/webhook/alert", strings.NewReader(validAlertPayload))
+	req.Header.Set("Authorization", "Bearer test-secret")
+	rec := httptest.NewRecorder()
+
+	h.HandleAlertWebhook(rec, req)
+
+	// Alert must still be persisted and response must be 200
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 even when mailer fails, got %d: %s", rec.Code, rec.Body.String())
+	}
+	if len(store.alerts) != 1 {
+		t.Fatalf("expected alert persisted despite mailer error, got %d", len(store.alerts))
+	}
+}
+
 var errStoreDown = errSentinel("store unavailable")
 
 type errSentinel string

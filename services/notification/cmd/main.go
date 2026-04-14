@@ -97,12 +97,18 @@ func main() {
 // ALERTMANAGER_WEBHOOK_TOKEN for auth. Both are optional — if not
 // configured, the webhook is disabled (useful for dev environments).
 func setupAlertWebhook(ctx context.Context, app *server.App, r chi.Router, mailer *service.SMTPMailer) {
-	platformURL := config.Env("POSTGRES_PLATFORM_URL", "")
+	platformURL := loadSecret("/run/secrets/db_platform_url",
+		config.Env("POSTGRES_PLATFORM_URL", ""))
 	webhookToken := loadSecret("/run/secrets/alertmanager_webhook_token",
 		config.Env("ALERTMANAGER_WEBHOOK_TOKEN", ""))
 
 	if platformURL == "" || webhookToken == "" {
-		slog.Info("alert webhook disabled (POSTGRES_PLATFORM_URL or webhook token not configured)")
+		slog.Info("alert webhook disabled (platform DB URL or webhook token not configured)")
+		return
+	}
+
+	if len(webhookToken) < 32 {
+		slog.Error("alert webhook token too short, minimum 32 bytes required")
 		return
 	}
 

@@ -406,6 +406,14 @@ func (h *Platform) RecordDeploy(w http.ResponseWriter, r *http.Request) {
 		status = "pending"
 	}
 
+	switch status {
+	case "pending", "success", "failed", "rollback":
+		// valid
+	default:
+		httperr.WriteError(w, r, httperr.InvalidInput("status must be one of: pending, success, failed, rollback"))
+		return
+	}
+
 	var notes pgtype.Text
 	if req.Notes != "" {
 		notes = pgtype.Text{String: req.Notes, Valid: true}

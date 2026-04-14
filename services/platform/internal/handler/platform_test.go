@@ -848,3 +848,17 @@ func TestRecordDeploy_DefaultStatus_Pending(t *testing.T) {
 		t.Errorf("expected default status pending, got %s", resp.Status)
 	}
 }
+
+func TestRecordDeploy_InvalidStatus_Returns400(t *testing.T) {
+	r := setupPlatformRouter(&mockPlatformService{})
+
+	body := `{"service":"auth","version_to":"1.1.0","status":"yolo"}`
+	req := withAdminAuth(httptest.NewRequest(http.MethodPost, "/v1/platform/deploys", strings.NewReader(body)), t)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for invalid status, got %d: %s", rec.Code, rec.Body.String())
+	}
+}

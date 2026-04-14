@@ -68,9 +68,7 @@ func (h *AlertWebhook) HandleAlertWebhook(w http.ResponseWriter, r *http.Request
 	var payload alertmanagerPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		if isMaxBytesError(err) {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusRequestEntityTooLarge)
-			json.NewEncoder(w).Encode(map[string]string{"error": "payload too large"})
+			httperr.WriteError(w, r, httperr.Wrap(err, "payload_too_large", "payload too large", http.StatusRequestEntityTooLarge))
 			return
 		}
 		httperr.WriteError(w, r, httperr.InvalidInput("invalid JSON payload"))

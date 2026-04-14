@@ -99,7 +99,7 @@ services:
       - alertmanager-data:/alertmanager
       - ../secrets/alertmanager-webhook-token:/run/secrets/alertmanager_webhook_token:ro
     ports:
-      - "9093:9093"
+      - "127.0.0.1:9093:9093"
     restart: unless-stopped
     networks:
       - sda-observability
@@ -132,4 +132,3 @@ networks:
     driver: bridge
   sda-backend:
     external: true
-    driver: bridge

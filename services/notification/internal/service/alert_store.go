@@ -38,7 +38,11 @@ func NewPgAlertStore(pool *pgxpool.Pool) *PgAlertStore {
 func (s *PgAlertStore) SaveAlert(ctx context.Context, alert InfraAlert) error {
 	_, err := s.pool.Exec(ctx, `
 		INSERT INTO infra_alerts (fingerprint, status, severity, alertname, service, summary, description, labels, annotations, starts_at, ends_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		ON CONFLICT (fingerprint, starts_at) DO UPDATE SET
+			status = EXCLUDED.status,
+			ends_at = EXCLUDED.ends_at,
+			received_at = now()`,
 		alert.Fingerprint, alert.Status, alert.Severity, alert.AlertName,
 		alert.Service, alert.Summary, alert.Description,
 		alert.Labels, alert.Annotations,
