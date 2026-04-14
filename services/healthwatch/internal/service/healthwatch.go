@@ -229,6 +229,9 @@ func (s *Service) ListTriageRecords(ctx context.Context, limit int) ([]TriageRec
 		r.ResolvedAt = resolvedAt
 		records = append(records, r)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate triage records: %w", err)
+	}
 	return records, nil
 }
 

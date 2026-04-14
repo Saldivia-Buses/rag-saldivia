@@ -15,8 +15,10 @@ import (
 
 	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
+	"github.com/Camionerou/rag-saldivia/pkg/tenant"
 	"github.com/Camionerou/rag-saldivia/services/platform/db"
 	"github.com/Camionerou/rag-saldivia/services/platform/internal/service"
 )
@@ -494,7 +496,16 @@ func (h *Platform) requirePlatformAdmin(next http.Handler) http.Handler {
 		r.Header.Set("X-User-Role", claims.Role)
 		r.Header.Set("X-Tenant-ID", claims.TenantID)
 		r.Header.Set("X-Tenant-Slug", claims.Slug)
-		next.ServeHTTP(w, r)
+
+		// Set context values to align with pkg/middleware.AuthWithConfig
+		ctx := tenant.WithInfo(r.Context(), tenant.Info{
+			ID:   claims.TenantID,
+			Slug: claims.Slug,
+		})
+		ctx = sdamw.WithRole(ctx, claims.Role)
+		ctx = sdamw.WithUserID(ctx, claims.UserID)
+		ctx = sdamw.WithUserEmail(ctx, claims.Email)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
