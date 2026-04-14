@@ -120,12 +120,16 @@ func (m *mockPlatformService) RecordDeploy(_ context.Context, arg db.InsertDeplo
 	if m.err != nil {
 		return service.DeployRecord{}, m.err
 	}
-	return service.DeployRecord{
+	rec := service.DeployRecord{
 		ID: "d-new", Service: arg.Service,
 		VersionFrom: arg.VersionFrom, VersionTo: arg.VersionTo,
 		Status: arg.Status, DeployedBy: arg.DeployedBy,
 		StartedAt: "2026-04-14T10:00:00Z",
-	}, nil
+	}
+	if arg.Notes.Valid {
+		rec.Notes = arg.Notes.String
+	}
+	return rec, nil
 }
 
 func (m *mockPlatformService) ListDeploys(_ context.Context, _, _ int32) ([]service.DeployRecord, error) {
@@ -860,5 +864,45 @@ func TestRecordDeploy_InvalidStatus_Returns400(t *testing.T) {
 
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400 for invalid status, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestRecordDeploy_WithNotes_IncludesNotes(t *testing.T) {
+	r := setupPlatformRouter(&mockPlatformService{})
+
+	body := `{"service":"auth","version_from":"1.0.0","version_to":"1.1.0","notes":"hotfix for login bug"}`
+	req := withAdminAuth(httptest.NewRequest(http.MethodPost, "/v1/platform/deploys", strings.NewReader(body)), t)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var resp service.DeployRecord
+	json.NewDecoder(rec.Body).Decode(&resp)
+	if resp.Notes != "hotfix for login bug" {
+		t.Errorf("expected notes to be propagated, got %q", resp.Notes)
+	}
+}
+
+func TestRecordDeploy_WithoutNotes_OmitsNotes(t *testing.T) {
+	r := setupPlatformRouter(&mockPlatformService{})
+
+	body := `{"service":"auth","version_from":"1.0.0","version_to":"1.1.0"}`
+	req := withAdminAuth(httptest.NewRequest(http.MethodPost, "/v1/platform/deploys", strings.NewReader(body)), t)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var resp map[string]any
+	json.NewDecoder(rec.Body).Decode(&resp)
+	if _, hasNotes := resp["notes"]; hasNotes {
+		t.Errorf("expected notes to be omitted when empty, got %v", resp["notes"])
 	}
 }

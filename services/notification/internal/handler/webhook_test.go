@@ -357,6 +357,62 @@ func TestAlertWebhook_MailerError_StillReturns200(t *testing.T) {
 	}
 }
 
+func TestAlertWebhook_EmptyAlertsArray_Returns204(t *testing.T) {
+	store := &mockAlertStore{}
+	mailer := &mockWebhookMailer{}
+	h := NewAlertWebhook("test-secret", store, mailer, "ops@sda.app")
+
+	payload := `{"version":"4","status":"firing","alerts":[]}`
+	req := httptest.NewRequest(http.MethodPost, "/internal/webhook/alert", strings.NewReader(payload))
+	req.Header.Set("Authorization", "Bearer test-secret")
+	rec := httptest.NewRecorder()
+
+	h.HandleAlertWebhook(rec, req)
+
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("expected 204 for empty alerts, got %d: %s", rec.Code, rec.Body.String())
+	}
+	if len(store.alerts) != 0 {
+		t.Errorf("expected 0 alerts persisted, got %d", len(store.alerts))
+	}
+}
+
+func TestAlertWebhook_MissingFingerprint_PersistsWithEmpty(t *testing.T) {
+	store := &mockAlertStore{}
+	mailer := &mockWebhookMailer{}
+	h := NewAlertWebhook("test-secret", store, mailer, "ops@sda.app")
+
+	// Alert with no fingerprint — should still persist (dedup index allows empty string)
+	payload := `{
+		"version": "4",
+		"status": "firing",
+		"alerts": [{
+			"status": "firing",
+			"labels": {"alertname": "Test", "severity": "warning"},
+			"annotations": {},
+			"startsAt": "2026-04-14T10:00:00Z"
+		}]
+	}`
+	req := httptest.NewRequest(http.MethodPost, "/internal/webhook/alert", strings.NewReader(payload))
+	req.Header.Set("Authorization", "Bearer test-secret")
+	rec := httptest.NewRecorder()
+
+	h.HandleAlertWebhook(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+	if len(store.alerts) != 1 {
+		t.Fatalf("expected 1 alert, got %d", len(store.alerts))
+	}
+	if store.alerts[0].Fingerprint != "" {
+		t.Errorf("expected empty fingerprint, got %q", store.alerts[0].Fingerprint)
+	}
+	if store.alerts[0].AlertName != "Test" {
+		t.Errorf("expected alertname Test, got %q", store.alerts[0].AlertName)
+	}
+}
+
 var errStoreDown = errSentinel("store unavailable")
 
 type errSentinel string

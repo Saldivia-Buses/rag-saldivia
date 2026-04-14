@@ -75,6 +75,12 @@ func (h *AlertWebhook) HandleAlertWebhook(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	if len(payload.Alerts) == 0 {
+		slog.Warn("alert webhook received empty alerts array", "status", payload.Status)
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
 	ctx := r.Context()
 	persisted := 0
 
