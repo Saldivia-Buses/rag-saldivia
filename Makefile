@@ -95,6 +95,12 @@ build: ## Build all Go services (including astro with CGO)
 				go build \
 				-ldflags '$(LDFLAGS_BASE) -X github.com/Camionerou/rag-saldivia/pkg/build.Version='"$$ver" \
 				-o $(GOBIN)/$$svc ./cmd/... || exit 1; \
+		elif [ "$$svc" = "bigbrother" ]; then \
+			cd $(SERVICES_DIR)/$$svc && go build \
+				-ldflags '$(LDFLAGS_BASE) -X github.com/Camionerou/rag-saldivia/pkg/build.Version='"$$ver" \
+				-o $(GOBIN)/$$svc ./cmd/ || exit 1; \
+			cd $(SERVICES_DIR)/$$svc && go build \
+				-o $(GOBIN)/$$svc-healthcheck ./cmd/healthcheck/ || exit 1; \
 		else \
 			cd $(SERVICES_DIR)/$$svc && go build \
 				-ldflags '$(LDFLAGS_BASE) -X github.com/Camionerou/rag-saldivia/pkg/build.Version='"$$ver" \
@@ -199,7 +205,18 @@ test-all: test test-frontend test-e2e ## Run all test suites
 # ── Linting ──────────────────────────────────────────────────────────────
 
 lint: ## Lint all Go code
-	golangci-lint run ./services/... ./pkg/... ./tools/...
+	@echo "::group::Linting pkg/"
+	@cd $(ROOT_DIR) && golangci-lint run ./pkg/...
+	@echo "::endgroup::"
+	@for svc in $(GO_SERVICES); do \
+		echo "▸ linting services/$$svc"; \
+		cd $(SERVICES_DIR)/$$svc && golangci-lint run ./... || exit 1; \
+	done
+	@for tool in tools/*/; do \
+		[ -f "$(ROOT_DIR)/$$tool/go.mod" ] || continue; \
+		echo "▸ linting $$tool"; \
+		cd $(ROOT_DIR)/$$tool && golangci-lint run ./... || exit 1; \
+	done
 
 lint-%: ## Lint a specific service
 	cd $(SERVICES_DIR)/$* && golangci-lint run ./...
