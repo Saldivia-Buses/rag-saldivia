@@ -245,17 +245,31 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 		migration.NewDeliveryNoteLineMigrator(mysqlDB, tenantID),
 	)
 
-	// Phase 7: Tax entries from IVAIMPORTES (depends on invoice headers)
+	// Phase 7: Treasury movements — cash + bank + cash counts (depends on treasury catalogs)
+	orch.RegisterMigrators(
+		migration.NewCashMovementMigrator(mysqlDB, tenantID),
+		migration.NewBankMovementMigrator(mysqlDB, tenantID),
+		migration.NewCashCountMigrator(mysqlDB, tenantID),
+	)
+
+	// Phase 7b: Tax entries from IVAIMPORTES (depends on invoice headers)
 	orch.RegisterMigrators(
 		migration.NewTaxEntrySalesMigrator(mysqlDB, tenantID),
 		migration.NewTaxEntryPurchasesMigrator(mysqlDB, tenantID),
 	)
 
-	// Phase 8: Withholdings (depends on entities)
+	// Phase 8: Current Accounts (depends on entities + treasury movements)
+	orch.RegisterMigrators(
+		migration.NewAccountMovementMigrator(mysqlDB, tenantID),
+		migration.NewPaymentAllocationMigrator(mysqlDB, tenantID),
+	)
+
+	// Phase 8b: Withholdings (depends on entities)
 	orch.RegisterMigrators(
 		migration.NewWithholdingGainsMigrator(mysqlDB, tenantID),
 		migration.NewWithholdingIVAMigrator(mysqlDB, tenantID),
 		migration.NewWithholding1598Migrator(mysqlDB, tenantID),
+		migration.NewWithholdingIIBBMigrator(mysqlDB, tenantID),
 	)
 
 	// Phase 9: Stock extended — BOM, stock levels, price lists
@@ -281,6 +295,7 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 		migration.NewProductionRequestMigrator(mysqlDB, tenantID),
 		migration.NewProductionStepMigrator(mysqlDB, tenantID),
 		migration.NewProductionInspectionMigrator(mysqlDB, tenantID),
+		migration.NewProductionInspectionDetailMigrator(mysqlDB, tenantID),
 	)
 
 	// Phase 12: Quality (ISO 9001)

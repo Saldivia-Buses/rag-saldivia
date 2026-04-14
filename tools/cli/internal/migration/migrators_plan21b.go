@@ -100,18 +100,20 @@ func NewBOMHistoryMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				return nil, nil
 			}
 
-			// Parent article FK: resolve via pieza_id → STKPIEZA mapping,
-			// then from STKPIEZA we'd need the parent. Since this is complex,
-			// use pieza_id as the parent FK (links to the BOM entry which IS the parent-child relationship).
-			// Actually, BOM history doesn't have direct parent code — the pieza_id links to STKPIEZA.
-			// Resolve pieza_id → STKPIEZA mapping to get the BOM entry, use that as parent_id.
-			piezaID := row.Int64("pieza_id")
-			parentID, err := mapper.ResolveOptional(ctx, "stock", "STKPIEZA", piezaID)
+			// Parent article FK: resolve via hashCode of parent article code.
+			// parent_article_code comes from STKPIEZA.idPadre via JOIN in the reader.
+			// erp_bom_history.parent_id references erp_articles(id), NOT erp_bom(id).
+			parentCode := row.String("parent_article_code")
+			if parentCode == "" {
+				return nil, nil // skip — no parent article
+			}
+			parentLegacyID := int64(hashCode(parentCode))
+			parentID, err := mapper.ResolveOptional(ctx, "stock", "STK_ARTICULOS", parentLegacyID)
 			if err != nil {
 				return nil, nil
 			}
 			if parentID == uuid.Nil {
-				return nil, nil // skip if BOM entry not migrated
+				return nil, nil // skip if parent article not migrated
 			}
 
 			id, err := mapper.Map(ctx, nil, "stock", "STK_BOM_HIST", legacyID, nil)
@@ -554,10 +556,12 @@ func NewVehicleMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 			var orderID *uuid.UUID
 			var prodOrderID *uuid.UUID
 
-			// Status from chequeo field
-			status := "active"
-			if row.Int("chequeo") == 1 {
-				status = "inspected"
+			// Status: CHECK allows only in_production/ready/delivered.
+			// salida (exit date) present → delivered, else default in_production.
+			status := "in_production"
+			salidaDate := timeFromRow(row, "salida")
+			if !salidaDate.IsZero() && salidaDate.Year() > 1900 {
+				status = "delivered"
 			}
 
 			// Model from modcha
@@ -622,6 +626,22 @@ func NewProductionInspectionMigrator(db *sql.DB, tenantID string) *GenericMigrat
 				return nil, nil
 			}
 
+			// PROD_CONTROLES is a control-template table with no direct order FK.
+			// erp_production_inspections.order_id is NOT NULL, so we must skip rows
+			// where we can't resolve a production order.
+			// Try resolving seccion_coche_id as a vehicle → production order link.
+			cocheID := row.Int64("seccion_coche_id")
+			var orderID *uuid.UUID
+			if cocheID > 0 {
+				resolved, err := mapper.ResolveOptional(ctx, "production", "MRP_PEDIDO_PRODUCCION", cocheID)
+				if err == nil && resolved != uuid.Nil {
+					orderID = &resolved
+				}
+			}
+			if orderID == nil {
+				return nil, nil // skip: order_id is NOT NULL
+			}
+
 			// seccion_id → could map to a production step/section
 			var stepID *uuid.UUID
 			seccionID := row.Int64("seccion_id")
@@ -657,7 +677,7 @@ func NewProductionInspectionMigrator(db *sql.DB, tenantID string) *GenericMigrat
 
 			return []any{
 				id, tenantID,
-				(*uuid.UUID)(nil), // order_id — PROD_CONTROLES is a template, no direct order FK
+				*orderID,
 				stepID,
 				(*uuid.UUID)(nil), // inspector_id — legajo_defecto is an int, not directly resolvable
 				result,
@@ -1195,7 +1215,7 @@ func NewAttendanceMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				row.NullString("hingreso"), // clock_in
 				row.NullString("hegreso"),  // clock_out
 				hours,
-				"legacy", // source
+				"rfid", // source — CHECK allows only manual/rfid/biometric
 			}, nil
 		},
 	}
@@ -1360,10 +1380,10 @@ func NewDeductionEventMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				id, tenantID, *entityID,
 				"sanction",
 				SafeDateRequired(timeFromRow(row, "fecha")),
-				(*time.Time)(nil), // date_to — single date event
-				ParseDecimal(row.Decimal("importe")), // hours → store importe as the value
+				(*time.Time)(nil),  // date_to — single date event
+				ParseDecimal("0"),  // hours — not tracked for deductions
 				reasonID,
-				fmt.Sprintf("sobre_extras=%d", row.Int("sobre_extras")),
+				fmt.Sprintf("importe=%s sobre_extras=%d", row.Decimal("importe"), row.Int("sobre_extras")),
 				LegacyUserID,
 			}, nil
 		},
@@ -1686,10 +1706,10 @@ func NewFuelLogMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 // ACCIDENTE_PER has NO auto-increment PK. 22 rows.
 // Uses IdPersona + fechaini as composite key.
 func NewAccidentMigrator(db *sql.DB, tenantID string) *GenericMigrator {
-	reader := legacy.AccidentReader(db)
+	reader := legacy.NewAccidentPersonReader(db)
 	return &GenericMigrator{
 		reader:      reader,
-		columns:     []string{"id", "tenant_id", "date", "entity_id", "body_part", "type", "severity", "status", "user_id"},
+		columns:     []string{"id", "tenant_id", "entity_id", "accident_type_id", "body_part_id", "section_id", "incident_date", "recovery_date", "lost_days", "observations", "reported_by", "status"},
 		conflictCol: "",
 		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
 			personaID := row.Int64("IdPersona")
@@ -1714,24 +1734,26 @@ func NewAccidentMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 			}
 
 			// Resolve accident type from idaccidente → ACCIDENTE catalog
-			accType := "general"
-			bodyPart := ""
+			var accidentTypeID *uuid.UUID
 			accidenteID := row.Int64("idaccidente")
 			if accidenteID > 0 {
-				// ACCIDENTE table has: idaccidente, tipo_accidente, nombre, abae, descripcion
-				// We can't join here but we set the type ID
-				accType = fmt.Sprintf("type_%d", accidenteID)
+				resolved, err := mapper.ResolveOptional(ctx, "safety", "ACCIDENTE", accidenteID)
+				if err == nil && resolved != uuid.Nil {
+					accidentTypeID = &resolved
+				}
 			}
 
 			return []any{
-				id, tenantID,
+				id, tenantID, entityID,
+				accidentTypeID,
+				(*uuid.UUID)(nil), // body_part_id — not in ACCIDENTE_PER
+				(*uuid.UUID)(nil), // section_id — sector is a string, not directly resolvable
 				SafeDateRequired(timeFromRow(row, "fechaini")),
-				entityID,
-				bodyPart,    // body_part — not in ACCIDENTE_PER
-				accType,
-				"moderate",  // severity — not directly available
-				"reported",  // status
-				LegacyUserID,
+				SafeDate(timeFromRow(row, "fechafin")),
+				0,                           // lost_days — not in ACCIDENTE_PER
+				row.String("observaciones"), // observations
+				"",                          // reported_by
+				"open",                      // status
 			}, nil
 		},
 	}
@@ -1808,7 +1830,7 @@ func NewRiskExposureMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				id, tenantID, entityID,
 				riskAgentID,
 				(*uuid.UUID)(nil), // section_id — no direct mapping
-				SafeDate(timeFromRow(row, "fecha_desde")),
+				SafeDateRequired(timeFromRow(row, "fecha_desde")), // exposed_from is NOT NULL
 				SafeDate(timeFromRow(row, "fecha_hasta")),
 				"", // notes — not in RIESGO_PERSONAL
 			}, nil
@@ -1823,7 +1845,7 @@ func NewMedicalLeaveMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 	reader := legacy.MedicalLeaveReader(db)
 	return &GenericMigrator{
 		reader:      reader,
-		columns:     []string{"id", "tenant_id", "entity_id", "date_from", "date_to", "diagnosis", "medical_authorization", "user_id"},
+		columns:     []string{"id", "tenant_id", "entity_id", "body_part_id", "accident_id", "leave_type", "date_from", "date_to", "working_days", "observations", "status", "approved_by"},
 		conflictCol: "",
 		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
 			legacyID := row.Int64("id")
@@ -1831,23 +1853,11 @@ func NewMedicalLeaveMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				return nil, nil
 			}
 
-			// PARTE_MEDICO_DIARIO doesn't have IdPersona — it has "nombre" (patient name)
-			// We can't resolve entity_id directly. Set to nil.
-			var entityID *uuid.UUID
-
-			id, err := mapper.Map(ctx, nil, "safety", "PARTE_MEDICO_DIARIO", legacyID, nil)
-			if err != nil {
-				id = uuid.New()
-			}
-
-			return []any{
-				id, tenantID, entityID,
-				SafeDateRequired(timeFromRow(row, "fecha")),
-				(*time.Time)(nil), // date_to — not in PARTE_MEDICO_DIARIO
-				row.String("sintomatologia") + " | " + row.String("prescripcion"), // diagnosis
-				"",                  // medical_authorization — not in table
-				LegacyUserID,
-			}, nil
+			// PARTE_MEDICO_DIARIO doesn't have IdPersona — it has "nombre" (patient name).
+			// entity_id is NOT NULL, so we can't migrate rows without a resolvable entity.
+			// Try resolving nombre via PERSONAL name match — not feasible in batch.
+			// Skip these rows: entity_id is NOT NULL and unresolvable.
+			return nil, nil
 		},
 	}
 }

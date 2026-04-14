@@ -1,6 +1,11 @@
 package legacy
 
-import "database/sql"
+import (
+	"context"
+	"database/sql"
+	"fmt"
+	"strconv"
+)
 
 // ---------------------------------------------------------------------------
 // BOM — Bill of Materials (STKPIEZA)
@@ -33,20 +38,72 @@ func BOMReader(db *sql.DB) *GenericReader {
 // Each row captures a point-in-time cost calculation for a BOM piece.
 // level_0..level_7 = cost breakdown by BOM depth, piezas = total pieces count.
 // tipocalculo_costo = cost calculation method, regcuenta_id = supplier entity.
-func BOMHistoryReader(db *sql.DB) *GenericReader {
-	return &GenericReader{
-		DB:         db,
-		Table:      "STK_BOM_HIST",
-		Target:     "erp_bom_history",
-		DomainName: "stock",
-		PKColumn:   "id_stkbomhist",
-		Columns: "id_stkbomhist, pieza_id, bom_variacion_id, fecha_costo, " +
-			"stkarticulohijo_id, stkarticulohijo_string, posicionfab_id, " +
-			"tipocalculo_costo, regcuenta_id, cuenta_id, cantidad, " +
-			"unidad_compra, unidad_uso, multiplo, unitario, recargo, " +
-			"porcentaje_region, sumaitems, sumaitems_clog, " +
-			"level_0, level_1, level_2, level_3, level_4, level_5, level_6, level_7, piezas",
+// JOINs STKPIEZA to bring in idPadre (parent article code) needed for article FK resolution.
+type BOMHistoryReaderType struct {
+	DB *sql.DB
+}
+
+func (r *BOMHistoryReaderType) LegacyTable() string { return "STK_BOM_HIST" }
+func (r *BOMHistoryReaderType) SDATable() string     { return "erp_bom_history" }
+func (r *BOMHistoryReaderType) Domain() string       { return "stock" }
+
+func (r *BOMHistoryReaderType) ReadBatch(ctx context.Context, resumeKey string, limit int) ([]LegacyRow, string, error) {
+	lastID := int64(0)
+	if resumeKey != "" {
+		lastID, _ = strconv.ParseInt(resumeKey, 10, 64)
 	}
+
+	query := `SELECT h.id_stkbomhist, h.pieza_id, h.bom_variacion_id, h.fecha_costo,
+		h.stkarticulohijo_id, h.stkarticulohijo_string, h.posicionfab_id,
+		h.tipocalculo_costo, h.regcuenta_id, h.cuenta_id, h.cantidad,
+		h.unidad_compra, h.unidad_uso, h.multiplo, h.unitario, h.recargo,
+		h.porcentaje_region, h.sumaitems, h.sumaitems_clog,
+		h.level_0, h.level_1, h.level_2, h.level_3, h.level_4, h.level_5, h.level_6, h.level_7, h.piezas,
+		p.idPadre AS parent_article_code
+		FROM STK_BOM_HIST h
+		LEFT JOIN STKPIEZA p ON h.pieza_id = p.id_pieza
+		WHERE h.id_stkbomhist > ?
+		ORDER BY h.id_stkbomhist LIMIT ?`
+
+	rows, err := r.DB.QueryContext(ctx, query, lastID, limit)
+	if err != nil {
+		return nil, "", fmt.Errorf("read STK_BOM_HIST: %w", err)
+	}
+	defer rows.Close()
+
+	cols, err := rows.Columns()
+	if err != nil {
+		return nil, "", fmt.Errorf("columns STK_BOM_HIST: %w", err)
+	}
+
+	var result []LegacyRow
+	var lastKey int64
+	for rows.Next() {
+		values := make([]any, len(cols))
+		ptrs := make([]any, len(cols))
+		for i := range values {
+			ptrs[i] = &values[i]
+		}
+		if err := rows.Scan(ptrs...); err != nil {
+			return nil, "", fmt.Errorf("scan STK_BOM_HIST: %w", err)
+		}
+		row := make(LegacyRow, len(cols))
+		for i, col := range cols {
+			row[col] = values[i]
+		}
+		result = append(result, row)
+		lastKey = row.Int64("id_stkbomhist")
+	}
+	if err := rows.Err(); err != nil {
+		return nil, "", fmt.Errorf("iterate STK_BOM_HIST: %w", err)
+	}
+
+	return result, strconv.FormatInt(lastKey, 10), nil
+}
+
+// BOMHistoryReader creates a reader for STK_BOM_HIST with a STKPIEZA JOIN.
+func BOMHistoryReader(db *sql.DB) *BOMHistoryReaderType {
+	return &BOMHistoryReaderType{DB: db}
 }
 
 // ---------------------------------------------------------------------------

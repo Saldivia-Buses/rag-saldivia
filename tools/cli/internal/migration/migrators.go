@@ -971,6 +971,9 @@ func NewSalesInvoiceMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 					entityID = &resolved
 				}
 			}
+			if entityID == nil || *entityID == uuid.Nil {
+				return nil, nil // entity_id is NOT NULL — skip unresolvable
+			}
 
 			// Number: LETTER-PV-NUMERO (e.g., A-0001-00012345)
 			number := fmt.Sprintf("%s-%04d-%08d", codlet, row.Int64("nronpv"), row.Int64("nrocom"))
@@ -1027,6 +1030,9 @@ func NewPurchaseInvoiceMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				if err == nil && resolved != uuid.Nil {
 					entityID = &resolved
 				}
+			}
+			if entityID == nil || *entityID == uuid.Nil {
+				return nil, nil // entity_id is NOT NULL — skip unresolvable
 			}
 
 			number := fmt.Sprintf("%s-%04d-%08d", codlet, row.Int64("nronpv"), row.Int64("nrocom"))
