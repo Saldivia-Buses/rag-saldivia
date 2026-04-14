@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SDA Framework Architecture</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background: #020617;
+      min-height: 100vh;
+      padding: 2rem;
+      color: white;
+    }
+    .container { max-width: 1600px; margin: 0 auto; }
+    .header { margin-bottom: 2rem; }
+    .header-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }
+    .pulse-dot {
+      width: 12px; height: 12px; background: #22d3ee;
+      border-radius: 50%; animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.025em; }
+    .subtitle { color: #94a3b8; font-size: 0.875rem; margin-left: 1.75rem; }
+    .diagram-container {
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 1rem;
+      border: 1px solid #1e293b;
+      padding: 1.5rem;
+      overflow-x: auto;
+    }
+    svg { width: 100%; min-width: 1500px; display: block; }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem; margin-top: 2rem;
+    }
+    .card {
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 0.75rem;
+      border: 1px solid #1e293b;
+      padding: 1.25rem;
+    }
+    .card-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .card-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .card-dot.cyan { background: #22d3ee; }
+    .card-dot.emerald { background: #34d399; }
+    .card-dot.violet { background: #a78bfa; }
+    .card-dot.amber { background: #fbbf24; }
+    .card-dot.rose { background: #fb7185; }
+    .card-dot.orange { background: #fb923c; }
+    .card h3 { font-size: 0.875rem; font-weight: 600; }
+    .card ul { list-style: none; color: #94a3b8; font-size: 0.75rem; }
+    .card li { margin-bottom: 0.375rem; }
+    .footer { text-align: center; margin-top: 1.5rem; color: #475569; font-size: 0.75rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-row">
+        <div class="pulse-dot"></div>
+        <h1>SDA Framework Architecture</h1>
+      </div>
+      <p class="subtitle">Multi-tenant SaaS platform &mdash; Hybrid Cloud/InHouse deployment &mdash; 15 Go microservices + GPU pipeline</p>
+    </div>
+
+    <div class="diagram-container">
+      <svg viewBox="0 0 1620 1050">
+        <defs>
+          <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#64748b" />
+          </marker>
+          <marker id="arrow-cyan" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#22d3ee" />
+          </marker>
+          <marker id="arrow-rose" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#fb7185" />
+          </marker>
+          <marker id="arrow-emerald" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#34d399" />
+          </marker>
+          <marker id="arrow-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#fb923c" />
+          </marker>
+          <marker id="arrow-violet" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#a78bfa" />
+          </marker>
+          <marker id="arrow-amber" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#fbbf24" />
+          </marker>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+          </pattern>
+        </defs>
+
+        <rect width="100%" height="100%" fill="url(#grid)" />
+
+        <!-- ============================================================
+             CONNECTIONS (drawn first → render behind boxes)
+             ============================================================ -->
+
+        <!-- Users → CF Tunnel -->
+        <line x1="145" y1="125" x2="145" y2="198" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <text x="158" y="167" fill="#94a3b8" font-size="8" font-weight="500">HTTPS</text>
+
+        <!-- CF Tunnel → Traefik -->
+        <path d="M 260,237 L 280,237 Q 290,237 290,227 L 290,100 L 318,100" fill="none" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrow-cyan)"/>
+        <text x="293" y="170" fill="#22d3ee" font-size="8" font-weight="500">Tunnel</text>
+
+        <!-- Next.js Web → CF Tunnel -->
+        <path d="M 260,490 L 276,490 Q 283,490 283,482 L 283,260 Q 283,252 276,252 L 262,252" fill="none" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrow-cyan)"/>
+        <text x="288" y="380" fill="#22d3ee" font-size="8" font-weight="500">REST+WS</text>
+
+        <!-- Next.js Login → CF Tunnel -->
+        <path d="M 260,620 L 270,620 Q 277,620 277,612 L 277,260 Q 277,252 270,252 L 262,252" fill="none" stroke="#fb7185" stroke-width="1" stroke-dasharray="5,3" marker-end="url(#arrow-rose)"/>
+        <text x="260" y="550" fill="#fb7185" font-size="8">login</text>
+
+        <!-- Agent → NVIDIA API -->
+        <path d="M 318,365 L 295,365 Q 288,365 288,373 L 288,855 Q 288,862 280,862 L 262,862" fill="none" stroke="#fbbf24" stroke-width="1" stroke-dasharray="5,3" marker-end="url(#arrow-amber)"/>
+        <text x="290" y="720" fill="#fbbf24" font-size="8">cloud LLM</text>
+
+        <!-- Traefik → CrowdSec -->
+        <line x1="510" y1="95" x2="570" y2="95" stroke="#fb7185" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-rose)"/>
+        <text x="540" y="88" fill="#fb7185" font-size="8" text-anchor="middle">logs</text>
+
+        <!-- Docker Proxy → Traefik -->
+        <line x1="740" y1="110" x2="512" y2="110" stroke="#94a3b8" stroke-width="1" marker-end="url(#arrowhead)"/>
+        <text x="626" y="104" fill="#94a3b8" font-size="8" text-anchor="middle">Docker API</text>
+
+        <!-- Traefik routing bus -->
+        <line x1="415" y1="135" x2="415" y2="168" stroke="#34d399" stroke-width="1.5"/>
+        <line x1="370" y1="168" x2="1170" y2="168" stroke="#34d399" stroke-width="1.5"/>
+        <text x="770" y="163" fill="#34d399" font-size="7" text-anchor="middle">REST routing via Traefik</text>
+        <!-- Drops to core services -->
+        <line x1="370" y1="168" x2="370" y2="198" stroke="#34d399" stroke-width="1" marker-end="url(#arrow-emerald)"/>
+        <line x1="500" y1="168" x2="500" y2="198" stroke="#34d399" stroke-width="1" marker-end="url(#arrow-emerald)"/>
+        <line x1="630" y1="168" x2="630" y2="198" stroke="#34d399" stroke-width="1" marker-end="url(#arrow-emerald)"/>
+        <line x1="760" y1="168" x2="760" y2="198" stroke="#34d399" stroke-width="1" marker-end="url(#arrow-emerald)"/>
+        <line x1="890" y1="168" x2="890" y2="198" stroke="#34d399" stroke-width="1" marker-end="url(#arrow-emerald)"/>
+        <line x1="1020" y1="168" x2="1020" y2="198" stroke="#34d399" stroke-width="1" marker-end="url(#arrow-emerald)"/>
+        <line x1="1150" y1="168" x2="1150" y2="198" stroke="#34d399" stroke-width="1" marker-end="url(#arrow-emerald)"/>
+        <!-- Dashed extensions to modular -->
+        <line x1="375" y1="168" x2="375" y2="330" stroke="#34d399" stroke-width="0.7" stroke-dasharray="3,4"/>
+        <line x1="530" y1="168" x2="530" y2="330" stroke="#34d399" stroke-width="0.7" stroke-dasharray="3,4"/>
+        <line x1="685" y1="168" x2="685" y2="330" stroke="#34d399" stroke-width="0.7" stroke-dasharray="3,4"/>
+        <line x1="840" y1="168" x2="840" y2="330" stroke="#34d399" stroke-width="0.7" stroke-dasharray="3,4"/>
+        <line x1="990" y1="168" x2="990" y2="330" stroke="#34d399" stroke-width="0.7" stroke-dasharray="3,4"/>
+
+        <!-- WS Hub → Chat gRPC -->
+        <line x1="553" y1="225" x2="577" y2="225" stroke="#fbbf24" stroke-width="2" marker-end="url(#arrow-amber)"/>
+        <text x="565" y="218" fill="#fbbf24" font-size="7" text-anchor="middle">gRPC</text>
+
+        <!-- Agent → Search gRPC -->
+        <path d="M 440,365 L 745,365 Q 760,365 760,352 L 760,262" fill="none" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arrow-amber)"/>
+        <text x="590" y="358" fill="#fbbf24" font-size="8" text-anchor="middle">gRPC :50051</text>
+
+        <!-- Services → NATS stubs -->
+        <line x1="430" y1="486" x2="430" y2="508" stroke="#fb923c" stroke-width="1.5" marker-end="url(#arrow-orange)"/>
+        <line x1="680" y1="486" x2="680" y2="508" stroke="#fb923c" stroke-width="1.5" marker-end="url(#arrow-orange)"/>
+        <line x1="930" y1="486" x2="930" y2="508" stroke="#fb923c" stroke-width="1.5" marker-end="url(#arrow-orange)"/>
+        <text x="560" y="500" fill="#fb923c" font-size="7" text-anchor="middle">pub/sub events</text>
+
+        <!-- NATS → Data stubs -->
+        <line x1="415" y1="545" x2="415" y2="575" stroke="#a78bfa" stroke-width="1" marker-end="url(#arrow-violet)"/>
+        <line x1="640" y1="545" x2="640" y2="575" stroke="#a78bfa" stroke-width="1" marker-end="url(#arrow-violet)"/>
+        <line x1="855" y1="545" x2="855" y2="575" stroke="#a78bfa" stroke-width="1" marker-end="url(#arrow-violet)"/>
+        <line x1="1055" y1="545" x2="1055" y2="575" stroke="#a78bfa" stroke-width="1" marker-end="url(#arrow-violet)"/>
+
+        <!-- Services → OTel -->
+        <path d="M 1210,225 L 1240,225 Q 1250,225 1250,215 L 1250,90 L 1298,90" fill="none" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrowhead)"/>
+        <text x="1255" y="155" fill="#94a3b8" font-size="8">traces+metrics</text>
+
+        <!-- OTel → Tempo / Prometheus -->
+        <line x1="1370" y1="115" x2="1370" y2="200" stroke="#94a3b8" stroke-width="1" marker-end="url(#arrowhead)"/>
+        <line x1="1505" y1="115" x2="1505" y2="200" stroke="#94a3b8" stroke-width="1" marker-end="url(#arrowhead)"/>
+
+        <!-- Promtail → Loki -->
+        <line x1="1370" y1="398" x2="1370" y2="370" stroke="#94a3b8" stroke-width="1" marker-end="url(#arrowhead)"/>
+
+        <!-- AlertManager → Notification -->
+        <path d="M 1440,330 L 960,330 Q 950,330 950,320 L 950,262" fill="none" stroke="#fb7185" stroke-width="1" stroke-dasharray="5,3" marker-end="url(#arrow-rose)"/>
+        <text x="1200" y="323" fill="#fb7185" font-size="8" text-anchor="middle">webhook alert</text>
+
+        <!-- Ingest → Extractor -->
+        <path d="M 596,365 L 620,365 Q 630,365 630,375 L 630,440 L 1123,440" fill="none" stroke="#34d399" stroke-width="1" marker-end="url(#arrow-emerald)"/>
+        <text x="880" y="434" fill="#94a3b8" font-size="8" text-anchor="middle">OCR pipeline</text>
+
+        <!-- Agent → SGLang OCR -->
+        <path d="M 375,398 L 375,490 Q 375,498 382,498 L 398,498 Q 405,498 405,506 L 405,720" fill="none" stroke="#fbbf24" stroke-width="1" stroke-dasharray="5,3" marker-end="url(#arrow-amber)"/>
+        <text x="392" y="620" fill="#fbbf24" font-size="8">LLM</text>
+
+        <!-- Extractor → SGLang Vision -->
+        <path d="M 1185,465 L 1185,490 Q 1185,498 1177,498 L 600,498 Q 588,498 588,506 L 588,720" fill="none" stroke="#fbbf24" stroke-width="0.8" stroke-dasharray="4,3"/>
+        <text x="890" y="492" fill="#fbbf24" font-size="8" text-anchor="middle">vision OCR</text>
+
+        <!-- ============================================================
+             ZONE: CLOUD (left)
+             ============================================================ -->
+        <rect x="15" y="15" width="255" height="920" rx="12" fill="rgba(8, 51, 68, 0.08)" stroke="#22d3ee" stroke-width="1" stroke-dasharray="8,4"/>
+        <text x="27" y="38" fill="#22d3ee" font-size="11" font-weight="600">CLOUD</text>
+
+        <!-- Users -->
+        <rect x="35" y="70" width="215" height="55" rx="6" fill="#0f172a"/>
+        <rect x="35" y="70" width="215" height="55" rx="6" fill="rgba(30, 41, 59, 0.5)" stroke="#94a3b8" stroke-width="1.5"/>
+        <text x="142" y="94" fill="white" font-size="12" font-weight="600" text-anchor="middle">Users</text>
+        <text x="142" y="112" fill="#94a3b8" font-size="9" text-anchor="middle">Browser / Mobile</text>
+
+        <!-- Cloudflare Tunnel -->
+        <rect x="35" y="200" width="215" height="55" rx="6" fill="#0f172a"/>
+        <rect x="35" y="200" width="215" height="55" rx="6" fill="rgba(136, 19, 55, 0.4)" stroke="#fb7185" stroke-width="1.5"/>
+        <text x="142" y="224" fill="white" font-size="11" font-weight="600" text-anchor="middle">Cloudflare Tunnel</text>
+        <text x="142" y="243" fill="#94a3b8" font-size="9" text-anchor="middle">DDoS + WS-safe</text>
+
+        <!-- Next.js Web -->
+        <rect x="35" y="430" width="215" height="110" rx="6" fill="#0f172a"/>
+        <rect x="35" y="430" width="215" height="110" rx="6" fill="rgba(8, 51, 68, 0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="142" y="455" fill="white" font-size="12" font-weight="600" text-anchor="middle">Next.js Web</text>
+        <text x="142" y="474" fill="#94a3b8" font-size="9" text-anchor="middle">React 19 + shadcn/ui</text>
+        <text x="142" y="491" fill="#94a3b8" font-size="9" text-anchor="middle">TanStack Query v5</text>
+        <text x="142" y="508" fill="#94a3b8" font-size="9" text-anchor="middle">Tailwind CSS 4</text>
+        <text x="142" y="528" fill="#22d3ee" font-size="8" text-anchor="middle">:3000 &bull; Vercel/Fly.io</text>
+
+        <!-- Next.js Login -->
+        <rect x="35" y="575" width="215" height="85" rx="6" fill="#0f172a"/>
+        <rect x="35" y="575" width="215" height="85" rx="6" fill="rgba(8, 51, 68, 0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="142" y="603" fill="white" font-size="12" font-weight="600" text-anchor="middle">Next.js Login</text>
+        <text x="142" y="622" fill="#94a3b8" font-size="9" text-anchor="middle">Isolated auth gate (minimal)</text>
+        <text x="142" y="648" fill="#22d3ee" font-size="8" text-anchor="middle">:3001 &bull; Vercel/Fly.io</text>
+
+        <!-- NVIDIA API -->
+        <rect x="35" y="830" width="215" height="75" rx="6" fill="#0f172a"/>
+        <rect x="35" y="830" width="215" height="75" rx="6" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="142" y="855" fill="white" font-size="11" font-weight="600" text-anchor="middle">NVIDIA API</text>
+        <text x="142" y="874" fill="#94a3b8" font-size="9" text-anchor="middle">Nemotron-Super-49B</text>
+        <text x="142" y="894" fill="#fbbf24" font-size="8" text-anchor="middle">per-token billing</text>
+
+        <!-- ============================================================
+             ZONE: INHOUSE (center)
+             ============================================================ -->
+        <rect x="295" y="15" width="930" height="920" rx="12" fill="rgba(6, 78, 59, 0.05)" stroke="#34d399" stroke-width="1" stroke-dasharray="8,4"/>
+        <text x="310" y="38" fill="#34d399" font-size="11" font-weight="600">INHOUSE &mdash; RTX PRO 6000 Workstation (96GB VRAM, 256GB RAM)</text>
+
+        <!-- === Gateway Layer === -->
+        <rect x="310" y="55" width="570" height="100" rx="8" fill="transparent" stroke="#fb7185" stroke-width="1" stroke-dasharray="4,4"/>
+        <text x="322" y="72" fill="#fb7185" font-size="9">Gateway &amp; Security</text>
+
+        <!-- Traefik -->
+        <rect x="320" y="78" width="190" height="60" rx="6" fill="#0f172a"/>
+        <rect x="320" y="78" width="190" height="60" rx="6" fill="rgba(136, 19, 55, 0.4)" stroke="#fb7185" stroke-width="1.5"/>
+        <text x="415" y="102" fill="white" font-size="12" font-weight="600" text-anchor="middle">Traefik v3</text>
+        <text x="415" y="122" fill="#94a3b8" font-size="9" text-anchor="middle">:80/:443 &bull; TLS + routing</text>
+
+        <!-- CrowdSec -->
+        <rect x="575" y="78" width="140" height="60" rx="6" fill="#0f172a"/>
+        <rect x="575" y="78" width="140" height="60" rx="6" fill="rgba(136, 19, 55, 0.4)" stroke="#fb7185" stroke-width="1.5"/>
+        <text x="645" y="102" fill="white" font-size="11" font-weight="600" text-anchor="middle">CrowdSec</text>
+        <text x="645" y="122" fill="#94a3b8" font-size="9" text-anchor="middle">IDS</text>
+
+        <!-- Docker Socket Proxy -->
+        <rect x="745" y="78" width="120" height="60" rx="6" fill="#0f172a"/>
+        <rect x="745" y="78" width="120" height="60" rx="6" fill="rgba(30, 41, 59, 0.5)" stroke="#94a3b8" stroke-width="1.5"/>
+        <text x="805" y="102" fill="white" font-size="10" font-weight="600" text-anchor="middle">Docker Proxy</text>
+        <text x="805" y="120" fill="#94a3b8" font-size="8" text-anchor="middle">:2375 internal</text>
+
+        <!-- === Core Services === -->
+        <rect x="305" y="182" width="915" height="85" rx="8" fill="transparent" stroke="#34d399" stroke-width="1" stroke-dasharray="4,4"/>
+        <text x="318" y="197" fill="#34d399" font-size="9">Core Services (always active)</text>
+
+        <!-- Auth -->
+        <rect x="318" y="205" width="118" height="55" rx="6" fill="#0f172a"/>
+        <rect x="318" y="205" width="118" height="55" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="377" y="228" fill="white" font-size="11" font-weight="600" text-anchor="middle">Auth</text>
+        <text x="377" y="248" fill="#94a3b8" font-size="8" text-anchor="middle">:8001 JWT+RBAC</text>
+
+        <!-- WS Hub -->
+        <rect x="448" y="205" width="118" height="55" rx="6" fill="#0f172a"/>
+        <rect x="448" y="205" width="118" height="55" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="507" y="228" fill="white" font-size="11" font-weight="600" text-anchor="middle">WS Hub</text>
+        <text x="507" y="248" fill="#94a3b8" font-size="8" text-anchor="middle">:8002 realtime</text>
+
+        <!-- Chat -->
+        <rect x="578" y="205" width="118" height="55" rx="6" fill="#0f172a"/>
+        <rect x="578" y="205" width="118" height="55" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="637" y="228" fill="white" font-size="11" font-weight="600" text-anchor="middle">Chat</text>
+        <text x="637" y="248" fill="#94a3b8" font-size="8" text-anchor="middle">:8003 sessions</text>
+
+        <!-- Search -->
+        <rect x="708" y="205" width="118" height="55" rx="6" fill="#0f172a"/>
+        <rect x="708" y="205" width="118" height="55" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="767" y="228" fill="white" font-size="11" font-weight="600" text-anchor="middle">Search</text>
+        <text x="767" y="248" fill="#94a3b8" font-size="8" text-anchor="middle">:8010 tree RAG</text>
+
+        <!-- Notification -->
+        <rect x="838" y="205" width="118" height="55" rx="6" fill="#0f172a"/>
+        <rect x="838" y="205" width="118" height="55" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="897" y="228" fill="white" font-size="11" font-weight="600" text-anchor="middle">Notification</text>
+        <text x="897" y="248" fill="#94a3b8" font-size="8" text-anchor="middle">:8005 bell+email</text>
+
+        <!-- Platform -->
+        <rect x="968" y="205" width="118" height="55" rx="6" fill="#0f172a"/>
+        <rect x="968" y="205" width="118" height="55" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="1027" y="228" fill="white" font-size="11" font-weight="600" text-anchor="middle">Platform</text>
+        <text x="1027" y="248" fill="#94a3b8" font-size="8" text-anchor="middle">:8006 admin</text>
+
+        <!-- Traces -->
+        <rect x="1098" y="205" width="118" height="55" rx="6" fill="#0f172a"/>
+        <rect x="1098" y="205" width="118" height="55" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="1157" y="228" fill="white" font-size="11" font-weight="600" text-anchor="middle">Traces</text>
+        <text x="1157" y="248" fill="#94a3b8" font-size="8" text-anchor="middle">:8009 cost</text>
+
+        <!-- === Modular Services === -->
+        <rect x="305" y="290" width="915" height="195" rx="8" fill="transparent" stroke="#34d399" stroke-width="0.8" stroke-dasharray="4,4"/>
+        <text x="318" y="308" fill="#34d399" font-size="9">Modular Services (per-tenant feature flags)</text>
+
+        <!-- Row 1 -->
+        <rect x="318" y="318" width="135" height="55" rx="6" fill="#0f172a"/>
+        <rect x="318" y="318" width="135" height="55" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="386" y="341" fill="white" font-size="11" font-weight="600" text-anchor="middle">Agent</text>
+        <text x="386" y="361" fill="#94a3b8" font-size="8" text-anchor="middle">:8004 LLM+tools</text>
+
+        <rect x="470" y="318" width="135" height="55" rx="6" fill="#0f172a"/>
+        <rect x="470" y="318" width="135" height="55" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="538" y="341" fill="white" font-size="11" font-weight="600" text-anchor="middle">Ingest</text>
+        <text x="538" y="361" fill="#94a3b8" font-size="8" text-anchor="middle">:8007 pipeline</text>
+
+        <rect x="622" y="318" width="135" height="55" rx="6" fill="#0f172a"/>
+        <rect x="622" y="318" width="135" height="55" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="690" y="341" fill="white" font-size="11" font-weight="600" text-anchor="middle">Feedback</text>
+        <text x="690" y="361" fill="#94a3b8" font-size="8" text-anchor="middle">:8008 quality</text>
+
+        <rect x="774" y="318" width="135" height="55" rx="6" fill="#0f172a"/>
+        <rect x="774" y="318" width="135" height="55" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="842" y="341" fill="white" font-size="11" font-weight="600" text-anchor="middle">Astro</text>
+        <text x="842" y="361" fill="#94a3b8" font-size="8" text-anchor="middle">:8011 55+ techs</text>
+
+        <rect x="926" y="318" width="135" height="55" rx="6" fill="#0f172a"/>
+        <rect x="926" y="318" width="135" height="55" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="994" y="341" fill="white" font-size="11" font-weight="600" text-anchor="middle">ERP</text>
+        <text x="994" y="361" fill="#94a3b8" font-size="8" text-anchor="middle">:8013 business</text>
+
+        <!-- Row 2 -->
+        <rect x="318" y="400" width="135" height="55" rx="6" fill="#0f172a"/>
+        <rect x="318" y="400" width="135" height="55" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="386" y="423" fill="white" font-size="11" font-weight="600" text-anchor="middle">BigBrother</text>
+        <text x="386" y="443" fill="#94a3b8" font-size="8" text-anchor="middle">:8012 network</text>
+
+        <rect x="470" y="400" width="135" height="55" rx="6" fill="#0f172a"/>
+        <rect x="470" y="400" width="135" height="55" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="538" y="423" fill="white" font-size="11" font-weight="600" text-anchor="middle">HealthWatch</text>
+        <text x="538" y="443" fill="#94a3b8" font-size="8" text-anchor="middle">:8014 triage</text>
+
+        <rect x="1115" y="418" width="135" height="55" rx="6" fill="#0f172a"/>
+        <rect x="1115" y="418" width="135" height="55" rx="6" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="1183" y="441" fill="white" font-size="11" font-weight="600" text-anchor="middle">Extractor</text>
+        <text x="1183" y="461" fill="#fbbf24" font-size="8" text-anchor="middle">:8090 Python OCR</text>
+
+        <!-- === NATS + JetStream === -->
+        <rect x="318" y="510" width="900" height="32" rx="6" fill="rgba(251, 146, 60, 0.15)" stroke="#fb923c" stroke-width="1.5"/>
+        <text x="768" y="531" fill="#fb923c" font-size="11" font-weight="600" text-anchor="middle">NATS + JetStream  &mdash;  tenant.{slug}.notify.{event} | tenant.{slug}.{channel}</text>
+        <text x="370" y="531" fill="#94a3b8" font-size="9">:4222</text>
+
+        <!-- === Data Layer === -->
+        <rect x="305" y="565" width="915" height="115" rx="8" fill="transparent" stroke="#a78bfa" stroke-width="0.8" stroke-dasharray="4,4"/>
+        <text x="318" y="582" fill="#a78bfa" font-size="9">Data Layer (per-tenant isolation)</text>
+
+        <rect x="318" y="592" width="200" height="75" rx="6" fill="#0f172a"/>
+        <rect x="318" y="592" width="200" height="75" rx="6" fill="rgba(76, 29, 149, 0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="418" y="615" fill="white" font-size="11" font-weight="600" text-anchor="middle">PostgreSQL</text>
+        <text x="418" y="635" fill="#94a3b8" font-size="9" text-anchor="middle">Platform DB</text>
+        <text x="418" y="655" fill="#a78bfa" font-size="8" text-anchor="middle">tenants, users, billing</text>
+
+        <rect x="538" y="592" width="200" height="75" rx="6" fill="#0f172a"/>
+        <rect x="538" y="592" width="200" height="75" rx="6" fill="rgba(76, 29, 149, 0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="638" y="615" fill="white" font-size="11" font-weight="600" text-anchor="middle">PostgreSQL</text>
+        <text x="638" y="635" fill="#94a3b8" font-size="9" text-anchor="middle">Tenant DB (per-tenant)</text>
+        <text x="638" y="655" fill="#a78bfa" font-size="8" text-anchor="middle">chat, docs, feedback</text>
+
+        <rect x="758" y="592" width="180" height="75" rx="6" fill="#0f172a"/>
+        <rect x="758" y="592" width="180" height="75" rx="6" fill="rgba(76, 29, 149, 0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="848" y="615" fill="white" font-size="11" font-weight="600" text-anchor="middle">Redis 7</text>
+        <text x="848" y="635" fill="#94a3b8" font-size="9" text-anchor="middle">Platform + Tenant</text>
+        <text x="848" y="655" fill="#a78bfa" font-size="8" text-anchor="middle">cache, sessions, rate</text>
+
+        <rect x="958" y="592" width="180" height="75" rx="6" fill="#0f172a"/>
+        <rect x="958" y="592" width="180" height="75" rx="6" fill="rgba(76, 29, 149, 0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="1048" y="615" fill="white" font-size="11" font-weight="600" text-anchor="middle">MinIO</text>
+        <text x="1048" y="635" fill="#94a3b8" font-size="9" text-anchor="middle">S3-compatible</text>
+        <text x="1048" y="655" fill="#a78bfa" font-size="8" text-anchor="middle">:9000 documents</text>
+
+        <!-- === GPU / ML Pipeline === -->
+        <rect x="305" y="705" width="600" height="115" rx="8" fill="transparent" stroke="#fbbf24" stroke-width="0.8" stroke-dasharray="4,4"/>
+        <text x="318" y="722" fill="#fbbf24" font-size="9">GPU / ML Pipeline (SGLang model servers)</text>
+
+        <rect x="318" y="735" width="170" height="72" rx="6" fill="#0f172a"/>
+        <rect x="318" y="735" width="170" height="72" rx="6" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="403" y="758" fill="white" font-size="11" font-weight="600" text-anchor="middle">SGLang OCR</text>
+        <text x="403" y="778" fill="#94a3b8" font-size="9" text-anchor="middle">PaddleOCR-VL 1.5</text>
+        <text x="403" y="798" fill="#fbbf24" font-size="8" text-anchor="middle">:8100 GPU</text>
+
+        <rect x="508" y="735" width="170" height="72" rx="6" fill="#0f172a"/>
+        <rect x="508" y="735" width="170" height="72" rx="6" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="593" y="758" fill="white" font-size="11" font-weight="600" text-anchor="middle">SGLang Vision</text>
+        <text x="593" y="778" fill="#94a3b8" font-size="9" text-anchor="middle">Qwen3.5-9B</text>
+        <text x="593" y="798" fill="#fbbf24" font-size="8" text-anchor="middle">:8101 GPU</text>
+
+        <rect x="698" y="735" width="190" height="72" rx="6" fill="#0f172a"/>
+        <rect x="698" y="735" width="190" height="72" rx="6" fill="rgba(120, 53, 15, 0.15)" stroke="#fbbf24" stroke-width="1" stroke-dasharray="4,4"/>
+        <text x="793" y="758" fill="#94a3b8" font-size="11" font-weight="600" text-anchor="middle">SGLang LLM</text>
+        <text x="793" y="778" fill="#64748b" font-size="9" text-anchor="middle">Nemotron-Super-49B</text>
+        <text x="793" y="798" fill="#64748b" font-size="8" text-anchor="middle">:8102 (future)</text>
+
+        <!-- Docker Networks -->
+        <rect x="930" y="720" width="280" height="105" rx="6" fill="#0f172a"/>
+        <rect x="930" y="720" width="280" height="105" rx="6" fill="rgba(30, 41, 59, 0.3)" stroke="#64748b" stroke-width="1"/>
+        <text x="1070" y="742" fill="white" font-size="10" font-weight="600" text-anchor="middle">Docker Networks</text>
+        <text x="1070" y="762" fill="#22d3ee" font-size="9" text-anchor="middle">frontend: Traefik &harr; Services</text>
+        <text x="1070" y="780" fill="#fb923c" font-size="9" text-anchor="middle">sda-backend: Services &harr; NATS</text>
+        <text x="1070" y="798" fill="#a78bfa" font-size="9" text-anchor="middle">data: Services &harr; PG/Redis</text>
+        <text x="1070" y="816" fill="#94a3b8" font-size="9" text-anchor="middle">lan: BigBrother (macvlan)</text>
+
+        <!-- ============================================================
+             ZONE: OBSERVABILITY (right)
+             ============================================================ -->
+        <rect x="1250" y="15" width="355" height="520" rx="12" fill="rgba(30, 41, 59, 0.1)" stroke="#94a3b8" stroke-width="1" stroke-dasharray="8,4"/>
+        <text x="1265" y="38" fill="#94a3b8" font-size="11" font-weight="600">Observability Stack</text>
+
+        <rect x="1268" y="55" width="320" height="55" rx="6" fill="#0f172a"/>
+        <rect x="1268" y="55" width="320" height="55" rx="6" fill="rgba(30, 41, 59, 0.5)" stroke="#94a3b8" stroke-width="1.5"/>
+        <text x="1428" y="80" fill="white" font-size="11" font-weight="600" text-anchor="middle">OpenTelemetry Collector</text>
+        <text x="1428" y="100" fill="#94a3b8" font-size="9" text-anchor="middle">:4317 gRPC / :4318 HTTP</text>
+
+        <rect x="1268" y="135" width="320" height="55" rx="6" fill="#0f172a"/>
+        <rect x="1268" y="135" width="320" height="55" rx="6" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="1428" y="160" fill="white" font-size="11" font-weight="600" text-anchor="middle">Grafana 11.6</text>
+        <text x="1428" y="180" fill="#94a3b8" font-size="9" text-anchor="middle">:3001 dashboards + alerts</text>
+
+        <rect x="1268" y="215" width="150" height="55" rx="6" fill="#0f172a"/>
+        <rect x="1268" y="215" width="150" height="55" rx="6" fill="rgba(76, 29, 149, 0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="1343" y="240" fill="white" font-size="11" font-weight="600" text-anchor="middle">Tempo</text>
+        <text x="1343" y="260" fill="#94a3b8" font-size="9" text-anchor="middle">:3200 traces</text>
+
+        <rect x="1438" y="215" width="150" height="55" rx="6" fill="#0f172a"/>
+        <rect x="1438" y="215" width="150" height="55" rx="6" fill="rgba(76, 29, 149, 0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="1513" y="240" fill="white" font-size="11" font-weight="600" text-anchor="middle">Prometheus</text>
+        <text x="1513" y="260" fill="#94a3b8" font-size="9" text-anchor="middle">:9090 metrics</text>
+
+        <rect x="1268" y="295" width="150" height="55" rx="6" fill="#0f172a"/>
+        <rect x="1268" y="295" width="150" height="55" rx="6" fill="rgba(76, 29, 149, 0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="1343" y="320" fill="white" font-size="11" font-weight="600" text-anchor="middle">Loki</text>
+        <text x="1343" y="340" fill="#94a3b8" font-size="9" text-anchor="middle">:3100 logs</text>
+
+        <rect x="1438" y="295" width="150" height="55" rx="6" fill="#0f172a"/>
+        <rect x="1438" y="295" width="150" height="55" rx="6" fill="rgba(136, 19, 55, 0.4)" stroke="#fb7185" stroke-width="1.5"/>
+        <text x="1513" y="320" fill="white" font-size="10" font-weight="600" text-anchor="middle">AlertManager</text>
+        <text x="1513" y="340" fill="#94a3b8" font-size="8" text-anchor="middle">:9093 routing</text>
+
+        <rect x="1268" y="375" width="320" height="48" rx="6" fill="#0f172a"/>
+        <rect x="1268" y="375" width="320" height="48" rx="6" fill="rgba(30, 41, 59, 0.5)" stroke="#94a3b8" stroke-width="1"/>
+        <text x="1428" y="398" fill="white" font-size="10" font-weight="600" text-anchor="middle">Promtail &rarr; Docker container logs</text>
+        <text x="1428" y="416" fill="#94a3b8" font-size="8" text-anchor="middle">/var/lib/docker/containers/</text>
+
+        <rect x="1268" y="445" width="320" height="48" rx="6" fill="#0f172a"/>
+        <rect x="1268" y="445" width="320" height="48" rx="6" fill="rgba(30, 41, 59, 0.5)" stroke="#94a3b8" stroke-width="1"/>
+        <text x="1428" y="468" fill="white" font-size="10" font-weight="600" text-anchor="middle">Autoheal</text>
+        <text x="1428" y="486" fill="#94a3b8" font-size="8" text-anchor="middle">auto-restart unhealthy containers</text>
+
+        <!-- ============================================================
+             LEGEND
+             ============================================================ -->
+        <text x="1268" y="570" fill="white" font-size="11" font-weight="600">Legend</text>
+
+        <rect x="1268" y="586" width="18" height="12" rx="2" fill="rgba(8, 51, 68, 0.4)" stroke="#22d3ee" stroke-width="1"/>
+        <text x="1294" y="597" fill="#94a3b8" font-size="9">Frontend (Next.js)</text>
+
+        <rect x="1268" y="608" width="18" height="12" rx="2" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1"/>
+        <text x="1294" y="619" fill="#94a3b8" font-size="9">Backend (Go microservice)</text>
+
+        <rect x="1268" y="630" width="18" height="12" rx="2" fill="rgba(76, 29, 149, 0.4)" stroke="#a78bfa" stroke-width="1"/>
+        <text x="1294" y="641" fill="#94a3b8" font-size="9">Database / Storage</text>
+
+        <rect x="1268" y="652" width="18" height="12" rx="2" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1"/>
+        <text x="1294" y="663" fill="#94a3b8" font-size="9">Cloud / GPU / ML</text>
+
+        <rect x="1268" y="674" width="18" height="12" rx="2" fill="rgba(136, 19, 55, 0.4)" stroke="#fb7185" stroke-width="1"/>
+        <text x="1294" y="685" fill="#94a3b8" font-size="9">Security / Gateway</text>
+
+        <rect x="1268" y="696" width="18" height="12" rx="2" fill="rgba(251, 146, 60, 0.3)" stroke="#fb923c" stroke-width="1"/>
+        <text x="1294" y="707" fill="#94a3b8" font-size="9">Message Bus (NATS)</text>
+
+        <line x1="1268" y1="726" x2="1286" y2="726" stroke="#fbbf24" stroke-width="2"/>
+        <text x="1294" y="730" fill="#94a3b8" font-size="9">gRPC internal</text>
+
+        <line x1="1268" y1="748" x2="1286" y2="748" stroke="#fb7185" stroke-width="1.5" stroke-dasharray="4,3"/>
+        <text x="1294" y="752" fill="#94a3b8" font-size="9">Auth / security flow</text>
+
+        <line x1="1268" y1="770" x2="1286" y2="770" stroke="#34d399" stroke-width="1.5"/>
+        <text x="1294" y="774" fill="#94a3b8" font-size="9">REST routing (Traefik)</text>
+
+        <!-- ============================================================
+             TENANT CONTEXT (bottom)
+             ============================================================ -->
+        <rect x="15" y="955" width="1590" height="85" rx="8" fill="rgba(136, 19, 55, 0.1)" stroke="#fb7185" stroke-width="0.8" stroke-dasharray="4,4"/>
+        <text x="32" y="978" fill="#fb7185" font-size="10" font-weight="600">Tenant Context Propagation</text>
+        <text x="32" y="998" fill="#94a3b8" font-size="9">Browser &rarr; Cloudflare Tunnel &rarr; Traefik (extract subdomain) &rarr; X-Tenant-ID header &rarr; Go middleware (resolve from Platform DB, cache in Redis) &rarr; per-tenant PostgreSQL + Redis</text>
+        <text x="32" y="1016" fill="#94a3b8" font-size="9">JWT claims: user_id, tenant_id, slug, role, permissions &bull; Ed25519 local validation (no Auth round-trip) &bull; Subdomain + JWT must match (security invariant)</text>
+        <text x="32" y="1034" fill="#94a3b8" font-size="9">NATS subjects: tenant.{slug}.notify.{event} + tenant.{slug}.{channel} &bull; Every write publishes event &rarr; WS Hub pushes to browser &bull; No polling in frontend</text>
+
+      </svg>
+    </div>
+
+    <!-- Info Cards -->
+    <div class="cards">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot emerald"></div>
+          <h3>Go Microservices (15)</h3>
+        </div>
+        <ul>
+          <li>&#8226; chi router + sqlc + slog</li>
+          <li>&#8226; JWT Ed25519 local validation</li>
+          <li>&#8226; Per-tenant DB/Redis isolation</li>
+          <li>&#8226; NATS async events on every write</li>
+          <li>&#8226; OpenTelemetry traces + metrics</li>
+          <li>&#8226; gRPC for internal service calls</li>
+          <li>&#8226; Feature flags per tenant</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot amber"></div>
+          <h3>GPU / ML Pipeline</h3>
+        </div>
+        <ul>
+          <li>&#8226; RTX PRO 6000 (96GB VRAM)</li>
+          <li>&#8226; SGLang: OCR (PaddleOCR-VL 1.5)</li>
+          <li>&#8226; SGLang: Vision (Qwen3.5-9B)</li>
+          <li>&#8226; Tree RAG (PageIndex-inspired, no vectors)</li>
+          <li>&#8226; NVIDIA API: Nemotron-Super-49B</li>
+          <li>&#8226; Model-agnostic via OpenAI-compatible API</li>
+          <li>&#8226; Slot-per-pipeline-step architecture</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot violet"></div>
+          <h3>Data & Infrastructure</h3>
+        </div>
+        <ul>
+          <li>&#8226; PostgreSQL 16: platform + per-tenant DBs</li>
+          <li>&#8226; Redis 7: cache, sessions, rate limits</li>
+          <li>&#8226; NATS + JetStream: persistent events</li>
+          <li>&#8226; MinIO: S3-compatible object storage</li>
+          <li>&#8226; Traefik v3: TLS, subdomain routing</li>
+          <li>&#8226; CrowdSec IDS + Docker autoheal</li>
+          <li>&#8226; 4 Docker networks (frontend/backend/data/lan)</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot rose"></div>
+          <h3>Security</h3>
+        </div>
+        <ul>
+          <li>&#8226; JWT + refresh tokens (Ed25519)</li>
+          <li>&#8226; RBAC with granular permissions</li>
+          <li>&#8226; Tenant isolation at every layer</li>
+          <li>&#8226; AES-256-GCM envelope encryption</li>
+          <li>&#8226; Cloudflare Tunnel (no exposed ports)</li>
+          <li>&#8226; CrowdSec IDS on Traefik logs</li>
+          <li>&#8226; Per-service NATS auth tokens</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot cyan"></div>
+          <h3>Frontend</h3>
+        </div>
+        <ul>
+          <li>&#8226; Next.js 16.2.2 + React 19.2.4 + TypeScript</li>
+          <li>&#8226; Tailwind CSS 4 + shadcn/ui (web only)</li>
+          <li>&#8226; TanStack Query v5 for state</li>
+          <li>&#8226; WebSocket-first real-time</li>
+          <li>&#8226; Module Registry (dynamic imports)</li>
+          <li>&#8226; Login app: minimal, no shadcn</li>
+          <li>&#8226; Deploy: Vercel or Fly.io</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot orange"></div>
+          <h3>Observability</h3>
+        </div>
+        <ul>
+          <li>&#8226; OpenTelemetry Collector (gRPC + HTTP)</li>
+          <li>&#8226; Grafana 11.6 (single pane of glass)</li>
+          <li>&#8226; Tempo: distributed tracing</li>
+          <li>&#8226; Prometheus v3.4: metrics (30d retention)</li>
+          <li>&#8226; Loki + Promtail: log aggregation</li>
+          <li>&#8226; AlertManager &rarr; Notification webhook</li>
+          <li>&#8226; HealthWatch + AI triage</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="footer">
+      SDA Framework v2.0.5 &bull; Hybrid Cloud/InHouse &bull; github.com/Camionerou/rag-saldivia &bull; April 2026
+    </p>
+
+    <!-- References -->
+    <div class="card" style="margin-top: 2rem;">
+      <div class="card-header">
+        <div class="card-dot amber"></div>
+        <h3>Source References</h3>
+      </div>
+      <ul>
+        <li style="margin-top: 0.5rem; color: #64748b; font-size: 0.65rem;">SERVICE ENTRY POINTS (ports verified)</li>
+        <li>&#8226; services/auth/cmd/main.go &mdash; :8001 JWT+RBAC+MFA</li>
+        <li>&#8226; services/ws/cmd/main.go &mdash; :8002 WebSocket Hub</li>
+        <li>&#8226; services/chat/cmd/main.go &mdash; :8003 + gRPC :50052</li>
+        <li>&#8226; services/agent/cmd/main.go &mdash; :8004 LLM+tools</li>
+        <li>&#8226; services/notification/cmd/main.go &mdash; :8005</li>
+        <li>&#8226; services/platform/cmd/main.go &mdash; :8006 admin+flags</li>
+        <li>&#8226; services/ingest/cmd/main.go &mdash; :8007 pipeline</li>
+        <li>&#8226; services/feedback/cmd/main.go &mdash; :8008 quality</li>
+        <li>&#8226; services/traces/cmd/main.go &mdash; :8009 cost tracking</li>
+        <li>&#8226; services/search/cmd/main.go &mdash; :8010 + gRPC :50051</li>
+        <li>&#8226; services/astro/cmd/main.go &mdash; :8011 (v0.2.0)</li>
+        <li>&#8226; services/bigbrother/cmd/main.go &mdash; :8012 network intel</li>
+        <li>&#8226; services/erp/cmd/main.go &mdash; :8013</li>
+        <li>&#8226; services/healthwatch/cmd/main.go &mdash; :8014</li>
+        <li>&#8226; services/extractor/main.py &mdash; :8090 Python OCR+Vision</li>
+        <li style="margin-top: 0.5rem; color: #64748b; font-size: 0.65rem;">INFRASTRUCTURE &amp; DEPLOY</li>
+        <li>&#8226; deploy/docker-compose.dev.yml &mdash; dev stack (postgres, redis, nats, traefik, mailpit, minio, sglang)</li>
+        <li>&#8226; deploy/docker-compose.prod.yml &mdash; prod stack (secrets, resource limits, autoheal, 4 networks)</li>
+        <li>&#8226; deploy/docker-compose.test.yml &mdash; CI ephemeral stack (tmpfs, offset ports)</li>
+        <li>&#8226; deploy/traefik/dynamic/dev.yml &mdash; dev routing (14 routers, host.docker.internal)</li>
+        <li>&#8226; deploy/traefik/dynamic/prod.yml.tmpl &mdash; prod routing (subdomain extraction, rate limiting)</li>
+        <li>&#8226; deploy/traefik/traefik.prod.yml.tmpl &mdash; ACME TLS, Cloudflare DNS challenge</li>
+        <li>&#8226; deploy/crowdsec/acquis.yaml &mdash; Traefik log analysis + HTTP-CVE detection</li>
+        <li>&#8226; deploy/nats/nats-server.conf &mdash; prod NATS auth (per-service credentials)</li>
+        <li style="margin-top: 0.5rem; color: #64748b; font-size: 0.65rem;">OBSERVABILITY</li>
+        <li>&#8226; deploy/observability/docker-compose.observability.yml &mdash; full Grafana stack</li>
+        <li>&#8226; deploy/observability/otel/config.yaml &mdash; OTLP pipelines (traces&rarr;Tempo, metrics&rarr;Prometheus, logs&rarr;Loki)</li>
+        <li>&#8226; deploy/observability/prometheus/prometheus.yml &mdash; scrape config, 15s interval</li>
+        <li>&#8226; deploy/observability/prometheus/alerts.yml &mdash; sda-service-health + sda-infrastructure rules</li>
+        <li>&#8226; deploy/observability/alertmanager/config.yml &mdash; webhook to notification:8005, severity routing</li>
+        <li>&#8226; deploy/observability/promtail/config.yml &mdash; Docker container log discovery, JSON parsing</li>
+        <li>&#8226; deploy/observability/tempo-config.yaml &mdash; Tempo v2.7.2 trace storage</li>
+        <li>&#8226; deploy/observability/grafana/provisioning/datasources/datasources.yaml &mdash; Tempo+Prometheus+Loki</li>
+        <li style="margin-top: 0.5rem; color: #64748b; font-size: 0.65rem;">SHARED PACKAGES (architecture patterns)</li>
+        <li>&#8226; pkg/jwt/jwt.go &mdash; Ed25519 signing (EdDSA), 15min access / 7d refresh tokens</li>
+        <li>&#8226; pkg/crypto/crypto.go &mdash; AES-256-GCM encryption (32-byte key, random nonce)</li>
+        <li>&#8226; pkg/crypto/envelope.go &mdash; Envelope encryption KEK/DEK + AAD</li>
+        <li>&#8226; pkg/tenant/resolver.go &mdash; Platform DB lookup, pool cache (5min TTL), encrypted URLs</li>
+        <li>&#8226; pkg/nats/publisher.go &mdash; Subject format: tenant.{slug}.notify.{event} + tenant.{slug}.{channel}</li>
+        <li style="margin-top: 0.5rem; color: #64748b; font-size: 0.65rem;">FRONTEND</li>
+        <li>&#8226; apps/web/package.json &mdash; Next.js 16.2.2, React 19.2.4, TanStack Query 5, shadcn 4.1.2, Zod 4.3.6</li>
+        <li>&#8226; apps/login/package.json &mdash; Next.js 16.2.2, React 19.2.4, Tailwind only (no shadcn)</li>
+        <li>&#8226; apps/web/next.config.ts &mdash; CSP headers, authInterrupts, wss://*.sda.app allowed</li>
+        <li style="margin-top: 0.5rem; color: #64748b; font-size: 0.65rem;">WORKSPACE</li>
+        <li>&#8226; go.work &mdash; 14 Go modules registered (extractor excluded, it's Python)</li>
+        <li>&#8226; docs/plans/2.0.x-plan01-sda-framework.md &mdash; system spec (la biblia)</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>
