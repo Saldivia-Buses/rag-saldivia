@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/ed25519"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 
@@ -13,7 +14,9 @@ import (
 
 	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
+	"github.com/Camionerou/rag-saldivia/pkg/tenant"
 	"github.com/Camionerou/rag-saldivia/services/healthwatch/internal/service"
 )
 
@@ -87,6 +90,11 @@ func (h *Healthwatch) Alerts(w http.ResponseWriter, r *http.Request) {
 func (h *Healthwatch) Check(w http.ResponseWriter, r *http.Request) {
 	summary, err := h.svc.TriggerCheck(r.Context())
 	if err != nil {
+		if errors.Is(err, service.ErrCheckCooldown) {
+			w.Header().Set("Retry-After", "10")
+			httperr.WriteError(w, r, httperr.Wrap(err, httperr.CodeInvalidInput, "check on cooldown, retry after 10s", 429))
+			return
+		}
 		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
@@ -150,7 +158,16 @@ func (h *Healthwatch) requirePlatformAdmin(next http.Handler) http.Handler {
 		r.Header.Set("X-User-Role", claims.Role)
 		r.Header.Set("X-Tenant-ID", claims.TenantID)
 		r.Header.Set("X-Tenant-Slug", claims.Slug)
-		next.ServeHTTP(w, r)
+
+		// Set context values to align with pkg/middleware.AuthWithConfig
+		ctx := tenant.WithInfo(r.Context(), tenant.Info{
+			ID:   claims.TenantID,
+			Slug: claims.Slug,
+		})
+		ctx = sdamw.WithRole(ctx, claims.Role)
+		ctx = sdamw.WithUserID(ctx, claims.UserID)
+		ctx = sdamw.WithUserEmail(ctx, claims.Email)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 

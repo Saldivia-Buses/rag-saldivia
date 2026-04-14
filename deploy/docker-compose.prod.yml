@@ -255,6 +255,7 @@ services:
       - data
     labels:
       - "traefik.enable=true"
+      - "autoheal=true"
       - "traefik.http.routers.auth.rule=PathPrefix(`/v1/auth`) || PathPrefix(`/v1/modules`)"
       - "traefik.http.routers.auth.entrypoints=websecure"
       - "traefik.http.services.auth.loadbalancer.server.port=8001"
@@ -298,6 +299,7 @@ services:
       - backend
     labels:
       - "traefik.enable=true"
+      - "autoheal=true"
       - "traefik.http.routers.ws.rule=PathPrefix(`/ws`)"
       - "traefik.http.routers.ws.entrypoints=websecure"
       - "traefik.http.services.ws.loadbalancer.server.port=8002"
@@ -347,6 +349,7 @@ services:
       - data
     labels:
       - "traefik.enable=true"
+      - "autoheal=true"
       - "traefik.http.routers.chat.rule=PathPrefix(`/v1/chat`)"
       - "traefik.http.routers.chat.entrypoints=websecure"
       - "traefik.http.services.chat.loadbalancer.server.port=8003"
@@ -398,6 +401,7 @@ services:
       - backend
     labels:
       - "traefik.enable=true"
+      - "autoheal=true"
       - "traefik.http.routers.agent.rule=PathPrefix(`/v1/agent`)"
       - "traefik.http.routers.agent.entrypoints=websecure"
       - "traefik.http.services.agent.loadbalancer.server.port=8004"
@@ -448,6 +452,7 @@ services:
       - data
     labels:
       - "traefik.enable=true"
+      - "autoheal=true"
       - "traefik.http.routers.search.rule=PathPrefix(`/v1/search`)"
       - "traefik.http.routers.search.entrypoints=websecure"
       - "traefik.http.services.search.loadbalancer.server.port=8010"
@@ -492,6 +497,7 @@ services:
       - data
     labels:
       - "traefik.enable=true"
+      - "autoheal=true"
       - "traefik.http.routers.traces.rule=PathPrefix(`/v1/traces`)"
       - "traefik.http.routers.traces.entrypoints=websecure"
       - "traefik.http.services.traces.loadbalancer.server.port=8009"
@@ -541,6 +547,7 @@ services:
       - data
     labels:
       - "traefik.enable=true"
+      - "autoheal=true"
       - "traefik.http.routers.notification.rule=PathPrefix(`/v1/notifications`)"
       - "traefik.http.routers.notification.entrypoints=websecure"
       - "traefik.http.services.notification.loadbalancer.server.port=8005"
@@ -586,6 +593,7 @@ services:
       - data
     labels:
       - "traefik.enable=true"
+      - "autoheal=true"
       - "traefik.http.routers.platform.rule=Host(`platform.${SDA_DOMAIN:-sda.app}`) && PathPrefix(`/v1/platform`)"
       - "traefik.http.routers.platform.entrypoints=websecure"
       - "traefik.http.services.platform.loadbalancer.server.port=8006"
@@ -631,6 +639,7 @@ services:
       - data
     labels:
       - "traefik.enable=true"
+      - "autoheal=true"
       - "traefik.http.routers.ingest.rule=PathPrefix(`/v1/ingest`)"
       - "traefik.http.routers.ingest.entrypoints=websecure"
       - "traefik.http.services.ingest.loadbalancer.server.port=8007"
@@ -675,6 +684,7 @@ services:
       - data
     labels:
       - "traefik.enable=true"
+      - "autoheal=true"
       - "traefik.http.routers.feedback.rule=PathPrefix(`/v1/feedback`) || PathPrefix(`/v1/platform/feedback`)"
       - "traefik.http.routers.feedback.entrypoints=websecure"
       - "traefik.http.services.feedback.loadbalancer.server.port=8008"
@@ -728,6 +738,7 @@ services:
       - data
     labels:
       - "traefik.enable=true"
+      - "autoheal=true"
       - "traefik.http.routers.astro.rule=PathPrefix(`/v1/astro`)"
       - "traefik.http.routers.astro.entrypoints=websecure"
       - "traefik.http.services.astro.loadbalancer.server.port=8011"
@@ -806,6 +817,7 @@ services:
       - data
     labels:
       - "traefik.enable=true"
+      - "autoheal=true"
       - "traefik.http.routers.erp.rule=PathPrefix(`/v1/erp`)"
       - "traefik.http.routers.erp.entrypoints=websecure"
       - "traefik.http.services.erp.loadbalancer.server.port=8013"
@@ -865,6 +877,7 @@ services:
       - lan
     labels:
       - "traefik.enable=true"
+      - "autoheal=true"
       - "traefik.http.routers.bigbrother.rule=PathPrefix(`/v1/bigbrother`)"
       - "traefik.http.routers.bigbrother.entrypoints=websecure"
       - "traefik.http.services.bigbrother.loadbalancer.server.port=8012"
@@ -917,6 +930,7 @@ services:
       - data
     labels:
       - "traefik.enable=true"
+      - "autoheal=true"
       - "traefik.http.routers.healthwatch.rule=PathPrefix(`/v1/healthwatch`)"
       - "traefik.http.routers.healthwatch.entrypoints=websecure"
       - "traefik.http.services.healthwatch.loadbalancer.server.port=8014"
@@ -936,7 +950,7 @@ services:
     depends_on:
       - docker-socket-proxy
     environment:
-      AUTOHEAL_CONTAINER_LABEL: all
+      AUTOHEAL_CONTAINER_LABEL: autoheal
       AUTOHEAL_INTERVAL: 30        # check every 30s
       AUTOHEAL_START_PERIOD: 60    # grace period on startup
       AUTOHEAL_DEFAULT_STOP_TIMEOUT: 10

@@ -101,6 +101,13 @@ http:
       entryPoints: [web]
       middlewares: [dev-cors, dev-tenant]
 
+    # HealthWatch — platform-level health monitoring (no dev-tenant: admin only)
+    healthwatch:
+      rule: "PathPrefix(`/v1/healthwatch`)"
+      service: healthwatch
+      entryPoints: [web]
+      middlewares: [dev-cors]
+
   services:
     auth:
       loadBalancer:
@@ -150,6 +157,10 @@ http:
       loadBalancer:
         servers:
           - url: "http://host.docker.internal:8013"
+    healthwatch:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8014"
 
   middlewares:
     # CORS for dev — frontend on :3000, API on :80

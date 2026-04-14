@@ -4,14 +4,19 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
+	"sync"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/Camionerou/rag-saldivia/services/healthwatch/internal/collector"
 )
+
+// ErrCheckCooldown is returned when a manual check is triggered too soon.
+var ErrCheckCooldown = errors.New("manual check on cooldown, try again later")
 
 // HealthSummary is the scrubbed executive summary response ([M3]).
 // No raw errors, IPs, credentials, or stack traces.
@@ -70,11 +75,22 @@ type Service struct {
 	prom      *collector.Prometheus
 	docker    *collector.Docker
 	services  *collector.Service
+
+	// Rate limiting for manual check trigger
+	checkMu       sync.Mutex
+	lastCheckTime time.Time
+	checkCooldown time.Duration
 }
 
 // New creates a healthwatch service.
 func New(db *pgxpool.Pool, prom *collector.Prometheus, docker *collector.Docker, services *collector.Service) *Service {
-	return &Service{db: db, prom: prom, docker: docker, services: services}
+	return &Service{
+		db:            db,
+		prom:          prom,
+		docker:        docker,
+		services:      services,
+		checkCooldown: 10 * time.Second,
+	}
 }
 
 // Summary returns a scrubbed executive summary of system health.
@@ -116,8 +132,8 @@ func (s *Service) Summary(ctx context.Context) (*HealthSummary, error) {
 		Infrastructure: infra,
 	}
 
-	// Persist snapshots to DB
-	s.persistSnapshots(ctx, statuses)
+	// Persist snapshots to DB — async to avoid blocking the response
+	go s.persistSnapshots(context.WithoutCancel(ctx), statuses)
 
 	return summary, nil
 }
@@ -166,12 +182,24 @@ func (s *Service) ActiveAlerts(ctx context.Context) ([]Alert, error) {
 	return alerts, nil
 }
 
-// TriggerCheck runs a manual health check and returns the summary.
+// TriggerCheck runs a manual health check with cooldown rate limiting.
+// Minimum 10s between manual triggers to prevent flooding internal services.
 func (s *Service) TriggerCheck(ctx context.Context) (*HealthSummary, error) {
+	s.checkMu.Lock()
+	if time.Since(s.lastCheckTime) < s.checkCooldown {
+		s.checkMu.Unlock()
+		return nil, ErrCheckCooldown
+	}
+	s.lastCheckTime = time.Now()
+	s.checkMu.Unlock()
+
 	return s.Summary(ctx)
 }
 
 // ListTriageRecords returns recent triage records from the database.
+// Uses raw SQL instead of sqlc — healthwatch queries the shared platform DB
+// (health_snapshots, triage_records) which is not owned by this service.
+// Setting up a full sqlc config for 2 simple queries is not justified.
 func (s *Service) ListTriageRecords(ctx context.Context, limit int) ([]TriageRecord, error) {
 	if s.db == nil {
 		return []TriageRecord{}, nil

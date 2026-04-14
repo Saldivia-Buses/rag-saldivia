@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS health_snapshots (
     id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     service     TEXT NOT NULL,
-    status      TEXT NOT NULL,  -- 'healthy', 'degraded', 'unhealthy', 'offline'
+    status      TEXT NOT NULL CHECK (status IN ('healthy', 'degraded', 'unhealthy', 'offline')),
     response_ms INT,
     version     TEXT,
     details     JSONB,         -- arbitrary health data from /health
@@ -18,12 +18,12 @@ CREATE INDEX idx_health_snapshots_service ON health_snapshots(service, checked_a
 -- Triage records (AI-generated analysis)
 CREATE TABLE IF NOT EXISTS triage_records (
     id            TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-    severity      TEXT NOT NULL,  -- 'critical', 'high', 'medium', 'low', 'info'
+    severity      TEXT NOT NULL CHECK (severity IN ('critical', 'high', 'medium', 'low', 'info')),
     title         TEXT NOT NULL,
     analysis      TEXT NOT NULL,  -- AI-generated analysis (scrubbed, no raw errors)
     services      TEXT[],         -- affected services
     github_issue  INT,            -- GitHub issue number if created
-    status        TEXT NOT NULL DEFAULT 'open',  -- 'open', 'resolved', 'dismissed'
+    status        TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'resolved', 'dismissed')),
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
     resolved_at   TIMESTAMPTZ
 );
