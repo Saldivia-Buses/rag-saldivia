@@ -19,7 +19,7 @@
         "pkg", "proto", "config"
       ]
     ],
-    "subject-case": [2, "always", ["lower-case", "sentence-case"]],
+    "subject-case": [0],
     "subject-max-length": [2, "always", 100],
     "body-max-line-length": [2, "always", 150],
     "header-max-length": [2, "always", 120]
