@@ -38,7 +38,9 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Validate PR commits
-        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+        run: |
+          MERGE_BASE=$(git merge-base ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
+          npx commitlint --from "$MERGE_BASE" --to ${{ github.event.pull_request.head.sha }} --verbose
 
   go-build:
     name: Build Go services
@@ -188,7 +190,7 @@ jobs:
           echo "::endgroup::"
 
       - name: Trivy filesystem scan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.28.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -212,7 +214,7 @@ jobs:
           SERVICES=$(ls services/*/Dockerfile 2>/dev/null \
             | grep -v '\.scaffold' | grep -v extractor \
             | sed 's|services/||;s|/Dockerfile||' \
-            | jq -R -s 'split("\n") | map(select(. != ""))')
+            | jq -Rc -s 'split("\n") | map(select(. != ""))')
           echo "matrix={\"service\":$SERVICES}" >> $GITHUB_OUTPUT
           echo "Discovered services: $SERVICES"
 
