@@ -2,6 +2,7 @@ name: AI Review
 
 on:
   pull_request:
+    branches: [2.0.x, main]
     types: [opened, synchronize]
 
 concurrency:
@@ -48,7 +49,7 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: ${{ steps.prompt.outputs.REVIEW_PROMPT }}
           claude_args: "--model claude-opus-4-6"
-          use_sticky_comment: "true"
+          use_sticky_comment: "false"
 
       - name: Score findings
         if: always() && steps.review.outcome == 'success'
@@ -123,7 +124,7 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: ${{ steps.prompt.outputs.REVIEW_PROMPT }}
           claude_args: "--model claude-opus-4-6"
-          use_sticky_comment: "true"
+          use_sticky_comment: "false"
 
       - name: Score findings
         if: always() && steps.review.outcome == 'success'
@@ -176,6 +177,7 @@ jobs:
       pull-requests: read
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with: { fetch-depth: 0 }
 
       - name: Read review prompt
         id: prompt
@@ -195,7 +197,7 @@ jobs:
           prompt: ${{ steps.prompt.outputs.REVIEW_PROMPT }}
           # Sonnet is sufficient for dependency review and cheaper
           claude_args: "--model claude-sonnet-4-6"
-          use_sticky_comment: "true"
+          use_sticky_comment: "false"
 
       - name: Score findings
         if: always() && steps.review.outcome == 'success'
