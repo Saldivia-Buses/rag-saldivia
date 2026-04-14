@@ -5,3 +5,5 @@
 - [PR 85 blacklist audit](project_pr85_blacklist_audit.md) -- 1 critical (dead code, nothing wired), 3 high. NOT APTO.
 - [Plan 08 post-hardening audit](project_plan08_audit.md) -- 0 critical, 3 high, 6 medium. First APTO verdict. Controlled production OK.
 - [Plan 15 BigBrother audit](project_plan15_bigbrother_audit.md) -- All 15 fixes verified, 3 new LOW only. APPROVE.
+- [Plan 23 Phase 3 AI gates audit](project_plan23_phase3_audit.md) -- 0 critical, 2 high (scoring bypass via code fences, mutable action tags). APTO with conditions.
+- [Plan 23 Phase 4 HealthWatch audit](project_plan23_phase4_audit.md) -- 1 critical (/send no RBAC), 3 high (blacklist fail-open, token not masked, wrong Traefik network). NOT APTO.

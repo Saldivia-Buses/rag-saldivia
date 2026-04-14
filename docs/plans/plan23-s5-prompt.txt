@@ -1,0 +1,106 @@
+Session S5 del Plan 23 — SDA Development Stack v2.
+
+Plan file: docs/plans/2.0.x-plan23-dev-stack-v2.md
+Fase 4: HealthWatch service + self-healing loop (lines 815-1193).
+
+Contexto: S1 completó Fase 1 (CI gates, ldflags, astro CGO fix). S2+S3
+completaron Fase 2 (alertmanager webhook, deploy recording, 6-phase deploy
+pipeline, circuit-breaker scripts, dependency ordering). S4 completó Fase 3
+(AI review gates, @claude assist, review prompts). 18 commits en 2.0.5.
+
+Esta fase tiene migraciones, código Go nuevo (servicio completo), Docker
+compose, y workflows YAML. Es la fase más pesada del plan.
+
+Estado actual relevante:
+- Platform DB latest migration: 006 (db/platform/migrations/006_trace_events_tenant)
+  → healthwatch migration será 007
+- get-service-token.sh ya existe en deploy/scripts/
+- Notification service tiene webhook endpoint pero NO tiene POST /v1/notifications/send
+  → task 4.6 lo agrega
+- Notification routes: List, UnreadCount, MarkAllRead, MarkRead, Get/UpdatePreferences,
+  HandleAlertWebhook (internal)
+
+IMPORTANTE — API de claude-code-action@v1 (descubierto en S4):
+El plan spec en 4.4 usa `direct_prompt`, `model`, y `outputs.response` que
+NO EXISTEN en la action real. Los campos reales son:
+- `prompt` (no direct_prompt)
+- `claude_args: "--model claude-sonnet-4-6"` (no model:)
+- `execution_file` output (no response output)
+- No existe `context_files` — para pasar archivos usar el prompt + repo checkout
+Adaptar el YAML de 4.4 y 4.5 a la API real, como se hizo en S4 con Fase 3.
+
+Actions pinned a SHA (de S4):
+- anthropics/claude-code-action@1c8b699d43e9bfed42b48ef15da85d89bab70960 # v1.0.94
+- actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+Tasks para esta sesión:
+
+4.1 — Scaffold healthwatch service + registrar en go.work
+- Estructura standard SDA: cmd/main.go, internal/{handler,service,collector}/
+- VERSION 0.1.0, Dockerfile, README.md, go.mod
+- 6 endpoints (todos requirePlatformAdmin excepto /health)
+- Puerto 8014
+- Docker compose entries en prod + dev
+- Registrar en go.work
+- Commit: feat(healthwatch): scaffold service with auth + docker proxy
+
+4.2 — Collectors con input seguro
+- prometheus.go: query Prometheus API, whitelist de service names (NUNCA user input)
+- docker.go: query docker-socket-proxy (NUNCA raw socket — DS5)
+- services.go: parallel HTTP to /health + /v1/info con errgroup + 5s timeout
+- Unit tests con HTTP mocks para cada collector
+- Commit: feat(healthwatch): implement collectors with input validation
+
+4.3 — Summary aggregation (scrubbed output)
+- /v1/healthwatch/summary devuelve JSON scrubbed (no raw errors/IPs/creds — M3)
+- Integration test verifica JSON schema + no raw error strings
+- Commit: feat(healthwatch): implement scrubbed summary aggregation
+
+4.4 — Daily triage cron (7PM Argentina)
+- .github/workflows/daily-triage.yml
+- Cron 0 22 * * * (UTC) = 7PM ART
+- Self-hosted runner (necesita acceso a HealthWatch en red local)
+- Service account JWT via get-service-token.sh
+- Health summary escrito a archivo, pasado como contexto (DS6: no interpolation)
+- AI triage con Sonnet, output JSON scrubbed
+- Crear GitHub issues para high+ findings
+- ANTHROPIC_API_KEY_TRIAGE (key separada — M5)
+- ADAPTAR a API real de claude-code-action (ver nota arriba)
+- Commit: feat(ci): add daily health triage cron at 7PM
+
+4.5 — Post-deploy verification + auto-close
+- .github/workflows/post-deploy.yml
+- Trigger: workflow_run de "Deploy SDA" completed
+- Self-hosted: health check + auto-close triage issues de servicios healthy
+- ADAPTAR a API real si usa claude-code-action
+- Commit: feat(ci): auto-close triage issues after successful deploy
+
+4.6 — POST /v1/notifications/send endpoint
+- Nuevo endpoint en notification service
+- Requiere JWT auth
+- Types: email, in_app
+- Prerequisito para daily triage email (4.4)
+- Integration test
+- Commit: feat(notification): add POST /v1/notifications/send endpoint
+
+Decisiones de seguridad relevantes:
+- DS4: Todos los endpoints de HealthWatch requieren requirePlatformAdmin JWT
+- DS5: Docker via socket proxy, NUNCA raw /var/run/docker.sock
+- DS6: Health data para triage via archivo, no interpolado en prompt string
+- M3: Summary output scrubbed — no raw errors, IPs, credentials, stack traces
+- M5: API key separada para triage (ANTHROPIC_API_KEY_TRIAGE)
+
+Archivos clave a leer antes de implementar:
+- services/platform/internal/handler/platform.go — requirePlatformAdmin pattern
+- services/notification/internal/handler/notification.go — routes existentes
+- services/notification/internal/handler/webhook.go — webhook auth pattern
+- pkg/middleware/auth.go — auth middleware
+- pkg/server/server.go — standard service bootstrap
+- services/.scaffold/ — template para nuevo servicio
+- deploy/docker-compose.prod.yml — compose patterns
+- deploy/docker-compose.dev.yml — compose dev patterns
+- deploy/scripts/get-service-token.sh — cómo obtener service JWT
+- db/platform/migrations/006_trace_events_tenant.up.sql — latest platform migration
+
+Workflow: leer docs/bible.md primero, TDD (test first), commit después
+de cada task, review al final de la sesión.

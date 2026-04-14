@@ -38,3 +38,6 @@
 - [PR #141 Post-audit ERP](project_pr141_post_audit.md) -- Post-audit fixes, APPROVED, float64 precision in cash count diff is medium finding
 - [2.0.5 Execution Plan](project_plan205_execution.md) -- Pre-impl review, 4 blockers: sqlc collision, missing queries, cross-service wiring, undefined query SQL
 - [Plan 23 S3 review (tasks 2.4-2.6)](project_plan23_s3_review.md) -- Deploy pipeline, blocker: prod-only dispatch silently skips deploy-prod; DS6 shell injection in generate-deploy-env; SECRET raw in JSON body
+- [Plan 23 Phase 3 review (AI gates)](project_plan23_phase3_review.md) -- ai-review.yml + claude-assist.yml + prompts, blockers: JSON extraction broken (gate is no-op), concurrency at wrong level
+- [Plan 23 Phase 4 review (HealthWatch)](project_plan23_phase4_review.md) -- HealthWatch service + /send endpoint, blockers: testify missing from go.mod, /send no role check, get-service-token 404, dev.yml missing healthwatch entry
+- [Plan 23 Phase 4 v2 review (second pass)](project_plan23_phase4_v2_review.md) -- CAMBIOS REQUERIDOS: service-token endpoint still missing in auth, shell injection in issue title, rows.Err() missing
