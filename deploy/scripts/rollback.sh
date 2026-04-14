@@ -74,4 +74,9 @@ done
 docker compose -f "$DEPLOY_DIR/docker-compose.prod.yml" up -d --pull always
 
 echo ""
-echo "Rollback complete. Versions restored from $VERSIONS_FILE"
+echo "Checking health after rollback..."
+bash "$SCRIPT_DIR/health-check.sh" --env prod --timeout 120 || {
+  echo "ERROR: rollback deployed but services unhealthy"
+  exit 1
+}
+echo "Rollback complete and verified. Versions restored from $VERSIONS_FILE"

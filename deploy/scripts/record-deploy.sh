@@ -52,17 +52,19 @@ fi
 
 # ── Record deploy ──────────────────────────────────────────────────────
 
+# Build JSON payload safely (jq --arg escapes special characters)
+PAYLOAD=$(jq -n \
+  --arg svc "sda" \
+  --arg ver_to "$SHA" \
+  --arg status "$STATUS" \
+  --arg notes "ref=${VERSION} sha=${SHA}" \
+  '{"service":$svc,"version_from":"","version_to":$ver_to,"status":$status,"notes":$notes}')
+
 RESPONSE=$(curl -sf --max-time 10 \
   -X POST "${PLATFORM_URL}/v1/platform/deploys" \
   -H "Authorization: Bearer ${TOKEN}" \
   -H "Content-Type: application/json" \
-  -d "{
-    \"service\": \"sda-platform\",
-    \"version_from\": \"\",
-    \"version_to\": \"${SHA}\",
-    \"status\": \"${STATUS}\",
-    \"notes\": \"ref=${VERSION} sha=${SHA}\"
-  }" 2>&1) || {
+  -d "$PAYLOAD" 2>&1) || {
   echo "WARN: failed to record deploy: $RESPONSE" >&2
   echo "Deploy was successful but not recorded in platform DB."
   exit 0  # non-fatal

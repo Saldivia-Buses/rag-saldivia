@@ -41,11 +41,15 @@ if [ -z "$SECRET" ]; then
   exit 1
 fi
 
+# Build JSON payload safely (jq --arg escapes quotes, backslashes, control chars)
+PAYLOAD=$(jq -n --arg svc "$SERVICE" --arg key "$SECRET" \
+  '{"service":$svc,"key":$key}')
+
 # Request short-lived token from auth service
 TOKEN=$(curl -sf --max-time 10 \
   -X POST "${AUTH_URL}/v1/auth/service-token" \
   -H "Content-Type: application/json" \
-  -d "{\"service\":\"${SERVICE}\",\"key\":\"${SECRET}\"}" 2>/dev/null \
+  -d "$PAYLOAD" 2>/dev/null \
   | jq -re '.token' 2>/dev/null) || {
   echo "ERROR: failed to obtain service token from ${AUTH_URL}" >&2
   exit 1

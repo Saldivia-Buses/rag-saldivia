@@ -37,3 +37,4 @@
 - [PR #138 Plan 17 Phases 7b+8](project_pr138_plan17_7b_8.md) -- ERP accounts+production+C2 fix, blockers: trigger crashes Allocate (no status col), balance update silent failure
 - [PR #141 Post-audit ERP](project_pr141_post_audit.md) -- Post-audit fixes, APPROVED, float64 precision in cash count diff is medium finding
 - [2.0.5 Execution Plan](project_plan205_execution.md) -- Pre-impl review, 4 blockers: sqlc collision, missing queries, cross-service wiring, undefined query SQL
+- [Plan 23 S3 review (tasks 2.4-2.6)](project_plan23_s3_review.md) -- Deploy pipeline, blocker: prod-only dispatch silently skips deploy-prod; DS6 shell injection in generate-deploy-env; SECRET raw in JSON body
