@@ -2,16 +2,19 @@ name: CI
 
 on:
   pull_request:
-    branches: [2.0.x, 2.0.1, main]
+    branches: [2.0.x, 2.0.5, main]
   push:
-    branches: [2.0.x, 2.0.1, main]
+    branches: [2.0.x, 2.0.5, main]
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# ══════════════════════════════════════════════════════════════════════════
+# Gate 1: Verify — lint, vet, build (parallel within gate)
+# ══════════════════════════════════════════════════════════════════════════
+
 jobs:
-  # ── Commitlint ────────────────────────────────────────────────────────────
   commitlint:
     name: Lint commit messages
     runs-on: ubuntu-latest
@@ -37,7 +40,6 @@ jobs:
       - name: Validate PR commits
         run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
 
-  # ── Go Build ──────────────────────────────────────────────────────────────
   go-build:
     name: Build Go services
     runs-on: ubuntu-latest
@@ -61,7 +63,6 @@ jobs:
             echo "::endgroup::"
           done
 
-  # ── Go Vet ────────────────────────────────────────────────────────────────
   go-vet:
     name: Vet Go code
     runs-on: ubuntu-latest
@@ -88,7 +89,10 @@ jobs:
           go vet ./gen/go/...
           echo "::endgroup::"
 
-  # ── Go Test ───────────────────────────────────────────────────────────────
+  # ══════════════════════════════════════════════════════════════════════════
+  # Gate 2: Test — unit + integration (needs Gate 1)
+  # ══════════════════════════════════════════════════════════════════════════
+
   go-test:
     name: Test Go services
     runs-on: ubuntu-latest
@@ -113,10 +117,14 @@ jobs:
           go test -race -count=1 ./pkg/...
           echo "::endgroup::"
 
-  # ── Security Scanning ──────────────────────────────────────────────────
+  # ══════════════════════════════════════════════════════════════════════════
+  # Gate 3: Security — gosec + trivy (needs Gate 1)
+  # ══════════════════════════════════════════════════════════════════════════
+
   security:
     name: Security scan
     runs-on: ubuntu-latest
+    needs: [go-build]
     steps:
       - uses: actions/checkout@v4
 
@@ -147,3 +155,47 @@ jobs:
           scan-ref: '.'
           severity: 'HIGH,CRITICAL'
           exit-code: '1'
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # Gate 4: Docker — build all images (needs Gate 2 + 3)
+  # ══════════════════════════════════════════════════════════════════════════
+
+  discover-services:
+    name: Discover Go services
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.find.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: find
+        name: Generate service matrix from filesystem
+        run: |
+          SERVICES=$(ls services/*/Dockerfile 2>/dev/null \
+            | grep -v '\.scaffold' | grep -v extractor \
+            | sed 's|services/||;s|/Dockerfile||' \
+            | jq -R -s 'split("\n") | map(select(. != ""))')
+          echo "matrix={\"service\":$SERVICES}" >> $GITHUB_OUTPUT
+          echo "Discovered services: $SERVICES"
+
+  docker-build:
+    name: "Docker build: ${{ matrix.service }}"
+    runs-on: ubuntu-latest
+    needs: [go-test, security, discover-services]
+    strategy:
+      matrix: ${{ fromJson(needs.discover-services.outputs.matrix) }}
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          SERVICE="${{ matrix.service }}"
+          echo "::group::Building sda-${SERVICE}"
+          docker build \
+            --build-arg VERSION=ci-test \
+            --build-arg GIT_SHA=${{ github.sha }} \
+            --build-arg BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ) \
+            -t "sda-${SERVICE}:ci" \
+            -f "services/${SERVICE}/Dockerfile" .
+          echo "::endgroup::"
+          echo "Image sda-${SERVICE}:ci built successfully"
