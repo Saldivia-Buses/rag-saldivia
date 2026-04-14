@@ -23,11 +23,15 @@ and Dockerfiles — not business logic.
 
 ## Critical Invariants (subset relevant to deps/config)
 
-1. **Migration pairs are always complete** — every `.up.sql` has a matching
+1. **Every write publishes a NATS event** — if a migration adds a new table
+   or a new mutation endpoint appears, verify the corresponding NATS event
+   publisher exists. Subject format: `tenant.{slug}.{service}.{entity}[.{action}]`.
+
+2. **Migration pairs are always complete** — every `.up.sql` has a matching
    `.down.sql`. Numbers are sequential with no gaps. sqlc generated code must
    match the current schema.
 
-2. **Service structure is uniform** — every Go service has `cmd/main.go`,
+3. **Service structure is uniform** — every Go service has `cmd/main.go`,
    `VERSION` (valid semver), `Dockerfile` (multi-stage, non-root), `README.md`.
    Every service is registered in `go.work`.
 
@@ -77,21 +81,14 @@ and Dockerfiles — not business logic.
 
 ## Output Format
 
-Respond with ONLY valid JSON (no markdown, no code fences):
+Respond with ONLY a valid JSON object. No markdown, no code fences, no
+explanation before or after — just the raw JSON object starting with { and
+ending with }.
 
-```
-{
-  "findings": [
-    {
-      "severity": "critical|high|medium|low",
-      "file": "path/to/file",
-      "line": 0,
-      "issue": "Description of the issue",
-      "fix": "Suggested fix"
-    }
-  ],
-  "summary": "One paragraph summarizing dependency/config changes"
-}
-```
+Example (single line for clarity):
+{"findings": [{"severity": "high", "file": "path/to/file", "line": 0, "issue": "Description", "fix": "Suggested fix"}], "summary": "One paragraph summary"}
 
-If no issues found, return `{"findings": [], "summary": "No dependency or configuration issues found."}`.
+Schema: findings is an array of objects with severity (critical|high|medium|low),
+file (string), line (integer), issue (string), fix (string). summary is a string.
+
+If no issues found: {"findings": [], "summary": "No dependency or configuration issues found."}

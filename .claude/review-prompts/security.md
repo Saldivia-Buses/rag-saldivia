@@ -16,7 +16,7 @@ SDA Framework is a multi-tenant SaaS platform. A cross-tenant data leak is the
 worst-case scenario. Security is not a tradeoff — it is a constraint.
 
 - **Stack:** Go (chi + sqlc + pgx + slog + golang-jwt + nats.go)
-- **Auth:** JWT (HS256, 32+ byte secret, 15min access / 7d refresh)
+- **Auth:** JWT (EdDSA / ed25519 keypair, 15min access / 7d refresh)
 - **Database:** PostgreSQL per-tenant (isolated pools via `tenant.Resolver`)
 - **Cache:** Redis per-tenant (isolated clients via `tenant.Resolver`)
 - **Broker:** NATS + JetStream (tenant-namespaced subjects)
@@ -32,8 +32,9 @@ These 7 rules MUST NOT be violated. Any violation is a **critical** finding.
    pool across tenants.
 
 2. **JWT is the single source of identity** — UserID, TenantID, Slug, Role all
-   come from JWT claims. Services verify JWT locally with ed25519 public key.
-   Never trust client-supplied identity headers without middleware validation.
+   come from JWT claims. Services verify JWT locally with ed25519 public key
+   (EdDSA — HS256 is explicitly rejected). Never trust client-supplied identity
+   headers without middleware validation.
 
 3. **NATS subjects are tenant-namespaced** — ALL events follow
    `tenant.{slug}.{service}.{entity}[.{action}]` format. Never publish without
@@ -106,21 +107,14 @@ Focus on security vulnerabilities in the PR diff:
 
 ## Output Format
 
-Respond with ONLY valid JSON (no markdown, no code fences):
+Respond with ONLY a valid JSON object. No markdown, no code fences, no
+explanation before or after — just the raw JSON object starting with { and
+ending with }.
 
-```
-{
-  "findings": [
-    {
-      "severity": "critical|high|medium|low",
-      "file": "path/to/file.go",
-      "line": 42,
-      "issue": "Description of the vulnerability",
-      "fix": "Suggested remediation"
-    }
-  ],
-  "summary": "One paragraph summarizing the security posture"
-}
-```
+Example (single line for clarity):
+{"findings": [{"severity": "critical", "file": "path/to/file.go", "line": 42, "issue": "Description", "fix": "Remediation"}], "summary": "One paragraph summary"}
 
-If no issues found, return `{"findings": [], "summary": "No security issues found."}`.
+Schema: findings is an array of objects with severity (critical|high|medium|low),
+file (string), line (integer), issue (string), fix (string). summary is a string.
+
+If no issues found: {"findings": [], "summary": "No security issues found."}

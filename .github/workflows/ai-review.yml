@@ -27,7 +27,7 @@ jobs:
       contents: read
       pull-requests: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with: { fetch-depth: 0 }
 
       - name: Read review prompt
@@ -43,7 +43,7 @@ jobs:
 
       - name: Claude Quality Review
         id: review
-        uses: anthropics/claude-code-action@v1
+        uses: anthropics/claude-code-action@1c8b699d43e9bfed42b48ef15da85d89bab70960 # v1.0.94
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: ${{ steps.prompt.outputs.REVIEW_PROMPT }}
@@ -61,22 +61,32 @@ jobs:
             exit 0
           fi
 
-          # Extract JSON from execution output (may contain non-JSON wrapper)
-          # Try direct parse first, then extract JSON object if wrapped
+          # Extract JSON: try direct parse, then strip code fences, then regex
           if jq -e '.findings' "$EXEC_FILE" > /dev/null 2>&1; then
             cp "$EXEC_FILE" /tmp/review-output.json
+          elif sed -n '/^```\(json\)\?$/,/^```$/{ /^```/d; p }' "$EXEC_FILE" | jq -e '.findings' > /dev/null 2>&1; then
+            sed -n '/^```\(json\)\?$/,/^```$/{ /^```/d; p }' "$EXEC_FILE" > /tmp/review-output.json
+          elif python3 -c "
+          import json, re, sys
+          text = open(sys.argv[1]).read()
+          m = re.search(r'\{.*\}', text, re.DOTALL)
+          if m:
+              obj = json.loads(m.group())
+              json.dump(obj, open('/tmp/review-output.json','w'))
+          else:
+              sys.exit(1)
+          " "$EXEC_FILE" 2>/dev/null; then
+            true
           else
-            # Try to extract the first JSON object from the file
-            grep -oP '\{[\s\S]*\}' "$EXEC_FILE" | head -1 > /tmp/review-output.json 2>/dev/null || true
+            echo "::error::Could not parse review output as JSON — failing closed"
+            exit 1
           fi
 
-          if [ ! -s /tmp/review-output.json ]; then
-            echo "::warning::Could not parse review output as JSON — manual review needed"
-            exit 0
+          # Count blocking findings — fail-closed on parse error
+          if ! BLOCKERS=$(jq '[.findings[] | select(.severity == "critical" or .severity == "high")] | length' /tmp/review-output.json); then
+            echo "::error::jq scoring failed — treating as blocking"
+            exit 1
           fi
-
-          # Count blocking findings (critical + high)
-          BLOCKERS=$(jq '[.findings[] | select(.severity == "critical" or .severity == "high")] | length' /tmp/review-output.json 2>/dev/null || echo "0")
 
           if [ "$BLOCKERS" -gt 0 ]; then
             echo "::error::Quality review found $BLOCKERS blocking issue(s) (critical/high)"
@@ -93,7 +103,7 @@ jobs:
       contents: read
       pull-requests: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with: { fetch-depth: 0 }
 
       - name: Read review prompt
@@ -108,7 +118,7 @@ jobs:
 
       - name: Claude Security Review
         id: review
-        uses: anthropics/claude-code-action@v1
+        uses: anthropics/claude-code-action@1c8b699d43e9bfed42b48ef15da85d89bab70960 # v1.0.94
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: ${{ steps.prompt.outputs.REVIEW_PROMPT }}
@@ -127,16 +137,28 @@ jobs:
 
           if jq -e '.findings' "$EXEC_FILE" > /dev/null 2>&1; then
             cp "$EXEC_FILE" /tmp/review-output.json
+          elif sed -n '/^```\(json\)\?$/,/^```$/{ /^```/d; p }' "$EXEC_FILE" | jq -e '.findings' > /dev/null 2>&1; then
+            sed -n '/^```\(json\)\?$/,/^```$/{ /^```/d; p }' "$EXEC_FILE" > /tmp/review-output.json
+          elif python3 -c "
+          import json, re, sys
+          text = open(sys.argv[1]).read()
+          m = re.search(r'\{.*\}', text, re.DOTALL)
+          if m:
+              obj = json.loads(m.group())
+              json.dump(obj, open('/tmp/review-output.json','w'))
+          else:
+              sys.exit(1)
+          " "$EXEC_FILE" 2>/dev/null; then
+            true
           else
-            grep -oP '\{[\s\S]*\}' "$EXEC_FILE" | head -1 > /tmp/review-output.json 2>/dev/null || true
+            echo "::error::Could not parse review output as JSON — failing closed"
+            exit 1
           fi
 
-          if [ ! -s /tmp/review-output.json ]; then
-            echo "::warning::Could not parse review output as JSON — manual review needed"
-            exit 0
+          if ! BLOCKERS=$(jq '[.findings[] | select(.severity == "critical" or .severity == "high")] | length' /tmp/review-output.json); then
+            echo "::error::jq scoring failed — treating as blocking"
+            exit 1
           fi
-
-          BLOCKERS=$(jq '[.findings[] | select(.severity == "critical" or .severity == "high")] | length' /tmp/review-output.json 2>/dev/null || echo "0")
 
           if [ "$BLOCKERS" -gt 0 ]; then
             echo "::error::Security review found $BLOCKERS blocking issue(s) (critical/high)"
@@ -153,7 +175,7 @@ jobs:
       contents: read
       pull-requests: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Read review prompt
         id: prompt
@@ -167,7 +189,7 @@ jobs:
 
       - name: Claude Dependency Review
         id: review
-        uses: anthropics/claude-code-action@v1
+        uses: anthropics/claude-code-action@1c8b699d43e9bfed42b48ef15da85d89bab70960 # v1.0.94
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: ${{ steps.prompt.outputs.REVIEW_PROMPT }}
@@ -187,16 +209,28 @@ jobs:
 
           if jq -e '.findings' "$EXEC_FILE" > /dev/null 2>&1; then
             cp "$EXEC_FILE" /tmp/review-output.json
+          elif sed -n '/^```\(json\)\?$/,/^```$/{ /^```/d; p }' "$EXEC_FILE" | jq -e '.findings' > /dev/null 2>&1; then
+            sed -n '/^```\(json\)\?$/,/^```$/{ /^```/d; p }' "$EXEC_FILE" > /tmp/review-output.json
+          elif python3 -c "
+          import json, re, sys
+          text = open(sys.argv[1]).read()
+          m = re.search(r'\{.*\}', text, re.DOTALL)
+          if m:
+              obj = json.loads(m.group())
+              json.dump(obj, open('/tmp/review-output.json','w'))
+          else:
+              sys.exit(1)
+          " "$EXEC_FILE" 2>/dev/null; then
+            true
           else
-            grep -oP '\{[\s\S]*\}' "$EXEC_FILE" | head -1 > /tmp/review-output.json 2>/dev/null || true
+            echo "::error::Could not parse review output as JSON — failing closed"
+            exit 1
           fi
 
-          if [ ! -s /tmp/review-output.json ]; then
-            echo "::warning::Could not parse review output as JSON — manual review needed"
-            exit 0
+          if ! BLOCKERS=$(jq '[.findings[] | select(.severity == "critical" or .severity == "high")] | length' /tmp/review-output.json); then
+            echo "::error::jq scoring failed — treating as blocking"
+            exit 1
           fi
-
-          BLOCKERS=$(jq '[.findings[] | select(.severity == "critical" or .severity == "high")] | length' /tmp/review-output.json 2>/dev/null || echo "0")
 
           if [ "$BLOCKERS" -gt 0 ]; then
             echo "::error::Dependency review found $BLOCKERS blocking issue(s) (critical/high)"

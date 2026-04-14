@@ -30,8 +30,10 @@ These 7 rules MUST NOT be violated. Any violation is a **critical** finding.
    pool across tenants.
 
 2. **JWT is the single source of identity** — UserID, TenantID, Slug, Role all
-   come from JWT claims. Services verify JWT locally with ed25519 public key.
-   Never trust client-supplied identity headers without middleware validation.
+   come from JWT claims. Services verify JWT locally with ed25519 public key
+   (EdDSA). Never trust client-supplied identity headers without middleware
+   validation. `pkg/middleware.Auth()` deletes spoofable headers (X-User-ID,
+   X-User-Email, X-User-Role, X-Tenant-ID, X-Tenant-Slug) BEFORE parsing JWT.
 
 3. **NATS subjects are tenant-namespaced** — ALL events follow
    `tenant.{slug}.{service}.{entity}[.{action}]` format. Never publish without
@@ -76,30 +78,29 @@ Focus on code quality issues in the PR diff:
 - No `fmt.Println` — use `slog`
 - No `panic` in handlers
 
-### SDA Patterns
+### HTTP Handlers
 - Handlers use `chi.URLParam()` for path params, not manual parsing
 - JSON decode via `json.NewDecoder(r.Body).Decode()`
 - Body size limited with `http.MaxBytesReader(w, r.Body, 1<<20)`
+- Correct status codes: 201 create, 204 delete, 400 bad input, 401 no auth, 403 forbidden, 404 not found
+- Error responses as JSON: `http.Error(w, '{"error":"msg"}', code)` or `writeJSON()`
+
+### SDA Patterns
 - Tenant context from `tenant.FromContext(ctx)`, never from body/query
 - NATS publish errors logged but don't block the request
+- WS Hub verifies JWT in upgrade handler (different from middleware pattern)
+- Header spoofing: handlers reading X-User-ID must be behind auth middleware
 
 ## Output Format
 
-Respond with ONLY valid JSON (no markdown, no code fences):
+Respond with ONLY a valid JSON object. No markdown, no code fences, no
+explanation before or after — just the raw JSON object starting with { and
+ending with }.
 
-```
-{
-  "findings": [
-    {
-      "severity": "critical|high|medium|low",
-      "file": "path/to/file.go",
-      "line": 42,
-      "issue": "Description of the issue",
-      "fix": "Suggested fix"
-    }
-  ],
-  "summary": "One paragraph summarizing the review"
-}
-```
+Example (single line for clarity):
+{"findings": [{"severity": "critical", "file": "path/to/file.go", "line": 42, "issue": "Description", "fix": "Suggested fix"}], "summary": "One paragraph summary"}
 
-If no issues found, return `{"findings": [], "summary": "No issues found."}`.
+Schema: findings is an array of objects with severity (critical|high|medium|low),
+file (string), line (integer), issue (string), fix (string). summary is a string.
+
+If no issues found: {"findings": [], "summary": "No issues found."}
