@@ -76,13 +76,14 @@ func (c *Service) checkService(ctx context.Context, name, port string) ServiceCh
 	if err != nil {
 		return check
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
-	if resp.StatusCode == http.StatusOK {
+	switch resp.StatusCode {
+	case http.StatusOK:
 		check.Status = "healthy"
-	} else if resp.StatusCode == http.StatusServiceUnavailable {
+	case http.StatusServiceUnavailable:
 		check.Status = "degraded"
-	} else {
+	default:
 		check.Status = "unhealthy"
 	}
 
@@ -107,7 +108,7 @@ func (c *Service) checkService(ctx context.Context, name, port string) ServiceCh
 	if err != nil {
 		return check
 	}
-	defer infoResp.Body.Close()
+	defer func() { _ = infoResp.Body.Close() }()
 
 	var info struct {
 		Version string `json:"version"`

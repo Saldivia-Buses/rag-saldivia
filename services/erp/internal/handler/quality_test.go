@@ -18,7 +18,6 @@ import (
 
 type mockQualityService struct {
 	ncs        []repository.ListNonconformitiesRow
-	nc         repository.ErpNonconformity
 	ncRow      repository.GetNonconformityRow
 	ncCreated  repository.CreateNonconformityRow
 	cas        []repository.ErpCorrectiveAction

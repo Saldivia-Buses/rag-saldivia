@@ -125,48 +125,60 @@ func TestReadVersionFile(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		setup    func() string // returns path
+		setup    func(t *testing.T) string // returns path
 		expected string
 	}{
 		{
 			name: "valid version file",
-			setup: func() string {
+			setup: func(t *testing.T) string {
+				t.Helper()
 				p := filepath.Join(tmpDir, "VERSION_valid")
-				os.WriteFile(p, []byte("1.2.3\n"), 0644)
+				if err := os.WriteFile(p, []byte("1.2.3\n"), 0644); err != nil {
+					t.Fatalf("write VERSION_valid: %v", err)
+				}
 				return p
 			},
 			expected: "1.2.3",
 		},
 		{
 			name: "version with whitespace",
-			setup: func() string {
+			setup: func(t *testing.T) string {
+				t.Helper()
 				p := filepath.Join(tmpDir, "VERSION_ws")
-				os.WriteFile(p, []byte("  2.0.0-rc1  \n"), 0644)
+				if err := os.WriteFile(p, []byte("  2.0.0-rc1  \n"), 0644); err != nil {
+					t.Fatalf("write VERSION_ws: %v", err)
+				}
 				return p
 			},
 			expected: "2.0.0-rc1",
 		},
 		{
 			name: "empty file returns dev",
-			setup: func() string {
+			setup: func(t *testing.T) string {
+				t.Helper()
 				p := filepath.Join(tmpDir, "VERSION_empty")
-				os.WriteFile(p, []byte(""), 0644)
+				if err := os.WriteFile(p, []byte(""), 0644); err != nil {
+					t.Fatalf("write VERSION_empty: %v", err)
+				}
 				return p
 			},
 			expected: "dev",
 		},
 		{
 			name: "whitespace-only file returns dev",
-			setup: func() string {
+			setup: func(t *testing.T) string {
+				t.Helper()
 				p := filepath.Join(tmpDir, "VERSION_ws_only")
-				os.WriteFile(p, []byte("   \n  \n"), 0644)
+				if err := os.WriteFile(p, []byte("   \n  \n"), 0644); err != nil {
+					t.Fatalf("write VERSION_ws_only: %v", err)
+				}
 				return p
 			},
 			expected: "dev",
 		},
 		{
 			name: "missing file returns Version fallback",
-			setup: func() string {
+			setup: func(_ *testing.T) string {
 				return filepath.Join(tmpDir, "nonexistent")
 			},
 			expected: Version, // "dev" or whatever ldflags set
@@ -175,7 +187,7 @@ func TestReadVersionFile(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			path := tt.setup()
+			path := tt.setup(t)
 			got := ReadVersionFile(path)
 			if got != tt.expected {
 				t.Errorf("ReadVersionFile(%q) = %q, want %q", path, got, tt.expected)

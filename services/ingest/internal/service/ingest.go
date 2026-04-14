@@ -127,13 +127,13 @@ func (s *Ingest) Submit(ctx context.Context, tenantSlug, userID, collection, fil
 	stagedPath := tmpFile.Name()
 
 	written, err := io.Copy(tmpFile, file)
-	tmpFile.Close()
+	_ = tmpFile.Close()
 	if err != nil {
-		os.Remove(stagedPath)
+		_ = os.Remove(stagedPath)
 		return nil, fmt.Errorf("stage file: %w", err)
 	}
 	if written == 0 {
-		os.Remove(stagedPath)
+		_ = os.Remove(stagedPath)
 		return nil, fmt.Errorf("empty file")
 	}
 
@@ -145,7 +145,7 @@ func (s *Ingest) Submit(ctx context.Context, tenantSlug, userID, collection, fil
 		FileSize:   fileSize,
 	})
 	if err != nil {
-		os.Remove(stagedPath)
+		_ = os.Remove(stagedPath)
 		return nil, fmt.Errorf("create ingest job: %w", err)
 	}
 	job := toJob(row)
@@ -161,14 +161,14 @@ func (s *Ingest) Submit(ctx context.Context, tenantSlug, userID, collection, fil
 		StagedPath: stagedPath,
 	})
 	if err != nil {
-		os.Remove(stagedPath)
+		_ = os.Remove(stagedPath)
 		return nil, fmt.Errorf("marshal ingest message: %w", err)
 	}
 
 	// S7 fix: fail the upload if NATS publish fails — prevents orphaned pending jobs
 	if err := s.nc.Publish(subject, payload); err != nil {
-		os.Remove(stagedPath)
-		s.repo.DeleteJobByID(ctx, job.ID)
+		_ = os.Remove(stagedPath)
+		_ = s.repo.DeleteJobByID(ctx, job.ID)
 		return nil, fmt.Errorf("publish ingest job: %w", err)
 	}
 

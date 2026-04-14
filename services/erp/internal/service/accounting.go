@@ -44,6 +44,9 @@ func (s *Accounting) ListAccounts(ctx context.Context, tenantID string, activeOn
 
 // CreateAccount creates a new account in the chart.
 func (s *Accounting) CreateAccount(ctx context.Context, tenantID, code, name string, parentID pgtype.UUID, accountType string, isDetail bool, costCenterID pgtype.UUID, userID, ip string) (repository.ErpAccount, error) {
+	if !validAccountTypes[accountType] {
+		return repository.ErpAccount{}, fmt.Errorf("invalid account type: %s", accountType)
+	}
 	acct, err := s.repo.CreateAccount(ctx, repository.CreateAccountParams{
 		TenantID: tenantID, Code: code, Name: name, ParentID: parentID,
 		AccountType: accountType, IsDetail: isDetail, CostCenterID: costCenterID,
@@ -191,7 +194,7 @@ func (s *Accounting) CloseFiscalYear(ctx context.Context, tenantID string, yearI
 	if err != nil {
 		return nil, fmt.Errorf("begin tx: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 	qtx := s.repo.WithTx(tx)
 
 	// 1. Validate fiscal year
@@ -357,7 +360,7 @@ func (s *Accounting) createClosingEntry(ctx context.Context, qtx *repository.Que
 		// Net income (income > expense): credit result account
 		resultDebit = zeroNumeric()
 		resultCredit = netResult
-	} else {
+	} else if isNegative(netResult) {
 		// Net loss: debit result account
 		resultDebit = absNumeric(netResult)
 		resultCredit = zeroNumeric()
@@ -534,7 +537,7 @@ func (s *Accounting) CreateEntry(ctx context.Context, req CreateEntryRequest) (*
 	if err != nil {
 		return nil, fmt.Errorf("begin tx: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	qtx := s.repo.WithTx(tx)
 

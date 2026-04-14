@@ -98,7 +98,9 @@ func (d *Documenter) GenerateDoc(ctx context.Context, deviceID string) (*DeviceD
 		defer rows.Close()
 		for rows.Next() {
 			var p PortDoc
-			rows.Scan(&p.Port, &p.Protocol, &p.Service, &p.Version, &p.State)
+			if err := rows.Scan(&p.Port, &p.Protocol, &p.Service, &p.Version, &p.State); err != nil {
+				continue
+			}
 			doc.Ports = append(doc.Ports, p)
 		}
 	}
@@ -115,7 +117,9 @@ func (d *Documenter) GenerateDoc(ctx context.Context, deviceID string) (*DeviceD
 		defer rows2.Close()
 		for rows2.Next() {
 			var c CapDoc
-			rows2.Scan(&c.Capability, &c.VerifiedAt)
+			if err := rows2.Scan(&c.Capability, &c.VerifiedAt); err != nil {
+				continue
+			}
 			doc.Caps = append(doc.Caps, c)
 		}
 	}
@@ -134,7 +138,9 @@ func (d *Documenter) GenerateDoc(ctx context.Context, deviceID string) (*DeviceD
 			defer rows3.Close()
 			for rows3.Next() {
 				var r RegisterDoc
-				rows3.Scan(&r.Protocol, &r.Address, &r.Name, &r.Value, &r.SafetyTier, &r.Writable)
+				if err := rows3.Scan(&r.Protocol, &r.Address, &r.Name, &r.Value, &r.SafetyTier, &r.Writable); err != nil {
+					continue
+				}
 				doc.Registers = append(doc.Registers, r)
 			}
 		}
@@ -181,7 +187,9 @@ func (d *Documenter) GetTopology(ctx context.Context) ([]TopologyEntry, error) {
 	var entries []TopologyEntry
 	for rows.Next() {
 		var e TopologyEntry
-		rows.Scan(&e.ID, &e.IP, &e.MAC, &e.Hostname, &e.DeviceType, &e.Status, &e.Vendor)
+		if err := rows.Scan(&e.ID, &e.IP, &e.MAC, &e.Hostname, &e.DeviceType, &e.Status, &e.Vendor); err != nil {
+			continue
+		}
 		entries = append(entries, e)
 	}
 	if entries == nil {
@@ -215,11 +223,14 @@ func (d *Documenter) GetStats(ctx context.Context) (*NetworkStats, error) {
 	for rows.Next() {
 		var status string
 		var count int
-		rows.Scan(&status, &count)
+		if err := rows.Scan(&status, &count); err != nil {
+			continue
+		}
 		stats.TotalDevices += count
-		if status == "online" {
+		switch status {
+		case "online":
 			stats.Online = count
-		} else if status == "offline" {
+		case "offline":
 			stats.Offline = count
 		}
 	}
@@ -234,14 +245,16 @@ func (d *Documenter) GetStats(ctx context.Context) (*NetworkStats, error) {
 		for rows2.Next() {
 			var dtype string
 			var count int
-			rows2.Scan(&dtype, &count)
+			if err := rows2.Scan(&dtype, &count); err != nil {
+				continue
+			}
 			stats.ByType[dtype] = count
 		}
 	}
 
 	// Last scan
 	var lastScan *string
-	d.db.QueryRow(ctx,
+	_ = d.db.QueryRow(ctx,
 		`SELECT details->>'duration_ms' FROM bb_events
 		 WHERE tenant_id = (SELECT id FROM tenants WHERE slug = $1 LIMIT 1)
 		   AND event_type = 'scan_completed'

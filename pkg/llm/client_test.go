@@ -48,7 +48,7 @@ func newTestServer(t *testing.T, status int, respBody string) (*httptest.Server,
 		lastBody = b
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(status)
-		w.Write([]byte(respBody))
+		_, _ = w.Write([]byte(respBody))
 	}))
 	t.Cleanup(srv.Close)
 
@@ -140,7 +140,7 @@ func TestChat_MaxTokensOmittedWhenZero(t *testing.T) {
 	}
 
 	var body map[string]any
-	json.Unmarshal(*lastBody, &body)
+	_ = json.Unmarshal(*lastBody, &body)
 
 	if _, exists := body["max_tokens"]; exists {
 		t.Error("max_tokens should be omitted when value is 0")
@@ -158,7 +158,7 @@ func TestChat_ToolsOmittedWhenNil(t *testing.T) {
 	}
 
 	var body map[string]any
-	json.Unmarshal(*lastBody, &body)
+	_ = json.Unmarshal(*lastBody, &body)
 
 	if _, exists := body["tools"]; exists {
 		t.Error("tools should be omitted when nil")
@@ -300,7 +300,7 @@ func TestChat_AuthorizationHeader(t *testing.T) {
 			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				gotAuth = r.Header.Get("Authorization")
 				w.Header().Set("Content-Type", "application/json")
-				w.Write([]byte(fakeCompletionResponse("ok", nil, 1, 1)))
+				_, _ = w.Write([]byte(fakeCompletionResponse("ok", nil, 1, 1)))
 			}))
 			t.Cleanup(srv.Close)
 
@@ -322,7 +322,7 @@ func TestChat_ContentTypeHeader(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotContentType = r.Header.Get("Content-Type")
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(fakeCompletionResponse("ok", nil, 1, 1)))
+		_, _ = w.Write([]byte(fakeCompletionResponse("ok", nil, 1, 1)))
 	}))
 	t.Cleanup(srv.Close)
 
@@ -342,7 +342,7 @@ func TestChat_EndpointPath(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotPath = r.URL.Path
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(fakeCompletionResponse("ok", nil, 1, 1)))
+		_, _ = w.Write([]byte(fakeCompletionResponse("ok", nil, 1, 1)))
 	}))
 	t.Cleanup(srv.Close)
 
@@ -468,7 +468,7 @@ func TestSimplePrompt_SendsSingleUserMessage(t *testing.T) {
 	}
 
 	var body map[string]any
-	json.Unmarshal(*lastBody, &body)
+	_ = json.Unmarshal(*lastBody, &body)
 
 	msgs := body["messages"].([]any)
 	if len(msgs) != 1 {
@@ -499,7 +499,7 @@ func TestSimplePrompt_DefaultMaxTokens(t *testing.T) {
 	}
 
 	var body map[string]any
-	json.Unmarshal(*lastBody, &body)
+	_ = json.Unmarshal(*lastBody, &body)
 
 	mt := int(body["max_tokens"].(float64))
 	if mt != 4096 {
@@ -517,7 +517,7 @@ func TestSimplePrompt_CustomMaxTokens(t *testing.T) {
 	}
 
 	var body map[string]any
-	json.Unmarshal(*lastBody, &body)
+	_ = json.Unmarshal(*lastBody, &body)
 
 	mt := int(body["max_tokens"].(float64))
 	if mt != 256 {
@@ -535,7 +535,7 @@ func TestSimplePrompt_ZeroMaxTokensFallsBackToDefault(t *testing.T) {
 	}
 
 	var body map[string]any
-	json.Unmarshal(*lastBody, &body)
+	_ = json.Unmarshal(*lastBody, &body)
 
 	mt := int(body["max_tokens"].(float64))
 	if mt != 4096 {

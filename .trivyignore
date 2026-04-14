@@ -1,0 +1,3 @@
+# Indirect dependency from testcontainers — test-only, not exploitable in production.
+# docker/docker v28.x is pulled as indirect dep; v29.x doesn't exist as Go module yet.
+CVE-2026-34040

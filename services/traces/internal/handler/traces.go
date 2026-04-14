@@ -64,7 +64,7 @@ func (h *Handler) ListTraces(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(traces)
+	_ = json.NewEncoder(w).Encode(traces)
 }
 
 // GetTraceDetail handles GET /v1/traces/{traceID}
@@ -90,7 +90,7 @@ func (h *Handler) GetTraceDetail(w http.ResponseWriter, r *http.Request) {
 		"events": events,
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	_ = json.NewEncoder(w).Encode(resp)
 }
 
 // GetTenantCost handles GET /v1/traces/costs?from=2026-04-01&to=2026-05-01
@@ -119,5 +119,5 @@ func (h *Handler) GetTenantCost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(cost)
+	_ = json.NewEncoder(w).Encode(cost)
 }

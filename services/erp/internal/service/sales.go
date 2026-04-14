@@ -77,7 +77,7 @@ func (s *Sales) CreateQuotation(ctx context.Context, req CreateQuotationRequest)
 	if err != nil {
 		return nil, fmt.Errorf("begin tx: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 	qtx := s.repo.WithTx(tx)
 
 	var total pgtype.Numeric

@@ -123,7 +123,7 @@ func (e *Executor) executeHTTP(ctx context.Context, jwt string, def Definition, 
 	if err != nil {
 		return &Result{Status: "timeout", Error: err.Error()}, nil
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20)) // 1MB max
 	if err != nil {

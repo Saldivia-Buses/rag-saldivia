@@ -82,6 +82,47 @@ func (q *Queries) EnableTenant(ctx context.Context, id string) error {
 	return err
 }
 
+const getTenantByID = `-- name: GetTenantByID :one
+SELECT id, slug, name, plan_id, postgres_url, redis_url, enabled, logo_url, domain, settings, created_at, updated_at
+FROM tenants
+WHERE id = $1
+`
+
+type GetTenantByIDRow struct {
+	ID          string             `json:"id"`
+	Slug        string             `json:"slug"`
+	Name        string             `json:"name"`
+	PlanID      string             `json:"plan_id"`
+	PostgresUrl string             `json:"postgres_url"`
+	RedisUrl    string             `json:"redis_url"`
+	Enabled     bool               `json:"enabled"`
+	LogoUrl     pgtype.Text        `json:"logo_url"`
+	Domain      pgtype.Text        `json:"domain"`
+	Settings    []byte             `json:"settings"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) GetTenantByID(ctx context.Context, id string) (GetTenantByIDRow, error) {
+	row := q.db.QueryRow(ctx, getTenantByID, id)
+	var i GetTenantByIDRow
+	err := row.Scan(
+		&i.ID,
+		&i.Slug,
+		&i.Name,
+		&i.PlanID,
+		&i.PostgresUrl,
+		&i.RedisUrl,
+		&i.Enabled,
+		&i.LogoUrl,
+		&i.Domain,
+		&i.Settings,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getTenantBySlug = `-- name: GetTenantBySlug :one
 SELECT id, slug, name, plan_id, postgres_url, redis_url, enabled, logo_url, domain, settings, created_at, updated_at
 FROM tenants

@@ -124,7 +124,7 @@ func (c *Client) markClosed() {
 func (c *Client) ReadPump(ctx context.Context) {
 	defer func() {
 		c.hub.unregister <- c
-		c.conn.Close(websocket.StatusNormalClosure, "")
+		_ = c.conn.Close(websocket.StatusNormalClosure, "")
 	}()
 
 	for {
@@ -153,7 +153,7 @@ func (c *Client) ReadPump(ctx context.Context) {
 
 // WritePump sends messages from the send channel to the WebSocket connection.
 func (c *Client) WritePump(ctx context.Context) {
-	defer c.conn.Close(websocket.StatusNormalClosure, "")
+	defer func() { _ = c.conn.Close(websocket.StatusNormalClosure, "") }()
 
 	for {
 		select {

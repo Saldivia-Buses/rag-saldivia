@@ -85,6 +85,6 @@ func Handler(serviceName string) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(payload)
+		_, _ = w.Write(payload)
 	}
 }

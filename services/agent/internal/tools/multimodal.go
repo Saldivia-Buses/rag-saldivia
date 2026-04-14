@@ -73,7 +73,7 @@ func (m *MultimodalTool) AnalyzeImage(ctx context.Context, params AnalyzeImagePa
 	if err != nil {
 		return &Result{Status: "error", Error: "vision model unreachable"}, nil
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		errBody, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))

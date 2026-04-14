@@ -1,15 +1,13 @@
 package config_test
 
 import (
-	"os"
 	"testing"
 
 	"github.com/Camionerou/rag-saldivia/pkg/config"
 )
 
 func TestEnv_WithValue(t *testing.T) {
-	os.Setenv("TEST_ENV_KEY", "hello")
-	defer os.Unsetenv("TEST_ENV_KEY")
+	t.Setenv("TEST_ENV_KEY", "hello")
 
 	got := config.Env("TEST_ENV_KEY", "default")
 	if got != "hello" {
@@ -25,8 +23,7 @@ func TestEnv_Fallback(t *testing.T) {
 }
 
 func TestMustEnv_WithValue(t *testing.T) {
-	os.Setenv("TEST_MUST_KEY", "value")
-	defer os.Unsetenv("TEST_MUST_KEY")
+	t.Setenv("TEST_MUST_KEY", "value")
 
 	got := config.MustEnv("TEST_MUST_KEY")
 	if got != "value" {

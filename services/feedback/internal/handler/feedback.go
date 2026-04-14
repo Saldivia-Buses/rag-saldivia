@@ -293,7 +293,7 @@ func parseIntParam(s string, fallback, max int) int {
 func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(v)
+	_ = json.NewEncoder(w).Encode(v)
 }
 
 // qualityEventToMap builds a response map from typed quality event fields.

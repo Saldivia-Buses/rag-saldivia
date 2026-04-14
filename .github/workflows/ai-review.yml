@@ -2,7 +2,7 @@ name: AI Review
 
 on:
   pull_request:
-    branches: [2.0.x, main]
+    branches: [2.0.x, 2.0.5, main]
     types: [opened, synchronize]
 
 concurrency:
@@ -23,10 +23,12 @@ concurrency:
 jobs:
   quality-review:
     name: "AI: Code Quality"
+    if: ${{ !startsWith(github.head_ref, 'bugfix/') && !startsWith(github.head_ref, 'fix/') && !startsWith(github.head_ref, 'hotfix/') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: read
+      id-token: write
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with: { fetch-depth: 0 }
@@ -99,10 +101,12 @@ jobs:
 
   security-review:
     name: "AI: Security"
+    if: ${{ !startsWith(github.head_ref, 'bugfix/') && !startsWith(github.head_ref, 'fix/') && !startsWith(github.head_ref, 'hotfix/') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: read
+      id-token: write
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with: { fetch-depth: 0 }
@@ -171,10 +175,12 @@ jobs:
 
   dependency-review:
     name: "AI: Dependencies"
+    if: ${{ !startsWith(github.head_ref, 'bugfix/') && !startsWith(github.head_ref, 'fix/') && !startsWith(github.head_ref, 'hotfix/') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: read
+      id-token: write
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with: { fetch-depth: 0 }
@@ -241,3 +247,35 @@ jobs:
           fi
 
           echo "Dependency review passed — no blocking findings"
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # Auto-approve: if all 3 review passes succeed, approve the PR
+  # so it satisfies branch protection "required reviewers" rule.
+  # ══════════════════════════════════════════════════════════════════════════
+  auto-approve:
+    name: "AI: Approve PR"
+    runs-on: ubuntu-latest
+    needs: [quality-review, security-review, dependency-review]
+    # Skip entirely on bugfix/fix/hotfix — Enzo merges those manually.
+    # GITHUB_TOKEN cannot approve PRs (org restriction), so we only run on
+    # feature branches where all 3 AI reviews ran and we post a comment instead.
+    if: ${{ !startsWith(github.head_ref, 'bugfix/') && !startsWith(github.head_ref, 'fix/') && !startsWith(github.head_ref, 'hotfix/') }}
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Check review results
+        run: |
+          if [ "${{ needs.quality-review.result }}" != "success" ] || \
+             [ "${{ needs.security-review.result }}" != "success" ] || \
+             [ "${{ needs.dependency-review.result }}" != "success" ]; then
+            echo "::error::AI review failed — cannot approve"
+            exit 1
+          fi
+
+      - name: Post approval comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --repo ${{ github.repository }} \
+            --body "All 3 AI review passes (quality, security, dependencies) passed. Ready to merge."

@@ -56,7 +56,7 @@ func (s *CurrentAccounts) Allocate(ctx context.Context, req AllocateRequest) err
 	if err != nil {
 		return fmt.Errorf("begin tx: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 	qtx := s.repo.WithTx(tx)
 
 	amt := pgNumeric(req.Amount)

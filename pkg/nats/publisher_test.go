@@ -145,7 +145,7 @@ func TestPublisher_Broadcast_ValidEvent(t *testing.T) {
 	}
 
 	var received map[string]any
-	json.Unmarshal(msg.Data, &received)
+	_ = json.Unmarshal(msg.Data, &received)
 
 	if received["type"] != "event" {
 		t.Errorf("expected type 'event', got %v", received["type"])

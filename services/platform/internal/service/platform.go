@@ -85,7 +85,7 @@ type TenantDetail struct {
 	UpdatedAt string `json:"updated_at"`
 }
 
-func tenantToDetail(t db.Tenant) TenantDetail {
+func idRowToDetail(t db.GetTenantByIDRow) TenantDetail {
 	d := TenantDetail{
 		ID:        t.ID,
 		Slug:      t.Slug,
@@ -157,6 +157,18 @@ func (p *Platform) ListTenants(ctx context.Context, limit, offset int32) ([]db.L
 		return nil, fmt.Errorf("list tenants: %w", err)
 	}
 	return tenants, nil
+}
+
+// GetTenantByID returns a tenant by ID (safe view without connection strings).
+func (p *Platform) GetTenantByID(ctx context.Context, id string) (TenantDetail, error) {
+	tenant, err := p.queries.GetTenantByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return TenantDetail{}, ErrTenantNotFound
+		}
+		return TenantDetail{}, fmt.Errorf("get tenant by id: %w", err)
+	}
+	return idRowToDetail(tenant), nil
 }
 
 // GetTenant returns a tenant by slug (safe view without connection strings).

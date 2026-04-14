@@ -39,7 +39,7 @@ func main() {
 	if err != nil {
 		slog.Warn("nats connect failed, trace publishing disabled", "error", err)
 	} else {
-		app.OnShutdown(func() { nc.Drain() })
+		app.OnShutdown(func() { _ = nc.Drain() })
 		slog.Info("connected to nats", "url", config.RedactURL(natsURL))
 	}
 	tracePublisher := service.NewTracePublisher(nc)
@@ -108,7 +108,7 @@ func main() {
 			slog.Warn("grpc search client failed, using http fallback", "error", err)
 		} else {
 			executor.SetGRPCSearch(grpcClient)
-			app.OnShutdown(func() { grpcClient.Close() })
+			app.OnShutdown(func() { _ = grpcClient.Close() })
 			slog.Info("search via grpc", "target", searchGRPC)
 		}
 	}

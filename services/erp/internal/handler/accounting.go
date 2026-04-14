@@ -92,7 +92,7 @@ func (h *Accounting) ListAccounts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"accounts": accounts})
+	_ = json.NewEncoder(w).Encode(map[string]any{"accounts": accounts})
 }
 
 func (h *Accounting) CreateAccount(w http.ResponseWriter, r *http.Request) {

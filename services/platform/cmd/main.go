@@ -42,7 +42,7 @@ func main() {
 	if err != nil {
 		slog.Warn("nats connect failed, lifecycle events disabled", "error", err)
 	} else {
-		app.OnShutdown(func() { nc.Drain() })
+		app.OnShutdown(func() { _ = nc.Drain() })
 	}
 	publisher := natspub.New(nc)
 

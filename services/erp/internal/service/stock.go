@@ -165,7 +165,7 @@ func (s *Stock) CreateMovement(ctx context.Context, req CreateMovementRequest) (
 	if err != nil {
 		return repository.ErpStockMovement{}, fmt.Errorf("begin tx: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	qtx := s.repo.WithTx(tx)
 

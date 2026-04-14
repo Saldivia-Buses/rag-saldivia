@@ -100,7 +100,7 @@ func New(name string, opts ...Option) *App {
 	if err != nil {
 		slog.Warn("otel init failed, traces disabled", "error", err)
 	} else {
-		app.cleanup = append(app.cleanup, func() { otelShutdown(context.Background()) })
+		app.cleanup = append(app.cleanup, func() { _ = otelShutdown(context.Background()) })
 	}
 
 	// Chi router with base middleware

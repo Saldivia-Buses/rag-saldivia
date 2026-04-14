@@ -43,7 +43,7 @@ func (b *NATSBridge) Start() error {
 // Stop unsubscribes from all NATS subjects.
 func (b *NATSBridge) Stop() {
 	for _, sub := range b.subs {
-		sub.Unsubscribe()
+		_ = sub.Unsubscribe()
 	}
 }
 

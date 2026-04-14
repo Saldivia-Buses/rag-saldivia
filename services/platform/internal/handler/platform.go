@@ -27,6 +27,7 @@ import (
 type PlatformService interface {
 	ListTenants(ctx context.Context, limit, offset int32) ([]db.ListTenantsRow, error)
 	GetTenant(ctx context.Context, slug string) (service.TenantDetail, error)
+	GetTenantByID(ctx context.Context, id string) (service.TenantDetail, error)
 	CreateTenant(ctx context.Context, arg db.CreateTenantParams) (service.TenantDetail, error)
 	UpdateTenant(ctx context.Context, arg db.UpdateTenantParams) error
 	DisableTenant(ctx context.Context, id string) error
@@ -69,6 +70,7 @@ func (h *Platform) Routes() chi.Router {
 	r.Route("/tenants", func(r chi.Router) {
 		r.Get("/", h.ListTenants)
 		r.Post("/", h.CreateTenant)
+		r.Get("/by-id/{tenantID}", h.GetTenantByID)
 		r.Get("/{slug}", h.GetTenant)
 		r.Put("/{tenantID}", h.UpdateTenant)
 		r.Post("/{tenantID}/disable", h.DisableTenant)
@@ -126,6 +128,21 @@ func (h *Platform) ListTenants(w http.ResponseWriter, r *http.Request) {
 func (h *Platform) GetTenant(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
 	tenant, err := h.svc.GetTenant(r.Context(), slug)
+	if err != nil {
+		if errors.Is(err, service.ErrTenantNotFound) {
+			httperr.WriteError(w, r, httperr.NotFound("tenant"))
+			return
+		}
+		httperr.WriteError(w, r, httperr.Internal(err))
+		return
+	}
+	writeJSON(w, http.StatusOK, tenant)
+}
+
+// GetTenantByID handles GET /v1/platform/tenants/by-id/{tenantID}
+func (h *Platform) GetTenantByID(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "tenantID")
+	tenant, err := h.svc.GetTenantByID(r.Context(), id)
 	if err != nil {
 		if errors.Is(err, service.ErrTenantNotFound) {
 			httperr.WriteError(w, r, httperr.NotFound("tenant"))
@@ -652,6 +669,6 @@ func (h *Platform) requirePlatformAdmin(next http.Handler) http.Handler {
 func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(v)
+	_ = json.NewEncoder(w).Encode(v)
 }
 

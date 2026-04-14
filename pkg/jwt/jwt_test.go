@@ -119,7 +119,7 @@ func TestCreateRefresh_and_Verify(t *testing.T) {
 	}
 
 	// Refresh token should expire in ~7 days
-	expiry := got.ExpiresAt.Time.Sub(got.IssuedAt.Time)
+	expiry := got.ExpiresAt.Sub(got.IssuedAt.Time)
 	if expiry < 6*24*time.Hour || expiry > 8*24*time.Hour {
 		t.Errorf("expected ~7d expiry, got %v", expiry)
 	}
@@ -522,8 +522,8 @@ func TestCreateRefresh_DifferentExpiryFromAccess(t *testing.T) {
 		t.Fatalf("Verify refresh: %v", err)
 	}
 
-	accessExpiry := accessClaims.ExpiresAt.Time.Sub(accessClaims.IssuedAt.Time)
-	refreshExpiry := refreshClaims.ExpiresAt.Time.Sub(refreshClaims.IssuedAt.Time)
+	accessExpiry := accessClaims.ExpiresAt.Sub(accessClaims.IssuedAt.Time)
+	refreshExpiry := refreshClaims.ExpiresAt.Sub(refreshClaims.IssuedAt.Time)
 
 	if refreshExpiry <= accessExpiry {
 		t.Errorf("refresh expiry (%v) must be longer than access expiry (%v)", refreshExpiry, accessExpiry)

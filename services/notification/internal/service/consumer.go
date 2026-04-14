@@ -130,20 +130,20 @@ func (c *Consumer) handleEvent(msg jetstream.Msg) {
 	tenantSlug := tenantFromSubject(msg.Subject())
 	if tenantSlug == "" {
 		slog.Warn("could not extract tenant from subject", "subject", msg.Subject())
-		msg.Nak()
+		_ = msg.Nak()
 		return
 	}
 
 	var evt Event
 	if err := json.Unmarshal(msg.Data(), &evt); err != nil {
 		slog.Warn("invalid notification event", "error", err, "subject", msg.Subject())
-		msg.Term() // don't redeliver malformed messages
+		_ = msg.Term() // don't redeliver malformed messages
 		return
 	}
 
 	if evt.UserID == "" || evt.Type == "" || evt.Title == "" {
 		slog.Warn("notification event missing required fields", "subject", msg.Subject())
-		msg.Term()
+		_ = msg.Term()
 		return
 	}
 
@@ -159,7 +159,7 @@ func (c *Consumer) handleEvent(msg jetstream.Msg) {
 	// Skip if user muted this type
 	if slices.Contains(prefs.MutedTypes, evt.Type) {
 		slog.Debug("notification muted by user", "type", evt.Type, "user_id", evt.UserID)
-		msg.Ack()
+		_ = msg.Ack()
 		return
 	}
 
@@ -173,7 +173,7 @@ func (c *Consumer) handleEvent(msg jetstream.Msg) {
 		notif, err := c.svc.Create(ctx, evt.UserID, evt.Type, evt.Title, evt.Body, evt.Data, channel)
 		if err != nil {
 			slog.Error("failed to create notification", "error", err, "user_id", evt.UserID)
-			msg.Nak() // retry later
+			_ = msg.Nak() // retry later
 			return
 		}
 		c.publishToWS(tenantSlug, notif)
@@ -190,7 +190,7 @@ func (c *Consumer) handleEvent(msg jetstream.Msg) {
 		}
 	}
 
-	msg.Ack()
+	_ = msg.Ack()
 }
 
 // publishToWS publishes a notification event to the WS Hub via NATS.

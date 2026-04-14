@@ -64,7 +64,9 @@ func (h *PlatformFeedback) Tenants(w http.ResponseWriter, r *http.Request) {
 		var period string
 		var activeAlerts int
 
-		rows.Scan(&tenantID, &name, &overall, &ai, &errors, &perf, &security, &usage, &nps, &period, &activeAlerts)
+		if err := rows.Scan(&tenantID, &name, &overall, &ai, &errors, &perf, &security, &usage, &nps, &period, &activeAlerts); err != nil {
+			continue
+		}
 		tenants = append(tenants, map[string]any{
 			"tenant_id":         tenantID,
 			"tenant_name":       name,
@@ -124,8 +126,10 @@ func (h *PlatformFeedback) Alerts(w http.ResponseWriter, r *http.Request) {
 		var createdAt string
 		var resolvedAt *string
 
-		rows.Scan(&id, &tenantID, &tenantName, &alertType, &severity, &module,
-			&title, &desc, &threshold, &currentVal, &st, &createdAt, &resolvedAt)
+		if err := rows.Scan(&id, &tenantID, &tenantName, &alertType, &severity, &module,
+			&title, &desc, &threshold, &currentVal, &st, &createdAt, &resolvedAt); err != nil {
+			continue
+		}
 		alerts = append(alerts, map[string]any{
 			"id": id, "tenant_id": tenantID, "tenant_name": tenantName,
 			"alert_type": alertType, "severity": severity, "module": module,
@@ -141,7 +145,7 @@ func (h *PlatformFeedback) Alerts(w http.ResponseWriter, r *http.Request) {
 
 	// Also return summary counts
 	var activeCount, warningCount, criticalCount int
-	h.platformDB.QueryRow(ctx,
+	_ = h.platformDB.QueryRow(ctx,
 		`SELECT COUNT(*),
 			COUNT(*) FILTER (WHERE severity = 'warning'),
 			COUNT(*) FILTER (WHERE severity = 'critical')
@@ -201,7 +205,9 @@ func (h *PlatformFeedback) Quality(w http.ResponseWriter, r *http.Request) {
 	var items []qualityRow
 	for rows.Next() {
 		var qr qualityRow
-		rows.Scan(&qr.TenantID, &qr.TenantName, &qr.Module, &qr.Total, &qr.Positive, &qr.Negative, &qr.AvgScore)
+		if err := rows.Scan(&qr.TenantID, &qr.TenantName, &qr.Module, &qr.Total, &qr.Positive, &qr.Negative, &qr.AvgScore); err != nil {
+			continue
+		}
 		items = append(items, qr)
 	}
 
@@ -212,5 +218,5 @@ func (h *PlatformFeedback) Quality(w http.ResponseWriter, r *http.Request) {
 	out, _ := json.Marshal(items)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(out)
+	_, _ = w.Write(out)
 }

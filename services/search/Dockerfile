@@ -6,11 +6,13 @@ ARG BUILD_TIME=unknown
 
 WORKDIR /app
 
-# Copy workspace files for module resolution
-COPY go.work go.work.sum ./
+# Copy only the modules this service needs
 COPY pkg/ ./pkg/
 COPY gen/ ./gen/
 COPY services/search/ ./services/search/
+
+# Generate a minimal go.work with only the modules present in the container
+RUN printf 'go 1.25.0\n\nuse (\n\t./pkg\n\t./gen/go\n\t./services/search\n)\n' > go.work
 
 WORKDIR /app/services/search
 RUN go mod download

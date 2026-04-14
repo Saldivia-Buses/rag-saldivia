@@ -67,7 +67,7 @@ func TestPutGetDelete(t *testing.T) {
 		t.Fatalf("get: %v", err)
 	}
 	got, err := io.ReadAll(rc)
-	rc.Close()
+	_ = rc.Close()
 	if err != nil {
 		t.Fatalf("read: %v", err)
 	}
@@ -99,7 +99,7 @@ func TestPutNilOpts(t *testing.T) {
 	if err != nil {
 		t.Fatalf("put with nil opts: %v", err)
 	}
-	store.Delete(ctx, key)
+	_ = store.Delete(ctx, key)
 }
 
 func TestGetNotFound(t *testing.T) {

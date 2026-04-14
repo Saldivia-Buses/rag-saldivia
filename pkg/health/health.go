@@ -124,6 +124,6 @@ func (c *Checker) Handler() http.HandlerFunc {
 		} else {
 			w.WriteHeader(http.StatusServiceUnavailable)
 		}
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}
 }
