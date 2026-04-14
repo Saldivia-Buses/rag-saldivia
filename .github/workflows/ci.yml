@@ -58,9 +58,14 @@ jobs:
         run: |
           for svc in services/*/; do
             [ -f "${svc}cmd/main.go" ] || continue  # skip non-Go (extractor)
-            echo "$svc" | grep -q 'astro' && continue  # skip CGO (needs libswe.a, not in CI)
-            echo "::group::Building ${svc}"
-            go build "./${svc}cmd/"
+            SVC_NAME=$(basename "$svc")
+            echo "::group::Building ${SVC_NAME}"
+            if [ "$SVC_NAME" = "astro" ]; then
+              CGO_ENABLED=1 CGO_LDFLAGS="-L${GITHUB_WORKSPACE}/services/astro -lm" \
+                go build "./${svc}cmd/"
+            else
+              go build "./${svc}cmd/"
+            fi
             echo "::endgroup::"
           done
 
@@ -79,9 +84,14 @@ jobs:
         run: |
           for svc in services/*/; do
             [ -f "${svc}go.mod" ] || continue
-            echo "$svc" | grep -q 'astro' && continue  # skip CGO
-            echo "::group::Vetting ${svc}"
-            go vet "./${svc}..."
+            SVC_NAME=$(basename "$svc")
+            echo "::group::Vetting ${SVC_NAME}"
+            if [ "$SVC_NAME" = "astro" ]; then
+              CGO_ENABLED=1 CGO_LDFLAGS="-L${GITHUB_WORKSPACE}/services/astro -lm" \
+                go vet "./${svc}..."
+            else
+              go vet "./${svc}..."
+            fi
             echo "::endgroup::"
           done
           echo "::group::Vetting pkg/"
@@ -111,9 +121,14 @@ jobs:
         run: |
           for svc in services/*/; do
             [ -f "${svc}go.mod" ] || continue
-            echo "$svc" | grep -q 'astro' && continue  # skip CGO
-            echo "::group::Testing ${svc}"
-            go test -race -count=1 "./${svc}..."
+            SVC_NAME=$(basename "$svc")
+            echo "::group::Testing ${SVC_NAME}"
+            if [ "$SVC_NAME" = "astro" ]; then
+              CGO_ENABLED=1 CGO_LDFLAGS="-L${GITHUB_WORKSPACE}/services/astro -lm" \
+                go test -race -count=1 "./${svc}..."
+            else
+              go test -race -count=1 "./${svc}..."
+            fi
             echo "::endgroup::"
           done
 
@@ -158,9 +173,14 @@ jobs:
         run: |
           for svc in services/*/; do
             [ -f "${svc}go.mod" ] || continue
-            echo "$svc" | grep -q 'astro' && continue  # skip CGO
-            echo "::group::gosec ${svc}"
-            gosec -quiet "./${svc}..."
+            SVC_NAME=$(basename "$svc")
+            echo "::group::gosec ${SVC_NAME}"
+            if [ "$SVC_NAME" = "astro" ]; then
+              CGO_ENABLED=1 CGO_LDFLAGS="-L${GITHUB_WORKSPACE}/services/astro -lm" \
+                gosec -quiet "./${svc}..."
+            else
+              gosec -quiet "./${svc}..."
+            fi
             echo "::endgroup::"
           done
           echo "::group::gosec pkg/"
@@ -177,7 +197,6 @@ jobs:
 
   # ══════════════════════════════════════════════════════════════════════════
   # Gate 4: Docker — build all images (needs Gate 2 + 3)
-  # Astro excluded: needs libswe.a (gitignored, built only on self-hosted).
   # ══════════════════════════════════════════════════════════════════════════
 
   discover-services:
@@ -191,7 +210,7 @@ jobs:
         name: Generate service matrix from filesystem
         run: |
           SERVICES=$(ls services/*/Dockerfile 2>/dev/null \
-            | grep -v '\.scaffold' | grep -v extractor | grep -v astro \
+            | grep -v '\.scaffold' | grep -v extractor \
             | sed 's|services/||;s|/Dockerfile||' \
             | jq -R -s 'split("\n") | map(select(. != ""))')
           echo "matrix={\"service\":$SERVICES}" >> $GITHUB_OUTPUT
