@@ -31,6 +31,10 @@ func main() {
 
 	publicKey := sdajwt.MustLoadPublicKey("JWT_PUBLIC_KEY")
 	blacklist := security.InitBlacklist(ctx, config.Env("REDIS_URL", "localhost:6379"))
+	if blacklist == nil {
+		slog.Error("redis is required for token revocation on admin endpoints")
+		os.Exit(1)
+	}
 
 	pool, err := database.NewPool(ctx, dbURL)
 	if err != nil {

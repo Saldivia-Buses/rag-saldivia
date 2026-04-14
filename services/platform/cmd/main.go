@@ -46,8 +46,12 @@ func main() {
 	}
 	publisher := natspub.New(nc)
 
-	// Token blacklist (shared Redis)
+	// Token blacklist (shared Redis) — required for admin endpoints
 	blacklist := security.InitBlacklist(ctx, config.Env("REDIS_URL", "localhost:6379"))
+	if blacklist == nil {
+		slog.Error("redis is required for token revocation on admin endpoints")
+		os.Exit(1)
+	}
 
 	platformSvc := service.New(pool, publisher)
 	platformSlug := config.Env("PLATFORM_TENANT_SLUG", "platform")
