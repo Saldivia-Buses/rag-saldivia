@@ -17,6 +17,8 @@ RUN printf 'go 1.25.0\n\nuse (\n\t./pkg\n\t./services/astro\n)\n' > go.work
 
 WORKDIR /app/services/astro
 RUN go mod download
+# libswe.a is checked into services/astro/ — copy to linker search path
+RUN cp libswe.a /usr/lib/
 RUN CGO_ENABLED=1 GOOS=linux go build \
     -ldflags "-s -w \
       -X github.com/Camionerou/rag-saldivia/pkg/build.Version=${VERSION} \
