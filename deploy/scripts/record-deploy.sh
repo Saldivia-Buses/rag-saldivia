@@ -20,7 +20,7 @@ PLATFORM_URL="http://localhost:8006"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --version)
-      [[ "$2" =~ ^[a-zA-Z0-9._/-]+$ ]] || { echo "ERROR: invalid --version format"; exit 1; }
+      [[ "$2" =~ ^v?[0-9][a-zA-Z0-9._-]*$ ]] || { echo "ERROR: invalid --version format"; exit 1; }
       VERSION="$2"; shift 2 ;;
     --sha)
       [[ "$2" =~ ^[a-f0-9]{7,40}$ ]] || { echo "ERROR: invalid --sha format"; exit 1; }

@@ -28,7 +28,7 @@ AUTH_URL="http://localhost:8001"
 # Read secret from Docker secret file first, fall back to env var
 SECRET=""
 if [ -f /run/secrets/service_account_key ]; then
-  SECRET=$(cat /run/secrets/service_account_key)
+  SECRET=$(head -c 4096 /run/secrets/service_account_key)
 elif [ -n "${SERVICE_ACCOUNT_KEY:-}" ]; then
   SECRET="$SERVICE_ACCOUNT_KEY"
 else

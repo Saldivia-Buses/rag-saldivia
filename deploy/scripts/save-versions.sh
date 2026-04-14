@@ -34,11 +34,17 @@ for svc in $(echo "${!SERVICES[@]}" | tr ' ' '\n' | sort); do
   port="${SERVICES[$svc]}"
 
   # Query /v1/info and extract version + git_sha
-  ver=$(curl -sf --max-time 5 "http://${HOST}:${port}/v1/info" 2>/dev/null \
-    | jq -re '.git_sha // .version' 2>/dev/null || echo "")
+  raw=$(curl -sf --max-time 5 "http://${HOST}:${port}/v1/info" 2>/dev/null || echo "")
+
+  if [ -z "$raw" ]; then
+    echo "WARN: ${svc} (:${port}) unreachable" >&2
+    continue
+  fi
+
+  ver=$(echo "$raw" | jq -re '.git_sha // .version' 2>/dev/null || echo "")
 
   if [ -z "$ver" ]; then
-    echo "WARN: ${svc} (:${port}) unreachable or no version info" >&2
+    echo "WARN: ${svc} (:${port}) returned unparseable JSON: ${raw:0:80}" >&2
     continue
   fi
 

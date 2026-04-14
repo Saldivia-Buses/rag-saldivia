@@ -278,6 +278,8 @@ services:
         condition: service_healthy
       nats:
         condition: service_healthy
+      chat:
+        condition: service_healthy
     environment:
       WS_PORT: "8002"
       REDIS_URL: redis:6379
