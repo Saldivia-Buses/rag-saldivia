@@ -23,6 +23,12 @@ func NewService() *Service {
 	}
 }
 
+// NewServiceWithClient creates a service collector with a custom HTTP client.
+// Used in tests to inject mock transports.
+func NewServiceWithClient(client *http.Client) *Service {
+	return &Service{httpClient: client}
+}
+
 // CheckServices queries /health for all known services in parallel.
 func (c *Service) CheckServices(ctx context.Context) ([]ServiceCheck, error) {
 	var mu sync.Mutex

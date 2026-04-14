@@ -173,6 +173,9 @@ func (s *Service) TriggerCheck(ctx context.Context) (*HealthSummary, error) {
 
 // ListTriageRecords returns recent triage records from the database.
 func (s *Service) ListTriageRecords(ctx context.Context, limit int) ([]TriageRecord, error) {
+	if s.db == nil {
+		return []TriageRecord{}, nil
+	}
 	if limit <= 0 || limit > 100 {
 		limit = 50
 	}
@@ -226,6 +229,9 @@ func (s *Service) collectInfra(ctx context.Context) (*InfraStatus, error) {
 
 // persistSnapshots saves health check results to the database.
 func (s *Service) persistSnapshots(ctx context.Context, statuses []ServiceStatus) {
+	if s.db == nil {
+		return
+	}
 	for _, st := range statuses {
 		_, err := s.db.Exec(ctx,
 			`INSERT INTO health_snapshots (service, status, version, checked_at)
