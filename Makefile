@@ -291,7 +291,8 @@ versions: ## Show running vs expected service versions
 		"8001:auth" "8002:ws" "8003:chat" "8004:agent" \
 		"8005:notification" "8006:platform" "8007:ingest" \
 		"8008:feedback" "8009:traces" "8010:search" \
-		"8011:astro" "8012:bigbrother" "8013:erp"; do \
+		"8011:astro" "8012:bigbrother" "8013:erp" \
+		"8014:healthwatch"; do \
 		port=$$(echo $$entry | cut -d: -f1); \
 		name=$$(echo $$entry | cut -d: -f2); \
 		info=$$(curl -sf --max-time 2 http://localhost:$$port/v1/info 2>/dev/null || echo ""); \

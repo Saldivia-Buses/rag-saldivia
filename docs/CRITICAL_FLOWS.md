@@ -913,6 +913,132 @@ Every publisher validates the slug before constructing the subject.
 
 ---
 
+## Flow 6: Deploy Pipeline (6 Phases + Circuit-Breaker)
+
+**Entry point:** `workflow_dispatch` (manual) or `push tags v*`
+**Workflow:** `.github/workflows/deploy.yml`
+
+```
+Phase 0: Discover services
+  └─ discover-services job (ubuntu-latest)
+     └─ ls services/*/Dockerfile → dynamic matrix JSON
+         (excludes .scaffold, extractor)
+
+Phase 1: Preflight (self-hosted, read-only)
+  └─ deploy/scripts/preflight.sh
+     └─ 13 checks: disk, Docker, secrets, ports, compose syntax
+
+Phase 2: Build + Push images (GitHub-hosted — DS1)
+  └─ Matrix build per service
+     └─ docker build --build-arg VERSION/GIT_SHA/BUILD_TIME
+     └─ push to ghcr.io/camionerou/sda-{service}:{SHA}
+
+Phase 2b: Generate .env.deploy
+  └─ Single job after all builds
+     └─ {SERVICE}_VERSION={SHA} per service
+     └─ Upload as artifact
+
+Phase 3: Deploy Dev (optional, continue-on-error)
+  └─ docker compose --env-file deploy/.env.deploy up -d
+  └─ deploy/scripts/health-check.sh --env dev --timeout 120
+
+Phase 4+5: Deploy Prod (requires environment approval)
+  └─ deploy/scripts/save-versions.sh → $ROLLBACK_FILE (chmod 600)
+  └─ docker compose --env-file deploy/.env.deploy up -d
+  └─ deploy/scripts/health-check.sh --env prod --timeout 120
+  └─ ON FAILURE: deploy/scripts/rollback.sh $ROLLBACK_FILE
+     └─ Safe parser (regex validation, no source — DS2)
+     └─ Re-deploy previous versions
+     └─ Health check to verify rollback
+
+Phase 6: Record + Notify
+  └─ deploy/scripts/record-deploy.sh
+     └─ get-service-token.sh → short-lived JWT
+     └─ POST /v1/platform/deploys (version, sha, status)
+```
+
+**Security invariants:**
+- CI/build runs on GitHub-hosted runners; only deploy runs on self-hosted (DS1)
+- Rollback scripts never use `source`; validate all input with regex (DS2)
+- SHA-pinned images via .env.deploy (deterministic deploy)
+- Rollback file stored in $RUNNER_TEMP with chmod 600
+
+**Key files:**
+- `.github/workflows/deploy.yml` — orchestration
+- `deploy/scripts/preflight.sh` — pre-deploy validation
+- `deploy/scripts/health-check.sh` — parametrized health verification
+- `deploy/scripts/save-versions.sh` — capture current state for rollback
+- `deploy/scripts/rollback.sh` — safe restore with regex parser
+- `deploy/scripts/record-deploy.sh` — persist deploy record via platform API
+- `deploy/scripts/get-service-token.sh` — obtain short-lived service JWT
+
+---
+
+## Flow 7: Self-Healing Loop (HealthWatch + AI Triage)
+
+**Components:** HealthWatch service (port 8014), daily-triage.yml, post-deploy.yml
+
+```
+                    ┌─────────────────────────┐
+                    │  HealthWatch Service     │
+                    │  (port 8014, platform    │
+                    │   admin JWT required)    │
+                    └────────┬────────────────┘
+                             │
+              ┌──────────────┼──────────────┐
+              ▼              ▼              ▼
+        ┌──────────┐  ┌──────────┐  ┌──────────┐
+        │Prometheus │  │ Docker   │  │ Service  │
+        │Collector  │  │Collector │  │Collector │
+        │(PromQL)   │  │(proxy)   │  │(/health) │
+        └──────────┘  └──────────┘  └──────────┘
+
+Daily Triage (7PM Argentina — cron '0 22 * * *'):
+  1. get-service-token.sh healthwatch → short-lived JWT
+  2. GET /v1/healthwatch/summary → /tmp/health-summary.json
+  3. Claude Sonnet analyzes health data (via file, never interpolated — DS6)
+  4. Output: JSON with findings (severity, hypothesis, action)
+  5. Create GitHub Issues for critical/high findings
+     └─ Labels: severity:{level}, auto-triage, service:{name}
+  6. POST /v1/notifications/send → email executive summary
+
+Post-Deploy Verification (triggers after Deploy SDA succeeds):
+  1. Wait 60s for services to stabilize
+  2. deploy/scripts/health-check.sh --env prod --timeout 60
+  3. GET /v1/healthwatch/services → per-service health status
+  4. For each open auto-triage issue:
+     └─ Extract service from label (service:{name})
+     └─ If service is now healthy → gh issue close with comment
+     └─ If service still unhealthy → leave open
+
+Alertmanager Path (real-time):
+  1. Prometheus alert fires (ServiceDown, HighErrorRate, etc.)
+  2. Alertmanager routes to notification service
+     └─ POST /internal/webhook/alert (Docker network, no Traefik)
+     └─ Bearer token auth via Docker secret (DS3)
+  3. Notification persists alert to platform DB (infra_alerts table)
+  4. If severity=critical → immediate email via SMTP
+```
+
+**Security invariants:**
+- All HealthWatch endpoints require platform admin JWT (DS4)
+- Docker access via docker-socket-proxy only, never raw socket (DS5)
+- Prometheus collector validates service names against hardcoded whitelist (no PromQL injection)
+- Summary output is scrubbed: no raw errors, stack traces, IPs, or credentials
+- AI triage uses separate API key (ANTHROPIC_API_KEY_TRIAGE) with spending limit
+- Health data passed to AI via file, never shell-interpolated (DS6)
+
+**Key files:**
+- `services/healthwatch/` — service code (collectors, aggregation, API)
+- `.github/workflows/daily-triage.yml` — nightly AI analysis
+- `.github/workflows/post-deploy.yml` — post-deploy verification + auto-close
+- `deploy/observability/alertmanager/config.yml` — alert routing
+- `services/notification/internal/handler/webhook.go` — alert webhook
+- `db/platform/migrations/007_infra_alerts.up.sql` — alert persistence
+- `db/platform/migrations/008_healthwatch.up.sql` — snapshots + triage records
+
+---
+
 ## Cross-Cutting: Tenant Isolation Checklist
 
 For any new flow or modification, verify these properties hold:

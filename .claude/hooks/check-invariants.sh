@@ -80,7 +80,7 @@ check "migration numbers are sequential (tenant)" bash -c '
     cd "'"$ROOT"'"
     prev=0
     for f in db/tenant/migrations/*.up.sql; do
-        num=$(basename "$f" | grep -oP "^\d+")
+        num=$(basename "$f" | grep -oE "^[0-9]+")
         num=$((10#$num))  # strip leading zeros
         expected=$((prev + 1))
         if [ $prev -ne 0 ] && [ $num -ne $expected ]; then
@@ -95,7 +95,7 @@ check "migration numbers are sequential (platform)" bash -c '
     cd "'"$ROOT"'"
     prev=0
     for f in db/platform/migrations/*.up.sql; do
-        num=$(basename "$f" | grep -oP "^\d+")
+        num=$(basename "$f" | grep -oE "^[0-9]+")
         num=$((10#$num))
         expected=$((prev + 1))
         if [ $prev -ne 0 ] && [ $num -ne $expected ]; then
@@ -132,7 +132,7 @@ check "VERSION files contain valid semver" bash -c '
     cd "'"$ROOT"'"
     for v in services/*/VERSION; do
         ver=$(cat "$v" | tr -d "[:space:]")
-        echo "$ver" | grep -qP "^\d+\.\d+\.\d+$" || { echo "INVALID: $v = $ver"; exit 1; }
+        echo "$ver" | grep -qE "^[0-9]+\.[0-9]+\.[0-9]+$" || { echo "INVALID: $v = $ver"; exit 1; }
     done
 '
 
@@ -223,7 +223,7 @@ check "no secrets in Go source files" bash -c '
 
 check "no .env files committed" bash -c '
     cd "'"$ROOT"'"
-    ! git ls-files --cached | grep -qP "^\.env$|^\.env\.local$|^\.env\.production$"
+    ! git ls-files --cached | grep -qE "^\.env$|^\.env\.local$|^\.env\.production$"
 '
 
 # ─── 7. Docker Compose ─────────────────────────────────────────────
@@ -276,8 +276,8 @@ check "NATS publishes use tenant.{slug} prefix" bash -c '
 check "NATS consumer subjects defined with tenant.* prefix" bash -c '
     cd "'"$ROOT"'"
     # Verify subject filter constants/vars include tenant.* pattern
-    for consumer in $(grep -rl "FilterSubject\|Subjects:" services/*/internal/ --include="*.go" | grep -v _test.go); do
-        svc_dir=$(echo "$consumer" | grep -oP "services/[^/]+")
+    for consumer in $(grep -rlE "FilterSubject|Subjects:" services/*/internal/ --include="*.go" | grep -v _test.go); do
+        svc_dir=$(echo "$consumer" | sed -n "s|\(services/[^/]*\)/.*|\1|p")
         # Check that somewhere in this service there is a tenant.* subject definition
         grep -rq "tenant\.\*" "$svc_dir/internal/" --include="*.go" || \
             { echo "NO tenant.* SUBJECT in $svc_dir"; exit 1; }
@@ -298,7 +298,7 @@ check "services with INSERT/UPDATE/DELETE have NATS Publish" bash -c '
         # skip services that are read-only or platform-only
         [[ "$svc" == "platform" || "$svc" == "search" ]] && continue
         # check if any query has a write operation
-        has_writes=$(grep -riclP "INSERT|UPDATE|DELETE" "$qdir/" 2>/dev/null) || has_writes=""
+        has_writes=$(grep -riclE "INSERT|UPDATE|DELETE" "$qdir/" 2>/dev/null) || has_writes=""
         [ -z "$has_writes" ] && continue
         # check if service has Publish calls OR broadcasts
         has_publish=$(grep -rl "Publish\|Broadcast\|publisher" "$svc_dir/internal/" --include="*.go" 2>/dev/null | grep -v _test.go | head -1) || has_publish=""
@@ -341,7 +341,7 @@ check "http.Error calls use JSON format (not plain text)" bash -c '
     # Bad: http.Error(w, "some plain text", code)
     for hfile in services/*/internal/handler/*.go; do
         [[ "$hfile" == *_test.go || "$hfile" == *ws.go ]] && continue
-        svc=$(echo "$hfile" | grep -oP "services/\K[^/]+")
+        svc=$(echo "$hfile" | sed -n "s|.*services/\([^/]*\)/.*|\1|p")
         [[ "$svc" == "ws" || "$svc" == "bigbrother" ]] && continue
         # Find http.Error with plain text (not JSON backtick or double-quote JSON)
         bad=$(grep "http\.Error(" "$hfile" 2>/dev/null \
@@ -381,9 +381,9 @@ echo "▸ Repowise Index"
 
 check "Repowise index is less than 3 days old" bash -c '
     cd "'"$ROOT"'"
-    idx_date=$(grep -oP "Last indexed: \K[\d-]+" .claude/CLAUDE.md 2>/dev/null || echo "")
+    idx_date=$(grep -oE "Last indexed: [0-9-]+" .claude/CLAUDE.md 2>/dev/null | sed "s/Last indexed: //" || echo "")
     [ -z "$idx_date" ] && exit 0  # no date found, skip
-    idx_epoch=$(date -d "$idx_date" +%s 2>/dev/null || echo 0)
+    idx_epoch=$(date -jf "%Y-%m-%d" "$idx_date" +%s 2>/dev/null || date -d "$idx_date" +%s 2>/dev/null || echo 0)
     now_epoch=$(date +%s)
     age_days=$(( (now_epoch - idx_epoch) / 86400 ))
     [ "$age_days" -le 3 ] || { echo "STALE: Repowise indexed $age_days days ago ($idx_date) — run repowise mcp to reindex"; exit 1; }
@@ -412,7 +412,7 @@ echo "▸ Docs-Code Sync"
 check "files referenced in CRITICAL_FLOWS.md exist" bash -c '
     cd "'"$ROOT"'"
     [ -f "docs/CRITICAL_FLOWS.md" ] || exit 0
-    files=$(grep -oP "services/[^\s|)\`]+\.go|pkg/[^\s|)\`]+\.go" docs/CRITICAL_FLOWS.md | sort -u)
+    files=$(grep -oE "services/[^ |)\`]+\.go|pkg/[^ |)\`]+\.go" docs/CRITICAL_FLOWS.md | sort -u)
     for f in $files; do
         [ -f "$f" ] || { echo "STALE REF: $f referenced in CRITICAL_FLOWS.md but does not exist"; exit 1; }
     done
