@@ -77,6 +77,13 @@ http:
       entryPoints: [web]
       middlewares: [rate-limit, cors]
 
+    # Feature flags evaluate — any authenticated user
+    flags:
+      rule: "PathPrefix(`/v1/flags`)"
+      service: platform
+      entryPoints: [web]
+      middlewares: [strip-spoofed-headers, tenant-from-subdomain, rate-limit, cors]
+
     # Ingest — document upload
     ingest:
       rule: "PathPrefix(`/v1/ingest`)"

@@ -36,7 +36,11 @@ type PlatformService interface {
 	EnableModule(ctx context.Context, arg db.EnableModuleForTenantParams) error
 	DisableModule(ctx context.Context, tenantID, moduleID string) error
 	ListFeatureFlags(ctx context.Context) ([]service.FeatureFlag, error)
+	CreateFeatureFlag(ctx context.Context, params service.CreateFlagParams, createdBy string) (service.FeatureFlag, error)
+	UpdateFeatureFlag(ctx context.Context, id string, params service.UpdateFlagParams) error
 	ToggleFeatureFlag(ctx context.Context, id string, enabled bool) error
+	KillFlag(ctx context.Context, id string, killedBy string) error
+	EvaluateFlags(ctx context.Context, tenantID, userID string) (map[string]bool, error)
 	GetConfig(ctx context.Context, key string) (service.ConfigEntry, error)
 	SetConfig(ctx context.Context, key string, value []byte, updatedBy string) error
 	RecordDeploy(ctx context.Context, arg db.InsertDeployLogParams) (service.DeployRecord, error)
@@ -79,9 +83,12 @@ func (h *Platform) Routes() chi.Router {
 	// Modules catalog
 	r.Get("/modules", h.ListModules)
 
-	// Feature flags
+	// Feature flags (admin CRUD)
 	r.Get("/flags", h.ListFeatureFlags)
+	r.Post("/flags", h.CreateFeatureFlag)
+	r.Put("/flags/{flagID}", h.UpdateFeatureFlag)
 	r.Patch("/flags/{flagID}", h.ToggleFeatureFlag)
+	r.Delete("/flags/{flagID}/kill", h.KillFlag)
 
 	// Global config
 	r.Get("/config/{key}", h.GetConfig)
@@ -91,6 +98,14 @@ func (h *Platform) Routes() chi.Router {
 	r.Post("/deploys", h.RecordDeploy)
 	r.Get("/deploys", h.ListDeploys)
 
+	return r
+}
+
+// FlagsRoutes returns a chi router for flag evaluation (standard auth, not platform admin).
+func (h *Platform) FlagsRoutes() chi.Router {
+	r := chi.NewRouter()
+	r.Use(sdamw.Auth(h.publicKey))
+	r.Get("/evaluate", h.EvaluateFlags)
 	return r
 }
 
@@ -331,6 +346,131 @@ func (h *Platform) ToggleFeatureFlag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+type createFlagRequest struct {
+	ID          string  `json:"id"`
+	Name        string  `json:"name"`
+	Description string  `json:"description,omitempty"`
+	TenantID    *string `json:"tenant_id,omitempty"`
+	RolloutPct  *int    `json:"rollout_pct,omitempty"`
+}
+
+// CreateFeatureFlag handles POST /v1/platform/flags
+func (h *Platform) CreateFeatureFlag(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+
+	var req createFlagRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid request body"))
+		return
+	}
+	if req.ID == "" || req.Name == "" {
+		httperr.WriteError(w, r, httperr.InvalidInput("id and name are required"))
+		return
+	}
+
+	rollout := 0
+	if req.RolloutPct != nil {
+		rollout = *req.RolloutPct
+		if rollout < 0 || rollout > 100 {
+			httperr.WriteError(w, r, httperr.InvalidInput("rollout_pct must be 0-100"))
+			return
+		}
+	}
+
+	createdBy := r.Header.Get("X-User-ID")
+
+	flag, err := h.svc.CreateFeatureFlag(r.Context(), service.CreateFlagParams{
+		ID:          req.ID,
+		Name:        req.Name,
+		Description: req.Description,
+		TenantID:    req.TenantID,
+		RolloutPct:  rollout,
+	}, createdBy)
+	if err != nil {
+		httperr.WriteError(w, r, httperr.Internal(err))
+		return
+	}
+	writeJSON(w, http.StatusCreated, flag)
+}
+
+type updateFlagRequest struct {
+	Enabled    *bool `json:"enabled,omitempty"`
+	RolloutPct *int  `json:"rollout_pct,omitempty"`
+}
+
+// UpdateFeatureFlag handles PUT /v1/platform/flags/{flagID}
+func (h *Platform) UpdateFeatureFlag(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+	flagID := chi.URLParam(r, "flagID")
+
+	var req updateFlagRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid request body"))
+		return
+	}
+	if req.Enabled == nil && req.RolloutPct == nil {
+		httperr.WriteError(w, r, httperr.InvalidInput("at least one of enabled or rollout_pct is required"))
+		return
+	}
+	if req.RolloutPct != nil && (*req.RolloutPct < 0 || *req.RolloutPct > 100) {
+		httperr.WriteError(w, r, httperr.InvalidInput("rollout_pct must be 0-100"))
+		return
+	}
+
+	updatedBy := r.Header.Get("X-User-ID")
+
+	err := h.svc.UpdateFeatureFlag(r.Context(), flagID, service.UpdateFlagParams{
+		Enabled:    req.Enabled,
+		RolloutPct: req.RolloutPct,
+		UpdatedBy:  updatedBy,
+	})
+	if err != nil {
+		if errors.Is(err, service.ErrFlagNotFound) {
+			httperr.WriteError(w, r, httperr.NotFound("feature flag"))
+			return
+		}
+		httperr.WriteError(w, r, httperr.Internal(err))
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// KillFlag handles DELETE /v1/platform/flags/{flagID}/kill
+func (h *Platform) KillFlag(w http.ResponseWriter, r *http.Request) {
+	flagID := chi.URLParam(r, "flagID")
+
+	killedBy := r.Header.Get("X-User-ID")
+
+	err := h.svc.KillFlag(r.Context(), flagID, killedBy)
+	if err != nil {
+		if errors.Is(err, service.ErrFlagNotFound) {
+			httperr.WriteError(w, r, httperr.NotFound("feature flag"))
+			return
+		}
+		httperr.WriteError(w, r, httperr.Internal(err))
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// EvaluateFlags handles GET /v1/flags/evaluate
+// Identity comes from JWT claims only (DS7 — no query params for identity).
+func (h *Platform) EvaluateFlags(w http.ResponseWriter, r *http.Request) {
+	tenantID := r.Header.Get("X-Tenant-ID")
+	userID := r.Header.Get("X-User-ID")
+	if tenantID == "" || userID == "" {
+		httperr.WriteError(w, r, httperr.Unauthorized("missing identity"))
+		return
+	}
+
+	flags, err := h.svc.EvaluateFlags(r.Context(), tenantID, userID)
+	if err != nil {
+		httperr.WriteError(w, r, httperr.Internal(err))
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"flags": flags})
 }
 
 // ── Global Config ───────────────────────────────────────────────────────

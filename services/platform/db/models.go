@@ -65,6 +65,10 @@ type FeatureFlag struct {
 	Enabled     bool               `json:"enabled"`
 	Config      []byte             `json:"config"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	// Percentage of users who see this flag (0-100). Evaluation: hash(flag_id + user_id) mod 100 < rollout_pct (deterministic per user).
+	RolloutPct int32              `json:"rollout_pct"`
+	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
+	UpdatedBy  pgtype.Text        `json:"updated_by"`
 }
 
 type FeedbackAlert struct {
@@ -104,6 +108,16 @@ type GlobalConfig struct {
 	Value     []byte             `json:"value"`
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 	UpdatedBy string             `json:"updated_by"`
+}
+
+type HealthSnapshot struct {
+	ID         string             `json:"id"`
+	Service    string             `json:"service"`
+	Status     string             `json:"status"`
+	ResponseMs pgtype.Int4        `json:"response_ms"`
+	Version    pgtype.Text        `json:"version"`
+	Details    []byte             `json:"details"`
+	CheckedAt  pgtype.Timestamptz `json:"checked_at"`
 }
 
 type InfraAlert struct {
@@ -245,4 +259,16 @@ type TraceEvent struct {
 	DurationMs pgtype.Int4        `json:"duration_ms"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 	TenantID   string             `json:"tenant_id"`
+}
+
+type TriageRecord struct {
+	ID          string             `json:"id"`
+	Severity    string             `json:"severity"`
+	Title       string             `json:"title"`
+	Analysis    string             `json:"analysis"`
+	Services    []string           `json:"services"`
+	GithubIssue pgtype.Int4        `json:"github_issue"`
+	Status      string             `json:"status"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	ResolvedAt  pgtype.Timestamptz `json:"resolved_at"`
 }

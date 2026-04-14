@@ -80,6 +80,13 @@ http:
       entryPoints: [web]
       middlewares: [dev-cors]
 
+    # Feature flags evaluate — any authenticated user
+    flags:
+      rule: "PathPrefix(`/v1/flags`)"
+      service: platform
+      entryPoints: [web]
+      middlewares: [dev-cors, dev-tenant]
+
     # Ingest — document upload + job tracking
     ingest:
       rule: "PathPrefix(`/v1/ingest`)"

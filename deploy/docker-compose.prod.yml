@@ -600,6 +600,9 @@ services:
       - "traefik.http.routers.platform.rule=Host(`platform.${SDA_DOMAIN:-sda.app}`) && PathPrefix(`/v1/platform`)"
       - "traefik.http.routers.platform.entrypoints=websecure"
       - "traefik.http.services.platform.loadbalancer.server.port=8006"
+      - "traefik.http.routers.flags.rule=PathPrefix(`/v1/flags`)"
+      - "traefik.http.routers.flags.entrypoints=websecure"
+      - "traefik.http.routers.flags.service=platform"
     deploy:
       resources:
         limits:

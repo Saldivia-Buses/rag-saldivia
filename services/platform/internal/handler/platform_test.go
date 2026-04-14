@@ -98,11 +98,34 @@ func (m *mockPlatformService) ListFeatureFlags(_ context.Context) ([]service.Fea
 	return m.flags, nil
 }
 
-func (m *mockPlatformService) ToggleFeatureFlag(_ context.Context, id string, enabled bool) error {
+func (m *mockPlatformService) CreateFeatureFlag(_ context.Context, params service.CreateFlagParams, createdBy string) (service.FeatureFlag, error) {
 	if m.err != nil {
-		return m.err
+		return service.FeatureFlag{}, m.err
 	}
-	return nil
+	return service.FeatureFlag{ID: params.ID, Name: params.Name, RolloutPct: params.RolloutPct}, nil
+}
+
+func (m *mockPlatformService) UpdateFeatureFlag(_ context.Context, id string, params service.UpdateFlagParams) error {
+	return m.err
+}
+
+func (m *mockPlatformService) ToggleFeatureFlag(_ context.Context, id string, enabled bool) error {
+	return m.err
+}
+
+func (m *mockPlatformService) KillFlag(_ context.Context, id string, killedBy string) error {
+	return m.err
+}
+
+func (m *mockPlatformService) EvaluateFlags(_ context.Context, tenantID, userID string) (map[string]bool, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+	result := make(map[string]bool)
+	for _, f := range m.flags {
+		result[f.Name] = f.Enabled
+	}
+	return result, nil
 }
 
 func (m *mockPlatformService) GetConfig(_ context.Context, key string) (service.ConfigEntry, error) {
@@ -904,5 +927,250 @@ func TestRecordDeploy_WithoutNotes_OmitsNotes(t *testing.T) {
 	json.NewDecoder(rec.Body).Decode(&resp)
 	if _, hasNotes := resp["notes"]; hasNotes {
 		t.Errorf("expected notes to be omitted when empty, got %v", resp["notes"])
+	}
+}
+
+// --- feature flags v2: create, update, kill, evaluate ---
+
+func TestCreateFlag_Success_Returns201(t *testing.T) {
+	r := setupPlatformRouter(&mockPlatformService{})
+
+	body := `{"id":"flag-1","name":"dark_mode","rollout_pct":50}`
+	req := withAdminAuth(httptest.NewRequest(http.MethodPost, "/v1/platform/flags", strings.NewReader(body)), t)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var flag service.FeatureFlag
+	json.NewDecoder(rec.Body).Decode(&flag)
+	if flag.ID != "flag-1" {
+		t.Errorf("expected id flag-1, got %s", flag.ID)
+	}
+	if flag.RolloutPct != 50 {
+		t.Errorf("expected rollout_pct 50, got %d", flag.RolloutPct)
+	}
+}
+
+func TestCreateFlag_MissingID_Returns400(t *testing.T) {
+	r := setupPlatformRouter(&mockPlatformService{})
+
+	body := `{"name":"dark_mode"}`
+	req := withAdminAuth(httptest.NewRequest(http.MethodPost, "/v1/platform/flags", strings.NewReader(body)), t)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestCreateFlag_MissingName_Returns400(t *testing.T) {
+	r := setupPlatformRouter(&mockPlatformService{})
+
+	body := `{"id":"flag-1"}`
+	req := withAdminAuth(httptest.NewRequest(http.MethodPost, "/v1/platform/flags", strings.NewReader(body)), t)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestCreateFlag_InvalidRollout_Returns400(t *testing.T) {
+	r := setupPlatformRouter(&mockPlatformService{})
+
+	body := `{"id":"flag-1","name":"test","rollout_pct":150}`
+	req := withAdminAuth(httptest.NewRequest(http.MethodPost, "/v1/platform/flags", strings.NewReader(body)), t)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for rollout >100, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestCreateFlag_DefaultRollout_IsZero(t *testing.T) {
+	r := setupPlatformRouter(&mockPlatformService{})
+
+	body := `{"id":"flag-1","name":"dark_mode"}`
+	req := withAdminAuth(httptest.NewRequest(http.MethodPost, "/v1/platform/flags", strings.NewReader(body)), t)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var flag service.FeatureFlag
+	json.NewDecoder(rec.Body).Decode(&flag)
+	if flag.RolloutPct != 0 {
+		t.Errorf("expected default rollout_pct 0, got %d", flag.RolloutPct)
+	}
+}
+
+func TestUpdateFlag_Success_Returns204(t *testing.T) {
+	r := setupPlatformRouter(&mockPlatformService{})
+
+	body := `{"enabled":true,"rollout_pct":25}`
+	req := withAdminAuth(httptest.NewRequest(http.MethodPut, "/v1/platform/flags/f-1", strings.NewReader(body)), t)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("expected 204, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestUpdateFlag_NoFields_Returns400(t *testing.T) {
+	r := setupPlatformRouter(&mockPlatformService{})
+
+	body := `{}`
+	req := withAdminAuth(httptest.NewRequest(http.MethodPut, "/v1/platform/flags/f-1", strings.NewReader(body)), t)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestUpdateFlag_InvalidRollout_Returns400(t *testing.T) {
+	r := setupPlatformRouter(&mockPlatformService{})
+
+	body := `{"rollout_pct":-5}`
+	req := withAdminAuth(httptest.NewRequest(http.MethodPut, "/v1/platform/flags/f-1", strings.NewReader(body)), t)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for negative rollout, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestUpdateFlag_NotFound_Returns404(t *testing.T) {
+	mock := &mockPlatformService{err: service.ErrFlagNotFound}
+	r := setupPlatformRouter(mock)
+
+	body := `{"enabled":false}`
+	req := withAdminAuth(httptest.NewRequest(http.MethodPut, "/v1/platform/flags/f-999", strings.NewReader(body)), t)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestKillFlag_Success_Returns204(t *testing.T) {
+	r := setupPlatformRouter(&mockPlatformService{})
+
+	req := withAdminAuth(httptest.NewRequest(http.MethodDelete, "/v1/platform/flags/f-1/kill", nil), t)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("expected 204, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestKillFlag_NotFound_Returns404(t *testing.T) {
+	mock := &mockPlatformService{err: service.ErrFlagNotFound}
+	r := setupPlatformRouter(mock)
+
+	req := withAdminAuth(httptest.NewRequest(http.MethodDelete, "/v1/platform/flags/f-999/kill", nil), t)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestEvaluateFlags_WithJWT_Returns200(t *testing.T) {
+	mock := &mockPlatformService{flags: []service.FeatureFlag{
+		{ID: "f-1", Name: "dark_mode", Enabled: true},
+		{ID: "f-2", Name: "new_chat", Enabled: false},
+	}}
+	h := NewPlatform(mock, testPub, "platform", nil)
+	r := chi.NewRouter()
+	r.Mount("/v1/platform", h.Routes())
+	r.Mount("/v1/flags", h.FlagsRoutes())
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/flags/evaluate", nil)
+	req.Header.Set("Authorization", "Bearer "+userToken(t))
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var resp map[string]map[string]bool
+	json.NewDecoder(rec.Body).Decode(&resp)
+	flags := resp["flags"]
+	if !flags["dark_mode"] {
+		t.Error("expected dark_mode=true")
+	}
+	if flags["new_chat"] {
+		t.Error("expected new_chat=false")
+	}
+}
+
+func TestEvaluateFlags_NoToken_Returns401(t *testing.T) {
+	h := NewPlatform(&mockPlatformService{}, testPub, "platform", nil)
+	r := chi.NewRouter()
+	r.Mount("/v1/flags", h.FlagsRoutes())
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/flags/evaluate", nil)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestEvaluateFlags_ResponseOnlyBooleans(t *testing.T) {
+	mock := &mockPlatformService{flags: []service.FeatureFlag{
+		{ID: "f-1", Name: "feature_a", Enabled: true},
+	}}
+	h := NewPlatform(mock, testPub, "platform", nil)
+	r := chi.NewRouter()
+	r.Mount("/v1/flags", h.FlagsRoutes())
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/flags/evaluate", nil)
+	req.Header.Set("Authorization", "Bearer "+userToken(t))
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	// Verify response shape: {"flags": {"feature_a": true}} — only booleans, no metadata
+	var raw map[string]json.RawMessage
+	json.NewDecoder(rec.Body).Decode(&raw)
+
+	flagsRaw, ok := raw["flags"]
+	if !ok {
+		t.Fatal("expected 'flags' key in response")
+	}
+
+	var flags map[string]bool
+	if err := json.Unmarshal(flagsRaw, &flags); err != nil {
+		t.Fatalf("flags should be map[string]bool, got error: %v", err)
 	}
 }

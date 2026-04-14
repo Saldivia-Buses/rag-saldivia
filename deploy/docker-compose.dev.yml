@@ -370,6 +370,9 @@ services:
       - "traefik.http.routers.platform-docker.entrypoints=web"
       - "traefik.http.routers.platform-docker.priority=100"
       - "traefik.http.services.platform-docker.loadbalancer.server.port=8006"
+      - "traefik.http.routers.flags-docker.rule=PathPrefix(`/v1/flags`)"
+      - "traefik.http.routers.flags-docker.entrypoints=web"
+      - "traefik.http.routers.flags-docker.service=platform-docker"
 
   ingest:
     <<: *service-defaults

@@ -75,6 +75,7 @@ func main() {
 	r := app.Router()
 	r.Get("/health", hc.Handler())
 	r.Mount("/v1/platform", platformHandler.Routes())
+	r.Mount("/v1/flags", platformHandler.FlagsRoutes())
 
 	app.Run()
 }
