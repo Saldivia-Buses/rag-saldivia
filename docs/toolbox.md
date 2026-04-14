@@ -10,7 +10,6 @@ actualizado cada vez que se encuentra algo nuevo.
 
 | Repo/herramienta | Qué es | Para qué lo usamos |
 |---|---|---|
-| [nvidia/GenerativeAIExamples](https://github.com/NVIDIA/GenerativeAIExamples) | RAG Blueprint v2.5.0 | Base del sistema RAG (submodule en `vendor/rag-blueprint/`) |
 | zod | Validación de schemas TypeScript | Compartido entre todos los paquetes (`packages/shared`) |
 | shadcn/ui + Radix | Componentes UI + primitivos headless | Design system completo de la app |
 | Tailwind CSS v4 | Utility-first CSS | Styling de toda la app |
