@@ -40,12 +40,13 @@ type EventPublisher interface {
 
 // Auth handles HTTP requests for authentication.
 type Auth struct {
-	authSvc   AuthService      // static service (single-tenant mode)
-	resolver  *tenant.Resolver // per-request resolution (multi-tenant mode)
-	jwtCfg    sdajwt.Config
-	publisher EventPublisher
-	blacklist *security.TokenBlacklist // for multi-tenant service wiring
-	svcCache  sync.Map         // slug → AuthService (multi-tenant cache)
+	authSvc         AuthService      // static service (single-tenant mode)
+	resolver        *tenant.Resolver // per-request resolution (multi-tenant mode)
+	jwtCfg          sdajwt.Config
+	publisher       EventPublisher
+	blacklist       *security.TokenBlacklist // for multi-tenant service wiring
+	svcCache        sync.Map         // slug → AuthService (multi-tenant cache)
+	serviceTokenCfg *ServiceTokenConfig      // for POST /v1/auth/service-token
 }
 
 // NewAuth creates auth HTTP handlers in single-tenant mode.

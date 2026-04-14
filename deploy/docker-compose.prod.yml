@@ -30,6 +30,8 @@ secrets:
     file: ./secrets/bb-kek
   alertmanager_webhook_token:
     file: ./secrets/alertmanager-webhook-token
+  service_account_key:
+    file: ./secrets/service-account-key
 
 x-service-defaults: &service-defaults
   restart: unless-stopped
@@ -244,6 +246,7 @@ services:
       - jwt_private_key
       - jwt_public_key
       - db_platform_url
+      - service_account_key
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8001/health || exit 1"]
       interval: 10s

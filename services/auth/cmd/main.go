@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -111,16 +112,34 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Service account token endpoint (machine-to-machine)
+	serviceKey := loadSecret("/run/secrets/service_account_key",
+		config.Env("SERVICE_ACCOUNT_KEY", ""))
+	if serviceKey != "" {
+		platformTenantID := config.Env("PLATFORM_TENANT_ID", "platform")
+		platformSlug := config.Env("PLATFORM_TENANT_SLUG", "platform")
+		authHandler.SetServiceTokenConfig(handler.ServiceTokenConfig{
+			Key:              serviceKey,
+			PlatformTenantID: platformTenantID,
+			PlatformSlug:     platformSlug,
+		})
+		slog.Info("service token endpoint enabled")
+	} else {
+		slog.Info("service token endpoint disabled (no SERVICE_ACCOUNT_KEY)")
+	}
+
 	// Rate limiters for sensitive endpoints
 	loginRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 5, Window: time.Minute, KeyFunc: sdamw.ByIP})
 	refreshRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 10, Window: time.Minute, KeyFunc: sdamw.ByIP})
 	mfaRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 5, Window: time.Minute, KeyFunc: sdamw.ByIP})
+	svcTokenRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 5, Window: time.Minute, KeyFunc: sdamw.ByIP})
 
 	r := app.Router()
 	r.Get("/health", hc.Handler())
 	r.With(loginRL).Post("/v1/auth/login", authHandler.Login)
 	r.With(refreshRL).Post("/v1/auth/refresh", authHandler.Refresh)
 	r.Post("/v1/auth/logout", authHandler.Logout)
+	r.With(svcTokenRL).Post("/v1/auth/service-token", authHandler.ServiceToken)
 
 	// Protected routes — require valid access token + blacklist check
 	r.Group(func(r chi.Router) {
@@ -164,4 +183,13 @@ func loadJWTKeys() (ed25519.PrivateKey, ed25519.PublicKey) {
 	}
 
 	return privateKey, publicKey
+}
+
+// loadSecret reads a Docker secret file, falling back to a default value.
+func loadSecret(path, fallback string) string {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return fallback
+	}
+	return strings.TrimSpace(string(data))
 }
