@@ -23,6 +23,9 @@ type mockNotificationService struct {
 	unreadCount   int
 	markedCount   int64
 	err           error
+	sendCalled    bool
+	sendReq       service.SendRequest
+	sendErr       error
 }
 
 func (m *mockNotificationService) List(_ context.Context, userID string, unreadOnly bool, limit int) ([]service.Notification, error) {
@@ -77,6 +80,15 @@ func (m *mockNotificationService) UpdatePreferences(_ context.Context, userID st
 		InAppEnabled: inAppEnabled,
 		MutedTypes:   mutedTypes,
 	}, nil
+}
+
+func (m *mockNotificationService) Send(_ context.Context, req service.SendRequest) error {
+	m.sendCalled = true
+	m.sendReq = req
+	if m.sendErr != nil {
+		return m.sendErr
+	}
+	return nil
 }
 
 // --- helpers ---
@@ -460,5 +472,130 @@ func TestMarkAllRead_ReturnsMarkedField(t *testing.T) {
 	}
 	if _, ok := resp["marked"]; !ok {
 		t.Error("response must contain 'marked' field even when count is 0")
+	}
+}
+
+// ── Send endpoint ────────────────────────────────────────────────────────────
+
+func TestSend_Email_Success(t *testing.T) {
+	mock := &mockNotificationService{}
+	r := setupNotifRouter(mock)
+
+	body := `{"type":"email","to":"enzo@saldivia.com","subject":"Test Subject","body":"Test body content"}`
+	req := withUser(httptest.NewRequest(http.MethodPost, "/v1/notifications/send", strings.NewReader(body)), "u-1")
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+	if !mock.sendCalled {
+		t.Fatal("expected Send to be called")
+	}
+	if mock.sendReq.Type != "email" {
+		t.Errorf("expected type email, got %s", mock.sendReq.Type)
+	}
+	if mock.sendReq.To != "enzo@saldivia.com" {
+		t.Errorf("expected to enzo@saldivia.com, got %s", mock.sendReq.To)
+	}
+
+	var resp map[string]string
+	json.NewDecoder(rec.Body).Decode(&resp)
+	if resp["status"] != "sent" {
+		t.Errorf("expected status sent, got %s", resp["status"])
+	}
+}
+
+func TestSend_InApp_Success(t *testing.T) {
+	mock := &mockNotificationService{}
+	r := setupNotifRouter(mock)
+
+	body := `{"type":"in_app","to":"user-123","subject":"New notification","body":"Hello"}`
+	req := withUser(httptest.NewRequest(http.MethodPost, "/v1/notifications/send", strings.NewReader(body)), "u-1")
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+	if mock.sendReq.Type != "in_app" {
+		t.Errorf("expected type in_app, got %s", mock.sendReq.Type)
+	}
+}
+
+func TestSend_MissingFields_Returns400(t *testing.T) {
+	tests := []struct {
+		name string
+		body string
+	}{
+		{"missing type", `{"to":"a@b.com","subject":"s"}`},
+		{"missing to", `{"type":"email","subject":"s"}`},
+		{"missing subject", `{"type":"email","to":"a@b.com"}`},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mock := &mockNotificationService{}
+			r := setupNotifRouter(mock)
+
+			req := withUser(httptest.NewRequest(http.MethodPost, "/v1/notifications/send", strings.NewReader(tt.body)), "u-1")
+			req.Header.Set("Content-Type", "application/json")
+			rec := httptest.NewRecorder()
+			r.ServeHTTP(rec, req)
+
+			if rec.Code != http.StatusBadRequest {
+				t.Fatalf("expected 400, got %d: %s", rec.Code, rec.Body.String())
+			}
+			if mock.sendCalled {
+				t.Error("Send should not be called for invalid input")
+			}
+		})
+	}
+}
+
+func TestSend_InvalidType_Returns400(t *testing.T) {
+	mock := &mockNotificationService{}
+	r := setupNotifRouter(mock)
+
+	body := `{"type":"sms","to":"a@b.com","subject":"Test"}`
+	req := withUser(httptest.NewRequest(http.MethodPost, "/v1/notifications/send", strings.NewReader(body)), "u-1")
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestSend_MissingUserID_Returns401(t *testing.T) {
+	mock := &mockNotificationService{}
+	r := setupNotifRouter(mock)
+
+	body := `{"type":"email","to":"a@b.com","subject":"Test","body":"Body"}`
+	req := httptest.NewRequest(http.MethodPost, "/v1/notifications/send", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestSend_ServiceError_Returns500(t *testing.T) {
+	mock := &mockNotificationService{sendErr: errors.New("smtp down")}
+	r := setupNotifRouter(mock)
+
+	body := `{"type":"email","to":"a@b.com","subject":"Test","body":"Body"}`
+	req := withUser(httptest.NewRequest(http.MethodPost, "/v1/notifications/send", strings.NewReader(body)), "u-1")
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("expected 500, got %d: %s", rec.Code, rec.Body.String())
 	}
 }

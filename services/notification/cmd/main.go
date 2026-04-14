@@ -55,6 +55,7 @@ func main() {
 		config.Env("SMTP_FROM", "noreply@sda.local"),
 	)
 	notifSvc := service.New(pool)
+	notifSvc.SetMailer(mailer)
 	consumer := service.NewConsumer(nc, notifSvc, mailer)
 	if err := consumer.Start(ctx); err != nil {
 		slog.Error("failed to start NATS consumer", "error", err)

@@ -22,6 +22,7 @@ type NotificationService interface {
 	MarkAllRead(ctx context.Context, userID string) (int64, error)
 	GetPreferences(ctx context.Context, userID string) (*service.Preferences, error)
 	UpdatePreferences(ctx context.Context, userID string, emailEnabled, inAppEnabled bool, quietStart, quietEnd *string, mutedTypes []string) (*service.Preferences, error)
+	Send(ctx context.Context, req service.SendRequest) error
 }
 
 // Notification handles HTTP requests for notification operations.
@@ -42,6 +43,7 @@ func (h *Notification) Routes() chi.Router {
 	r.Get("/", h.List)
 	r.Get("/count", h.UnreadCount)
 	r.Post("/read-all", h.MarkAllRead)
+	r.Post("/send", h.Send)
 	r.Patch("/{notificationID}/read", h.MarkRead)
 
 	r.Route("/preferences", func(r chi.Router) {
@@ -144,6 +146,45 @@ func (h *Notification) UpdatePreferences(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	writeJSON(w, http.StatusOK, prefs)
+}
+
+type sendRequest struct {
+	Type    string `json:"type"`
+	To      string `json:"to"`
+	Subject string `json:"subject"`
+	Body    string `json:"body"`
+}
+
+// Send handles POST /v1/notifications/send
+func (h *Notification) Send(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+
+	var req sendRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid request body"))
+		return
+	}
+
+	if req.Type == "" || req.To == "" || req.Subject == "" {
+		httperr.WriteError(w, r, httperr.InvalidInput("type, to, and subject are required"))
+		return
+	}
+
+	if req.Type != "email" && req.Type != "in_app" {
+		httperr.WriteError(w, r, httperr.InvalidInput("type must be email or in_app"))
+		return
+	}
+
+	if err := h.svc.Send(r.Context(), service.SendRequest{
+		Type:    req.Type,
+		To:      req.To,
+		Subject: req.Subject,
+		Body:    req.Body,
+	}); err != nil {
+		httperr.WriteError(w, r, httperr.Internal(err))
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"status": "sent"})
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) {
