@@ -125,6 +125,12 @@ type alertmanagerAlert struct {
 }
 
 func toInfraAlert(a alertmanagerAlert) service.InfraAlert {
+	if a.Labels == nil {
+		a.Labels = map[string]string{}
+	}
+	if a.Annotations == nil {
+		a.Annotations = map[string]string{}
+	}
 	labels, _ := json.Marshal(a.Labels)
 	annotations, _ := json.Marshal(a.Annotations)
 
