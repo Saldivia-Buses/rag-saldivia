@@ -80,7 +80,7 @@ func (h *Invoicing) ListInvoices(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"invoices": invoices})
+	_ = json.NewEncoder(w).Encode(map[string]any{"invoices": invoices})
 }
 
 func (h *Invoicing) GetInvoice(w http.ResponseWriter, r *http.Request) {
@@ -96,7 +96,7 @@ func (h *Invoicing) GetInvoice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(detail)
+	_ = json.NewEncoder(w).Encode(detail)
 }
 
 func (h *Invoicing) CreateInvoice(w http.ResponseWriter, r *http.Request) {
@@ -152,7 +152,7 @@ func (h *Invoicing) CreateInvoice(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(detail)
+	_ = json.NewEncoder(w).Encode(detail)
 }
 
 func (h *Invoicing) PostInvoice(w http.ResponseWriter, r *http.Request) {
@@ -183,7 +183,7 @@ func (h *Invoicing) GetTaxBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"entries": entries})
+	_ = json.NewEncoder(w).Encode(map[string]any{"entries": entries})
 }
 
 func (h *Invoicing) ListWithholdings(w http.ResponseWriter, r *http.Request) {
@@ -196,7 +196,7 @@ func (h *Invoicing) ListWithholdings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"withholdings": withholdings})
+	_ = json.NewEncoder(w).Encode(map[string]any{"withholdings": withholdings})
 }
 
 func (h *Invoicing) CreateWithholding(w http.ResponseWriter, r *http.Request) {
@@ -244,7 +244,7 @@ func (h *Invoicing) CreateWithholding(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(w2)
+	_ = json.NewEncoder(w).Encode(w2)
 }
 
 // VoidPreview returns what voiding an invoice would do.
@@ -261,7 +261,7 @@ func (h *Invoicing) VoidPreview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(preview)
+	_ = json.NewEncoder(w).Encode(preview)
 }
 
 // VoidInvoice performs cascade void on a posted/paid invoice.
@@ -287,5 +287,5 @@ func (h *Invoicing) VoidInvoice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(result)
+	_ = json.NewEncoder(w).Encode(result)
 }

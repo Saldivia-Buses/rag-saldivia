@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -89,11 +88,9 @@ func buildWorkerWithServer(t *testing.T, srv *httptest.Server, pub EventPublishe
 		StagingDir:   t.TempDir(),
 		Timeout:      0,
 	}
-	// nc == nil is OK for processJob — it only uses nc.Publish in publishCompletion
-	// and we can tolerate that failing silently (no assertions on WS publish in unit test)
 	w := &Worker{
 		nc:        nil,
-		svc:       nil, // replaced below
+		svc:       &ingestSpy{},
 		publisher: pub,
 		client:    &http.Client{Timeout: cfg.Timeout},
 		cfg:       cfg,
@@ -173,16 +170,11 @@ func TestTenantFromSubject(t *testing.T) {
 }
 
 // --- processJob tests ---
-// Note: processJob calls w.svc.UpdateJobStatus(ctx, ...) which panics on nil svc.
-// We attach a thin ingest svc with nil pool — UpdateJobStatus will fail silently
-// (error is discarded with `_ =`). This is intentional per the production code.
+// Worker.svc is a JobStatusUpdater interface, so ingestSpy records calls
+// without needing a real pool. buildWorkerWithServer wires a fresh spy by
+// default. Tests that need to inspect the updates assign a named spy.
 
-// nullIngest returns an Ingest that does not panic on UpdateJobStatus but has no DB.
-// UpdateJobStatus calls repo.UpdateJobStatus — with a nil pool, repo.New panics.
-// To avoid this, we need to intercept at the Ingest level.
-// Strategy: create a minimal wrapper that implements the needed method.
-
-// ingestSpy wraps calls to UpdateJobStatus for assertions.
+// ingestSpy implements JobStatusUpdater and records calls for assertions.
 type ingestSpy struct {
 	updates []statusUpdate
 }
@@ -197,31 +189,6 @@ func (s *ingestSpy) UpdateJobStatus(_ context.Context, jobID, status string, err
 	s.updates = append(s.updates, statusUpdate{JobID: jobID, Status: status, ErrMsg: errMsg})
 	return nil
 }
-
-// To use ingestSpy with Worker.processJob, we need Worker.svc to accept the interface.
-// But Worker.svc is *Ingest (concrete). We cannot replace it without changing production code.
-//
-// TDD-ANCHOR: Worker.svc is *Ingest (not an interface). This means processJob cannot be
-// unit-tested without a real *pgxpool.Pool. The calls to UpdateJobStatus inside processJob
-// use `_ =` (errors discarded) so a nil svc.repo will panic.
-// Mitigation: test processJob at the HTTP level only — verify Blueprint interaction behavior
-// (ack on 200, nak on 5xx) by observing msg.AckCalled / msg.NakCalled / msg.TermCalled.
-// The svc.UpdateJobStatus calls are skipped by not wiring a real svc.
-
-// workerWithNilSvc builds a worker where w.svc is nil.
-// processJob discards UpdateJobStatus errors so nil svc causes a nil-pointer panic.
-// We accept this constraint: the tests below avoid triggering UpdateJobStatus by only
-// asserting on ack/nak/term behavior which happens after or instead of status updates.
-//
-// Actually re-reading processJob: it calls w.svc.UpdateJobStatus unconditionally before
-// forwardToBlueprint. With nil svc this panics. We need another approach.
-//
-// Final approach: test what CAN be tested without DB:
-//   1. tenantFromSubject — already done above
-//   2. processJob with malformed JSON → Term() (UpdateJobStatus not called)
-//   3. processJob with missing fields → Term() (UpdateJobStatus not called)
-//   4. processJob with tenant mismatch → Term() (UpdateJobStatus not called)
-//   5. processJob success path → tested via integration (TDD-ANCHOR noted below)
 
 func TestProcessJob_MalformedJSON_Terms(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -292,22 +259,76 @@ func TestProcessJob_TenantMismatch_Terms(t *testing.T) {
 	assert.False(t, msg.NakCalled, "spoofed tenant payload must not be nacked (no retry)")
 }
 
-func TestProcessJob_StagedFileNotFound_NaksOrTermsOnFinalAttempt(t *testing.T) {
-	// TDD-ANCHOR: processJob calls w.svc.UpdateJobStatus before forwardToBlueprint.
-	// With w.svc == nil this would panic. We skip this test until Worker accepts
-	// an injectable interface for status updates.
-	//
-	// This test documents the DESIRED behavior:
-	//   - staged file missing → forwardToBlueprint returns error
-	//   - on retries 1-2: msg.Nak()
-	//   - on final attempt (NumDelivered >= maxDeliveries): msg.Term()
-	//
-	// To make this testable without DB, Worker.svc should be an interface:
-	//   type JobUpdater interface {
-	//       UpdateJobStatus(ctx context.Context, jobID, status string, errMsg *string) error
-	//   }
-	// Tracked as a future improvement.
-	t.Skip("TDD-ANCHOR: Worker.svc is *Ingest (not interface) — needs interface extraction to test without DB")
+func TestProcessJob_StagedFileNotFound_RetryThenTerm(t *testing.T) {
+	// When forwardToBlueprint fails (staged file missing), processJob must:
+	//   - on retries 1-2: Nak() for redelivery, job stays "processing"
+	//   - on final attempt (NumDelivered >= maxDeliveries): Term() + status="failed"
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK) // server is fine; file is missing locally
+	}))
+	defer srv.Close()
+
+	t.Run("retry attempt naks and keeps processing status", func(t *testing.T) {
+		spy := &ingestSpy{}
+		w := buildWorkerWithServer(t, srv, nil)
+		w.svc = spy
+
+		missingPath := filepath.Join(t.TempDir(), "does-not-exist.pdf")
+		data := ingestMsg(t, IngestMessage{
+			JobID:      "job-retry",
+			TenantSlug: "saldivia",
+			StagedPath: missingPath,
+			Collection: "docs",
+			FileName:   "missing.pdf",
+		})
+		msg := &mockMsg{
+			subject:       "tenant.saldivia.ingest.process",
+			data:          data,
+			deliveryCount: 1, // first attempt — should retry
+		}
+		w.processJob(msg)
+
+		assert.True(t, msg.NakCalled, "retry attempt must Nak for redelivery")
+		assert.False(t, msg.TermCalled)
+		assert.False(t, msg.AckCalled)
+
+		// Status stays "processing" — no "failed" update until final attempt.
+		require.Len(t, spy.updates, 1, "only the initial processing update should fire on retry")
+		assert.Equal(t, "processing", spy.updates[0].Status)
+		assert.Nil(t, spy.updates[0].ErrMsg)
+	})
+
+	t.Run("final attempt terms and marks failed", func(t *testing.T) {
+		spy := &ingestSpy{}
+		w := buildWorkerWithServer(t, srv, nil)
+		w.svc = spy
+
+		missingPath := filepath.Join(t.TempDir(), "does-not-exist.pdf")
+		data := ingestMsg(t, IngestMessage{
+			JobID:      "job-final",
+			TenantSlug: "saldivia",
+			StagedPath: missingPath,
+			Collection: "docs",
+			FileName:   "missing.pdf",
+		})
+		msg := &mockMsg{
+			subject:       "tenant.saldivia.ingest.process",
+			data:          data,
+			deliveryCount: uint64(maxDeliveries), // final attempt
+		}
+		w.processJob(msg)
+
+		assert.True(t, msg.TermCalled, "final attempt must Term (no more retries)")
+		assert.False(t, msg.NakCalled)
+		assert.False(t, msg.AckCalled)
+
+		// Spy must see processing → failed with error message.
+		require.Len(t, spy.updates, 2)
+		assert.Equal(t, "processing", spy.updates[0].Status)
+		assert.Equal(t, "failed", spy.updates[1].Status)
+		require.NotNil(t, spy.updates[1].ErrMsg)
+		assert.Contains(t, *spy.updates[1].ErrMsg, "failed after")
+	})
 }
 
 // --- forwardToBlueprint behavior via HTTP test server ---
@@ -482,21 +503,3 @@ type jetMsg interface {
 
 var _ jetMsg = (*mockMsg)(nil)
 
-// --- TDD-ANCHOR documentation ---
-
-// TDD-ANCHOR: processJob success/failure paths with status transitions (pending→processing→completed/failed)
-// cannot be unit-tested without a real database because Worker.svc is *Ingest (a struct, not
-// an interface), and *Ingest requires a live *pgxpool.Pool for UpdateJobStatus.
-//
-// To enable full unit coverage of processJob, the production code would need:
-//   type JobStatusUpdater interface {
-//       UpdateJobStatus(ctx context.Context, jobID, status string, errMsg *string) error
-//   }
-// and Worker.svc should be this interface, not *Ingest.
-//
-// Current coverage in ingest_integration_test.go already covers UpdateJobStatus transitions.
-// The Blueprint-level behavior (ack on 200, nak on transient error, term on final attempt)
-// is covered by TestForwardToBlueprint_* tests above.
-
-// Ensure the test file compiles by importing fmt only if needed.
-var _ = fmt.Sprintf

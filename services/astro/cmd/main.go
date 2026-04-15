@@ -48,7 +48,7 @@ func main() {
 	if err != nil {
 		slog.Warn("nats connect failed, event publishing disabled", "error", err)
 	} else {
-		app.OnShutdown(func() { nc.Drain() })
+		app.OnShutdown(func() { _ = nc.Drain() }) // best-effort drain on shutdown
 		slog.Info("connected to nats", "url", config.RedactURL(natsURL))
 	}
 	tracePublisher := traces.NewPublisher(nc)

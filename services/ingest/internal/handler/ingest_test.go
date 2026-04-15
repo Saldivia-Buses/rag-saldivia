@@ -112,9 +112,9 @@ func makeUploadRequest(t *testing.T, fileName, collection, userID, tenantSlug st
 	var buf bytes.Buffer
 	writer := multipart.NewWriter(&buf)
 	part, _ := writer.CreateFormFile("file", fileName)
-	part.Write([]byte("fake pdf content"))
-	writer.WriteField("collection", collection)
-	writer.Close()
+	_, _ = part.Write([]byte("fake pdf content"))
+	_ = writer.WriteField("collection", collection)
+	_ = writer.Close()
 
 	req := httptest.NewRequest(http.MethodPost, "/v1/ingest/upload", &buf)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
@@ -143,7 +143,7 @@ func TestUpload_Success(t *testing.T) {
 	}
 
 	var job service.Job
-	json.NewDecoder(rec.Body).Decode(&job)
+	_ = json.NewDecoder(rec.Body).Decode(&job)
 	if job.Status != "pending" {
 		t.Errorf("expected status pending, got %q", job.Status)
 	}
@@ -155,9 +155,9 @@ func TestUpload_MissingUserID_Returns403(t *testing.T) {
 	var buf bytes.Buffer
 	writer := multipart.NewWriter(&buf)
 	part, _ := writer.CreateFormFile("file", "doc.pdf")
-	part.Write([]byte("content"))
-	writer.WriteField("collection", "test")
-	writer.Close()
+	_, _ = part.Write([]byte("content"))
+	_ = writer.WriteField("collection", "test")
+	_ = writer.Close()
 
 	req := httptest.NewRequest(http.MethodPost, "/v1/ingest/upload", &buf)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
@@ -223,9 +223,9 @@ func TestUpload_MissingCollection_Returns400(t *testing.T) {
 	var buf bytes.Buffer
 	writer := multipart.NewWriter(&buf)
 	part, _ := writer.CreateFormFile("file", "doc.pdf")
-	part.Write([]byte("content"))
+	_, _ = part.Write([]byte("content"))
 	// No collection field
-	writer.Close()
+	_ = writer.Close()
 
 	req := httptest.NewRequest(http.MethodPost, "/v1/ingest/upload", &buf)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
@@ -261,7 +261,7 @@ func TestListJobs_ReturnsUserJobs(t *testing.T) {
 	}
 
 	var resp map[string][]service.Job
-	json.NewDecoder(rec.Body).Decode(&resp)
+	_ = json.NewDecoder(rec.Body).Decode(&resp)
 	if len(resp["jobs"]) != 1 {
 		t.Errorf("expected 1 job for u-1, got %d", len(resp["jobs"]))
 	}
@@ -356,7 +356,7 @@ func TestListJobs_ServiceError_Returns500_GenericMessage(t *testing.T) {
 	}
 
 	var resp map[string]string
-	json.NewDecoder(rec.Body).Decode(&resp)
+	_ = json.NewDecoder(rec.Body).Decode(&resp)
 	if resp["error"] != "internal error" {
 		t.Errorf("expected generic error, got %q — service internals may be leaking", resp["error"])
 	}
@@ -439,7 +439,7 @@ func TestCreateCollection_EmptyName_Returns400(t *testing.T) {
 	}
 
 	var resp map[string]string
-	json.NewDecoder(rec.Body).Decode(&resp)
+	_ = json.NewDecoder(rec.Body).Decode(&resp)
 	if resp["error"] == "" {
 		t.Error("expected non-empty error field in response")
 	}
@@ -477,7 +477,7 @@ func TestCreateCollection_DuplicateName_Returns409(t *testing.T) {
 	}
 
 	var resp map[string]string
-	json.NewDecoder(rec.Body).Decode(&resp)
+	_ = json.NewDecoder(rec.Body).Decode(&resp)
 	if resp["error"] == "" {
 		t.Error("expected non-empty error in conflict response")
 	}
@@ -535,11 +535,11 @@ func TestUpload_FileTooBig_Returns400OrRequestEntityTooLarge(t *testing.T) {
 		if written+n > overLimit {
 			n = overLimit - written
 		}
-		part.Write(chunk[:n])
+		_, _ = part.Write(chunk[:n])
 		written += n
 	}
-	writer.WriteField("collection", "test")
-	writer.Close()
+	_ = writer.WriteField("collection", "test")
+	_ = writer.Close()
 
 	req := httptest.NewRequest(http.MethodPost, "/v1/ingest/upload", &buf)
 	req.Header.Set("Content-Type", writer.FormDataContentType())

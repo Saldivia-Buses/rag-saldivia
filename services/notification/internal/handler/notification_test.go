@@ -155,7 +155,7 @@ func TestUnreadCount_Returns_Count(t *testing.T) {
 	}
 
 	var resp map[string]int
-	json.NewDecoder(rec.Body).Decode(&resp)
+	_ = json.NewDecoder(rec.Body).Decode(&resp)
 	if resp["count"] != 5 {
 		t.Errorf("expected count 5, got %d", resp["count"])
 	}
@@ -203,7 +203,7 @@ func TestMarkAllRead_Returns_Count(t *testing.T) {
 	}
 
 	var resp map[string]int64
-	json.NewDecoder(rec.Body).Decode(&resp)
+	_ = json.NewDecoder(rec.Body).Decode(&resp)
 	if resp["marked"] != 3 {
 		t.Errorf("expected marked 3, got %d", resp["marked"])
 	}
@@ -221,7 +221,7 @@ func TestGetPreferences_Returns_Defaults(t *testing.T) {
 	}
 
 	var prefs service.Preferences
-	json.NewDecoder(rec.Body).Decode(&prefs)
+	_ = json.NewDecoder(rec.Body).Decode(&prefs)
 	if !prefs.EmailEnabled {
 		t.Error("expected email_enabled true by default")
 	}
@@ -241,7 +241,7 @@ func TestUpdatePreferences_Success(t *testing.T) {
 	}
 
 	var prefs service.Preferences
-	json.NewDecoder(rec.Body).Decode(&prefs)
+	_ = json.NewDecoder(rec.Body).Decode(&prefs)
 	if prefs.EmailEnabled {
 		t.Error("expected email_enabled false")
 	}
@@ -273,7 +273,7 @@ func TestList_ServiceError_Returns500_GenericMessage(t *testing.T) {
 	}
 
 	var resp map[string]string
-	json.NewDecoder(rec.Body).Decode(&resp)
+	_ = json.NewDecoder(rec.Body).Decode(&resp)
 	if resp["error"] != "internal error" {
 		t.Errorf("expected generic error, got %q", resp["error"])
 	}
@@ -507,7 +507,7 @@ func TestSend_Email_Success(t *testing.T) {
 	}
 
 	var resp map[string]string
-	json.NewDecoder(rec.Body).Decode(&resp)
+	_ = json.NewDecoder(rec.Body).Decode(&resp)
 	if resp["status"] != "sent" {
 		t.Errorf("expected status sent, got %s", resp["status"])
 	}

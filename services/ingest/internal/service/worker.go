@@ -16,11 +16,17 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 )
 
+// JobStatusUpdater is the narrow dependency the Worker needs from Ingest.
+// Defined as an interface so tests can substitute a fake without a real pool.
+type JobStatusUpdater interface {
+	UpdateJobStatus(ctx context.Context, jobID, status string, errMsg *string) error
+}
+
 // Worker consumes ingest jobs from NATS JetStream and forwards documents
 // to the NVIDIA RAG Blueprint for vectorization.
 type Worker struct {
 	nc        *nats.Conn
-	svc       *Ingest
+	svc       JobStatusUpdater
 	publisher EventPublisher
 	client    *http.Client
 	cfg       Config
@@ -30,7 +36,7 @@ type Worker struct {
 }
 
 // NewWorker creates an ingest worker.
-func NewWorker(nc *nats.Conn, svc *Ingest, publisher EventPublisher, cfg Config) *Worker {
+func NewWorker(nc *nats.Conn, svc JobStatusUpdater, publisher EventPublisher, cfg Config) *Worker {
 	return &Worker{
 		nc:        nc,
 		svc:       svc,

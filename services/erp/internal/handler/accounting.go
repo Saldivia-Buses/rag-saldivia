@@ -121,7 +121,7 @@ func (h *Accounting) CreateAccount(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(acct)
+	_ = json.NewEncoder(w).Encode(acct)
 }
 
 func (h *Accounting) ListCostCenters(w http.ResponseWriter, r *http.Request) {
@@ -133,7 +133,7 @@ func (h *Accounting) ListCostCenters(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"cost_centers": centers})
+	_ = json.NewEncoder(w).Encode(map[string]any{"cost_centers": centers})
 }
 
 func (h *Accounting) CreateCostCenter(w http.ResponseWriter, r *http.Request) {
@@ -157,7 +157,7 @@ func (h *Accounting) CreateCostCenter(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(cc)
+	_ = json.NewEncoder(w).Encode(cc)
 }
 
 func (h *Accounting) ListFiscalYears(w http.ResponseWriter, r *http.Request) {
@@ -168,7 +168,7 @@ func (h *Accounting) ListFiscalYears(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"fiscal_years": years})
+	_ = json.NewEncoder(w).Encode(map[string]any{"fiscal_years": years})
 }
 
 func (h *Accounting) CreateFiscalYear(w http.ResponseWriter, r *http.Request) {
@@ -191,7 +191,7 @@ func (h *Accounting) CreateFiscalYear(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(fy)
+	_ = json.NewEncoder(w).Encode(fy)
 }
 
 func (h *Accounting) ListEntries(w http.ResponseWriter, r *http.Request) {
@@ -207,7 +207,7 @@ func (h *Accounting) ListEntries(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"entries": entries})
+	_ = json.NewEncoder(w).Encode(map[string]any{"entries": entries})
 }
 
 func (h *Accounting) GetEntry(w http.ResponseWriter, r *http.Request) {
@@ -223,7 +223,7 @@ func (h *Accounting) GetEntry(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(detail)
+	_ = json.NewEncoder(w).Encode(detail)
 }
 
 func (h *Accounting) CreateEntry(w http.ResponseWriter, r *http.Request) {
@@ -282,7 +282,7 @@ func (h *Accounting) CreateEntry(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(detail)
+	_ = json.NewEncoder(w).Encode(detail)
 }
 
 func (h *Accounting) PostEntry(w http.ResponseWriter, r *http.Request) {
@@ -310,7 +310,7 @@ func (h *Accounting) GetBalance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"balances": balances})
+	_ = json.NewEncoder(w).Encode(map[string]any{"balances": balances})
 }
 
 func (h *Accounting) GetLedger(w http.ResponseWriter, r *http.Request) {
@@ -326,7 +326,7 @@ func (h *Accounting) GetLedger(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"ledger": ledger})
+	_ = json.NewEncoder(w).Encode(map[string]any{"ledger": ledger})
 }
 
 // SetResultAccount sets the result account on a fiscal year (required before close).
@@ -372,7 +372,7 @@ func (h *Accounting) PreviewClose(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(preview)
+	_ = json.NewEncoder(w).Encode(preview)
 }
 
 // CloseFiscalYear closes a fiscal year and creates the next one.
@@ -390,7 +390,7 @@ func (h *Accounting) CloseFiscalYear(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(result)
+	_ = json.NewEncoder(w).Encode(result)
 }
 
 // pgDate parses a date string into pgtype.Date. Returns invalid if empty.

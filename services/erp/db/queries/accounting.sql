@@ -41,6 +41,14 @@ SELECT id, tenant_id, year, start_date, end_date, status, result_account_id,
        closed_by, closed_at, closing_entry_id, opening_entry_id
 FROM erp_fiscal_years WHERE id = $1 AND tenant_id = $2;
 
+-- name: GetFiscalYearByDate :one
+-- Returns the open fiscal year that contains the given date, if any.
+SELECT id, tenant_id, year, start_date, end_date, status, result_account_id,
+       closed_by, closed_at, closing_entry_id, opening_entry_id
+FROM erp_fiscal_years
+WHERE tenant_id = $1 AND start_date <= $2 AND end_date >= $2 AND status = 'open'
+LIMIT 1;
+
 -- name: CreateFiscalYear :one
 INSERT INTO erp_fiscal_years (tenant_id, year, start_date, end_date, result_account_id)
 VALUES ($1, $2, $3, $4, $5)

@@ -217,6 +217,13 @@ VALUES ($1, $2, $3)
 RETURNING *;
 
 -- name: GetNextReceiptNumber :one
+-- FOR UPDATE is applied inside a subquery because PostgreSQL rejects
+-- FOR UPDATE at the top level when combined with an aggregate (MAX).
+-- Locking the underlying rows prevents two concurrent transactions from
+-- allocating the same receipt number.
 SELECT COALESCE(MAX(CAST(SUBSTRING(number FROM '[0-9]+$') AS INT)), 0) + 1 AS next_number
-FROM erp_receipts WHERE tenant_id = $1 AND receipt_type = $2
-FOR UPDATE;
+FROM (
+    SELECT number FROM erp_receipts
+    WHERE tenant_id = $1 AND receipt_type = $2
+    FOR UPDATE
+) sub;

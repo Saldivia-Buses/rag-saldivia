@@ -4,6 +4,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -62,7 +63,9 @@ func writeSafeErr(w http.ResponseWriter, err error, status int) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(map[string]string{"error": safe})
+	if encErr := json.NewEncoder(w).Encode(map[string]string{"error": safe}); encErr != nil {
+		slog.Warn("write error response failed", "error", encErr)
+	}
 }
 
 // parseUUID parses a string into pgtype.UUID.
@@ -108,7 +111,7 @@ func (h *Suggestions) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
+	_ = json.NewEncoder(w).Encode(map[string]any{
 		"suggestions": suggestions,
 		"page":        p.Page,
 		"page_size":   p.PageSize,
@@ -132,7 +135,7 @@ func (h *Suggestions) Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
+	_ = json.NewEncoder(w).Encode(map[string]any{
 		"suggestion": suggestion,
 		"responses":  responses,
 	})
@@ -172,7 +175,7 @@ func (h *Suggestions) Create(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(suggestion)
+	_ = json.NewEncoder(w).Encode(suggestion)
 }
 
 // Respond adds a response to a suggestion.
@@ -215,7 +218,7 @@ func (h *Suggestions) Respond(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(response)
 }
 
 // MarkRead marks a suggestion as read.
@@ -247,5 +250,5 @@ func (h *Suggestions) CountUnread(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"unread": count})
+	_ = json.NewEncoder(w).Encode(map[string]any{"unread": count})
 }

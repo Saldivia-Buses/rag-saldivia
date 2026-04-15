@@ -59,7 +59,7 @@ func (h *Sales) ListQuotations(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"quotations": quotations})
+	_ = json.NewEncoder(w).Encode(map[string]any{"quotations": quotations})
 }
 
 func (h *Sales) GetQuotation(w http.ResponseWriter, r *http.Request) {
@@ -75,7 +75,7 @@ func (h *Sales) GetQuotation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(detail)
+	_ = json.NewEncoder(w).Encode(detail)
 }
 
 func (h *Sales) CreateQuotation(w http.ResponseWriter, r *http.Request) {
@@ -127,7 +127,7 @@ func (h *Sales) CreateQuotation(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(detail)
+	_ = json.NewEncoder(w).Encode(detail)
 }
 
 func (h *Sales) ListOrders(w http.ResponseWriter, r *http.Request) {
@@ -139,7 +139,7 @@ func (h *Sales) ListOrders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"orders": orders})
+	_ = json.NewEncoder(w).Encode(map[string]any{"orders": orders})
 }
 
 func (h *Sales) CreateOrder(w http.ResponseWriter, r *http.Request) {
@@ -167,7 +167,7 @@ func (h *Sales) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(order)
+	_ = json.NewEncoder(w).Encode(order)
 }
 
 func (h *Sales) UpdateOrderStatus(w http.ResponseWriter, r *http.Request) {
@@ -198,5 +198,5 @@ func (h *Sales) ListPriceLists(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"price_lists": lists})
+	_ = json.NewEncoder(w).Encode(map[string]any{"price_lists": lists})
 }

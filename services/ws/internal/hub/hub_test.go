@@ -93,7 +93,7 @@ func TestHub_BroadcastToTenant(t *testing.T) {
 	select {
 	case data := <-c1.send:
 		var msg Message
-		json.Unmarshal(data, &msg)
+		_ = json.Unmarshal(data, &msg)
 		if msg.Channel != "notifications" {
 			t.Errorf("expected channel 'notifications', got %q", msg.Channel)
 		}
@@ -208,7 +208,7 @@ func TestHub_MaxClients_RejectsOverCapacity(t *testing.T) {
 	select {
 	case data := <-c3.send:
 		var msg Message
-		json.Unmarshal(data, &msg)
+		_ = json.Unmarshal(data, &msg)
 		if msg.Type != Error {
 			t.Errorf("expected error type, got %s", msg.Type)
 		}
@@ -343,7 +343,7 @@ func TestHub_HandleMessage_Subscribe(t *testing.T) {
 	select {
 	case data := <-c.send:
 		var msg Message
-		json.Unmarshal(data, &msg)
+		_ = json.Unmarshal(data, &msg)
 		if msg.ID != "req-1" {
 			t.Errorf("expected correlation ID 'req-1', got %q", msg.ID)
 		}
@@ -361,7 +361,7 @@ func TestHub_HandleMessage_SubscribeEmpty(t *testing.T) {
 	select {
 	case data := <-c.send:
 		var msg Message
-		json.Unmarshal(data, &msg)
+		_ = json.Unmarshal(data, &msg)
 		if msg.Type != Error {
 			t.Errorf("expected error type, got %s", msg.Type)
 		}
@@ -390,7 +390,7 @@ func TestHub_HandleMessage_Unsubscribe(t *testing.T) {
 	select {
 	case data := <-c.send:
 		var msg Message
-		json.Unmarshal(data, &msg)
+		_ = json.Unmarshal(data, &msg)
 		if msg.Channel != "ch-1" {
 			t.Errorf("expected channel 'ch-1' in confirmation, got %q", msg.Channel)
 		}
@@ -408,7 +408,7 @@ func TestHub_HandleMessage_MutationsDisabled(t *testing.T) {
 	select {
 	case data := <-c.send:
 		var msg Message
-		json.Unmarshal(data, &msg)
+		_ = json.Unmarshal(data, &msg)
 		if msg.Type != Error {
 			t.Errorf("expected error type, got %s", msg.Type)
 		}
@@ -426,7 +426,7 @@ func TestHub_HandleMessage_UnknownType(t *testing.T) {
 	select {
 	case data := <-c.send:
 		var msg Message
-		json.Unmarshal(data, &msg)
+		_ = json.Unmarshal(data, &msg)
 		if msg.Type != Error {
 			t.Errorf("expected error type for unknown message type, got %s", msg.Type)
 		}

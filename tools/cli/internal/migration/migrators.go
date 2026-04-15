@@ -264,7 +264,7 @@ func NewFiscalYearMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 			// Parse year from nombre_ejercicio or comienza date
 			year := 0
 			if nombre := row.String("nombre_ejercicio"); nombre != "" {
-				fmt.Sscanf(nombre, "%d", &year)
+				_, _ = fmt.Sscanf(nombre, "%d", &year)
 			}
 			if year == 0 {
 				// Try to extract from start date

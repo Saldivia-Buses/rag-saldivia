@@ -752,11 +752,21 @@ func (s *Treasury) CreateReceipt(ctx context.Context, tenantID string, inp Recei
 		}
 	}
 
+	// Resolve the open fiscal year for the receipt date — required by the
+	// erp_journal_entries.fiscal_year_id NOT NULL constraint.
+	fy, err := qtx.GetFiscalYearByDate(ctx, repository.GetFiscalYearByDateParams{
+		TenantID: tenantID, Date: d,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("resolve fiscal year for receipt date: %w", err)
+	}
+
 	// Create journal entry + lines
 	entry, err := qtx.CreateJournalEntry(ctx, repository.CreateJournalEntryParams{
 		TenantID:      tenantID,
 		Number:        "AUT-" + number,
 		Date:          d,
+		FiscalYearID:  fy.ID,
 		Concept:       fmt.Sprintf("Recibo %s", number),
 		EntryType:     "auto",
 		ReferenceType: pgText("receipt"),

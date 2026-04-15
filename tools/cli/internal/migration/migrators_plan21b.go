@@ -1956,7 +1956,7 @@ func parseHoursString(s string) float64 {
 	}
 	// Try plain number
 	var f float64
-	fmt.Sscanf(s, "%f", &f)
+	_, _ = fmt.Sscanf(s, "%f", &f)
 	return f
 }
 
@@ -1964,7 +1964,7 @@ func parseHoursString(s string) float64 {
 func parseIntSafe(s string) int {
 	s = strings.TrimSpace(s)
 	var n int
-	fmt.Sscanf(s, "%d", &n)
+	_, _ = fmt.Sscanf(s, "%d", &n)
 	return n
 }
 

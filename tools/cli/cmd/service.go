@@ -41,15 +41,15 @@ func runServiceHealth(cmd *cobra.Command, args []string) {
 	results := admin.ServiceHealth(baseHost)
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintf(w, "SERVICE\tPORT\tSTATUS\tLATENCY\n")
+	_, _ = fmt.Fprintf(w, "SERVICE\tPORT\tSTATUS\tLATENCY\n")
 	for _, s := range results {
 		latency := "-"
 		if s.Latency > 0 {
 			latency = s.Latency.Round(time.Millisecond).String()
 		}
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", s.Name, s.Port, s.Status, latency)
+		_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", s.Name, s.Port, s.Status, latency)
 	}
-	w.Flush()
+	_ = w.Flush()
 }
 
 func runServiceLogs(cmd *cobra.Command, args []string) {

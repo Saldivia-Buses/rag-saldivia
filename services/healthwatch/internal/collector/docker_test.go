@@ -16,7 +16,7 @@ func TestDocker_ListContainers(t *testing.T) {
 		assert.Equal(t, "/containers/json", r.URL.Path)
 		assert.Contains(t, r.URL.RawQuery, "filters=")
 
-		json.NewEncoder(w).Encode([]map[string]any{
+		_ = json.NewEncoder(w).Encode([]map[string]any{
 			{
 				"Names":  []string{"/sda-auth"},
 				"Image":  "ghcr.io/camionerou/sda-auth:0.1.0",
@@ -62,7 +62,7 @@ func TestDocker_ListContainers(t *testing.T) {
 
 func TestDocker_ListContainers_EmptyResponse(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode([]any{})
+		_ = json.NewEncoder(w).Encode([]any{})
 	}))
 	defer server.Close()
 

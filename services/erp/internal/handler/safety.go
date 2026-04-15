@@ -73,7 +73,7 @@ func (h *Safety) ListAccidentTypes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"accident_types": types})
+	_ = json.NewEncoder(w).Encode(map[string]any{"accident_types": types})
 }
 
 func (h *Safety) ListBodyParts(w http.ResponseWriter, r *http.Request) {
@@ -83,7 +83,7 @@ func (h *Safety) ListBodyParts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"body_parts": parts})
+	_ = json.NewEncoder(w).Encode(map[string]any{"body_parts": parts})
 }
 
 func (h *Safety) ListRiskAgents(w http.ResponseWriter, r *http.Request) {
@@ -93,7 +93,7 @@ func (h *Safety) ListRiskAgents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"risk_agents": agents})
+	_ = json.NewEncoder(w).Encode(map[string]any{"risk_agents": agents})
 }
 
 // ── Work Accidents ────────────────────────────────────────────────────────────
@@ -106,7 +106,7 @@ func (h *Safety) ListAccidents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"accidents": accidents})
+	_ = json.NewEncoder(w).Encode(map[string]any{"accidents": accidents})
 }
 
 func (h *Safety) GetAccident(w http.ResponseWriter, r *http.Request) {
@@ -121,7 +121,7 @@ func (h *Safety) GetAccident(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(wa)
+	_ = json.NewEncoder(w).Encode(wa)
 }
 
 func (h *Safety) CreateAccident(w http.ResponseWriter, r *http.Request) {
@@ -168,7 +168,7 @@ func (h *Safety) CreateAccident(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(wa)
+	_ = json.NewEncoder(w).Encode(wa)
 }
 
 func (h *Safety) UpdateAccidentStatus(w http.ResponseWriter, r *http.Request) {
@@ -211,7 +211,7 @@ func (h *Safety) ListRiskExposures(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"risk_exposures": exposures})
+	_ = json.NewEncoder(w).Encode(map[string]any{"risk_exposures": exposures})
 }
 
 func (h *Safety) CreateRiskExposure(w http.ResponseWriter, r *http.Request) {
@@ -262,7 +262,7 @@ func (h *Safety) CreateRiskExposure(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(exp)
+	_ = json.NewEncoder(w).Encode(exp)
 }
 
 // ── Medical Consultations ─────────────────────────────────────────────────────
@@ -276,7 +276,7 @@ func (h *Safety) ListMedicalLog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"consultations": consultations})
+	_ = json.NewEncoder(w).Encode(map[string]any{"consultations": consultations})
 }
 
 func (h *Safety) CreateMedicalConsultation(w http.ResponseWriter, r *http.Request) {
@@ -315,7 +315,7 @@ func (h *Safety) CreateMedicalConsultation(w http.ResponseWriter, r *http.Reques
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(mc)
+	_ = json.NewEncoder(w).Encode(mc)
 }
 
 // ── Medical Leaves ────────────────────────────────────────────────────────────
@@ -329,7 +329,7 @@ func (h *Safety) ListMedicalLeaves(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"medical_leaves": leaves})
+	_ = json.NewEncoder(w).Encode(map[string]any{"medical_leaves": leaves})
 }
 
 func (h *Safety) CreateMedicalLeave(w http.ResponseWriter, r *http.Request) {
@@ -383,7 +383,7 @@ func (h *Safety) CreateMedicalLeave(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(ml)
+	_ = json.NewEncoder(w).Encode(ml)
 }
 
 func (h *Safety) ApproveMedicalLeave(w http.ResponseWriter, r *http.Request) {
@@ -425,7 +425,7 @@ func (h *Safety) GetKPIs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(kpis)
+	_ = json.NewEncoder(w).Encode(kpis)
 }
 
 // pgTime converts a time string "HH:MM" or "HH:MM:SS" to pgtype.Time.

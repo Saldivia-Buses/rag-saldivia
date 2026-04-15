@@ -353,14 +353,18 @@ func (p *Platform) CreateFeatureFlag(ctx context.Context, params CreateFlagParam
 		return FeatureFlag{}, fmt.Errorf("rollout_pct must be 0-100")
 	}
 	var f FeatureFlag
+	var tenantID *string
 	err := p.pool.QueryRow(ctx,
 		`INSERT INTO feature_flags (id, name, description, tenant_id, enabled, rollout_pct, updated_by, updated_at)
 		 VALUES ($1, $2, $3, $4, false, $5, $6, now())
 		 RETURNING id, name, tenant_id, enabled, rollout_pct`,
 		params.ID, params.Name, params.Description, params.TenantID, params.RolloutPct, createdBy,
-	).Scan(&f.ID, &f.Name, &f.TenantID, &f.Enabled, &f.RolloutPct)
+	).Scan(&f.ID, &f.Name, &tenantID, &f.Enabled, &f.RolloutPct)
 	if err != nil {
 		return FeatureFlag{}, fmt.Errorf("create feature flag: %w", err)
+	}
+	if tenantID != nil {
+		f.TenantID = *tenantID
 	}
 	p.auditor.Write(ctx, audit.Entry{
 		UserID: createdBy, Action: "flag.created", Resource: f.ID,

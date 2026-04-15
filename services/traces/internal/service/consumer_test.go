@@ -1,23 +1,20 @@
 // Package service consumer_test covers the NATS consumer routing logic.
 //
-// Architecture note: Consumer.handleEvent calls c.svc *Traces which uses
-// *pgxpool.Pool directly (no repository interface). This means tests for
-// the Ack path (service.RecordTraceStart/End/Event succeeds) require a real
-// database and are tagged as integration tests (TDD-ANCHOR section below).
-//
-// This file covers all paths that resolve BEFORE reaching the service call:
+// Consumer.svc is a TraceRecorder interface (see consumer.go), so tests can
+// substitute a recording spy instead of a real *Traces + pgxpool. This file
+// covers all handleEvent paths:
 //   - Invalid subject format → Term
 //   - Malformed JSON payload → Term
 //   - Tenant mismatch (payload tenant_id ≠ subject slug) → Term
 //   - Unknown action → Term
-//
-// These are the most security-critical paths. The Ack/Nak paths that exercise
-// service calls are documented as TDD-ANCHOR contracts at the bottom.
+//   - Valid events (start/end/event) → spy called + Ack
+//   - Spy returns error → Nak (transient, NATS redelivers)
 package service
 
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -61,13 +58,47 @@ func (m *mockMsg) Metadata() (*jetstream.MsgMetadata, error)   { return nil, nil
 // Helpers
 // ---------------------------------------------------------------------------
 
-// newConsumerNoPool builds a Consumer with a nil *Traces (no pool).
-// This is safe for tests that resolve before any service call (Term paths).
-// Tests that reach RecordTraceStart/End/Event will panic on the nil pool —
-// those are TDD-ANCHOR integration tests documented below.
+// traceSpy implements TraceRecorder and records every call for assertions.
+// StartErr / EndErr / EventErr let a test force the error path.
+type traceSpy struct {
+	Starts    []TraceStartEvent
+	Ends      []TraceEndEvent
+	Events    []TraceEvent
+	StartErr  error
+	EndErr    error
+	EventErr  error
+}
+
+func (s *traceSpy) RecordTraceStart(_ context.Context, evt TraceStartEvent) error {
+	s.Starts = append(s.Starts, evt)
+	return s.StartErr
+}
+
+func (s *traceSpy) RecordTraceEnd(_ context.Context, evt TraceEndEvent) error {
+	s.Ends = append(s.Ends, evt)
+	return s.EndErr
+}
+
+func (s *traceSpy) RecordEvent(_ context.Context, evt TraceEvent) error {
+	s.Events = append(s.Events, evt)
+	return s.EventErr
+}
+
+// newConsumerNoPool builds a Consumer wired to a fresh traceSpy. Kept under
+// this name to preserve call sites in existing tests (they exercise Term paths
+// that never reach the spy, so the fresh spy is harmless).
 func newConsumerNoPool() *Consumer {
 	return &Consumer{
-		svc: &Traces{pool: nil},
+		svc: &traceSpy{},
+		ctx: context.Background(),
+	}
+}
+
+// newConsumerWithSpy builds a Consumer wired to the given spy. Use this when
+// a test needs to assert on what was recorded or force an error.
+func newConsumerWithSpy(spy *traceSpy) *Consumer {
+	return &Consumer{
+		svc: spy,
 		ctx: context.Background(),
 	}
 }
@@ -324,63 +355,158 @@ func TestConsumer_HandleEvent_TenantSpoofing_UsesSubjectNotPayload(t *testing.T)
 //   This is intentional: trace starts require explicit tenant_id.
 //
 // For "end" and "event", empty payload tenant_id passes through to the service call.
-// We test "end" and "event" only (pool=nil → service call would panic, so we
-// document this as TDD-ANCHOR for integration testing).
-func TestConsumer_HandleEvent_TenantSpoofing_EmptyPayloadTenantAllowed_Spec(t *testing.T) {
-	// This test is a specification test — it documents the mismatch condition
-	// used in handleEvent without executing the full path.
-	//
-	// Condition for "end" action (consumer.go:137):
-	//   if subjectTenant != "" && evt.TenantID != "" && evt.TenantID != subjectTenant → Term
-	//
-	// When evt.TenantID == "" (payload omits tenant_id), the condition is false → no Term.
-	// The message proceeds to RecordTraceEnd (service call with pool — needs integration test).
-
-	// Verify the condition logic in isolation:
-	subjectTenant := "saldivia"
-
+// This test drives handleEvent with a spy to verify the actual routing behavior
+// for all three (attacker / match / empty) combinations.
+func TestConsumer_HandleEvent_EndEvent_TenantMatchMatrix(t *testing.T) {
 	cases := []struct {
+		name          string
 		payloadTenant string
-		wantMismatch  bool
+		wantTerm      bool
+		wantAck       bool
+		wantSpyCalls  int
 	}{
-		{"attacker", true},  // non-empty + different → mismatch → Term
-		{"saldivia", false}, // same → no mismatch
-		{"", false},         // empty → condition short-circuits → no mismatch for end/event
+		{"mismatch", "attacker", true, false, 0},
+		{"match", "saldivia", false, true, 1},
+		{"empty_payload", "", false, true, 1},
 	}
 
 	for _, c := range cases {
-		mismatch := subjectTenant != "" && c.payloadTenant != "" && c.payloadTenant != subjectTenant
-		if mismatch != c.wantMismatch {
-			t.Errorf("payloadTenant=%q: mismatch=%v, want=%v", c.payloadTenant, mismatch, c.wantMismatch)
-		}
+		t.Run(c.name, func(t *testing.T) {
+			spy := &traceSpy{}
+			cons := newConsumerWithSpy(spy)
+
+			evt := TraceEndEvent{TraceID: "t-1", TenantID: c.payloadTenant}
+			data, _ := json.Marshal(evt)
+			msg := &mockMsg{subject: "tenant.saldivia.traces.end", data: data}
+
+			cons.handleEvent(msg)
+
+			if msg.termCalled != c.wantTerm {
+				t.Errorf("termCalled=%v, want %v", msg.termCalled, c.wantTerm)
+			}
+			if msg.ackCalled != c.wantAck {
+				t.Errorf("ackCalled=%v, want %v", msg.ackCalled, c.wantAck)
+			}
+			if len(spy.Ends) != c.wantSpyCalls {
+				t.Errorf("spy calls=%d, want %d", len(spy.Ends), c.wantSpyCalls)
+			}
+		})
 	}
 }
 
 // ---------------------------------------------------------------------------
-// TDD-ANCHOR: Ack and Nak paths (service calls required)
-//
-// The following paths reach c.svc.RecordTraceStart/End/Event which use
-// *pgxpool.Pool. Testing these requires a real PostgreSQL connection.
-//
-// Test contracts (implement as integration tests with testcontainers):
-//
-//   TestConsumer_HandleEvent_ValidStartEvent_PersistsAndAcks:
-//     subject=tenant.saldivia.traces.start, payload tenant_id=saldivia
-//     → RecordTraceStart called with evt.TenantID="saldivia"
-//     → msg.Ack() called
-//
-//   TestConsumer_HandleEvent_ValidEndEvent_PersistsAndAcks:
-//     subject=tenant.saldivia.traces.end, payload with matching tenant_id
-//     → RecordTraceEnd called
-//     → msg.Ack() called
-//
-//   TestConsumer_HandleEvent_ValidTraceEvent_PersistsAndAcks:
-//     subject=tenant.saldivia.traces.event, payload with matching tenant_id
-//     → RecordEvent called
-//     → msg.Ack() called
-//
-//   TestConsumer_HandleEvent_ServiceError_Naks:
-//     RecordTraceStart returns error (e.g., DB unavailable)
-//     → msg.Nak() called (transient — NATS should redeliver)
-//     → msg.Term() NOT called
+// Ack and Nak paths (use TraceRecorder spy)
 // ---------------------------------------------------------------------------
+
+func TestConsumer_HandleEvent_ValidStartEvent_PersistsAndAcks(t *testing.T) {
+	spy := &traceSpy{}
+	c := newConsumerWithSpy(spy)
+
+	evt := TraceStartEvent{TraceID: "t-1", TenantID: "saldivia"}
+	data, _ := json.Marshal(evt)
+	msg := &mockMsg{subject: "tenant.saldivia.traces.start", data: data}
+
+	c.handleEvent(msg)
+
+	if len(spy.Starts) != 1 {
+		t.Fatalf("expected 1 RecordTraceStart call, got %d", len(spy.Starts))
+	}
+	if spy.Starts[0].TenantID != "saldivia" {
+		t.Errorf("TenantID: want saldivia, got %q", spy.Starts[0].TenantID)
+	}
+	if !msg.ackCalled {
+		t.Error("Ack not called on valid start event")
+	}
+	if msg.nakCalled || msg.termCalled {
+		t.Error("Nak/Term should not be called on success")
+	}
+}
+
+func TestConsumer_HandleEvent_ValidEndEvent_PersistsAndAcks(t *testing.T) {
+	spy := &traceSpy{}
+	c := newConsumerWithSpy(spy)
+
+	evt := TraceEndEvent{TraceID: "t-1", TenantID: "saldivia"}
+	data, _ := json.Marshal(evt)
+	msg := &mockMsg{subject: "tenant.saldivia.traces.end", data: data}
+
+	c.handleEvent(msg)
+
+	if len(spy.Ends) != 1 {
+		t.Fatalf("expected 1 RecordTraceEnd call, got %d", len(spy.Ends))
+	}
+	if !msg.ackCalled {
+		t.Error("Ack not called on valid end event")
+	}
+}
+
+func TestConsumer_HandleEvent_ValidTraceEvent_PersistsAndAcks(t *testing.T) {
+	spy := &traceSpy{}
+	c := newConsumerWithSpy(spy)
+
+	evt := TraceEvent{TraceID: "t-1", TenantID: "saldivia"}
+	data, _ := json.Marshal(evt)
+	msg := &mockMsg{subject: "tenant.saldivia.traces.event", data: data}
+
+	c.handleEvent(msg)
+
+	if len(spy.Events) != 1 {
+		t.Fatalf("expected 1 RecordEvent call, got %d", len(spy.Events))
+	}
+	if !msg.ackCalled {
+		t.Error("Ack not called on valid trace event")
+	}
+}
+
+func TestConsumer_HandleEvent_ServiceError_Naks(t *testing.T) {
+	// When RecordTraceStart returns error (DB unavailable, etc.), handleEvent
+	// must Nak for transient retry — never Term (which would drop the message).
+	spy := &traceSpy{StartErr: errors.New("connection refused")}
+	c := newConsumerWithSpy(spy)
+
+	evt := TraceStartEvent{TraceID: "t-1", TenantID: "saldivia"}
+	data, _ := json.Marshal(evt)
+	msg := &mockMsg{subject: "tenant.saldivia.traces.start", data: data}
+
+	c.handleEvent(msg)
+
+	if !msg.nakCalled {
+		t.Error("Nak not called on service error")
+	}
+	if msg.ackCalled {
+		t.Error("Ack should not fire when service returns error")
+	}
+	if msg.termCalled {
+		t.Error("Term must not fire on transient service error — would lose the message")
+	}
+}
+
+func TestConsumer_HandleEvent_EndServiceError_Naks(t *testing.T) {
+	spy := &traceSpy{EndErr: errors.New("db timeout")}
+	c := newConsumerWithSpy(spy)
+
+	evt := TraceEndEvent{TraceID: "t-1", TenantID: "saldivia"}
+	data, _ := json.Marshal(evt)
+	msg := &mockMsg{subject: "tenant.saldivia.traces.end", data: data}
+
+	c.handleEvent(msg)
+
+	if !msg.nakCalled {
+		t.Error("Nak not called on RecordTraceEnd error")
+	}
+}
+
+func TestConsumer_HandleEvent_EventServiceError_Naks(t *testing.T) {
+	spy := &traceSpy{EventErr: errors.New("db timeout")}
+	c := newConsumerWithSpy(spy)
+
+	evt := TraceEvent{TraceID: "t-1", TenantID: "saldivia"}
+	data, _ := json.Marshal(evt)
+	msg := &mockMsg{subject: "tenant.saldivia.traces.event", data: data}
+
+	c.handleEvent(msg)
+
+	if !msg.nakCalled {
+		t.Error("Nak not called on RecordEvent error")
+	}
+}

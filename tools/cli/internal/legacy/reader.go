@@ -136,7 +136,7 @@ func (r *GenericReader) ReadBatch(ctx context.Context, resumeKey string, limit i
 	if err != nil {
 		return nil, "", fmt.Errorf("read %s: %w", r.Table, err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	cols, err := rows.Columns()
 	if err != nil {
@@ -237,7 +237,7 @@ func (r *CompositeKeyReader) ReadBatch(ctx context.Context, resumeKey string, li
 	if err != nil {
 		return nil, "", fmt.Errorf("read %s: %w", r.Table, err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	cols, err := rows.Columns()
 	if err != nil {

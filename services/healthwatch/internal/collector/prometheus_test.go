@@ -18,7 +18,7 @@ func TestPrometheus_QueryMetrics_ValidService(t *testing.T) {
 		query := r.URL.Query().Get("query")
 		assert.Contains(t, query, `service_name="auth"`)
 
-		json.NewEncoder(w).Encode(map[string]any{
+		_ = json.NewEncoder(w).Encode(map[string]any{
 			"status": "success",
 			"data": map[string]any{
 				"resultType": "vector",
@@ -66,7 +66,7 @@ func TestPrometheus_QueryMetrics_RejectsUnknownService(t *testing.T) {
 
 func TestPrometheus_QueryMetrics_EmptyResult(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode(map[string]any{
+		_ = json.NewEncoder(w).Encode(map[string]any{
 			"status": "success",
 			"data": map[string]any{
 				"resultType": "vector",
@@ -86,7 +86,7 @@ func TestPrometheus_QueryMetrics_EmptyResult(t *testing.T) {
 func TestPrometheus_QueryAlerts(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/api/v1/alerts", r.URL.Path)
-		json.NewEncoder(w).Encode(map[string]any{
+		_ = json.NewEncoder(w).Encode(map[string]any{
 			"status": "success",
 			"data": map[string]any{
 				"alerts": []map[string]any{

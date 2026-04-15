@@ -43,7 +43,9 @@ func init() {
 	migrateLegacyCmd.Flags().StringSlice("skip-dry-run-for", nil, "Tenants allowed to skip dry-run requirement")
 	migrateLegacyCmd.Flags().Bool("validate-only", false, "Run post-migration validation without migrating")
 
-	migrateLegacyCmd.MarkFlagRequired("tenant")
+	if err := migrateLegacyCmd.MarkFlagRequired("tenant"); err != nil {
+		panic(err)
+	}
 }
 
 func runMigrateLegacy(cmd *cobra.Command, args []string) error {
@@ -78,7 +80,7 @@ func runMigrateLegacy(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("mysql connect: %w", err)
 	}
-	defer mysqlDB.Close()
+	defer func() { _ = mysqlDB.Close() }()
 
 	slog.Info("connecting to PostgreSQL", "dsn", maskDSN(pgDSN))
 	pgPool, err := pgxpool.New(ctx, pgDSN)
@@ -113,10 +115,12 @@ func runMigrateLegacy(cmd *cobra.Command, args []string) error {
 	var dryRunID uuid.UUID
 	if dryRun {
 		dryRunID = uuid.New()
-		pgPool.Exec(ctx,
+		if _, err := pgPool.Exec(ctx,
 			`INSERT INTO erp_migration_runs (id, tenant_id, mode) VALUES ($1, $2, 'dry_run')`,
 			dryRunID, tenantSlug,
-		)
+		); err != nil {
+			slog.Warn("could not record dry-run start", "err", err)
+		}
 
 		report, err := migration.RunPreValidation(ctx, mysqlDB, pgPool, tenantSlug, dryRunID)
 		if err != nil {
@@ -125,10 +129,12 @@ func runMigrateLegacy(cmd *cobra.Command, args []string) error {
 		migration.PrintPreValidationReport(report)
 
 		if report.FixManual > 0 {
-			pgPool.Exec(ctx,
+			if _, err := pgPool.Exec(ctx,
 				`UPDATE erp_migration_runs SET status = 'dry_run_failed', completed_at = now() WHERE id = $1`,
 				dryRunID,
-			)
+			); err != nil {
+				slog.Warn("could not record dry-run failure", "err", err)
+			}
 			return fmt.Errorf("%d blocking issues found — fix them and re-run", report.FixManual)
 		}
 
@@ -160,7 +166,9 @@ func runMigrateLegacy(cmd *cobra.Command, args []string) error {
 	// --- Post-migration validation (prod mode) ---
 	if !dryRun {
 		fmt.Println("\nRunning post-migration validation...")
-		migration.PostMigrationValidation(ctx, mysqlDB, pgPool, tenantSlug)
+		if err := migration.PostMigrationValidation(ctx, mysqlDB, pgPool, tenantSlug); err != nil {
+			slog.Warn("post-migration validation reported issues", "err", err)
+		}
 	}
 
 	return nil

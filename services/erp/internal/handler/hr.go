@@ -63,7 +63,7 @@ func (h *HR) ListDepartments(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"departments": depts})
+	_ = json.NewEncoder(w).Encode(map[string]any{"departments": depts})
 }
 
 func (h *HR) CreateDepartment(w http.ResponseWriter, r *http.Request) {
@@ -88,7 +88,7 @@ func (h *HR) CreateDepartment(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(d)
+	_ = json.NewEncoder(w).Encode(d)
 }
 
 func (h *HR) ListEmployees(w http.ResponseWriter, r *http.Request) {
@@ -99,7 +99,7 @@ func (h *HR) ListEmployees(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"employees": employees})
+	_ = json.NewEncoder(w).Encode(map[string]any{"employees": employees})
 }
 
 func (h *HR) GetEmployee(w http.ResponseWriter, r *http.Request) {
@@ -114,7 +114,7 @@ func (h *HR) GetEmployee(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(ed)
+	_ = json.NewEncoder(w).Encode(ed)
 }
 
 func (h *HR) UpsertEmployee(w http.ResponseWriter, r *http.Request) {
@@ -160,7 +160,7 @@ func (h *HR) UpsertEmployee(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(ed)
+	_ = json.NewEncoder(w).Encode(ed)
 }
 
 func (h *HR) ListEvents(w http.ResponseWriter, r *http.Request) {
@@ -173,7 +173,7 @@ func (h *HR) ListEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"events": events})
+	_ = json.NewEncoder(w).Encode(map[string]any{"events": events})
 }
 
 func (h *HR) CreateEvent(w http.ResponseWriter, r *http.Request) {
@@ -222,7 +222,7 @@ func (h *HR) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(ev)
+	_ = json.NewEncoder(w).Encode(ev)
 }
 
 func (h *HR) ListTraining(w http.ResponseWriter, r *http.Request) {
@@ -233,7 +233,7 @@ func (h *HR) ListTraining(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"training": training})
+	_ = json.NewEncoder(w).Encode(map[string]any{"training": training})
 }
 
 func (h *HR) CreateTraining(w http.ResponseWriter, r *http.Request) {
@@ -260,7 +260,7 @@ func (h *HR) CreateTraining(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(t)
+	_ = json.NewEncoder(w).Encode(t)
 }
 
 func (h *HR) ListAttendance(w http.ResponseWriter, r *http.Request) {
@@ -274,7 +274,7 @@ func (h *HR) ListAttendance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"attendance": att})
+	_ = json.NewEncoder(w).Encode(map[string]any{"attendance": att})
 }
 
 func (h *HR) CreateAttendance(w http.ResponseWriter, r *http.Request) {
@@ -314,7 +314,7 @@ func (h *HR) CreateAttendance(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(a)
+	_ = json.NewEncoder(w).Encode(a)
 }
 
 // helpers for optional pgtype values

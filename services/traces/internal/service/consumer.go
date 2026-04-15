@@ -16,16 +16,24 @@ const (
 	tracesSubject    = "tenant.*.traces.>"
 )
 
+// TraceRecorder is the narrow set of Traces methods the Consumer needs.
+// Defined as an interface so tests can substitute a fake without a real pool.
+type TraceRecorder interface {
+	RecordTraceStart(ctx context.Context, evt TraceStartEvent) error
+	RecordTraceEnd(ctx context.Context, evt TraceEndEvent) error
+	RecordEvent(ctx context.Context, evt TraceEvent) error
+}
+
 // Consumer listens to NATS trace events and persists them via the Traces service.
 type Consumer struct {
 	nc     *nats.Conn
-	svc    *Traces
+	svc    TraceRecorder
 	ctx    context.Context
 	cancel context.CancelFunc
 }
 
 // NewConsumer creates a traces NATS consumer.
-func NewConsumer(nc *nats.Conn, svc *Traces) *Consumer {
+func NewConsumer(nc *nats.Conn, svc TraceRecorder) *Consumer {
 	return &Consumer{nc: nc, svc: svc}
 }
 

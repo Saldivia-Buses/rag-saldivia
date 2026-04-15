@@ -382,7 +382,7 @@ func TestListTenants_ServiceError_Returns500(t *testing.T) {
 	}
 
 	var resp map[string]string
-	json.NewDecoder(rec.Body).Decode(&resp)
+	_ = json.NewDecoder(rec.Body).Decode(&resp)
 	if resp["error"] != "internal error" {
 		t.Errorf("expected generic error, got %q", resp["error"])
 	}
@@ -584,7 +584,7 @@ func TestCreateTenant_EmptySlug_Returns400(t *testing.T) {
 	}
 
 	var resp map[string]string
-	json.NewDecoder(rec.Body).Decode(&resp)
+	_ = json.NewDecoder(rec.Body).Decode(&resp)
 	if resp["error"] == "" {
 		t.Error("expected non-empty error field")
 	}
@@ -691,7 +691,7 @@ func TestSetConfig_ServiceError_Returns500(t *testing.T) {
 	}
 
 	var resp map[string]string
-	json.NewDecoder(rec.Body).Decode(&resp)
+	_ = json.NewDecoder(rec.Body).Decode(&resp)
 	if resp["error"] != "internal error" {
 		t.Errorf("expected generic error message, got %q", resp["error"])
 	}
@@ -728,7 +728,7 @@ func TestRecordDeploy_Success_Returns201(t *testing.T) {
 	}
 
 	var resp service.DeployRecord
-	json.NewDecoder(rec.Body).Decode(&resp)
+	_ = json.NewDecoder(rec.Body).Decode(&resp)
 	if resp.Service != "auth" {
 		t.Errorf("expected service auth, got %s", resp.Service)
 	}
@@ -811,7 +811,7 @@ func TestListDeploys_Success(t *testing.T) {
 	}
 
 	var deploys []service.DeployRecord
-	json.NewDecoder(rec.Body).Decode(&deploys)
+	_ = json.NewDecoder(rec.Body).Decode(&deploys)
 	if len(deploys) != 2 {
 		t.Errorf("expected 2 deploys, got %d", len(deploys))
 	}
@@ -830,7 +830,7 @@ func TestListDeploys_Empty_ReturnsEmptyArray(t *testing.T) {
 	}
 
 	var deploys []service.DeployRecord
-	json.NewDecoder(rec.Body).Decode(&deploys)
+	_ = json.NewDecoder(rec.Body).Decode(&deploys)
 	if len(deploys) != 0 {
 		t.Errorf("expected 0 deploys, got %d", len(deploys))
 	}
@@ -877,7 +877,7 @@ func TestRecordDeploy_DefaultStatus_Pending(t *testing.T) {
 	}
 
 	var resp service.DeployRecord
-	json.NewDecoder(rec.Body).Decode(&resp)
+	_ = json.NewDecoder(rec.Body).Decode(&resp)
 	if resp.Status != "pending" {
 		t.Errorf("expected default status pending, got %s", resp.Status)
 	}
@@ -911,7 +911,7 @@ func TestRecordDeploy_WithNotes_IncludesNotes(t *testing.T) {
 	}
 
 	var resp service.DeployRecord
-	json.NewDecoder(rec.Body).Decode(&resp)
+	_ = json.NewDecoder(rec.Body).Decode(&resp)
 	if resp.Notes != "hotfix for login bug" {
 		t.Errorf("expected notes to be propagated, got %q", resp.Notes)
 	}
@@ -931,7 +931,7 @@ func TestRecordDeploy_WithoutNotes_OmitsNotes(t *testing.T) {
 	}
 
 	var resp map[string]any
-	json.NewDecoder(rec.Body).Decode(&resp)
+	_ = json.NewDecoder(rec.Body).Decode(&resp)
 	if _, hasNotes := resp["notes"]; hasNotes {
 		t.Errorf("expected notes to be omitted when empty, got %v", resp["notes"])
 	}
@@ -953,7 +953,7 @@ func TestCreateFlag_Success_Returns201(t *testing.T) {
 	}
 
 	var flag service.FeatureFlag
-	json.NewDecoder(rec.Body).Decode(&flag)
+	_ = json.NewDecoder(rec.Body).Decode(&flag)
 	if flag.ID != "flag-1" {
 		t.Errorf("expected id flag-1, got %s", flag.ID)
 	}
@@ -1018,7 +1018,7 @@ func TestCreateFlag_DefaultRollout_IsZero(t *testing.T) {
 	}
 
 	var flag service.FeatureFlag
-	json.NewDecoder(rec.Body).Decode(&flag)
+	_ = json.NewDecoder(rec.Body).Decode(&flag)
 	if flag.RolloutPct != 0 {
 		t.Errorf("expected default rollout_pct 0, got %d", flag.RolloutPct)
 	}
@@ -1126,7 +1126,7 @@ func TestEvaluateFlags_WithJWT_Returns200(t *testing.T) {
 	}
 
 	var resp map[string]map[string]bool
-	json.NewDecoder(rec.Body).Decode(&resp)
+	_ = json.NewDecoder(rec.Body).Decode(&resp)
 	flags := resp["flags"]
 	if !flags["dark_mode"] {
 		t.Error("expected dark_mode=true")
@@ -1169,7 +1169,7 @@ func TestEvaluateFlags_ResponseOnlyBooleans(t *testing.T) {
 
 	// Verify response shape: {"flags": {"feature_a": true}} — only booleans, no metadata
 	var raw map[string]json.RawMessage
-	json.NewDecoder(rec.Body).Decode(&raw)
+	_ = json.NewDecoder(rec.Body).Decode(&raw)
 
 	flagsRaw, ok := raw["flags"]
 	if !ok {

@@ -117,7 +117,7 @@ func (h *Manufacturing) ListChassisBrands(w http.ResponseWriter, r *http.Request
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"chassis_brands": brands})
+	_ = json.NewEncoder(w).Encode(map[string]any{"chassis_brands": brands})
 }
 
 func (h *Manufacturing) ListChassisModels(w http.ResponseWriter, r *http.Request) {
@@ -127,7 +127,7 @@ func (h *Manufacturing) ListChassisModels(w http.ResponseWriter, r *http.Request
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"chassis_models": models})
+	_ = json.NewEncoder(w).Encode(map[string]any{"chassis_models": models})
 }
 
 func (h *Manufacturing) ListCarroceriaModels(w http.ResponseWriter, r *http.Request) {
@@ -137,7 +137,7 @@ func (h *Manufacturing) ListCarroceriaModels(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"carroceria_models": models})
+	_ = json.NewEncoder(w).Encode(map[string]any{"carroceria_models": models})
 }
 
 func (h *Manufacturing) GetCarroceriaBOM(w http.ResponseWriter, r *http.Request) {
@@ -152,7 +152,7 @@ func (h *Manufacturing) GetCarroceriaBOM(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"bom": bom})
+	_ = json.NewEncoder(w).Encode(map[string]any{"bom": bom})
 }
 
 func (h *Manufacturing) ListUnits(w http.ResponseWriter, r *http.Request) {
@@ -163,7 +163,7 @@ func (h *Manufacturing) ListUnits(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"units": units})
+	_ = json.NewEncoder(w).Encode(map[string]any{"units": units})
 }
 
 func (h *Manufacturing) GetUnit(w http.ResponseWriter, r *http.Request) {
@@ -178,7 +178,7 @@ func (h *Manufacturing) GetUnit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(unit)
+	_ = json.NewEncoder(w).Encode(unit)
 }
 
 func (h *Manufacturing) ListUnitControls(w http.ResponseWriter, r *http.Request) {
@@ -194,7 +194,7 @@ func (h *Manufacturing) ListUnitControls(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"controls": controls})
+	_ = json.NewEncoder(w).Encode(map[string]any{"controls": controls})
 }
 
 func (h *Manufacturing) GetUnitPendingControls(w http.ResponseWriter, r *http.Request) {
@@ -209,7 +209,7 @@ func (h *Manufacturing) GetUnitPendingControls(w http.ResponseWriter, r *http.Re
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"pending_controls": controls})
+	_ = json.NewEncoder(w).Encode(map[string]any{"pending_controls": controls})
 }
 
 func (h *Manufacturing) GetUnitControlExecutions(w http.ResponseWriter, r *http.Request) {
@@ -224,7 +224,7 @@ func (h *Manufacturing) GetUnitControlExecutions(w http.ResponseWriter, r *http.
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"executions": executions})
+	_ = json.NewEncoder(w).Encode(map[string]any{"executions": executions})
 }
 
 func (h *Manufacturing) ListLCM(w http.ResponseWriter, r *http.Request) {
@@ -239,7 +239,7 @@ func (h *Manufacturing) ListLCM(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"lcm": lcms})
+	_ = json.NewEncoder(w).Encode(map[string]any{"lcm": lcms})
 }
 
 func (h *Manufacturing) ListCNRTWork(w http.ResponseWriter, r *http.Request) {
@@ -254,7 +254,7 @@ func (h *Manufacturing) ListCNRTWork(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"cnrt_work": orders})
+	_ = json.NewEncoder(w).Encode(map[string]any{"cnrt_work": orders})
 }
 
 func (h *Manufacturing) GetCertificate(w http.ResponseWriter, r *http.Request) {
@@ -269,7 +269,7 @@ func (h *Manufacturing) GetCertificate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(cert)
+	_ = json.NewEncoder(w).Encode(cert)
 }
 
 // ─── Write Operations ─────────────────────────────────────────────────────────
@@ -296,7 +296,7 @@ func (h *Manufacturing) CreateChassisBrand(w http.ResponseWriter, r *http.Reques
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(brand)
+	_ = json.NewEncoder(w).Encode(brand)
 }
 
 func (h *Manufacturing) CreateCarroceriaModel(w http.ResponseWriter, r *http.Request) {
@@ -337,7 +337,7 @@ func (h *Manufacturing) CreateCarroceriaModel(w http.ResponseWriter, r *http.Req
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(model)
+	_ = json.NewEncoder(w).Encode(model)
 }
 
 func (h *Manufacturing) AddBOMItem(w http.ResponseWriter, r *http.Request) {
@@ -379,7 +379,7 @@ func (h *Manufacturing) AddBOMItem(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(item)
+	_ = json.NewEncoder(w).Encode(item)
 }
 
 func (h *Manufacturing) DeleteBOMItem(w http.ResponseWriter, r *http.Request) {
@@ -476,7 +476,7 @@ func (h *Manufacturing) CreateUnit(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(unit)
+	_ = json.NewEncoder(w).Encode(unit)
 }
 
 func (h *Manufacturing) UpdateUnitStatus(w http.ResponseWriter, r *http.Request) {
@@ -555,7 +555,7 @@ func (h *Manufacturing) CreateLCM(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(lcm)
+	_ = json.NewEncoder(w).Encode(lcm)
 }
 
 func (h *Manufacturing) CreateCNRTWork(w http.ResponseWriter, r *http.Request) {
@@ -596,7 +596,7 @@ func (h *Manufacturing) CreateCNRTWork(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(order)
+	_ = json.NewEncoder(w).Encode(order)
 }
 
 func (h *Manufacturing) CreateCertificate(w http.ResponseWriter, r *http.Request) {
@@ -648,7 +648,7 @@ func (h *Manufacturing) CreateCertificate(w http.ResponseWriter, r *http.Request
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(cert)
+	_ = json.NewEncoder(w).Encode(cert)
 }
 
 // ─── Control Execution ────────────────────────────────────────────────────────
@@ -699,7 +699,7 @@ func (h *Manufacturing) CreateControl(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(ctrl)
+	_ = json.NewEncoder(w).Encode(ctrl)
 }
 
 func (h *Manufacturing) ExecuteControl(w http.ResponseWriter, r *http.Request) {
@@ -756,7 +756,7 @@ func (h *Manufacturing) ExecuteControl(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(exec)
+	_ = json.NewEncoder(w).Encode(exec)
 }
 
 // ─── Certification ────────────────────────────────────────────────────────────

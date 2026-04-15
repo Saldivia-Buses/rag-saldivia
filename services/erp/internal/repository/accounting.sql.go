@@ -465,6 +465,41 @@ func (q *Queries) GetFiscalYear(ctx context.Context, arg GetFiscalYearParams) (G
 	return i, err
 }
 
+const getFiscalYearByDate = `-- name: GetFiscalYearByDate :one
+-- Returns the open fiscal year that contains the given date, if any.
+SELECT id, tenant_id, year, start_date, end_date, status, result_account_id,
+       closed_by, closed_at, closing_entry_id, opening_entry_id
+FROM erp_fiscal_years
+WHERE tenant_id = $1 AND start_date <= $2 AND end_date >= $2 AND status = 'open'
+LIMIT 1
+`
+
+type GetFiscalYearByDateParams struct {
+	TenantID string      `json:"tenant_id"`
+	Date     pgtype.Date `json:"date"`
+}
+
+type GetFiscalYearByDateRow = GetFiscalYearRow
+
+func (q *Queries) GetFiscalYearByDate(ctx context.Context, arg GetFiscalYearByDateParams) (GetFiscalYearByDateRow, error) {
+	row := q.db.QueryRow(ctx, getFiscalYearByDate, arg.TenantID, arg.Date)
+	var i GetFiscalYearByDateRow
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.Year,
+		&i.StartDate,
+		&i.EndDate,
+		&i.Status,
+		&i.ResultAccountID,
+		&i.ClosedBy,
+		&i.ClosedAt,
+		&i.ClosingEntryID,
+		&i.OpeningEntryID,
+	)
+	return i, err
+}
+
 const getJournalEntry = `-- name: GetJournalEntry :one
 SELECT id, tenant_id, number, date, fiscal_year_id, concept, entry_type,
        reference_type, reference_id, user_id, status, created_at

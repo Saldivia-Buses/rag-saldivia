@@ -1,0 +1,16 @@
+# golangci-lint configuration for SDA Framework.
+#
+# Uses staticcheck defaults minus the QF (Quickfix) family. QF1003 (tagged
+# switch) and QF1012 (Fprintf instead of WriteString+Sprintf) are stylistic
+# hints, not bugs, and the codebase consistently uses the older forms. Real
+# bugs under SA*, ST*, errcheck, and the other default linters are still
+# enforced.
+
+version: "2"
+
+linters:
+  settings:
+    staticcheck:
+      checks:
+        - "-QF1003"
+        - "-QF1012"

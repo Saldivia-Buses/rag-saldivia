@@ -21,7 +21,7 @@ func newTestCollectors(t *testing.T) (*collector.Prometheus, *collector.Docker, 
 
 	promServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/api/v1/alerts" {
-			json.NewEncoder(w).Encode(map[string]any{
+			_ = json.NewEncoder(w).Encode(map[string]any{
 				"data": map[string]any{
 					"alerts": []map[string]any{
 						{
@@ -35,7 +35,7 @@ func newTestCollectors(t *testing.T) (*collector.Prometheus, *collector.Docker, 
 			return
 		}
 		// metrics query
-		json.NewEncoder(w).Encode(map[string]any{
+		_ = json.NewEncoder(w).Encode(map[string]any{
 			"data": map[string]any{
 				"resultType": "vector",
 				"result": []map[string]any{
@@ -47,7 +47,7 @@ func newTestCollectors(t *testing.T) (*collector.Prometheus, *collector.Docker, 
 	t.Cleanup(promServer.Close)
 
 	dockerServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode([]map[string]any{
+		_ = json.NewEncoder(w).Encode([]map[string]any{
 			{"Names": []string{"/sda-auth"}, "Image": "sda-auth:0.1.0", "State": "running", "Status": "Up (healthy)"},
 			{"Names": []string{"/sda-agent"}, "Image": "sda-agent:0.1.0", "State": "running", "Status": "Up (unhealthy)"},
 			{"Names": []string{"/sda-postgres"}, "Image": "postgres:16", "State": "running", "Status": "Up"},
@@ -57,11 +57,11 @@ func newTestCollectors(t *testing.T) (*collector.Prometheus, *collector.Docker, 
 
 	svcServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasSuffix(r.URL.Path, "/health") {
-			json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+			_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 			return
 		}
 		if strings.HasSuffix(r.URL.Path, "/v1/info") {
-			json.NewEncoder(w).Encode(map[string]string{"version": "0.1.0"})
+			_ = json.NewEncoder(w).Encode(map[string]string{"version": "0.1.0"})
 			return
 		}
 	}))
@@ -168,11 +168,11 @@ func TestSummary_OverallStatus_Degraded(t *testing.T) {
 	degradedServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasSuffix(r.URL.Path, "/health") {
 			w.WriteHeader(http.StatusServiceUnavailable)
-			json.NewEncoder(w).Encode(map[string]string{"status": "degraded"})
+			_ = json.NewEncoder(w).Encode(map[string]string{"status": "degraded"})
 			return
 		}
 		if strings.HasSuffix(r.URL.Path, "/v1/info") {
-			json.NewEncoder(w).Encode(map[string]string{"version": "0.1.0"})
+			_ = json.NewEncoder(w).Encode(map[string]string{"version": "0.1.0"})
 			return
 		}
 	}))

@@ -64,7 +64,7 @@ func (h *Workshop) ListVehicles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"vehicles": vehicles})
+	_ = json.NewEncoder(w).Encode(map[string]any{"vehicles": vehicles})
 }
 
 func (h *Workshop) GetVehicle(w http.ResponseWriter, r *http.Request) {
@@ -79,7 +79,7 @@ func (h *Workshop) GetVehicle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(v)
+	_ = json.NewEncoder(w).Encode(v)
 }
 
 func (h *Workshop) CreateVehicle(w http.ResponseWriter, r *http.Request) {
@@ -148,7 +148,7 @@ func (h *Workshop) CreateVehicle(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(v)
+	_ = json.NewEncoder(w).Encode(v)
 }
 
 func (h *Workshop) UpdateVehicle(w http.ResponseWriter, r *http.Request) {
@@ -220,7 +220,7 @@ func (h *Workshop) ListIncidentTypes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"incident_types": types})
+	_ = json.NewEncoder(w).Encode(map[string]any{"incident_types": types})
 }
 
 func (h *Workshop) CreateIncidentType(w http.ResponseWriter, r *http.Request) {
@@ -244,7 +244,7 @@ func (h *Workshop) CreateIncidentType(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(t)
+	_ = json.NewEncoder(w).Encode(t)
 }
 
 // ─── Incidents ─────────────────────────────────────────────────────────────────
@@ -258,7 +258,7 @@ func (h *Workshop) ListIncidents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"incidents": incidents})
+	_ = json.NewEncoder(w).Encode(map[string]any{"incidents": incidents})
 }
 
 func (h *Workshop) CreateIncident(w http.ResponseWriter, r *http.Request) {
@@ -300,7 +300,7 @@ func (h *Workshop) CreateIncident(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(inc)
+	_ = json.NewEncoder(w).Encode(inc)
 }
 
 func (h *Workshop) ResolveIncident(w http.ResponseWriter, r *http.Request) {
@@ -330,5 +330,5 @@ func (h *Workshop) GetKPIs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(kpis)
+	_ = json.NewEncoder(w).Encode(kpis)
 }

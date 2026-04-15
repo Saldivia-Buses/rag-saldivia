@@ -70,7 +70,7 @@ func (h *Stock) ListArticles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"articles": articles})
+	_ = json.NewEncoder(w).Encode(map[string]any{"articles": articles})
 }
 
 func (h *Stock) GetArticle(w http.ResponseWriter, r *http.Request) {
@@ -86,7 +86,7 @@ func (h *Stock) GetArticle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(article)
+	_ = json.NewEncoder(w).Encode(article)
 }
 
 func (h *Stock) CreateArticle(w http.ResponseWriter, r *http.Request) {
@@ -129,7 +129,7 @@ func (h *Stock) CreateArticle(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(article)
+	_ = json.NewEncoder(w).Encode(article)
 }
 
 func (h *Stock) ListWarehouses(w http.ResponseWriter, r *http.Request) {
@@ -141,7 +141,7 @@ func (h *Stock) ListWarehouses(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"warehouses": warehouses})
+	_ = json.NewEncoder(w).Encode(map[string]any{"warehouses": warehouses})
 }
 
 func (h *Stock) CreateWarehouse(w http.ResponseWriter, r *http.Request) {
@@ -164,7 +164,7 @@ func (h *Stock) CreateWarehouse(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(wh)
+	_ = json.NewEncoder(w).Encode(wh)
 }
 
 func (h *Stock) GetStockLevels(w http.ResponseWriter, r *http.Request) {
@@ -178,7 +178,7 @@ func (h *Stock) GetStockLevels(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"levels": levels})
+	_ = json.NewEncoder(w).Encode(map[string]any{"levels": levels})
 }
 
 func (h *Stock) ListMovements(w http.ResponseWriter, r *http.Request) {
@@ -192,7 +192,7 @@ func (h *Stock) ListMovements(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"movements": movements})
+	_ = json.NewEncoder(w).Encode(map[string]any{"movements": movements})
 }
 
 func (h *Stock) CreateMovement(w http.ResponseWriter, r *http.Request) {
@@ -240,7 +240,7 @@ func (h *Stock) CreateMovement(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(mov)
+	_ = json.NewEncoder(w).Encode(mov)
 }
 
 func (h *Stock) ListBOM(w http.ResponseWriter, r *http.Request) {
@@ -256,7 +256,7 @@ func (h *Stock) ListBOM(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"bom": bom})
+	_ = json.NewEncoder(w).Encode(map[string]any{"bom": bom})
 }
 
 // optUUID parses an optional UUID string pointer into pgtype.UUID.

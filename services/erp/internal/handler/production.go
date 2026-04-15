@@ -64,7 +64,7 @@ func (h *Production) ListCenters(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"centers": centers})
+	_ = json.NewEncoder(w).Encode(map[string]any{"centers": centers})
 }
 
 func (h *Production) CreateCenter(w http.ResponseWriter, r *http.Request) {
@@ -82,7 +82,7 @@ func (h *Production) CreateCenter(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(c)
+	_ = json.NewEncoder(w).Encode(c)
 }
 
 func (h *Production) ListOrders(w http.ResponseWriter, r *http.Request) {
@@ -94,7 +94,7 @@ func (h *Production) ListOrders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"orders": orders})
+	_ = json.NewEncoder(w).Encode(map[string]any{"orders": orders})
 }
 
 func (h *Production) GetOrder(w http.ResponseWriter, r *http.Request) {
@@ -110,7 +110,7 @@ func (h *Production) GetOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(detail)
+	_ = json.NewEncoder(w).Encode(detail)
 }
 
 func (h *Production) CreateOrder(w http.ResponseWriter, r *http.Request) {
@@ -153,7 +153,7 @@ func (h *Production) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(order)
+	_ = json.NewEncoder(w).Encode(order)
 }
 
 func (h *Production) StartOrder(w http.ResponseWriter, r *http.Request) {
@@ -223,7 +223,7 @@ func (h *Production) CreateInspection(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(insp)
+	_ = json.NewEncoder(w).Encode(insp)
 }
 
 func (h *Production) ListUnits(w http.ResponseWriter, r *http.Request) {
@@ -235,7 +235,7 @@ func (h *Production) ListUnits(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"units": units})
+	_ = json.NewEncoder(w).Encode(map[string]any{"units": units})
 }
 
 func (h *Production) GetUnit(w http.ResponseWriter, r *http.Request) {
@@ -251,7 +251,7 @@ func (h *Production) GetUnit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(unit)
+	_ = json.NewEncoder(w).Encode(unit)
 }
 
 func (h *Production) CreateUnit(w http.ResponseWriter, r *http.Request) {
@@ -299,5 +299,5 @@ func (h *Production) CreateUnit(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(unit)
+	_ = json.NewEncoder(w).Encode(unit)
 }

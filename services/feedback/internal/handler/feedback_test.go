@@ -90,7 +90,7 @@ func TestHealthScore_NilPlatformDB_Returns503(t *testing.T) {
 	}
 
 	var resp map[string]string
-	json.NewDecoder(rec.Body).Decode(&resp)
+	_ = json.NewDecoder(rec.Body).Decode(&resp)
 	if resp["error"] == "" {
 		t.Error("expected non-empty error in response body")
 	}
@@ -223,7 +223,7 @@ func TestHealthScore_MissingTenantID_Returns401_ErrorFieldPresent(t *testing.T) 
 	}
 
 	var resp map[string]string
-	json.NewDecoder(rec.Body).Decode(&resp)
+	_ = json.NewDecoder(rec.Body).Decode(&resp)
 	if resp["error"] == "" {
 		t.Error("expected non-empty 'error' field in 401 response")
 	}

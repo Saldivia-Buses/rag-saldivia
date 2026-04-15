@@ -512,12 +512,6 @@ func TestGetConfig_NotFound_Integration(t *testing.T) {
 // TestFeatureFlag_CreateAndEvaluate_Enabled_Integration verifies that a flag
 // with rollout_pct=100 and enabled=true is seen as true by EvaluateFlags for
 // any (tenantID, userID) pair.
-//
-// TDD-ANCHOR: CreateFeatureFlag has a bug where it scans tenant_id (NULL for global
-// flags) into a plain string instead of *string, causing "cannot scan NULL into *string".
-// Until that bug is fixed, we seed the flag via direct INSERT and test the invariant
-// through ToggleFeatureFlag + EvaluateFlags.
-// Bug location: platform.go CreateFeatureFlag Scan(&f.TenantID) — should use *string.
 func TestFeatureFlag_CreateAndEvaluate_Enabled_Integration(t *testing.T) {
 	pool, cleanup := setupTestDB(t)
 	defer cleanup()
@@ -525,13 +519,10 @@ func TestFeatureFlag_CreateAndEvaluate_Enabled_Integration(t *testing.T) {
 	svc := New(pool, nil)
 	ctx := context.Background()
 
-	// Seed via direct INSERT to bypass the CreateFeatureFlag NULL-scan bug.
-	_, err := pool.Exec(ctx,
-		`INSERT INTO feature_flags (id, name, enabled, rollout_pct) VALUES ($1, $2, false, $3)`,
-		"flag-enabled-100", "full_rollout_flag", 100,
-	)
-	if err != nil {
-		t.Fatalf("seed feature flag: %v", err)
+	if _, err := svc.CreateFeatureFlag(ctx, CreateFlagParams{
+		ID: "flag-enabled-100", Name: "full_rollout_flag", RolloutPct: 100,
+	}, "admin"); err != nil {
+		t.Fatalf("create feature flag: %v", err)
 	}
 
 	// Enable explicitly (CreateFeatureFlag always inserts enabled=false).
@@ -556,10 +547,6 @@ func TestFeatureFlag_CreateAndEvaluate_Enabled_Integration(t *testing.T) {
 // TestFeatureFlag_RolloutPct_Deterministic_Integration verifies that EvaluateFlags
 // returns the same result for the same (tenantID, userID) pair across repeated calls.
 // The rollout bucket is computed via FNV-32a hash — it must be stable for a given input.
-//
-// TDD-ANCHOR: CreateFeatureFlag has a NULL-scan bug for global flags (see
-// TestFeatureFlag_CreateAndEvaluate_Enabled_Integration for details). Seeding via
-// direct INSERT instead.
 func TestFeatureFlag_RolloutPct_Deterministic_Integration(t *testing.T) {
 	pool, cleanup := setupTestDB(t)
 	defer cleanup()
@@ -567,13 +554,10 @@ func TestFeatureFlag_RolloutPct_Deterministic_Integration(t *testing.T) {
 	svc := New(pool, nil)
 	ctx := context.Background()
 
-	// Seed via direct INSERT to bypass the CreateFeatureFlag NULL-scan bug.
-	_, err := pool.Exec(ctx,
-		`INSERT INTO feature_flags (id, name, enabled, rollout_pct) VALUES ($1, $2, false, $3)`,
-		"flag-rollout-50", "half_rollout_flag", 50,
-	)
-	if err != nil {
-		t.Fatalf("seed feature flag: %v", err)
+	if _, err := svc.CreateFeatureFlag(ctx, CreateFlagParams{
+		ID: "flag-rollout-50", Name: "half_rollout_flag", RolloutPct: 50,
+	}, "admin"); err != nil {
+		t.Fatalf("create feature flag: %v", err)
 	}
 	if err := svc.ToggleFeatureFlag(ctx, "flag-rollout-50", true); err != nil {
 		t.Fatalf("toggle flag enabled: %v", err)
@@ -604,10 +588,6 @@ func TestFeatureFlag_RolloutPct_Deterministic_Integration(t *testing.T) {
 // TestFeatureFlag_KilledFlag_NeverEnabled_Integration verifies that KillFlag
 // immediately forces enabled=false regardless of prior state. EvaluateFlags
 // must return false after the kill switch is activated.
-//
-// TDD-ANCHOR: CreateFeatureFlag has a NULL-scan bug for global flags (see
-// TestFeatureFlag_CreateAndEvaluate_Enabled_Integration for details). Seeding via
-// direct INSERT instead.
 func TestFeatureFlag_KilledFlag_NeverEnabled_Integration(t *testing.T) {
 	pool, cleanup := setupTestDB(t)
 	defer cleanup()
@@ -615,13 +595,10 @@ func TestFeatureFlag_KilledFlag_NeverEnabled_Integration(t *testing.T) {
 	svc := New(pool, nil)
 	ctx := context.Background()
 
-	// Seed via direct INSERT to bypass the CreateFeatureFlag NULL-scan bug.
-	_, err := pool.Exec(ctx,
-		`INSERT INTO feature_flags (id, name, enabled, rollout_pct) VALUES ($1, $2, false, $3)`,
-		"flag-to-kill", "soon_dead_flag", 100,
-	)
-	if err != nil {
-		t.Fatalf("seed feature flag: %v", err)
+	if _, err := svc.CreateFeatureFlag(ctx, CreateFlagParams{
+		ID: "flag-to-kill", Name: "soon_dead_flag", RolloutPct: 100,
+	}, "admin"); err != nil {
+		t.Fatalf("create feature flag: %v", err)
 	}
 	// Enable it first so we know the kill actually does something.
 	if err := svc.ToggleFeatureFlag(ctx, "flag-to-kill", true); err != nil {

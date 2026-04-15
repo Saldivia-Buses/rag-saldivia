@@ -90,7 +90,7 @@ func (h *Quality) ListNC(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"nonconformities": ncs})
+	_ = json.NewEncoder(w).Encode(map[string]any{"nonconformities": ncs})
 }
 
 func (h *Quality) GetNC(w http.ResponseWriter, r *http.Request) {
@@ -105,7 +105,7 @@ func (h *Quality) GetNC(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(nc)
+	_ = json.NewEncoder(w).Encode(nc)
 }
 
 func (h *Quality) CreateNC(w http.ResponseWriter, r *http.Request) {
@@ -137,7 +137,7 @@ func (h *Quality) CreateNC(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(nc)
+	_ = json.NewEncoder(w).Encode(nc)
 }
 
 func (h *Quality) UpdateNCStatus(w http.ResponseWriter, r *http.Request) {
@@ -172,7 +172,7 @@ func (h *Quality) ListCA(w http.ResponseWriter, r *http.Request) {
 		erperrors.WriteError(w, r, erperrors.Internal(err)); return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"corrective_actions": cas})
+	_ = json.NewEncoder(w).Encode(map[string]any{"corrective_actions": cas})
 }
 
 func (h *Quality) CreateCA(w http.ResponseWriter, r *http.Request) {
@@ -204,7 +204,7 @@ func (h *Quality) CreateCA(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(ca)
+	_ = json.NewEncoder(w).Encode(ca)
 }
 
 func (h *Quality) ListAudits(w http.ResponseWriter, r *http.Request) {
@@ -214,7 +214,7 @@ func (h *Quality) ListAudits(w http.ResponseWriter, r *http.Request) {
 		erperrors.WriteError(w, r, erperrors.Internal(err)); return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"audits": audits})
+	_ = json.NewEncoder(w).Encode(map[string]any{"audits": audits})
 }
 
 func (h *Quality) CreateAudit(w http.ResponseWriter, r *http.Request) {
@@ -238,7 +238,7 @@ func (h *Quality) CreateAudit(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(a)
+	_ = json.NewEncoder(w).Encode(a)
 }
 
 func (h *Quality) ListFindings(w http.ResponseWriter, r *http.Request) {
@@ -249,7 +249,7 @@ func (h *Quality) ListFindings(w http.ResponseWriter, r *http.Request) {
 		erperrors.WriteError(w, r, erperrors.Internal(err)); return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"findings": findings})
+	_ = json.NewEncoder(w).Encode(map[string]any{"findings": findings})
 }
 
 func (h *Quality) CreateFinding(w http.ResponseWriter, r *http.Request) {
@@ -273,7 +273,7 @@ func (h *Quality) CreateFinding(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(f)
+	_ = json.NewEncoder(w).Encode(f)
 }
 
 func (h *Quality) ListDocuments(w http.ResponseWriter, r *http.Request) {
@@ -283,7 +283,7 @@ func (h *Quality) ListDocuments(w http.ResponseWriter, r *http.Request) {
 		erperrors.WriteError(w, r, erperrors.Internal(err)); return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"documents": docs})
+	_ = json.NewEncoder(w).Encode(map[string]any{"documents": docs})
 }
 
 func (h *Quality) CreateDocument(w http.ResponseWriter, r *http.Request) {
@@ -307,7 +307,7 @@ func (h *Quality) CreateDocument(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(d)
+	_ = json.NewEncoder(w).Encode(d)
 }
 
 // ─── NC Origins ────────────────────────────────────────────────────────────
@@ -319,7 +319,7 @@ func (h *Quality) ListNCOrigins(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"nc_origins": origins})
+	_ = json.NewEncoder(w).Encode(map[string]any{"nc_origins": origins})
 }
 
 func (h *Quality) CreateNCOrigin(w http.ResponseWriter, r *http.Request) {
@@ -341,7 +341,7 @@ func (h *Quality) CreateNCOrigin(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(o)
+	_ = json.NewEncoder(w).Encode(o)
 }
 
 // ─── Action Plans ──────────────────────────────────────────────────────────
@@ -355,7 +355,7 @@ func (h *Quality) ListActionPlans(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"action_plans": plans})
+	_ = json.NewEncoder(w).Encode(map[string]any{"action_plans": plans})
 }
 
 func (h *Quality) GetActionPlan(w http.ResponseWriter, r *http.Request) {
@@ -370,7 +370,7 @@ func (h *Quality) GetActionPlan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(plan)
+	_ = json.NewEncoder(w).Encode(plan)
 }
 
 func (h *Quality) CreateActionPlan(w http.ResponseWriter, r *http.Request) {
@@ -422,7 +422,7 @@ func (h *Quality) CreateActionPlan(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(plan)
+	_ = json.NewEncoder(w).Encode(plan)
 }
 
 func (h *Quality) UpdateActionPlanStatus(w http.ResponseWriter, r *http.Request) {
@@ -468,7 +468,7 @@ func (h *Quality) ListActionTasks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"tasks": tasks})
+	_ = json.NewEncoder(w).Encode(map[string]any{"tasks": tasks})
 }
 
 func (h *Quality) CreateActionTask(w http.ResponseWriter, r *http.Request) {
@@ -510,7 +510,7 @@ func (h *Quality) CreateActionTask(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(t)
+	_ = json.NewEncoder(w).Encode(t)
 }
 
 func (h *Quality) CompleteActionTask(w http.ResponseWriter, r *http.Request) {

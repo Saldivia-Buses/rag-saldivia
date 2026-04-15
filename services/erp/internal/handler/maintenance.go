@@ -61,7 +61,7 @@ func (h *Maintenance) ListAssets(w http.ResponseWriter, r *http.Request) {
 	assets, err := h.svc.ListAssets(r.Context(), slug, q.Get("type"), q.Get("active") != "false")
 	if err != nil { erperrors.WriteError(w, r, erperrors.Internal(err)); return }
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"assets": assets})
+	_ = json.NewEncoder(w).Encode(map[string]any{"assets": assets})
 }
 
 func (h *Maintenance) CreateAsset(w http.ResponseWriter, r *http.Request) {
@@ -74,7 +74,7 @@ func (h *Maintenance) CreateAsset(w http.ResponseWriter, r *http.Request) {
 		UnitID: optUUID(body.UnitID), Location: body.Location, Metadata: []byte(`{}`),
 	}, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil { erperrors.WriteError(w, r, erperrors.Internal(err)); return }
-	w.Header().Set("Content-Type", "application/json"); w.WriteHeader(http.StatusCreated); json.NewEncoder(w).Encode(a)
+	w.Header().Set("Content-Type", "application/json"); w.WriteHeader(http.StatusCreated); _ = json.NewEncoder(w).Encode(a)
 }
 
 func (h *Maintenance) ListPlans(w http.ResponseWriter, r *http.Request) {
@@ -82,7 +82,7 @@ func (h *Maintenance) ListPlans(w http.ResponseWriter, r *http.Request) {
 	if err != nil { erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id"))); return }
 	plans, err := h.svc.ListPlans(r.Context(), tenantSlug(r), id)
 	if err != nil { erperrors.WriteError(w, r, erperrors.Internal(err)); return }
-	w.Header().Set("Content-Type", "application/json"); json.NewEncoder(w).Encode(map[string]any{"plans": plans})
+	w.Header().Set("Content-Type", "application/json"); _ = json.NewEncoder(w).Encode(map[string]any{"plans": plans})
 }
 
 func (h *Maintenance) CreatePlan(w http.ResponseWriter, r *http.Request) {
@@ -98,14 +98,14 @@ func (h *Maintenance) CreatePlan(w http.ResponseWriter, r *http.Request) {
 		FrequencyHours: optInt4(body.FreqHours), NextDue: pgDate(nd),
 	}, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil { erperrors.WriteError(w, r, erperrors.Internal(err)); return }
-	w.Header().Set("Content-Type", "application/json"); w.WriteHeader(http.StatusCreated); json.NewEncoder(w).Encode(pl)
+	w.Header().Set("Content-Type", "application/json"); w.WriteHeader(http.StatusCreated); _ = json.NewEncoder(w).Encode(pl)
 }
 
 func (h *Maintenance) ListWorkOrders(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r); p := pagination.Parse(r)
 	wos, err := h.svc.ListWorkOrders(r.Context(), slug, r.URL.Query().Get("status"), p.Limit(), p.Offset())
 	if err != nil { erperrors.WriteError(w, r, erperrors.Internal(err)); return }
-	w.Header().Set("Content-Type", "application/json"); json.NewEncoder(w).Encode(map[string]any{"work_orders": wos})
+	w.Header().Set("Content-Type", "application/json"); _ = json.NewEncoder(w).Encode(map[string]any{"work_orders": wos})
 }
 
 func (h *Maintenance) GetWorkOrder(w http.ResponseWriter, r *http.Request) {
@@ -113,7 +113,7 @@ func (h *Maintenance) GetWorkOrder(w http.ResponseWriter, r *http.Request) {
 	if err != nil { erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id"))); return }
 	detail, err := h.svc.GetWorkOrder(r.Context(), id, tenantSlug(r))
 	if err != nil { erperrors.WriteError(w, r, erperrors.NotFound("work order")); return }
-	w.Header().Set("Content-Type", "application/json"); json.NewEncoder(w).Encode(detail)
+	w.Header().Set("Content-Type", "application/json"); _ = json.NewEncoder(w).Encode(detail)
 }
 
 func (h *Maintenance) CreateWorkOrder(w http.ResponseWriter, r *http.Request) {
@@ -134,7 +134,7 @@ func (h *Maintenance) CreateWorkOrder(w http.ResponseWriter, r *http.Request) {
 		UserID: r.Header.Get("X-User-ID"), Notes: body.Notes,
 	}, r.RemoteAddr)
 	if err != nil { erperrors.WriteError(w, r, erperrors.Internal(err)); return }
-	w.Header().Set("Content-Type", "application/json"); w.WriteHeader(http.StatusCreated); json.NewEncoder(w).Encode(wo)
+	w.Header().Set("Content-Type", "application/json"); w.WriteHeader(http.StatusCreated); _ = json.NewEncoder(w).Encode(wo)
 }
 
 func (h *Maintenance) UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
@@ -172,7 +172,7 @@ func (h *Maintenance) ListFuelLogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"fuel_logs": logs})
+	_ = json.NewEncoder(w).Encode(map[string]any{"fuel_logs": logs})
 }
 
 func (h *Maintenance) CreateFuelLog(w http.ResponseWriter, r *http.Request) {
@@ -203,7 +203,7 @@ func (h *Maintenance) CreateFuelLog(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(fl)
+	_ = json.NewEncoder(w).Encode(fl)
 }
 
 func optInt4(v *int32) pgtype.Int4 {

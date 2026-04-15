@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -49,7 +50,10 @@ func (h *Handler) SubmitFeedback(w http.ResponseWriter, r *http.Request) {
 
 	var comment pgtype.Text
 	if req.Comment != "" {
-		comment.Scan(req.Comment)
+		if err := comment.Scan(req.Comment); err != nil {
+			jsonError(w, "invalid comment", http.StatusBadRequest)
+			return
+		}
 	}
 
 	fb, err := h.q.CreateFeedback(r.Context(), repository.CreateFeedbackParams{
@@ -72,5 +76,7 @@ func (h *Handler) SubmitFeedback(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(fb)
+	if err := json.NewEncoder(w).Encode(fb); err != nil {
+		slog.Error("encode feedback response", "error", err)
+	}
 }
