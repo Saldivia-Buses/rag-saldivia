@@ -373,10 +373,12 @@ func (o *Orchestrator) runTableResume(ctx context.Context, runID, progressID uui
 	}
 
 	// Mark in_progress
-	o.pg.Exec(ctx,
+	if _, err := o.pg.Exec(ctx,
 		`UPDATE erp_migration_table_progress SET status = 'in_progress', started_at = COALESCE(started_at, now()) WHERE id = $1`,
 		progressID,
-	)
+	); err != nil {
+		slog.Warn("mark in_progress failed", "progress_id", progressID, "err", err)
+	}
 
 	stats := TableStats{RowsRead: readSoFar, RowsWritten: writtenSoFar, RowsSkipped: skippedSoFar}
 	reader := m.Reader()
@@ -476,13 +478,15 @@ func (o *Orchestrator) runTableResume(ctx context.Context, runID, progressID uui
 	}
 
 	// Mark completed
-	o.pg.Exec(ctx,
+	if _, err := o.pg.Exec(ctx,
 		`UPDATE erp_migration_table_progress
 		 SET status = 'completed', completed_at = now(),
 		     rows_read = $1, rows_written = $2, rows_skipped = $3
 		 WHERE id = $4`,
 		stats.RowsRead, stats.RowsWritten, stats.RowsSkipped, progressID,
-	)
+	); err != nil {
+		slog.Warn("mark completed failed", "progress_id", progressID, "err", err)
+	}
 
 	slog.Info("table completed",
 		"table", m.LegacyTable(),
@@ -555,17 +559,21 @@ func (o *Orchestrator) dryRunTable(ctx context.Context, runID uuid.UUID, m Table
 
 func (o *Orchestrator) failRun(ctx context.Context, runID uuid.UUID, err error) {
 	status := "failed"
-	o.pg.Exec(ctx,
+	if _, execErr := o.pg.Exec(ctx,
 		`UPDATE erp_migration_runs SET status = $1, error_message = $2, completed_at = now() WHERE id = $3`,
 		status, err.Error(), runID,
-	)
+	); execErr != nil {
+		slog.Error("fail run update failed", "run_id", runID, "orig_err", err, "update_err", execErr)
+	}
 }
 
 func markTableFailed(ctx context.Context, pg *pgxpool.Pool, progressID uuid.UUID, errMsg string) {
-	pg.Exec(ctx,
+	if _, err := pg.Exec(ctx,
 		`UPDATE erp_migration_table_progress SET status = 'failed', error_message = $1, completed_at = now() WHERE id = $2`,
 		errMsg, progressID,
-	)
+	); err != nil {
+		slog.Error("mark table failed update failed", "progress_id", progressID, "err", err)
+	}
 }
 
 // FindLastDryRun finds the most recent dry_run_ok for a tenant.

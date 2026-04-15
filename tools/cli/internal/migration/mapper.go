@@ -270,7 +270,7 @@ func (m *Mapper) BuildRegMovimIndex(ctx context.Context, mysqlDB *sql.DB) error 
 		for rows.Next() {
 			var legacyID, regMovimID int64
 			if err := rows.Scan(&legacyID, &regMovimID); err != nil {
-				rows.Close()
+				_ = rows.Close()
 				return fmt.Errorf("scan regmovim index: %w", err)
 			}
 			// Look up the invoice UUID from cache
@@ -285,7 +285,7 @@ func (m *Mapper) BuildRegMovimIndex(ctx context.Context, mysqlDB *sql.DB) error 
 				count++
 			}
 		}
-		rows.Close()
+		_ = rows.Close()
 		if err := rows.Err(); err != nil {
 			return fmt.Errorf("iterate regmovim index %s: %w", spec.table, err)
 		}

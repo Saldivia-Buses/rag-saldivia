@@ -74,7 +74,7 @@ func (e *MetadataEnricher) enrich(ctx context.Context, spec enrichSpec) (updated
 		slog.Warn("enrichment query failed (table may not exist)", "name", spec.name, "err", err)
 		return 0, 0, nil // non-fatal: table might not exist in this legacy instance
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	cols, err := rows.Columns()
 	if err != nil {

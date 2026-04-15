@@ -65,7 +65,7 @@ func ServiceHealth(baseHost string) []ServiceStatus {
 			} else {
 				st.Status = fmt.Sprintf("ERR(%d)", resp.StatusCode)
 			}
-			resp.Body.Close()
+			_ = resp.Body.Close()
 		}
 
 		results = append(results, st)
@@ -93,7 +93,7 @@ func TenantList(platformDBURL string) ([]TenantSummary, error) {
 	if err != nil {
 		return nil, fmt.Errorf("connect to platform db: %w", err)
 	}
-	defer conn.Close(ctx)
+	defer func() { _ = conn.Close(ctx) }()
 
 	rows, err := conn.Query(ctx,
 		`SELECT id, slug, name, plan_id, enabled, created_at
@@ -134,7 +134,7 @@ func TenantStatus(platformDBURL, slug string) (*TenantDetail, error) {
 	if err != nil {
 		return nil, fmt.Errorf("connect to platform db: %w", err)
 	}
-	defer conn.Close(ctx)
+	defer func() { _ = conn.Close(ctx) }()
 
 	var d TenantDetail
 	err = conn.QueryRow(ctx,
@@ -171,7 +171,7 @@ func DBQuery(platformDBURL, tenantSlug, query string) ([]map[string]any, error) 
 	if err != nil {
 		return nil, fmt.Errorf("connect to platform db: %w", err)
 	}
-	defer pConn.Close(ctx)
+	defer func() { _ = pConn.Close(ctx) }()
 
 	var tenantDBURL string
 	err = pConn.QueryRow(ctx,
@@ -189,13 +189,13 @@ func DBQuery(platformDBURL, tenantSlug, query string) ([]map[string]any, error) 
 	if err != nil {
 		return nil, fmt.Errorf("connect to tenant db: %w", err)
 	}
-	defer tConn.Close(ctx)
+	defer func() { _ = tConn.Close(ctx) }()
 
 	tx, err := tConn.BeginTx(ctx, pgx.TxOptions{AccessMode: pgx.ReadOnly})
 	if err != nil {
 		return nil, fmt.Errorf("begin read-only tx: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	rows, err := tx.Query(ctx, query)
 	if err != nil {
