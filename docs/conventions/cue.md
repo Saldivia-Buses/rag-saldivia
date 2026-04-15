@@ -83,7 +83,7 @@ events: "chat.new_message": {
 | Lista homogénea | `[...string]` |
 | Comentario | `// ...` (preservado como docstring Go/JSDoc) |
 
-No usamos templates (`#Def`), comprehensions, ni múltiples módulos CUE. Specs planas, un archivo por familia.
+Specs planas, un archivo por familia. No usamos comprehensions ni múltiples módulos CUE. Templates (`#Def`) quedan **reservados para Plan 28** cuando aparezcan payloads polimórficos (ej. `traces.event.Data` con disjunción `#LLMCallData | #ToolCallData | #ErrorData`). En Plan 26 no se usan.
 
 ---
 
@@ -151,7 +151,7 @@ events: "platform.lifecycle": {
         by_user_id:  string
     }
     publishers: ["platform"]
-    consumers:  ["auth", "healthwatch", "ws", "outbox"]  // outbox escucha tenant.*
+    consumers:  ["auth", "chat", "ingest", "healthwatch", "ws"]  // los que corren DrainerRegistry + ws subs
 }
 ```
 
