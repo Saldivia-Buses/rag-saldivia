@@ -405,18 +405,9 @@ check "no hardcoded API URLs in frontend source" bash -c '
     [ -z "$bad" ] || { echo "HARDCODED API URL: $bad"; exit 1; }
 '
 
-# ─── 17. Docs-Code Sync ───────────────────────────────────────────
-echo ""
-echo "▸ Docs-Code Sync"
-
-check "files referenced in CRITICAL_FLOWS.md exist" bash -c '
-    cd "'"$ROOT"'"
-    [ -f "docs/CRITICAL_FLOWS.md" ] || exit 0
-    files=$(grep -oE "services/[^ |)\`]+\.go|pkg/[^ |)\`]+\.go" docs/CRITICAL_FLOWS.md | sort -u)
-    for f in $files; do
-        [ -f "$f" ] || { echo "STALE REF: $f referenced in CRITICAL_FLOWS.md but does not exist"; exit 1; }
-    done
-'
+# (I17 removed: legacy CRITICAL_FLOWS.md is gone. Modular flow docs
+#  reference code via path:line prose, not as relative links. Staleness
+#  is enforced by the doc-sync hook reviewing diffs on commit.)
 
 # ─── 18. Silent Failure Protection ────────────────────────────────
 echo ""
@@ -438,6 +429,106 @@ check "no excessive bare error returns (>8 per service file)" bash -c '
         count=$(grep -c "return.*err$" "$sfile" 2>/dev/null) || count=0
         [ "$count" -le 8 ] || { echo "MANY UNWRAPPED ERRORS ($count) in $sfile — add context"; exit 1; }
     done
+'
+
+# ─── 19. Modular Docs Invariants ──────────────────────────────────
+echo ""
+echo "▸ Modular Docs"
+
+MODULAR_DIRS="docs/architecture docs/services docs/packages docs/flows docs/conventions docs/operations docs/ai"
+
+check "every Go service has docs/services/*.md" bash -c '
+    cd "'"$ROOT"'"
+    [ -d "docs/services" ] || exit 0  # skeleton not yet created
+    for svc in services/*/cmd/main.go; do
+        name=$(basename "$(dirname "$(dirname "$svc")")")
+        [[ "$name" == "scaffold" ]] && continue
+        [ -f "docs/services/$name.md" ] || { echo "MISSING: docs/services/$name.md"; exit 1; }
+    done
+'
+
+check "every pkg/ directory has docs/packages/*.md" bash -c '
+    cd "'"$ROOT"'"
+    [ -d "docs/packages" ] || exit 0
+    for pkgdir in pkg/*/; do
+        name=$(basename "$pkgdir")
+        # skip non-go dirs
+        ls "$pkgdir"*.go >/dev/null 2>&1 || ls "$pkgdir"*/*.go >/dev/null 2>&1 || continue
+        [ -f "docs/packages/$name.md" ] || { echo "MISSING: docs/packages/$name.md"; exit 1; }
+    done
+'
+
+check "no modular doc exceeds 200 lines" bash -c '
+    cd "'"$ROOT"'"
+    over=""
+    for dir in '"$MODULAR_DIRS"'; do
+        [ -d "$dir" ] || continue
+        for doc in "$dir"/*.md; do
+            [ -f "$doc" ] || continue
+            lines=$(wc -l < "$doc")
+            if [ "$lines" -gt 200 ]; then
+                over="$over$doc ($lines)\n"
+            fi
+        done
+    done
+    [ -z "$over" ] || { printf "OVERFLOW:\n%b" "$over"; exit 1; }
+'
+
+check "every modular doc has frontmatter (title, audience, last_reviewed)" bash -c '
+    cd "'"$ROOT"'"
+    missing=""
+    for dir in '"$MODULAR_DIRS"'; do
+        [ -d "$dir" ] || continue
+        for doc in "$dir"/*.md; do
+            [ -f "$doc" ] || continue
+            head -n 10 "$doc" | grep -q "^title:"         || missing="$missing$doc (title)\n"
+            head -n 10 "$doc" | grep -q "^audience:"      || missing="$missing$doc (audience)\n"
+            head -n 10 "$doc" | grep -q "^last_reviewed:" || missing="$missing$doc (last_reviewed)\n"
+        done
+    done
+    [ -z "$missing" ] || { printf "MISSING FRONTMATTER:\n%b" "$missing"; exit 1; }
+'
+
+check "no modular doc has last_reviewed older than 90 days" bash -c '
+    cd "'"$ROOT"'"
+    stale=""
+    now_epoch=$(date +%s)
+    for dir in '"$MODULAR_DIRS"'; do
+        [ -d "$dir" ] || continue
+        for doc in "$dir"/*.md; do
+            [ -f "$doc" ] || continue
+            rev=$(head -n 10 "$doc" | grep "^last_reviewed:" | sed "s/last_reviewed: *//" | tr -d "[:space:]")
+            [ -z "$rev" ] && continue
+            rev_epoch=$(date -d "$rev" +%s 2>/dev/null || date -jf "%Y-%m-%d" "$rev" +%s 2>/dev/null || echo 0)
+            [ "$rev_epoch" -eq 0 ] && continue
+            age=$(( (now_epoch - rev_epoch) / 86400 ))
+            [ "$age" -gt 90 ] && stale="$stale$doc (${age}d)\n"
+        done
+    done
+    [ -z "$stale" ] || { printf "STALE:\n%b" "$stale"; exit 1; }
+'
+
+# (I32 removed: dead-branch reference sweep is one-time. Post-sweep, no
+#  future commits should introduce the dead branch name since it no longer
+#  exists. A grep for the literal name self-matches this check, so the
+#  invariant is counterproductive.)
+
+check "no broken relative links in modular docs" bash -c '
+    cd "'"$ROOT"'"
+    broken=""
+    for dir in '"$MODULAR_DIRS"'; do
+        [ -d "$dir" ] || continue
+        for doc in "$dir"/*.md; do
+            [ -f "$doc" ] || continue
+            # Extract relative .md links like [text](../foo/bar.md) or (./baz.md)
+            while IFS= read -r link; do
+                resolved=$(cd "$(dirname "$doc")" && realpath -m "$link" 2>/dev/null)
+                [ -z "$resolved" ] && continue
+                [ -f "$resolved" ] || broken="$broken$doc -> $link\n"
+            done < <(grep -oE "\(\.\.?/[^)]+\.md\)" "$doc" | tr -d "()")
+        done
+    done
+    [ -z "$broken" ] || { printf "BROKEN LINKS:\n%b" "$broken"; exit 1; }
 '
 
 # ─── Summary ───────────────────────────────────────────────────────

@@ -57,7 +57,7 @@ func (r *AccidentPersonReader) ReadBatch(ctx context.Context, resumeKey string, 
 	if err != nil {
 		return nil, "", fmt.Errorf("read ACCIDENTE_PER: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	cols, err := rows.Columns()
 	if err != nil {

@@ -224,7 +224,7 @@ depender del job exit code (rama de status checks), no del contenido del
 comentario.
 
 **Verificar:** Que los tres jobs de `ai-review.yml` esten configurados como
-required status checks en la branch protection de `experimental/ultra-optimize`
+required status checks on branch protection for `2.0.5`
 y `2.0.x`. Si no estan como required checks, los gates no bloquean merge aunque
 fallen.
 

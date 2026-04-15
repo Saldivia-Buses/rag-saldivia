@@ -69,7 +69,7 @@ func (r *BOMHistoryReaderType) ReadBatch(ctx context.Context, resumeKey string, 
 	if err != nil {
 		return nil, "", fmt.Errorf("read STK_BOM_HIST: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	cols, err := rows.Columns()
 	if err != nil {

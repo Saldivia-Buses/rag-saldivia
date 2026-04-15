@@ -212,7 +212,7 @@ func RunPreValidation(ctx context.Context, mysqlDB *sql.DB, pgPool *pgxpool.Pool
 			var legacyID int64
 			var detail string
 			if err := rows.Scan(&legacyID, &detail); err != nil {
-				rows.Close()
+				_ = rows.Close()
 				return nil, fmt.Errorf("scan %s: %w", rule.Name, err)
 			}
 			issues = append(issues, ValidationIssue{
@@ -224,18 +224,20 @@ func RunPreValidation(ctx context.Context, mysqlDB *sql.DB, pgPool *pgxpool.Pool
 				Resolution:  rule.Transform,
 			})
 		}
-		rows.Close()
+		_ = rows.Close()
 
 		// Record issues in PostgreSQL
 		for _, issue := range issues {
 			detailJSON, _ := json.Marshal(map[string]string{"value": issue.Detail})
-			pgPool.Exec(ctx,
+			if _, err := pgPool.Exec(ctx,
 				`INSERT INTO erp_migration_validation_issues
 				 (tenant_id, run_id, domain, legacy_table, legacy_id, constraint_name, details, resolution)
 				 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
 				tenantID, runID, issue.Domain, issue.LegacyTable, issue.LegacyID,
 				issue.Constraint, detailJSON, issue.Resolution,
-			)
+			); err != nil {
+				slog.Warn("record validation issue failed", "rule", rule.Name, "legacy_id", issue.LegacyID, "err", err)
+			}
 		}
 
 		report.Issues = append(report.Issues, issues...)
@@ -285,10 +287,16 @@ func PostMigrationValidation(ctx context.Context, mysqlDB *sql.DB, pgPool *pgxpo
 		var mysqlCount, pgCount int
 
 		row := mysqlDB.QueryRowContext(ctx, c.MySQL)
-		row.Scan(&mysqlCount)
+		if err := row.Scan(&mysqlCount); err != nil {
+			slog.Warn("mysql count scan failed", "check", c.Name, "err", err)
+			allOK = false
+		}
 
 		pgRow := pgPool.QueryRow(ctx, c.PG, tenantID)
-		pgRow.Scan(&pgCount)
+		if err := pgRow.Scan(&pgCount); err != nil {
+			slog.Warn("pg count scan failed", "check", c.Name, "err", err)
+			allOK = false
+		}
 
 		status := "OK"
 		if mysqlCount != pgCount {
@@ -300,10 +308,16 @@ func PostMigrationValidation(ctx context.Context, mysqlDB *sql.DB, pgPool *pgxpo
 
 	// Financial checksum: journal balance
 	var mysqlBalance, pgBalance decimal.Decimal
-	mysqlDB.QueryRowContext(ctx,
-		"SELECT COALESCE(SUM(CAST(importe AS DECIMAL(16,2))),0) FROM CTB_DETALLES WHERE doh=0").Scan(&mysqlBalance)
-	pgPool.QueryRow(ctx,
-		"SELECT COALESCE(SUM(debit),0) FROM erp_journal_lines WHERE tenant_id=$1", tenantID).Scan(&pgBalance)
+	if err := mysqlDB.QueryRowContext(ctx,
+		"SELECT COALESCE(SUM(CAST(importe AS DECIMAL(16,2))),0) FROM CTB_DETALLES WHERE doh=0").Scan(&mysqlBalance); err != nil {
+		slog.Warn("mysql journal balance scan failed", "err", err)
+		allOK = false
+	}
+	if err := pgPool.QueryRow(ctx,
+		"SELECT COALESCE(SUM(debit),0) FROM erp_journal_lines WHERE tenant_id=$1", tenantID).Scan(&pgBalance); err != nil {
+		slog.Warn("pg journal balance scan failed", "err", err)
+		allOK = false
+	}
 
 	diff := mysqlBalance.Sub(pgBalance).Abs()
 	balanceStatus := "OK"
@@ -315,10 +329,16 @@ func PostMigrationValidation(ctx context.Context, mysqlDB *sql.DB, pgPool *pgxpo
 
 	// Phase 18 — Tax entry balance (IVAIMPORTES.impimp vs erp_tax_entries.tax_amount)
 	var mysqlTaxSum, pgTaxSum decimal.Decimal
-	mysqlDB.QueryRowContext(ctx,
-		"SELECT COALESCE(SUM(ABS(impimp)),0) FROM IVAIMPORTES").Scan(&mysqlTaxSum)
-	pgPool.QueryRow(ctx,
-		"SELECT COALESCE(SUM(ABS(tax_amount)),0) FROM erp_tax_entries WHERE tenant_id=$1", tenantID).Scan(&pgTaxSum)
+	if err := mysqlDB.QueryRowContext(ctx,
+		"SELECT COALESCE(SUM(ABS(impimp)),0) FROM IVAIMPORTES").Scan(&mysqlTaxSum); err != nil {
+		slog.Warn("mysql tax sum scan failed", "err", err)
+		allOK = false
+	}
+	if err := pgPool.QueryRow(ctx,
+		"SELECT COALESCE(SUM(ABS(tax_amount)),0) FROM erp_tax_entries WHERE tenant_id=$1", tenantID).Scan(&pgTaxSum); err != nil {
+		slog.Warn("pg tax sum scan failed", "err", err)
+		allOK = false
+	}
 
 	taxDiff := mysqlTaxSum.Sub(pgTaxSum).Abs()
 	taxStatus := "OK"
@@ -330,10 +350,16 @@ func PostMigrationValidation(ctx context.Context, mysqlDB *sql.DB, pgPool *pgxpo
 
 	// Phase 18 — Treasury balance (CAJMOVIM absolute amounts vs erp_treasury_movements.amount)
 	var mysqlTreasurySum, pgTreasurySum decimal.Decimal
-	mysqlDB.QueryRowContext(ctx,
-		"SELECT COALESCE(SUM(ABS(cajimp)),0) FROM CAJMOVIM").Scan(&mysqlTreasurySum)
-	pgPool.QueryRow(ctx,
-		"SELECT COALESCE(SUM(ABS(amount)),0) FROM erp_treasury_movements WHERE tenant_id=$1", tenantID).Scan(&pgTreasurySum)
+	if err := mysqlDB.QueryRowContext(ctx,
+		"SELECT COALESCE(SUM(ABS(cajimp)),0) FROM CAJMOVIM").Scan(&mysqlTreasurySum); err != nil {
+		slog.Warn("mysql treasury sum scan failed", "err", err)
+		allOK = false
+	}
+	if err := pgPool.QueryRow(ctx,
+		"SELECT COALESCE(SUM(ABS(amount)),0) FROM erp_treasury_movements WHERE tenant_id=$1", tenantID).Scan(&pgTreasurySum); err != nil {
+		slog.Warn("pg treasury sum scan failed", "err", err)
+		allOK = false
+	}
 
 	treasuryDiff := mysqlTreasurySum.Sub(pgTreasurySum).Abs()
 	treasuryStatus := "OK"

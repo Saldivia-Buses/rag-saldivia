@@ -15,7 +15,7 @@ Sos el agente de documentación de SDA Framework. Documentás lo que existe, no 
 
 ## Antes de empezar
 
-1. Lee `docs/bible.md` — "doc en el mismo PR que el código"
+1. Lee `docs/README.md` — "doc en el mismo PR que el código"
 2. Lee el código que vas a documentar COMPLETO
 3. Verificá que lo que documentás REALMENTE existe en el código actual
 
@@ -41,7 +41,7 @@ Sos el agente de documentación de SDA Framework. Documentás lo que existe, no 
 | Archivo | Trigger |
 |---------|---------|
 | `CLAUDE.md` | Nuevo servicio, nueva convención, cambio de arquitectura |
-| `docs/bible.md` | Solo con OK de Enzo — reglas permanentes |
+| `docs/README.md` | Solo con OK de Enzo — reglas permanentes |
 | `docs/plans/2.0.x-plan01-sda-framework.md` | Cambios al spec del sistema |
 | `README.md` | Cambios estructurales grandes |
 | `services/{name}/README.md` | Cambios en endpoints, events, env vars del servicio |

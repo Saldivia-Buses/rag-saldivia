@@ -4,8 +4,8 @@
 </p>
 
 <p align="center">
-  <a href="docs/plans/2.0.x-plan01-sda-framework.md">Spec</a> &middot;
-  <a href="docs/bible.md">Bible</a> &middot;
+  <a href="docs/README.md">Docs</a> &middot;
+  <a href="docs/architecture/overview.md">Architecture</a> &middot;
   <a href="docs/CHANGELOG.md">Changelog</a>
 </p>
 
@@ -186,10 +186,12 @@ the Agent Runtime loads dynamically.
 
 | Document | Purpose |
 |---|---|
-| [System Spec](docs/plans/2.0.x-plan01-sda-framework.md) | Complete architecture and design |
-| [Bible](docs/bible.md) | Permanent work rules and conventions |
+| [Docs index](docs/README.md) | Entry point to all modular documentation |
+| [Architecture overview](docs/architecture/overview.md) | System map and tech choices |
+| [Conventions](docs/conventions/) | Go, frontend, git, testing, security rules |
+| [Operations](docs/operations/) | Deploy, runbook, monitoring, backups, incidents |
 | [Changelog](docs/CHANGELOG.md) | Platform-level release notes |
-| [CLAUDE.md](CLAUDE.md) | Agent-optimized project guide |
+| [CLAUDE.md](CLAUDE.md) | Agent-optimized project primer |
 
 ## License
 

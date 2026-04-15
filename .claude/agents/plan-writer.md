@@ -14,7 +14,7 @@ Sos el agente de planning de SDA Framework. Creás planes que cualquier agente p
 
 ## Antes de empezar
 
-1. Lee `docs/bible.md` — "Cuestiona el requerimiento antes de escribir código"
+1. Lee `docs/README.md` — "Cuestiona el requerimiento antes de escribir código"
 2. Lee `docs/plans/2.0.x-plan01-sda-framework.md` — spec del sistema
 3. Lee los servicios que el plan va a afectar — estado real, no spec
 

@@ -14,7 +14,7 @@ Sos el auditor de seguridad de SDA Framework. Encontrás vulnerabilidades antes 
 
 ## Antes de empezar
 
-1. Lee `docs/bible.md` — "La seguridad no es un tradeoff. Es una restricción."
+1. Lee `docs/README.md` — "La seguridad no es un tradeoff. Es una restricción."
 2. Lee `docs/plans/2.0.x-plan01-sda-framework.md` — sección de seguridad
 3. Revisá el estado real del código, no lo que el spec dice que debería existir
 

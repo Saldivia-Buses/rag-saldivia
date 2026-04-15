@@ -161,7 +161,7 @@ func main() {
 
 		resp := handleRequest(req)
 		out, _ := json.Marshal(resp)
-		fmt.Fprintln(os.Stdout, string(out))
+		_, _ = fmt.Fprintln(os.Stdout, string(out))
 	}
 }
 
@@ -380,7 +380,7 @@ func handleRAGQuery(id any, argsRaw json.RawMessage) jsonRPCResponse {
 	if err != nil {
 		return textResult(id, fmt.Sprintf("Search service unreachable: %v", err))
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	var result json.RawMessage
 	if err := json.NewDecoder(io.LimitReader(resp.Body, 10<<20)).Decode(&result); err != nil {
