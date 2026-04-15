@@ -104,28 +104,25 @@ func CalcPrenatalEclipseTransits(
 			}
 		}
 
-		// Transit activations
+		// Transit activations — check once per transit planet (mid-January).
 		for _, tr := range transits {
-			// Check if transit planet hits the prenatal eclipse degree
 			flags := ephemeris.FlagSwieph | ephemeris.FlagSpeed
-			for m := 1; m <= 12; m++ {
-				jd := ephemeris.JulDay(year, m, 15, 12.0)
-				for _, sp := range []struct{ name string; id int }{
-					{"Saturno", ephemeris.Saturn}, {"Júpiter", ephemeris.Jupiter},
-					{"Marte", ephemeris.Mars},
-				} {
-					if sp.name != tr.Transit { continue }
-					pos, err := ephemeris.CalcPlanet(jd, sp.id, flags)
-					if err != nil { continue }
-					asp := astromath.FindAspect(pos.Lon, eclLon, 3.0)
-					if asp != nil {
-						activations = append(activations, PrenatalEclipseActivation{
-							Technique: "transit", Planet: sp.name, Aspect: asp.Name,
-							Orb: asp.Orb, Month: m, EclType: eclType,
-						})
-					}
+			m := 1
+			jd := ephemeris.JulDay(year, m, 15, 12.0)
+			for _, sp := range []struct{ name string; id int }{
+				{"Saturno", ephemeris.Saturn}, {"Júpiter", ephemeris.Jupiter},
+				{"Marte", ephemeris.Mars},
+			} {
+				if sp.name != tr.Transit { continue }
+				pos, err := ephemeris.CalcPlanet(jd, sp.id, flags)
+				if err != nil { continue }
+				asp := astromath.FindAspect(pos.Lon, eclLon, 3.0)
+				if asp != nil {
+					activations = append(activations, PrenatalEclipseActivation{
+						Technique: "transit", Planet: sp.name, Aspect: asp.Name,
+						Orb: asp.Orb, Month: m, EclType: eclType,
+					})
 				}
-				break // only check once per transit planet
 			}
 		}
 	}
