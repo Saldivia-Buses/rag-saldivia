@@ -8,6 +8,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -251,5 +252,94 @@ func TestDeleteSession_CascadesMessages_Integration(t *testing.T) {
 	pool.QueryRow(ctx, `SELECT count(*) FROM messages WHERE session_id = $1`, session.ID).Scan(&count)
 	if count != 0 {
 		t.Errorf("expected 0 messages after cascade delete, got %d", count)
+	}
+}
+
+// TestListSessions_Pagination_Integration seeds 5 sessions with distinct timestamps
+// and verifies that limit + offset slicing returns the expected windows in
+// created_at DESC order (most recent first).
+//
+// TDD-ANCHOR: ListSessions uses created_at DESC (see idx_sessions_user index).
+// Sessions are inserted directly via SQL with explicit timestamps to guarantee
+// deterministic ordering — CreateSession uses DEFAULT now() which can collide
+// within the same millisecond in a fast test loop.
+func TestListSessions_Pagination_Integration(t *testing.T) {
+	pool, cleanup := setupTestDB(t)
+	defer cleanup()
+
+	svc := NewChat(pool, "dev", nil)
+	ctx := context.Background()
+
+	// Insert 5 sessions with explicit, evenly-spaced timestamps so ordering is
+	// deterministic regardless of test execution speed.
+	base := time.Date(2024, 1, 1, 12, 0, 0, 0, time.UTC)
+	var sessionIDs []string
+	for i := 0; i < 5; i++ {
+		ts := base.Add(time.Duration(i) * time.Minute)
+		var id string
+		err := pool.QueryRow(ctx,
+			`INSERT INTO sessions (user_id, title, created_at, updated_at)
+			 VALUES ($1, $2, $3, $3) RETURNING id`,
+			"u-1",
+			fmt.Sprintf("Session %d", i+1),
+			ts,
+		).Scan(&id)
+		if err != nil {
+			t.Fatalf("seed session %d: %v", i, err)
+		}
+		sessionIDs = append(sessionIDs, id)
+	}
+	// sessionIDs[4] has the latest timestamp → should appear first in DESC order.
+
+	// Page 1: limit=2, offset=0 → 2 most recent sessions.
+	page1, err := svc.ListSessions(ctx, "u-1", 2, 0)
+	if err != nil {
+		t.Fatalf("list sessions page 1: %v", err)
+	}
+	if len(page1) != 2 {
+		t.Fatalf("page 1: expected 2 sessions, got %d", len(page1))
+	}
+	// Most recent first → session index 4, then 3.
+	if page1[0].ID != sessionIDs[4] {
+		t.Errorf("page1[0]: expected session %s (newest), got %s", sessionIDs[4], page1[0].ID)
+	}
+	if page1[1].ID != sessionIDs[3] {
+		t.Errorf("page1[1]: expected session %s, got %s", sessionIDs[3], page1[1].ID)
+	}
+
+	// Page 2: limit=2, offset=2 → next 2 sessions.
+	page2, err := svc.ListSessions(ctx, "u-1", 2, 2)
+	if err != nil {
+		t.Fatalf("list sessions page 2: %v", err)
+	}
+	if len(page2) != 2 {
+		t.Fatalf("page 2: expected 2 sessions, got %d", len(page2))
+	}
+	if page2[0].ID != sessionIDs[2] {
+		t.Errorf("page2[0]: expected session %s, got %s", sessionIDs[2], page2[0].ID)
+	}
+	if page2[1].ID != sessionIDs[1] {
+		t.Errorf("page2[1]: expected session %s, got %s", sessionIDs[1], page2[1].ID)
+	}
+
+	// Page 3: limit=2, offset=4 → last session (only 1 remaining).
+	page3, err := svc.ListSessions(ctx, "u-1", 2, 4)
+	if err != nil {
+		t.Fatalf("list sessions page 3: %v", err)
+	}
+	if len(page3) != 1 {
+		t.Fatalf("page 3: expected 1 session (last), got %d", len(page3))
+	}
+	if page3[0].ID != sessionIDs[0] {
+		t.Errorf("page3[0]: expected session %s (oldest), got %s", sessionIDs[0], page3[0].ID)
+	}
+
+	// Boundary: offset beyond total returns empty slice, not error.
+	beyond, err := svc.ListSessions(ctx, "u-1", 2, 100)
+	if err != nil {
+		t.Fatalf("list sessions beyond: %v", err)
+	}
+	if len(beyond) != 0 {
+		t.Errorf("offset beyond total: expected 0 sessions, got %d", len(beyond))
 	}
 }
