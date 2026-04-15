@@ -5,3 +5,4 @@
 - [Plan 09 gRPC](project_plan09_grpc.md) — gRPC inter-service plan written 2026-04-05, 8 phases, pragmatic scope
 - [Plan 10 polish](project_plan10_polish.md) — backend polish plan written 2026-04-05, 9 phases, last backend round before frontend
 - [Plan 16 polish](project_plan16_polish.md) — v2.0.5 backend polish, 25 audit findings, 6 phases, zero features, written 2026-04-09
+- [Plan 24 test reinforcement](project_plan24_test_reinforcement.md) — test reinforcement written 2026-04-14, 10 services, unit + integration, one big PR
