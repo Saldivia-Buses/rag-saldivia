@@ -32,6 +32,13 @@
             "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-commit-check.sh\"",
             "timeout": 30,
             "statusMessage": "Running invariant checks..."
+          },
+          {
+            "type": "command",
+            "if": "Bash(git commit*)",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/doc-sync.sh\"",
+            "timeout": 15,
+            "statusMessage": "Checking doc sync..."
           }
         ]
       }
