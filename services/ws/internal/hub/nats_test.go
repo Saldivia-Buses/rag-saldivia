@@ -272,3 +272,94 @@ func TestNATSBridge_ChannelFromSubject_MultiDotChannel(t *testing.T) {
 		t.Fatalf("expected 1 message for multi-dot channel, got %d", len(msgs))
 	}
 }
+
+// TestNATSBridge_Envelope_UnwrapsPayload verifies that a spine envelope
+// published by a migrated service is unwrapped: the inner payload becomes
+// Message.Data and the envelope Type becomes Action. The frontend client
+// receives the same shape as before migration.
+//
+// Mandatory test per Plan 26 Fase 1 verification.
+func TestNATSBridge_Envelope_UnwrapsPayload(t *testing.T) {
+	h := newTestHub()
+	c := newTestClient(h, "u-1", "saldivia", "notify.chat.new_message")
+
+	b := NewNATSBridge(h, nil)
+
+	// Shape matches pkg/spine.Envelope[T] with a typed payload.
+	envelope := []byte(`{
+		"id":"0194f010-1234-7abc-8def-000000000001",
+		"tenant_id":"saldivia",
+		"type":"chat.new_message",
+		"schema_version":1,
+		"occurred_at":"2026-04-15T00:00:00Z",
+		"recorded_at":"2026-04-15T00:00:00Z",
+		"payload":{"user_id":"u-1","title":"Hola","body":"Test","channel":"in_app"}
+	}`)
+
+	invokeNATSHandler(b, "tenant.saldivia.notify.chat.new_message", envelope)
+	time.Sleep(10 * time.Millisecond)
+
+	msgs := drainClient(c)
+	if len(msgs) != 1 {
+		t.Fatalf("expected 1 unwrapped message, got %d", len(msgs))
+	}
+
+	got := msgs[0]
+	if got.Type != Event {
+		t.Errorf("Type: got %q, want %q", got.Type, Event)
+	}
+	if got.Channel != "notify.chat.new_message" {
+		t.Errorf("Channel: got %q, want notify.chat.new_message", got.Channel)
+	}
+	if got.Action != "chat.new_message" {
+		t.Errorf("Action should carry envelope Type: got %q", got.Action)
+	}
+
+	// Data is the unwrapped inner payload, NOT the full envelope.
+	var payload struct {
+		UserID  string `json:"user_id"`
+		Title   string `json:"title"`
+		Body    string `json:"body"`
+		Channel string `json:"channel"`
+	}
+	if err := json.Unmarshal(got.Data, &payload); err != nil {
+		t.Fatalf("unmarshal unwrapped payload: %v", err)
+	}
+	if payload.Title != "Hola" || payload.Body != "Test" {
+		t.Errorf("payload roundtrip failed: %+v", payload)
+	}
+
+	// Must NOT contain envelope metadata in Data.
+	var stray map[string]any
+	_ = json.Unmarshal(got.Data, &stray)
+	for _, k := range []string{"id", "schema_version", "tenant_id", "occurred_at"} {
+		if _, ok := stray[k]; ok {
+			t.Errorf("envelope metadata leaked into Data: %q present", k)
+		}
+	}
+}
+
+// TestNATSBridge_Envelope_IncompleteFallsThrough verifies that messages which
+// look partially like envelopes (missing id or schema_version) do NOT trigger
+// unwrap and instead follow the raw/Message path. The frontend should NOT see
+// the envelope Type in Action.
+func TestNATSBridge_Envelope_IncompleteFallsThrough(t *testing.T) {
+	h := newTestHub()
+	c := newTestClient(h, "u-1", "saldivia", "fleet.update")
+
+	b := NewNATSBridge(h, nil)
+
+	// Has payload but missing id — NOT an envelope by the detection rule.
+	looksLike := []byte(`{"schema_version":1,"type":"fake.type","payload":{"a":1}}`)
+	invokeNATSHandler(b, "tenant.saldivia.fleet.update", looksLike)
+	time.Sleep(10 * time.Millisecond)
+
+	msgs := drainClient(c)
+	if len(msgs) != 1 {
+		t.Fatalf("expected 1 fallthrough message, got %d", len(msgs))
+	}
+	// Action must NOT be set from the Type field — unwrap did not run.
+	if msgs[0].Action == "fake.type" {
+		t.Errorf("unwrap ran on incomplete envelope (missing id): Action=%q", msgs[0].Action)
+	}
+}
