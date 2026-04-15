@@ -21,6 +21,7 @@ import (
 	"embed"
 	"flag"
 	"fmt"
+	"go/format"
 	"log"
 	"os"
 	"path/filepath"
@@ -443,5 +444,13 @@ func render(fam Family, tmplName, outPath string) error {
 	if err := tmpl.Execute(&buf, fam); err != nil {
 		return fmt.Errorf("execute template: %w", err)
 	}
-	return os.WriteFile(outPath, buf.Bytes(), 0o644)
+	out := buf.Bytes()
+	if strings.HasSuffix(outPath, ".go") {
+		formatted, ferr := format.Source(out)
+		if ferr != nil {
+			return fmt.Errorf("gofmt generated Go: %w\n--- raw output ---\n%s", ferr, string(out))
+		}
+		out = formatted
+	}
+	return os.WriteFile(outPath, out, 0o644)
 }

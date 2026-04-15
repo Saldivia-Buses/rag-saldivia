@@ -19,13 +19,12 @@ const IngestCompletedSubject = "tenant.{slug}.ingest.completed"
 
 // IngestCompletedPayload is the payload for ingest.completed events.
 type IngestCompletedPayload struct {
-	JobID string `json:"job_id"`
+	JobID          string `json:"job_id"`
 	CollectionName string `json:"collection_name"`
-	DocCount int `json:"doc_count"`
-	ChunkCount int `json:"chunk_count"`
-	DurationMS int `json:"duration_ms"`
+	DocCount       int    `json:"doc_count"`
+	ChunkCount     int    `json:"chunk_count"`
+	DurationMS     int    `json:"duration_ms"`
 }
 
 // IngestCompleted is the full typed envelope for ingest.completed events.
 type IngestCompleted = spine.Envelope[IngestCompletedPayload]
-

@@ -21,19 +21,18 @@ const PlatformLifecycleSubject = "platform.lifecycle.{action}"
 type PlatformLifecycleAction string
 
 const (
-	PlatformLifecycleActionTenantCreated PlatformLifecycleAction = "tenant_created"
-	PlatformLifecycleActionTenantDeleted PlatformLifecycleAction = "tenant_deleted"
+	PlatformLifecycleActionTenantCreated   PlatformLifecycleAction = "tenant_created"
+	PlatformLifecycleActionTenantDeleted   PlatformLifecycleAction = "tenant_deleted"
 	PlatformLifecycleActionTenantSuspended PlatformLifecycleAction = "tenant_suspended"
 )
 
 // PlatformLifecyclePayload is the payload for platform.lifecycle events.
 type PlatformLifecyclePayload struct {
-	Action PlatformLifecycleAction `json:"action"`
-	TenantID string `json:"tenant_id"`
-	TenantSlug string `json:"tenant_slug"`
-	ByUserID string `json:"by_user_id"`
+	Action     PlatformLifecycleAction `json:"action"`
+	TenantID   string                  `json:"tenant_id"`
+	TenantSlug string                  `json:"tenant_slug"`
+	ByUserID   string                  `json:"by_user_id"`
 }
 
 // PlatformLifecycle is the full typed envelope for platform.lifecycle events.
 type PlatformLifecycle = spine.Envelope[PlatformLifecyclePayload]
-

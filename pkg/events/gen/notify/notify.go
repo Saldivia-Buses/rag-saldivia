@@ -19,8 +19,8 @@ const AuthLoginSuccessSubject = "tenant.{slug}.auth.login_success"
 
 // AuthLoginSuccessPayload is the payload for auth.login_success events.
 type AuthLoginSuccessPayload struct {
-	UserID string `json:"user_id"`
-	Email string `json:"email"`
+	UserID    string `json:"user_id"`
+	Email     string `json:"email"`
 	IPAddress string `json:"ip_address"`
 	UserAgent string `json:"user_agent"`
 }
@@ -44,19 +44,18 @@ type ChatNewMessageChannel string
 const (
 	ChatNewMessageChannelInApp ChatNewMessageChannel = "in_app"
 	ChatNewMessageChannelEmail ChatNewMessageChannel = "email"
-	ChatNewMessageChannelBoth ChatNewMessageChannel = "both"
+	ChatNewMessageChannelBoth  ChatNewMessageChannel = "both"
 )
 
 // ChatNewMessagePayload is the payload for chat.new_message events.
 type ChatNewMessagePayload struct {
-	UserID string `json:"user_id"`
-	SessionID string `json:"session_id"`
-	MessageID string `json:"message_id"`
-	Title string `json:"title"`
-	Body string `json:"body"`
-	Channel ChatNewMessageChannel `json:"channel"`
+	UserID    string                `json:"user_id"`
+	SessionID string                `json:"session_id"`
+	MessageID string                `json:"message_id"`
+	Title     string                `json:"title"`
+	Body      string                `json:"body"`
+	Channel   ChatNewMessageChannel `json:"channel"`
 }
 
 // ChatNewMessage is the full typed envelope for chat.new_message events.
 type ChatNewMessage = spine.Envelope[ChatNewMessagePayload]
-
