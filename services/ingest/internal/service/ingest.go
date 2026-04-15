@@ -166,6 +166,7 @@ func (s *Ingest) Submit(ctx context.Context, tenantSlug, userID, collection, fil
 	}
 
 	// S7 fix: fail the upload if NATS publish fails — prevents orphaned pending jobs
+	//nolint:forbidigo // Plan 26 Fase 3 migrates ingest publishes to outbox.PublishTx.
 	if err := s.nc.Publish(subject, payload); err != nil {
 		_ = os.Remove(stagedPath)
 		_ = s.repo.DeleteJobByID(ctx, job.ID)

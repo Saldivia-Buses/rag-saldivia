@@ -249,6 +249,7 @@ func (w *Worker) publishCompletion(im IngestMessage) {
 		},
 	})
 	subject := "tenant." + im.TenantSlug + ".ingest.jobs"
+	//nolint:forbidigo // Plan 26 Fase 3 migrates ingest publishes to outbox.PublishTx.
 	if err := w.nc.Publish(subject, payload); err != nil {
 		slog.Warn("failed to broadcast ingest status", "error", err)
 	}

@@ -165,6 +165,7 @@ func (s *Scanner) publishEvent(eventType string, details map[string]any) {
 		slog.Error("marshal NATS event failed", "error", err)
 		return
 	}
+	//nolint:forbidigo // Plan 27 will migrate bigbrother to pkg/spine.
 	if err := s.nc.Publish(subject, data); err != nil {
 		slog.Error("publish NATS event failed", "subject", subject, "error", err)
 	}
