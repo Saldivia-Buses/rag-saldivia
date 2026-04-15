@@ -405,18 +405,9 @@ check "no hardcoded API URLs in frontend source" bash -c '
     [ -z "$bad" ] || { echo "HARDCODED API URL: $bad"; exit 1; }
 '
 
-# ─── 17. Docs-Code Sync ───────────────────────────────────────────
-echo ""
-echo "▸ Docs-Code Sync"
-
-check "files referenced in CRITICAL_FLOWS.md exist" bash -c '
-    cd "'"$ROOT"'"
-    [ -f "docs/CRITICAL_FLOWS.md" ] || exit 0
-    files=$(grep -oE "services/[^ |)\`]+\.go|pkg/[^ |)\`]+\.go" docs/CRITICAL_FLOWS.md | sort -u)
-    for f in $files; do
-        [ -f "$f" ] || { echo "STALE REF: $f referenced in CRITICAL_FLOWS.md but does not exist"; exit 1; }
-    done
-'
+# (I17 removed: legacy CRITICAL_FLOWS.md is gone. Modular flow docs
+#  reference code via path:line prose, not as relative links. Staleness
+#  is enforced by the doc-sync hook reviewing diffs on commit.)
 
 # ─── 18. Silent Failure Protection ────────────────────────────────
 echo ""

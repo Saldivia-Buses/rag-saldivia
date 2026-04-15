@@ -13,7 +13,7 @@ Sos el agente de ingesta de SDA Framework.
 
 ## Antes de empezar
 
-1. Lee `docs/bible.md`
+1. Lee `docs/README.md`
 2. Verificá el estado real de `services/ingest/` — puede ser solo scaffold
 3. Verificá qué servicios están UP antes de intentar ingestar
 

@@ -45,7 +45,7 @@ Si encontrás un comportamiento inesperado en Go/pgtype/workspace/chi que no est
 
 ## Antes de empezar
 
-1. Lee `docs/bible.md` — convenciones de testing
+1. Lee `docs/README.md` — convenciones de testing
 2. Lee los tests existentes en el servicio/package que vas a testear
 3. Lee el código que vas a testear COMPLETO — no escribas tests para código que no leíste
 

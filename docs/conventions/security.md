@@ -25,7 +25,7 @@ DON'T trust any header containing identity unless `pkg/middleware/auth.go` set i
 
 ## Tenant isolation checklist
 
-For any new flow or endpoint, every box below must be checked. From `docs/CRITICAL_FLOWS.md` lines 1042–1056.
+For any new flow or endpoint, every box below must be checked.
 
 - [ ] JWT slug cross-validated against Traefik slug (`pkg/middleware/auth.go:115`)
 - [ ] Identity headers stripped before processing (`pkg/middleware/auth.go:45-49`)

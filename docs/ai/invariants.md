@@ -106,7 +106,7 @@ bash .claude/hooks/check-invariants.sh
 
 ### Docs ↔ code sync (1)
 
-33. Files referenced in `docs/CRITICAL_FLOWS.md` actually exist
+33. (removed — legacy doc was deleted; flow-doc code refs are reviewed by the doc-sync hook)
 
 ### Silent failure protection (2)
 

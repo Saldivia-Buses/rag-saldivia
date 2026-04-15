@@ -57,12 +57,12 @@ agent is invoked.
 ## Hygiene rule
 
 Memory must be **true today**. When an entry stops being true, delete it
-or rewrite it. The bible-maintenance feedback applies: stale memory is
-worse than no memory because it actively misleads the next session.
+or rewrite it. Stale memory is worse than no memory because it actively
+misleads the next session.
 
 Audit triggers:
 - Major release (e.g., 2.0.x → 2.1.x) — sweep version-specific entries.
-- Convention change documented in `docs/bible.md` — reflect it in memory.
+- Convention change documented in `docs/conventions/` — reflect it in memory.
 - Project rename or restructure — update paths.
 
 ## Adding an entry
@@ -76,9 +76,9 @@ Audit triggers:
 ## Removing an entry
 
 1. Delete the bullet from `MEMORY.md`.
-2. Delete or archive the slug file.
+2. Delete the slug file (no archiving — git is the archive).
 3. If the rule still matters but is now permanent, move it to
-   `docs/bible.md` instead of memory.
+   `docs/conventions/` or `docs/ai/` instead of memory.
 
 ## Subagent inheritance
 

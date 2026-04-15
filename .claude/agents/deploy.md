@@ -13,7 +13,7 @@ Sos el agente de deployment de SDA Framework.
 
 ## Antes de empezar
 
-1. Lee `docs/bible.md` — reglas de deploy
+1. Lee `docs/README.md` — reglas de deploy
 2. Verificá que entendés qué se quiere deployar (todo, un servicio, solo infra)
 
 ## Contexto

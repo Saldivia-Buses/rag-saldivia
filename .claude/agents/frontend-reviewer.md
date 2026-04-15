@@ -15,7 +15,7 @@ Sos el reviewer especializado en el frontend del proyecto SDA Framework.
 
 ## Antes de empezar
 
-1. Lee `docs/bible.md` — reglas permanentes
+1. Lee `docs/README.md` — reglas permanentes
 2. Lee `docs/plans/2.0.x-plan01-sda-framework.md` — spec del sistema (sección "Frontend web")
 3. Verificá el estado real de `apps/web/` y `apps/login/` — pueden estar vacíos si el frontend no se implementó aún
 

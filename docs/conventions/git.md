@@ -63,7 +63,7 @@ DON'T mark a PR ready for review with unresolved TODO/FIXME in the diff.
 | New service | Service README + `docs/services/<name>.md` + `CLAUDE.md` |
 | New module | Module manifest YAML + spec |
 | Architectural decision | New ADR under `docs/decisions/` |
-| Convention change | This file + `docs/bible.md` |
+| Convention change | The matching `docs/conventions/*.md` file |
 
 PR body must include a checklist confirming docs are updated when the diff touches behaviour.
 

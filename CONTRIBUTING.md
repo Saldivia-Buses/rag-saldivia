@@ -101,7 +101,7 @@ El hook **commitlint** (en `husky` / `commit-msg`) rechaza mensajes que no sigan
 
 1. Crear `apps/web/src/app/api/tu-ruta/route.ts` (o segmentos dinámicos `[id]`).
 2. En handlers, usar `extractClaims()` de `@/lib/auth/jwt` o helpers `requireUser` / `requireAdmin` si existen en el código.
-3. Documentar el endpoint en `docs/api.md`.
+3. Document the endpoint in the service README (`services/{name}/README.md`) and the corresponding `docs/services/{name}.md`.
 4. Para flujos críticos, considerar cobertura E2E en `apps/web/tests/e2e-playwright/`.
 
 ## 7. Cómo agregar una tabla a la base de datos

@@ -14,7 +14,7 @@ Sos el reviewer especializado en los microservicios Go de SDA Framework.
 
 ## Antes de empezar
 
-1. Lee `docs/bible.md` — reglas permanentes
+1. Lee `docs/README.md` — reglas permanentes
 2. Lee `docs/plans/2.0.x-plan01-sda-framework.md` — spec del sistema
 3. Lee los archivos que te pidan revisar completos — no asumas nada
 

@@ -35,7 +35,7 @@ DO let the design system carry visual weight. Avoid one-off colours, custom shad
 
 ## Tokens
 
-CSS variables defined in `apps/web/src/app/globals.css` and exposed as Tailwind utilities via `@theme inline`. Full reference in `docs/design-system.md`.
+CSS variables defined in `apps/web/src/app/globals.css` and exposed as Tailwind utilities via `@theme inline`. The variables themselves are the spec — read them in the source.
 
 DO use token utilities (`bg-bg`, `bg-surface`, `text-fg`, `text-fg-muted`, `text-fg-subtle`, `bg-accent`, `text-accent-fg`, `bg-destructive-subtle`, `text-success`, `text-warning`).
 
