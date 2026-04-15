@@ -25,6 +25,13 @@
 - [ ] Los commits siguen Conventional Commits (`type(scope): description`)
 - [ ] No hay secrets ni credenciales hardcodeadas
 
+## Traces freeze (Plan 26 → 28)
+
+`services/traces/` está congelado a bug fixes mientras se migra a `pkg/spine` (Plan 28).
+
+- [ ] Este PR **NO** agrega funcionalidad nueva a `services/traces/`, O
+- [ ] Agrega funcionalidad nueva justificada — label `traces-exception` aplicado + razón en "Notas para el reviewer"
+
 ## Notas para el reviewer
 
 <!-- Algo que el reviewer deba saber? Decisiones de diseño, trade-offs, etc. -->
