@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -43,7 +44,10 @@ func (h *Handler) CreateSession(w http.ResponseWriter, r *http.Request) {
 	}
 	var contactID pgtype.UUID
 	if req.ContactID != "" {
-		contactID.Scan(req.ContactID)
+		if err := contactID.Scan(req.ContactID); err != nil {
+			jsonError(w, "invalid contact_id", http.StatusBadRequest)
+			return
+		}
 	}
 
 	session, err := h.q.CreateSession(r.Context(), repository.CreateSessionParams{
@@ -70,7 +74,9 @@ func (h *Handler) CreateSession(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(session)
+	if err := json.NewEncoder(w).Encode(session); err != nil {
+		slog.Error("encode session response", "error", err)
+	}
 }
 
 func (h *Handler) ListSessions(w http.ResponseWriter, r *http.Request) {
