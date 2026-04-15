@@ -87,6 +87,15 @@ func main() {
 		}
 	}
 
+	// Emit shared TS Envelope interface once. Per-family files import it.
+	envTS, err := templatesFS.ReadFile("templates/envelope.ts.tmpl")
+	if err != nil {
+		log.Fatalf("read envelope template: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(*outTS, "envelope.ts"), envTS, 0o644); err != nil {
+		log.Fatalf("write envelope.ts: %v", err)
+	}
+
 	for _, fam := range families {
 		goDir := filepath.Join(*outGo, fam.Name)
 		if err := os.MkdirAll(goDir, 0o755); err != nil {
@@ -282,10 +291,13 @@ func extractFields(v cue.Value, parentGo string) ([]Field, error) {
 	var fields []Field
 	for iter.Next() {
 		name := iter.Selector().Unquoted()
+		// TSName == JSON name (snake_case) so the generated interface matches
+		// the wire format. Do NOT camel-case — that decouples the type from
+		// the JSON and breaks runtime indexing.
 		f := Field{
 			Name:     name,
 			GoName:   goName(name),
-			TSName:   tsName(name),
+			TSName:   name,
 			Optional: iter.IsOptional(),
 		}
 		fv := iter.Value()
@@ -380,24 +392,6 @@ func goName(s string) string {
 		}
 		out.WriteString(strings.ToUpper(part[:1]))
 		out.WriteString(part[1:])
-	}
-	return out.String()
-}
-
-// tsName converts "user_id" → "userId".
-func tsName(s string) string {
-	parts := splitOn(s, '_')
-	if len(parts) == 0 {
-		return s
-	}
-	var out strings.Builder
-	out.WriteString(strings.ToLower(parts[0]))
-	for _, p := range parts[1:] {
-		if p == "" {
-			continue
-		}
-		out.WriteString(strings.ToUpper(p[:1]))
-		out.WriteString(p[1:])
 	}
 	return out.String()
 }
