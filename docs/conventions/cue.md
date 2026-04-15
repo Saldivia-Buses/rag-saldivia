@@ -21,7 +21,7 @@ Necesitamos tipos compartidos entre backend Go y frontend TS, con validación de
 | JSON Schema | standard, tooling web | validación débil, sin tipos union elegantes |
 | YAML + code | simple | sin validación de tipos, errores al regenerar |
 
-CUE gana porque el envelope se serializa como JSON legible y queremos garantías de shape sin ir a binario.
+CUE gana porque el envelope es JSON legible y queremos garantías de shape.
 
 ## Instalación
 
@@ -77,9 +77,8 @@ events: "chat.new_message": {
 | Feature | Ejemplo |
 |---|---|
 | Primitivos | `string`, `int`, `bool`, `number` |
-| Enum (union literal) | `"in_app" \| "email" \| "both"` |
-| Opcional | `correlation_id?: string` |
-| Default | `channel: *"in_app" \| "email" \| "both"` |
+| Enum | `"in_app" \| "email" \| "both"` (union de literales) |
+| Opcional / Default | `correlation_id?: string` / `channel: *"in_app" \| "email"` |
 | Lista homogénea | `[...string]` |
 | Comentario | `// ...` (preservado como docstring Go/JSDoc) |
 
@@ -145,15 +144,17 @@ events: "platform.lifecycle": {
     version: 1
     subject: "platform.lifecycle.{action}"
     payload: {
-        action:      "tenant.created" | "tenant.deleted" | "tenant.suspended"
+        action:      "tenant_created" | "tenant_deleted" | "tenant_suspended"
         tenant_id:   string
         tenant_slug: string
         by_user_id:  string
     }
     publishers: ["platform"]
-    consumers:  ["auth", "chat", "ingest", "healthwatch", "ws"]  // los que corren DrainerRegistry + ws subs
+    consumers:  ["auth", "chat", "ingest", "healthwatch", "ws"]  // DrainerRegistry + ws subs
 }
 ```
+
+**Nota:** `action` usa underscores (`tenant_created`), no dots. La razón es que `{action}` se interpola en el subject y `pkg/spine.BuildSubject` valida cada segmento con `^[a-zA-Z0-9_-]+$`. Si necesitás subjects jerárquicos con dots, el template debe tenerlos literales, no vía substitución (ej. `platform.lifecycle.tenant.{verb}` con `verb: "created"`).
 
 ---
 
