@@ -180,7 +180,7 @@ func (o *Orchestrator) RunWithID(ctx context.Context, externalRunID uuid.UUID, d
 		if _, err := o.pg.Exec(ctx, "SET session_replication_role = 'replica'"); err != nil {
 			slog.Warn("could not disable FK checks", "err", err)
 		} else {
-			defer o.pg.Exec(ctx, "SET session_replication_role = 'origin'")
+			defer func() { _, _ = o.pg.Exec(ctx, "SET session_replication_role = 'origin'") }()
 			slog.Info("FK checks disabled for bulk load")
 		}
 		hooksRan := false
@@ -256,10 +256,12 @@ func (o *Orchestrator) Resume(ctx context.Context, resumeRunID string) error {
 	}
 
 	// Mark as running again
-	o.pg.Exec(ctx,
+	if _, err := o.pg.Exec(ctx,
 		`UPDATE erp_migration_runs SET status = 'running', error_message = NULL WHERE id = $1`,
 		runID,
-	)
+	); err != nil {
+		slog.Warn("could not mark run as running", "err", err)
+	}
 
 	// Tenant context is set per-batch transaction via set_config (see runTable)
 
@@ -313,7 +315,9 @@ func (o *Orchestrator) Resume(ctx context.Context, resumeRunID string) error {
 		}
 
 		// Preload dependent domains for FK resolution
-		o.mapper.PreloadDomain(ctx, t.Domain)
+		if err := o.mapper.PreloadDomain(ctx, t.Domain); err != nil {
+			slog.Warn("could not preload domain", "domain", t.Domain, "err", err)
+		}
 
 		s, err := o.runTableResume(ctx, runID, t.ID, migrator, t.LastKey, t.RowsRead, t.RowsWritten, t.RowsSkipped)
 		if err != nil {
@@ -325,12 +329,14 @@ func (o *Orchestrator) Resume(ctx context.Context, resumeRunID string) error {
 
 	// Mark completed
 	statsJSON, _ := json.Marshal(stats)
-	o.pg.Exec(ctx,
+	if _, err := o.pg.Exec(ctx,
 		`UPDATE erp_migration_runs
 		 SET status = 'completed', completed_at = now(), stats = $1
 		 WHERE id = $2`,
 		statsJSON, runID,
-	)
+	); err != nil {
+		slog.Warn("could not mark resume run as completed", "err", err)
+	}
 
 	slog.Info("resume completed", "run_id", runID)
 	printReport(stats, false, 0)
@@ -397,7 +403,7 @@ func (o *Orchestrator) runTableResume(ctx context.Context, runID, progressID uui
 
 		// Set tenant context for RLS on business tables (LOCAL = tx-scoped)
 		if _, err := tx.Exec(ctx, "SELECT set_config('app.tenant_id', $1, true)", o.tenantID); err != nil {
-			tx.Rollback(ctx)
+			_ = tx.Rollback(ctx)
 			slog.Warn("could not set app.tenant_id", "err", err)
 		}
 		// Disable FK checks within this TX for bulk load
@@ -410,7 +416,7 @@ func (o *Orchestrator) runTableResume(ctx context.Context, runID, progressID uui
 		for _, row := range rows {
 			vals, err := m.Transform(ctx, row, o.mapper)
 			if err != nil {
-				tx.Rollback(ctx)
+				_ = tx.Rollback(ctx)
 				markTableFailed(ctx, o.pg, progressID, err.Error())
 				return stats, fmt.Errorf("transform %s row: %w", m.LegacyTable(), err)
 			}
@@ -423,7 +429,7 @@ func (o *Orchestrator) runTableResume(ctx context.Context, runID, progressID uui
 
 		// Flush pending mapper inserts in batch (instead of per-row)
 		if err := o.mapper.FlushPending(ctx, tx); err != nil {
-			tx.Rollback(ctx)
+			_ = tx.Rollback(ctx)
 			markTableFailed(ctx, o.pg, progressID, err.Error())
 			return stats, err
 		}
@@ -432,7 +438,7 @@ func (o *Orchestrator) runTableResume(ctx context.Context, runID, progressID uui
 		if len(insertRows) > 0 {
 			written, err := o.writer.WriteBatch(ctx, tx, m.SDATable(), m.Columns(), m.ConflictColumn(), insertRows)
 			if err != nil {
-				tx.Rollback(ctx)
+				_ = tx.Rollback(ctx)
 				markTableFailed(ctx, o.pg, progressID, err.Error())
 				return stats, err
 			}
@@ -492,16 +498,18 @@ func (o *Orchestrator) dryRunTable(ctx context.Context, runID uuid.UUID, m Table
 	slog.Info("dry-run table", "legacy", m.LegacyTable(), "sda", m.SDATable())
 
 	var progressID uuid.UUID
-	o.pg.QueryRow(ctx,
+	_ = o.pg.QueryRow(ctx,
 		`SELECT id FROM erp_migration_table_progress
 		 WHERE run_id = $1 AND legacy_table = $2 AND tenant_id = $3`,
 		runID, m.LegacyTable(), o.tenantID,
 	).Scan(&progressID)
 
-	o.pg.Exec(ctx,
+	if _, err := o.pg.Exec(ctx,
 		`UPDATE erp_migration_table_progress SET status = 'in_progress', started_at = now() WHERE id = $1`,
 		progressID,
-	)
+	); err != nil {
+		slog.Warn("could not mark dry-run table as in_progress", "err", err)
+	}
 
 	stats := TableStats{}
 	reader := m.Reader()
@@ -531,13 +539,15 @@ func (o *Orchestrator) dryRunTable(ctx context.Context, runID uuid.UUID, m Table
 		lastKey = nextKey
 	}
 
-	o.pg.Exec(ctx,
+	if _, err := o.pg.Exec(ctx,
 		`UPDATE erp_migration_table_progress
 		 SET status = 'completed', completed_at = now(),
 		     rows_read = $1, rows_written = $2, rows_skipped = $3
 		 WHERE id = $4`,
 		stats.RowsRead, stats.RowsWritten, stats.RowsSkipped, progressID,
-	)
+	); err != nil {
+		slog.Warn("could not mark dry-run table as completed", "err", err)
+	}
 
 	slog.Info("dry-run table done", "table", m.LegacyTable(), "read", stats.RowsRead, "would_write", stats.RowsWritten, "skip", stats.RowsSkipped)
 	return stats, nil

@@ -137,7 +137,7 @@ func (h *Devices) ExecCommand(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(result)
+	_ = json.NewEncoder(w).Encode(result)
 }
 
 // StoreCredential handles credential creation.
@@ -232,7 +232,7 @@ func (h *Devices) ListDevices(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
+	_ = json.NewEncoder(w).Encode(map[string]any{
 		"devices": devices,
 		"total":   len(devices),
 	})
@@ -253,7 +253,7 @@ func (h *Devices) GetDevice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(doc)
+	_ = json.NewEncoder(w).Encode(doc)
 }
 
 // GetTopology returns the network map.
@@ -265,7 +265,7 @@ func (h *Devices) GetTopology(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
+	_ = json.NewEncoder(w).Encode(map[string]any{
 		"devices": entries,
 		"total":   len(entries),
 	})
@@ -304,7 +304,7 @@ func (h *Devices) ListEvents(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
+	_ = json.NewEncoder(w).Encode(map[string]any{
 		"events": events,
 		"total":  len(events),
 	})
@@ -319,7 +319,7 @@ func (h *Devices) GetStats(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(stats)
+	_ = json.NewEncoder(w).Encode(stats)
 }
 
 // TriggerScan triggers an immediate manual scan cycle.
@@ -330,7 +330,7 @@ func (h *Devices) TriggerScan(w http.ResponseWriter, r *http.Request) {
 	}
 	h.scanLoop.Trigger()
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
+	_ = json.NewEncoder(w).Encode(map[string]any{
 		"status": "scan_triggered",
 		"mode":   string(h.scanLoop.Mode()),
 	})
@@ -357,7 +357,7 @@ func (h *Devices) SetScanMode(w http.ResponseWriter, r *http.Request) {
 	case scanner.ModePassive, scanner.ModeActive, scanner.ModeFull:
 		h.scanLoop.SetMode(mode)
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]any{
+		_ = json.NewEncoder(w).Encode(map[string]any{
 			"status": "mode_changed",
 			"mode":   body.Mode,
 		})

@@ -59,12 +59,12 @@ func runVersions(cmd *cobra.Command, args []string) {
 
 		var info buildInfo
 		if decErr := json.NewDecoder(resp.Body).Decode(&info); decErr != nil {
-			resp.Body.Close()
+			_ = resp.Body.Close()
 			fmt.Printf("%-20s %-10s %-10s %-22s \033[33mBAD RESPONSE\033[0m\n",
 				svc.name, "-", "-", "-")
 			continue
 		}
-		resp.Body.Close()
+		_ = resp.Body.Close()
 
 		status := "\033[32mMATCH\033[0m"
 		if info.GitSHA != currentSHA {

@@ -163,7 +163,7 @@ func TestListTraces_EmptyResult_ReturnsEmptyArray(t *testing.T) {
 		t.Fatalf("expected 200, got %d", rec.Code)
 	}
 	var traces []service.Trace
-	json.NewDecoder(rec.Body).Decode(&traces)
+	_ = json.NewDecoder(rec.Body).Decode(&traces)
 	if len(traces) != 0 {
 		t.Errorf("expected empty array, got %d elements", len(traces))
 	}

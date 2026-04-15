@@ -95,7 +95,7 @@ func (r *ProductionInspectionDetailReader) ReadBatch(ctx context.Context, resume
 	if err != nil {
 		return nil, "", fmt.Errorf("read PROD_CONTROL_MOVIM: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	cols, err := rows.Columns()
 	if err != nil {

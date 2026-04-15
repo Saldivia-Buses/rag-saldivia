@@ -86,12 +86,12 @@ func WriteError(w http.ResponseWriter, r *http.Request, err error) {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(erpErr.StatusCode)
-		json.NewEncoder(w).Encode(errorResponse{Error: erpErr.Message, Code: erpErr.Code})
+		_ = json.NewEncoder(w).Encode(errorResponse{Error: erpErr.Message, Code: erpErr.Code})
 		return
 	}
 	// Unknown error type — treat as internal
 	slog.Error("unhandled error", "error", err, "path", r.URL.Path)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusInternalServerError)
-	json.NewEncoder(w).Encode(errorResponse{Error: "internal error", Code: CodeInternal})
+	_ = json.NewEncoder(w).Encode(errorResponse{Error: "internal error", Code: CodeInternal})
 }

@@ -96,7 +96,7 @@ func (h *Entities) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
+	_ = json.NewEncoder(w).Encode(map[string]any{
 		"entities":  entities,
 		"total":     count,
 		"page":      p.Page,
@@ -121,7 +121,7 @@ func (h *Entities) Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(detail)
+	_ = json.NewEncoder(w).Encode(detail)
 }
 
 // Create creates a new entity.
@@ -180,7 +180,7 @@ func (h *Entities) Create(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(entity)
+	_ = json.NewEncoder(w).Encode(entity)
 }
 
 // Update updates an existing entity.
@@ -248,7 +248,7 @@ func (h *Entities) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(entity)
+	_ = json.NewEncoder(w).Encode(entity)
 }
 
 // Delete soft-deletes an entity.
@@ -298,7 +298,7 @@ func (h *Entities) AddContact(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(contact)
+	_ = json.NewEncoder(w).Encode(contact)
 }
 
 // AddNote adds a note to an entity.
@@ -332,7 +332,7 @@ func (h *Entities) AddNote(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(note)
+	_ = json.NewEncoder(w).Encode(note)
 }
 
 // AddDocument registers a document for an entity.
@@ -364,5 +364,5 @@ func (h *Entities) AddDocument(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(doc)
+	_ = json.NewEncoder(w).Encode(doc)
 }

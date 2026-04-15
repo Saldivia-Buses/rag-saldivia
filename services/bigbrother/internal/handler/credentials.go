@@ -57,7 +57,7 @@ func (h *Credentials) Store(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(meta)
+	_ = json.NewEncoder(w).Encode(meta)
 }
 
 // List returns credential metadata (never plaintext).
@@ -69,7 +69,7 @@ func (h *Credentials) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"credentials": creds})
+	_ = json.NewEncoder(w).Encode(map[string]any{"credentials": creds})
 }
 
 // Delete removes a credential.

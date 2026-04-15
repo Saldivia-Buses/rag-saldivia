@@ -38,11 +38,11 @@ func newTestServiceCollector(serverURL string) *Service {
 func TestService_CheckServices_Healthy(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasSuffix(r.URL.Path, "/health") {
-			json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+			_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 			return
 		}
 		if strings.HasSuffix(r.URL.Path, "/v1/info") {
-			json.NewEncoder(w).Encode(map[string]string{"version": "0.1.0"})
+			_ = json.NewEncoder(w).Encode(map[string]string{"version": "0.1.0"})
 			return
 		}
 		w.WriteHeader(http.StatusNotFound)
@@ -68,11 +68,11 @@ func TestService_CheckServices_Degraded(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasSuffix(r.URL.Path, "/health") {
 			w.WriteHeader(http.StatusServiceUnavailable)
-			json.NewEncoder(w).Encode(map[string]string{"status": "degraded"})
+			_ = json.NewEncoder(w).Encode(map[string]string{"status": "degraded"})
 			return
 		}
 		if strings.HasSuffix(r.URL.Path, "/v1/info") {
-			json.NewEncoder(w).Encode(map[string]string{"version": "0.1.0"})
+			_ = json.NewEncoder(w).Encode(map[string]string{"version": "0.1.0"})
 			return
 		}
 	}))
@@ -86,11 +86,11 @@ func TestService_CheckServices_Degraded(t *testing.T) {
 func TestService_CheckServices_Parallel(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasSuffix(r.URL.Path, "/health") {
-			json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+			_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 			return
 		}
 		if strings.HasSuffix(r.URL.Path, "/v1/info") {
-			json.NewEncoder(w).Encode(map[string]string{"version": "0.1.0"})
+			_ = json.NewEncoder(w).Encode(map[string]string{"version": "0.1.0"})
 			return
 		}
 	}))

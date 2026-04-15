@@ -57,7 +57,7 @@ func (h *CurrentAccounts) ListMovements(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"movements": movements})
+	_ = json.NewEncoder(w).Encode(map[string]any{"movements": movements})
 }
 
 func (h *CurrentAccounts) GetBalances(w http.ResponseWriter, r *http.Request) {
@@ -69,7 +69,7 @@ func (h *CurrentAccounts) GetBalances(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"balances": balances})
+	_ = json.NewEncoder(w).Encode(map[string]any{"balances": balances})
 }
 
 func (h *CurrentAccounts) GetOverdue(w http.ResponseWriter, r *http.Request) {
@@ -80,7 +80,7 @@ func (h *CurrentAccounts) GetOverdue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"overdue": overdue})
+	_ = json.NewEncoder(w).Encode(map[string]any{"overdue": overdue})
 }
 
 func (h *CurrentAccounts) Allocate(w http.ResponseWriter, r *http.Request) {

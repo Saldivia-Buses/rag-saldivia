@@ -74,7 +74,7 @@ func (h *Catalogs) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"catalogs": catalogs})
+	_ = json.NewEncoder(w).Encode(map[string]any{"catalogs": catalogs})
 }
 
 // ListTypes returns distinct catalog types.
@@ -88,7 +88,7 @@ func (h *Catalogs) ListTypes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"types": types})
+	_ = json.NewEncoder(w).Encode(map[string]any{"types": types})
 }
 
 // Get returns a single catalog entry.
@@ -108,7 +108,7 @@ func (h *Catalogs) Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(catalog)
+	_ = json.NewEncoder(w).Encode(catalog)
 }
 
 // Create creates a new catalog entry.
@@ -162,7 +162,7 @@ func (h *Catalogs) Create(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(catalog)
+	_ = json.NewEncoder(w).Encode(catalog)
 }
 
 // Update updates an existing catalog entry.
@@ -227,7 +227,7 @@ func (h *Catalogs) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(catalog)
+	_ = json.NewEncoder(w).Encode(catalog)
 }
 
 // Delete soft-deletes a catalog entry.

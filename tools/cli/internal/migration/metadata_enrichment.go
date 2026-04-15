@@ -194,7 +194,7 @@ func (e *MetadataEnricher) flushBatch(ctx context.Context, sdaTable, metadataKey
 	if err != nil {
 		return 0, fmt.Errorf("begin tx: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	// Disable triggers for bulk update
 	if _, err := tx.Exec(ctx, "SET LOCAL session_replication_role = 'replica'"); err != nil {
@@ -661,6 +661,6 @@ func truncStr(v any, maxLen int) string {
 // parseInt64 parses a string as int64, returning 0 on failure.
 func parseInt64(s string) int64 {
 	var n int64
-	fmt.Sscanf(s, "%d", &n)
+	_, _ = fmt.Sscanf(s, "%d", &n)
 	return n
 }

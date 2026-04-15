@@ -110,7 +110,7 @@ func (h *Treasury) ListBankAccounts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"bank_accounts": accounts})
+	_ = json.NewEncoder(w).Encode(map[string]any{"bank_accounts": accounts})
 }
 
 func (h *Treasury) CreateBankAccount(w http.ResponseWriter, r *http.Request) {
@@ -143,7 +143,7 @@ func (h *Treasury) CreateBankAccount(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(ba)
+	_ = json.NewEncoder(w).Encode(ba)
 }
 
 func (h *Treasury) ListCashRegisters(w http.ResponseWriter, r *http.Request) {
@@ -154,7 +154,7 @@ func (h *Treasury) ListCashRegisters(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"cash_registers": regs})
+	_ = json.NewEncoder(w).Encode(map[string]any{"cash_registers": regs})
 }
 
 func (h *Treasury) CreateCashRegister(w http.ResponseWriter, r *http.Request) {
@@ -176,7 +176,7 @@ func (h *Treasury) CreateCashRegister(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(cr)
+	_ = json.NewEncoder(w).Encode(cr)
 }
 
 func (h *Treasury) ListMovements(w http.ResponseWriter, r *http.Request) {
@@ -191,7 +191,7 @@ func (h *Treasury) ListMovements(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"movements": movements})
+	_ = json.NewEncoder(w).Encode(map[string]any{"movements": movements})
 }
 
 func (h *Treasury) CreateMovement(w http.ResponseWriter, r *http.Request) {
@@ -243,7 +243,7 @@ func (h *Treasury) CreateMovement(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(mov)
+	_ = json.NewEncoder(w).Encode(mov)
 }
 
 func (h *Treasury) ListChecks(w http.ResponseWriter, r *http.Request) {
@@ -256,7 +256,7 @@ func (h *Treasury) ListChecks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"checks": checks})
+	_ = json.NewEncoder(w).Encode(map[string]any{"checks": checks})
 }
 
 func (h *Treasury) CreateCheck(w http.ResponseWriter, r *http.Request) {
@@ -295,7 +295,7 @@ func (h *Treasury) CreateCheck(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(chk)
+	_ = json.NewEncoder(w).Encode(chk)
 }
 
 func (h *Treasury) UpdateCheckStatus(w http.ResponseWriter, r *http.Request) {
@@ -335,7 +335,7 @@ func (h *Treasury) GetBalance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"balances": balances})
+	_ = json.NewEncoder(w).Encode(map[string]any{"balances": balances})
 }
 
 func (h *Treasury) ListCashCounts(w http.ResponseWriter, r *http.Request) {
@@ -347,7 +347,7 @@ func (h *Treasury) ListCashCounts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"cash_counts": counts})
+	_ = json.NewEncoder(w).Encode(map[string]any{"cash_counts": counts})
 }
 
 func (h *Treasury) CreateCashCount(w http.ResponseWriter, r *http.Request) {
@@ -398,7 +398,7 @@ func (h *Treasury) CreateCashCount(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(cc)
+	_ = json.NewEncoder(w).Encode(cc)
 }
 
 // ============================================================
@@ -416,7 +416,7 @@ func (h *Treasury) ListReceiptsH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"receipts": receipts})
+	_ = json.NewEncoder(w).Encode(map[string]any{"receipts": receipts})
 }
 
 func (h *Treasury) GetReceiptH(w http.ResponseWriter, r *http.Request) {
@@ -432,7 +432,7 @@ func (h *Treasury) GetReceiptH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(detail)
+	_ = json.NewEncoder(w).Encode(detail)
 }
 
 func (h *Treasury) CreateReceiptH(w http.ResponseWriter, r *http.Request) {
@@ -455,7 +455,7 @@ func (h *Treasury) CreateReceiptH(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(detail)
+	_ = json.NewEncoder(w).Encode(detail)
 }
 
 func (h *Treasury) VoidReceiptH(w http.ResponseWriter, r *http.Request) {
@@ -485,7 +485,7 @@ func (h *Treasury) ListReconciliations(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"reconciliations": recons})
+	_ = json.NewEncoder(w).Encode(map[string]any{"reconciliations": recons})
 }
 
 func (h *Treasury) CreateReconciliation(w http.ResponseWriter, r *http.Request) {
@@ -514,7 +514,7 @@ func (h *Treasury) CreateReconciliation(w http.ResponseWriter, r *http.Request) 
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(recon)
+	_ = json.NewEncoder(w).Encode(recon)
 }
 
 func (h *Treasury) GetReconciliation(w http.ResponseWriter, r *http.Request) {
@@ -530,7 +530,7 @@ func (h *Treasury) GetReconciliation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(detail)
+	_ = json.NewEncoder(w).Encode(detail)
 }
 
 func (h *Treasury) ImportStatementLines(w http.ResponseWriter, r *http.Request) {
@@ -554,7 +554,7 @@ func (h *Treasury) ImportStatementLines(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"imported": count})
+	_ = json.NewEncoder(w).Encode(map[string]any{"imported": count})
 }
 
 func (h *Treasury) AutoMatch(w http.ResponseWriter, r *http.Request) {
@@ -570,7 +570,7 @@ func (h *Treasury) AutoMatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(result)
+	_ = json.NewEncoder(w).Encode(result)
 }
 
 func (h *Treasury) MatchManual(w http.ResponseWriter, r *http.Request) {

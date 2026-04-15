@@ -80,7 +80,7 @@ func (h *Purchasing) ListOrders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"orders": orders})
+	_ = json.NewEncoder(w).Encode(map[string]any{"orders": orders})
 }
 
 func (h *Purchasing) GetOrder(w http.ResponseWriter, r *http.Request) {
@@ -96,7 +96,7 @@ func (h *Purchasing) GetOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(detail)
+	_ = json.NewEncoder(w).Encode(detail)
 }
 
 func (h *Purchasing) CreateOrder(w http.ResponseWriter, r *http.Request) {
@@ -151,7 +151,7 @@ func (h *Purchasing) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(detail)
+	_ = json.NewEncoder(w).Encode(detail)
 }
 
 func (h *Purchasing) Approve(w http.ResponseWriter, r *http.Request) {
@@ -239,7 +239,7 @@ func (h *Purchasing) InspectReceipt(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"inspections": results})
+	_ = json.NewEncoder(w).Encode(map[string]any{"inspections": results})
 }
 
 func (h *Purchasing) ListInspections(w http.ResponseWriter, r *http.Request) {
@@ -252,7 +252,7 @@ func (h *Purchasing) ListInspections(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"inspections": inspections})
+	_ = json.NewEncoder(w).Encode(map[string]any{"inspections": inspections})
 }
 
 func (h *Purchasing) GetInspection(w http.ResponseWriter, r *http.Request) {
@@ -268,7 +268,7 @@ func (h *Purchasing) GetInspection(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(insp)
+	_ = json.NewEncoder(w).Encode(insp)
 }
 
 func (h *Purchasing) ListSupplierDemerits(w http.ResponseWriter, r *http.Request) {
@@ -285,7 +285,7 @@ func (h *Purchasing) ListSupplierDemerits(w http.ResponseWriter, r *http.Request
 	}
 	total, _ := h.svc.GetSupplierDemeritTotal(r.Context(), slug, supplierID)
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"demerits": demerits, "total_points": total})
+	_ = json.NewEncoder(w).Encode(map[string]any{"demerits": demerits, "total_points": total})
 }
 
 func (h *Purchasing) ListReceipts(w http.ResponseWriter, r *http.Request) {
@@ -297,5 +297,5 @@ func (h *Purchasing) ListReceipts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"receipts": receipts})
+	_ = json.NewEncoder(w).Encode(map[string]any{"receipts": receipts})
 }

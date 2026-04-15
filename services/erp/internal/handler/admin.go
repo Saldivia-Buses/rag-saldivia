@@ -54,7 +54,7 @@ func (h *Admin) ListCommunications(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"communications": comms})
+	_ = json.NewEncoder(w).Encode(map[string]any{"communications": comms})
 }
 
 func (h *Admin) CreateCommunication(w http.ResponseWriter, r *http.Request) {
@@ -72,7 +72,7 @@ func (h *Admin) CreateCommunication(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(c)
+	_ = json.NewEncoder(w).Encode(c)
 }
 
 func (h *Admin) ListCalendarEvents(w http.ResponseWriter, r *http.Request) {
@@ -87,7 +87,7 @@ func (h *Admin) ListCalendarEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"events": events})
+	_ = json.NewEncoder(w).Encode(map[string]any{"events": events})
 }
 
 func (h *Admin) CreateCalendarEvent(w http.ResponseWriter, r *http.Request) {
@@ -121,7 +121,7 @@ func (h *Admin) CreateCalendarEvent(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(ev)
+	_ = json.NewEncoder(w).Encode(ev)
 }
 
 func (h *Admin) ListSurveys(w http.ResponseWriter, r *http.Request) {
@@ -132,7 +132,7 @@ func (h *Admin) ListSurveys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"surveys": surveys})
+	_ = json.NewEncoder(w).Encode(map[string]any{"surveys": surveys})
 }
 
 func (h *Admin) CreateSurvey(w http.ResponseWriter, r *http.Request) {
@@ -150,5 +150,5 @@ func (h *Admin) CreateSurvey(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(sv)
+	_ = json.NewEncoder(w).Encode(sv)
 }

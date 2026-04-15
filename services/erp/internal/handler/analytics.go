@@ -153,7 +153,7 @@ func (h *Analytics) wrap(name string, cols []export.Column, fn fetchFn) http.Han
 			}
 		default:
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]any{
+			_ = json.NewEncoder(w).Encode(map[string]any{
 				"columns": cols,
 				"rows":    rows,
 				"meta":    map[string]any{"count": len(rows), "report": name},
@@ -988,7 +988,7 @@ func (h *Analytics) DashboardKPIs(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(map[string]any{
+	_ = json.NewEncoder(w).Encode(map[string]any{
 		"kpis":   result,
 		"errors": errList,
 	})
