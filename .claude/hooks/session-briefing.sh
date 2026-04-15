@@ -10,7 +10,7 @@ cd "$ROOT"
 echo "SDA Framework — Session Briefing ($(date '+%Y-%m-%d %H:%M'))"
 echo ""
 echo "Branch: $(git branch --show-current)"
-echo "Ahead of upstream: $(git rev-list --count experimental/ultra-optimize..HEAD 2>/dev/null || echo 'N/A') commits"
+echo "Ahead of upstream: $(git rev-list --count 2.0.5..HEAD 2>/dev/null || echo 'N/A') commits"
 echo ""
 
 echo "Last 10 commits:"

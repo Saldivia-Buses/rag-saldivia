@@ -14,7 +14,7 @@ Gracias por contribuir. Este documento describe cómo preparar el entorno, ejecu
    ```bash
    git clone https://github.com/Camionerou/rag-saldivia
    cd rag-saldivia
-   git checkout experimental/ultra-optimize
+   git checkout 2.0.5
    ```
 
 3. **Redis** (obligatorio)  
@@ -83,9 +83,9 @@ El hook **commitlint** (en `husky` / `commit-msg`) rechaza mensajes que no sigan
 
 ## 4. Flujo de PR
 
-1. Crear branch desde `experimental/ultra-optimize`.
+1. Crear branch desde `2.0.5`.
 2. Nombre sugerido: `feat/descripcion-corta` o `fix/descripcion-corta`.
-3. Abrir PR **hacia** `experimental/ultra-optimize`.
+3. Abrir PR **hacia** `2.0.5`.
 4. El **CI** debe pasar (tests, lint, type-check según workflow).
 5. Completar el **PR template** (`.github/pull_request_template.md`).
 

@@ -1,6 +1,6 @@
 # Workflows — RAG Saldivia
 
-> Branch: `experimental/ultra-optimize`
+> Branch: `2.0.5`
 > Última actualización: 2026-03-26
 
 Este documento describe los flujos de trabajo que usamos en el proyecto. Es la referencia para cómo desarrollar, testear, hacer commits, planificar features y deployar.
@@ -300,17 +300,17 @@ docs/plans/[tema]-plan[N]-[descripcion].md
 ```
 
 Ejemplos:
-- `ultra-optimize-plan1-birth.md`
-- `ultra-optimize-plan2-testing.md`
-- `ultra-optimize-plan4-e2e-playwright.md`
+- `(removed)`
+- `(removed)`
+- `(removed)-e2e-playwright.md`
 
 ### Planes actuales (todos completados)
 
 | Plan | Estado | Descripción |
 |------|--------|-------------|
-| [plan1-birth](./plans/ultra-optimize-plan1-birth.md) | ✅ completado 2026-03-24 | Construcción del monorepo TypeScript desde cero |
-| [plan2-testing](./plans/ultra-optimize-plan2-testing.md) | ✅ completado 2026-03-25 | Testing sistemático en 7 fases, 15 bugs encontrados |
-| [plan3-bugfix](./plans/ultra-optimize-plan3-bugfix.md) | ✅ completado 2026-03-25 | Bugfix + refactor de complejidad (CodeGraphContext) |
+| [plan1-birth](./plans/(removed)) | ✅ completado 2026-03-24 | Construcción del monorepo TypeScript desde cero |
+| [plan2-testing](./plans/(removed)) | ✅ completado 2026-03-25 | Testing sistemático en 7 fases, 15 bugs encontrados |
+| [plan3-bugfix](./plans/(removed)) | ✅ completado 2026-03-25 | Bugfix + refactor de complejidad (CodeGraphContext) |
 
 ---
 
@@ -364,7 +364,7 @@ make deploy PROFILE=workstation-1gpu
 
 ### Deploy del nuevo stack (cuando esté listo)
 
-El proceso aún no está definido en detalle. Cuando `experimental/ultra-optimize` esté listo para producción:
+El proceso aún no está definido en detalle. Cuando `2.0.5` esté listo para producción:
 
 1. Merge a `main` vía PR
 2. Tag `v1.0.0` en GitHub

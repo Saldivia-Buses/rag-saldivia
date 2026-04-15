@@ -21,7 +21,7 @@
 cd ~
 git clone https://github.com/Camionerou/rag-saldivia
 cd rag-saldivia
-git checkout experimental/ultra-optimize
+git checkout 2.0.5
 
 # 2. Setup completo (instala deps, configura .env, migra DB, seed)
 bun run setup
