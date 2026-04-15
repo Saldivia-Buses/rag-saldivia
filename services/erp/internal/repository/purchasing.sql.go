@@ -29,9 +29,11 @@ func (q *Queries) ApprovePurchaseOrder(ctx context.Context, arg ApprovePurchaseO
 	return result.RowsAffected(), nil
 }
 
-const completeInspection = `-- name: CompleteInspection :execrows
+const completeInspection = `-- name: CompleteInspection :one
 UPDATE erp_qc_inspections SET status = 'completed', completed_at = now()
 WHERE id = $1 AND tenant_id = $2 AND status = 'pending'
+RETURNING id, tenant_id, receipt_id, receipt_line_id, article_id, quantity,
+    accepted_qty, rejected_qty, status, inspector_id, notes, completed_at, created_at
 `
 
 type CompleteInspectionParams struct {
@@ -39,12 +41,25 @@ type CompleteInspectionParams struct {
 	TenantID string      `json:"tenant_id"`
 }
 
-func (q *Queries) CompleteInspection(ctx context.Context, arg CompleteInspectionParams) (int64, error) {
-	result, err := q.db.Exec(ctx, completeInspection, arg.ID, arg.TenantID)
-	if err != nil {
-		return 0, err
-	}
-	return result.RowsAffected(), nil
+func (q *Queries) CompleteInspection(ctx context.Context, arg CompleteInspectionParams) (ErpQcInspection, error) {
+	row := q.db.QueryRow(ctx, completeInspection, arg.ID, arg.TenantID)
+	var i ErpQcInspection
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.ReceiptID,
+		&i.ReceiptLineID,
+		&i.ArticleID,
+		&i.Quantity,
+		&i.AcceptedQty,
+		&i.RejectedQty,
+		&i.Status,
+		&i.InspectorID,
+		&i.Notes,
+		&i.CompletedAt,
+		&i.CreatedAt,
+	)
+	return i, err
 }
 
 const createDemerit = `-- name: CreateDemerit :one

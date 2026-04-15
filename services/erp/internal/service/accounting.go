@@ -354,16 +354,17 @@ func (s *Accounting) createClosingEntry(ctx context.Context, qtx *repository.Que
 		sortOrder++
 	}
 
-	// Balancing line to result account (equity)
-	var resultDebit, resultCredit pgtype.Numeric
+	// Balancing line to result account (equity). Zero default keeps both
+	// sides non-NULL when netResult is exactly zero (no income/expense rows),
+	// which the journal line schema requires.
+	resultDebit := zeroNumeric()
+	resultCredit := zeroNumeric()
 	if isPositive(netResult) {
 		// Net income (income > expense): credit result account
-		resultDebit = zeroNumeric()
 		resultCredit = netResult
 	} else if isNegative(netResult) {
 		// Net loss: debit result account
 		resultDebit = absNumeric(netResult)
-		resultCredit = zeroNumeric()
 	}
 
 	_, err = qtx.CreateJournalLine(ctx, repository.CreateJournalLineParams{

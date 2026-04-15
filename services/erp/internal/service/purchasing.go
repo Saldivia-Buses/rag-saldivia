@@ -263,12 +263,15 @@ func (s *Purchasing) InspectReceipt(ctx context.Context, tenantID string, receip
 			return nil, fmt.Errorf("create inspection %d: %w", i, err)
 		}
 
-		// Mark as completed (sets completed_at timestamp)
-		if _, err := qtx.CompleteInspection(ctx, repository.CompleteInspectionParams{
+		// Mark as completed (sets completed_at timestamp). The returned row has
+		// the updated status/completed_at so callers observe the final state.
+		completed, err := qtx.CompleteInspection(ctx, repository.CompleteInspectionParams{
 			ID: qc.ID, TenantID: tenantID,
-		}); err != nil {
+		})
+		if err != nil {
 			return nil, fmt.Errorf("complete inspection %d: %w", i, err)
 		}
+		qc = completed
 
 		// Accepted qty → stock movement (in)
 		acceptedF := parseFloatStr(inp.AcceptedQty)

@@ -66,9 +66,11 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 RETURNING id, tenant_id, receipt_id, receipt_line_id, article_id, quantity,
     accepted_qty, rejected_qty, status, inspector_id, notes, completed_at, created_at;
 
--- name: CompleteInspection :execrows
+-- name: CompleteInspection :one
 UPDATE erp_qc_inspections SET status = 'completed', completed_at = now()
-WHERE id = $1 AND tenant_id = $2 AND status = 'pending';
+WHERE id = $1 AND tenant_id = $2 AND status = 'pending'
+RETURNING id, tenant_id, receipt_id, receipt_line_id, article_id, quantity,
+    accepted_qty, rejected_qty, status, inspector_id, notes, completed_at, created_at;
 
 -- name: ListInspections :many
 SELECT qi.id, qi.tenant_id, qi.receipt_id, qi.article_id, qi.quantity,
