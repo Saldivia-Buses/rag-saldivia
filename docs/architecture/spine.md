@@ -14,7 +14,8 @@ related:
 
 The spine is the typed event bus built on NATS JetStream. It replaces raw
 NATS publishing with envelope-wrapped, schema-versioned events that carry
-trace context and support exactly-once delivery via the outbox pattern.
+trace context and support effectively-once delivery (at-least-once publish
+via outbox + idempotent consume via `processed_events`).
 
 ## Components
 

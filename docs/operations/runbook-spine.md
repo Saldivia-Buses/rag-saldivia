@@ -10,8 +10,9 @@ related:
 
 ## Scenario 1: NATS down — events accumulating in outbox
 
-**Symptoms:** `spine_outbox_unpublished` growing, services healthy, NATS
-unreachable.
+**Symptoms:** outbox rows accumulating (check via
+`SELECT count(*) FROM event_outbox WHERE published_at IS NULL` per tenant DB),
+services healthy, NATS unreachable.
 
 **Steps:**
 1. Check NATS: `docker ps | grep nats` or health endpoint.
