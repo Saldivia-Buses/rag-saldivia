@@ -58,30 +58,10 @@ func (m *mockMsg) Metadata() (*jetstream.MsgMetadata, error) {
 // Compile-time check: mockMsg must satisfy the full jetstream.Msg interface.
 var _ jetstream.Msg = (*mockMsg)(nil)
 
-// --- mock EventPublisher ---
-
-type mockPublisher struct {
-	NotifyCalled bool
-	NotifyArgs   []notifyCall
-	ReturnErr    error
-}
-
-type notifyCall struct {
-	Slug string
-	Evt  any
-}
-
-func (m *mockPublisher) Notify(slug string, evt any) error {
-	m.NotifyCalled = true
-	m.NotifyArgs = append(m.NotifyArgs, notifyCall{Slug: slug, Evt: evt})
-	return m.ReturnErr
-}
-
 // --- helpers ---
 
 // buildWorkerWithServer creates a worker wired to a test HTTP server.
-// Returns the worker and a cleanup func.
-func buildWorkerWithServer(t *testing.T, srv *httptest.Server, _ EventPublisher) *Worker {
+func buildWorkerWithServer(t *testing.T, srv *httptest.Server) *Worker {
 	t.Helper()
 	cfg := Config{
 		BlueprintURL: srv.URL,
@@ -196,7 +176,7 @@ func TestProcessJob_MalformedJSON_Terms(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	w := buildWorkerWithServer(t, srv, nil)
+	w := buildWorkerWithServer(t, srv)
 
 	msg := &mockMsg{
 		subject: "tenant.saldivia.ingest.process",
@@ -215,7 +195,7 @@ func TestProcessJob_MissingFields_Terms(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	w := buildWorkerWithServer(t, srv, nil)
+	w := buildWorkerWithServer(t, srv)
 
 	// JobID empty
 	data := ingestMsg(t, IngestMessage{
@@ -241,7 +221,7 @@ func TestProcessJob_TenantMismatch_Terms(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	w := buildWorkerWithServer(t, srv, nil)
+	w := buildWorkerWithServer(t, srv)
 
 	data := ingestMsg(t, IngestMessage{
 		JobID:      "job-1",
@@ -270,7 +250,7 @@ func TestProcessJob_StagedFileNotFound_RetryThenTerm(t *testing.T) {
 
 	t.Run("retry attempt naks and keeps processing status", func(t *testing.T) {
 		spy := &ingestSpy{}
-		w := buildWorkerWithServer(t, srv, nil)
+		w := buildWorkerWithServer(t, srv)
 		w.svc = spy
 
 		missingPath := filepath.Join(t.TempDir(), "does-not-exist.pdf")
@@ -300,7 +280,7 @@ func TestProcessJob_StagedFileNotFound_RetryThenTerm(t *testing.T) {
 
 	t.Run("final attempt terms and marks failed", func(t *testing.T) {
 		spy := &ingestSpy{}
-		w := buildWorkerWithServer(t, srv, nil)
+		w := buildWorkerWithServer(t, srv)
 		w.svc = spy
 
 		missingPath := filepath.Join(t.TempDir(), "does-not-exist.pdf")
@@ -343,7 +323,7 @@ func TestForwardToBlueprint_Success_OnHTTP200(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	w := buildWorkerWithServer(t, srv, nil)
+	w := buildWorkerWithServer(t, srv)
 
 	// Write real temp file
 	staged := stagedFile(t, t.TempDir())
@@ -373,7 +353,7 @@ func TestForwardToBlueprint_NamespacedCollection(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	w := buildWorkerWithServer(t, srv, nil)
+	w := buildWorkerWithServer(t, srv)
 	staged := stagedFile(t, t.TempDir())
 
 	im := IngestMessage{
@@ -396,7 +376,7 @@ func TestForwardToBlueprint_HTTPError_ReturnsError(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	w := buildWorkerWithServer(t, srv, nil)
+	w := buildWorkerWithServer(t, srv)
 	staged := stagedFile(t, t.TempDir())
 
 	im := IngestMessage{
@@ -418,7 +398,7 @@ func TestForwardToBlueprint_FileNotFound_ReturnsError(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	w := buildWorkerWithServer(t, srv, nil)
+	w := buildWorkerWithServer(t, srv)
 
 	im := IngestMessage{
 		JobID:      "job-999",
@@ -433,12 +413,11 @@ func TestForwardToBlueprint_FileNotFound_ReturnsError(t *testing.T) {
 	assert.Contains(t, err.Error(), "open staged file")
 }
 
-func TestPublishCompletion_CallsPublisher(t *testing.T) {
-	pub := &mockPublisher{}
+func TestBroadcastStatus_NilNC_NoPanic(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {}))
 	defer srv.Close()
 
-	w := buildWorkerWithServer(t, srv, pub)
+	w := buildWorkerWithServer(t, srv)
 
 	im := IngestMessage{
 		JobID:      "job-1",

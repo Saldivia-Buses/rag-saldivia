@@ -60,7 +60,7 @@ func main() {
 
 	// Outbox drainer — publishes spine events from event_outbox to NATS.
 	drainer := outbox.NewDrainer(pool, nc, tenantSlug)
-	drainerCtx, drainerCancel := context.WithCancel(context.Background())
+	drainerCtx, drainerCancel := context.WithCancel(ctx)
 	go drainer.Run(drainerCtx)
 	app.OnShutdown(drainerCancel)
 

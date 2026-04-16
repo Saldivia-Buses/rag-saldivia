@@ -73,8 +73,7 @@ func main() {
 	app.OnShutdown(drainerCancel)
 
 	// Service + Worker
-	publisher := natspub.New(nc)
-	ingestSvc := service.New(pool, nc, publisher, cfg)
+	ingestSvc := service.New(pool, nc, cfg)
 
 	worker := service.NewWorker(nc, pool, tenantSlug, ingestSvc, cfg)
 	if err := worker.Start(ctx); err != nil {
