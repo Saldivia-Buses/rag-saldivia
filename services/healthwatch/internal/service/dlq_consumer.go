@@ -117,9 +117,10 @@ type dlqPayload struct {
 	Headers         map[string][]string `json:"headers,omitempty"`
 }
 
-// envelopeProbe extracts just tenant_id + type from the envelope without
-// fully deserializing it.
+// envelopeProbe extracts key fields from the envelope for indexing without
+// fully deserializing the typed payload.
 type envelopeProbe struct {
+	ID       string `json:"id"`
 	TenantID string `json:"tenant_id"`
 	Type     string `json:"type"`
 }
@@ -138,12 +139,21 @@ func (c *DLQConsumer) handleDLQMessage(msg jetstream.Msg) {
 
 	headersJSON, _ := json.Marshal(entry.Headers)
 
+	// Use envelope event_id as dead_events.id for idempotent persistence.
+	// If JetStream redelivers the same DLQ message, the ON CONFLICT skips
+	// the duplicate instead of creating a second row.
+	var deadID *string
+	if probe.ID != "" {
+		deadID = &probe.ID
+	}
+
 	_, err := c.pool.Exec(c.ctx,
 		`INSERT INTO dead_events
-			(original_subject, original_stream, consumer_name, tenant_id,
+			(id, original_subject, original_stream, consumer_name, tenant_id,
 			 event_type, delivery_count, last_error, dead_at, envelope, headers)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-		 ON CONFLICT DO NOTHING`,
+		 VALUES (COALESCE($1::uuid, gen_random_uuid()), $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		 ON CONFLICT (id) DO NOTHING`,
+		deadID,
 		entry.OriginalSubject,
 		entry.OriginalStream,
 		entry.ConsumerName,

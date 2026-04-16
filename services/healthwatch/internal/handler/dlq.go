@@ -169,7 +169,24 @@ func (h *DLQ) replay(w http.ResponseWriter, r *http.Request) {
 
 	newEventID, _ := uuid.NewV7()
 
-	msg := &nats.Msg{Subject: originalSubject, Data: envelope, Header: nats.Header{}}
+	// Inject new event_id into the envelope so the consumer's idempotency
+	// check (EnsureFirstDelivery) treats this as a NEW event, not a dup of
+	// the original dead one. Also set causation_id to the original for audit.
+	var envMap map[string]json.RawMessage
+	if err := json.Unmarshal(envelope, &envMap); err != nil {
+		httperr.WriteError(w, r, httperr.Internal(err))
+		return
+	}
+	originalID := envMap["id"]
+	envMap["id"], _ = json.Marshal(newEventID.String())
+	envMap["causation_id"] = originalID
+	replayEnvelope, err := json.Marshal(envMap)
+	if err != nil {
+		httperr.WriteError(w, r, httperr.Internal(err))
+		return
+	}
+
+	msg := &nats.Msg{Subject: originalSubject, Data: replayEnvelope, Header: nats.Header{}}
 	if err := h.nc.PublishMsg(msg); err != nil {
 		httperr.WriteError(w, r, httperr.Internal(err))
 		return
