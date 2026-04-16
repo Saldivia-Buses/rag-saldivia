@@ -54,19 +54,17 @@ export default function DLQPage() {
       if (consumer) params.set("consumer", consumer);
       if (tenant) params.set("tenant", tenant);
       params.set("limit", "100");
-      return api.get(`/v1/admin/dlq?${params}`).then((r) => r.json());
+      return api.get<{ events: DeadEvent[] }>(`/v1/admin/dlq?${params}`);
     },
   });
 
   const replayMutation = useMutation({
-    mutationFn: (id: string) =>
-      api.post(`/v1/admin/dlq/${id}/replay`).then((r) => r.json()),
+    mutationFn: (id: string) => api.post(`/v1/admin/dlq/${id}/replay`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["dlq"] }),
   });
 
   const dropMutation = useMutation({
-    mutationFn: (id: string) =>
-      api.post(`/v1/admin/dlq/${id}/drop`).then((r) => r.json()),
+    mutationFn: (id: string) => api.post(`/v1/admin/dlq/${id}/drop`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["dlq"] }),
   });
 

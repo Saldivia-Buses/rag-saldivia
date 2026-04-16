@@ -31,18 +31,16 @@ export default function DLQDetailPage() {
 
   const { data: event, isLoading, error } = useQuery<DeadEventDetail>({
     queryKey: ["dlq", params.id],
-    queryFn: () => api.get(`/v1/admin/dlq/${params.id}`).then((r) => r.json()),
+    queryFn: () => api.get<DeadEventDetail>(`/v1/admin/dlq/${params.id}`),
   });
 
   const replayMutation = useMutation({
-    mutationFn: () =>
-      api.post(`/v1/admin/dlq/${params.id}/replay`).then((r) => r.json()),
+    mutationFn: () => api.post(`/v1/admin/dlq/${params.id}/replay`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["dlq"] }),
   });
 
   const dropMutation = useMutation({
-    mutationFn: () =>
-      api.post(`/v1/admin/dlq/${params.id}/drop`).then((r) => r.json()),
+    mutationFn: () => api.post(`/v1/admin/dlq/${params.id}/drop`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["dlq"] });
       router.push("/admin/dlq");
