@@ -247,10 +247,12 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=deploy_default"
       # Catch-all: lowest priority so /v1/* and /ws/* match first.
-      - "traefik.http.routers.web-docker.rule=PathPrefix(`/`)"
-      - "traefik.http.routers.web-docker.entrypoints=web"
-      - "traefik.http.routers.web-docker.priority=1"
-      - "traefik.http.services.web-docker.loadbalancer.server.port=3000"
+      # Router name `frontend` (not `web-docker`) — `web` is also the entrypoint name
+      # which Traefik may conflate when normalizing label keys.
+      - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.frontend.entrypoints=web"
+      - "traefik.http.routers.frontend.priority=1"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
 
   # ── Go Services (profile: full) ──────────────────────────────────────
   # Only start with: docker compose --profile full up --build
