@@ -19,7 +19,7 @@ type ValidationRule struct {
 	LegacyTable string
 	Constraint  string // SDA constraint/trigger name that would be violated
 	Query       string // MySQL query returning problematic rows
-	Transform   string // default resolution: "skip", "fix_manual", "auto_fix"
+	Transform   string // default resolution: "skip", "fix_manual", "auto_fixed"
 }
 
 // DefaultValidationRules returns pre-validation rules for Plan 17+18 constraints.
@@ -31,7 +31,7 @@ func DefaultValidationRules() []ValidationRule {
 			LegacyTable: "CTB_MOVIMIENTOS",
 			Constraint:  "date_not_zero",
 			Query:       "SELECT id_movimiento as legacy_id, CAST(fecha_movimiento AS CHAR) as detail FROM CTB_MOVIMIENTOS WHERE CAST(fecha_movimiento AS CHAR) = '0000-00-00' LIMIT 1000",
-			Transform:   "auto_fix",
+			Transform:   "auto_fixed",
 		},
 		{
 			Name:        "journal_unbalanced",
@@ -55,7 +55,7 @@ func DefaultValidationRules() []ValidationRule {
 			LegacyTable: "IVAVENTAS",
 			Constraint:  "date_not_zero",
 			Query:       "SELECT id_ivaventa as legacy_id, CAST(feciva AS CHAR) as detail FROM IVAVENTAS WHERE CAST(feciva AS CHAR) = '0000-00-00' LIMIT 1000",
-			Transform:   "auto_fix",
+			Transform:   "auto_fixed",
 		},
 		{
 			Name:        "stock_movements_zero_qty",
@@ -88,7 +88,7 @@ func DefaultValidationRules() []ValidationRule {
 			LegacyTable: "FACDETAL",
 			Constraint:  "erp_invoice_lines_quantity_check",
 			Query:       "SELECT CAST(remnro AS SIGNED) as legacy_id, CAST(artcan AS CHAR) as detail FROM FACDETAL WHERE artcan <= 0 LIMIT 1000",
-			Transform:   "auto_fix",
+			Transform:   "auto_fixed",
 		},
 		{
 			Name:        "invoice_total_zero",
@@ -144,7 +144,7 @@ func DefaultValidationRules() []ValidationRule {
 			LegacyTable: "PROD_CONTROL_MOVIM",
 			Constraint:  "erp_production_inspections_result_check",
 			Query:       "SELECT id_controlmovim as legacy_id, CONCAT('conforme=', conforme, ' no_conforme=', no_conforme) as detail FROM PROD_CONTROL_MOVIM WHERE conforme = 0 AND no_conforme = 0 AND no_aplica = 0 LIMIT 1000",
-			Transform:   "auto_fix",
+			Transform:   "auto_fixed",
 		},
 		{
 			Name:        "treasury_movement_type_unknown",
@@ -163,11 +163,14 @@ func DefaultValidationRules() []ValidationRule {
 			Transform:   "skip",
 		},
 		{
+			// PK of STK_ARTICULOS is (id_stkarticulo, subsistema_id). Count
+			// against the real composite key; otherwise articles legitimately
+			// split across subsystems look like duplicates.
 			Name:        "article_hashcode_collision",
 			Domain:      "stock",
 			LegacyTable: "STK_ARTICULOS",
 			Constraint:  "hashcode_uniqueness",
-			Query:       "SELECT COUNT(*) as legacy_id, CAST(COUNT(DISTINCT id_stkarticulo) AS CHAR) as detail FROM STK_ARTICULOS HAVING COUNT(*) != COUNT(DISTINCT id_stkarticulo)",
+			Query:       "SELECT COUNT(*) as legacy_id, CAST(COUNT(DISTINCT id_stkarticulo, subsistema_id) AS CHAR) as detail FROM STK_ARTICULOS HAVING COUNT(*) != COUNT(DISTINCT id_stkarticulo, subsistema_id)",
 			Transform:   "fix_manual",
 		},
 	}
@@ -243,7 +246,7 @@ func RunPreValidation(ctx context.Context, mysqlDB *sql.DB, pgPool *pgxpool.Pool
 		report.Issues = append(report.Issues, issues...)
 		for _, i := range issues {
 			switch i.Resolution {
-			case "auto_fix":
+			case "auto_fixed":
 				report.AutoFix++
 			case "skip":
 				report.Skip++

@@ -516,11 +516,16 @@ func NewArticleMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 		columns:     []string{"id", "tenant_id", "code", "name", "article_type", "min_stock", "max_stock", "reorder_point", "last_cost", "avg_cost", "active"},
 		conflictCol: "",
 		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
-			code := row.String("id_stkarticulo")
-			if code == "" {
+			rawCode := row.String("id_stkarticulo")
+			if rawCode == "" {
 				return nil, nil
 			}
-			// Use a hash of the code as pseudo legacy ID for mapping
+			// STK_ARTICULOS PK is composite (id_stkarticulo, subsistema_id).
+			// Same id may appear under multiple subsystems — preserve them as
+			// distinct articles by namespacing the code and hash for any subsystem
+			// other than "01" (the dominant one).
+			subsistema := row.String("subsistema_id")
+			code := articleCompositeCode(rawCode, subsistema)
 			legacyID := int64(hashCode(code))
 
 			baja := row.Int("baja_articulo")
@@ -571,16 +576,38 @@ func NewStockMovementMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 
 			// Resolve article FK by code hash
 			artCode := row.String("stkarticulo_id")
-			artLegacyID := int64(hashCode(artCode))
+			artLegacyID := int64(hashCode(articleCompositeCode(artCode, row.String("subsistema_id"))))
 			articleID, err := mapper.Resolve(ctx, "stock", "STK_ARTICULOS", artLegacyID)
 			if err != nil {
 				return nil, nil // skip if article not found
 			}
 
+			// Warehouse FK — fall back to the UNASSIGNED warehouse when the legacy
+			// row has stkdeposito_id = 0 (allowed in Histrix) or points to a depot
+			// that no longer exists. Prefix notes with [legacy:unassigned_warehouse]
+			// so the rows can be filtered and reassigned from an admin UI later.
 			warehouseLegacyID := row.Int64("stkdeposito_id")
-			warehouseID, err := mapper.Resolve(ctx, "stock", "STK_DEPOSITOS", warehouseLegacyID)
-			if err != nil {
-				return nil, nil // skip if warehouse not found
+			unassigned := false
+			var warehouseID uuid.UUID
+			if warehouseLegacyID > 0 {
+				resolved, err := mapper.Resolve(ctx, "stock", "STK_DEPOSITOS", warehouseLegacyID)
+				if err != nil {
+					fallbackID := mapper.UnassignedWarehouseID()
+					if fallbackID == uuid.Nil {
+						return nil, nil // fallback not initialised — skip row
+					}
+					warehouseID = fallbackID
+					unassigned = true
+				} else {
+					warehouseID = resolved
+				}
+			} else {
+				fallbackID := mapper.UnassignedWarehouseID()
+				if fallbackID == uuid.Nil {
+					return nil, nil
+				}
+				warehouseID = fallbackID
+				unassigned = true
 			}
 
 			// Movement type — positive quantity = in, negative = out
@@ -600,11 +627,20 @@ func NewStockMovementMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				id = uuid.New()
 			}
 
+			notes := row.String("referencia")
+			if unassigned {
+				if notes != "" {
+					notes = "[legacy:unassigned_warehouse] " + notes
+				} else {
+					notes = "[legacy:unassigned_warehouse]"
+				}
+			}
+
 			return []any{
 				id, tenantID, articleID, warehouseID, movType, quantity,
 				ParseDecimal(row.Decimal("precio_costo")),
 				LegacyUserID,
-				row.String("referencia"),
+				notes,
 				SafeDateRequired(timeFromRow(row, "fecha_movimiento")),
 			}, nil
 		},
@@ -682,7 +718,7 @@ func NewPurchaseOrderLineMigrator(db *sql.DB, tenantID string) *GenericMigrator 
 			}
 
 			artCode := row.String("stkarticulo_id")
-			artLegacyID := int64(hashCode(artCode))
+			artLegacyID := int64(hashCode(articleCompositeCode(artCode, row.String("subsistema_id"))))
 			articleID, err := mapper.Resolve(ctx, "stock", "STK_ARTICULOS", artLegacyID)
 			if err != nil {
 				return nil, nil
@@ -800,7 +836,7 @@ func NewProductionOrderMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 			if artCode == "" {
 				return nil, nil // skip production orders with no articles
 			}
-			artLegacyID := int64(hashCode(artCode))
+			artLegacyID := int64(hashCode(articleCompositeCode(artCode, row.String("subsistema_id"))))
 			productID, err := mapper.ResolveOptional(ctx, "stock", "STK_ARTICULOS", artLegacyID)
 			if err != nil || productID == uuid.Nil {
 				return nil, nil // skip if article not migrated
@@ -849,7 +885,12 @@ func NewEmployeeDetailMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				return nil, nil // skip if entity not migrated
 			}
 
-			id := uuid.New()
+			// Map PERSONAL→EmployeeDetail idempotently (separate domain so it does
+			// not collide with the entity UUID for the same IdPersona).
+			id, err := mapper.Map(ctx, nil, "hr", "PERSONAL_DETAIL", legacyID, nil)
+			if err != nil {
+				return nil, fmt.Errorf("map PERSONAL_DETAIL %d: %w", legacyID, err)
+			}
 
 			// Schedule type
 			scheduleType := "full_time"
@@ -1095,7 +1136,7 @@ func NewInvoiceLineMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 			var articleID *uuid.UUID
 			artCode := row.String("artcod")
 			if artCode != "" {
-				artLegacyID := int64(hashCode(artCode))
+				artLegacyID := int64(hashCode(articleCompositeCode(artCode, row.String("subsistema_id"))))
 				resolved, err := mapper.ResolveOptional(ctx, "stock", "STK_ARTICULOS", artLegacyID)
 				if err == nil && resolved != uuid.Nil {
 					articleID = &resolved
@@ -1258,21 +1299,12 @@ func NewDeliveryNoteLineMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				return nil, nil
 			}
 
-			// idRemito is the FK to REMITO. Since REMITO has composite PK,
-			// idRemito may be a reference number. Try resolving via REMITO mapping.
-			// If not found, skip the line.
+			// idRemito is the physical auto-inc PK in REMITO; REMITO's logical PK is
+			// composite (numero, puesto) and is hashed as legacy_id by the REMITO
+			// migrator. BuildRemitoIndex resolves idRemito → UUID via that hash.
 			remitoID := row.Int64("idRemito")
-			if remitoID == 0 {
-				return nil, nil
-			}
-			// Try to resolve — REMITO uses hash-based IDs, so we can't resolve by int directly.
-			// Skip this line if we can't find the parent (orphan).
-			// Note: for REMITO, the legacy_id in the mapper is hash("REMITO:numero:puesto"),
-			// which we don't know here. Skip FK resolution for now.
-			// TODO: build REMITO idRemito→UUID index if needed.
 			var invoiceID *uuid.UUID
-			resolved, err := mapper.ResolveOptional(ctx, "invoicing", "REMDETAL_PARENT", remitoID)
-			if err == nil && resolved != uuid.Nil {
+			if resolved, ok := mapper.ResolveByRemitoID(remitoID); ok {
 				invoiceID = &resolved
 			}
 			if invoiceID == nil {
@@ -1283,7 +1315,7 @@ func NewDeliveryNoteLineMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 			var articleID *uuid.UUID
 			artCode := row.String("artcod")
 			if artCode != "" {
-				artLegacyID := int64(hashCode(artCode))
+				artLegacyID := int64(hashCode(articleCompositeCode(artCode, row.String("subsistema_id"))))
 				resolved, err := mapper.ResolveOptional(ctx, "stock", "STK_ARTICULOS", artLegacyID)
 				if err == nil && resolved != uuid.Nil {
 					articleID = &resolved
@@ -1605,15 +1637,28 @@ func timeFromRow(row legacy.LegacyRow, col string) time.Time {
 	}
 }
 
-// hashCode generates a stable int64 hash from a string code using FNV-1a 64-bit.
-// Used for STK_ARTICULOS where PK is varchar, not int.
-// FNV-1a has much better collision resistance than DJB hash.
-func hashCode(s string) uint64 {
+// hashCode generates a stable non-negative int64 hash from a string code using
+// FNV-1a 64-bit, clearing the sign bit. Used for tables where the PK is varchar
+// (e.g. STK_ARTICULOS) or composite, so they can be stored as int64 legacy_id in
+// erp_legacy_mapping without bit-63 overflow collisions.
+func hashCode(s string) int64 {
 	h := fnv.New64a()
 	h.Write([]byte(s))
-	v := h.Sum64()
+	v := h.Sum64() & 0x7FFFFFFFFFFFFFFF // clear sign bit — guarantees positive int64
 	if v == 0 {
 		v = 1
 	}
-	return v
+	return int64(v)
+}
+
+// articleCompositeCode namespaces an article code by its subsystem so rows
+// that share id_stkarticulo across different subsistema_id values in
+// STK_ARTICULOS (the legacy PK is composite) remain distinct after migration.
+// Subsystem "01" is the dominant one and is treated as the default (no prefix)
+// so existing FKs referencing id_stkarticulo keep resolving via hashCode(code).
+func articleCompositeCode(rawCode, subsistema string) string {
+	if subsistema == "" || subsistema == "01" {
+		return rawCode
+	}
+	return "SS" + subsistema + "|" + rawCode
 }

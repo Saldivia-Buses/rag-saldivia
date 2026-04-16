@@ -158,7 +158,7 @@ func NewStockLevelMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 			}
 
 			// Resolve article FK via hashCode
-			artLegacyID := int64(hashCode(artCode))
+			artLegacyID := int64(hashCode(articleCompositeCode(artCode, row.String("subsistema_id"))))
 			articleID, err := mapper.Resolve(ctx, "stock", "STK_ARTICULOS", artLegacyID)
 			if err != nil {
 				return nil, nil // skip if article not migrated
@@ -255,7 +255,7 @@ func NewPriceListItemMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 			artCode := row.String("stkarticulo_id")
 			var articleID *uuid.UUID
 			if artCode != "" {
-				artLegacyID := int64(hashCode(artCode))
+				artLegacyID := int64(hashCode(articleCompositeCode(artCode, row.String("subsistema_id"))))
 				resolved, err := mapper.ResolveOptional(ctx, "stock", "STK_ARTICULOS", artLegacyID)
 				if err == nil && resolved != uuid.Nil {
 					articleID = &resolved
@@ -1181,17 +1181,11 @@ func NewAttendanceMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				return nil, nil
 			}
 
-			// Entity FK: legajo → PERSONAL.legajo (need to find the person by legajo)
+			// Entity FK: legajo → PERSONAL.legajo via pre-built index.
 			legajo := row.Int64("legajo")
 			var entityID *uuid.UUID
-			if legajo > 0 {
-				// legajo is a field in PERSONAL, but PERSONAL PK is IdPersona.
-				// We can't resolve legajo→IdPersona without an index.
-				// Try resolving via the legajo as if it were a PERSONAL ID.
-				resolved, err := mapper.ResolveOptional(ctx, "entity", "PERSONAL", legajo)
-				if err == nil && resolved != uuid.Nil {
-					entityID = &resolved
-				}
+			if resolved, ok := mapper.ResolveByLegajo(legajo); ok {
+				entityID = &resolved
 			}
 			if entityID == nil {
 				return nil, nil // skip if employee not found
@@ -1348,14 +1342,11 @@ func NewDeductionEventMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				return nil, nil
 			}
 
-			// Entity FK: legajo → PERSONAL (legajo is a field, not the PK)
+			// Entity FK: legajo → PERSONAL via pre-built index.
 			legajo := row.Int64("legajo")
 			var entityID *uuid.UUID
-			if legajo > 0 {
-				resolved, err := mapper.ResolveOptional(ctx, "entity", "PERSONAL", legajo)
-				if err == nil && resolved != uuid.Nil {
-					entityID = &resolved
-				}
+			if resolved, ok := mapper.ResolveByLegajo(legajo); ok {
+				entityID = &resolved
 			}
 			if entityID == nil {
 				return nil, nil
@@ -1406,13 +1397,10 @@ func NewAdditionalPayEventMigrator(db *sql.DB, tenantID string) *GenericMigrator
 				return nil, nil
 			}
 
-			// Entity FK: legajo → PERSONAL
+			// Entity FK: legajo → PERSONAL via pre-built index.
 			var entityID *uuid.UUID
-			if legajo > 0 {
-				resolved, err := mapper.ResolveOptional(ctx, "entity", "PERSONAL", legajo)
-				if err == nil && resolved != uuid.Nil {
-					entityID = &resolved
-				}
+			if resolved, ok := mapper.ResolveByLegajo(legajo); ok {
+				entityID = &resolved
 			}
 			if entityID == nil {
 				return nil, nil

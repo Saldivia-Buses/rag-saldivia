@@ -607,22 +607,14 @@ func NewProductionInspectionDetailMigrator(db *sql.DB, tenantID string) *Generic
 				}
 			}
 
-			// Inspector FK: legajo_realizo or legajo_personal → PERSONAL
+			// Inspector FK: legajo_realizo or legajo_personal → PERSONAL via index.
 			var inspectorID *uuid.UUID
-			legajoRealizo := row.Int64("legajo_realizo")
-			if legajoRealizo > 0 {
-				resolved, err := mapper.ResolveOptional(ctx, "entity", "PERSONAL", legajoRealizo)
-				if err == nil && resolved != uuid.Nil {
-					inspectorID = &resolved
-				}
+			if resolved, ok := mapper.ResolveByLegajo(row.Int64("legajo_realizo")); ok {
+				inspectorID = &resolved
 			}
 			if inspectorID == nil {
-				legajoPersonal := row.Int64("legajo_personal")
-				if legajoPersonal > 0 {
-					resolved, err := mapper.ResolveOptional(ctx, "entity", "PERSONAL", legajoPersonal)
-					if err == nil && resolved != uuid.Nil {
-						inspectorID = &resolved
-					}
+				if resolved, ok := mapper.ResolveByLegajo(row.Int64("legajo_personal")); ok {
+					inspectorID = &resolved
 				}
 			}
 

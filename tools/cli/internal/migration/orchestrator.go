@@ -18,13 +18,15 @@ type SetupHook func(ctx context.Context, mapper *Mapper) error
 
 // Orchestrator coordinates the migration of legacy MySQL data to PostgreSQL.
 type Orchestrator struct {
-	mysql      *sql.DB
-	pg         *pgxpool.Pool
-	tenantID   string
-	mapper     *Mapper
-	writer     *BatchWriter
-	readers    []TableMigrator
-	setupHooks []SetupHook
+	mysql           *sql.DB
+	pg              *pgxpool.Pool
+	tenantID        string
+	mapper          *Mapper
+	writer          *BatchWriter
+	readers         []TableMigrator
+	setupHooks      []SetupHook
+	afterTableHooks map[string][]SetupHook
+	batchSize       int
 }
 
 // TableMigrator defines how to migrate a single legacy table.
@@ -51,11 +53,21 @@ type TableMigrator interface {
 // NewOrchestrator creates a new migration orchestrator.
 func NewOrchestrator(mysql *sql.DB, pg *pgxpool.Pool, tenantID string) *Orchestrator {
 	return &Orchestrator{
-		mysql:    mysql,
-		pg:       pg,
-		tenantID: tenantID,
-		mapper:   NewMapper(pg, tenantID),
-		writer:   NewBatchWriter(pg, tenantID),
+		mysql:           mysql,
+		pg:              pg,
+		tenantID:        tenantID,
+		mapper:          NewMapper(pg, tenantID),
+		writer:          NewBatchWriter(pg, tenantID),
+		afterTableHooks: make(map[string][]SetupHook),
+		batchSize:       DefaultBatchSize,
+	}
+}
+
+// SetBatchSize overrides the base batch size. Per-table size is still clamped
+// to fit under PG's 65535 bind-param limit (see batchSizeFor).
+func (o *Orchestrator) SetBatchSize(n int) {
+	if n > 0 {
+		o.batchSize = n
 	}
 }
 
@@ -67,6 +79,14 @@ func (o *Orchestrator) RegisterMigrators(migrators ...TableMigrator) {
 // AddSetupHook adds a function to run before migration starts (for building indexes, caches).
 func (o *Orchestrator) AddSetupHook(fn SetupHook) {
 	o.setupHooks = append(o.setupHooks, fn)
+}
+
+// AddAfterTableHook adds a function to run in prod mode right after the given legacy
+// table finishes successfully. Useful for building indexes that depend on the PG rows
+// produced by that migrator (e.g. legajo → entity UUID after PERSONAL).
+// In dry-run mode these hooks are no-ops (mapper is in dry-run and tables are empty).
+func (o *Orchestrator) AddAfterTableHook(legacyTable string, fn SetupHook) {
+	o.afterTableHooks[legacyTable] = append(o.afterTableHooks[legacyTable], fn)
 }
 
 // GetMapper returns the mapper (for external setup hooks).
@@ -175,14 +195,10 @@ func (o *Orchestrator) RunWithID(ctx context.Context, externalRunID uuid.UUID, d
 			return firstErr
 		}
 	} else {
-		// Prod: sequential with FK ordering + setup hooks
-		// Disable FK checks during bulk load (re-enabled after completion)
-		if _, err := o.pg.Exec(ctx, "SET session_replication_role = 'replica'"); err != nil {
-			slog.Warn("could not disable FK checks", "err", err)
-		} else {
-			defer func() { _, _ = o.pg.Exec(ctx, "SET session_replication_role = 'origin'") }()
-			slog.Info("FK checks disabled for bulk load")
-		}
+		// Prod: sequential with FK ordering + setup hooks.
+		// FK checks are disabled per-tx via SET LOCAL inside runTableResume, which is
+		// the only reliable way with a connection pool (a plain SET only affects the
+		// single pool connection that happened to run it and is reset on return).
 		hooksRan := false
 		for _, m := range o.readers {
 			if len(domains) > 0 && !contains(domains, m.Domain()) {
@@ -211,6 +227,15 @@ func (o *Orchestrator) RunWithID(ctx context.Context, externalRunID uuid.UUID, d
 				return fmt.Errorf("migrate %s: %w", m.LegacyTable(), err)
 			}
 			stats[m.LegacyTable()] = s
+
+			if hooks, ok := o.afterTableHooks[m.LegacyTable()]; ok {
+				for _, hook := range hooks {
+					if err := hook(ctx, o.mapper); err != nil {
+						o.failRun(ctx, runID, err)
+						return fmt.Errorf("after-table hook for %s: %w", m.LegacyTable(), err)
+					}
+				}
+			}
 		}
 	}
 
@@ -299,6 +324,35 @@ func (o *Orchestrator) Resume(ctx context.Context, resumeRunID string) error {
 
 	slog.Info("resuming migration", "run_id", runID, "pending_tables", len(pending))
 
+	// Replay after-table hooks for already-completed tables so downstream
+	// migrators (e.g. HR tables needing the legajo index) see a fully-built state.
+	if len(o.afterTableHooks) > 0 {
+		completedRows, err := o.pg.Query(ctx,
+			`SELECT legacy_table FROM erp_migration_table_progress
+			 WHERE run_id = $1 AND status = 'completed'`,
+			runID,
+		)
+		if err == nil {
+			completed := make(map[string]bool)
+			for completedRows.Next() {
+				var t string
+				if scanErr := completedRows.Scan(&t); scanErr == nil {
+					completed[t] = true
+				}
+			}
+			completedRows.Close()
+			for table := range completed {
+				if hooks, ok := o.afterTableHooks[table]; ok {
+					for _, hook := range hooks {
+						if err := hook(ctx, o.mapper); err != nil {
+							return fmt.Errorf("replay after-table hook %s: %w", table, err)
+						}
+					}
+				}
+			}
+		}
+	}
+
 	stats := make(map[string]TableStats)
 	for _, t := range pending {
 		// Find the matching migrator
@@ -325,6 +379,15 @@ func (o *Orchestrator) Resume(ctx context.Context, resumeRunID string) error {
 			return fmt.Errorf("resume %s: %w", t.LegacyTable, err)
 		}
 		stats[t.LegacyTable] = s
+
+		if hooks, ok := o.afterTableHooks[t.LegacyTable]; ok {
+			for _, hook := range hooks {
+				if err := hook(ctx, o.mapper); err != nil {
+					o.failRun(ctx, runID, err)
+					return fmt.Errorf("after-table hook %s: %w", t.LegacyTable, err)
+				}
+			}
+		}
 	}
 
 	// Mark completed
@@ -350,7 +413,27 @@ type TableStats struct {
 	RowsSkipped int `json:"rows_skipped"`
 }
 
-const batchSize = 5000
+// DefaultBatchSize is the base batch size for MySQL reads and PG writes. The
+// orchestrator clamps it per-table so that (batch × cols) stays under PG's
+// 65535 bind-parameter limit. Override via Orchestrator.SetBatchSize.
+const DefaultBatchSize = 2000
+
+// pgMaxBindParams is PostgreSQL's hard limit on parameters per prepared statement.
+const pgMaxBindParams = 65535
+
+// batchSizeFor returns the largest batch size that keeps total bind parameters
+// for an INSERT of numCols columns under pgMaxBindParams, capped at base.
+// Leaves a 64-param headroom for safety (trailing WHERE/DO UPDATE clauses).
+func batchSizeFor(base, numCols int) int {
+	if numCols <= 0 {
+		return base
+	}
+	safeMax := (pgMaxBindParams - 64) / numCols
+	if base > safeMax {
+		return safeMax
+	}
+	return base
+}
 
 func (o *Orchestrator) runTable(ctx context.Context, runID uuid.UUID, m TableMigrator) (TableStats, error) {
 	return o.runTableResume(ctx, runID, uuid.Nil, m, "", 0, 0, 0)
@@ -383,9 +466,10 @@ func (o *Orchestrator) runTableResume(ctx context.Context, runID, progressID uui
 	stats := TableStats{RowsRead: readSoFar, RowsWritten: writtenSoFar, RowsSkipped: skippedSoFar}
 	reader := m.Reader()
 	lastKey := resumeKey
+	effectiveBatch := batchSizeFor(o.batchSize, len(m.Columns()))
 
 	for {
-		rows, nextKey, err := reader.ReadBatch(ctx, lastKey, batchSize)
+		rows, nextKey, err := reader.ReadBatch(ctx, lastKey, effectiveBatch)
 		if err != nil {
 			markTableFailed(ctx, o.pg, progressID, err.Error())
 			return stats, err
@@ -518,9 +602,10 @@ func (o *Orchestrator) dryRunTable(ctx context.Context, runID uuid.UUID, m Table
 	stats := TableStats{}
 	reader := m.Reader()
 	lastKey := ""
+	effectiveBatch := batchSizeFor(o.batchSize, len(m.Columns()))
 
 	for {
-		rows, nextKey, err := reader.ReadBatch(ctx, lastKey, batchSize)
+		rows, nextKey, err := reader.ReadBatch(ctx, lastKey, effectiveBatch)
 		if err != nil {
 			return stats, err
 		}

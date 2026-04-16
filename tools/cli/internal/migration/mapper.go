@@ -23,30 +23,67 @@ type pendingMapping struct {
 
 // Mapper handles legacy INT → SDA UUID mapping with in-memory cache.
 type Mapper struct {
-	pool          *pgxpool.Pool
-	tenantID      string
-	dryRun        bool
-	mu            sync.RWMutex
-	cache         map[string]map[int64]uuid.UUID   // "domain:table" → legacy_id → uuid
-	codeIndex     map[string]map[string]uuid.UUID  // "domain:table" → code → uuid (for varchar PK tables)
-	dateCache     map[uuid.UUID]time.Time          // entry UUID → date (for journal line date resolution)
-	regMovimIndex map[int64]uuid.UUID              // regmovim_id → invoice UUID (for FACDETAL FK resolution)
-	pending       []pendingMapping                  // batch of mappings to flush
+	pool                  *pgxpool.Pool
+	tenantID              string
+	dryRun                bool
+	mu                    sync.RWMutex
+	cache                 map[string]map[int64]uuid.UUID  // "domain:table" → legacy_id → uuid
+	codeIndex             map[string]map[string]uuid.UUID // "domain:table" → code → uuid (for varchar PK tables)
+	dateCache             map[uuid.UUID]time.Time         // entry UUID → date (for journal line date resolution)
+	regMovimIndex         map[int64]uuid.UUID             // regmovim_id → invoice UUID (for FACDETAL FK resolution)
+	legajoIndex           map[int64]uuid.UUID             // PERSONAL.legajo → entity UUID (HR FK resolution)
+	remitoByID            map[int64]uuid.UUID             // REMITO.idRemito → REMITO UUID (REMDETAL FK resolution)
+	unassignedWarehouseID uuid.UUID                       // fallback warehouse for STK_MOVIMIENTOS with stkdeposito_id=0
+	pending               []pendingMapping                // batch of mappings to flush
 }
 
 // NewMapper creates a new ID mapper for a tenant.
 func NewMapper(pool *pgxpool.Pool, tenantID string) *Mapper {
 	return &Mapper{
-		pool:      pool,
-		tenantID:  tenantID,
-		cache:     make(map[string]map[int64]uuid.UUID),
-		codeIndex: make(map[string]map[string]uuid.UUID),
-		dateCache: make(map[uuid.UUID]time.Time),
+		pool:        pool,
+		tenantID:    tenantID,
+		cache:       make(map[string]map[int64]uuid.UUID),
+		codeIndex:   make(map[string]map[string]uuid.UUID),
+		dateCache:   make(map[uuid.UUID]time.Time),
+		legajoIndex: make(map[int64]uuid.UUID),
+		remitoByID:  make(map[int64]uuid.UUID),
 	}
 }
 
 // SetDryRun enables dry-run mode: all lookups return deterministic UUIDs without hitting PG.
 func (m *Mapper) SetDryRun(v bool) { m.dryRun = v }
+
+// EnsureUnassignedWarehouse creates (or finds) a fallback warehouse used for
+// STK_MOVIMIENTOS rows whose stkdeposito_id is 0 or points to a deleted depot.
+// Histrix let users record stock movements without a depot, so blindly requiring
+// a FK would drop ~1M rows in saldivia. The fallback preserves the movement
+// (quantity, article, date) and marks it in notes so it can be reassigned later
+// via an admin UI. Idempotent — safe to call from prod, dry-run, and resume.
+func (m *Mapper) EnsureUnassignedWarehouse(ctx context.Context, pgPool *pgxpool.Pool) error {
+	if m.dryRun {
+		m.unassignedWarehouseID = m.deterministicUUID("stock", "UNASSIGNED_WAREHOUSE", "0")
+		return nil
+	}
+	const code = "UNASSIGNED"
+	var id uuid.UUID
+	err := pgPool.QueryRow(ctx,
+		`INSERT INTO erp_warehouses (tenant_id, code, name, location, active)
+		 VALUES ($1, $2, 'Sin Asignar (Legacy)', 'Movimientos Histrix sin deposito — reasignar manualmente', true)
+		 ON CONFLICT (tenant_id, code) DO UPDATE SET code = EXCLUDED.code
+		 RETURNING id`, m.tenantID, code).Scan(&id)
+	if err != nil {
+		return fmt.Errorf("ensure unassigned warehouse: %w", err)
+	}
+	m.unassignedWarehouseID = id
+	return nil
+}
+
+// UnassignedWarehouseID returns the fallback warehouse UUID for legacy stock
+// movements without a depot. Returns uuid.Nil if EnsureUnassignedWarehouse was
+// not called — callers must treat that as "skip row" rather than insert NULL.
+func (m *Mapper) UnassignedWarehouseID() uuid.UUID {
+	return m.unassignedWarehouseID
+}
 
 func (m *Mapper) cacheKey(domain, table string) string {
 	return domain + ":" + table
@@ -58,11 +95,22 @@ type querier interface {
 	Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
 }
 
+// dryRunNamespace is a fixed UUIDv5 namespace for deterministic dry-run UUID
+// generation. Keeping it stable across runs lets us diff two dry-runs or compare
+// a dry-run against a prod migration for the same inputs.
+var dryRunNamespace = uuid.MustParse("b7f9a3d4-2c1e-4b0a-9d8e-0f1a2b3c4d5e")
+
+// deterministicUUID produces a v5 UUID from the parts, joined with '|'. Used
+// exclusively in dry-run mode so outputs are reproducible.
+func (m *Mapper) deterministicUUID(parts ...string) uuid.UUID {
+	return uuid.NewSHA1(dryRunNamespace, []byte(m.tenantID+"|"+strings.Join(parts, "|")))
+}
+
 // Map returns the UUID for a legacy ID. If no mapping exists, generates a new one.
 // When tx is non-nil, uses the transaction; otherwise falls back to the pool.
 func (m *Mapper) Map(ctx context.Context, tx pgx.Tx, domain, table string, legacyID int64, legacyCreatedBy *string) (uuid.UUID, error) {
 	if m.dryRun {
-		return uuid.New(), nil
+		return m.deterministicUUID(domain, table, fmt.Sprintf("%d", legacyID)), nil
 	}
 
 	key := m.cacheKey(domain, table)
@@ -126,7 +174,7 @@ func (m *Mapper) Resolve(ctx context.Context, domain, table string, legacyID int
 	}
 
 	if m.dryRun {
-		return uuid.New(), nil
+		return m.deterministicUUID(domain, table, fmt.Sprintf("%d", legacyID)), nil
 	}
 
 	key := m.cacheKey(domain, table)
@@ -199,7 +247,7 @@ func (m *Mapper) BuildCodeIndex(ctx context.Context, domain, sdaTable, codeColum
 // ResolveByCode looks up a UUID by string code in the code index.
 func (m *Mapper) ResolveByCode(domain, sdaTable, code string) (uuid.UUID, error) {
 	if m.dryRun {
-		return uuid.New(), nil
+		return m.deterministicUUID(domain, sdaTable, code), nil
 	}
 	key := m.cacheKey(domain, sdaTable)
 	m.mu.RLock()
@@ -297,11 +345,135 @@ func (m *Mapper) BuildRegMovimIndex(ctx context.Context, mysqlDB *sql.DB) error 
 // ResolveRegMovim looks up an invoice UUID by regmovim_id.
 func (m *Mapper) ResolveRegMovim(regMovimID int64) (uuid.UUID, bool) {
 	if m.dryRun {
-		return uuid.New(), true
+		return m.deterministicUUID("regmovim", fmt.Sprintf("%d", regMovimID)), true
 	}
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	id, ok := m.regMovimIndex[regMovimID]
+	return id, ok
+}
+
+// BuildLegajoIndex builds an in-memory index: PERSONAL.legajo → entity UUID.
+// Must be called after entity phase is complete so cache["entity:PERSONAL"] is populated.
+// HR tables (FICHADADIA, RRHH_DESCUENTOS, RRHH_ADICIONALES, CTR_CALIDAD*) use legajo as FK,
+// but PERSONAL's PK is IdPersona. Without this index those FKs silently fail.
+func (m *Mapper) BuildLegajoIndex(ctx context.Context, mysqlDB *sql.DB) error {
+	if m.dryRun {
+		return nil
+	}
+	rows, err := mysqlDB.QueryContext(ctx,
+		`SELECT IdPersona, legajo FROM PERSONAL WHERE legajo IS NOT NULL AND legajo > 0`)
+	if err != nil {
+		return fmt.Errorf("build legajo index: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	key := m.cacheKey("entity", "PERSONAL")
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.legajoIndex == nil {
+		m.legajoIndex = make(map[int64]uuid.UUID)
+	}
+	count := 0
+	orphans := 0
+	for rows.Next() {
+		var idPersona, legajo int64
+		if err := rows.Scan(&idPersona, &legajo); err != nil {
+			return fmt.Errorf("scan legajo index: %w", err)
+		}
+		uid, ok := m.cache[key][idPersona]
+		if !ok {
+			orphans++
+			continue
+		}
+		m.legajoIndex[legajo] = uid
+		count++
+	}
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("iterate legajo index: %w", err)
+	}
+	fmt.Printf("  legajo index: loaded %d mappings (%d PERSONAL rows without cached UUID)\n", count, orphans)
+	return nil
+}
+
+// ResolveByLegajo looks up an entity UUID by PERSONAL.legajo. Returns (uuid.Nil, false) if
+// legajo <= 0 or not in index. Caller should treat that as "skip row" (orphan employee FK).
+func (m *Mapper) ResolveByLegajo(legajo int64) (uuid.UUID, bool) {
+	if legajo <= 0 {
+		return uuid.Nil, false
+	}
+	if m.dryRun {
+		return m.deterministicUUID("legajo", fmt.Sprintf("%d", legajo)), true
+	}
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	id, ok := m.legajoIndex[legajo]
+	return id, ok
+}
+
+// BuildRemitoIndex builds an in-memory index: REMITO.idRemito → REMITO UUID.
+// REMITO's legacy_id in the mapper is hash("REMITO:<numero>:<puesto>"), because
+// the logical PK is composite. REMDETAL.idRemito references the physical auto-inc
+// column, so without this index REMDETAL loses its parent FK.
+// Must be called after REMITO migrator finishes.
+func (m *Mapper) BuildRemitoIndex(ctx context.Context, mysqlDB *sql.DB) error {
+	if m.dryRun {
+		return nil
+	}
+	rows, err := mysqlDB.QueryContext(ctx,
+		`SELECT idRemito, numero, puesto FROM REMITO WHERE idRemito IS NOT NULL AND idRemito > 0`)
+	if err != nil {
+		return fmt.Errorf("build remito index: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	key := m.cacheKey("invoicing", "REMITO")
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.remitoByID == nil {
+		m.remitoByID = make(map[int64]uuid.UUID)
+	}
+	count := 0
+	orphans := 0
+	for rows.Next() {
+		var idRemito, numero, puesto int64
+		if err := rows.Scan(&idRemito, &numero, &puesto); err != nil {
+			return fmt.Errorf("scan remito index: %w", err)
+		}
+		compositeKey := fmt.Sprintf("REMITO:%d:%d", numero, puesto)
+		hashKey := hashCode(compositeKey)
+		if hashKey == 0 {
+			hashKey = 1
+		}
+		uid, ok := m.cache[key][hashKey]
+		if !ok {
+			orphans++
+			continue
+		}
+		m.remitoByID[idRemito] = uid
+		count++
+	}
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("iterate remito index: %w", err)
+	}
+	fmt.Printf("  remito index: loaded %d mappings (%d REMITO rows without cached UUID)\n", count, orphans)
+	return nil
+}
+
+// ResolveByRemitoID looks up a REMITO UUID by its idRemito auto-inc PK.
+// Returns (uuid.Nil, false) if the REMITO parent is not found (orphan REMDETAL line).
+func (m *Mapper) ResolveByRemitoID(idRemito int64) (uuid.UUID, bool) {
+	if idRemito <= 0 {
+		return uuid.Nil, false
+	}
+	if m.dryRun {
+		return m.deterministicUUID("remito_id", fmt.Sprintf("%d", idRemito)), true
+	}
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	id, ok := m.remitoByID[idRemito]
 	return id, ok
 }
 

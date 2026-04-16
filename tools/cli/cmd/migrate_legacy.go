@@ -42,6 +42,8 @@ func init() {
 	migrateLegacyCmd.Flags().String("resume-run-id", "", "UUID of the run to resume")
 	migrateLegacyCmd.Flags().StringSlice("skip-dry-run-for", nil, "Tenants allowed to skip dry-run requirement")
 	migrateLegacyCmd.Flags().Bool("validate-only", false, "Run post-migration validation without migrating")
+	migrateLegacyCmd.Flags().Int("batch-size", migration.DefaultBatchSize,
+		"Rows per batch. Auto-clamped per table to stay under PG's 65535 bind-param limit.")
 
 	if err := migrateLegacyCmd.MarkFlagRequired("tenant"); err != nil {
 		panic(err)
@@ -107,6 +109,20 @@ func runMigrateLegacy(cmd *cobra.Command, args []string) error {
 
 	// --- Build orchestrator ---
 	orch := migration.NewOrchestrator(mysqlDB, pgPool, tenantSlug)
+	if bs, _ := cmd.Flags().GetInt("batch-size"); bs > 0 {
+		orch.SetBatchSize(bs)
+	}
+
+	// Seed dry-run flag before initialising fallback so EnsureUnassignedWarehouse
+	// uses the deterministic path instead of hitting PG.
+	orch.GetMapper().SetDryRun(dryRun)
+
+	// Fallback warehouse for STK_MOVIMIENTOS rows with stkdeposito_id=0 or
+	// orphaned depot FKs. Must exist before the stock phase runs; called here
+	// so both prod and dry-run (and resume) share the same code path.
+	if err := orch.GetMapper().EnsureUnassignedWarehouse(ctx, pgPool); err != nil {
+		return fmt.Errorf("init unassigned warehouse: %w", err)
+	}
 
 	// Register all migrators in FK dependency order
 	registerMigrators(orch, mysqlDB, tenantSlug)
@@ -185,6 +201,13 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 		migration.NewEmployeeMigrator(mysqlDB, tenantID),
 	)
 
+	// After-table hook: PERSONAL.legajo → entity UUID index.
+	// Consumed by HR tables (FICHADADIA, RRHH_DESCUENTOS, RRHH_ADICIONALES) and
+	// production inspections (legajo_realizo / legajo_personal in PROD_CONTROL_MOVIM).
+	orch.AddAfterTableHook("PERSONAL", func(ctx context.Context, mapper *migration.Mapper) error {
+		return mapper.BuildLegajoIndex(ctx, mysqlDB)
+	})
+
 	// Phase 3: Financial (depends on entities + catalogs)
 	orch.RegisterMigrators(
 		migration.NewCostCenterMigrator(mysqlDB, tenantID),
@@ -245,11 +268,20 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 		return mapper.BuildRegMovimIndex(ctx, mysqlDB)
 	})
 
-	// Phase 6b: Invoice lines + delivery notes (depends on invoice headers)
+	// Phase 6b: Invoice lines + delivery notes (depends on invoice headers).
+	// REMITO must run before REMDETAL so the remito index is built in-between.
 	orch.RegisterMigrators(
 		migration.NewInvoiceLineMigrator(mysqlDB, tenantID),
 		migration.NewDeliveryNoteMigrator(mysqlDB, tenantID),
 		migration.NewDeliveryNoteAltMigrator(mysqlDB, tenantID),
+	)
+
+	// After-table hook: REMITO.idRemito → REMITO UUID index (consumed by REMDETAL).
+	orch.AddAfterTableHook("REMITO", func(ctx context.Context, mapper *migration.Mapper) error {
+		return mapper.BuildRemitoIndex(ctx, mysqlDB)
+	})
+
+	orch.RegisterMigrators(
 		migration.NewDeliveryNoteLineMigrator(mysqlDB, tenantID),
 	)
 
