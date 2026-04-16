@@ -103,9 +103,13 @@ services:
       - "--providers.docker.exposedbydefault=false"
       - "--providers.file.directory=/etc/traefik/dynamic"
       - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
       - "--log.level=INFO"
     ports:
       - "80:80"
+      - "443:443"
       - "8080:8080"
     extra_hosts:
       # In WSL2, host-gateway may not resolve to the WSL IP.
@@ -115,6 +119,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik/dynamic:/etc/traefik/dynamic:ro
+      - ./traefik/certs:/etc/traefik/certs:ro
     restart: unless-stopped
 
   mailpit:
@@ -236,7 +241,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.web-docker.rule=PathPrefix(`/`)"
-      - "traefik.http.routers.web-docker.entrypoints=web"
+      - "traefik.http.routers.web-docker.entrypoints=websecure"
+      - "traefik.http.routers.agent-docker.tls=true"
       - "traefik.http.routers.web-docker.priority=1"
       - "traefik.http.services.web-docker.loadbalancer.server.port=3000"
 
@@ -253,7 +259,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.login-docker.rule=PathPrefix(`/login`)"
-      - "traefik.http.routers.login-docker.entrypoints=web"
+      - "traefik.http.routers.login-docker.entrypoints=websecure"
+      - "traefik.http.routers.astro-docker.tls=true"
       - "traefik.http.routers.login-docker.priority=50"
       - "traefik.http.services.login-docker.loadbalancer.server.port=3001"
 
@@ -276,7 +283,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.auth-docker.rule=PathPrefix(`/v1/auth`)"
-      - "traefik.http.routers.auth-docker.entrypoints=web"
+      - "traefik.http.routers.auth-docker.entrypoints=websecure"
+      - "traefik.http.routers.auth-docker.tls=true"
       - "traefik.http.routers.auth-docker.middlewares=dev-cors@file"
       - "traefik.http.routers.auth-docker.priority=100"
       - "traefik.http.services.auth-docker.loadbalancer.server.port=8001"
@@ -299,7 +307,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.ws-docker.rule=PathPrefix(`/ws`)"
-      - "traefik.http.routers.ws-docker.entrypoints=web"
+      - "traefik.http.routers.ws-docker.entrypoints=websecure"
+      - "traefik.http.routers.bigbrother-docker.tls=true"
       - "traefik.http.routers.ws-docker.middlewares=dev-cors@file"
       - "traefik.http.routers.ws-docker.priority=100"
       - "traefik.http.services.ws-docker.loadbalancer.server.port=8002"
@@ -321,7 +330,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.chat-docker.rule=PathPrefix(`/v1/chat`)"
-      - "traefik.http.routers.chat-docker.entrypoints=web"
+      - "traefik.http.routers.chat-docker.entrypoints=websecure"
+      - "traefik.http.routers.chat-docker.tls=true"
       - "traefik.http.routers.chat-docker.middlewares=dev-cors@file"
       - "traefik.http.routers.chat-docker.priority=100"
       - "traefik.http.services.chat-docker.loadbalancer.server.port=8003"
@@ -347,7 +357,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.agent-docker.rule=PathPrefix(`/v1/agent`)"
-      - "traefik.http.routers.agent-docker.entrypoints=web"
+      - "traefik.http.routers.agent-docker.entrypoints=websecure"
+      - "traefik.http.routers.feedback-docker.tls=true"
       - "traefik.http.routers.agent-docker.middlewares=dev-cors@file"
       - "traefik.http.routers.agent-docker.priority=100"
       - "traefik.http.services.agent-docker.loadbalancer.server.port=8004"
@@ -376,7 +387,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.notification-docker.rule=PathPrefix(`/v1/notifications`)"
-      - "traefik.http.routers.notification-docker.entrypoints=web"
+      - "traefik.http.routers.notification-docker.entrypoints=websecure"
+      - "traefik.http.routers.flags-docker.tls=true"
       - "traefik.http.routers.notification-docker.middlewares=dev-cors@file"
       - "traefik.http.routers.notification-docker.priority=100"
       - "traefik.http.services.notification-docker.loadbalancer.server.port=8005"
@@ -397,12 +409,14 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.platform-docker.rule=PathPrefix(`/v1/platform`)"
-      - "traefik.http.routers.platform-docker.entrypoints=web"
+      - "traefik.http.routers.platform-docker.entrypoints=websecure"
+      - "traefik.http.routers.healthwatch-docker.tls=true"
       - "traefik.http.routers.platform-docker.middlewares=dev-cors@file"
       - "traefik.http.routers.platform-docker.priority=100"
       - "traefik.http.services.platform-docker.loadbalancer.server.port=8006"
       - "traefik.http.routers.flags-docker.rule=PathPrefix(`/v1/flags`)"
-      - "traefik.http.routers.flags-docker.entrypoints=web"
+      - "traefik.http.routers.flags-docker.entrypoints=websecure"
+      - "traefik.http.routers.ingest-docker.tls=true"
       - "traefik.http.routers.flags-docker.middlewares=dev-cors@file"
       - "traefik.http.routers.flags-docker.service=platform-docker"
 
@@ -422,7 +436,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.ingest-docker.rule=PathPrefix(`/v1/ingest`)"
-      - "traefik.http.routers.ingest-docker.entrypoints=web"
+      - "traefik.http.routers.ingest-docker.entrypoints=websecure"
+      - "traefik.http.routers.login-docker.tls=true"
       - "traefik.http.routers.ingest-docker.middlewares=dev-cors@file"
       - "traefik.http.routers.ingest-docker.priority=100"
       - "traefik.http.services.ingest-docker.loadbalancer.server.port=8007"
@@ -448,7 +463,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.astro-docker.rule=PathPrefix(`/v1/astro`)"
-      - "traefik.http.routers.astro-docker.entrypoints=web"
+      - "traefik.http.routers.astro-docker.entrypoints=websecure"
+      - "traefik.http.routers.notification-docker.tls=true"
       - "traefik.http.routers.astro-docker.middlewares=dev-cors@file"
       - "traefik.http.routers.astro-docker.priority=100"
       - "traefik.http.services.astro-docker.loadbalancer.server.port=8011"
@@ -473,7 +489,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.search-docker.rule=PathPrefix(`/v1/search`)"
-      - "traefik.http.routers.search-docker.entrypoints=web"
+      - "traefik.http.routers.search-docker.entrypoints=websecure"
+      - "traefik.http.routers.platform-docker.tls=true"
       - "traefik.http.routers.search-docker.middlewares=dev-cors@file"
       - "traefik.http.routers.search-docker.priority=100"
       - "traefik.http.services.search-docker.loadbalancer.server.port=8010"
@@ -494,7 +511,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.traces-docker.rule=PathPrefix(`/v1/traces`)"
-      - "traefik.http.routers.traces-docker.entrypoints=web"
+      - "traefik.http.routers.traces-docker.entrypoints=websecure"
+      - "traefik.http.routers.search-docker.tls=true"
       - "traefik.http.routers.traces-docker.middlewares=dev-cors@file"
       - "traefik.http.routers.traces-docker.priority=100"
       - "traefik.http.services.traces-docker.loadbalancer.server.port=8009"
@@ -515,7 +533,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.feedback-docker.rule=PathPrefix(`/v1/feedback`)"
-      - "traefik.http.routers.feedback-docker.entrypoints=web"
+      - "traefik.http.routers.feedback-docker.entrypoints=websecure"
+      - "traefik.http.routers.traces-docker.tls=true"
       - "traefik.http.routers.feedback-docker.middlewares=dev-cors@file"
       - "traefik.http.routers.feedback-docker.priority=100"
       - "traefik.http.services.feedback-docker.loadbalancer.server.port=8008"
@@ -538,7 +557,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.healthwatch-docker.rule=PathPrefix(`/v1/healthwatch`)"
-      - "traefik.http.routers.healthwatch-docker.entrypoints=web"
+      - "traefik.http.routers.healthwatch-docker.entrypoints=websecure"
+      - "traefik.http.routers.web-docker.tls=true"
       - "traefik.http.routers.healthwatch-docker.middlewares=dev-cors@file"
       - "traefik.http.routers.healthwatch-docker.priority=100"
       - "traefik.http.services.healthwatch-docker.loadbalancer.server.port=8014"
@@ -561,7 +581,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.bigbrother-docker.rule=PathPrefix(`/v1/bigbrother`)"
-      - "traefik.http.routers.bigbrother-docker.entrypoints=web"
+      - "traefik.http.routers.bigbrother-docker.entrypoints=websecure"
+      - "traefik.http.routers.ws-docker.tls=true"
       - "traefik.http.routers.bigbrother-docker.middlewares=dev-cors@file"
       - "traefik.http.routers.bigbrother-docker.priority=100"
       - "traefik.http.services.bigbrother-docker.loadbalancer.server.port=8012"
