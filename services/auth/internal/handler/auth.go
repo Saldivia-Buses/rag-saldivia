@@ -32,18 +32,11 @@ type AuthService interface {
 	ListUsers(ctx context.Context, limit, offset int32) ([]service.UserListItem, error)
 }
 
-// EventPublisher can publish notification events via NATS.
-type EventPublisher interface {
-	Notify(tenantSlug string, evt any) error
-	Broadcast(tenantSlug, channel string, data any) error
-}
-
 // Auth handles HTTP requests for authentication.
 type Auth struct {
 	authSvc         AuthService      // static service (single-tenant mode)
 	resolver        *tenant.Resolver // per-request resolution (multi-tenant mode)
 	jwtCfg          sdajwt.Config
-	publisher       EventPublisher
 	blacklist       *security.TokenBlacklist // for multi-tenant service wiring
 	svcCache        sync.Map         // slug → AuthService (multi-tenant cache)
 	serviceTokenCfg *ServiceTokenConfig      // for POST /v1/auth/service-token
@@ -55,11 +48,11 @@ func NewAuth(authSvc AuthService) *Auth {
 }
 
 // NewMultiTenantAuth creates auth HTTP handlers that resolve the tenant DB per request.
-func NewMultiTenantAuth(resolver *tenant.Resolver, jwtCfg sdajwt.Config, publisher EventPublisher, blacklist *security.TokenBlacklist) *Auth {
+// Event publishing is handled via the transactional outbox inside the service layer.
+func NewMultiTenantAuth(resolver *tenant.Resolver, jwtCfg sdajwt.Config, blacklist *security.TokenBlacklist) *Auth {
 	return &Auth{
 		resolver:  resolver,
 		jwtCfg:    jwtCfg,
-		publisher: publisher,
 		blacklist: blacklist,
 	}
 }
@@ -93,7 +86,7 @@ func (h *Auth) resolveService(r *http.Request) (AuthService, error) {
 		return nil, err
 	}
 
-	svc := service.NewAuth(pool, h.jwtCfg, tenantID, slug, h.publisher)
+	svc := service.NewAuth(pool, h.jwtCfg, tenantID, slug)
 	svc.SetBlacklist(h.blacklist)
 	h.svcCache.Store(slug, svc)
 	return svc, nil
