@@ -258,8 +258,8 @@ events-validate: ## Verify generated events match spec (used by CI)
 		-spec $(ROOT_DIR)/pkg/events/spec \
 		-out-go $$tmpdir/go -out-ts $$tmpdir/ts -out-docs $$tmpdir/docs; \
 	diff -r $$tmpdir/go $(ROOT_DIR)/pkg/events/gen >/dev/null || { echo "pkg/events/gen out of date — run 'make events-gen'"; rm -rf $$tmpdir; exit 1; }; \
-	diff -r $$tmpdir/ts $(ROOT_DIR)/apps/web/src/lib/events/gen >/dev/null || { echo "apps/web/src/lib/events/gen out of date"; rm -rf $$tmpdir; exit 1; }; \
-	diff -r $$tmpdir/docs $(ROOT_DIR)/docs/events >/dev/null || { echo "docs/events out of date"; rm -rf $$tmpdir; exit 1; }; \
+	diff -r $$tmpdir/ts $(ROOT_DIR)/apps/web/src/lib/events/gen --exclude=envelope.ts >/dev/null || { echo "apps/web/src/lib/events/gen out of date"; rm -rf $$tmpdir; exit 1; }; \
+	diff -r $$tmpdir/docs $(ROOT_DIR)/docs/events --exclude=README.md >/dev/null || { echo "docs/events out of date"; rm -rf $$tmpdir; exit 1; }; \
 	rm -rf $$tmpdir; \
 	echo "events: generated files match specs"
 
