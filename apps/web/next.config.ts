@@ -7,7 +7,7 @@ const securityHeaders = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "style-src 'self' 'unsafe-inline'",
-      "connect-src 'self' wss://*.sda.app https://*.sda.app http://localhost:* ws://localhost:*",
+      "connect-src 'self' wss://*.sda.app https://*.sda.app http://localhost:* ws://localhost:* http://100.119.11.46:* ws://100.119.11.46:*",
       "img-src 'self' data: blob: https://models.dev",
       "font-src 'self'",
       "frame-ancestors 'none'",
