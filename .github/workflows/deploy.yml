@@ -2,175 +2,20 @@ name: Deploy SDA
 
 on:
   workflow_dispatch:
-    inputs:
-      environment:
-        description: "Target environment"
-        type: choice
-        options: [dev, prod]
-        default: dev
   push:
     tags:
       - 'v*'
 
 concurrency:
   group: deploy-production
-  cancel-in-progress: false  # never cancel in-flight deploys
-
-# ══════════════════════════════════════════════════════════════════════════
-# Phase 0: Discover services (dynamic matrix)
-# ══════════════════════════════════════════════════════════════════════════
+  cancel-in-progress: false
 
 jobs:
-  discover:
-    name: Discover services
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.find.outputs.matrix }}
-    steps:
-      - uses: actions/checkout@v4
-      - id: find
-        name: Generate service matrix from Dockerfiles
-        run: |
-          SERVICES=$(ls services/*/Dockerfile 2>/dev/null \
-            | grep -v '\.scaffold' | grep -v extractor \
-            | sed 's|services/||;s|/Dockerfile||' \
-            | jq -Rc -s 'split("\n") | map(select(. != ""))')
-          echo "matrix={\"service\":$SERVICES}" >> "$GITHUB_OUTPUT"
-          echo "Discovered services: $SERVICES"
-
-  # ══════════════════════════════════════════════════════════════════════════
-  # Phase 1: Preflight (self-hosted, read-only validation)
-  # ══════════════════════════════════════════════════════════════════════════
-
-  preflight:
-    name: Preflight checks
+  deploy:
+    name: Build & Deploy
     runs-on: [self-hosted, workstation-1]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Link persistent config
-        run: |
-          cp /etc/sda/.env deploy/.env
-          mkdir -p deploy/secrets/dynamic deploy/traefik/dynamic deploy/cloudflare
-          cp /etc/sda/dynamic/jwt-*.pem deploy/secrets/dynamic/ 2>/dev/null || true
-          cp /etc/sda/traefik/traefik.prod.yml deploy/traefik/ 2>/dev/null || true
-          cp /etc/sda/traefik/dynamic/prod.yml deploy/traefik/dynamic/ 2>/dev/null || true
-          cp /etc/sda/cloudflare/config.yml deploy/cloudflare/ 2>/dev/null || true
-      - name: Run preflight checks
-        run: bash deploy/scripts/preflight.sh
-
-  # ══════════════════════════════════════════════════════════════════════════
-  # Phase 2: Build + push images (GitHub-hosted — DS1: never self-hosted)
-  # ══════════════════════════════════════════════════════════════════════════
-
-  build:
-    name: "Build: ${{ matrix.service }}"
-    needs: [preflight, discover]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    strategy:
-      matrix: ${{ fromJson(needs.discover.outputs.matrix) }}
-      fail-fast: false
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push to GHCR
-        run: |
-          SERVICE="${{ matrix.service }}"
-          VERSION=$(cat "services/${SERVICE}/VERSION")
-          SHA="${{ github.sha }}"
-          IMAGE="ghcr.io/saldivia-buses/sda-${SERVICE}"
-
-          docker build \
-            --build-arg VERSION="${VERSION}" \
-            --build-arg GIT_SHA="${SHA}" \
-            --build-arg BUILD_TIME="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-            -t "${IMAGE}:${SHA}" \
-            -f "services/${SERVICE}/Dockerfile" .
-
-          docker push "${IMAGE}:${SHA}"
-
-  # ══════════════════════════════════════════════════════════════════════════
-  # Phase 2b: Generate SHA-pinned .env.deploy
-  # ══════════════════════════════════════════════════════════════════════════
-
-  generate-deploy-env:
-    name: Generate deploy env
-    needs: [build, discover]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Generate SHA-pinned .env.deploy
-        env:
-          SERVICES_JSON: ${{ needs.discover.outputs.matrix }}
-          SHA: ${{ github.sha }}
-        run: |
-          echo "$SERVICES_JSON" | jq -r '.service[]' | while read -r svc; do
-            KEY=$(printf '%s' "${svc}" | tr '[:lower:]-' '[:upper:]_')_VERSION
-            printf '%s=%s\n' "${KEY}" "${SHA}"
-          done > deploy/.env.deploy
-          echo "Generated .env.deploy:"
-          cat deploy/.env.deploy
-
-      - name: Upload deploy env
-        uses: actions/upload-artifact@v4
-        with:
-          name: deploy-env
-          path: deploy/.env.deploy
-          retention-days: 7
-
-  # ══════════════════════════════════════════════════════════════════════════
-  # Phase 3: Deploy Dev (optional — skip if no dev-pc runner)
-  # ══════════════════════════════════════════════════════════════════════════
-
-  deploy-dev:
-    name: Deploy to dev
-    needs: [generate-deploy-env]
-    if: inputs.environment == 'dev' || startsWith(github.ref, 'refs/tags/')
-    runs-on: [self-hosted, dev-pc]
-    continue-on-error: true  # dev-pc runner may not be set up yet
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: deploy-env
-          path: deploy/
-
-      - name: Deploy with SHA-pinned images
-        run: |
-          docker compose --env-file deploy/.env.deploy \
-            -f deploy/docker-compose.dev.yml up -d --pull always
-
-      - name: Health check
-        run: bash deploy/scripts/health-check.sh --env dev --timeout 120
-
-  # ══════════════════════════════════════════════════════════════════════════
-  # Phase 4+5: Deploy Prod + smoke test (requires approval — DS1)
-  # Smoke test is in the same job because ROLLBACK_FILE is job-scoped
-  # via GITHUB_ENV.
-  # ══════════════════════════════════════════════════════════════════════════
-
-  deploy-prod:
-    name: Deploy to production
-    needs: [generate-deploy-env]
-    if: |
-      always() && !cancelled() &&
-      needs.generate-deploy-env.result == 'success' &&
-      (inputs.environment == 'prod' || startsWith(github.ref, 'refs/tags/'))
     environment:
       name: production
-      url: https://${{ vars.SDA_DOMAIN }}
-    runs-on: [self-hosted, workstation-1]
     steps:
       - uses: actions/checkout@v4
 
@@ -183,64 +28,17 @@ jobs:
           cp /etc/sda/traefik/dynamic/prod.yml deploy/traefik/dynamic/ 2>/dev/null || true
           cp /etc/sda/cloudflare/config.yml deploy/cloudflare/ 2>/dev/null || true
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: deploy-env
-          path: deploy/
+      - name: Preflight checks
+        run: bash deploy/scripts/preflight.sh
 
-      - name: Save current versions (for rollback)
-        run: |
-          ROLLBACK_FILE="${RUNNER_TEMP}/sda-rollback-$(date +%s).env"
-          bash deploy/scripts/save-versions.sh > "$ROLLBACK_FILE" || {
-            echo "::error::Failed to capture current versions — aborting deploy"
-            exit 1
-          }
-          chmod 600 "$ROLLBACK_FILE"
-          echo "ROLLBACK_FILE=$ROLLBACK_FILE" >> "$GITHUB_ENV"
-          echo "Saved rollback versions to $ROLLBACK_FILE"
+      - name: Build & deploy
+        run: bash deploy/scripts/deploy.sh --cache
 
-      - name: Deploy with SHA-pinned images
-        run: |
-          docker compose --env-file deploy/.env.deploy \
-            -f deploy/docker-compose.prod.yml up -d --pull always
-
-      - name: Health + smoke tests
-        id: smoke
-        run: bash deploy/scripts/health-check.sh --env prod --timeout 120
-
-      - name: Circuit-breaker rollback
-        if: failure() && env.ROLLBACK_FILE != ''
-        run: |
-          echo "::warning::Smoke test failed — rolling back to previous versions"
-          bash deploy/scripts/rollback.sh "$ROLLBACK_FILE"
-
-      - name: Record rollback event
-        if: failure() && env.ROLLBACK_FILE != ''
+      - name: Record deploy
+        if: success()
         run: |
           bash deploy/scripts/record-deploy.sh \
             --version "${{ github.ref_name }}" \
             --sha "${{ github.sha }}" \
-            --status "rollback"
-
-  # ══════════════════════════════════════════════════════════════════════════
-  # Phase 6: Record deploy + notify
-  # ══════════════════════════════════════════════════════════════════════════
-
-  release:
-    name: Record deploy
-    needs: [deploy-prod]
-    runs-on: [self-hosted, workstation-1]
-    if: success()
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Record deploy in platform DB
-        run: |
-          bash deploy/scripts/record-deploy.sh \
-            --version "${{ github.ref_name }}" \
-            --sha "${{ github.sha }}" \
-            --status "success"
-
-      - name: Notify
-        run: |
+            --status "success" || true
           echo "::notice::Deploy ${{ github.ref_name }} (${{ github.sha }}) successful"
