@@ -18,6 +18,7 @@ use (
 	./services/traces
 	./services/ws
 	./tools/cli
+	./tools/eventsgen
 	./tools/mcp
 	./tools/pkg
 )

@@ -24,7 +24,7 @@ func TestSetupMFA_GeneratesSecretAndURI(t *testing.T) {
 	defer cleanup()
 
 	userID := seedTestUser(t, pool, "mfa-setup@test.com", "password123", "role-user")
-	auth := NewAuth(pool, testJWTCfg(t), "t-mfa", "mfa-tenant", nil)
+	auth := NewAuth(pool, testJWTCfg(t), "t-mfa", "mfa-tenant")
 
 	result, err := auth.SetupMFA(context.Background(), userID)
 	require.NoError(t, err)
@@ -48,7 +48,7 @@ func TestSetupMFA_StoredSecret_IsValidForTOTP(t *testing.T) {
 	defer cleanup()
 
 	userID := seedTestUser(t, pool, "mfa-stored@test.com", "password123", "role-user")
-	auth := NewAuth(pool, testJWTCfg(t), "t-mfa", "mfa-tenant", nil)
+	auth := NewAuth(pool, testJWTCfg(t), "t-mfa", "mfa-tenant")
 
 	result, err := auth.SetupMFA(context.Background(), userID)
 	require.NoError(t, err)
@@ -69,7 +69,7 @@ func TestVerifySetup_ValidTOTP_EnablesMFA(t *testing.T) {
 	defer cleanup()
 
 	userID := seedTestUser(t, pool, "mfa-verify@test.com", "password123", "role-user")
-	auth := NewAuth(pool, testJWTCfg(t), "t-mfa", "mfa-tenant", nil)
+	auth := NewAuth(pool, testJWTCfg(t), "t-mfa", "mfa-tenant")
 
 	// Setup first to get a secret stored in DB
 	result, err := auth.SetupMFA(context.Background(), userID)
@@ -99,7 +99,7 @@ func TestVerifySetup_InvalidCode_ReturnsError(t *testing.T) {
 	defer cleanup()
 
 	userID := seedTestUser(t, pool, "mfa-invalid@test.com", "password123", "role-user")
-	auth := NewAuth(pool, testJWTCfg(t), "t-mfa", "mfa-tenant", nil)
+	auth := NewAuth(pool, testJWTCfg(t), "t-mfa", "mfa-tenant")
 
 	// Setup to store a secret
 	_, err := auth.SetupMFA(context.Background(), userID)
@@ -128,7 +128,7 @@ func TestDisableMFA_WithValidTOTP_DisablesMFA(t *testing.T) {
 	defer cleanup()
 
 	userID := seedTestUser(t, pool, "mfa-disable@test.com", "password123", "role-user")
-	auth := NewAuth(pool, testJWTCfg(t), "t-mfa", "mfa-tenant", nil)
+	auth := NewAuth(pool, testJWTCfg(t), "t-mfa", "mfa-tenant")
 
 	// Enable MFA first
 	result, err := auth.SetupMFA(context.Background(), userID)
@@ -164,7 +164,7 @@ func TestDisableMFA_WrongCode_ReturnsError(t *testing.T) {
 	defer cleanup()
 
 	userID := seedTestUser(t, pool, "mfa-wrong@test.com", "password123", "role-user")
-	auth := NewAuth(pool, testJWTCfg(t), "t-mfa", "mfa-tenant", nil)
+	auth := NewAuth(pool, testJWTCfg(t), "t-mfa", "mfa-tenant")
 
 	// Enable MFA
 	result, err := auth.SetupMFA(context.Background(), userID)
@@ -188,7 +188,7 @@ func TestCompleteMFALogin_ValidCode_ReturnsTokens(t *testing.T) {
 
 	userID := seedTestUser(t, pool, "mfa-complete@test.com", "password123", "role-user")
 	jwtCfg := testJWTCfg(t)
-	auth := NewAuth(pool, jwtCfg, "t-mfa", "mfa-tenant", nil)
+	auth := NewAuth(pool, jwtCfg, "t-mfa", "mfa-tenant")
 
 	// Enable MFA for this user
 	result, err := auth.SetupMFA(context.Background(), userID)
@@ -231,7 +231,7 @@ func TestCompleteMFALogin_InvalidCode_ReturnsError(t *testing.T) {
 	defer cleanup()
 
 	userID := seedTestUser(t, pool, "mfa-badcode@test.com", "password123", "role-user")
-	auth := NewAuth(pool, testJWTCfg(t), "t-mfa", "mfa-tenant", nil)
+	auth := NewAuth(pool, testJWTCfg(t), "t-mfa", "mfa-tenant")
 
 	// Enable MFA
 	result, err := auth.SetupMFA(context.Background(), userID)

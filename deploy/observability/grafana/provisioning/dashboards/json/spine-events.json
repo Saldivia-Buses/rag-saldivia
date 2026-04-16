@@ -1,0 +1,122 @@
+{
+  "uid": "sda-spine-events",
+  "title": "SDA Spine Event Bus",
+  "tags": ["sda", "plan26", "spine", "nats"],
+  "timezone": "browser",
+  "editable": true,
+  "time": { "from": "now-1h", "to": "now" },
+  "refresh": "30s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Publish Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum by (subject) (rate(spine_publish_total[5m]))",
+          "legendFormat": "{{ subject }}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Consume Rate by Result",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum by (consumer, result) (rate(spine_consume_total[5m]))",
+          "legendFormat": "{{ consumer }} — {{ result }}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Handler Duration (p95)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (consumer, le) (rate(spine_consume_duration_seconds_bucket[5m])))",
+          "legendFormat": "{{ consumer }} p95"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "DLQ Events (cumulative)",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum(spine_dlq_total)",
+          "legendFormat": "total"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 10 },
+              { "color": "red", "value": 100 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Errors by Consumer",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "expr": "sum by (consumer) (rate(spine_consume_total{result=~\"error|handler_error|panic|decode_error\"}[5m]))",
+          "legendFormat": "{{ consumer }}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Consumer Breakdown",
+      "type": "piechart",
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 16 },
+      "targets": [
+        {
+          "expr": "sum by (consumer) (spine_consume_total)",
+          "legendFormat": "{{ consumer }}"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Panics (5m rate)",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum(increase(spine_consume_total{result=\"panic\"}[5m]))",
+          "legendFormat": "panics"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "schemaVersion": 39,
+  "version": 1
+}

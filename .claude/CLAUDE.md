@@ -60,7 +60,7 @@ Run `bash .claude/hooks/check-invariants.sh` — 42 checks. Blocks commit if any
 > They deliver richer context — documentation, ownership, history, decisions —
 > in a single call. Raw `read_file` calls are a last resort only.
 
-Last indexed: 2026-04-12
+Last indexed: 2026-04-16
 ### Entry Points
 - `apps/web/src/components/supabase/server.ts`
 - `apps/web/src/components/tailgrids/core/index.tsx`

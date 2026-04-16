@@ -5,7 +5,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -19,8 +18,11 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
+	authnotify "github.com/Camionerou/rag-saldivia/pkg/events/gen/notify"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	"github.com/Camionerou/rag-saldivia/pkg/outbox"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
+	"github.com/Camionerou/rag-saldivia/pkg/spine"
 	"github.com/Camionerou/rag-saldivia/services/auth/internal/repository"
 )
 
@@ -44,17 +46,11 @@ const (
 // Prevents enumeration via response timing differences.
 var dummyHash, _ = bcrypt.GenerateFromPassword([]byte("dummy-password-for-timing"), bcryptCost)
 
-// EventPublisher can publish notification events. Optional — if nil, no events are published.
-type EventPublisher interface {
-	Notify(tenantSlug string, evt any) error
-}
-
 // Auth handles authentication operations for a single tenant.
 type Auth struct {
 	db            *pgxpool.Pool
 	repo          *repository.Queries
 	jwtCfg        sdajwt.Config
-	events        EventPublisher
 	auditor       *audit.Writer
 	blacklist     *security.TokenBlacklist
 	encryptionKey []byte // AES-256 key for MFA secret encryption (nil = plaintext)
@@ -64,9 +60,10 @@ type Auth struct {
 	}
 }
 
-// NewAuth creates an auth service for a specific tenant.
-func NewAuth(db *pgxpool.Pool, jwtCfg sdajwt.Config, tenantID, tenantSlug string, events EventPublisher) *Auth {
-	a := &Auth{db: db, repo: repository.New(db), jwtCfg: jwtCfg, events: events, auditor: audit.NewWriter(db)}
+// NewAuth creates an auth service for a specific tenant. Event publishing is
+// handled via the transactional outbox (pkg/outbox) inside Login.
+func NewAuth(db *pgxpool.Pool, jwtCfg sdajwt.Config, tenantID, tenantSlug string) *Auth {
+	a := &Auth{db: db, repo: repository.New(db), jwtCfg: jwtCfg, auditor: audit.NewWriter(db)}
 	a.tenant.ID = tenantID
 	a.tenant.Slug = tenantSlug
 	return a
@@ -226,17 +223,22 @@ func (a *Auth) Login(ctx context.Context, req LoginRequest) (*TokenPair, error) 
 		return nil, fmt.Errorf("create refresh token: %w", err)
 	}
 
-	// Store refresh token hash (SHA-256, not bcrypt — tokens are high-entropy,
-	// no rainbow table risk, and bcrypt truncates at 72 bytes which JWTs exceed)
+	// Token rotation + login event in a single tx. If the commit fails,
+	// neither the new refresh token nor the outbox event are persisted.
 	refreshHash := hashToken(refreshToken)
 
-	// Revoke old refresh tokens for this user
-	if err := a.repo.RevokeUserRefreshTokens(ctx, userID); err != nil {
+	tx, err := a.db.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("begin login tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	txRepo := a.repo.WithTx(tx)
+
+	if err := txRepo.RevokeUserRefreshTokens(ctx, userID); err != nil {
 		slog.Warn("failed to revoke old refresh tokens", "error", err, "user_id", userID)
 	}
 
-	// Store new refresh token
-	err = a.repo.StoreRefreshToken(ctx, repository.StoreRefreshTokenParams{
+	err = txRepo.StoreRefreshToken(ctx, repository.StoreRefreshTokenParams{
 		UserID:    userID,
 		TokenHash: refreshHash,
 		ExpiresAt: pgtype.Timestamptz{Time: time.Now().Add(a.jwtCfg.RefreshExpiry), Valid: true},
@@ -245,15 +247,35 @@ func (a *Auth) Login(ctx context.Context, req LoginRequest) (*TokenPair, error) 
 		return nil, fmt.Errorf("store refresh token: %w", err)
 	}
 
-	// Audit log
+	// Login event via outbox — uses savepoint so a failure doesn't abort
+	// the token rotation tx.
+	env, envErr := spine.New(a.tenant.Slug, authnotify.AuthLoginSuccessType,
+		authnotify.AuthLoginSuccessSchemaVersion,
+		authnotify.AuthLoginSuccessPayload{
+			UserID:    userID,
+			Email:     email,
+			IPAddress: req.IP,
+			UserAgent: req.UserAgent,
+		})
+	if envErr == nil {
+		subject, _ := spine.BuildSubject(authnotify.AuthLoginSuccessSubject,
+			map[string]string{"slug": a.tenant.Slug})
+		if _, spErr := tx.Exec(ctx, "SAVEPOINT outbox_sp"); spErr == nil {
+			if pubErr := outbox.PublishTx(ctx, tx, subject, env); pubErr != nil {
+				slog.Warn("outbox enqueue failed, rolling back savepoint", "error", pubErr)
+				_, _ = tx.Exec(ctx, "ROLLBACK TO SAVEPOINT outbox_sp")
+			}
+		}
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("commit login tx: %w", err)
+	}
+
+	// Audit log (non-transactional, non-critical — errors logged, not returned)
 	a.auditor.Write(ctx, audit.Entry{
 		UserID: userID, Action: "user.login", Resource: email,
 		IP: req.IP, UserAgent: req.UserAgent,
-	})
-
-	// Publish login event for notifications
-	a.publishEvent("auth.login_success", userID, name, email, map[string]string{
-		"ip": req.IP,
 	})
 
 	return &TokenPair{
@@ -614,33 +636,4 @@ func (a *Auth) getPermissions(ctx context.Context, userID string) ([]string, err
 	return perms, nil
 }
 
-func (a *Auth) publishEvent(eventType, userID, name, email string, extra map[string]string) {
-	if a.events == nil {
-		return
-	}
-
-	data, _ := json.Marshal(extra)
-	err := a.events.Notify(a.tenant.Slug, map[string]any{
-		"user_id": userID,
-		"type":    eventType,
-		"title":   formatEventTitle(eventType, name),
-		"body":    "",
-		"channel": "in_app",
-		"data":    json.RawMessage(data),
-	})
-	if err != nil {
-		slog.Warn("failed to publish auth event", "error", err, "type", eventType)
-	}
-}
-
-func formatEventTitle(eventType, name string) string {
-	switch eventType {
-	case "auth.login_success":
-		return name + " inicio sesion"
-	case "auth.account_locked":
-		return "Cuenta bloqueada: " + name
-	default:
-		return eventType
-	}
-}
 

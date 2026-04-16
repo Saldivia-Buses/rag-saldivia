@@ -257,6 +257,7 @@ func (s *PLCService) ApproveWrite(ctx context.Context, requestID, approverID, ip
 func (s *PLCService) publishEvent(eventType string, details map[string]any) {
 	subject := fmt.Sprintf("tenant.%s.bigbrother.%s", s.tenantSlug, eventType)
 	data, _ := json.Marshal(details)
+	//nolint:forbidigo // Plan 27 will migrate bigbrother to pkg/spine.
 	if err := s.nc.Publish(subject, data); err != nil {
 		slog.Error("publish NATS event failed", "subject", subject, "error", err)
 	}

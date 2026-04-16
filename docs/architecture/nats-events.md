@@ -95,9 +95,25 @@ Subjects are the only mechanism preventing cross-tenant event leakage:
 - Consumers should always include `tenant.*.` in their `FilterSubject`.
   Never subscribe to bare `>` from inside an SDA service.
 
+## Spine (Plan 26)
+
+`pkg/spine` wraps NATS with typed `Envelope[T]`, schema versioning, and
+consumer guarantees. New events should use the spine framework:
+
+- **Publishing:** `outbox.PublishTx` inside a DB tx (guaranteed delivery).
+- **Consuming:** `spine.Consume[T]` with built-in panic recovery, idempotency,
+  OTel trace context, and DLQ.
+- **Event types:** defined in `pkg/events/spec/*.cue`, generated via
+  `make events-gen`. See `docs/conventions/cue.md`.
+- **Architecture:** `docs/architecture/spine.md`.
+- **DLQ:** dead events visible at `/admin/dlq`, replay/drop via healthwatch.
+
+Legacy `pkg/nats.Publisher.Notify/Broadcast` still works for non-migrated
+Types. Migration is per-Type, atomic (producer + consumer in same PR).
+
 ## When to publish what
 
 Every state-changing endpoint must publish a NATS event so the WS Hub can
 push the change to live clients (frontend has zero polling). Reads do not
-publish. Use `Notify` when the user should see a notification badge; use
-`Broadcast` for live UI updates (typing, presence, list changes).
+publish. Use `outbox.PublishTx` for new events (guaranteed delivery). Legacy
+`Notify` for notification badges, `Broadcast` for live UI updates.

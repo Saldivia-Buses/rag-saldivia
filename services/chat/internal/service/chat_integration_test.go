@@ -98,7 +98,7 @@ func TestCreateSession_Integration(t *testing.T) {
 	pool, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	svc := NewChat(pool, "dev", nil)
+	svc := NewChat(pool, "dev")
 	ctx := context.Background()
 
 	session, err := svc.CreateSession(ctx, "u-1", "Mi primer chat", nil)
@@ -120,7 +120,7 @@ func TestGetSession_Ownership_Integration(t *testing.T) {
 	pool, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	svc := NewChat(pool, "dev", nil)
+	svc := NewChat(pool, "dev")
 	ctx := context.Background()
 
 	session, _ := svc.CreateSession(ctx, "u-1", "Private chat", nil)
@@ -145,7 +145,7 @@ func TestListSessions_FiltersbyUser_Integration(t *testing.T) {
 	pool, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	svc := NewChat(pool, "dev", nil)
+	svc := NewChat(pool, "dev")
 	ctx := context.Background()
 
 	svc.CreateSession(ctx, "u-1", "Alice chat 1", nil)
@@ -165,7 +165,7 @@ func TestDeleteSession_Integration(t *testing.T) {
 	pool, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	svc := NewChat(pool, "dev", nil)
+	svc := NewChat(pool, "dev")
 	ctx := context.Background()
 
 	session, _ := svc.CreateSession(ctx, "u-1", "To delete", nil)
@@ -184,7 +184,7 @@ func TestAddMessage_and_GetMessages_Integration(t *testing.T) {
 	pool, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	svc := NewChat(pool, "dev", nil)
+	svc := NewChat(pool, "dev")
 	ctx := context.Background()
 
 	session, _ := svc.CreateSession(ctx, "u-1", "Chat", nil)
@@ -219,7 +219,7 @@ func TestRenameSession_Integration(t *testing.T) {
 	pool, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	svc := NewChat(pool, "dev", nil)
+	svc := NewChat(pool, "dev")
 	ctx := context.Background()
 
 	session, _ := svc.CreateSession(ctx, "u-1", "Original", nil)
@@ -238,7 +238,7 @@ func TestDeleteSession_CascadesMessages_Integration(t *testing.T) {
 	pool, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	svc := NewChat(pool, "dev", nil)
+	svc := NewChat(pool, "dev")
 	ctx := context.Background()
 
 	session, _ := svc.CreateSession(ctx, "u-1", "Chat", nil)
@@ -267,7 +267,7 @@ func TestListSessions_Pagination_Integration(t *testing.T) {
 	pool, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	svc := NewChat(pool, "dev", nil)
+	svc := NewChat(pool, "dev")
 	ctx := context.Background()
 
 	// Insert 5 sessions with explicit, evenly-spaced timestamps so ordering is

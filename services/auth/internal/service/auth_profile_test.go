@@ -21,7 +21,7 @@ func TestUpdateProfile_Name_UpdatesDB(t *testing.T) {
 	defer cleanup()
 
 	userID := seedTestUser(t, pool, "profile-name@test.com", "password123", "role-user")
-	auth := NewAuth(pool, testJWTCfg(t), "t-profile", "profile-tenant", nil)
+	auth := NewAuth(pool, testJWTCfg(t), "t-profile", "profile-tenant")
 
 	info, err := auth.UpdateProfile(context.Background(), userID, UpdateProfileRequest{
 		Name: "Updated Name",
@@ -46,7 +46,7 @@ func TestUpdateProfile_EmptyName_ReturnsValidationError(t *testing.T) {
 	defer cleanup()
 
 	userID := seedTestUser(t, pool, "profile-empty@test.com", "password123", "role-user")
-	auth := NewAuth(pool, testJWTCfg(t), "t-profile", "profile-tenant", nil)
+	auth := NewAuth(pool, testJWTCfg(t), "t-profile", "profile-tenant")
 
 	_, err := auth.UpdateProfile(context.Background(), userID, UpdateProfileRequest{
 		Name: "",
@@ -64,7 +64,7 @@ func TestUpdateProfile_NameTooLong_ReturnsValidationError(t *testing.T) {
 	defer cleanup()
 
 	userID := seedTestUser(t, pool, "profile-long@test.com", "password123", "role-user")
-	auth := NewAuth(pool, testJWTCfg(t), "t-profile", "profile-tenant", nil)
+	auth := NewAuth(pool, testJWTCfg(t), "t-profile", "profile-tenant")
 
 	longName := strings.Repeat("a", 201)
 	_, err := auth.UpdateProfile(context.Background(), userID, UpdateProfileRequest{
@@ -79,7 +79,7 @@ func TestUpdateProfile_NonexistentUser_ReturnsNotFound(t *testing.T) {
 	pool, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	auth := NewAuth(pool, testJWTCfg(t), "t-profile", "profile-tenant", nil)
+	auth := NewAuth(pool, testJWTCfg(t), "t-profile", "profile-tenant")
 
 	_, err := auth.UpdateProfile(context.Background(), "nonexistent-user-id", UpdateProfileRequest{
 		Name: "Valid Name",
@@ -93,7 +93,7 @@ func TestListUsers_ReturnsPaginated(t *testing.T) {
 	pool, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	auth := NewAuth(pool, testJWTCfg(t), "t-profile", "profile-tenant", nil)
+	auth := NewAuth(pool, testJWTCfg(t), "t-profile", "profile-tenant")
 
 	// Seed 3 users with unique emails
 	seedTestUser(t, pool, "list-user1@test.com", "pass", "role-user")
@@ -135,7 +135,7 @@ func TestListUsers_EmptyTable_ReturnsEmptySlice(t *testing.T) {
 	pool, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	auth := NewAuth(pool, testJWTCfg(t), "t-profile", "profile-tenant", nil)
+	auth := NewAuth(pool, testJWTCfg(t), "t-profile", "profile-tenant")
 
 	users, err := auth.ListUsers(context.Background(), 10, 0)
 	require.NoError(t, err)

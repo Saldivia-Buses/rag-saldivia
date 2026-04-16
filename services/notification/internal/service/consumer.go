@@ -210,6 +210,7 @@ func (c *Consumer) publishToWS(tenantSlug string, notif *Notification) {
 		"data":    notif,
 	})
 	subject := "tenant." + tenantSlug + ".notifications"
+	//nolint:forbidigo // Plan 26 Fase 2 migrates notification consumer to spine.Consume.
 	if err := c.nc.Publish(subject, payload); err != nil {
 		slog.Error("failed to publish to WS", "error", err, "subject", subject)
 	}

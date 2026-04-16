@@ -18,6 +18,7 @@ import (
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
+	"github.com/Camionerou/rag-saldivia/pkg/outbox"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
 	"github.com/Camionerou/rag-saldivia/pkg/server"
 	"github.com/Camionerou/rag-saldivia/pkg/tenant"
@@ -42,7 +43,6 @@ func main() {
 		os.Exit(1)
 	}
 	app.OnShutdown(func() { _ = nc.Drain() })
-	publisher := natspub.New(nc)
 	slog.Info("connected to NATS", "url", config.RedactURL(natsURL))
 
 	// Token blacklist (shared Redis)
@@ -83,7 +83,25 @@ func main() {
 		resolver := tenant.NewResolver(platformPool, nil) // nil = no credential encryption (yet)
 		app.OnShutdown(resolver.Close)
 
-		authHandler = handler.NewMultiTenantAuth(resolver, jwtCfg, publisher, blacklist)
+		// Outbox drainer for all tenants (multi-tenant mode).
+		// Bootstrap from active tenants in platform DB.
+		var activeSlugs []string
+		slugRows, err := platformPool.Query(ctx,
+			`SELECT slug FROM tenants WHERE is_active = true`)
+		if err == nil {
+			for slugRows.Next() {
+				var s string
+				if slugRows.Scan(&s) == nil {
+					activeSlugs = append(activeSlugs, s)
+				}
+			}
+			slugRows.Close()
+		}
+		slog.Info("bootstrapping outbox drainers", "tenants", len(activeSlugs))
+		registry := outbox.NewRegistry(resolver, nc)
+		go registry.Start(ctx, activeSlugs)
+
+		authHandler = handler.NewMultiTenantAuth(resolver, jwtCfg, blacklist)
 		hc.Add("postgres", func(ctx context.Context) error { return platformPool.Ping(ctx) })
 		slog.Info("auth service starting in multi-tenant mode")
 	} else if tenantDBURL != "" {
@@ -102,7 +120,13 @@ func main() {
 
 		tenantID := config.Env("TENANT_ID", "dev")
 		tenantSlug := config.Env("TENANT_SLUG", "dev")
-		authSvc := service.NewAuth(pool, jwtCfg, tenantID, tenantSlug, publisher)
+		// Outbox drainer (single-tenant mode).
+		drainer := outbox.NewDrainer(pool, nc, tenantSlug)
+		drainerCtx, drainerCancel := context.WithCancel(ctx)
+		go drainer.Run(drainerCtx)
+		app.OnShutdown(drainerCancel)
+
+		authSvc := service.NewAuth(pool, jwtCfg, tenantID, tenantSlug)
 		authSvc.SetBlacklist(blacklist)
 		authHandler = handler.NewAuth(authSvc)
 		hc.Add("postgres", func(ctx context.Context) error { return pool.Ping(ctx) })

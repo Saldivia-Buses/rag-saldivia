@@ -174,7 +174,7 @@ func TestLogin_Success(t *testing.T) {
 	seedTestUser(t, pool, "admin@test.com", "correctpassword", "role-admin")
 
 	jwtCfg := testJWTCfg(t)
-	auth := NewAuth(pool, jwtCfg, "t-test", "test-tenant", nil)
+	auth := NewAuth(pool, jwtCfg, "t-test", "test-tenant")
 
 	tokens, err := auth.Login(context.Background(), LoginRequest{
 		Email:    "admin@test.com",
@@ -217,7 +217,7 @@ func TestLogin_WrongPassword(t *testing.T) {
 
 	seedTestUser(t, pool, "user@test.com", "realpassword", "role-user")
 
-	auth := NewAuth(pool, testJWTCfg(t), "t-1", "dev", nil)
+	auth := NewAuth(pool, testJWTCfg(t), "t-1", "dev")
 
 	_, err := auth.Login(context.Background(), LoginRequest{
 		Email:    "user@test.com",
@@ -243,7 +243,7 @@ func TestLogin_BruteForce_Lockout(t *testing.T) {
 
 	seedTestUser(t, pool, "victim@test.com", "secret123", "role-user")
 
-	auth := NewAuth(pool, testJWTCfg(t), "t-1", "dev", nil)
+	auth := NewAuth(pool, testJWTCfg(t), "t-1", "dev")
 
 	// 5 failed attempts
 	for i := 0; i < 5; i++ {
@@ -270,7 +270,7 @@ func TestLogin_AfterLockout_CorrectPassword_StillFails(t *testing.T) {
 
 	seedTestUser(t, pool, "locked@test.com", "realpassword", "role-user")
 
-	auth := NewAuth(pool, testJWTCfg(t), "t-1", "dev", nil)
+	auth := NewAuth(pool, testJWTCfg(t), "t-1", "dev")
 
 	for i := 0; i < 5; i++ {
 		auth.Login(context.Background(), LoginRequest{
@@ -292,7 +292,7 @@ func TestLogin_NonexistentUser(t *testing.T) {
 	pool, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	auth := NewAuth(pool, testJWTCfg(t), "t-1", "dev", nil)
+	auth := NewAuth(pool, testJWTCfg(t), "t-1", "dev")
 
 	_, err := auth.Login(context.Background(), LoginRequest{
 		Email: "nobody@test.com", Password: "anything",
@@ -311,7 +311,7 @@ func TestLogin_DisabledUser(t *testing.T) {
 		`UPDATE users SET is_active = false WHERE email = $1`, "disabled@test.com",
 	)
 
-	auth := NewAuth(pool, testJWTCfg(t), "t-1", "dev", nil)
+	auth := NewAuth(pool, testJWTCfg(t), "t-1", "dev")
 
 	_, err := auth.Login(context.Background(), LoginRequest{
 		Email: "disabled@test.com", Password: "pass123",
@@ -329,7 +329,7 @@ func TestLogin_AuditLog(t *testing.T) {
 
 	seedTestUser(t, pool, "audited@test.com", "password", "role-admin")
 
-	auth := NewAuth(pool, testJWTCfg(t), "t-1", "dev", nil)
+	auth := NewAuth(pool, testJWTCfg(t), "t-1", "dev")
 	auth.Login(context.Background(), LoginRequest{
 		Email: "audited@test.com", Password: "password", IP: "10.0.0.1",
 	})
@@ -349,7 +349,7 @@ func TestLogin_RefreshTokenStored(t *testing.T) {
 
 	seedTestUser(t, pool, "refresh@test.com", "password", "role-user")
 
-	auth := NewAuth(pool, testJWTCfg(t), "t-1", "dev", nil)
+	auth := NewAuth(pool, testJWTCfg(t), "t-1", "dev")
 	auth.Login(context.Background(), LoginRequest{
 		Email: "refresh@test.com", Password: "password",
 	})
@@ -372,7 +372,7 @@ func TestRefreshRotation_OldTokenInvalidated(t *testing.T) {
 	seedTestUser(t, pool, "rotate@test.com", "password", "role-user")
 
 	jwtCfg := testJWTCfg(t)
-	auth := NewAuth(pool, jwtCfg, "t-1", "dev", nil)
+	auth := NewAuth(pool, jwtCfg, "t-1", "dev")
 
 	// Initial login — get first refresh token
 	tokens1, err := auth.Login(context.Background(), LoginRequest{
@@ -412,7 +412,7 @@ func TestLogin_MultipleActiveSessions_AllValid(t *testing.T) {
 	seedTestUser(t, pool, "multisession@test.com", "password", "role-user")
 
 	jwtCfg := testJWTCfg(t)
-	auth := NewAuth(pool, jwtCfg, "t-1", "dev", nil)
+	auth := NewAuth(pool, jwtCfg, "t-1", "dev")
 
 	// First login
 	tokens1, err := auth.Login(context.Background(), LoginRequest{
@@ -468,7 +468,7 @@ func TestTenantIsolation_TokenSlugMatchesService(t *testing.T) {
 	jwtCfg := testJWTCfg(t)
 
 	// Service configured for tenant A
-	tenantAAuth := NewAuth(pool, jwtCfg, "tenant-a-id", "tenant-a", nil)
+	tenantAAuth := NewAuth(pool, jwtCfg, "tenant-a-id", "tenant-a")
 	tokens, err := tenantAAuth.Login(context.Background(), LoginRequest{
 		Email: "tenantuser@test.com", Password: "password",
 	})
