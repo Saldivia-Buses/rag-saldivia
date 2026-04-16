@@ -21,98 +21,98 @@ http:
     auth:
       rule: "PathPrefix(`/v1/auth`) || PathPrefix(`/v1/modules`)"
       service: auth
-      entryPoints: [websecure]
+      entryPoints: [web]
       middlewares: [dev-cors, dev-tenant]
 
     # WebSocket — real-time channel
     ws:
       rule: "PathPrefix(`/ws`)"
       service: ws
-      entryPoints: [websecure]
+      entryPoints: [web]
       middlewares: [dev-cors, dev-tenant]
 
     # Chat — sessions + messages
     chat:
       rule: "PathPrefix(`/v1/chat`)"
       service: chat
-      entryPoints: [websecure]
+      entryPoints: [web]
       middlewares: [dev-cors, dev-tenant]
 
     # Agent — LLM runtime + tool execution
     agent:
       rule: "PathPrefix(`/v1/agent`)"
       service: agent
-      entryPoints: [websecure]
+      entryPoints: [web]
       middlewares: [dev-cors, dev-tenant]
 
     # Search — tree-based document retrieval
     search:
       rule: "PathPrefix(`/v1/search`)"
       service: search
-      entryPoints: [websecure]
+      entryPoints: [web]
       middlewares: [dev-cors, dev-tenant]
 
     # Traces — execution traces + cost tracking
     traces:
       rule: "PathPrefix(`/v1/traces`)"
       service: traces
-      entryPoints: [websecure]
+      entryPoints: [web]
       middlewares: [dev-cors, dev-tenant]
 
     # Feedback — quality metrics + alerts
     feedback:
       rule: "PathPrefix(`/v1/feedback`) || PathPrefix(`/v1/platform/feedback`)"
       service: feedback
-      entryPoints: [websecure]
+      entryPoints: [web]
       middlewares: [dev-cors, dev-tenant]
 
     # Notifications — in-app + preferences
     notifications:
       rule: "PathPrefix(`/v1/notifications`)"
       service: notification
-      entryPoints: [websecure]
+      entryPoints: [web]
       middlewares: [dev-cors, dev-tenant]
 
     # Platform — admin-only tenant/module/config management
     platform:
       rule: "PathPrefix(`/v1/platform`)"
       service: platform
-      entryPoints: [websecure]
+      entryPoints: [web]
       middlewares: [dev-cors]
 
     # Feature flags evaluate — any authenticated user
     flags:
       rule: "PathPrefix(`/v1/flags`)"
       service: platform
-      entryPoints: [websecure]
+      entryPoints: [web]
       middlewares: [dev-cors, dev-tenant]
 
     # Ingest — document upload + job tracking
     ingest:
       rule: "PathPrefix(`/v1/ingest`)"
       service: ingest
-      entryPoints: [websecure]
+      entryPoints: [web]
       middlewares: [dev-cors, dev-tenant]
 
     # Astro — astrological calculations + SSE query
     astro:
       rule: "PathPrefix(`/v1/astro`)"
       service: astro
-      entryPoints: [websecure]
+      entryPoints: [web]
       middlewares: [dev-cors, dev-tenant]
 
     # ERP — legacy Histrix replacement modules
     erp:
       rule: "PathPrefix(`/v1/erp`)"
       service: erp
-      entryPoints: [websecure]
+      entryPoints: [web]
       middlewares: [dev-cors, dev-tenant]
 
     # HealthWatch — platform-level health monitoring (no dev-tenant: admin only)
     healthwatch:
       rule: "PathPrefix(`/v1/healthwatch`)"
       service: healthwatch
-      entryPoints: [websecure]
+      entryPoints: [web]
       middlewares: [dev-cors]
 
   services:
@@ -198,10 +198,3 @@ http:
         customRequestHeaders:
           X-Tenant-ID: "dev-tenant-id"
           X-Tenant-Slug: "dev"
-
-tls:
-  stores:
-    default:
-      defaultCertificate:
-        certFile: /etc/traefik/certs/dev.crt
-        keyFile: /etc/traefik/certs/dev.key

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -304,14 +305,20 @@ func (h *Auth) Health(w http.ResponseWriter, r *http.Request) {
 }
 
 // setRefreshCookie sets the refresh token as an HttpOnly secure cookie.
+// In dev (HTTP), Secure=false and SameSite=Lax so the cookie works without TLS.
 func setRefreshCookie(w http.ResponseWriter, token string, expiresAt time.Time) {
+	secure := os.Getenv("SDA_ENV") != "development"
+	sameSite := http.SameSiteStrictMode
+	if !secure {
+		sameSite = http.SameSiteLaxMode
+	}
 	http.SetCookie(w, &http.Cookie{
 		Name:     "sda_refresh",
 		Value:    token,
 		Path:     "/v1/auth",
 		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
+		Secure:   secure,
+		SameSite: sameSite,
 		Expires:  expiresAt,
 	})
 }
