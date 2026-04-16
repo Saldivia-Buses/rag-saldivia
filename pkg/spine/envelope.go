@@ -47,6 +47,7 @@ type Header struct {
 	OccurredAt    time.Time `json:"occurred_at"`
 	RecordedAt    time.Time `json:"recorded_at"`
 	TraceID       string    `json:"trace_id,omitempty"`
+	SpanID        string    `json:"span_id,omitempty"`
 	CorrelationID string    `json:"correlation_id,omitempty"`
 }
 
