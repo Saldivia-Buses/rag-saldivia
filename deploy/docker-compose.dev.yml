@@ -348,6 +348,7 @@ services:
       <<: *env-common
       PLATFORM_PORT: "8006"
       POSTGRES_PLATFORM_URL: postgres://sda:sda_dev@postgres:5432/sda_platform?sslmode=disable
+      REDIS_URL: redis:6379
     ports:
       - "8006:8006"
     labels:
@@ -479,6 +480,7 @@ services:
       <<: *env-common
       HEALTHWATCH_PORT: "8014"
       POSTGRES_PLATFORM_URL: postgres://sda:sda_dev@postgres:5432/sda_platform?sslmode=disable
+      REDIS_URL: redis:6379
       PROMETHEUS_URL: http://host.docker.internal:9090
       DOCKER_PROXY_URL: http://host.docker.internal:2375
     ports:
