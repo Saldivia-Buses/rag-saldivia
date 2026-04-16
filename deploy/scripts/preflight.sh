@@ -22,9 +22,9 @@ check() {
     local msg="${3:-}"
 
     case "$result" in
-        ok)   echo "  ✓ $name"; ((PASS++)) ;;
-        warn) echo "  ⚠ $name: $msg"; ((WARN++)) ;;
-        fail) echo "  ✗ $name: $msg"; ((FAIL++)) ;;
+        ok)   echo "  ✓ $name"; PASS=$((PASS + 1)) ;;
+        warn) echo "  ⚠ $name: $msg"; WARN=$((WARN + 1)) ;;
+        fail) echo "  ✗ $name: $msg"; FAIL=$((FAIL + 1)) ;;
     esac
 }
 
