@@ -24,10 +24,18 @@ const securityHeaders = [
   },
 ];
 
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost";
+
 const nextConfig: NextConfig = {
   output: "standalone",
   experimental: {
     authInterrupts: true,
+  },
+  async rewrites() {
+    return [
+      { source: "/v1/:path*", destination: `${apiUrl}/v1/:path*` },
+      { source: "/ws/:path*", destination: `${apiUrl}/ws/:path*` },
+    ];
   },
   async headers() {
     return [
