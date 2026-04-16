@@ -223,7 +223,7 @@ services:
 
   auth:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-auth:${AUTH_VERSION:-local}
+    image: ghcr.io/saldivia-buses/sda-auth:${AUTH_VERSION:-local}
     build:
       context: ..
       dockerfile: services/auth/Dockerfile
@@ -270,7 +270,7 @@ services:
 
   ws:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-ws:${WS_VERSION:-local}
+    image: ghcr.io/saldivia-buses/sda-ws:${WS_VERSION:-local}
     build:
       context: ..
       dockerfile: services/ws/Dockerfile
@@ -316,7 +316,7 @@ services:
 
   chat:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-chat:${CHAT_VERSION:-local}
+    image: ghcr.io/saldivia-buses/sda-chat:${CHAT_VERSION:-local}
     build:
       context: ..
       dockerfile: services/chat/Dockerfile
@@ -364,7 +364,7 @@ services:
 
   agent:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-agent:${AGENT_VERSION:-local}
+    image: ghcr.io/saldivia-buses/sda-agent:${AGENT_VERSION:-local}
     build:
       context: ..
       dockerfile: services/agent/Dockerfile
@@ -418,7 +418,7 @@ services:
 
   search:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-search:${SEARCH_VERSION:-local}
+    image: ghcr.io/saldivia-buses/sda-search:${SEARCH_VERSION:-local}
     build:
       context: ..
       dockerfile: services/search/Dockerfile
@@ -467,7 +467,7 @@ services:
 
   traces:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-traces:${TRACES_VERSION:-local}
+    image: ghcr.io/saldivia-buses/sda-traces:${TRACES_VERSION:-local}
     build:
       context: ..
       dockerfile: services/traces/Dockerfile
@@ -512,7 +512,7 @@ services:
 
   notification:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-notification:${NOTIFICATION_VERSION:-local}
+    image: ghcr.io/saldivia-buses/sda-notification:${NOTIFICATION_VERSION:-local}
     build:
       context: ..
       dockerfile: services/notification/Dockerfile
@@ -562,7 +562,7 @@ services:
 
   platform:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-platform:${PLATFORM_VERSION:-local}
+    image: ghcr.io/saldivia-buses/sda-platform:${PLATFORM_VERSION:-local}
     build:
       context: ..
       dockerfile: services/platform/Dockerfile
@@ -611,7 +611,7 @@ services:
 
   ingest:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-ingest:${INGEST_VERSION:-local}
+    image: ghcr.io/saldivia-buses/sda-ingest:${INGEST_VERSION:-local}
     build:
       context: ..
       dockerfile: services/ingest/Dockerfile
@@ -657,7 +657,7 @@ services:
 
   feedback:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-feedback:${FEEDBACK_VERSION:-local}
+    image: ghcr.io/saldivia-buses/sda-feedback:${FEEDBACK_VERSION:-local}
     build:
       context: ..
       dockerfile: services/feedback/Dockerfile
@@ -704,7 +704,7 @@ services:
   # ── Astro (Plan 13 — astrological intelligence engine, CGO) ────────
   astro:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-astro:${ASTRO_VERSION:-local}
+    image: ghcr.io/saldivia-buses/sda-astro:${ASTRO_VERSION:-local}
     build:
       context: ..
       dockerfile: services/astro/Dockerfile
@@ -760,7 +760,7 @@ services:
 
   extractor:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-extractor:${EXTRACTOR_VERSION:-local}
+    image: ghcr.io/saldivia-buses/sda-extractor:${EXTRACTOR_VERSION:-local}
     build:
       context: ..
       dockerfile: services/extractor/Dockerfile
@@ -789,7 +789,7 @@ services:
 
   erp:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-erp:${ERP_VERSION:-local}
+    image: ghcr.io/saldivia-buses/sda-erp:${ERP_VERSION:-local}
     build:
       context: ..
       dockerfile: services/erp/Dockerfile
@@ -837,7 +837,7 @@ services:
 
   bigbrother:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-bigbrother:${BIGBROTHER_VERSION:-local}
+    image: ghcr.io/saldivia-buses/sda-bigbrother:${BIGBROTHER_VERSION:-local}
     build:
       context: ..
       dockerfile: services/bigbrother/Dockerfile
@@ -900,7 +900,7 @@ services:
 
   healthwatch:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-healthwatch:${HEALTHWATCH_VERSION:-local}
+    image: ghcr.io/saldivia-buses/sda-healthwatch:${HEALTHWATCH_VERSION:-local}
     build:
       context: ..
       dockerfile: services/healthwatch/Dockerfile

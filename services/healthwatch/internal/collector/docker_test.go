@@ -19,14 +19,14 @@ func TestDocker_ListContainers(t *testing.T) {
 		_ = json.NewEncoder(w).Encode([]map[string]any{
 			{
 				"Names":  []string{"/sda-auth"},
-				"Image":  "ghcr.io/camionerou/sda-auth:0.1.0",
+				"Image":  "ghcr.io/saldivia-buses/sda-auth:0.1.0",
 				"State":  "running",
 				"Status": "Up 2 hours (healthy)",
 				"Labels": map[string]string{"com.docker.compose.project": "sda"},
 			},
 			{
 				"Names":  []string{"/sda-agent"},
-				"Image":  "ghcr.io/camionerou/sda-agent:0.1.0",
+				"Image":  "ghcr.io/saldivia-buses/sda-agent:0.1.0",
 				"State":  "running",
 				"Status": "Up 2 hours (unhealthy)",
 				"Labels": map[string]string{"com.docker.compose.project": "sda"},

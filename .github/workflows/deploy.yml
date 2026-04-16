@@ -87,7 +87,7 @@ jobs:
           SERVICE="${{ matrix.service }}"
           VERSION=$(cat "services/${SERVICE}/VERSION")
           SHA="${{ github.sha }}"
-          IMAGE="ghcr.io/camionerou/sda-${SERVICE}"
+          IMAGE="ghcr.io/saldivia-buses/sda-${SERVICE}"
 
           docker build \
             --build-arg VERSION="${VERSION}" \
