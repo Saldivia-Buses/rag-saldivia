@@ -98,3 +98,49 @@ groups:
   #       labels: { severity: critical }
   #       annotations:
   #         summary: "Disk space below 10%"
+
+  # ── Spine Event Bus (Plan 26) ─────────────────────────────────────
+  - name: sda-spine
+    rules:
+      - alert: SpineHandlerPanic
+        expr: increase(spine_consume_total{result="panic"}[5m]) > 0
+        labels:
+          severity: critical
+        annotations:
+          summary: "Spine consumer {{ $labels.consumer }} panicked"
+          description: "Consumer {{ $labels.consumer }} had a panic in the last 5 minutes. Check logs for stack trace."
+
+      - alert: SpineDLQDepthHigh
+        expr: spine_dlq_total > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "DLQ depth exceeded 100 events"
+          description: "{{ $value }} events in DLQ. Check /admin/dlq for details and replay or drop."
+
+      - alert: SpineConsumerErrorRate
+        expr: |
+          (
+            sum by (consumer) (rate(spine_consume_total{result=~"error|handler_error|decode_error|panic"}[5m]))
+            /
+            sum by (consumer) (rate(spine_consume_total[5m]))
+          ) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Spine consumer {{ $labels.consumer }} error rate above 10%"
+          description: "Consumer {{ $labels.consumer }} has {{ $value | humanizePercentage }} error rate over 10 minutes."
+
+      - alert: SpineConsumerStalled
+        expr: |
+          rate(spine_consume_total{result="success"}[15m]) == 0
+          and
+          rate(spine_consume_total[15m]) > 0
+        for: 15m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Spine consumer {{ $labels.consumer }} stalled — processing but no successes"
+          description: "Consumer {{ $labels.consumer }} has been processing messages but none succeeded in 15 minutes."
