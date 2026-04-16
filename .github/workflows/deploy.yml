@@ -1,44 +1,29 @@
 name: Deploy SDA
 
 on:
-  workflow_dispatch:
   push:
-    tags:
-      - 'v*'
+    branches: [main]
+  workflow_dispatch:
 
 concurrency:
-  group: deploy-production
-  cancel-in-progress: false
+  group: deploy-workstation
+  cancel-in-progress: true
 
 jobs:
   deploy:
-    name: Build & Deploy
+    name: Pull & Restart
     runs-on: [self-hosted, workstation-1]
-    environment:
-      name: production
     steps:
       - uses: actions/checkout@v4
 
-      - name: Link persistent config
+      - name: Build & start all services
         run: |
-          cp /etc/sda/.env deploy/.env
-          mkdir -p deploy/secrets/dynamic deploy/traefik/dynamic deploy/cloudflare
-          cp /etc/sda/dynamic/jwt-*.pem deploy/secrets/dynamic/ 2>/dev/null || true
-          cp /etc/sda/traefik/traefik.prod.yml deploy/traefik/ 2>/dev/null || true
-          cp /etc/sda/traefik/dynamic/prod.yml deploy/traefik/dynamic/ 2>/dev/null || true
-          cp /etc/sda/cloudflare/config.yml deploy/cloudflare/ 2>/dev/null || true
+          [ -f deploy/.env ] || cp deploy/.env.example deploy/.env
+          export GIT_SHA=$(git rev-parse --short HEAD)
+          export BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          docker compose -f deploy/docker-compose.dev.yml --profile full up --build -d
 
-      - name: Preflight checks
-        run: bash deploy/scripts/preflight.sh
-
-      - name: Build & deploy
-        run: bash deploy/scripts/deploy.sh --cache
-
-      - name: Record deploy
-        if: success()
+      - name: Wait for health
         run: |
-          bash deploy/scripts/record-deploy.sh \
-            --version "${{ github.ref_name }}" \
-            --sha "${{ github.sha }}" \
-            --status "success" || true
-          echo "::notice::Deploy ${{ github.ref_name }} (${{ github.sha }}) successful"
+          sleep 15
+          docker ps --format "table {{.Names}}\t{{.Status}}" | sort
