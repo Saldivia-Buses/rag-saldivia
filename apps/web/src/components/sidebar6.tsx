@@ -15,8 +15,6 @@ import {
   Database,
 } from "lucide-react";
 import { useAuthStore } from "@/lib/auth/store";
-import { useEnabledModules } from "@/lib/modules/hooks";
-import { MODULE_REGISTRY } from "@/lib/modules/registry";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -181,8 +179,9 @@ const footerItems: NavItem[] = [
 
 function useSidebarData(): SidebarData {
   const user = useAuthStore((s) => s.user);
-  const { data: enabledModules = [] } = useEnabledModules();
 
+  // Sidebar shows only core navigation. ERP modules are accessed from /inicio
+  // (cards grid) so the sidebar stays compact regardless of tenant config.
   const coreItems: NavItem[] = [
     { label: "Inicio", icon: LayoutDashboard, href: "/inicio" },
     { label: "Chat", icon: MessageSquare, href: "/chat" },
@@ -191,29 +190,9 @@ function useSidebarData(): SidebarData {
     { label: "Notificaciones", icon: Bell, href: "/notifications" },
   ];
 
-  const moduleItems: NavItem[] = enabledModules
-    .map((m) => MODULE_REGISTRY[m.id])
-    .filter(Boolean)
-    .filter((m) => !["chat", "rag", "notifications", "ingest"].includes(m.id))
-    .sort((a, b) => a.nav.position - b.nav.position)
-    .map((m) => ({
-      label: m.nav.label,
-      icon: m.nav.icon,
-      href: m.nav.path,
-      children: m.subnav?.map((sub) => ({
-        label: sub.label,
-        icon: m.nav.icon,
-        href: sub.path,
-      })),
-    }));
-
   const navGroups: NavGroup[] = [
     { title: "Principal", defaultOpen: true, items: coreItems },
   ];
-
-  if (moduleItems.length > 0) {
-    navGroups.push({ title: "Modulos", defaultOpen: true, items: moduleItems });
-  }
 
   return {
     logo: sidebarLogo,
