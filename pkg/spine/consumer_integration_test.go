@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
@@ -177,6 +176,3 @@ func TestBackoff_ProductionDefaults(t *testing.T) {
 		t.Errorf("attempt 7 should cap at 60s, got %v", d)
 	}
 }
-
-// avoid "imported and not used" for pgx — keep available for future tests
-var _ pgx.Tx = nil

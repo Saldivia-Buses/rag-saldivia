@@ -110,6 +110,21 @@ func TestExtractTraceContext_NoTrace(t *testing.T) {
 	}
 }
 
+func TestPushDLQ_NilNC_LogsOnly(t *testing.T) {
+	entry := spine.DLQEntry{
+		OriginalSubject: "tenant.saldivia.notify.chat.new_message",
+		OriginalStream:  "NOTIFICATIONS",
+		ConsumerName:    "test-consumer",
+		DeliveryCount:   5,
+		LastError:       "handler timeout",
+	}
+	// nc=nil: should not panic, just log.
+	err := spine.PushDLQ(context.Background(), nil, entry)
+	if err != nil {
+		t.Errorf("PushDLQ with nil nc should succeed (log only), got %v", err)
+	}
+}
+
 func TestExtractTraceContext_BadHexFallsBackToHeaders(t *testing.T) {
 	header := spine.Header{TraceID: "not-hex", SpanID: "also-not"}
 	ctx := spine.ExtractTraceContext(context.Background(), header, nats.Header{})

@@ -25,7 +25,7 @@ var (
 	// Labels: consumer, subject.
 	ConsumeDuration metric.Float64Histogram
 
-	// DLQDepth is incremented every time PushDLQ is called.
+	// DLQTotal is incremented every time PushDLQ is called.
 	// Labels: stream, consumer.
 	DLQTotal metric.Int64Counter
 

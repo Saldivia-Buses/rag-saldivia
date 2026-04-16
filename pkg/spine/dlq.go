@@ -57,6 +57,5 @@ func PushDLQ(ctx context.Context, nc *nats.Conn, entry DLQEntry) error {
 	if err := nc.PublishMsg(msg); err != nil {
 		return fmt.Errorf("spine: publish dlq to %s: %w", subject, err)
 	}
-	_ = ctx
 	return nil
 }

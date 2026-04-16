@@ -158,6 +158,13 @@ func processOne[T any](
 ) {
 	start := time.Now()
 	subject := msg.Subject()
+
+	meta, _ := msg.Metadata()
+	delivery := uint64(1)
+	if meta != nil {
+		delivery = meta.NumDelivered
+	}
+
 	attrs := metric.WithAttributes(
 		attribute.String("consumer", cfg.ConsumerName),
 		attribute.String("subject", subject),
@@ -178,16 +185,11 @@ func processOne[T any](
 				"subject", subject,
 				"panic", r,
 				"stack", string(debug.Stack()),
+				"delivery", delivery,
 			)
-			nakWithBackoff(msg, cfg, 1)
+			nakWithBackoff(msg, cfg, int(delivery))
 		}
 	}()
-
-	meta, _ := msg.Metadata()
-	delivery := uint64(1)
-	if meta != nil {
-		delivery = meta.NumDelivered
-	}
 
 	// MaxDeliver hit — push to DLQ + Term so JetStream stops redelivering.
 	if int(delivery) > cfg.MaxDeliver {
