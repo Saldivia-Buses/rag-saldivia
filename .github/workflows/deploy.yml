@@ -50,9 +50,11 @@ jobs:
       - name: Link persistent config
         run: |
           cp /etc/sda/.env deploy/.env
-          mkdir -p deploy/secrets/dynamic
-          cp /etc/sda/dynamic/jwt-private.pem deploy/secrets/dynamic/ 2>/dev/null || true
-          cp /etc/sda/dynamic/jwt-public.pem deploy/secrets/dynamic/ 2>/dev/null || true
+          mkdir -p deploy/secrets/dynamic deploy/traefik/dynamic deploy/cloudflare
+          cp /etc/sda/dynamic/jwt-*.pem deploy/secrets/dynamic/ 2>/dev/null || true
+          cp /etc/sda/traefik/traefik.prod.yml deploy/traefik/ 2>/dev/null || true
+          cp /etc/sda/traefik/dynamic/prod.yml deploy/traefik/dynamic/ 2>/dev/null || true
+          cp /etc/sda/cloudflare/config.yml deploy/cloudflare/ 2>/dev/null || true
       - name: Run preflight checks
         run: bash deploy/scripts/preflight.sh
 
@@ -176,9 +178,11 @@ jobs:
       - name: Link persistent config
         run: |
           cp /etc/sda/.env deploy/.env
-          mkdir -p deploy/secrets/dynamic
-          cp /etc/sda/dynamic/jwt-private.pem deploy/secrets/dynamic/ 2>/dev/null || true
-          cp /etc/sda/dynamic/jwt-public.pem deploy/secrets/dynamic/ 2>/dev/null || true
+          mkdir -p deploy/secrets/dynamic deploy/traefik/dynamic deploy/cloudflare
+          cp /etc/sda/dynamic/jwt-*.pem deploy/secrets/dynamic/ 2>/dev/null || true
+          cp /etc/sda/traefik/traefik.prod.yml deploy/traefik/ 2>/dev/null || true
+          cp /etc/sda/traefik/dynamic/prod.yml deploy/traefik/dynamic/ 2>/dev/null || true
+          cp /etc/sda/cloudflare/config.yml deploy/cloudflare/ 2>/dev/null || true
 
       - uses: actions/download-artifact@v4
         with:
