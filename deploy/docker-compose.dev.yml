@@ -222,9 +222,11 @@ services:
   # For local dev: make migrate
 
   # ── Frontend ──────────────────────────────────────────────────────────
+  # Frontend runs on the host with `bun run dev` (not Docker).
+  # Use --profile frontend-docker only if you need containerized frontend.
 
   web:
-    profiles: [full]
+    profiles: [frontend-docker]
     build:
       context: ..
       dockerfile: apps/web/Dockerfile
@@ -243,7 +245,7 @@ services:
       - "traefik.http.services.web-docker.loadbalancer.server.port=3000"
 
   login:
-    profiles: [full]
+    profiles: [frontend-docker]
     build:
       context: ..
       dockerfile: apps/login/Dockerfile
