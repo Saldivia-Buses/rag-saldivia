@@ -34,8 +34,8 @@ jobs:
           SERVICES=$(ls services/*/Dockerfile 2>/dev/null \
             | grep -v '\.scaffold' | grep -v extractor \
             | sed 's|services/||;s|/Dockerfile||' \
-            | jq -R -s 'split("\n") | map(select(. != ""))')
-          echo "matrix={\"service\":$SERVICES}" >> $GITHUB_OUTPUT
+            | jq -Rc -s 'split("\n") | map(select(. != ""))')
+          echo "matrix={\"service\":$SERVICES}" >> "$GITHUB_OUTPUT"
           echo "Discovered services: $SERVICES"
 
   # ══════════════════════════════════════════════════════════════════════════
@@ -50,8 +50,9 @@ jobs:
       - name: Link persistent config
         run: |
           cp /etc/sda/.env deploy/.env
-          mkdir -p deploy/secrets
-          cp /etc/sda/jwt_ed25519*.pem deploy/secrets/ 2>/dev/null || true
+          mkdir -p deploy/secrets/dynamic
+          cp /etc/sda/dynamic/jwt-private.pem deploy/secrets/dynamic/ 2>/dev/null || true
+          cp /etc/sda/dynamic/jwt-public.pem deploy/secrets/dynamic/ 2>/dev/null || true
       - name: Run preflight checks
         run: bash deploy/scripts/preflight.sh
 
@@ -175,8 +176,9 @@ jobs:
       - name: Link persistent config
         run: |
           cp /etc/sda/.env deploy/.env
-          mkdir -p deploy/secrets
-          cp /etc/sda/jwt_ed25519*.pem deploy/secrets/ 2>/dev/null || true
+          mkdir -p deploy/secrets/dynamic
+          cp /etc/sda/dynamic/jwt-private.pem deploy/secrets/dynamic/ 2>/dev/null || true
+          cp /etc/sda/dynamic/jwt-public.pem deploy/secrets/dynamic/ 2>/dev/null || true
 
       - uses: actions/download-artifact@v4
         with:
