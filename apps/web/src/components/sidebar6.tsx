@@ -11,7 +11,6 @@ import {
   MessageSquare,
   Settings,
   User,
-  FileText,
   Database,
 } from "lucide-react";
 import { useAuthStore } from "@/lib/auth/store";
@@ -185,7 +184,7 @@ function useSidebarData(): SidebarData {
   const coreItems: NavItem[] = [
     { label: "Inicio", icon: LayoutDashboard, href: "/inicio" },
     { label: "Chat", icon: MessageSquare, href: "/chat" },
-    { label: "Documentos", icon: FileText, href: "/documents" },
+    // /documents page does not exist yet — re-add the entry once apps/web/src/app/(core)/documents/page.tsx lands.
     { label: "Colecciones", icon: Database, href: "/collections" },
     { label: "Notificaciones", icon: Bell, href: "/notifications" },
   ];

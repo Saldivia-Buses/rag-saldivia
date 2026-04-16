@@ -41,6 +41,7 @@
     "src/components/magicui",
     "src/components/iconiq",
     "src/components/abui",
-    "src/__tests__"
+    "src/__tests__",
+    "e2e/api"
   ]
 }
