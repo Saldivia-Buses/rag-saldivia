@@ -192,7 +192,7 @@ func (c *Chat) AddMessage(ctx context.Context, sessionID, userID, role, content 
 	m := messageFromRepo(row)
 
 	// Publish notification via outbox for user messages (not assistant/system).
-	// The DrainerWorker publishes to NATS after tx.Commit.
+	// Uses a savepoint so an outbox failure doesn't abort the message tx.
 	if c.tenantSlug != "" && role == "user" {
 		env, envErr := spine.New(c.tenantSlug, notify.ChatNewMessageType,
 			notify.ChatNewMessageSchemaVersion,
@@ -200,17 +200,18 @@ func (c *Chat) AddMessage(ctx context.Context, sessionID, userID, role, content 
 				UserID:    userID,
 				SessionID: sessionID,
 				MessageID: m.ID,
-				Title:     truncate(content, 100),
+				Title:     "Nuevo mensaje",
 				Body:      truncate(content, 100),
 				Channel:   notify.ChatNewMessageChannelInApp,
 			})
-		if envErr != nil {
-			slog.Warn("failed to build chat envelope", "error", envErr)
-		} else {
+		if envErr == nil {
 			subject, _ := spine.BuildSubject(notify.ChatNewMessageSubject,
 				map[string]string{"slug": c.tenantSlug})
-			if pubErr := outbox.PublishTx(ctx, tx, subject, env); pubErr != nil {
-				slog.Warn("failed to enqueue chat event to outbox", "error", pubErr)
+			if _, spErr := tx.Exec(ctx, "SAVEPOINT outbox_sp"); spErr == nil {
+				if pubErr := outbox.PublishTx(ctx, tx, subject, env); pubErr != nil {
+					slog.Warn("outbox enqueue failed, rolling back savepoint", "error", pubErr)
+					_, _ = tx.Exec(ctx, "ROLLBACK TO SAVEPOINT outbox_sp")
+				}
 			}
 		}
 	}

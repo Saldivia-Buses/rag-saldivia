@@ -84,9 +84,22 @@ func main() {
 		app.OnShutdown(resolver.Close)
 
 		// Outbox drainer for all tenants (multi-tenant mode).
+		// Bootstrap from active tenants in platform DB.
+		var activeSlugs []string
+		slugRows, err := platformPool.Query(ctx,
+			`SELECT slug FROM tenants WHERE is_active = true`)
+		if err == nil {
+			for slugRows.Next() {
+				var s string
+				if slugRows.Scan(&s) == nil {
+					activeSlugs = append(activeSlugs, s)
+				}
+			}
+			slugRows.Close()
+		}
+		slog.Info("bootstrapping outbox drainers", "tenants", len(activeSlugs))
 		registry := outbox.NewRegistry(resolver, nc)
-		go registry.Start(ctx, nil) // bootstraps from tenant.created events
-		app.OnShutdown(func() {})   // registry stops via ctx cancellation
+		go registry.Start(ctx, activeSlugs)
 
 		authHandler = handler.NewMultiTenantAuth(resolver, jwtCfg, blacklist)
 		hc.Add("postgres", func(ctx context.Context) error { return platformPool.Ping(ctx) })

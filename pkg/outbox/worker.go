@@ -11,8 +11,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
-
-	"github.com/Camionerou/rag-saldivia/pkg/spine"
 )
 
 // DrainerWorker drains the event_outbox for a single tenant DB. It runs as a
@@ -78,8 +76,11 @@ func (d *DrainerWorker) Run(ctx context.Context) {
 			continue
 		}
 
-		// Update gauge.
-		spine.OutboxUnpublished.Add(ctx, int64(-n))
+		// Note: OutboxUnpublished metric is not updated here. The current
+		// UpDownCounter instrument can't be "set" to an absolute value —
+		// it only supports Add. Proper gauge reporting (via observable
+		// callback) is deferred to Fase 5 (observability). The drainBatch
+		// count query already surfaces the unpublished total in logs.
 
 		if n > 0 {
 			// More work likely — poll fast.

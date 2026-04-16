@@ -247,7 +247,8 @@ func (a *Auth) Login(ctx context.Context, req LoginRequest) (*TokenPair, error) 
 		return nil, fmt.Errorf("store refresh token: %w", err)
 	}
 
-	// Login event via outbox — guaranteed delivery after commit.
+	// Login event via outbox — uses savepoint so a failure doesn't abort
+	// the token rotation tx.
 	env, envErr := spine.New(a.tenant.Slug, authnotify.AuthLoginSuccessType,
 		authnotify.AuthLoginSuccessSchemaVersion,
 		authnotify.AuthLoginSuccessPayload{
@@ -256,13 +257,14 @@ func (a *Auth) Login(ctx context.Context, req LoginRequest) (*TokenPair, error) 
 			IPAddress: req.IP,
 			UserAgent: req.UserAgent,
 		})
-	if envErr != nil {
-		slog.Warn("failed to build login envelope", "error", envErr)
-	} else {
+	if envErr == nil {
 		subject, _ := spine.BuildSubject(authnotify.AuthLoginSuccessSubject,
 			map[string]string{"slug": a.tenant.Slug})
-		if pubErr := outbox.PublishTx(ctx, tx, subject, env); pubErr != nil {
-			slog.Warn("failed to enqueue login event to outbox", "error", pubErr)
+		if _, spErr := tx.Exec(ctx, "SAVEPOINT outbox_sp"); spErr == nil {
+			if pubErr := outbox.PublishTx(ctx, tx, subject, env); pubErr != nil {
+				slog.Warn("outbox enqueue failed, rolling back savepoint", "error", pubErr)
+				_, _ = tx.Exec(ctx, "ROLLBACK TO SAVEPOINT outbox_sp")
+			}
 		}
 	}
 
