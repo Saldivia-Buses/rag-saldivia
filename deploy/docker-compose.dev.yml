@@ -220,6 +220,43 @@ services:
   # See .github/workflows/deploy.yml "Run migrations" step.
   # For local dev: make migrate
 
+  # ── Frontend ──────────────────────────────────────────────────────────
+
+  web:
+    profiles: [full]
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://${SDA_DOMAIN:-localhost}
+        NEXT_PUBLIC_TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.web-docker.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.web-docker.entrypoints=web"
+      - "traefik.http.routers.web-docker.priority=1"
+      - "traefik.http.services.web-docker.loadbalancer.server.port=3000"
+
+  login:
+    profiles: [full]
+    build:
+      context: ..
+      dockerfile: apps/login/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://${SDA_DOMAIN:-localhost}
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.login-docker.rule=PathPrefix(`/login`)"
+      - "traefik.http.routers.login-docker.entrypoints=web"
+      - "traefik.http.routers.login-docker.priority=50"
+      - "traefik.http.services.login-docker.loadbalancer.server.port=3001"
+
   # ── Go Services (profile: full) ──────────────────────────────────────
   # Only start with: docker compose --profile full up --build
   # Traefik auto-discovers these via Docker labels (priority 100).
