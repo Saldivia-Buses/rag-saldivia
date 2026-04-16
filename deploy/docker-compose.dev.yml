@@ -276,6 +276,9 @@ services:
       <<: *env-common
       AUTH_PORT: "8001"
       TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
+      # Dev/VPN access is HTTP same-origin — Secure cookies would be dropped
+      # by the browser. Refresh-token cookie keeps HttpOnly + SameSite=Lax.
+      SDA_COOKIE_SECURE: "false"
     ports:
       - "8001:8001"
     labels:
