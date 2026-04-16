@@ -7,6 +7,8 @@
 node_modules
 _archive
 apps
+!apps/web
+!apps/login
 docs
 *.md
 cover.html
