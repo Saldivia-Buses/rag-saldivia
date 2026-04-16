@@ -24,12 +24,7 @@ log() { echo "[migrate] $1"; }
 # Create schema_migrations tracking table if it doesn't exist
 ensure_tracking() {
     local db_url="$1"
-    psql "$db_url" --quiet -v ON_ERROR_STOP=1 <<'SQL'
-CREATE TABLE IF NOT EXISTS schema_migrations (
-    filename TEXT PRIMARY KEY,
-    applied_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-SQL
+    psql "$db_url" --quiet -v ON_ERROR_STOP=1 -c "CREATE TABLE IF NOT EXISTS schema_migrations (filename TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT now())" < /dev/null
 }
 
 # Apply a migration if not already applied
