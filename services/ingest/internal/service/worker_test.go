@@ -81,7 +81,7 @@ func (m *mockPublisher) Notify(slug string, evt any) error {
 
 // buildWorkerWithServer creates a worker wired to a test HTTP server.
 // Returns the worker and a cleanup func.
-func buildWorkerWithServer(t *testing.T, srv *httptest.Server, pub EventPublisher) *Worker {
+func buildWorkerWithServer(t *testing.T, srv *httptest.Server, _ EventPublisher) *Worker {
 	t.Helper()
 	cfg := Config{
 		BlueprintURL: srv.URL,
@@ -89,11 +89,11 @@ func buildWorkerWithServer(t *testing.T, srv *httptest.Server, pub EventPublishe
 		Timeout:      0,
 	}
 	w := &Worker{
-		nc:        nil,
-		svc:       &ingestSpy{},
-		publisher: pub,
-		client:    &http.Client{Timeout: cfg.Timeout},
-		cfg:       cfg,
+		nc:         nil,
+		svc:        &ingestSpy{},
+		tenantSlug: "test",
+		client:     &http.Client{Timeout: cfg.Timeout},
+		cfg:        cfg,
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
@@ -448,44 +448,10 @@ func TestPublishCompletion_CallsPublisher(t *testing.T) {
 		FileName:   "doc.pdf",
 	}
 
-	w.publishCompletion(im)
-
-	require.True(t, pub.NotifyCalled, "publisher.Notify must be called on completion")
-	require.Len(t, pub.NotifyArgs, 1)
-	assert.Equal(t, "saldivia", pub.NotifyArgs[0].Slug,
-		"notification must use tenant slug from IngestMessage (set by subject validation)")
-
-	// Verify the event content
-	evt, ok := pub.NotifyArgs[0].Evt.(map[string]string)
-	require.True(t, ok)
-	assert.Equal(t, "ingest.completed", evt["type"])
-	assert.Equal(t, "u-1", evt["user_id"])
-}
-
-func TestPublishCompletion_NilPublisher_NoopNotPanic(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {}))
-	defer srv.Close()
-
-	// publisher nil + nc nil should not panic (nc.Publish will fail silently)
-	w := buildWorkerWithServer(t, srv, nil)
-	w.publisher = nil
-
-	im := IngestMessage{
-		JobID:      "job-noop",
-		TenantSlug: "saldivia",
-		FileName:   "x.pdf",
-		Collection: "c",
-	}
-
-	// Must not panic even when both publisher and nc are nil
+	// broadcastStatus is the only non-outbox path. It should not panic
+	// even when nc is nil (the json.Marshal is always valid).
 	assert.NotPanics(t, func() {
-		// nc is nil so nc.Publish panics — we document this known limitation:
-		// Worker always needs a real nc for publishCompletion's WS broadcast.
-		// The publisher path is guarded by nil check; nc path is not.
-		// Skip the WS publish call by just testing the publisher guard.
-		if w.publisher != nil {
-			_ = w.publisher.Notify(im.TenantSlug, nil)
-		}
+		w.broadcastStatus(im)
 	})
 }
 

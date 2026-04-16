@@ -12,8 +12,14 @@ import (
 	"os"
 	"strings"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
+
+	ingestevt "github.com/Camionerou/rag-saldivia/pkg/events/gen/ingest"
+	"github.com/Camionerou/rag-saldivia/pkg/outbox"
+	"github.com/Camionerou/rag-saldivia/pkg/spine"
+	"github.com/Camionerou/rag-saldivia/services/ingest/internal/repository"
 )
 
 // JobStatusUpdater is the narrow dependency the Worker needs from Ingest.
@@ -25,24 +31,27 @@ type JobStatusUpdater interface {
 // Worker consumes ingest jobs from NATS JetStream and forwards documents
 // to the NVIDIA RAG Blueprint for vectorization.
 type Worker struct {
-	nc        *nats.Conn
-	svc       JobStatusUpdater
-	publisher EventPublisher
-	client    *http.Client
-	cfg       Config
-	cons      jetstream.Consumer
-	ctx       context.Context
-	cancel    context.CancelFunc
+	nc         *nats.Conn
+	pool       *pgxpool.Pool
+	tenantSlug string
+	svc        JobStatusUpdater
+	client     *http.Client
+	cfg        Config
+	cons       jetstream.Consumer
+	ctx        context.Context
+	cancel     context.CancelFunc
 }
 
-// NewWorker creates an ingest worker.
-func NewWorker(nc *nats.Conn, svc JobStatusUpdater, publisher EventPublisher, cfg Config) *Worker {
+// NewWorker creates an ingest worker. The pool is used for transactional
+// outbox writes on job completion.
+func NewWorker(nc *nats.Conn, pool *pgxpool.Pool, tenantSlug string, svc JobStatusUpdater, cfg Config) *Worker {
 	return &Worker{
-		nc:        nc,
-		svc:       svc,
-		publisher: publisher,
-		client:    &http.Client{Timeout: cfg.Timeout},
-		cfg:       cfg,
+		nc:         nc,
+		pool:       pool,
+		tenantSlug: tenantSlug,
+		svc:        svc,
+		client:     &http.Client{Timeout: cfg.Timeout},
+		cfg:        cfg,
 	}
 }
 
@@ -162,12 +171,17 @@ func (w *Worker) processJob(msg jetstream.Msg) {
 		return
 	}
 
-	// Mark completed and clean up staged file
-	_ = w.svc.UpdateJobStatus(ctx, im.JobID, "completed", nil)
+	// Mark completed + publish notification atomically via outbox.
+	if err := w.completeJob(ctx, im); err != nil {
+		slog.Error("complete job failed (non-fatal)", "job_id", im.JobID, "error", err)
+		// Status update may have failed but blueprint succeeded.
+		// Fall back to non-tx status update so the job isn't stuck in "processing".
+		_ = w.svc.UpdateJobStatus(ctx, im.JobID, "completed", nil)
+	}
 	_ = os.Remove(im.StagedPath)
 
-	// Publish notification + WS event
-	w.publishCompletion(im)
+	// WS broadcast for real-time progress (best-effort, no outbox)
+	w.broadcastStatus(im)
 
 	_ = msg.Ack()
 	slog.Info("ingest job completed", "job_id", im.JobID, "file", im.FileName)
@@ -223,21 +237,49 @@ func (w *Worker) forwardToBlueprint(ctx context.Context, im IngestMessage) error
 	return nil
 }
 
-func (w *Worker) publishCompletion(im IngestMessage) {
-	// D4: use actual user_id from the ingest message
-	if w.publisher != nil {
-		evt := map[string]string{
-			"type":    "ingest.completed",
-			"user_id": im.UserID,
-			"title":   "Documento procesado",
-			"body":    im.FileName + " ingresado en " + im.Collection,
-		}
-		if err := w.publisher.Notify(im.TenantSlug, evt); err != nil {
-			slog.Warn("failed to publish ingest notification", "error", err)
-		}
+// completeJob wraps the job status update + ingest.completed event in a single
+// tx via the outbox. Returns error if the tx fails (caller falls back to
+// non-tx status update).
+func (w *Worker) completeJob(ctx context.Context, im IngestMessage) error {
+	tx, err := w.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("begin completion tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	txRepo := repository.New(tx)
+	if err := txRepo.UpdateJobStatus(ctx, repository.UpdateJobStatusParams{
+		ID:     im.JobID,
+		Status: "completed",
+	}); err != nil {
+		return fmt.Errorf("update job status: %w", err)
 	}
 
-	// WS broadcast for real-time progress
+	env, err := spine.New(im.TenantSlug, ingestevt.IngestCompletedType,
+		ingestevt.IngestCompletedSchemaVersion,
+		ingestevt.IngestCompletedPayload{
+			JobID:          im.JobID,
+			CollectionName: im.Collection,
+			DocCount:       1,
+			ChunkCount:     0, // unknown until blueprint reports
+			DurationMS:     0, // TODO: track start time
+		})
+	if err != nil {
+		return fmt.Errorf("build envelope: %w", err)
+	}
+
+	subject, _ := spine.BuildSubject(ingestevt.IngestCompletedSubject,
+		map[string]string{"slug": im.TenantSlug})
+	if err := outbox.PublishTx(ctx, tx, subject, env); err != nil {
+		return fmt.Errorf("outbox publish: %w", err)
+	}
+
+	return tx.Commit(ctx)
+}
+
+// broadcastStatus sends a best-effort WS broadcast for real-time UI updates.
+// Not outbox-backed — a missed broadcast is tolerable (the client can poll).
+func (w *Worker) broadcastStatus(im IngestMessage) {
 	payload, _ := json.Marshal(map[string]any{
 		"type":    "event",
 		"channel": "ingest.jobs",
@@ -249,7 +291,7 @@ func (w *Worker) publishCompletion(im IngestMessage) {
 		},
 	})
 	subject := "tenant." + im.TenantSlug + ".ingest.jobs"
-	//nolint:forbidigo // Plan 26 Fase 3 migrates ingest publishes to outbox.PublishTx.
+	//nolint:forbidigo // WS broadcast — best-effort, no outbox needed.
 	if err := w.nc.Publish(subject, payload); err != nil {
 		slog.Warn("failed to broadcast ingest status", "error", err)
 	}

@@ -16,6 +16,7 @@ import (
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
+	"github.com/Camionerou/rag-saldivia/pkg/outbox"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
 	"github.com/Camionerou/rag-saldivia/pkg/server"
 	"github.com/Camionerou/rag-saldivia/services/ingest/internal/handler"
@@ -57,18 +58,25 @@ func main() {
 	app.OnShutdown(func() { _ = nc.Drain() })
 	slog.Info("connected to NATS", "url", config.RedactURL(natsURL))
 
-	publisher := natspub.New(nc)
-
 	cfg := service.Config{
 		BlueprintURL: blueprintURL,
 		StagingDir:   stagingDir,
 		Timeout:      120 * time.Second,
 	}
 
+	tenantSlug := config.Env("TENANT_SLUG", "dev")
+
+	// Outbox drainer — publishes spine events from event_outbox to NATS.
+	drainer := outbox.NewDrainer(pool, nc, tenantSlug)
+	drainerCtx, drainerCancel := context.WithCancel(ctx)
+	go drainer.Run(drainerCtx)
+	app.OnShutdown(drainerCancel)
+
 	// Service + Worker
+	publisher := natspub.New(nc)
 	ingestSvc := service.New(pool, nc, publisher, cfg)
 
-	worker := service.NewWorker(nc, ingestSvc, publisher, cfg)
+	worker := service.NewWorker(nc, pool, tenantSlug, ingestSvc, cfg)
 	if err := worker.Start(ctx); err != nil {
 		slog.Error("failed to start ingest worker", "error", err)
 		os.Exit(1)
