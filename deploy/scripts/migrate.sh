@@ -42,7 +42,7 @@ apply_migration() {
     # Check if already applied (use psql -v to avoid SQL injection)
     local applied
     applied=$(psql "$db_url" -t -v "mig_file=$filename" \
-        -c "SELECT 1 FROM schema_migrations WHERE filename = :'mig_file'" 2>/dev/null | tr -d ' ')
+        -c "SELECT 1 FROM schema_migrations WHERE filename = :'mig_file'" < /dev/null 2>/dev/null | tr -d ' ')
 
     if [ "$applied" = "1" ]; then
         return 0
@@ -51,11 +51,11 @@ apply_migration() {
     log "applying $filename → $(echo "$db_url" | sed 's|.*@||; s|?.*||')"
 
     # Apply migration inside a transaction
-    psql "$db_url" -v ON_ERROR_STOP=1 --quiet --single-transaction -f "$file"
+    psql "$db_url" -v ON_ERROR_STOP=1 --quiet --single-transaction -f "$file" < /dev/null
 
     # Record as applied
     psql "$db_url" --quiet -v "mig_file=$filename" \
-        -c "INSERT INTO schema_migrations (filename) VALUES (:'mig_file') ON CONFLICT DO NOTHING"
+        -c "INSERT INTO schema_migrations (filename) VALUES (:'mig_file') ON CONFLICT DO NOTHING" < /dev/null
 }
 
 # ── Platform DB ──────────────────────────────────────────────────────────
