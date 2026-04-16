@@ -36,6 +36,18 @@ Source: `pkg/spine/envelope.go`, `pkg/spine/subject.go`
 | `CheckSchemaVersion[T](env, expected)` | func | Fail-fast on schema mismatch |
 | `BuildSubject(template, replacements)` | func | `{key}` interpolation + per-segment validation |
 | `ValidateSubject(s)` | func | Canonical dot-separated subject check |
+| `Consume[T](ctx, nc, js, pool, cfg, handler)` | func | JetStream pull consumer with full middleware chain |
+| `TypedHandler[T]` | type | `func(ctx, pgx.Tx, Envelope[T]) error` — runs in handler tx |
+| `ConsumerConfig` | struct | Durable, Stream, Subject, MaxDeliver, backoff params |
+| `TenantPool` | interface | `PostgresPool(ctx, slug)` — tenant-scoped pool resolver |
+| `SubjectSlug(subject)` | func | Extract tenant slug from subject |
+| `ValidateTenantMatch(subject, header)` | func | Subject slug == envelope TenantID |
+| `EnsureFirstDelivery(ctx, tx, eventID, consumer)` | func | Atomic dedup in handler tx |
+| `ExtractTraceContext(ctx, header, natsHeaders)` | func | OTel from envelope or headers |
+| `Backoff(attempt, base, max)` | func | Exponential 2^n * base, capped at max |
+| `PushDLQ(ctx, nc, entry)` | func | Structured DLQ publish |
+| `DLQEntry` | struct | Original envelope + metadata for healthwatch |
+| `PublishTotal`, `ConsumeTotal`, ... | metrics | OTel counters + histograms |
 
 ## Envelope shape
 
@@ -94,9 +106,25 @@ if err := spine.CheckSchemaVersion(env, 1); err != nil { /* DLQ */ }
 - IDs are UUIDv7 (time-ordered) so `event_outbox` and `processed_events` rely
   on B-tree scans by ID for ordering and TTL cleanup.
 
+## Consumer middleware chain (Fase 2)
+
+`Consume[T]` creates a JetStream durable pull consumer that runs these
+steps per message (in order):
+
+1. Panic recovery → Nak + backoff, slog.Error with stack trace
+2. MaxDeliver check → PushDLQ + Term if exceeded
+3. PeekHeader → extract tenant slug + Type
+4. ValidateTenantMatch → Term on mismatch
+5. Decode envelope as `Envelope[T]`
+6. ExtractTraceContext from envelope TraceID+SpanID (or NATS headers)
+7. Get tenant pool → Nak on error (transient)
+8. Begin tx → EnsureFirstDelivery → Ack+skip if duplicate
+9. Run handler in tx
+10. Commit → Ack on success, Nak on error
+
 ## Importers
 
-Empty on merge (Fase 1 introduces the package). Fase 2 adds the consumer
-framework (`Consume`, middleware, DLQ push). Fase 3 migrates chat/ingest/auth
-to publish via `outbox.PublishTx` with a spine envelope. `pkg/nats.Publisher`
-stays the wire layer and gains an `Envelope[Event]` internal wrapper.
+Fase 2: framework only (no service uses it yet — notification retrofit
+deferred to when producers emit envelopes in Fase 3). Fase 3 migrates
+chat/ingest/auth to `outbox.PublishTx` and switches notification consumer
+to `spine.Consume`.
