@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,6 +36,7 @@ const Login5 = ({
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const login = useAuthStore((s) => s.login);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,7 +45,7 @@ const Login5 = ({
 
     try {
       await login(email, password);
-      window.location.href = "/inicio";
+      router.push("/inicio");
     } catch (err) {
       if (err instanceof ApiError) {
         switch (err.status) {
