@@ -56,6 +56,16 @@ func (h *Healthwatch) Routes() chi.Router {
 	return r
 }
 
+// AdminRoutes mounts admin-guarded routes (DLQ etc.) on the given router.
+// Applies requirePlatformAdmin so JWT auth + admin role are enforced,
+// and permissions are loaded into context for RequirePermission.
+func (h *Healthwatch) AdminRoutes(r chi.Router, dlq *DLQ) {
+	r.Group(func(r chi.Router) {
+		r.Use(h.requirePlatformAdmin)
+		dlq.Routes(r)
+	})
+}
+
 // Summary handles GET /v1/healthwatch/summary
 func (h *Healthwatch) Summary(w http.ResponseWriter, r *http.Request) {
 	summary, err := h.svc.Summary(r.Context())
@@ -167,6 +177,7 @@ func (h *Healthwatch) requirePlatformAdmin(next http.Handler) http.Handler {
 		ctx = sdamw.WithRole(ctx, claims.Role)
 		ctx = sdamw.WithUserID(ctx, claims.UserID)
 		ctx = sdamw.WithUserEmail(ctx, claims.Email)
+		ctx = sdamw.WithPermissions(ctx, claims.Permissions)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

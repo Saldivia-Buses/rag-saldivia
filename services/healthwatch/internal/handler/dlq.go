@@ -186,28 +186,37 @@ func (h *DLQ) replay(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	msg := &nats.Msg{Subject: originalSubject, Data: replayEnvelope, Header: nats.Header{}}
-	if err := h.nc.PublishMsg(msg); err != nil {
-		httperr.WriteError(w, r, httperr.Internal(err))
-		return
-	}
-
+	// Record the replay BEFORE publishing — if the DB write fails, we
+	// don't publish (avoids orphaned replays with no audit trail).
 	_, err = tx.Exec(r.Context(),
 		`INSERT INTO dead_events_replays (dead_event_id, replayed_by_user_id, new_event_id, status)
 		 VALUES ($1, $2, $3, 'pending')`,
 		id, userID, newEventID)
 	if err != nil {
-		slog.Error("record replay failed", "id", id, "error", err)
+		httperr.WriteError(w, r, httperr.Internal(err))
+		return
 	}
 
 	_, err = tx.Exec(r.Context(),
 		`UPDATE dead_events SET replay_count = replay_count + 1, last_replayed_at = now()
 		 WHERE id = $1`, id)
 	if err != nil {
-		slog.Error("update replay count failed", "id", id, "error", err)
+		httperr.WriteError(w, r, httperr.Internal(err))
+		return
 	}
 
 	if err := tx.Commit(r.Context()); err != nil {
+		httperr.WriteError(w, r, httperr.Internal(err))
+		return
+	}
+
+	// Publish AFTER commit so the audit trail is guaranteed to exist.
+	// If NATS publish fails here, the replay record shows status='pending'
+	// and the operator can retry.
+	msg := &nats.Msg{Subject: originalSubject, Data: replayEnvelope, Header: nats.Header{}}
+	if err := h.nc.PublishMsg(msg); err != nil {
+		// DB already committed — log the failure. Operator can retry replay.
+		slog.Error("replay publish failed after DB commit", "id", id, "error", err)
 		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}

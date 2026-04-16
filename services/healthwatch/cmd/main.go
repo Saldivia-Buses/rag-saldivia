@@ -98,7 +98,8 @@ func main() {
 	r := app.Router()
 	r.Get("/health", hc.Handler())
 	r.Mount("/v1/healthwatch", hw.Routes())
-	dlqHandler.Routes(r)
+	// DLQ admin routes — guarded by requirePlatformAdmin via hw.AdminRoutes
+	hw.AdminRoutes(r, dlqHandler)
 
 	app.Run()
 }
