@@ -17,7 +17,9 @@ import { login, apiGet } from "./helpers";
 const ERP_READ_ENDPOINTS: { path: string; query?: Record<string, string> }[] = [
   // Master data
   { path: "/v1/erp/catalogs/types" },
-  { path: "/v1/erp/entities", query: { page_size: "20" } },
+  { path: "/v1/erp/entities", query: { type: "customer", page_size: "20" } },
+  { path: "/v1/erp/entities", query: { type: "supplier", page_size: "20" } },
+  { path: "/v1/erp/entities", query: { type: "employee", page_size: "20" } },
 
   // Stock / inventory
   { path: "/v1/erp/stock/articles", query: { page_size: "20" } },

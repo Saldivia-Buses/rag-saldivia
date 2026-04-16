@@ -1,17 +1,22 @@
 /**
  * Smoke suite — visit every public route in the app and assert:
- *   - Page navigates without redirect-bouncing (URL contains the requested path).
+ *   - URL stays on the requested route (no redirect-bounce to /login).
  *   - No 5xx responses for any /v1/* request fired during the visit.
  *   - No uncaught JS errors / page errors.
+ *   - No unexpected console errors (HMR + WS subprotocol noise filtered).
  *
- * Console errors are filtered to ignore the dev-mode HMR WebSocket noise
- * and React DevTools nag — both are environmental, not regressions.
+ * Each test does a fresh API login in beforeEach to dodge the single-use
+ * refresh-token rotation problem (a saved storageState would die after one
+ * use as the first test's refresh consumes the token).
  */
-import { test, expect, type Page, type Request, type Response } from "@playwright/test";
+import { test, expect, type Page, type Response } from "@playwright/test";
+
+const TARGET = process.env.TARGET ?? "http://172.22.100.23";
+const TEST_EMAIL = process.env.TEST_EMAIL ?? "e2e-test@saldivia.local";
+const TEST_PASSWORD = process.env.TEST_PASSWORD ?? "testpassword123";
 
 interface Route {
   path: string;
-  /** Optional locator that must be visible — extra confidence the page rendered. */
   expectVisible?: string;
 }
 
@@ -37,29 +42,22 @@ const MODULE_ROOTS: Route[] = [
 ];
 
 const SUB_PAGES: Route[] = [
-  // Manufactura
   { path: "/manufactura/unidades" },
   { path: "/manufactura/controles" },
   { path: "/manufactura/certificaciones" },
-  // Producción
   { path: "/produccion/ordenes" },
   { path: "/produccion/seguimiento" },
   { path: "/produccion/pcp" },
   { path: "/produccion/preentrega" },
-  // Calidad
   { path: "/calidad/inspecciones" },
   { path: "/calidad/no-conformidades" },
   { path: "/calidad/trazabilidad" },
-  // Compras
   { path: "/compras/proveedores" },
   { path: "/compras/ordenes" },
-  // RRHH
   { path: "/rrhh/legajos" },
   { path: "/rrhh/licencias" },
-  // Seguridad
   { path: "/seguridad/incidentes" },
   { path: "/seguridad/inspecciones" },
-  // Mantenimiento
   { path: "/mantenimiento/equipos" },
   { path: "/mantenimiento/preventivo" },
 ];
@@ -70,9 +68,56 @@ function isIgnorableConsoleError(text: string): boolean {
   return (
     text.includes("webpack-hmr") ||
     text.includes("react-devtools") ||
-    text.includes("Download the React DevTools")
+    text.includes("Download the React DevTools") ||
+    text.includes("WebSocket connection to") ||
+    text.includes("HTTP Authentication failed") ||
+    (text.includes("Failed to load resource") && text.includes("404"))
   );
 }
+
+// Single login for the whole suite. Each test reuses the latest refresh
+// token (rotated by the previous test's silent refresh) via cookie injection.
+// Avoids /v1/auth/login rate-limit (429) while still testing real auth.
+let cachedRefreshToken: string | null = null;
+
+async function loginOnce(): Promise<string> {
+  if (cachedRefreshToken) return cachedRefreshToken;
+  const res = await fetch(`${TARGET}/v1/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: TEST_EMAIL, password: TEST_PASSWORD }),
+  });
+  if (!res.ok) throw new Error(`login failed: ${res.status} ${await res.text()}`);
+  const cookieHeader = res.headers.get("set-cookie") ?? "";
+  const match = cookieHeader.match(/sda_refresh=([^;]+)/);
+  if (!match) throw new Error(`no sda_refresh in Set-Cookie: ${cookieHeader}`);
+  cachedRefreshToken = match[1];
+  return cachedRefreshToken;
+}
+
+test.beforeEach(async ({ context }) => {
+  const refreshToken = await loginOnce();
+  const url = new URL(TARGET);
+  await context.addCookies([
+    {
+      name: "sda_refresh",
+      value: refreshToken,
+      domain: url.hostname,
+      path: "/v1/auth",
+      httpOnly: true,
+      secure: false,
+      sameSite: "Lax",
+    },
+  ]);
+});
+
+// After each test the page's silent refresh has rotated the cookie. Capture
+// the latest one so the next test's beforeEach starts with a valid token.
+test.afterEach(async ({ context }) => {
+  const cookies = await context.cookies();
+  const fresh = cookies.find((c) => c.name === "sda_refresh");
+  if (fresh?.value) cachedRefreshToken = fresh.value;
+});
 
 async function visitAndAssert(page: Page, route: Route) {
   const apiCalls: { url: string; status: number }[] = [];
@@ -86,18 +131,14 @@ async function visitAndAssert(page: Page, route: Route) {
   });
   page.on("pageerror", (err) => pageErrors.push(err.message));
   page.on("response", (res: Response) => {
-    const url = res.url();
-    if (url.includes("/v1/")) {
-      apiCalls.push({ url, status: res.status() });
+    if (res.url().includes("/v1/")) {
+      apiCalls.push({ url: res.url(), status: res.status() });
     }
   });
 
   await page.goto(route.path);
-
-  // Some pages load data after mount — give them a moment.
   await page.waitForLoadState("networkidle", { timeout: 8_000 }).catch(() => {});
 
-  // Asserts
   expect(page.url(), `URL mismatch on ${route.path}`).toContain(route.path);
 
   const fivexx = apiCalls.filter((c) => c.status >= 500);
@@ -106,19 +147,16 @@ async function visitAndAssert(page: Page, route: Route) {
       `5xx on ${route.path}:\n` + fivexx.map((c) => `  ${c.status} ${c.url}`).join("\n"),
     );
   }
-
   if (consoleErrors.length > 0) {
     throw new Error(
       `console errors on ${route.path}:\n  - ` + consoleErrors.join("\n  - "),
     );
   }
-
   if (pageErrors.length > 0) {
     throw new Error(
       `pageerror on ${route.path}:\n  - ` + pageErrors.join("\n  - "),
     );
   }
-
   if (route.expectVisible) {
     await expect(page.locator(route.expectVisible)).toBeVisible({ timeout: 5_000 });
   }

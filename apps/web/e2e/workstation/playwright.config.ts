@@ -31,16 +31,10 @@ export default defineConfig({
   },
   projects: [
     {
-      name: "setup",
-      testMatch: /auth\.setup\.ts/,
-    },
-    {
       name: "chromium",
-      use: {
-        browserName: "chromium",
-        storageState: "apps/web/e2e/workstation/.auth/state.json",
-      },
-      dependencies: ["setup"],
+      use: { browserName: "chromium" },
+      // No storageState / setup project — each test logs in fresh in
+      // beforeEach because refresh tokens are single-use rotation.
     },
   ],
 });
