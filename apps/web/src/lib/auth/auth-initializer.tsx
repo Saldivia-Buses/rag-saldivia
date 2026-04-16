@@ -45,7 +45,7 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
   // Not authenticated — redirect to login
   if (!isAuthenticated) {
     if (typeof window !== "undefined") {
-      window.location.href = "/login";
+      window.location.replace("/login");
     }
     return null;
   }

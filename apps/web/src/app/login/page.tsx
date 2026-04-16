@@ -2,17 +2,18 @@
 
 import { Login5 } from "@/components/login5";
 import { useAuthStore } from "@/lib/auth/store";
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function LoginPage() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const router = useRouter();
 
-  // If already authenticated, go to dashboard
   useEffect(() => {
     if (isAuthenticated) {
-      window.location.replace("/inicio");
+      router.push("/inicio");
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, router]);
 
   return <Login5 />;
 }
