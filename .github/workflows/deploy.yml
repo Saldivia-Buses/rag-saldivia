@@ -55,19 +55,17 @@ jobs:
 
       - name: Wait for health + diagnostics
         run: |
-          # Wait for web healthcheck to complete (3 retries × 15s = ~45s)
           for i in 1 2 3 4 5 6; do
             sleep 10
             STATUS=$(docker inspect deploy-web-1 --format '{{.State.Health.Status}}' 2>/dev/null || echo "?")
             echo "[$((i*10))s] web health: $STATUS"
             [ "$STATUS" = "healthy" ] && break
           done
-          docker ps --format "table {{.Names}}\t{{.Status}}" | sort
-          echo "--- traefik logs (last 30s) ---"
-          docker logs deploy-traefik-1 --since 30s 2>&1 | tail -40 || true
-          echo "--- traefik dashboard sees N routers ---"
+          echo "--- web healthcheck logs ---"
+          docker inspect deploy-web-1 --format '{{json .State.Health}}' | python3 -m json.tool || true
+          echo "--- web app logs ---"
+          docker logs deploy-web-1 --tail 10 2>&1 || true
+          echo "--- exec node check inside container ---"
+          docker exec deploy-web-1 node -e "require('http').get('http://localhost:3000/', (r) => { console.log('status:', r.statusCode); process.exit(0); }).on('error', (e) => { console.log('err:', e.message); process.exit(1); })" || true
+          echo "--- traefik routers ---"
           curl -s http://localhost:8080/api/http/routers | python3 -c 'import json,sys; print(*sorted([r["name"] for r in json.load(sys.stdin) if "@docker" in r["name"]]),sep="\n")'
-          echo "--- curl localhost:80/login ---"
-          curl -sI http://localhost/login | head -3
-          echo "--- curl localhost:3000 ---"
-          curl -sI http://localhost:3000/ | head -3
