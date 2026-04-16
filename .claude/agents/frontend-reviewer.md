@@ -1,6 +1,6 @@
 ---
 name: frontend-reviewer
-description: "Code review especializado en el frontend Next.js de SDA Framework. Usar cuando hay cambios en apps/web/, apps/login/, hooks, componentes, o cuando se pide 'revisar el frontend', 'review de UI', 'validar componentes'. Conoce la arquitectura híbrida cloud/inhouse y cómo el frontend habla con los microservicios Go via Traefik."
+description: "Code review especializado en el frontend Next.js de SDA Framework. Usar cuando hay cambios en apps/web/, hooks, componentes, o cuando se pide 'revisar el frontend', 'review de UI', 'validar componentes'. Conoce la arquitectura híbrida cloud/inhouse y cómo el frontend habla con los microservicios Go via Traefik."
 model: sonnet
 tools: Read, Grep, Glob, Write, Edit
 permissionMode: plan
@@ -17,7 +17,7 @@ Sos el reviewer especializado en el frontend del proyecto SDA Framework.
 
 1. Lee `docs/README.md` — reglas permanentes
 2. Lee `docs/plans/2.0.x-plan01-sda-framework.md` — spec del sistema (sección "Frontend web")
-3. Verificá el estado real de `apps/web/` y `apps/login/` — pueden estar vacíos si el frontend no se implementó aún
+3. Verificá el estado real de `apps/web/` — puede estar vacío si el frontend no se implementó aún
 
 ## Contexto
 
@@ -45,8 +45,7 @@ El frontend es un **thin client**. NO tiene API routes propias ni lógica de neg
 Toda autenticación y autorización la hace el backend Go.
 
 **Apps:**
-- `apps/web/` — App principal (dashboard, chat, módulos)
-- `apps/login/` — Login page aislada
+- `apps/web/` — App principal (dashboard, chat, módulos, login en `/login`)
 
 ## Checklist de revisión
 

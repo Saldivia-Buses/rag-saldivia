@@ -304,10 +304,11 @@ func (h *Auth) Health(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "service": "auth"})
 }
 
-// setRefreshCookie sets the refresh token as an HttpOnly secure cookie.
-// In dev (HTTP), Secure=false and SameSite=Lax so the cookie works without TLS.
+// setRefreshCookie sets the refresh token as an HttpOnly cookie.
+// SDA_COOKIE_SECURE=false → Secure=false + SameSite=Lax, so the cookie is
+// usable over plain HTTP (dev, VPN/IP same-origin, etc.). Default: secure.
 func setRefreshCookie(w http.ResponseWriter, token string, expiresAt time.Time) {
-	secure := os.Getenv("SDA_ENV") != "development"
+	secure := os.Getenv("SDA_COOKIE_SECURE") != "false"
 	sameSite := http.SameSiteStrictMode
 	if !secure {
 		sameSite = http.SameSiteLaxMode
@@ -323,15 +324,22 @@ func setRefreshCookie(w http.ResponseWriter, token string, expiresAt time.Time) 
 	})
 }
 
-// clearRefreshCookie removes the refresh cookie.
+// clearRefreshCookie removes the refresh cookie. Mirrors setRefreshCookie's
+// Secure/SameSite policy so the clear works over HTTP too — browsers ignore
+// Set-Cookie with Secure when the response is over HTTP.
 func clearRefreshCookie(w http.ResponseWriter) {
+	secure := os.Getenv("SDA_COOKIE_SECURE") != "false"
+	sameSite := http.SameSiteStrictMode
+	if !secure {
+		sameSite = http.SameSiteLaxMode
+	}
 	http.SetCookie(w, &http.Cookie{
 		Name:     "sda_refresh",
 		Value:    "",
 		Path:     "/v1/auth",
 		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
+		Secure:   secure,
+		SameSite: sameSite,
 		MaxAge:   -1,
 	})
 }

@@ -90,7 +90,8 @@ services:
       - "--providers.docker.endpoint=tcp://docker-socket-proxy:2375"
       - "--providers.file.directory=/etc/traefik/dynamic"
       - "--entrypoints.web.address=:80"
-      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      # HTTP→HTTPS redirect disabled: VPN/IP access uses plain HTTP same-origin.
+      # Re-enable once TLS is provisioned (Tailscale Funnel, ACME, or Cloudflare).
       - "--entrypoints.websecure.address=:443"
       - "--api.dashboard=false"
       - "--log.level=WARN"
@@ -112,6 +113,44 @@ services:
         limits:
           memory: 256M
           cpus: "1.0"
+
+  # ── Frontend (Next.js standalone) ────────────────────────────────────
+  # Production build, served by node from .next/standalone.
+  # Same-origin with API: Traefik routes /v1/* and /ws/* to backend services
+  # and `/` (lowest priority) to this container. NEXT_PUBLIC_API_URL="" so the
+  # browser uses relative URLs against the same host that served the page.
+
+  web:
+    <<: *service-defaults
+    image: ghcr.io/saldivia-buses/sda-web:${WEB_VERSION:-local}
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ""
+        NEXT_PUBLIC_TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/ >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      - frontend
+    labels:
+      - "traefik.enable=true"
+      - "autoheal=true"
+      # Catch-all router at lowest priority so /v1/* and /ws/* match first.
+      - "traefik.http.routers.web.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.web.priority=1"
+      - "traefik.http.routers.web.entrypoints=web,websecure"
+      - "traefik.http.services.web.loadbalancer.server.port=3000"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+        reservations:
+          memory: 128M
 
   # ── CrowdSec IDS (M12) ───────────────────────────────────────────────
 
@@ -242,6 +281,9 @@ services:
       REDIS_URL: redis:6379
       NATS_URL: nats://auth:${AUTH_NATS_PASS}@nats:4222
       TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
+      # HTTP same-origin via Traefik (no TLS on VPN/IP access).
+      # Set to "true" once TLS is in front (Tailscale Funnel, Cloudflare, ACME).
+      SDA_COOKIE_SECURE: ${SDA_COOKIE_SECURE:-false}
     secrets:
       - jwt_private_key
       - jwt_public_key
@@ -260,7 +302,7 @@ services:
       - "traefik.enable=true"
       - "autoheal=true"
       - "traefik.http.routers.auth.rule=PathPrefix(`/v1/auth`) || PathPrefix(`/v1/modules`)"
-      - "traefik.http.routers.auth.entrypoints=websecure"
+      - "traefik.http.routers.auth.entrypoints=web,websecure"
       - "traefik.http.services.auth.loadbalancer.server.port=8001"
     deploy:
       resources:
@@ -304,7 +346,7 @@ services:
       - "traefik.enable=true"
       - "autoheal=true"
       - "traefik.http.routers.ws.rule=PathPrefix(`/ws`)"
-      - "traefik.http.routers.ws.entrypoints=websecure"
+      - "traefik.http.routers.ws.entrypoints=web,websecure"
       - "traefik.http.services.ws.loadbalancer.server.port=8002"
     deploy:
       resources:
@@ -354,7 +396,7 @@ services:
       - "traefik.enable=true"
       - "autoheal=true"
       - "traefik.http.routers.chat.rule=PathPrefix(`/v1/chat`)"
-      - "traefik.http.routers.chat.entrypoints=websecure"
+      - "traefik.http.routers.chat.entrypoints=web,websecure"
       - "traefik.http.services.chat.loadbalancer.server.port=8003"
     deploy:
       resources:
@@ -406,7 +448,7 @@ services:
       - "traefik.enable=true"
       - "autoheal=true"
       - "traefik.http.routers.agent.rule=PathPrefix(`/v1/agent`)"
-      - "traefik.http.routers.agent.entrypoints=websecure"
+      - "traefik.http.routers.agent.entrypoints=web,websecure"
       - "traefik.http.services.agent.loadbalancer.server.port=8004"
     deploy:
       resources:
@@ -457,7 +499,7 @@ services:
       - "traefik.enable=true"
       - "autoheal=true"
       - "traefik.http.routers.search.rule=PathPrefix(`/v1/search`)"
-      - "traefik.http.routers.search.entrypoints=websecure"
+      - "traefik.http.routers.search.entrypoints=web,websecure"
       - "traefik.http.services.search.loadbalancer.server.port=8010"
     deploy:
       resources:
@@ -502,7 +544,7 @@ services:
       - "traefik.enable=true"
       - "autoheal=true"
       - "traefik.http.routers.traces.rule=PathPrefix(`/v1/traces`)"
-      - "traefik.http.routers.traces.entrypoints=websecure"
+      - "traefik.http.routers.traces.entrypoints=web,websecure"
       - "traefik.http.services.traces.loadbalancer.server.port=8009"
     deploy:
       resources:
@@ -552,7 +594,7 @@ services:
       - "traefik.enable=true"
       - "autoheal=true"
       - "traefik.http.routers.notification.rule=PathPrefix(`/v1/notifications`)"
-      - "traefik.http.routers.notification.entrypoints=websecure"
+      - "traefik.http.routers.notification.entrypoints=web,websecure"
       - "traefik.http.services.notification.loadbalancer.server.port=8005"
     deploy:
       resources:
@@ -597,11 +639,11 @@ services:
     labels:
       - "traefik.enable=true"
       - "autoheal=true"
-      - "traefik.http.routers.platform.rule=Host(`platform.${SDA_DOMAIN:-sda.app}`) && PathPrefix(`/v1/platform`)"
-      - "traefik.http.routers.platform.entrypoints=websecure"
+      - "traefik.http.routers.platform.rule=PathPrefix(`/v1/platform`)"
+      - "traefik.http.routers.platform.entrypoints=web,websecure"
       - "traefik.http.services.platform.loadbalancer.server.port=8006"
       - "traefik.http.routers.flags.rule=PathPrefix(`/v1/flags`)"
-      - "traefik.http.routers.flags.entrypoints=websecure"
+      - "traefik.http.routers.flags.entrypoints=web,websecure"
       - "traefik.http.routers.flags.service=platform"
     deploy:
       resources:
@@ -647,7 +689,7 @@ services:
       - "traefik.enable=true"
       - "autoheal=true"
       - "traefik.http.routers.ingest.rule=PathPrefix(`/v1/ingest`)"
-      - "traefik.http.routers.ingest.entrypoints=websecure"
+      - "traefik.http.routers.ingest.entrypoints=web,websecure"
       - "traefik.http.services.ingest.loadbalancer.server.port=8007"
     deploy:
       resources:
@@ -692,7 +734,7 @@ services:
       - "traefik.enable=true"
       - "autoheal=true"
       - "traefik.http.routers.feedback.rule=PathPrefix(`/v1/feedback`) || PathPrefix(`/v1/platform/feedback`)"
-      - "traefik.http.routers.feedback.entrypoints=websecure"
+      - "traefik.http.routers.feedback.entrypoints=web,websecure"
       - "traefik.http.services.feedback.loadbalancer.server.port=8008"
       - "traefik.docker.network=frontend"
     deploy:
@@ -746,7 +788,7 @@ services:
       - "traefik.enable=true"
       - "autoheal=true"
       - "traefik.http.routers.astro.rule=PathPrefix(`/v1/astro`)"
-      - "traefik.http.routers.astro.entrypoints=websecure"
+      - "traefik.http.routers.astro.entrypoints=web,websecure"
       - "traefik.http.services.astro.loadbalancer.server.port=8011"
     deploy:
       resources:
@@ -825,7 +867,7 @@ services:
       - "traefik.enable=true"
       - "autoheal=true"
       - "traefik.http.routers.erp.rule=PathPrefix(`/v1/erp`)"
-      - "traefik.http.routers.erp.entrypoints=websecure"
+      - "traefik.http.routers.erp.entrypoints=web,websecure"
       - "traefik.http.services.erp.loadbalancer.server.port=8013"
     deploy:
       resources:
@@ -885,7 +927,7 @@ services:
       - "traefik.enable=true"
       - "autoheal=true"
       - "traefik.http.routers.bigbrother.rule=PathPrefix(`/v1/bigbrother`)"
-      - "traefik.http.routers.bigbrother.entrypoints=websecure"
+      - "traefik.http.routers.bigbrother.entrypoints=web,websecure"
       - "traefik.http.services.bigbrother.loadbalancer.server.port=8012"
       - "traefik.docker.network=frontend"
     deploy:
@@ -938,7 +980,7 @@ services:
       - "traefik.enable=true"
       - "autoheal=true"
       - "traefik.http.routers.healthwatch.rule=PathPrefix(`/v1/healthwatch`)"
-      - "traefik.http.routers.healthwatch.entrypoints=websecure"
+      - "traefik.http.routers.healthwatch.entrypoints=web,websecure"
       - "traefik.http.services.healthwatch.loadbalancer.server.port=8014"
       - "traefik.docker.network=frontend"
     deploy:

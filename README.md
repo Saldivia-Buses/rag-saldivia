@@ -141,8 +141,7 @@ pkg/                         Shared Go packages
 
 gen/go/                      Generated gRPC code (7 protos, 14 files)
 proto/                       Protocol Buffer definitions
-apps/web/                    Next.js frontend
-apps/login/                  Isolated login page
+apps/web/                    Next.js frontend (login lives at /login route)
 modules/                     Industry vertical tool manifests (YAML)
 tools/cli/                   CLI binary (sda)
 tools/mcp/                   MCP Server for AI tooling

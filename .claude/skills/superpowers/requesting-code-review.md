@@ -14,7 +14,7 @@ Use specialized review agents for formal code review after completing features.
 | Changed files | Agent to use |
 |---------------|-------------|
 | `services/*/internal/`, `pkg/` | `gateway-reviewer` |
-| `apps/web/`, `apps/login/` | `frontend-reviewer` |
+| `apps/web/` | `frontend-reviewer` |
 | Auth, JWT, tenant, secrets | `security-auditor` |
 | Both backend + frontend | Both reviewers in parallel |
 | Pre-release | All three |

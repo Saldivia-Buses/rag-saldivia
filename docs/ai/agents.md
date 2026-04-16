@@ -19,7 +19,7 @@ lives in each agent's own file — link below.
 | Agent | Scope (one line) | Invoke when |
 |-------|------------------|-------------|
 | [gateway-reviewer](../../.claude/agents/gateway-reviewer.md) | Code review of Go microservices: handlers, middleware, JWT, RBAC, sqlc, NATS, tenant isolation | Changes in `services/*/internal/`, `pkg/middleware/`, `pkg/jwt/`, `pkg/nats/`, `pkg/tenant/` |
-| [frontend-reviewer](../../.claude/agents/frontend-reviewer.md) | Code review of Next.js frontend: components, hooks, auth, backend communication | Changes in `apps/web/`, `apps/login/` |
+| [frontend-reviewer](../../.claude/agents/frontend-reviewer.md) | Code review of Next.js frontend: components, hooks, auth, backend communication | Changes in `apps/web/` |
 | [security-auditor](../../.claude/agents/security-auditor.md) | Full security audit: auth surface, tenant isolation, SQL injection, NATS subjects, Docker, header spoofing | Before releases or on suspicion of vulnerability |
 | [test-writer](../../.claude/agents/test-writer.md) | Write Go (testify, testcontainers) and frontend (bun, Playwright) tests; commits incrementally per file | New code without coverage; explicit "add tests for X" |
 | [debugger](../../.claude/agents/debugger.md) | Root-cause debugging by failure-mode table → logs → config → code | Something broken or unexpected — never for review |

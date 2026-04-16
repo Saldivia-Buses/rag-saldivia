@@ -222,11 +222,12 @@ services:
   # For local dev: make migrate
 
   # ── Frontend ──────────────────────────────────────────────────────────
-  # Frontend runs on the host with `bun run dev` (not Docker).
-  # Use --profile frontend-docker only if you need containerized frontend.
+  # Always on. Production-mode Next.js standalone served behind Traefik so
+  # remote access via VPN/IP works (dev mode fails to hydrate over remote IP).
+  # For interactive HMR development, use `make dev-frontend` on your laptop
+  # against localhost — this container is for the workstation/test env.
 
   web:
-    profiles: [frontend-docker]
     build:
       context: ..
       dockerfile: apps/web/Dockerfile
@@ -234,33 +235,18 @@ services:
         NEXT_PUBLIC_API_URL: ""
         NEXT_PUBLIC_TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
     restart: unless-stopped
-    ports:
-      - "3000:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/ >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
     labels:
       - "traefik.enable=true"
+      # Catch-all: lowest priority so /v1/* and /ws/* match first.
       - "traefik.http.routers.web-docker.rule=PathPrefix(`/`)"
       - "traefik.http.routers.web-docker.entrypoints=web"
-      - "traefik.http.routers.agent-docker.tls=true"
       - "traefik.http.routers.web-docker.priority=1"
       - "traefik.http.services.web-docker.loadbalancer.server.port=3000"
-
-  login:
-    profiles: [frontend-docker]
-    build:
-      context: ..
-      dockerfile: apps/login/Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: ""
-    restart: unless-stopped
-    ports:
-      - "3001:3001"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.login-docker.rule=PathPrefix(`/login`)"
-      - "traefik.http.routers.login-docker.entrypoints=web"
-      - "traefik.http.routers.astro-docker.tls=true"
-      - "traefik.http.routers.login-docker.priority=50"
-      - "traefik.http.services.login-docker.loadbalancer.server.port=3001"
 
   # ── Go Services (profile: full) ──────────────────────────────────────
   # Only start with: docker compose --profile full up --build

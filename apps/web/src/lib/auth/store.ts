@@ -44,9 +44,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   clearAuth: () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("sda_refresh");
-    }
     set({
       user: null,
       accessToken: null,
@@ -63,13 +60,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }>("/v1/auth/login", { email, password }, { skipAuth: true });
 
     set({ accessToken: data.access_token });
-
-    // Persist refresh token for session recovery after page reloads
-    if (typeof window !== "undefined" && data.refresh_token) {
-      localStorage.setItem("sda_refresh", data.refresh_token);
-    }
-
-    // Fetch user profile
     await get().fetchMe();
   },
 
@@ -115,18 +105,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   refresh: async () => {
     try {
-      // Try localStorage refresh token (works across page reloads)
-      const storedToken = typeof window !== "undefined" ? localStorage.getItem("sda_refresh") : null;
       const data = await api.post<{ access_token: string; refresh_token: string; expires_in: number }>(
         "/v1/auth/refresh",
-        storedToken ? { refresh_token: storedToken } : undefined,
+        undefined,
         { skipAuth: true },
       );
       set({ accessToken: data.access_token });
-      // Update stored refresh token
-      if (typeof window !== "undefined" && data.refresh_token) {
-        localStorage.setItem("sda_refresh", data.refresh_token);
-      }
       return true;
     } catch {
       get().clearAuth();

@@ -33,6 +33,17 @@ declare -A SERVICE_PORTS=(
 )
 
 ALL_GO_SERVICES=(auth ws chat agent search astro traces notification platform ingest feedback bigbrother erp)
+ALL_FRONTEND_SERVICES=(web)
+ALL_SERVICES=("${ALL_GO_SERVICES[@]}" "${ALL_FRONTEND_SERVICES[@]}")
+
+# is_frontend <name> → 0 if name is in ALL_FRONTEND_SERVICES, 1 otherwise
+is_frontend() {
+    local name="$1"
+    for fe in "${ALL_FRONTEND_SERVICES[@]}"; do
+        [ "$name" = "$fe" ] && return 0
+    done
+    return 1
+}
 
 NO_CACHE="--no-cache"
 SERVICES=()
@@ -45,7 +56,7 @@ for arg in "$@"; do
 done
 
 if [ ${#SERVICES[@]} -eq 0 ]; then
-    SERVICES=("${ALL_GO_SERVICES[@]}")
+    SERVICES=("${ALL_SERVICES[@]}")
 fi
 
 echo "═══ SDA Deploy ═══"
@@ -63,7 +74,12 @@ ENV_DEPLOY="$DEPLOY_DIR/.env.deploy"
     echo "BUILD_TIME=$BUILD_TIME"
     for svc in "${SERVICES[@]}"; do
         upper=$(echo "$svc" | tr '[:lower:]' '[:upper:]')
-        version_file="$ROOT_DIR/services/$svc/VERSION"
+        # Frontend services live under apps/<svc>/, Go services under services/<svc>/.
+        if is_frontend "$svc"; then
+            version_file="$ROOT_DIR/apps/$svc/VERSION"
+        else
+            version_file="$ROOT_DIR/services/$svc/VERSION"
+        fi
         if [ -f "$version_file" ]; then
             version=$(tr -d '[:space:]' < "$version_file")
         else
@@ -119,11 +135,12 @@ for svc in "${SERVICES[@]}"; do
     fi
 done
 
-# Verify /v1/info matches expected SHA
+# Verify /v1/info matches expected SHA (Go services only — frontend has no /v1/info)
 echo ""
 echo "── Verifying build info ──"
 MISMATCHES=0
 for svc in "${SERVICES[@]}"; do
+    if is_frontend "$svc"; then continue; fi
     port=${SERVICE_PORTS[$svc]:-0}
     if [ "$port" -eq 0 ]; then continue; fi
 

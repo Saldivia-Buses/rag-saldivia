@@ -59,9 +59,11 @@ dev-services: ## Start all Go services on host (requires infra running)
 	env $$ENV_COMMON ERP_PORT=8013 nohup go run ./services/erp/cmd/... > /tmp/sda-erp.log 2>&1 & \
 	echo "All services starting. Logs in /tmp/sda-*.log" && echo "Run 'make status' to check."
 
-dev-frontend: ## Start Next.js frontend
-	@cd apps/web && NEXT_PUBLIC_API_URL=http://localhost NEXT_PUBLIC_TENANT_SLUG=dev nohup bun run dev > /tmp/sda-frontend.log 2>&1 &
-	@echo "Frontend starting on :3000. Log: /tmp/sda-frontend.log"
+dev-frontend: ## Start Next.js frontend in dev/HMR mode (LOCAL laptop @ localhost only — remote IP access fails to hydrate)
+	@cd apps/web && NEXT_PUBLIC_API_URL= NEXT_PUBLIC_TENANT_SLUG=dev nohup bun run dev > /tmp/sda-frontend.log 2>&1 &
+	@echo "Frontend (dev mode) starting on :3000. Log: /tmp/sda-frontend.log"
+	@echo "NOTE: dev mode does not hydrate over remote IP. Workstation/test envs"
+	@echo "      use the Docker 'web' service via docker compose (see deploy.yml)."
 
 dev-all: ## Start everything: infra + services + frontend
 	@$(MAKE) dev &
