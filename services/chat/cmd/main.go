@@ -18,6 +18,7 @@ import (
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
+	"github.com/Camionerou/rag-saldivia/pkg/outbox"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
 	"github.com/Camionerou/rag-saldivia/pkg/server"
 	"github.com/Camionerou/rag-saldivia/services/chat/internal/handler"
@@ -55,10 +56,15 @@ func main() {
 		os.Exit(1)
 	}
 	app.OnShutdown(func() { _ = nc.Drain() })
-	publisher := natspub.New(nc)
 	slog.Info("connected to NATS", "url", config.RedactURL(natsURL))
 
-	chatSvc := service.NewChat(pool, tenantSlug, publisher)
+	// Outbox drainer — publishes spine events from event_outbox to NATS.
+	drainer := outbox.NewDrainer(pool, nc, tenantSlug)
+	drainerCtx, drainerCancel := context.WithCancel(context.Background())
+	go drainer.Run(drainerCtx)
+	app.OnShutdown(drainerCancel)
+
+	chatSvc := service.NewChat(pool, tenantSlug)
 	chatHandler := handler.NewChat(chatSvc)
 
 	// Health checker
