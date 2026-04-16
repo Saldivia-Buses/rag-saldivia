@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CURD
+Tarea: Tabla de TIpo de Equipamiento
+Autor: Lmm
+Fecha: 17/08/11
+*******************************************************************************
+-->
+    <histrix tipo="abm">
+	<title>Tipo de Acciones</title>
+	 <obs></obs>
+		<form>
+		    <table id="MANT_ACCIONES" label="Acciones">
+				<field id="id_accion" esClave="true" noshow="true" />
+
+				<field id="nombre_accion">
+					<label>Tipo de accion</label>
+					<help>Nombre de la Accion</help>
+					<size>50</size>
+				</field>
+
+
+		    </table>
+		</form>
+    </histrix>	

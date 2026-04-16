@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta"  PDFfontSize="8" >
+    <title>DETALLE</title>
+    <obs></obs>
+    <form>
+        <table id="MRP_ORDEN_DETALLE" label="DETALLE">
+
+            <field id="mrporden_id" oculto="true" />
+
+            <field id="stkarticulo_id" deshabilitado="true" esClave="true" >
+                <label>Código</label>
+                <expresion>concat(left(id_stkarticulo, 1),'/', substr(id_stkarticulo, 2,4),'-'  ,
+                    substr(id_stkarticulo, 6,4) )</expresion>                
+                
+
+            </field>
+
+            <field id="nombre_articulo" >
+                <label>Producto</label>
+                <expression>STK_ARTICULOS.nombre_articulo</expression>
+            </field>
+
+<!--
+            <field id="texto">
+                <label>Producto</label>
+                <expression having="false"><![CDATA[
+
+                    CONCAT('<b>', STK_ARTICULOS.id_stkarticulo, ' - ', STK_ARTICULOS.nombre_articulo,'</b><br>',(select GROUP_CONCAT('     # ',round(STK_BOM.cantidad,2), ' x ', STK_ARTICULOS.nombre_articulo SEPARATOR '<br>') from STK_BOM 
+                        LEFT JOIN STK_ARTICULOS ON STK_ARTICULOS.id_stkarticulo = STK_BOM.stkarticulohijo_id
+                        WHERE STK_BOM.stkarticulopadre_id = MRP_ORDEN_DETALLE.stkarticulo_id))
+
+                ]]></expression>
+                <tipo>editor</tipo>
+            </field>
+
+            <field id="minimo_ordendetalle">
+                <label>Minimo</label>
+            </field>
+-->
+            <field id="objetivo_ordendetalle" noZero="true">
+                <label modpos="nobr">Objetivo</label>
+            </field>
+                <field id="roturas"  style="text-align:right;color:red;" PDFcolor="#FF0000">
+                    <label>Roturas</label>
+                    <expresion>select sum(MDR.cantidad) from MRP_DETALLE_REGISTRO MDR where MDR.mrpordendetalle_id = id_mrpordendetalle and mrpconcepto_id != 1</expresion>
+                </field>                 
+                <field id="producido"  noZero="true">
+                    <label>Terminado</label>
+                    <expresion>select sum(STK_MOVIMIENTOS.cantidad) from STK_MOVIMIENTOS where STK_MOVIMIENTOS.stkarticulo_id = MRP_ORDEN_DETALLE.stkarticulo_id AND STK_MOVIMIENTOS.ordendetalle_id = MRP_ORDEN_DETALLE.id_mrpordendetalle</expresion>
+                    <tipo>integer</tipo>
+                </field>
+            <field id="pendiente" local="true" style="color:green;text-align:right;" noZero="true">
+                <label>Pendiente</label>
+                <if exp="true">
+                    <true>objetivo_ordendetalle - ((producido  + 0)+ (roturas + 0))</true>
+                    <false>0</false>
+                </if>
+            </field>
+
+<!--
+            <field id="tiempo" noZero="true">
+                <label modpos="nobr">Tiempo</label>
+                <expression>concat(round(objetivo_ordendetalle / STK_ARTICULOS.produccion_diaria * 8.5,0), 'hs')</expression>
+            </field>
+-->
+            <field id="par">
+                <label>par</label>
+                <expression>concat((case when macho = 1 then 'Macho' else '' end), ' ',(case when hembra = 1 then 'Hembra' else '' end) ) </expression>
+            </field>
+            <field id="observaciones_ordendetalle" PDFfontSize="7">
+                <expression>if(observaciones_ordendetalle != nombre_articulo, observaciones_ordendetalle, '')</expression>
+                <label>Observaciones</label>
+            </field>
+
+        </table>
+
+        <join tipo="left">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">MRP_ORDEN_DETALLE.stkarticulo_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

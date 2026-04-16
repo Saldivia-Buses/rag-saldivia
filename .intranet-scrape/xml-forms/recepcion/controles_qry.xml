@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<histrix tipo="consulta" >
+		<title>Inspeccion de Recepcion</title>
+		<obs></obs>
+		<form >
+			<table id="STKINSPEC" label="Inspeccion de Recepcion">
+				<field id="id_norma_inspec" noshow="true" clave="true">
+				</field>
+			
+				<field id="artcod" _oculto="true">
+					<label>Articulo</label>
+					<help>Codigo de Articulo</help>
+				</field>
+				<field id="nronor" >
+					<tabla_ex id="NORMINSP">
+						<field id="nronor"></field>
+						<field id="desnor"></field>
+					</tabla_ex>
+					<label>Norma.</label>
+					<help>
+					</help>
+				</field>
+
+				<field id="inspec_entre_recep">
+					<label>Frecuencia</label>
+					<help>Cantidad de recepcion antes de inspeccion</help>
+					<tipo>numeric</tipo>
+				</field>
+
+				<field id="frecuencia">
+					<label>Descripcion</label>
+					<help>Frecuencia de Revision de las Partidas</help>
+				</field>
+
+			</table>
+		</form>
+	</histrix>

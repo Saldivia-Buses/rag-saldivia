@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  sololectura="true" tipo="ficha" autoprint="true" path="fotos"   limit="1">
+    <title>FICHA TECNICA</title>
+    <obs/>
+<!--
+    <pie>Nota: Planilla confeccionada en función de especificaciones del cliente y características standard del producto. La misma debe ser devuelta vía fax con el conforme correspondiente u observaciones, caso contrario la unidad se fabricará bajo las características aquí mencionadas. Los adicionales que no fueran expresamente aceptados NO se realizarán. Fax: 0341-4921135 - Opción 1</pie>
+-->    
+<form >
+        <table id="PEDCOTIZ" label="Ficha Técnica">
+            <field id="id" noshow="true" oculto="true">
+            </field>
+
+            <field id="marcadeagua" local="true" PDFbold="true" PDFitalic="true" PDFrotate="-45">
+    		    <expression>CASE WHEN IFNULL(estado_ficha,0) != 1 THEN 'BORRADOR' ELSE '' END</expression>
+    		    <label posx="30" posy="1" PDFcolor="#E3E3E3" PDFsize="105" size="400" PDFrestorePosition="true"/>
+    		    <size>200</size>
+	        </field>
+
+	        <field id="marcacopnocontr" local="true" PDFbold="true" PDFitalic="true" PDFrotate="-5">
+    		    <expression>CASE WHEN IFNULL(estado_ficha,0) != 1 THEN '' ELSE 'COPIA NO \n\nCONTROLADA' END</expression>
+    		    <label posx="25" posy="270" PDFcolor="#FF2222" PDFsize="20" PDFrestorePosition="true"/>
+	        </field>
+
+            <field id="marcacnrt" local="true" PDFbold="true">
+                <expression>CASE WHEN (SELECT COUNT(*) FROM PROD_TRABAJOS_CNRT where nrofab_id = PEDCOTIZ.nrocha) != 0 THEN 'UNIDAD PROTOTIPO CNRT' ELSE '' END</expression>
+                <label posx="100" posy="270" PDFcolor="#FF2222" PDFsize="20" PDFrestorePosition="true"/>
+            </field> 
+
+          <field id="publicada" local="true" noshow="true" print="false">
+                <label getStyle="maxfec">Publicada</label>
+                <tipo>date</tipo>
+                <expression><![CDATA[SELECT fecha FROM `HTXLOG` WHERE campo = 'Estado' AND HTXLOG.obs LIKE concat('%N.Fab.: ',nrocha,'%')  AND (xmlprog = 'Fichaventas_abm.xml' or xmlprog = 'producto_estado_ficha_update.xml') AND tipo = 'UPDATE' LIMIT 1]]></expression>
+            </field>
+
+            <field id="ctacod">
+                <label colspan="6" _size="15" posx="5" posy="17" PDFsize="12" PDFbold="true" PDFcolor="0000ff" PDFrestorePosition="true"></label>
+                <help>Código de Cuenta</help>
+               <expression>CONCAT((CASE WHEN CCTCUENT.ctafan = '' THEN '' ELSE CCTCUENT.ctafan END), '/', (CASE WHEN LEFT(CCTCONTA.nombre, 23) IS NULL THEN '' ELSE LEFT(CCTCONTA.nombre, 23) END))</expression> 
+            </field>
+
+          <field id="reasignacion" local="true" PDFbold="true" PDFitalic="true" >
+            <label posx="90" posy="17" PDFcolor="#FF2222" PDFsize="12" size="100" PDFrestorePosition="true"/>
+                <expression><![CDATA[SELECT 'REASIG' FROM `HTXLOG` WHERE campo = 'Cliente' AND obs LIKE concat('%N.Fab.: ',nrocha,'%') AND (xmlprog = 'Fichaventas_abm.xml' or xmlprog = 'producto_estado_ficha_update.xml') AND tipo = 'UPDATE' AND fecha > '[__publicada__]' AND nrocha != 0 LIMIT 1]]></expression>
+            </field>
+
+            <field id="pedfec">
+                <label size="24" posx="115" posy="0" PDFsize="10">Fecha</label>
+                <tipo>date</tipo>
+            </field>
+    	    <field id="homologacion_id" noshow="true" print="false" />
+           
+    	    <field id="homologacion">
+        		<label posx="5" posy="22" PDFsize="10"></label>
+<!--        		<helper type="combo" xml="combo_homologacion_modelo_qry.xml" dir="/fabricacion">
+
+        		</helper>
+-->
+        <expression><![CDATA[IFNULL(
+(SELECT 
+    CONCAT(   ifnull(CARROCERIA.desabv,''),' ',
+              ifnull(MARCHASIS.desabv,''),' ',
+              ifnull(MODCHASIS.desabv,''), ' ' ,
+
+              IFNULL(EURO_TIPO.abrev_euro,''), ' ',
+              (case when CARROCERIA.doble_piso = 1 then (CONCAT(ifnull(asientos, ''), '+', ifnull(asientos_plantabaja, ''))) else (ifnull(asientos,0) + ifnull(acompañante, 0)) end),
+              ' Asientos ',
+              (case when ifnull(auxiliar,0) = 1 then '+ Camarera ' else '' end) ,              
+              (CASE WHEN ifnull(banbar,0) = 1 THEN 'BB' ELSE ' ' END) ,
+              '- Largo: ', 
+              ifnull(largo,''), ' ', 
+              trim(ifnull(referencia,'')), ' ', 
+	      '- (',ifnull(HOMOLOGMOD.id_homologacion,''),')',
+              (case when ifnull(baja,0) = 1 then '- Baja' else '' end)
+
+)
+
+FROM HOMOLOGMOD H
+
+INNER JOIN PROD_MODELO_LCM ON id_modelo_lcm = modelo_lcm_id
+LEFT JOIN MODCHASIS ON id_modelo = PROD_MODELO_LCM.modelo_id
+LEFT JOIN MARCHASIS ON MARCHASIS.marcod = MODCHASIS.marcod
+LEFT JOIN EURO_TIPO ON EURO_TIPO.id_euro = MODCHASIS.euro_id 
+LEFT JOIN CARROCERIA ON PROD_MODELO_LCM.nrocar_id = CARROCERIA.nrocar
+LEFT JOIN PROD_LCM ON id_lcm = PROD_MODELO_LCM.lcm_id
+
+WHERE H.id_homologacion = HOMOLOGMOD.id_homologacion
+
+                ),'')]]>
+                </expression>
+
+                <detalle>homologacion_id</detalle>
+    	    </field>
+	                
+             <field id="revfec" >
+                <label size="24" modpos="nobr" posx="115" posy="0" PDFsize="10">Modificado</label>
+                <expression><![CDATA[SELECT fecha FROM `HTXLOG` WHERE (obs LIKE concat('% N.Fab.: ',nrocha,'%') or obs LIKE concat('% Coche: ', nrocha,'%')) AND (xmlprog ='fichaventas_abm.xml' or xmlprog = 'accesorios_coche.xml' or xmlprog = 'accesorios_coche_precio.xml' or xmlprog = 'producto_atributos_valores.xml' or xmlprog = 'producto_estado_ficha_update.xml') ORDER BY fecha DESC LIMIT 1]]></expression>
+            </field>
+
+            <field id="nrocha" esclave="true" PDFbold="true" PDFscaleX="120">
+                <label size="50" modpos="nobr" posx="135" posy="20" PDFsize="38" ></label>
+                <help>Número de Fabricación</help>
+            </field>
+
+            <field id="test" local="true" >
+            	<label posx="5" posy="28"></label>
+            	<helper type="object" xml="ficha_producto_qry.xml">
+            	    <parameter source="id" target="producto_id" />
+            	</helper>
+            </field>
+
+            <field id="titulo_controles" local="true">
+                <label posx="5" posy="+50" PDFsize="13" >Controles realizados</label>
+                <help>Controles realizados</help>
+            </field>
+
+            <field id="detalle_controles" local="true" >
+                <label posx="5" posy="+3"></label>
+                <helper type="object" xml="detalle_controles_ft_qry.xml">
+                    <parameter source="homologacion_id" target="homologacion_id" />
+                </helper>
+            </field>
+
+        </table>
+                    <join tipo="left">
+                            <table id="HOMOLOGMOD">
+                                <field id="id_homologacion">
+                                    <condicion operador="=">PEDCOTIZ.homologacion_id</condicion>
+                                </field>
+                        </table>
+                    </join>
+    <join tipo="left">
+               <table id="CARROCERIA">
+          <field id="nrocar">
+                 <condicion operador="=">HOMOLOGMOD.nrocar</condicion>
+          </field>
+        </table>
+    </join>
+    <join tipo="left">
+      <table id="MARCHASIS">
+        <field id="marcod">
+          <condicion operador="=">HOMOLOGMOD.marcod</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="MODCHASIS">
+        <field id="modcha">
+          <condicion operador="=">HOMOLOGMOD.modcha</condicion>
+        </field>
+        <field id="marcod">
+          <condicion operador="=">HOMOLOGMOD.marcod</condicion>
+        </field>
+      </table>
+    </join>
+
+	    <join tipo="left">
+            <table id="CCTCUENT">
+                <field id="siscod" oculto="true">
+                    <condicion operador="=">'02'</condicion>
+                </field>
+                <field id="ctacod">
+                    <condicion operador="=">PEDCOTIZ.ctacod</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="CCTCONTA">
+                <field id="siscod" oculto="true">
+                    <condicion operador="=">CCTCUENT.siscod</condicion>
+                </field>
+                <field id="ctacod">
+                    <condicion operador="=">PEDCOTIZ.ctacod</condicion>
+                </field>
+                <field id="idconta">
+                    <condicion operador="=">PEDCOTIZ.idconta</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

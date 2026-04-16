@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm">
+	<title>Inventarios</title>
+	<obs/>
+	<form >
+		<table id="INVTABLA">
+			<title>Inventarios</title>
+			<field id="nroInventario">
+				<label>Número Inventario</label>
+				<help>Número Inventario</help>
+			</field>
+			<field id="nombre">
+				<label>Nombre</label>
+				<help>Nombre</help>
+			</field>
+			<field id="fecha">
+				<label>Fecha</label>
+				<help>Fecha</help>
+			</field>
+			<field id="estado">
+				<label>Estado</label>
+				<help>Estado</help>
+				<options>
+					<option valor="1">Cerrado</option>
+					<option valor="0">Abierto</option>
+				</options>
+			</field>
+		</table>
+	</form>
+</histrix>

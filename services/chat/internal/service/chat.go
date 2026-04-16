@@ -3,7 +3,6 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -14,6 +13,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
+	notify "github.com/Camionerou/rag-saldivia/pkg/events/gen/notify"
+	"github.com/Camionerou/rag-saldivia/pkg/outbox"
+	"github.com/Camionerou/rag-saldivia/pkg/spine"
 	"github.com/Camionerou/rag-saldivia/services/chat/internal/repository"
 )
 
@@ -45,27 +47,22 @@ type Message struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-// EventPublisher can publish notification events. Optional.
-type EventPublisher interface {
-	Notify(tenantSlug string, evt any) error
-}
-
 // Chat handles chat operations for a single tenant.
 type Chat struct {
 	db         *pgxpool.Pool
 	repo       *repository.Queries
-	events     EventPublisher
 	auditor    *audit.Writer
 	tenantSlug string
 }
 
-// NewChat creates a chat service.
-func NewChat(db *pgxpool.Pool, tenantSlug string, events EventPublisher) *Chat {
+// NewChat creates a chat service. Event publishing is handled via the
+// transactional outbox (pkg/outbox) inside AddMessage — no EventPublisher
+// dependency needed.
+func NewChat(db *pgxpool.Pool, tenantSlug string) *Chat {
 	return &Chat{
 		db:         db,
 		repo:       repository.New(db),
 		tenantSlug: tenantSlug,
-		events:     events,
 		auditor:    audit.NewWriter(db),
 	}
 }
@@ -159,14 +156,23 @@ func (c *Chat) RenameSession(ctx context.Context, sessionID, userID, title strin
 	return nil
 }
 
-// AddMessage adds a message to a session.
+// AddMessage adds a message to a session. The DB write and the notification
+// event are committed atomically via the transactional outbox — if the insert
+// succeeds, the event is guaranteed to eventually reach NATS.
 func (c *Chat) AddMessage(ctx context.Context, sessionID, userID, role, content string, thinking *string, sources, metadata []byte) (*Message, error) {
-	// Default metadata to empty JSON object if nil (column is NOT NULL)
 	if metadata == nil {
 		metadata = []byte("{}")
 	}
 
-	row, err := c.repo.CreateMessage(ctx, repository.CreateMessageParams{
+	tx, err := c.db.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("begin tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	txRepo := c.repo.WithTx(tx)
+
+	row, err := txRepo.CreateMessage(ctx, repository.CreateMessageParams{
 		SessionID: sessionID,
 		Role:      role,
 		Content:   content,
@@ -178,28 +184,40 @@ func (c *Chat) AddMessage(ctx context.Context, sessionID, userID, role, content 
 		return nil, fmt.Errorf("add message: %w", err)
 	}
 
-	// Touch session updated_at (user_id filter for defense-in-depth)
-	c.repo.TouchSession(ctx, repository.TouchSessionParams{
+	_ = txRepo.TouchSession(ctx, repository.TouchSessionParams{
 		ID:     sessionID,
 		UserID: userID,
 	})
 
 	m := messageFromRepo(row)
 
-	// Publish notification event for user messages only (not assistant/system)
-	if c.events != nil && c.tenantSlug != "" && role == "user" {
-		data, _ := json.Marshal(map[string]string{"session_id": sessionID, "message_id": m.ID})
-		err := c.events.Notify(c.tenantSlug, map[string]any{
-			"user_id": userID,
-			"type":    "chat.new_message",
-			"title":   "Nuevo mensaje",
-			"body":    truncate(content, 100),
-			"channel": "in_app",
-			"data":    json.RawMessage(data),
-		})
-		if err != nil {
-			slog.Warn("failed to publish chat event", "error", err)
+	// Publish notification via outbox for user messages (not assistant/system).
+	// Uses a savepoint so an outbox failure doesn't abort the message tx.
+	if c.tenantSlug != "" && role == "user" {
+		env, envErr := spine.New(c.tenantSlug, notify.ChatNewMessageType,
+			notify.ChatNewMessageSchemaVersion,
+			notify.ChatNewMessagePayload{
+				UserID:    userID,
+				SessionID: sessionID,
+				MessageID: m.ID,
+				Title:     "Nuevo mensaje",
+				Body:      truncate(content, 100),
+				Channel:   notify.ChatNewMessageChannelInApp,
+			})
+		if envErr == nil {
+			subject, _ := spine.BuildSubject(notify.ChatNewMessageSubject,
+				map[string]string{"slug": c.tenantSlug})
+			if _, spErr := tx.Exec(ctx, "SAVEPOINT outbox_sp"); spErr == nil {
+				if pubErr := outbox.PublishTx(ctx, tx, subject, env); pubErr != nil {
+					slog.Warn("outbox enqueue failed, rolling back savepoint", "error", pubErr)
+					_, _ = tx.Exec(ctx, "ROLLBACK TO SAVEPOINT outbox_sp")
+				}
+			}
 		}
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("commit message + outbox: %w", err)
 	}
 
 	return &m, nil

@@ -2,60 +2,38 @@ package main
 
 import (
 	"context"
+	"crypto/ed25519"
+	"fmt"
 	"log/slog"
-	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	"crypto/ed25519"
-	"fmt"
-
 	"github.com/nats-io/nats.go"
 
 	"github.com/Camionerou/rag-saldivia/pkg/config"
-	"github.com/Camionerou/rag-saldivia/pkg/health"
-	"github.com/Camionerou/rag-saldivia/pkg/build"
 	"github.com/Camionerou/rag-saldivia/pkg/database"
+	"github.com/Camionerou/rag-saldivia/pkg/health"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
-	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
+	"github.com/Camionerou/rag-saldivia/pkg/outbox"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
+	"github.com/Camionerou/rag-saldivia/pkg/server"
 	"github.com/Camionerou/rag-saldivia/pkg/tenant"
 	"github.com/Camionerou/rag-saldivia/services/auth/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/auth/internal/service"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 func main() {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
-	slog.SetDefault(logger)
+	app := server.New("sda-auth", server.WithPort("AUTH_PORT", "8001"))
+	ctx := app.Context()
 
-	port := config.Env("AUTH_PORT", "8001")
 	tenantDBURL := config.Env("POSTGRES_TENANT_URL", "")
 	platformDBURL := config.Env("POSTGRES_PLATFORM_URL", "")
 
 	privateKey, publicKey := loadJWTKeys()
-
-	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer cancel()
-
-	// Initialize OpenTelemetry
-	otelShutdown, err := sdaotel.Setup(ctx, sdaotel.Config{
-		ServiceName:    "sda-auth",
-		ServiceVersion: "1.0.0",
-		Endpoint:       config.Env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
-		Insecure:       true,
-	})
-	if err != nil {
-		slog.Warn("otel init failed, traces disabled", "error", err)
-	} else {
-		defer otelShutdown(context.Background())
-	}
 
 	// Connect to NATS
 	natsURL := config.Env("NATS_URL", nats.DefaultURL)
@@ -64,8 +42,7 @@ func main() {
 		slog.Error("failed to connect to NATS", "error", err)
 		os.Exit(1)
 	}
-	defer nc.Drain()
-	publisher := natspub.New(nc)
+	app.OnShutdown(func() { _ = nc.Drain() })
 	slog.Info("connected to NATS", "url", config.RedactURL(natsURL))
 
 	// Token blacklist (shared Redis)
@@ -96,7 +73,7 @@ func main() {
 			slog.Error("failed to connect to platform database", "error", err)
 			os.Exit(1)
 		}
-		defer platformPool.Close()
+		app.OnShutdown(platformPool.Close)
 
 		if err := platformPool.Ping(ctx); err != nil {
 			slog.Error("failed to ping platform database", "error", err)
@@ -104,9 +81,27 @@ func main() {
 		}
 
 		resolver := tenant.NewResolver(platformPool, nil) // nil = no credential encryption (yet)
-		defer resolver.Close()
+		app.OnShutdown(resolver.Close)
 
-		authHandler = handler.NewMultiTenantAuth(resolver, jwtCfg, publisher, blacklist)
+		// Outbox drainer for all tenants (multi-tenant mode).
+		// Bootstrap from active tenants in platform DB.
+		var activeSlugs []string
+		slugRows, err := platformPool.Query(ctx,
+			`SELECT slug FROM tenants WHERE is_active = true`)
+		if err == nil {
+			for slugRows.Next() {
+				var s string
+				if slugRows.Scan(&s) == nil {
+					activeSlugs = append(activeSlugs, s)
+				}
+			}
+			slugRows.Close()
+		}
+		slog.Info("bootstrapping outbox drainers", "tenants", len(activeSlugs))
+		registry := outbox.NewRegistry(resolver, nc)
+		go registry.Start(ctx, activeSlugs)
+
+		authHandler = handler.NewMultiTenantAuth(resolver, jwtCfg, blacklist)
 		hc.Add("postgres", func(ctx context.Context) error { return platformPool.Ping(ctx) })
 		slog.Info("auth service starting in multi-tenant mode")
 	} else if tenantDBURL != "" {
@@ -116,7 +111,7 @@ func main() {
 			slog.Error("failed to connect to database", "error", err)
 			os.Exit(1)
 		}
-		defer pool.Close()
+		app.OnShutdown(pool.Close)
 
 		if err := pool.Ping(ctx); err != nil {
 			slog.Error("failed to ping database", "error", err)
@@ -125,7 +120,13 @@ func main() {
 
 		tenantID := config.Env("TENANT_ID", "dev")
 		tenantSlug := config.Env("TENANT_SLUG", "dev")
-		authSvc := service.NewAuth(pool, jwtCfg, tenantID, tenantSlug, publisher)
+		// Outbox drainer (single-tenant mode).
+		drainer := outbox.NewDrainer(pool, nc, tenantSlug)
+		drainerCtx, drainerCancel := context.WithCancel(ctx)
+		go drainer.Run(drainerCtx)
+		app.OnShutdown(drainerCancel)
+
+		authSvc := service.NewAuth(pool, jwtCfg, tenantID, tenantSlug)
 		authSvc.SetBlacklist(blacklist)
 		authHandler = handler.NewAuth(authSvc)
 		hc.Add("postgres", func(ctx context.Context) error { return pool.Ping(ctx) })
@@ -135,24 +136,34 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Router
-	r := chi.NewRouter()
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Recoverer)
-	r.Use(sdamw.SecureHeaders())
-	r.Use(middleware.Timeout(30 * time.Second))
+	// Service account token endpoint (machine-to-machine)
+	serviceKey := loadSecret("/run/secrets/service_account_key",
+		config.Env("SERVICE_ACCOUNT_KEY", ""))
+	if serviceKey != "" {
+		platformTenantID := config.Env("PLATFORM_TENANT_ID", "platform")
+		platformSlug := config.Env("PLATFORM_TENANT_SLUG", "platform")
+		authHandler.SetServiceTokenConfig(handler.ServiceTokenConfig{
+			Key:              serviceKey,
+			PlatformTenantID: platformTenantID,
+			PlatformSlug:     platformSlug,
+		})
+		slog.Info("service token endpoint enabled")
+	} else {
+		slog.Info("service token endpoint disabled (no SERVICE_ACCOUNT_KEY)")
+	}
 
 	// Rate limiters for sensitive endpoints
 	loginRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 5, Window: time.Minute, KeyFunc: sdamw.ByIP})
 	refreshRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 10, Window: time.Minute, KeyFunc: sdamw.ByIP})
 	mfaRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 5, Window: time.Minute, KeyFunc: sdamw.ByIP})
+	svcTokenRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 5, Window: time.Minute, KeyFunc: sdamw.ByIP})
 
+	r := app.Router()
 	r.Get("/health", hc.Handler())
-	r.Get("/v1/info", build.Handler("sda-auth"))
 	r.With(loginRL).Post("/v1/auth/login", authHandler.Login)
 	r.With(refreshRL).Post("/v1/auth/refresh", authHandler.Refresh)
 	r.Post("/v1/auth/logout", authHandler.Logout)
+	r.With(svcTokenRL).Post("/v1/auth/service-token", authHandler.ServiceToken)
 
 	// Protected routes — require valid access token + blacklist check
 	r.Group(func(r chi.Router) {
@@ -170,34 +181,7 @@ func main() {
 	// MFA login verification (uses temp mfa_token, not regular access token)
 	r.With(mfaRL).Post("/v1/auth/mfa/verify", authHandler.VerifyMFALogin)
 
-	// Server
-	srv := &http.Server{
-		Addr:         ":" + port,
-		Handler:      otelhttp.NewHandler(r, "sda-auth"),
-		ReadTimeout:  10 * time.Second,
-		ReadHeaderTimeout: 10 * time.Second,
-		WriteTimeout: 30 * time.Second,
-		IdleTimeout:  60 * time.Second,
-	}
-
-	go func() {
-		slog.Info("auth service listening", "port", port)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			slog.Error("server error", "error", err)
-			os.Exit(1)
-		}
-	}()
-
-	<-ctx.Done()
-	slog.Info("auth service shutting down")
-
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer shutdownCancel()
-
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		slog.Error("shutdown error", "error", err)
-	}
-	slog.Info("auth service stopped")
+	app.Run()
 }
 
 // loadJWTKeys loads Ed25519 keys from env vars (base64-encoded PEM).
@@ -223,4 +207,13 @@ func loadJWTKeys() (ed25519.PrivateKey, ed25519.PublicKey) {
 	}
 
 	return privateKey, publicKey
+}
+
+// loadSecret reads a Docker secret file, falling back to a default value.
+func loadSecret(path, fallback string) string {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return fallback
+	}
+	return strings.TrimSpace(string(data))
 }

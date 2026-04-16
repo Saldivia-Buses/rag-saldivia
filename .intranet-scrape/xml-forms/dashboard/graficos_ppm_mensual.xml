@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="dashboard">
+        <titulo>Medidores de Calidad</titulo>
+
+        <widget id="ppmdefectosmes"  width="98%" height="400px">
+           <title>PPM Defectos por Mes</title>
+	       <url><![CDATA[histrixLoader.php?xml=defectos_ppm_xmes.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="ppmpromedio"  width="32%" height="400px">
+           <title>PPM Promedio</title>
+	       <url><![CDATA[histrixLoader.php?xml=defectos_promedio_ppm.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="porcentajedefectosmes"  width="32%" height="400px">
+           <title>% Defectos Mensual</title>
+	       <url><![CDATA[histrixLoader.php?xml=defectos_secciones_xmes.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+</histrix>

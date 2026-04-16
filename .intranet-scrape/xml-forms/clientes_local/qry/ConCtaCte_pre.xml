@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="consulta" _ancho="40">
+    <title>Cuenta Corriente</title>
+    <obs></obs>
+    <form  detalle="imputaciones_rec.xml"  _detalle="factura_reimp.xml" inline="true">
+        <table id="REG_MOVIMIENTOS" label="Movimientos" _styleTbody="height:500px;">
+
+            <field id="id_regmovim" noshow="true" />
+
+            <field id="subsistema_id" oculto="true">
+                <label>Cod.</label>
+                <help>
+                </help>
+            </field>
+            <!--
+            <filters_ex>
+                    <label>Cuenta</label>
+                    <ayuda_ex id="CCTCUENT">
+                            <field id="ctacod"></field>
+                            <field id="ctanom"></field>
+                            <field id="siscod" oculto="true"></field>
+                            <field id="baja">
+                                    <condicion operador="=">0</condicion>
+                            </field>
+
+                            <order>
+                                    <field id="ctanom"></field>
+                            </order>
+
+                            <filtra>ctacod</filtra>
+                    </ayuda_ex>
+            </filtro_ex> -->
+
+
+            <field id="concepto" >
+                <attribute id="linkint">link</attribute>
+                <expression>REG_CONCEPTOS.descripcion_concepto</expression>
+                <label>Cod.Concepto</label>
+                <help>
+                </help>
+                <!--		      <tabla_ex id="CCTCONCE">
+
+                                                        <field id="concod"></field>
+                                                        <field id="condes"></field>
+                                                        </tabla_ex>
+                                                        -->
+
+
+                <paring destino="siscod">subsistema_id</paring>
+                <paring destino="ctacod">nro_cuenta</paring>
+
+                <paring destino="movnro">nro_movimiento</paring>
+                <paring destino="movnpv">puesto_movimiento</paring>
+                <tipo>varchar</tipo>
+
+            </field>
+            <field id="nrofab" noshow="true">
+                <label>Nro Fab</label>
+            </field>
+            <field id="concepto2" local="true">
+                <if exp="'ELECT' != ''">
+                    <true>('nrofab' == '0')?'---':'Unrofab'</true>
+                    <false>''</false>
+                </if>
+                <attribute id="linkint">ELECT</attribute>
+                <label>Cod.Con.</label>
+                <help>
+                </help>
+                <!--		      <tabla_ex id="CCTCONCE">
+
+                                                        <field id="concod"></field>
+                                                        <field id="condes"></field>
+                                                        </tabla_ex>
+                                                        -->
+
+
+                <paring destino="siscod">subsistema_id</paring>
+                <paring destino="ctacod">nro_cuenta</paring>
+
+                <paring destino="movnro">nro_movimiento</paring>
+                <paring destino="movnpv">puesto_movimiento</paring>
+                <tipo>varchar</tipo>
+
+            </field>
+            <field id="archivos_afip" local="true">
+                <label>Afip</label>
+            </field>
+            <field id="nro_cuenta" noshow="true">
+                <help>Codigo de Cuenta </help>
+                <ayuda_ex id="REG_CUENTA">
+                    <field id="nro_cuenta">
+                        <detalle>nro_cuenta</detalle>
+                    </field>
+                    <field id="nombre_cuenta">
+                        <detalle>ctanom</detalle>
+                    </field>
+                    <field id="subsistema_id" oculto="true"></field>
+                    <field id="baja">
+                        <condicion operador="=">0</condicion>
+                    </field>
+
+                    <order>
+                        <field id="nombre_cuenta"></field>
+                    </order>
+
+                    <filtra>nro_cuenta</filtra>
+                </ayuda_ex>
+                <detalle>nro_cuenta</detalle>
+            </field>
+            <field id="nombre_cuenta" tabla="REG_CUENTA" deshabilitado="true" local="true" noshow="true">
+                <label>Nombre</label>
+            </field>
+
+            <!--		        <condicion operador="=">20</condicion>
+                                                        -->
+            <field id="concod" noshow="true">
+                <label>concod</label>
+                <detalle>concod</detalle>
+            </field>
+            <field id="puesto_movimiento" noshow="true">
+                <label>P.V.</label>
+                <help> Punto Venta</help>
+                <format>%04d</format>
+                <detalle>movnpv</detalle>
+            </field>
+            <field id="nro_movimiento" noshow="true">
+                <label>Numero</label>
+                <help> Numero Comprobante</help>
+                <format>%12d</format>
+                <detalle>movnro</detalle>
+            </field>
+            
+            <field id="comprobante">
+        	<expression>'SALDO ANTERIOR'</expression>
+    		<label>Comprobante </label>
+    	    </field>
+    	    
+            <field id="facturas" noshow="true">
+                <expression>(case when REG_MOVIMIENTOS.concod then 'factura_reimp_acc.xml' else 'factura_reimp.xml' end)</expression>
+            </field>
+            <field id="link" local="true" noshow="true">
+                <if exp="concod==1||concod==36">
+                    <true>'facturas'</true>
+                    <false>''</false>
+
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="ELECT" local="true" noshow="true">
+                <if exp="concod==1">
+                    <true>'factura_elec_reimp.xml'</true>
+                    <false>''</false>
+
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+
+
+
+            <field id="fecha_movimiento" required="true">
+                <label>Fecha </label>
+	<!--	<condicion operador="&lt;=">STR_TO_DATE('[__fecha_hasta__]', '%d/%m/%Y') and fecha_movimiento &gt;= STR_TO_DATE('[__fecha_desde__]', '%d/%m/%Y')</condicion>-->
+            </field>
+
+
+
+            <!--          <field id="movvto">
+                                                <label>Venc. </label>
+                                                <help> </help>
+                                                </field>
+                                                -->
+            <field id="Debe" suma="true" noZero="true">
+                <expression>SUM(REG_MOVIMIENTOS.importe_movimiento * (case when (REG_CONCEPTOS.imputacion_concepto + 1) = 1 then 1 else 0 end))</expression>
+                <label>Debe</label>
+                <help>
+                </help>
+            </field>
+
+            <field id="Haber" suma="true" link_int="cctmovim_comp.xml" linkdes="Ver Recibo" noZero="true">
+                <expression>SUM(REG_MOVIMIENTOS.importe_movimiento * (case when (REG_CONCEPTOS.imputacion_concepto + 1) = 2 then 1 else 0 end))</expression>
+                <label>Haber</label>
+                <help>
+                </help>
+                <!-- <paring destino="siscod">siscod</paring>							-->
+                <paring destino="movnro">nro_movimiento</paring>
+                <paring destino="carrec">nro_movimiento</paring>
+                <paring destino="cajnro">nro_movimiento</paring>
+                <paring destino="movinc">nro_movimiento</paring>
+                <paring destino="movnpv">puesto_movimiento</paring>
+                <paring destino="ctacod">nro_cuenta</paring>
+                <paring destino="movfec">fecha_movimiento</paring>
+                <paring destino="cajfec">fecha_movimiento</paring>
+            </field>
+            <field id="resaltado" clasefila="true" local="true" noshow="true">
+                <expression>'resaltadoRojo'</expression>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="saldo_movimiento" suma="true" noZero="true">
+    <!--            <expression>SUM(abs(REG_MOVIMIENTOS.saldo_movimiento) * (case when (REG_CONCEPTOS.imputacion_concepto + 1) = 2 then 1 else 0 end))</expression> -->
+                <expression>SUM(REG_MOVIMIENTOS.saldo_movimiento)</expression>
+
+<!--
+                <if exp="true">
+                    <true>(Haber + 0) - (Debe + 0)</true>
+                    <false>0</false>
+                </if> -->
+                <label>Saldo</label>
+                <help></help>
+                <tipo>numeric</tipo>
+            </field>
+            <field id="acumulado" suma="true" acumula="true" local="true">
+                <if exp="true">
+                    <true>(Haber + 0) - (Debe + 0)</true>
+
+                    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+                <label>Acumulado</label>
+            </field>
+
+	    <field id="fecha_desde" local="true">
+	        <label>d</label>
+	        <tipo>date</tipo>
+    	    </field>
+        
+            <field id="fecha_hasta" local="true" >
+	        <label>h</label>
+                <tipo>date</tipo>
+            </field>
+                
+
+            <order>
+                <field id="fecha_movimiento"></field>
+            </order>
+        </table>
+        <join tipo="left">
+            <table id="REG_CUENTA">
+                <field id="id_regcuenta" >
+                    <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+                </field><!--
+                <field id="nro_cuenta" >
+                    <condicion operador="=">REG_MOVIMIENTOS.nro_cuenta</condicion>
+                </field>-->
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="REG_CONCEPTOS">
+                <field id="id_concepto" oculto="true">
+         <!--           <label>reg_cuenta.subsistema_id</label>-->
+                    <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+                </field>
+
+            </table>
+        </join>
+    </form>
+</histrix>

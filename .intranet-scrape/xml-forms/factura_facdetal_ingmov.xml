@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="insert">
+       <title>FACTURA</title>
+        <obs></obs>
+               <form >
+					<table id="FACDETAL" label="DETALLE DE LA FACTURA" idCampoCond="grdet">
+
+						<field id="id_detal" id_temp="id_detal" />
+
+						<field id="nrofac" id_cab="movnro">
+						</field>
+						<field id="nropue" id_cab="movnpv">
+						</field>
+						<field id="artcod" id_temp="artcod" >
+						</field>
+						<field id="artcan" id_temp="artcan" >
+						</field>
+						<field id="concod" id_cab="concod">
+						</field>
+						<field id="regmin" esNroMinuta="true">
+						</field>
+						<field id="regfec" id_cab="movfec">
+						</field>
+						<field id="ctacod" id_cab="ctacod">
+						</field>
+						<field id="remnro" id_temp="movnro">
+						</field>
+						<field id="artnet" id_temp="neto">
+						</field>
+						<field id="artali" id_temp="alicuota">
+						</field>
+						<field id="artiva" id_temp="iva">
+						</field>
+						<field id="arttot" id_temp="total">
+						</field>
+						<field id="regmovim_id" lastId="factura_cctmovim_ingmov.xml" />						
+
+
+					</table>
+               </form>
+        </histrix>

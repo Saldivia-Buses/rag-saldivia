@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="consulta" paginar="50">
+	<title>Cta Ctes</title>
+	 <obs></obs>
+		<consulta>
+		    <table id="REG_MOVIMIENTOS" label="Cta Cte Proveedores">
+		                <filters>
+		    		 <field id="fecha_mov1"  deshabilitado="false">
+					  <operador>&gt;=</operador>
+					  <label>Desde Fecha</label>
+					  <valor>today</valor>
+					   <valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m") ,
+					    date("d")-10, date("Y")))
+						    </valor>
+				      </field>  
+				      <field id="fecha_mov2"   deshabilitado="false">
+					  <operador>&lt;=</operador>
+					  <label modpos="nobr">Hasta Fecha</label>
+					  <valor>today</valor>
+					  <valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m") ,
+					    date("d")-10, date("Y")))
+						    </valor>
+                                       </field>
+		    			<field id="cuenta_mov1" deshabilitado="false">
+		    				<operador>&gt;=</operador>
+						<label>Desde cuenta</label>
+						<help>Numero de cuenta inicial </help>
+					</field>
+					<field id="cuenta_mov2" deshabilitado="false">
+		    				<operador>&lt;=</operador>
+						<label modpos="nobr">Hasta cuenta</label>
+						<help>Numero de cuenta Final</help>
+					</field>
+					<field id="concepto_id" deshabilitado="false">
+		    				<operador>=</operador>
+						<label>Concepto</label>
+					</field>
+					<field id="nro_movimiento" deshabilitado="false">
+		    				<operador>=</operador>
+						<label>Nro Cheque</label>
+					</field>
+					<field id="importe_movimiento" deshabilitado="false">
+		    				<operador>like</operador>
+						<label>Importe</label>
+					</field>
+		    		</filters>
+		    <field id="id_regmovim" autoinc="true" noshow="true">
+			<label>Código de movimiento</label>
+			<help>Código de movimiento</help>
+		    </field>
+		    <field id="nro_movimiento"  _noshow="true">
+			<label>nro movimiento</label>
+			<help>Código de movimiento</help>
+		    </field>
+		    
+		     <field id="regcuenta_id" noshow="true">
+			<label>cuenta</label>
+			<help>Cuenta que pertenece</help>
+			<detalle>regcuenta_id</detalle>
+		    </field>
+		    <field id="nombre_cuenta" tabla="REG_CUENTA">
+		        <label>Nombre Cuenta</label>
+		    </field>
+		    <field id="subsistema_id" noshow="true">
+			<label>Subsistema</label>
+			<help>Subsistema al que pertenece</help>
+			<condicion operador="=">04</condicion>
+			<detalle>subsistema_id</detalle>
+		    </field>
+		    <field id="concepto_id" noshow="true">
+		    <label>Concepto</label>
+		    <help>Código de concepto</help>
+		     <helper type="combo" id="REG_CONCEPTOS" empty="true">
+			  <field id="id_concepto"/>
+			  <field id="descripcion_concepto"/>
+			  <field id="subsistema_id">
+				<condicion operador="=">'04'</condicion>
+			  </field>
+		     </helper>
+		    </field>
+		     <field id="vencimiento_movimiento">
+		      <label>Acreditacion</label>
+		      <help>Código de concepto</help>
+	            </field>
+		    <field id="referencia_movimiento">
+		      <label>referencia</label>
+	            </field>
+		    
+		  
+
+		    
+	              
+		    
+		     <field id="importe_movimiento"  suma="true" >
+			<label>Importe</label>
+			<tipo>numeric</tipo>
+		    </field>
+		     <field id="conciliado">
+		      <label>Conciliado</label>
+			<expresion>(CASE WHEN  conciliado = '0000-00-00' THEN 0 ELSE 1 END)</expresion>
+			<tipo>check</tipo>
+	            </field>
+		       
+		     <field id="reg_fecha" noshow="true" >
+          		<label>Fecha</label>
+			<tipo>date</tipo>
+			<condicion operador="&gt;=">STR_TO_DATE('[__fecha_mov1__]', '%d/%m/%Y') and  reg_fecha  &lt;= STR_TO_DATE('[__fecha_mov2__]' ,'%d/%m/%Y')</condicion>
+      			 </field>
+			    <field id="baja_cuenta" noshow="true"  tabla="REG_CUENTA">
+			      <label>baja</label>
+				<condicion operador="=">'0000-00-00'</condicion>
+				</field>
+
+		                <field id="fecha_mov1" noshow="true" local="true">
+					<label>Desde</label>
+					<tipo>date</tipo>
+					<detalle>desde</detalle>
+				</field>
+				<field id="fecha_mov2" noshow="true" local="true">
+					<label>hasta</label>
+					<tipo>date</tipo>
+					<detalle>hasta</detalle>
+                                </field>
+				<field id="cuenta_mov1" noshow="true">
+					<expresion having="false">regcuenta_id</expresion>
+					<helper type="external" id="REG_CUENTA">
+					    <field id="id_regcuenta"/>
+					    <field id="nombre_cuenta"/>
+					</helper>	
+					<help>Desde cuenta</help>
+					<label>Cuenta</label>
+					<help>Código de Cuenta</help>
+				</field>
+				<field id="cuenta_mov2" noshow="true">
+					<expresion having="false">regcuenta_id</expresion>
+					<helper type="external" id="REG_CUENTA">
+					    <field id="id_regcuenta"/>
+					    <field id="nombre_cuenta"/>
+					</helper>
+					<help>Hasta cuenta</help>
+					<label>Cuenta</label>
+					<help>Código de Cuenta</help>
+                                </field>
+				<!--<group> 
+					  <field id="id_regcuenta"/>
+					  
+                                </group>
+				<order>
+					<field id="id_regcuenta"/>
+				</order>-->
+		    </table>
+		    
+		    <join tipo="left">
+		        <table id="REG_CUENTA">
+			<field id="id_regcuenta">
+				<condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+			    </field>
+			</table>
+		   </join>
+		     <join tipo="left">
+			<table id="REG_CONCEPTOS">
+			    <field id="id_concepto">
+				<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+    			    </field>
+			</table>
+		    </join>
+		
+		</consulta>
+    </histrix>

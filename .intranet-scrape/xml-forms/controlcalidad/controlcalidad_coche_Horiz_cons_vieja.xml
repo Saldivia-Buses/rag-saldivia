@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix _tipo="consulta" tipo="horizontalGrid">
+    <title>Control Calidad</title>
+    <obs/>
+
+    <form >
+        <table id="CONTROLCALIDAD">
+            <title>Control de Calidad</title>
+            <field id="idControl" oculto="true" tipoOrden="DESC">
+            </field>
+
+            <field id="nrofab" oculto="true">
+            </field>
+            <field id="fecha" >
+        	<expresion>max(fecha)</expresion>
+                <tipo>date</tipo> 
+                <formato>d/m</formato> 
+                
+            </field>
+            <field id="observaciones"  oculto="true" >
+                <expresion>ifnull((select CTR.observaciones from CONTROLCALIDAD as CTR
+                    where
+                        CTR.nrofab = CONTROLCALIDAD.nrofab
+                    and CTR.idSeccion = CONTROLCALIDAD.idSeccion
+                    ORDER BY CTR.idControl DESC limit 1), '')
+                </expresion>
+
+            </field>
+
+            <field id="color"  noshow="true" >
+                <expresion>(select CONCAT('background-color:',color) from CONTROLCALIDAD as CTR
+                    left join CALIFICACION ON CALIFICACION.idCalificacion = CTR.idCalificacion
+                    where   CTR.nrofab = CONTROLCALIDAD.nrofab
+                        and CTR.idSeccion = CONTROLCALIDAD.idSeccion
+                    ORDER BY CTR.idControl DESC limit 1)
+                </expresion>
+
+            </field>
+
+            <field id="abrev" tabla="MOMENTO" getStyle="color" >
+        	<expresion>CONCAT(MOMENTO.abrev, ' (' , ifnull((select sum(CTR.cantObs) from CONTROLCALIDAD AS CTR where CTR.nrofab = CONTROLCALIDAD.nrofab and idMomento = CTR.idSeccion), 0), ')')</expresion>
+                <attribute id="style">color</attribute>
+                <attribute id="tooltip">observaciones</attribute>
+            </field>
+            
+            <field id="idSeccion" oculto="true"/>
+            
+            <field id="linea_id" local="true"/>
+            
+            <field id="orden" noshow="true" tabla="MOMENTO"/>
+            
+            
+            <order>
+        	<field id="orden" tabla="MOMENTO"/>
+            </order>
+            <group>
+                <field id="idSeccion" />
+            </group>
+
+        </table>
+        <join tipo="left">
+            <table id="MOMENTO">
+                <field id="idMomento">
+                    <condicion operador="=">idSeccion</condicion>
+                </field>
+                
+                <field id="linea_id">
+                    <condicion operador="=">[__linea_id__]</condicion>
+                </field>       
+                
+                
+            </table>
+        </join>
+
+
+    </form>
+</histrix>

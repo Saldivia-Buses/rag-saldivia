@@ -6,51 +6,29 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/Camionerou/rag-saldivia/pkg/config"
 	"github.com/Camionerou/rag-saldivia/pkg/guardrails"
 	"github.com/Camionerou/rag-saldivia/pkg/health"
-	"github.com/Camionerou/rag-saldivia/pkg/build"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
-	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
-	"github.com/Camionerou/rag-saldivia/pkg/security"
-	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
-	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
-	"github.com/Camionerou/rag-saldivia/services/agent/internal/handler"
 	agentllm "github.com/Camionerou/rag-saldivia/pkg/llm"
+	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
+	"github.com/Camionerou/rag-saldivia/pkg/security"
+	"github.com/Camionerou/rag-saldivia/pkg/server"
+	"github.com/Camionerou/rag-saldivia/services/agent/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/agent/internal/service"
 	"github.com/Camionerou/rag-saldivia/services/agent/internal/tools"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 func main() {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
-	slog.SetDefault(logger)
+	app := server.New("sda-agent", server.WithPort("AGENT_PORT", "8004"))
+	ctx := app.Context()
 
-	port := config.Env("AGENT_PORT", "8004")
 	publicKey := sdajwt.MustLoadPublicKey("JWT_PUBLIC_KEY")
-
-	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer cancel()
-
-	otelShutdown, err := sdaotel.Setup(ctx, sdaotel.Config{
-		ServiceName:    "sda-agent",
-		ServiceVersion: "0.1.0",
-		Endpoint:       config.Env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
-		Insecure:       true,
-	})
-	if err != nil {
-		slog.Warn("otel init failed", "error", err)
-	} else {
-		defer otelShutdown(context.Background())
-	}
 
 	// Token blacklist (shared Redis)
 	blacklist := security.InitBlacklist(ctx, config.Env("REDIS_URL", "localhost:6379"))
@@ -61,7 +39,7 @@ func main() {
 	if err != nil {
 		slog.Warn("nats connect failed, trace publishing disabled", "error", err)
 	} else {
-		defer nc.Drain()
+		app.OnShutdown(func() { _ = nc.Drain() })
 		slog.Info("connected to nats", "url", config.RedactURL(natsURL))
 	}
 	tracePublisher := service.NewTracePublisher(nc)
@@ -77,6 +55,8 @@ func main() {
 	ingestURL := config.Env("INGEST_SERVICE_URL", "http://localhost:8007")
 	notificationURL := config.Env("NOTIFICATION_SERVICE_URL", "http://localhost:8005")
 	astroURL := config.Env("ASTRO_SERVICE_URL", "http://localhost:8011")
+	bigbrotherURL := config.Env("BIGBROTHER_SERVICE_URL", "http://localhost:8012")
+	erpURL := config.Env("ERP_SERVICE_URL", "http://localhost:8013")
 
 	// Core tools always available (not module-dependent)
 	toolDefs := []tools.Definition{
@@ -87,22 +67,30 @@ func main() {
 			Description: "Upload and process a new document into the knowledge base.",
 			Parameters:  json.RawMessage(`{"type":"object","required":["file_name","collection"],"properties":{"file_name":{"type":"string","description":"name of the file"},"collection":{"type":"string","description":"target collection"}}}`)},
 		{Name: "check_job_status", Service: "ingest", Endpoint: ingestURL + "/v1/ingest/jobs", Method: http.MethodGet, Type: "read",
-			Description: "Check the status of a document ingestion job.",
-			Parameters:  json.RawMessage(`{"type":"object","properties":{"job_id":{"type":"string","description":"the job ID to check"}}}`)},
-		{Name: "send_notification", Service: "notification", Endpoint: notificationURL + "/v1/notifications/send", Method: http.MethodPost, Type: "action", RequiresConfirmation: true,
-			Description: "Send a notification to a user or group.",
-			Parameters:  json.RawMessage(`{"type":"object","required":["message","recipients"],"properties":{"message":{"type":"string","description":"notification message"},"recipients":{"type":"array","description":"user IDs","items":{"type":"string"}}}}`)},
+			Description: "List document ingestion jobs and their statuses.",
+			Parameters:  json.RawMessage(`{"type":"object","properties":{"job_id":{"type":"string","description":"optional job ID filter"}}}`)},
+		// send_notification removed: notification service consumes NATS events, not HTTP POST.
+		// Notifications are triggered by NATS publish from other services, not by the agent directly.
 	}
 
 	// Load module tools from YAML manifests (extends core tools)
 	modulesDir := config.Env("MODULES_DIR", "modules")
 	serviceURLs := map[string]string{
 		"search": searchURL, "ingest": ingestURL, "notification": notificationURL,
-		"astro": astroURL,
+		"astro": astroURL, "bigbrother": bigbrotherURL, "erp": erpURL,
 	}
-	// TODO: enabledModules should come from Platform DB per-tenant.
-	// For now, load all modules' tools as available.
-	moduleDefs, err := tools.LoadModuleTools(modulesDir, map[string]bool{"fleet": true, "astro": true}, serviceURLs)
+	// ENABLED_MODULES controls which module tool manifests are loaded.
+	// Accepts a comma-separated list of module IDs (e.g. "fleet,erp") or
+	// "all" / "" to load everything. Set to "none" to load no module tools.
+	//
+	// TODO (Option A — per-tenant): once the platform service exposes an
+	// internal service-to-service endpoint for enabled modules (without
+	// platform-admin auth), load ALL module tools at startup here and filter
+	// them per-request in the handler/service based on the tenant's enabled
+	// modules fetched from platform. Track in: platform internal modules API.
+	enabledModules := tools.ParseEnabledModules(config.Env("ENABLED_MODULES", ""))
+	slog.Info("enabled module set", "modules", enabledModules)
+	moduleDefs, err := tools.LoadModuleTools(modulesDir, enabledModules, serviceURLs)
 	if err != nil {
 		slog.Warn("failed to load module tools", "error", err)
 	} else if len(moduleDefs) > 0 {
@@ -120,7 +108,7 @@ func main() {
 			slog.Warn("grpc search client failed, using http fallback", "error", err)
 		} else {
 			executor.SetGRPCSearch(grpcClient)
-			defer grpcClient.Close()
+			app.OnShutdown(func() { _ = grpcClient.Close() })
 			slog.Info("search via grpc", "target", searchGRPC)
 		}
 	}
@@ -144,17 +132,12 @@ func main() {
 		MaxLoopIterations:   10,
 		Temperature:         0.2,
 		MaxTokens:           8192,
-		GuardrailsConfig: guardrails.DefaultInputConfig(10000),
+		GuardrailsConfig:    guardrails.DefaultInputConfig(10000),
 	})
 
 	agentHandler := handler.New(agentSvc)
 
-	r := chi.NewRouter()
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Recoverer)
-	r.Use(middleware.Timeout(90 * time.Second))
-	r.Use(sdamw.SecureHeaders())
+	r := app.Router()
 
 	hc := health.New("agent")
 	if nc != nil {
@@ -169,41 +152,14 @@ func main() {
 		hc.Add("redis", func(ctx context.Context) error { return blacklist.Ping(ctx) })
 	}
 	r.Get("/health", hc.Handler())
-	r.Get("/v1/info", build.Handler("sda-agent"))
 
 	aiRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 30, Window: time.Minute, KeyFunc: sdamw.ByUser})
 
 	r.Group(func(r chi.Router) {
-		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist, FailOpen: true}))
+		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist, FailOpen: false}))
 		r.Use(aiRL)
 		r.Mount("/v1/agent", agentHandler.Routes())
 	})
 
-	srv := &http.Server{
-		Addr:         ":" + port,
-		Handler:      otelhttp.NewHandler(r, "sda-agent"),
-		ReadTimeout:  10 * time.Second,
-		ReadHeaderTimeout: 10 * time.Second,
-		WriteTimeout: 5 * time.Minute, // long for LLM streaming, but prevents indefinite slowloris
-		IdleTimeout:  120 * time.Second,
-	}
-
-	go func() {
-		slog.Info("agent runtime starting", "port", port, "model", llmModel)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			slog.Error("server error", "error", err)
-			os.Exit(1)
-		}
-	}()
-
-	<-ctx.Done()
-	slog.Info("agent runtime shutting down")
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer shutdownCancel()
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		slog.Error("shutdown error", "error", err)
-	}
+	app.Run()
 }
-
-
-

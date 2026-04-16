@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="delete">
+  <title>ARTICULOS POR SECTOR</title>
+  <obs></obs>
+  <form >
+    <table id="STK_ARTICULO_PROCESO" label="insert articulos" idCampoCond="deleteCond" >
+
+      <field id="id_artproceso"      id_temp="id_artproceso" esClave="true" />
+      
+    </table>
+  </form>     
+</histrix>

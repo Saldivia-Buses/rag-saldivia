@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" subtipo="vertical" inserta="false" borra="false" modifica="false" imprime="false" deleteRow="false" exportasuma="true" llenoreferente="true" llenotemporal="true">
+  <title>Comprobantes a Imputar</title>
+  <obs/>
+  <form>
+    <table id="REG_MOVIMIENTOS">
+	
+      <movimientos>
+        <relacion id="cajmovimientos_ruta_ins.xml" />
+                 -
+        <relacion id="cajvalores_efec_ruta_ins.xml" />   EFECTIVO
+<!--        
+
+	  FALTA ASIENTO CONTABLE!!!!
+        <relacion id="cajdetalle_efec_ruta_ins.xml" />   debe efectivo 
+
+        <relacion id="cajvalores_ruta_ins.xml" />   		CHEQUE
+        <relacion id="cajdetalle_debe_cheq_ruta_ins.xml" />       debe cheque 
+        -->
+
+	<CHEQUE>      
+	  esto lo metro en un boton - obj      
+      
+        <relacion id="carvalores_cheq_ruta_ins.xml" />   CHEQUE CARTERA VALORES
+        <relacion id="carmovimientos_ruta_ins.xml" />   CHEQUE  vinculo al cajmovimientos
+      
+	</CHEQUE>
+           <!--
+        <relacion id="cajdetalle_haber_ruta_ins.xml" />    haber de deudores (total)
+               -->
+
+
+        <relacion id="regmovimientos_ruta_ins.xml"/> 
+        <relacion id="regdetalles_ruta_ins.xml"/> 
+      
+        <relacion id="regimputaciones_ruta_ins.xml"/>
+        <relacion id="actualizo_nro_ruta.xml" />
+      </movimientos>                         
+      
+
+      <field id="id_regmovim" esClave="true" _noshow="true" />
+
+      <field id="subsistema_id" noshow="true"/>
+
+      <field id="cajconcepto_id" local="true" noshow="true"/>
+                                                                                                
+      <field id="regcuenta_id" noshow="true">
+      </field>
+      <field id="nombre_cuenta" tabla="REG_CUENTA">
+      </field>
+
+      <field id="fecha" >
+        <label>Fecha</label>
+        <tipo>date</tipo>
+	<expresion>fecha_movimiento</expresion>
+      </field>
+
+
+      <field id="vencimiento_movimiento">
+        <label>Vto</label>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="comprobante">
+        <label>Comprobante</label>
+        <expresion>CONCAT(REG_CONCEPTOS.abreviacion_concepto,' ',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,0),'-',LPAD(REG_MOVIMIENTOS.nro_movimiento,8,0))</expresion>
+      </field>
+
+<!--      <field id="cuota_movimiento">
+        <label>Cta</label>
+      </field> -->
+	<!-- Segun la imputacion del comprobante principal varia la imputacion de los comprobantes detalles esto es para que las facturas simpre salgan en positivo y los
+recibos u O.Pago como las Nc de clientes y proveedores salgan en negativo -->
+      <field id="imputacion_concepto_comprobante_llama" local="true" noshow="true" />
+
+
+      <field id="saldo_movimiento" >
+        <label>Saldo</label>
+	<expresion>(case when [__imputacion_concepto_comprobante_llama__] = 0 then -1 else 1 end *  case when imputacion_concepto = 1 then 1 else -1 end) *  saldo_movimiento</expresion>
+        <condicion operador="&gt;">0</condicion>
+      </field>
+
+      <field id="Imputado" local="true" refresh="true">
+        <label>Imputar</label>
+        <tipo>check</tipo>       
+      </field>
+      <field id="cajformapago_id" local="true" _esClave="true" noshow="true">
+        <detalle>cajformapago_id</detalle>
+        <valor>2</valor>
+      </field>
+
+      <field id="ejecuta_forma"  ventint="true" linkdes="CARGAR">
+    	<expresion>'carvalores_ruta_cobro_ing.xml'</expresion>
+        <label>Cheques</label>
+        <tipo>varchar</tipo>
+        <importar label="DETALLE">
+          <field id="id_regmovim">id_regmovim</field>
+        
+          <field id="moneda_id">moneda_id</field>
+          <field id="cajformapago_id">cajformapago_id</field>
+          <field id="tipo_movimiento">tipo_movimiento</field> 
+          <field id="imputacion_concepto">imputacion_concepto</field>
+          <field id="ctbcuenta_reg_doh">imputacion_concepto</field>
+          <field id="importe_movimiento">importe_movimiento</field>
+          <field id="fecha_movimiento">fecha_movimiento</field>
+          <field id="puesto_movimiento">puesto_movimiento</field>
+          <field id="nro_movimiento">nro_movimiento</field>
+          <field id="referencia_movimiento">referencia_movimiento</field>
+          <field id="subsistema_forma_id">subsistema_forma_id</field>
+          <field id="regconcepto_forma_id">regconcepto_forma_id</field>
+          <field id="stkconcepto_forma_id">stkconcepto_forma_id</field>
+          <field id="stkdeposito_id">stkdeposito_id</field>
+        </importar>
+      </field> 
+	<field id="pago_valor" local="true" editable="true" deshabilitado="true" suma="true">
+	  <label>valores</label>
+	</field>
+	<field id="efectivo_valor" local="true" editable="true" deshabilitado="false" suma="true">
+	  <label>efectivo</label>
+       <if exp="Imputado == 1 || pago_valor + 0 != 0">
+		    <true>(efectivo_valor != 0)?efectivo_valor:(saldo_movimiento  - (pago_valor + 0))</true>
+		    <false>0</false>
+        </if> 
+	<jseval campodestino="total_imputado" _total="true">efectivo_valor + pago_valor</jseval>
+            <tipo>numeric</tipo>
+	</field>
+   <field id="total_imputado" local="true" suma="true" editable="true" _noshow="true">
+	<!--<expresion>(case when [__imputacion_concepto_comprobante_llama__] = 0 then -1 else 1 end *  case when imputacion_concepto = 1 then 1 else -1 end) *  saldo_movimiento </expresion>
+	-->
+      	<label>Total Imputado</label>
+       <if exp="true">
+		    <true>pago_valor + efectivo_valor</true>
+		    <false>0</false>
+        </if> 
+        <jseval >total_imputado &lt;= saldo_movimiento</jseval>
+	<jseval campodestino="importe_imputado" total="true">total_imputado</jseval>
+        <detalle>importe_imputado</detalle>
+	<tipo>numeric</tipo>
+      </field>
+
+	  <field id="regzona_id" tabla="REG_CUENTA" oculto="true">
+        <condicion operador="=">-1</condicion>
+
+	  </field>
+    </table>
+    <join>
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+        </field>
+        </table>
+    </join>
+    <join>
+      <table id="REG_CONCEPTOS">
+        <field id="subsistema_id">
+          <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+        </field>
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id </condicion>
+        </field>
+
+        <field id="imputacion_concepto">
+    <!--      <condicion operador="=">0</condicion> -->
+        </field>
+
+        <field id="informa_calculo">
+          <condicion operador="=">0</condicion>
+        </field>
+
+      </table>
+    </join>
+
+    
+
+  </form>
+</histrix>

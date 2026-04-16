@@ -1,0 +1,411 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" >
+	<title>Movimientos Bancarios</title>
+	<obs></obs>
+	<form >
+		<table id="REG_MOVIMIENTOS" label="Movimientos Bancarios">
+
+<!--
+			<preconsultas>
+				<xmlfile id="bcsmovim_pre.xml"/>	   
+			</preconsultas>			
+-->
+			<filters>
+
+                                <field id="nro_cuenta">
+                                    <tabla_ex id="BCSCUENT">
+					<field id="ccbcod"></field>
+					<field id="ccbnom"></field> -
+					<field id="siscod" oculto="true"></field>
+                                    </tabla_ex>
+                                    <label>Codigo Cuenta</label>
+                                    <help>Codigo de Cuenta Bancaria </help>
+					<preparam operador="=">true</preparam>	
+                                    <operador>=</operador>
+                                </field>
+                                <field id="concod" >
+                                    <label>Tipo Mov</label>
+                                    <operador>=</operador>
+                                </field>
+
+				<field id="fpv_movimiento" copia="fpv_movimientopre"  deshabilitado="false">
+					<operador>>=</operador>
+					<label>Desde Fecha Acreditación</label>
+					<valor>today</valor>
+			
+				</field>
+			    <field id="fpv_movimientopre" local="true" noshow="true" deshabilitado="true">
+					<label modpos="nobr"></label>
+					<preparam campo="fpv_movimiento" operador="&lt;">true</preparam>
+					<valor>today</valor>	
+					<tipo>date</tipo>											
+			    </field>						
+
+				<field id="fpv_movimiento"  deshabilitado="false">
+					<operador>&lt;=</operador>
+					<label modpos="nobr">Hasta Fecha Acreditación</label>
+					<valor>today</valor>
+
+				</field>
+				<field id="fecha_movimiento" copia="fecha_movimientopre">
+					<label>Desde Fecha Mov.</label>
+					<operador>&gt;=</operador>
+				</field>
+
+			    <field id="fecha_movimientopre" local="true" noshow="true" deshabilitado="true">
+					<label modpos="nobr"> </label>
+					<preparam campo="fecha_movimiento" operador="&lt;">true</preparam>
+					<valor>today</valor>	
+					<tipo>date</tipo>											
+			    </field>
+
+				<field id="fecha_movimiento">
+					<label modpos="nobr">Hasta Fecha Mov.</label>
+					<operador>&lt;=</operador>
+				</field>
+
+                                <field id="importe_movimiento" >
+                                    <label>Desde Importe</label>
+                                    <operador>&gt;=</operador>
+                                </field>
+                                <field id="importe_movimiento" >
+                                    <label modpos="nobr">Hasta Importe</label>
+                                    <operador>&lt;=</operador>
+                                </field>
+			<field id="nro_movimiento">
+				<label>Número</label>
+				<help>Numero de Movimiento </help>
+			<!--	<format>%010d</format> -->
+                                
+                                <operador modificador="right">=</operador>
+				
+			</field>
+
+			</filters>
+			<field id="nro_cuenta" noshow="true">
+                                    <tabla_ex id="BCSCUENT" _vacio="true">
+					<field id="ccbcod"></field>
+					<field id="ccbnom"></field> -
+					<field id="siscod" oculto="true"></field>
+                                    </tabla_ex>
+				<label>Codigo Cuenta</label>
+				<help>Codigo de Cuenta Bancaria </help>
+				<preparam operador="=">true</preparam>	
+			</field>
+                        <field id="concod" noshow="true">
+                            <label>Tipo Mov</label>
+                                    <tabla_ex id="BCSCONCE" vacio="true">
+					<field id="cnbcod"></field>
+					<field id="cnbdes"></field>
+					<field id="siscod" oculto="true"></field>
+                                    </tabla_ex>
+                        </field>
+			
+			<field id="subsistema_id" oculto="true">
+				<label>Codigo Sistema.</label>
+				<condicion operador="=">04</condicion>
+				<help></help>
+			</field>
+			<field id="fecha_movimiento">
+				<label>Fecha Mov.</label>
+				<help>Fecha de Movimiento</help>
+			</field>
+			<field id="freal" noshow="true">
+			<expression>case when vencimiento_movimiento != fpv_movimiento then 'color:red;' end</expression>
+			</field>
+		    <field id="link" noshow="true">
+		    	<expression>'bcsmovim_crud.xml'</expression>
+		    </field>
+
+			<field id="fpv_movimiento" _required="true">
+				<attribute id="style">freal</attribute>
+				<attribute id="linkint">link</attribute>
+				<helper _xml="bcsmovim_crud.xml" type="link" reposition="true" width="400" height="250">
+					<parameter source="id_regmovim" target="id_bcsmovim" />
+				</helper>
+
+				<label>Acreditacion</label>
+				<help>Fecha de Acreditacion</help>
+				<tipo>date</tipo>
+			</field>
+			
+			    <field id="fpv_movimientopre" local="true" noshow="true" deshabilitado="true" >
+				<label modpos="nobr"></label>
+				<preparam campo="fpv_movimiento" operador="&lt;">true</preparam>
+				<valor>today</valor>	
+				<tipo>date</tipo>											
+			    </field>						
+			    <field id="fecha_movimientopre" local="true" noshow="true" deshabilitado="true" required="false">
+				    <label modpos="nobr"> </label>
+				    <preparam campo="fpv_movimiento" operador="&lt;">true</preparam>
+				    <valor>today</valor>	
+				    <tipo>date</tipo>											
+			    </field>				
+			<field id="cnbabvE">
+				<expression>cnbdes</expression>
+				<label>Tipo</label>
+				<help>Codigo de tipo de Movimiento </help>
+				
+				<!--                      <tabla_ex id="BCSCONCE">
+				<field id="cnbcod"></field>
+				<field id="cnbabv"></field>
+				</tabla_ex>
+				-->
+				<tipo>string</tipo>
+			</field>
+			<field id="nro_movimiento" noZero="true">
+				<label>Número</label>
+				<help>Numero de Movimiento </help>
+				<helper xml="ctbregis2.xml" dir="/ctb_old/" type="link" title="Asiento Contable">
+					<parameter source="numero_cae" target="numero_cae" />
+					<parameter source="fecha_movimiento" target="regfec" />
+				</helper>
+			<!--	<format>%010d</format> -->
+				
+			</field>
+			<field id="nropag">
+				<label>Nro Pago</label>
+			</field>
+			<field id="reimp">
+			    <expression> case when concod = 2 and REG_MOVIMIENTOS.nro_cuenta = 1 then 'Reimp' end</expression>
+			    <helper xml="cheque.xml" type="link">
+				<parameter source="nro_movimiento" target="nro_movimiento" />
+				<parameter source="concod" target="concod" />
+				<parameter source="nro_cuenta" target="nro_cuenta" />
+				<parameter source="fecha_movimiento" target="fecha_movimiento" />
+			    </helper>
+			</field>
+                        <field id="numero_cae" >
+                                    <label>Min</label>
+		    
+                                    <help>
+                                    </help>
+				    <helper type="link" xml="ctbregis2.xml" dir="/ctb_old" title="Asiento Contable">
+					<parameter source="nro_movimiento" target="regnro" />
+<!--					<parameter source="fecha_movimiento" target="regfec" /> -->
+					<parameter source="10" 	   target="siscod" />
+					<parameter source="numero_cae" target="regmin" />
+				    </helper>
+            
+                        </field>
+
+			<field id="referencia">
+				<expression>referencia_movimiento</expression>
+				<tipo>char</tipo>
+				<label>Referencia</label>
+				<help>Referencia Adicional. </help>
+			</field>
+                        <field id="importe_movimiento" noshow="true">
+                            <label>Importe</label>
+                        </field>
+			
+			<field id="debe" suma="true" noZero="true">
+				<expression>round(importe_movimiento * (case when cnbtip = '1' then 1 else 0 end), 2)</expression>
+				
+				<label>Creditos</label>
+				<help>Importe del Movimiento en el Debe</help>
+                                <tipo>numeric</tipo>
+			</field>
+			
+			<field id="haber" suma="true" noZero="true" style="padding-left:5px">
+				<expression>round(importe_movimiento * (case when cnbtip = '2' then 1 else 0 end), 2)</expression>
+				
+				<label>Débitos</label>
+				<help>Importe del Movimiento en el Haber</help>
+                                <tipo>numeric</tipo>
+			</field>
+			
+			<field id="saldo" suma="true" acumula="true" local="true" _retroalimenta="true" style="color:green;padding-left:5px;">
+			<label>Saldo</label>
+    			<help>saldo  movimiento </help>
+				<if exp="true">
+				    <true>round(debe - haber, 2)</true>
+				    <false>0</false>
+				</if>
+				<tipo>numeric</tipo>
+
+<!--
+				<expression>round(importe_movimiento * (case when cnbtip = '2' then -1 else 1 end), 2)</expression>
+-->
+			</field>
+			<field id="S2" suma="true" acumula="true" local="true" retroalimenta="true" noshow="true">
+    			<help>saldo  movimiento </help>
+				<if exp="true">
+				    <true>round(debe - haber,2)</true>
+				    <false>0</false>
+				</if>
+				<tipo>numeric</tipo>
+<!--
+				<expression>round(importe_movimiento * (case when cnbtip = '2' then -1 else 1 end), 2)</expression>
+-->
+			</field>
+			<field id="colorsaldo" noshow="true" local="true">
+			    <label>Dif s/Banco</label>
+			    <if exp="'Sbanco' == 'S2'">
+				<true>'color:blue;font-weight:bold;'</true>
+				<false>0</false>
+			    </if>
+			    <tipo>numeric</tipo>
+			</field>
+
+			<field id="Sbanco" noZero="true">
+			    <attribute id="style">colorsaldo</attribute>
+			    <label>Saldo s/Banco</label>
+			    <expression>BCS_IMPORTACION.saldo</expression>
+			    <tipo>numeric</tipo>
+			</field>
+			<field id="dif" noZero="true" local="true" style="color:red;">
+			    <label>Dif s/Banco</label>
+			    <if exp="'Sbanco' != '0'">
+				<true>S2 - Sbanco</true>
+				<false>0</false>
+			    </if>
+			    <tipo>numeric</tipo>
+			</field>
+<!--
+			<field id="fecha_movimiento">
+				<expression>fecha_movimiento</expression>
+				<label>Fecha Real</label>
+				<help>Fecha del Movimiento</help>
+				<tipo>date</tipo>
+			</field>
+-->			
+			<field id="presentado" deshabilitado="true">
+				<label>Conc</label>
+				<tipo>check</tipo>
+			</field>
+			<field id="nombre_moneda">
+			    <expression>abreviatura_moneda</expression>
+			</field>
+			<field id="importe_moneda_origen" suma="true">
+			    <expression>importe_moneda_origen * (case when cnbtip = '2' then 1 else -1 end)</expression>
+			    <label>Importe Moneda Origen</label>
+			    <tipo>numeric</tipo>
+		    
+			</field>
+			<field id="debecon" noZero="true" noshow="true">
+				<expression>round(importe_movimiento * presentado *(case when cnbtip = '1' then 1 else 0 end), 2)</expression>
+				
+				<label>Cred Con</label>
+				<help>Importe del Movimiento en el Debe</help>
+                                <tipo>numeric</tipo>
+			</field>
+			
+			<field id="habercon"  noZero="true" style="padding-left:5px" noshow="true">
+				<expression>round(importe_movimiento * presentado * (case when cnbtip = '2' then 1 else 0 end), 2)</expression>
+				
+				<label>Déb Con</label>
+				<help>Importe del Movimiento en el Haber</help>
+                                <tipo>numeric</tipo>
+			</field>
+			<field id="saldocon" suma="true" acumula="true" local="true" _retroalimenta="true" style="color:green;padding-left:5px;">
+			<label>Saldo Conciliado</label>
+    			<help>saldo  movimiento </help>
+				<if exp="true">
+				    <true>round(debecon - habercon, 2)</true>
+				    <false>0</false>
+				</if>
+				<tipo>numeric</tipo>
+
+<!--
+				<expression>round(importe_movimiento * (case when cnbtip = '2' then -1 else 1 end), 2)</expression>
+-->
+			</field>
+
+			<field id="id_regmovim" noshow="true">
+				<label>id</label>
+			</field>
+			
+			<!--
+			<field id="fpv_movimiento">
+			<label>Fecha Vencimiento    . </label>
+			<help>Fecha de vencimiento del Movimiento </help>
+			</field>
+			<field id="mar_movimiento">
+			<label>Marca </label>
+			<help> </help>
+			</field>
+			<field id="bcspre">
+			<label>F.Presentado </label>
+			<help>Fecha de Presentacion. </help>
+			</field>
+			<field id="bcstil">
+			<label>Presentado </label>
+			<help>[ ] = Sin Presentar  |  [1] = Presentado. </help>
+			</field>
+			<field id="cae_i">
+			<label>Firma Electronica </label>
+			<help>Firma Electronica </help>
+			</field>
+			<field id="presentado">
+			<label>Presentado </label>
+			<help>Indica si el Valor ya fue Presentado </help>
+			</field>
+			<field id="succod">
+			<label>Cod. Sucursal </label>
+			<help>Codigo de Sucursal </help>
+			</field>
+			
+			-->
+			<field id="id_importacion" tabla="BCS_IMPORTACION" noshow="true">
+				<expression>ifnull(id_importacion, 9999999999999)</expression>
+
+</field>
+
+			<field id="cf" clasefila="true" noshow="true" local="true">
+				<if exp="presentado != '0'">
+				    <true>('Sbanco' != '0' &amp;&amp; 'dif' == 0)?'error':'resaltado'</true>
+				    <false>('Sbanco' != '0' &amp;&amp; 'dif' == 0)?'error':''</false>
+				</if>
+			</field>
+
+			<group>
+				<field id="id_regmovim" ></field>
+
+			</group>	
+			<order>
+				<field id="fpv_movimiento"></field>
+				<field id="id_importacion" tabla="BCS_IMPORTACION"></field>
+				<field id="id_regmovim"></field>
+			</order>
+			
+		</table>
+		
+		<join tipo="left">
+			<table id="BCS_IMPORTACION">
+				<field id="regmovim_id">
+					<condicion operador="=">REG_MOVIMIENTOS.id_regmovim and regmovim_id != 0</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="BCSCONCE">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+					
+				</field>
+				
+				<field id="cnbcod" oculto="true">
+					<condicion operador="=">REG_MOVIMIENTOS.concod</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="REG_MOVIMIENTO_MONEDA">
+				<field id="regmovim_id" >
+					<condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion>
+					
+				</field>				
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="GEN_MONEDAS">
+				<field id="id_moneda" >
+					<condicion operador="=">moneda_origen_id</condicion>
+					
+				</field>				
+			</table>
+		</join>		
+	</form>
+</histrix>

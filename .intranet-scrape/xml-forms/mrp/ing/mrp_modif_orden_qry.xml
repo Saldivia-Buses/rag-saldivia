@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" inserta="no" width="20">
+    <title>MODIFICAR ORDENES DE PRODUCCION</title>
+    <obs></obs>
+    <form  detalle="mrp_modif_orden_crud.xml">
+        <table id="MRP_ORDEN_PRODUCCION" label="Modificar Orden de Producción">
+            <filters>
+                <field id="mrpestado_id" >
+                    <label>Estado </label>
+                    <help>Estado Actual</help>
+                    <options>
+                        <option valor="0">Pendiente</option>
+                        <option valor="1">Cumplida</option>
+                    </options>
+                    <operador>=</operador>
+                    <valor>0</valor>
+                </field>
+            </filters>
+
+            <field id="fecha_orden">
+                <label>Fecha</label>
+                <help>Fecha de Orden de Fabricación</help>
+            </field>
+            <field id="hoy" noshow="true">
+                <expresion>now()</expresion>
+                <detalle>fecha_cierre</detalle>
+            </field>
+
+            <field id="id_mrporden">
+                <label>Nro</label>
+                <help>Numero de Orden de Fabricación</help>
+
+                <detalle>id_mrporden</detalle>
+                <detalle>mrporden_id</detalle>
+            </field>
+            <field id="rhpersonal_nombre"  tabla="RH_PERSONAL" >
+                <label modpos="nobr">Empleado</label>
+		<expresion>concat(nombre_personal," ",apellido_personal)</expresion>
+            </field>
+
+                <field id="mrpestado_id" noshow="true">
+                    <label>Estado </label>
+                    <help>Estado Actual</help>
+                    <options>
+                        <option valor="0">Pendiente</option>
+                        <option valor="1">Cumplida</option>
+                    </options>
+                    <operador>=</operador>
+                    <valor>0</valor>
+                </field>
+
+            <order>
+                <field id="fecha_orden"></field>
+            </order>
+        </table>
+	<join>
+	    <table id="RH_PERSONAL">
+		<field id="id_rhpersonal">
+		    <condicion operador="=">rhpersonal_id</condicion>
+		</field>
+	    </table>
+	</join>
+
+
+    </form>
+</histrix>

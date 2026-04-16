@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+	<title>Talleres</title>
+	<obs></obs>
+	<form>
+	    <table id="MANT_TALLERES" label="Talleres">
+
+			<field id="id_manttaller" esClave="true" noshow="true" />
+
+			<field id="nombre_taller">
+				<label>Nombre Taller</label>
+				<size>50</size>
+			</field>
+
+			<field id="direccion">
+				<label>Direccion</label>
+				<size>50</size>
+			</field>
+
+			<field id="provincia_id">
+                <label>Provincia</label>
+                <helper type="combo" id="GEN_PROVINCIAS" empty="true">
+                    <field id="id_provincia" />
+                    <field id="nombre_provincia" />
+                </helper>
+                <actualiza>
+                    <field destino="provincia_id" id="localidad_id" />
+                </actualiza>
+            </field>
+
+            <field id="localidad_id">
+                <label modpos="nobr">Localidad</label>
+                <helper type="combo" id="GEN_LOCALIDADES" empty="true">
+                    <field id="id_localidad" />
+                    <field id="nombre_localidad" />
+                    <field id="provincia_id" oculto="true" /> 
+                </helper>
+            </field> 
+
+            <field id="regcuenta_id">
+                <label>Dueño</label>
+                <helper type="combo" id="REG_CUENTA" empty="true">
+                    <field id="id_regcuenta" />
+                    <field id="nombre_cuenta" />
+                    <field id="subsistema_id"> 
+                    	<condicion operador="=">01</condicion>
+                    </field>
+                </helper>
+            </field>
+
+            <field id="tipotaller_id">
+            	<label>Tipo Taller</label>
+            	<helper type="combo" id="MANT_TIPO_TALLERES" empty="true">
+                    <field id="id_tipotaller" />
+                    <field id="descripcion" />
+                </helper>
+            </field>
+
+	    </table>
+	</form>
+</histrix>	

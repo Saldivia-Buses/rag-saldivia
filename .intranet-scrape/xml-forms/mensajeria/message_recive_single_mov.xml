@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update">
+	<title>read message</title>
+	<obs></obs>
+	<form >
+		<table id="HTXMESSAGES" label="Marca Leidos" >
+			<field id="idMensaje" id_temp="idMensaje" esClave="true"></field>
+			<field id="leido" id_temp="estado">
+                        </field>
+		</table>
+	</form>
+</histrix>

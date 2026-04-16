@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" subtipo="vertical" imprime="false">
+    <title>Registros de Calidad</title>
+
+    <obs/>
+    <form>
+        <table id="CAL_PROC_REGIS">
+            <title>Procedimientos y Registros de Calidad</title>
+            <field id="menu_id" esClave="true"  noshow="true">
+                <label>id</label>
+            </field>
+            <field id="proced">
+                <label>Procedimiento</label>
+                <help>Cod. del Procedimiento</help>
+            </field>
+
+            <field id="register">
+                <label>Registro</label>
+                <help>Cod. del Procedimiento</help>
+            </field>
+        </table>
+    </form>
+</histrix>

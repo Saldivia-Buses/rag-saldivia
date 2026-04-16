@@ -103,7 +103,7 @@ func TestListJobs_Integration(t *testing.T) {
 	pool, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	svc := New(pool, nil, nil, Config{})
+	svc := New(pool, nil, Config{})
 	ctx := context.Background()
 
 	seedJob(t, pool, "u-1", "docs", "a.pdf", "completed")
@@ -123,7 +123,7 @@ func TestGetJob_Ownership_Integration(t *testing.T) {
 	pool, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	svc := New(pool, nil, nil, Config{})
+	svc := New(pool, nil, Config{})
 	ctx := context.Background()
 
 	jobID := seedJob(t, pool, "u-1", "docs", "private.pdf", "completed")
@@ -148,7 +148,7 @@ func TestDeleteJob_Integration(t *testing.T) {
 	pool, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	svc := New(pool, nil, nil, Config{})
+	svc := New(pool, nil, Config{})
 	ctx := context.Background()
 
 	jobID := seedJob(t, pool, "u-1", "docs", "delete-me.pdf", "completed")
@@ -167,7 +167,7 @@ func TestDeleteJob_NonOwner_Integration(t *testing.T) {
 	pool, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	svc := New(pool, nil, nil, Config{})
+	svc := New(pool, nil, Config{})
 	ctx := context.Background()
 
 	jobID := seedJob(t, pool, "u-1", "docs", "protected.pdf", "completed")
@@ -191,7 +191,7 @@ func TestUpdateJobStatus_Integration(t *testing.T) {
 	pool, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	svc := New(pool, nil, nil, Config{})
+	svc := New(pool, nil, Config{})
 	ctx := context.Background()
 
 	jobID := seedJob(t, pool, "u-1", "docs", "status.pdf", "pending")
@@ -225,7 +225,7 @@ func TestListJobs_Limit_Integration(t *testing.T) {
 	pool, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	svc := New(pool, nil, nil, Config{})
+	svc := New(pool, nil, Config{})
 	ctx := context.Background()
 
 	for i := 0; i < 10; i++ {

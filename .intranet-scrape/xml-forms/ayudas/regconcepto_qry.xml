@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ayuda">
+  <title>Conceptos</title>
+  <obs></obs>
+  <form >
+    <table id="REG_CONCEPTOS" label="Conceptos">
+
+		<field id="id_concepto" esClave="true" noshow="true" />
+
+		<field id="descripcion_concepto">
+			<label>Nombre</label>
+		</field>
+
+		<field id="subsistema_id" noshow="true" />
+
+		<field id="imputacion_concepto" noshow="true" />
+
+		<field id="tipo_concepto" noshow="true" />
+
+		<field id="ctbcuenta_concepto_id" noshow="true">
+			<expression>ctbcuenta_id</expression>
+		</field>
+	
+    </table>
+  </form>
+</histrix>

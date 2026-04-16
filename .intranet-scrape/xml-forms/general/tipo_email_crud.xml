@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm">
+	<title>Tipo Email</title>
+	<obs></obs>
+	<consulta>
+		<table id="GEN_TIPO_EMAIL" label="Tipo Email">
+			<filters>
+				<field id="nombre_tipoemail">
+					<label>Tipo Email</label>
+					<operador>like</operador>
+				</field>
+			</filters>
+			<field id="id_tipoemail" autoinc="true" noshow="true">
+				<label>Código</label>
+			</field>
+			<field id="nombre_tipoemail">
+				<label>Tipo Email</label>
+				<help>Nombre del Tipo Email</help>
+				<size>25</size>
+			</field>
+		</table>
+	</consulta>
+</histrix>

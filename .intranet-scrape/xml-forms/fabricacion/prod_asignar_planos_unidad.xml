@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" path="fotos/articulos" width="100">
+	<title>Carpeta Planos</title>
+	<obs/>
+	<form >
+		<table id="PRD_CARPETA_PLANOS">
+			<title>Carpeta Planos</title>
+
+		   <!--  <movimientos>
+		    	<relacion id="prod_planos_unidad_update.xml" /> 
+				<relacion id="prod_planos_unidad_ins.xml" />
+		    </movimientos> -->
+
+        <filters auto="true">
+			<field id="linea_id">
+				<label modpos="nobr">Línea</label>
+				<operador>=</operador>
+			</field>
+
+			<field id="seccion_id">
+				<label modpos="nobr">Sección</label>
+				<operador>=</operador>
+			</field>
+		</filters>
+			
+			<field id="id_carpetaplanos" _esClave="true" noshow="true"/>
+			
+            <field id="modelo_lcm" noshow="true" deshabilitado="true" local="true">
+                <label>Modelo LCM</label>
+            </field> 
+
+            <field id="homologacion" noshow="true" deshabilitado="true" local="true">
+                <label>Homologacion</label>
+            </field>
+
+             <field id="nrocar" noshow="true" deshabilitado="true" local="true">
+                <label>Modelo</label>
+            </field>
+
+		    <field id="nrocar_id" noshow="true" deshabilitado="true">
+				<condicion operador="=">[__nrocar__] or modelo_lcm_id = [__modelo_lcm__] or homologacion_id = [__homologacion__]</condicion>
+		    </field>
+
+
+			<field id="usuario" noshow="true" deshabilitado="true" local="true">
+            <label modpos="nobr">Usuario</label>
+            <valor eval="true">$_SESSION['usuario']</valor>
+            </field>
+
+		<field id="linea_id">
+			<label modpos="nobr">Línea</label>
+			<helper id="PROD_LINEAS" type="combo" empty="true">
+                <field id="id_linea" />
+                <field id="nombre_linea" />
+                <field id="vigente_linea" oculto="true">
+                	<condicion operador="=">1</condicion>
+                </field>
+		    </helper>
+			<actualiza>
+				<field id="seccion_id" destino="linea_id" /> 
+			</actualiza>
+		</field>
+
+		<field id="seccion_id">
+			<label>Sección</label>
+			<helper id="MOMENTO" type="combo" empty="true">
+                <field id="idMomento" />
+                <field id="descripcion" />
+		    </helper>
+		</field>
+
+		<field id="nrofab" local="true" noshow="true">
+			<label modpos="nobr">Unidad</label>
+		</field>
+
+		<field id="stkarticulo_id">
+			<label>Art.</label>
+			<help>Código de Artículo</help>
+			<ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/ayudas_local" >
+				<field id="artcod">
+					<label>Cod.</label>
+				</field>
+				<field id="artdes">
+					<label>Insumo</label>
+					<detalle>artdes</detalle>
+				</field>
+			</ayuda_ex>
+			<size>12</size>
+		</field>
+
+		<field id="artdes">
+			<expression>artdes</expression>
+			<label modpos="nobr">Descripción</label>
+			<size>100</size>
+		</field>
+
+		<field id="estandar_plano" deshabilitado="true">
+			<label>Estandar</label>
+			<options>
+				<option valor="0">No</option>
+				<option valor="1">Si</option>
+			</options>
+			<tipo>check</tipo>
+		</field>
+
+ 		<field id="muestra_plano" local="true" linkint="prod_confirmar_planos_unidad.xml" linkdir="fabricacion" width="10">
+                  <label modpos="nobr" style="font-size:16px;">Muestra</label>
+                  <paring destino="carpetaplanos_id">id_carpetaplanos</paring>
+                  <paring destino="stkarticulo_id">stkarticulo_id</paring>
+                  <paring destino="artdes">artdes</paring>              
+                  <paring destino="nrofab">nrofab</paring>
+                  <paring destino="seccion_id">seccion_id</paring>
+                  <paring destino="muestra_plano">muestra_plano_01</paring>
+                  <attribute id="linkdes">CONCAT(nrocha, ' / ', artdes)</attribute>
+		<expression>case
+					when estandar_plano = 1 and isnull(PRD_PLANOS.muestra_plano) then 'SI'
+					when estandar_plano = 1 and PRD_PLANOS.muestra_plano = 0 then 'NO'
+					when estandar_plano = 0 and isnull(PRD_PLANOS.muestra_plano) then 'NO' 
+					when estandar_plano = 0 and PRD_PLANOS.muestra_plano = 1 then 'SI' end
+
+ 			</expression>
+		</field>
+		
+		<field id="muestra_plano_01" noshow="true">
+			<label>Muestra</label>
+			<expression>if(estandar_plano = 0, 1, 0)</expression>
+		</field>
+
+        <field id="hi" deshabilitado="true" clasefila="true" noshow="true">
+		<expression>case
+					when estandar_plano = 1 and isnull(PRD_PLANOS.muestra_plano) then 'SI'
+					when estandar_plano = 1 and PRD_PLANOS.muestra_plano = 0 then 'resaltadoRojo'
+					when estandar_plano = 0 and isnull(PRD_PLANOS.muestra_plano) then 'resaltadoRojo' 
+					when estandar_plano = 0 and PRD_PLANOS.muestra_plano = 1 then 'SI' end
+ 			</expression>
+            <tipo>varchar</tipo>
+        </field>
+
+		<field id="fotopath" local="true" noshow="true">
+			<if exp="true">
+				<true>'stkarticulo_id/'</true>
+				<false>''</false>
+			</if>
+			<tipo>varchar</tipo>
+		</field>
+ 
+ 		<field id="foto" path="fotopath" open="false" print="false" _download="false">
+          		<expression>select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = STKINSUM.artcod and ARTICULO_FOTO.foto != '' order by revision desc limit 1</expression> 
+				<label>Imagen</label>
+                <tipo >file</tipo>
+                <size>20</size>
+		</field>
+
+	    <group>
+                <field id="id_carpetaplanos" />
+		</group>
+		<order>
+                <field id="muestra_plano" tipoOrden="DESC"/>
+		</order>
+
+</table>
+
+	<join tipo="left">
+		<table id="STKINSUM">
+			<field id="artcod">
+				<condicion operador="=">PRD_CARPETA_PLANOS.stkarticulo_id</condicion>
+			</field>
+			<field id="siscod">
+				<condicion operador="=">'01'</condicion>
+			</field>
+		</table>
+	</join> 
+
+	<join tipo="left">
+		<table id="PRD_PLANOS">
+			<field id="carpetaplanos_id">
+				<condicion operador="=">PRD_CARPETA_PLANOS.id_carpetaplanos</condicion>
+			</field>			
+			<field id="nrofab">
+				<condicion operador="=">'[__nrofab__]'</condicion>
+			</field>
+		</table>
+	</join> 
+
+		<join tipo="left">
+		    <table id="HTXUSERS">
+			<field id="login">
+			    <condicion operador="=">'[__usuario__]'</condicion>
+			</field>
+		    </table>
+		</join>
+
+	</form>
+</histrix>

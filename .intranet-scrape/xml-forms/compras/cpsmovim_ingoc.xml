@@ -1,0 +1,456 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" subtipo="vertical" llenoTemporal="false" transaccional="true"
+    impresion="cpsencab_cabreimp.xml"
+    inserta="false"
+    _email="cpsencab_cabreimp.xml"
+	importadatos="pedidoint_select.xml"
+    imprime="false"
+    path="fotos/"  >
+    <title>ORDENES DE COMPRA</title>
+	<confirmacion><![CDATA[¿Desea emitir la Orden de Compra?  ]]></confirmacion>	
+    <obs></obs>
+    <customScript><![CDATA[
+    
+        $('#DIVFORMcpsencab_cab_xml').on('change','[name="ctacod"]', function(){
+            var ctacod = $(this);
+            setTimeout(function(){
+                var emite = $('[name="emite_ocompra"]', '#DIVFORMcpsencab_cab_xml').val();
+                if (emite == 0)  {
+                    alert('PROVEEDOR NO CALIFICADO');
+                    ctacod.val('').focus();
+                }
+            }, "1000");
+        })
+    
+   ]]> </customScript>
+    <form>
+        <table id="CPSMOVIM" label="DETALLE DE LA ORDEN COMPRA">
+
+            <importar xml="pedidoint_select.xml"  label="Pedidos Internos" titulo="Pedidos Internos">
+                <field id="codprv">codprv</field>
+            </importar>
+
+            <importar xml="cotizado_select.xml"  label="Cotizaciones" titulo="Pedidos Internos">
+                <field id="codprv">codprv</field>
+            </importar>
+
+    	    <importar xml="oc_select_cons.xml"  label="O.Compra" titulo="Seleccionar articulos">
+        		<field id="fecreq">fecreq</field>
+        		<field id="codprv">codprv</field>
+    	    </importar>
+
+            <movimientos cabecera="cpsencab_cab.xml">
+                <relacion id="cpsmovim_ingmovOC.xml"></relacion>
+                <relacion id="cpsencab_insert.xml"></relacion>
+                <relacion id="crea_carpeta_importacion_insert.xml"></relacion>                
+
+                <relacion id="pedidoint_update.xml"/>
+                <relacion id="cotizacion_detalle_update.xml"/>
+
+
+            </movimientos>
+            
+            <field id="siscod" oculto="true">
+                <label>Codigo Sistema.. </label>
+                <help></help>
+                <condicion operador='='>'01'</condicion>
+            </field>
+
+            <field id="_ORDEN" oculto="true" local="true">
+                <label>Orden</label>
+            </field>
+           
+    	    <field id="usuario" local="true" esClave="true" noshow="true">
+		      <label>Usuario</label>
+    	    </field>
+
+            <field id="artcod"  esClave="true" _linkint="stkinspr_qry.xml" _linkdir="/compras/qry/" _linkdes="Precios" style="width:7em;">
+<!--                <paring destino="artcod" colspan="2">artcod</paring>  -->
+                <label>Artículo</label>
+                <help>Código de Artículo</help>
+                <ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/help_local">
+                    <field id="artcod" >
+                        <label>Cod.</label>
+                    </field>
+                    <field id="artdes">
+                        <label>Insumo</label>
+                        <detalle>artdes</detalle>
+                    </field>
+                    <field id="artpor" oculto="true">
+                        <label>Porcent</label>
+                        <detalle>artpor</detalle>
+                    </field>
+                    <field id="unicps" oculto="true">
+                        <detalle>unicps</detalle>
+                    </field>
+                    <field id="artiva" oculto="true">
+                        <expression>select IVAIMPUESTOS.impali from IVAIMPUESTOS where impcod = artiva limit 1</expression>
+                        <detalle>alicuota</detalle>
+                    </field>
+                    <field id="valcps" >
+                        <detalle>valcps</detalle>
+                    </field>
+                    <field id="valuso" >
+                        <detalle>valuso</detalle>
+                    </field>
+                    <field id="artuni" oculto="true">
+                        <detalle>artuni</detalle>
+                    </field>
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">'01'</condicion>
+                    </field>
+                    <field id="hlp" oculto="true">
+                        <expression>CONCAT(' ', ROUND(valcps,2),(SELECT FSMUNIDS.uninom from FSMUNIDS where FSMUNIDS.unicod = STKINSUM.unicps), '=',  ROUND(valuso, 2), (SELECT FSMUNIDS.uninom from FSMUNIDS where FSMUNIDS.unicod = STKINSUM.artuni)  )</expression>
+                        <detalle>hlp</detalle>
+                    </field>
+
+                    <field id="artcos" >
+                        <label>Costo</label>
+                        <expression>select round((costo_proveedor + (costo_proveedor / 100 * gasto_importacion))  + (flete_local_ars / (SELECT cotizacion_genmonedahis FROM GEN_MONEDA_HIS WHERE GEN_MONEDA_HIS.moneda_id = '[__moneda_id__]' ORDER BY fecha_genmonedahis DESC limit 1) ) , 2) from STK_COSTO_REPOSICION where stkarticulo_id = '[__artcod__]'</expression>
+                       <!--  <expression>select round((costo_proveedor + (costo_proveedor / 100 * gasto_importacion))  + (flete_local_ars / @cotiz ) + ((select  porcentaje_region / 100 from REG_CUENTA  join LOG_REGION on id_logregion = logregion_id where id_regcuenta = STK_COSTO_REPOSICION.regcuenta_id) *  costo_proveedor) , 2) from STK_COSTO_REPOSICION where stkarticulo_id = '[__artcod__]'</expression> -->
+
+                        <!-- <expression>select round(((costo_proveedor + (costo_proveedor / 100 * gasto_importacion)) + flete_local_ars, 2))
+                        from STK_COSTO_REPOSICION where stkarticulo_id = '[__artcod__]'</expression> -->
+
+                        <!-- <expression>select (round(((costo_proveedor + (costo_proveedor / 100 * gasto_importacion)) 
+                        - (costo_proveedor / 100 * descuento_1)) - (((costo_proveedor + (costo_proveedor / 100 * gasto_importacion)) 
+                        - (costo_proveedor / 100 * descuento_1)) / 100 * descuento_2)  + flete_local_ars, 2))
+                        from STK_COSTO_REPOSICION where stkarticulo_id = '[__artcod__]'
+                    </expression> -->
+
+                        <!-- <expression>select ifnull(getCostFunc('[__artcod__]', ifnull(STK_COSTO_REPOSICION.moneda_id, 1), STR_TO_DATE('[__fecha__]', '%d/%m/%Y')  ), 0) from STK_COSTO_REPOSICION where stkarticulo_id = '[__artcod__]'</expression> -->
+
+                        <!-- <expression>round(case when ((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and 
+                    										STKINSPR.siscod='01' order by fecult DESC limit 1) ) > 0
+                    	                      then ((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and 
+                    	                    							STKINSPR.siscod='01' order by fecult DESC limit 1)) 
+                    	                    							else STKINSUM.artcos end, 2)</expression>  -->  							
+                        <tipo>decimal</tipo>
+                        <detalle>artcos</detalle>
+                    </field>
+
+                    <field id="moneda" noshow="true">
+                        <label>Moneda</label>
+                        <expression>select moneda_id from STK_COSTO_REPOSICION where stkarticulo_id = '[__artcod__]'</expression>
+                        <detalle>moneda_id</detalle>
+                      </field>
+
+                    <field id="fecha" local="true" noshow="true">
+                        <label>Fecha</label>
+                        <valor>today</valor>
+                        <tipo>date</tipo>
+                        <detalle>fecha</detalle>
+                      </field>
+                   
+                	<field id="diapro">
+                	    <detalle>dias</detalle>
+                	</field>
+
+                    <field id="herrinventario_id">
+                        <detalle>herrinventario_id</detalle>
+                    </field>
+
+                    <field id="stkformaemb_id">
+                        <detalle>stkformaemb_id</detalle>
+                    </field>
+                    <clave>artcod</clave>
+                    <descripcion>artdes</descripcion>
+                </ayuda_ex>
+        		<actualiza>
+        		    <field id="ultimas_compras" destino="artcod"/>
+        		</actualiza>
+            </field>
+
+            <field id="artdes"  tabla="STKINSUM" esClave="true" deshabilitado="true">
+                <label modpos="nobr" colspan="2">Descripción</label>
+                <tipo>varchar</tipo>
+                <size>40</size>
+            </field>
+
+            <field id="observaciones"  esClave="true" required="false">
+                <label colspan="4" modpos="nobr" >Obs</label>
+                <size>80</size>
+                <valor></valor>
+            </field>
+
+            <field id="movcps" local="true" incdec="true" preventLoop="true" >
+                <label>Pedido</label>
+                <help>Pedido (expresado en la unidad de compra)</help>
+                <valor>1</valor>
+                <tipo>decimal</tipo>
+                <jseval campodestino="convertido">(valcps == 1)?(movcps * valuso):(movcps / valcps)</jseval>
+                <jseval campodestino="impiva">artcos * movcps / 100 * alicuota</jseval>
+                <jseval campodestino="Total">artcos * movcps + impiva</jseval>
+            </field>
+
+            <field id="unicps" deshabilitado="true" >
+                <label modpos="nobr">U.Compra</label>
+                <help>Unidad de Compra</help>
+                <tabla_ex id="FSMUNIDS">
+                    <field id="unicod" clave="true"></field>
+                    <field id="uninom"></field>
+                </tabla_ex>
+                <tipo>integer</tipo>
+            </field>
+
+            <field id="valcps" noshow="true">
+                <label modpos="nobr">conversión</label>
+                <valor>1</valor>
+            </field>
+
+            <field id="valuso" noshow="true">
+                <label modpos="nobr">conversion1</label>
+                <valor>1</valor>
+            </field>
+
+            <field id="convertido" preventLoop="true" style="width:5em;">
+                <label modpos="nobr">uso</label>
+                <if exp="true" operador="=">
+                    <true> (movcps / valcps) * valuso</true>
+                    <false>0</false>
+                </if>
+                <jseval campodestino="movcps">(valuso == 1)?(convertido * valcps):(convertido / valuso)</jseval>
+                <tipo>decimal</tipo>
+                <jseval campodestino="impiva">artcos * movcps / 100 * alicuota</jseval>
+                <jseval campodestino="Total">artcos * movcps + impiva</jseval>
+            </field>
+
+            <field id="artuni" deshabilitado="true" >
+                <label modpos="nobr" >U.uso</label>
+                <help>Unidad de Uso</help>
+                <tabla_ex id="FSMUNIDS">
+                    <field id="unicod" clave="true"></field>
+                    <field id="uninom"></field>
+                </tabla_ex>
+                <tipo>integer</tipo>
+            </field>
+
+
+	    <field id="nombre_centro" deshabilitado="true" tabla="CTB_CENTROS">
+              <label modpos="nobr">C.Costos</label>
+              <help>Centro de Costos</help>
+          </field>
+
+	    <field id="cpsproyecto_id" deshabilitado="true">
+              <label modpos="nobr">Proyec</label>
+              <help>Proyecto de Compras</help>
+              <tabla_ex id="CPS_PROYECTO" vacio="true">
+                  <field id="id_cpsproyecto" />
+                  <field id="abrev_cpsproyecto"/>
+                  <order>
+                      <field id="id_cpsproyecto" />
+                  </order>
+              </tabla_ex>
+          </field>
+
+            <field id="fecreq" local="true" esClave="true"  tipoOrden="ASC">
+                <label >Requerido</label>
+                <help>Fecha de Entrega</help>
+                <tipo>date</tipo>
+                <valor>today</valor>
+            </field>
+
+            <field id="herrinventario_id" _local="true" deshabilitado="true">
+                <label modpos="nobr">Abast.</label>
+                <helper type="combo" xml="HLPherramientas_inv.xml" dir="/ayudas_local" empty="true"/>
+            </field>
+
+            <field id="nrofab" local="true" esClave="true" style="width:5em;">
+                <label modpos="nobr">NroFab</label>
+                <tipo>integer</tipo>
+                <valor>0</valor>
+                <size>4</size>
+                <maxsize>4</maxsize>
+            </field>
+
+            <field id="artpor" deshabilitado="true" noshow="true">
+                <label modpos="nobr">artpor</label>
+                <tipo>numeric</tipo>
+                <valor>0</valor>
+            </field>
+            
+            <field id="moneda_id">
+                <label modpos="nobr">Moneda</label>
+             <!--    <expression>select descripcion_moneda from STK_COSTO_REPOSICION where moneda_id</expression> -->
+                <helper type="combo" xml="moneda_qry.xml" dir="/ayudas" >
+                     <field id="id_moneda"/>
+                    <field id="descripcion_moneda"/> 
+                </helper>
+            </field>
+
+           <!--  <field id="cotizacion_genmonedahis" local="true" sincelda="true" deshabilitado="true" noshow="true">
+                <label modpos="nobr">Cotizacion</label>
+                <expression sql="true">@cotiz:= (SELECT cotizacion_genmonedahis FROM GEN_MONEDA_HIS WHERE GEN_MONEDA_HIS.moneda_id = '[__moneda_id__]' ORDER BY fecha_genmonedahis DESC limit 1</expression>
+                <valor>1</valor>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="cotizacion" >
+                    <label>Cotización</label>
+                    <expression>@cotiz:=(select cotizacion_genmonedahis from GEN_MONEDA_HIS where GEN_MONEDA_HIS.moneda_id = STK_COSTO_REPOSICION.moneda_id order by fecha_genmonedahis DESC limit 1)</expression>
+                </field> -->
+
+            <field id="artcos">
+                <tipo>decimal</tipo>
+                <label modpos="nobr" colspan="3">Precio</label>
+                <jseval campodestino="neto">((artcos * movcps ) - ((artcos * movcps) / 100 * (bonificacion_1 + 0))) - (((artcos * movcps ) - ((artcos * movcps) / 100 * bonificacion_1)) / 100 * bonificacion_2)</jseval>
+                <jseval campodestino="impiva">neto / 100 * alicuota</jseval>
+                <jseval campodestino="Total">neto + impiva</jseval>
+            </field>
+
+<!--             <field id="costo_ant" local="true" deshabilitado="true">
+                <label>Costo Ant.</label>
+                <tipo>decimal</tipo>
+            </field> -->
+
+		    <field id="bonificacion_1" deshabilitado="false" >
+			 <label>%B1</label>
+             <expression>STK_COSTO_REPOSICION.descuento_1</expression>
+                <jseval campodestino="neto">((artcos * movcps ) - ((artcos * movcps) / 100 * bonificacion_1)) - (((artcos * movcps ) - ((artcos * movcps) / 100 * bonificacion_1)) / 100 * bonificacion_2)</jseval>            
+		    </field>
+
+		    <field id="bonificacion_2" deshabilitado="false">
+			 <label modpos="nobr">%B2</label>
+             <expression>STK_COSTO_REPOSICION.descuento_2</expression>
+                <jseval campodestino="neto">((artcos * movcps ) - ((artcos * movcps) / 100 * bonificacion_1)) - (((artcos * movcps ) - ((artcos * movcps) / 100 * bonificacion_1)) / 100 * bonificacion_2)</jseval>            
+		    </field>
+
+            <field id="hlp" deshabilitado="true" colstyle="display:none" sincelda="true">
+                <size>40</size>
+                <tipo>varchar</tipo>
+                <label colstyle="display:none;" modpos="nobr" colspan="3">Ayuda</label>
+            </field>
+
+            <field id="fotopath" local="true" noshow="true">
+                <if exp="true">
+                    <true>'articulos/artcod/'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="pedidopath" local="true" noshow="true">
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="foto" path="fotopath" download="true" deshabilitado="true">
+                <expression sql="true">select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = '[__artcod__]' order by revision desc limit 1</expression>
+                <label Formstyle="display:none;">Imagen</label>
+                <tipo >file</tipo>
+                <size>40</size>
+            </field>
+
+            <field id="archivo" _noshow="true" deshabilitado="true" esClave="true" path="pedidopath" download="true">
+                <tipo >file</tipo>
+                <label Formstyle="display:none;">Adjunto</label>
+                <size>40</size>
+            </field>
+
+            <field id="stkformaemb_id" deshabilitado="true" Formstyle="display:none;">
+                <helper type="combo" xml="stkformasemb_qry.xml" dir="/ayudas_local" />
+                <label>Forma Emb.</label>
+            </field>
+
+            <field id="dias" local="true" deshabilitado="true" Formstyle="display:none;">
+              <label modpos="nobr">Días</label>
+              <help>Demora del proveedor en suministrar el artículo</help>
+              <tipo>integer</tipo>
+            </field>
+
+    	    <field id="neto" local="true" suma="true" deshabilitado="true">
+        		<label>Neto</label>
+        		<if exp="true">
+        		    <true>round(((artcos * movcps ) - ((artcos * movcps) / 100 * (bonificacion_1 + 0) )) - (((artcos * movcps ) - ((artcos * movcps) / 100 * (bonificacion_1 + 0))) / 100 * (bonificacion_2 + 0) ), 2)</true>
+        		    <false>0</false>
+                        <jseval campodestino="impiva">neto / 100 * alicuota</jseval>
+                        <jseval campodestino="Total">neto + impiva</jseval>            
+        		</if>
+    	    </field>
+
+            <field id="alicuota" deshabilitado="true" esClave="true">
+                <label modpos="nobr">Alic</label>
+            </field>
+
+            <field id="impiva" deshabilitado="true" suma="true" >
+                <label modpos="nobr">Iva</label>
+                <if exp="alicuota + 0 &gt; 0">
+                    <true>round( (neto  + 0) * alicuota / 100, 2)</true>
+                    <false>0</false>
+                </if>
+            </field>
+
+            <field id="Total" suma="true" deshabilitado="true" local="true">
+                <label colspan="3" modpos="nobr">Total</label>
+                <if exp="true">
+                    <true> round( (neto  + 0) + impiva, 2)</true>
+                    <false>0</false>
+                </if>
+            </field>
+
+            <field id="acumulado" acumula="true" suma="true" deshabilitado="true" local="true" retroalimenta="true" Formstyle="display:none;" colstyle="display:none;">
+                <if exp="true">
+                    <true>Total + 0</true>
+                    <false>0</false>
+                </if>
+            </field>
+
+            <field id="acumulado_cotiz" acumula="true" suma="true" deshabilitado="true" local="true" _refresh="true" Formstyle="display:none;" colstyle="display:none;">
+                <label>Acumula Cotiz</label>
+                <if exp="true">
+                    <true>(Total * cotizacion_genmonedahis) + 0</true>
+                    <false>0</false>
+                </if>
+            </field>
+            <field id="grabaauditoria" deshabilitado="true" local="true" _Formstyle="display:none;" _colstyle="display:none;">
+                <label>audit</label>
+                <if exp="acumulado + 0 &gt; ( (moneda_id + 0 == 1)?importe_auditoria + 0:dolar_auditoria  + 0 ) ">
+                    <true>'0'</true>
+                    <false>'1'</false>
+                </if>
+            </field>
+
+            <field id="id_cotiz_detalle" esClave="true" noshow="true" deshabilitado="true"></field>
+
+            <field id="idPed" esClave="true" noshow="true" deshabilitado="true"></field>
+            <tipo>integer</tipo>
+
+    	    <field id="ultimas_compras" local="true" colstyle="display:none;">
+        		<label colspan="8">Últimas Compras</label>
+        		<helper type="object" xml="compras_prov_resumen.xml">
+    		      <parameter source="artcod" target="artcod" />
+        		</helper> 
+    	    </field>
+
+            <order>
+                <field id="fecreq"></field>
+            </order>
+
+        </table>
+
+        <join tipo="left">
+            <table id="STKINSUM">
+                <field id="siscod" oculto="true">
+                    <label>STKINSUM.siscod</label>
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="artcod" oculto="true">
+                    <condicion operador="=">CPSMOVIM.artcod</condicion>
+                </field>
+<!--                <field id="artuni" oculto="true">
+                </field>
+                <field id="unicps" oculto="true">
+                </field>
+                <field id="stkformaemb_id" oculto="true">
+                </field>-->
+            </table>
+        </join>
+
+        <join tipo="left">
+        <table id="STK_COSTO_REPOSICION">
+            <field id="stkarticulo_id" >
+                <condicion operador="=">CPSMOVIM.artcod</condicion>
+            </field>
+        </table>
+	</join>
+    </form>
+</histrix>

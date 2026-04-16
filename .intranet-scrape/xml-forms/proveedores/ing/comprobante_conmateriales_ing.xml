@@ -1,0 +1,418 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" class="consultaancha" inserta="false" modifica="false" transaccional="true" log="false" imprime="false">
+  <title>Ingreso de movimientos</title>
+  <obs/>
+  <form>
+    <table id="REG_MOVIMIENTOS" label="Ingreso de movimientos">
+
+      <!-- BEGIN VALIDACIONES  -->
+      <validation>
+        <condition><![CDATA[concepto_id + 0 == 0]]></condition>
+        <message>Debe seleccionar un tipo de comprobante</message>
+      </validation>
+      <validation>
+        <condition><![CDATA[ 'letra_movimiento' == '0' ]]></condition>
+        <message>Debe ingresar una letra de comprobante</message>
+      </validation>
+      <validation>
+        <condition><![CDATA[nro_movimiento == 0]]></condition>
+        <message>Ingrese Nro de factura</message>
+      </validation>
+      <validation>
+        <condition><![CDATA[importe_movimiento + 0 == 0 ]]></condition>
+        <message>Debe ingresar un importe valido</message>
+      </validation>
+      <validation>
+        <condition><![CDATA[diferencia + 0 != 0 ]]></condition>
+        <message>Importes No Coinciden</message>
+      </validation>
+      <!-- FIN VALIDACIONES -->
+
+      <movimientos>
+        <relacion id="regmovimiento_ins.xml"/>
+        <relacion id="ctbmovimiento_upd.xml"/>
+      </movimientos>
+
+      <cierraproceso id="asiento_contable_header.xml" condition="modulocontable">
+        <paring destino="fecha_movimiento">reg_fecha</paring>
+        <paring destino="punto_venta">puesto_movimiento</paring>
+        <paring destino="numero">nro_movimiento</paring>
+        <paring destino="nombre">nombre</paring>
+        <paring destino="letra">letra_movimiento</paring>
+        <paring destino="referencia">referencia_movimiento</paring>
+      </cierraproceso>
+
+      <field id="subsistema_id" oculto="true" valauto="true"/>
+
+      <field id="regcuenta_id" noshow="true" />
+
+      <fieldGroup>
+
+            <field id="barcode" local="true">
+                <label colspan="3">Cod.Barras</label>
+                <jsextract posini="12" posfin="13" >concepto_id</jsextract>
+                <jsextract posini="13" posfin="17" >puesto_movimiento</jsextract>
+                <jsextract posini="0" posfin="11"  >cuit_cuenta</jsextract>
+                <jsextract posini="31" posfin="39"  >fecha_cae</jsextract>
+        
+        
+<!--        <jseval campodestino="movnpv">'barcode'.substring(14,17)</jseval> -->
+                <tipo>varchar</tipo>
+                <size>30</size>
+            </field>
+
+        <field id="nro_cuenta" local="true">
+          <label>Cod.Cuenta</label>
+          <helper type="external" xml="regcuenta_cmb_nro.xml">
+                    <field id="catganancias_id" noshow="true">
+                        <detalle>catganancias_id</detalle>
+                    </field>
+                  <field id="letra" tabla="GEN_IVA">
+
+                      <detalle>letra_movimiento</detalle>
+                  </field>
+          </helper>
+          <size>6</size>
+          <jsfunction event="onfocus"> jQuery('input[name=nombre]').prop('disabled', (this.value != 9999) ); </jsfunction>
+    	  <jsfunction event="onkeyup"> jQuery('input[name=nombre]').prop('disabled', (this.value != 9999) ); </jsfunction>
+    	  <jsfunction event="onfocus"> jQuery('input[name=cuit_cuenta]').prop('disabled', (this.value != 9999) ); </jsfunction>
+    	  <jsfunction event="onkeyup"> jQuery('input[name=cuit_cuenta]').prop('disabled', (this.value != 9999) ); </jsfunction>
+        </field>
+        <field id="nombre" _deshabilitado="true" local="true">
+          <label modpos="nobr" colspan="2"/>
+          <size>50</size>
+          <tipo>varchar</tipo>
+        </field>
+        <field id="cuit_cuenta" local="true" >
+                <ayuda_ex id="REG_CUENTA" _xml="HLPcctcuent_cuit.xml" _dir="/help_local">
+                    <field id="subsistema_id" oculto="true">
+                        <label>siscod</label>
+                        <condicion operador="=">'01'</condicion>
+                    </field>
+                    <field id="cuit_cuenta">
+                        <expression having="false">REPLACE(cuit_cuenta, '-','')</expression>
+                    </field>
+                    <field id="nro_cuenta">
+                        <label>Nro</label>
+                        <detalle>nro_cuenta</detalle>
+                    </field>
+                    <field id="id_regcuenta">
+                        <detalle>id_regcuenta</detalle>
+                    </field>
+                    <field id="nombre">
+			             <expression>nombre_cuenta</expression>
+                        <detalle>nombre</detalle>
+                    </field>
+
+                    <field id="iva_id" noshow="true">
+                        <detalle>iva_id</detalle>
+                    </field>
+                    <field id="catganancias_id" noshow="true">
+                        <detalle>catganancias_id</detalle>
+                    </field>
+                  <field id="letra" >
+                      <expression>select letra from GEN_IVA where id_iva = REG_CUENTA.iva_id limit 1</expression>
+                      <detalle>letra_movimiento</detalle>
+                  </field>
+
+<!--
+                    <field id="zoncod">
+                        <detalle>zoncod</detalle>
+                    </field>
+
+                    <field id="ivacod2">
+                        <expression>(case
+              when ivacod = 3 or ivacod = 6 then 'C'
+              when ivacod = 1 or ivacod = 2 then 'A' else 'B' end)
+                        </expression>
+                        <detalle>movlet</detalle>
+                    </field>
+                    <field id="doccod">
+                        <detalle>doccod</detalle>
+                    </field>
+
+                    <field id="codigoNumero">
+                        <detalle>codigoNumero</detalle>
+                    </field>
+
+                    <field id="ctbcod" >
+                        <detalle>ctb_prov</detalle>
+                    </field>
+
+
+                    <clave>ctanro</clave>
+                    <descripcion>ctanom</descripcion>
+-->
+                </ayuda_ex>
+
+    	  <label modpos="nobr" colspan="2">CUIT</label>
+    	  <size>15</size>
+    	</field>
+        <field id="iva_id" sincelda="true" deshabilitado="true">
+          <label modpos="nobr">Iva</label>
+          <helper type="combo" xml="iva_qry.xml" dir="/ayudas" empty="true">
+            <field id="id_iva" autoinc="true" noshow="true">
+              <label>Código </label>
+              <help>Código de IVA</help>
+            </field>
+            <field id="test">
+              <expression>CASE WHEN id_iva = 1 THEN 0 ELSE 1 END</expression>
+              <detalle>test</detalle>
+            </field>
+          </helper>
+        </field>
+        <field id="fecha_movimiento" copia="vencimiento_movimiento">
+          <label>Fecha</label>
+          <help>Fecha movimiento</help>
+          <valor>today</valor>
+          <tipo>date</tipo>
+        </field>
+        <field id="concepto_id">
+          <label modpos="nobr">Comprobante</label>
+          <helper type="combo" xml="regconcepto_qry.xml" dir="/ayudas" empty="true" />
+        </field>
+        <field id="letra_movimiento" sincelda="true" deshabilitado="true">
+          <label modpos="nobr">Letra</label>
+          <helper type="combo">
+            <option value=""/>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+          </helper>
+          <size>5</size>
+        </field>
+        <field id="puesto_movimiento" style="width:4em;white-space:nowrap">
+          <label modpos="nobr" colspan="4">Nro Factura</label>
+          <size>4</size>
+	    <tipo>varchar</tipo>
+        </field>
+        <field id="nro_movimiento" sincelda="true">
+          <label modpos="nobr">-</label>
+          <size>8</size>
+        </field>
+        <field id="cuota_movimiento" local="true" style="width:3em;" sincelda="true">
+          <label modpos="nobr">Cuota</label>
+	    
+          <size>2</size>
+        </field>
+        <field id="vencimiento_movimiento">
+          <label>Vencimiento</label>
+          <help>Fecha de Vencimiento</help>
+          <valor>today</valor>
+          <tipo>date</tipo>
+        </field>
+        <field id="reg_fecha">
+          <label modpos="nobr">Registracion</label>
+          <help>Corresponde a la Fecha de Registracion Contable</help>
+          <valor>today</valor>
+          <tipo>date</tipo>
+        </field>
+        <field id="fecha_cae" deshabilitado="true" sincelda="true">
+          <label modpos="nobr">Fecha CAE</label>
+          <help>Fecha de Factura Electronica</help>
+          <tipo>date</tipo>
+		<valor eval="true">date('Ymd')</valor>
+        </field>
+        <field id="numero_cae">
+          <label modpos="nobr">Nº CAE</label>
+          <help>Nº de Factura Electrónica</help>
+        </field>
+        <field id="referencia_movimiento">
+          <label colspan="4">Referencia</label>
+          <help>Referencia del movimiento</help>
+          <size>80</size>
+        </field>
+	<field id="catganancias_id">
+		<label modpos="nobr">Categoria Ganancias</label>
+		<help>Categoria de Ganancias</help>
+		<helper type="combo" id="RET_CONCEPTOS" empty="true">
+			<field id="id_retconcepto"></field>
+			<field id="nombre_retconcepto"></field>
+		</helper>
+	</field>	
+
+        <field id="descuento_1">
+          <label >Descuento 1</label>
+          <tipo>numeric</tipo>
+          <size>17</size>
+          <tipo>numeric</tipo>
+        </field>
+        <field id="descuento_2">
+          <label modpos="nobr"> Descuento 2</label>
+          <tipo>numeric</tipo>
+          <size>17</size>
+          <tipo>numeric</tipo>
+        </field>
+
+
+        <field id="importe_movimiento">
+          <label style="font-size: 16px;color:blue;">Importe Total</label>
+          <tipo>numeric</tipo>
+          <size>17</size>
+          <jseval campodestino="importe_gravado" actxml="true">( importe_movimiento - ((importe_exento + 0 ) + (importe_nogravado + 0) + (importe_ibr + 0)))</jseval>
+          <tipo>numeric</tipo>
+        </field>
+
+
+        <field id="importe_nogravado">
+          <label>No Gravado</label>
+          <jseval campodestino="importe_gravado" actxml="true">( importe_movimiento - ((importe_exento + 0 ) + (importe_nogravado + 0) + (importe_ibr + 0)))</jseval>
+          <tipo>numeric</tipo>
+        </field>
+        <field id="importe_exento">
+          <label>Exento</label>
+          <jseval campodestino="importe_gravado" actxml="true">( importe_movimiento - ((importe_exento + 0 ) + (importe_nogravado + 0) + (importe_ibr + 0)))</jseval>
+          <tipo>numeric</tipo>
+        </field>
+        <field id="importe_ibr">
+          <label>Importe IIBB</label>
+          <jseval campodestino="importe_gravado" actxml="true">( importe_movimiento - ((importe_exento + 0 ) + (importe_nogravado + 0) + (importe_ibr + 0)))</jseval>
+        </field>
+        <field id="test" local="true" desactiva="true" noshow="true">
+          <tipo>check</tipo>
+          <valor>1</valor>
+        </field>
+      </fieldGroup>
+
+
+      <fieldGroup>
+        <if>if (strpos($_SESSION['properties']['modulos'],'iva') != false) return true; </if>
+        <field id="detalle_iva" local="true" showTabla="true" activador="test">
+          <label colspan="10" modpos="force">Detalle</label>
+          <helper type="object" xml="comprobante_ing.xml">
+            <parameter source="importe_gravado" target="importe_gravado"/>
+          </helper>
+        </field>
+      </fieldGroup>
+
+      <fieldGroup deshabilitado="true" noshow="true">
+        <field id="regcuenta_ivaid" local="true"/>
+
+        <field id="imputacion_concepto" local="true">
+           <jseval campodestino="cuenta_debe_doh" actxml="false">imputacion_concepto+0==0?0:1</jseval>
+           <jseval campodestino="cuenta_haber_doh" actxml="false">imputacion_concepto+0==0?1:0</jseval>
+           <actualiza>
+              <field id="detalle_iva" destino="imputacion_concepto" />
+           </actualiza>
+        </field>
+        <field id="cuenta_debe_doh" local="true">
+            <if exp="imputacion_concepto+0 == 0">
+               <true>'1'</true>
+               <false>'0'</false>
+            </if>
+        </field>
+        <field id="cuenta_haber_doh" local="true">
+            <if exp="imputacion_concepto+0 == 0">
+               <true>'0'</true>
+               <false>'1'</false>
+            </if>
+        </field>
+
+        <field id="cuenta_prov_debe" local="true" _noshow="false">
+          <parametro id="cuentas_habilitadas_qry.xml" retorna="id_cuenta">
+            <field id="id_cuenta">
+              <condicion operador="=">(SELECT GEN_SUBSISTEMAS.cuenta_debe_id from GEN_SUBSISTEMAS where id_subsistema = '01')</condicion>
+            </field>
+          </parametro>
+
+        </field>
+        <field id="cuenta_prov_haber" local="true">
+          <parametro id="cuentas_habilitadas_qry.xml" retorna="id_cuenta">
+            <field id="id_cuenta">
+              <condicion operador="=">(SELECT GEN_SUBSISTEMAS.cuenta_debe_id from GEN_SUBSISTEMAS where id_subsistema = '01')</condicion>
+            </field>
+          </parametro>
+        </field>
+        <field id="cuenta_prov_ibr" local="true">
+          <helper type="parameter" id="SIS::01:cuenta_contable_percepcion_iibb">
+            <label>Cuenta Contable para percepciones de ingresos brutos</label>
+            <defaultValue/>
+          </helper>
+        </field>
+        <field id="importe_gravado" local="true" noshow="false">
+          <label>gravado </label>
+          <jseval campodestino="diferencia" actxml="false">(importe_gravado + 0 - gravado_movimiento + 0).toFixed(2)</jseval>
+        </field>
+        <field id="gravado_movimiento" local="true" noshow="false">
+          <label>gravado mov</label>
+          <jseval campodestino="diferencia" actxml="false">(gravado_movimiento + 0 - importe_gravado + 0).toFixed(2)</jseval>
+        </field>
+        <field id="neto_movimiento">
+          <label>neto</label>
+        </field>
+        <field id="importe_iva">
+          <label>iva</label>
+        </field>
+        <field id="importe_percepcion">
+          <label>percepcion</label>
+        </field>
+      </fieldGroup>
+
+      <field id="diferencia" deshabilitado="true">
+        <label style="font-size: 16px; color: red;">Diferencia</label>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="modulocontable" local="true" noshow="true">
+        <valor eval="true">(strpos($_SESSION['properties']['modulos'],'contabilidad') != false ? 1 : 0  )</valor>
+      </field>
+
+    </table>
+
+    <join>
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+        <field id="subsistema_id">
+          <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join>
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join>
+      <table id="GEN_SUBSISTEMAS">
+        <field id="id_subsistema">
+          <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+        </field>
+      </table>
+    </join>
+
+
+    <tempTable id="TEMPTABLENAME">
+      <row>
+        <field id="cuenta_id">cuenta_prov_haber</field>
+        <field id="doh">cuenta_haber_doh</field>
+        <field id="importe">importe_movimiento</field>
+      </row>
+      <row>
+        <field id="cuenta_id">cuenta_prov_debe</field>
+        <field id="doh">cuenta_debe_doh</field>
+        <field id="importe">neto_movimiento</field>
+      </row>
+      <row>
+        <field id="cuenta_id">cuenta_prov_debe</field>
+        <field id="doh">cuenta_debe_doh</field>
+        <field id="importe">importe_exento</field>
+      </row>
+      <row>
+        <field id="cuenta_id">cuenta_prov_debe</field>
+        <field id="doh">cuenta_debe_doh</field>
+        <field id="importe">importe_nogravado</field>
+      </row>
+      <row>
+        <field id="cuenta_id">cuenta_prov_ibr</field>
+        <field id="doh">cuenta_debe_doh</field>
+        <field id="importe">importe_ibr</field>
+      </row>
+    </tempTable>
+
+
+  </form>
+</histrix>

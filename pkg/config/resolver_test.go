@@ -60,12 +60,14 @@ func TestResolver_Get_PlanScope(t *testing.T) {
 
 	// rate_limits.queries_per_minute is seeded as 10 for plan:starter, 60 for plan:business
 	// Create a temp tenant on starter plan to test cascade
-	pool.Exec(ctx, `INSERT INTO tenants (id, slug, name, plan_id, postgres_url, redis_url)
+	if _, err := pool.Exec(ctx, `INSERT INTO tenants (id, slug, name, plan_id, postgres_url, redis_url)
 		VALUES ('test-cascade-tenant', 'test-cascade', 'Test', 'starter',
 			'postgres://localhost/test', 'redis://localhost/0')
-		ON CONFLICT (id) DO NOTHING`)
+		ON CONFLICT (id) DO NOTHING`); err != nil {
+		t.Fatalf("insert test tenant: %v", err)
+	}
 	t.Cleanup(func() {
-		pool.Exec(ctx, `DELETE FROM tenants WHERE id = 'test-cascade-tenant'`)
+		_, _ = pool.Exec(ctx, `DELETE FROM tenants WHERE id = 'test-cascade-tenant'`)
 	})
 
 	val, err := resolver.GetInt(ctx, "test-cascade-tenant", "rate_limits.queries_per_minute")
@@ -82,16 +84,20 @@ func TestResolver_Get_TenantOverride(t *testing.T) {
 	ctx := context.Background()
 
 	// Create tenant + override
-	pool.Exec(ctx, `INSERT INTO tenants (id, slug, name, plan_id, postgres_url, redis_url)
+	if _, err := pool.Exec(ctx, `INSERT INTO tenants (id, slug, name, plan_id, postgres_url, redis_url)
 		VALUES ('test-override-tenant', 'test-override', 'Test Override', 'starter',
 			'postgres://localhost/test', 'redis://localhost/0')
-		ON CONFLICT (id) DO NOTHING`)
-	pool.Exec(ctx, `INSERT INTO agent_config (scope, key, value, updated_by)
+		ON CONFLICT (id) DO NOTHING`); err != nil {
+		t.Fatalf("insert test tenant: %v", err)
+	}
+	if _, err := pool.Exec(ctx, `INSERT INTO agent_config (scope, key, value, updated_by)
 		VALUES ('tenant:test-override-tenant', 'guardrails.input_max_length', '5000', 'test')
-		ON CONFLICT (scope, key) DO UPDATE SET value = '5000'`)
+		ON CONFLICT (scope, key) DO UPDATE SET value = '5000'`); err != nil {
+		t.Fatalf("insert agent_config override: %v", err)
+	}
 	t.Cleanup(func() {
-		pool.Exec(ctx, `DELETE FROM agent_config WHERE scope = 'tenant:test-override-tenant'`)
-		pool.Exec(ctx, `DELETE FROM tenants WHERE id = 'test-override-tenant'`)
+		_, _ = pool.Exec(ctx, `DELETE FROM agent_config WHERE scope = 'tenant:test-override-tenant'`)
+		_, _ = pool.Exec(ctx, `DELETE FROM tenants WHERE id = 'test-override-tenant'`)
 	})
 
 	val, err := resolver.GetInt(ctx, "test-override-tenant", "guardrails.input_max_length")

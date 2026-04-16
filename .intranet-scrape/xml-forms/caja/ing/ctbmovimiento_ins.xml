@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" grabafinal="true">
+  <title>Asiento Contable</title>
+  <obs/>
+  <form >
+    <table id="CTB_MOVIMIENTOS">
+      <field id="referencia" id_temp="referencia"/>
+      <field id="concepto_id" id_temp="concepto_id"/>
+      <field id="nro_minuta" id_temp="nro_minuta"/>
+      <field id="ejercicio_id" id_temp="ejercicio_id"/>
+      <field id="fecha_movimiento" id_temp="fecha_movimiento"/>
+    </table>
+  </form>
+</histrix>

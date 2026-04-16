@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="consulta" exportasuma="true" PDFlineColor="255,255,255">
+	<title>Detalles</title>
+	 <obs></obs>
+		<form >
+		    <table id="REG_DETALLES" label="Detalle de Movimientos" styleTbody="height:150px;overflow-x:hidden;" PDFnoborder="true" >
+
+			<field id="muestra_iva" noshow="true" local="true" print="false"/>
+			<field id="NoMuestra_iva" noshow="true" local="true" print="false">
+				<if exp="muestra_iva">
+				<true>'false'</true>
+				<false>'true'</false>
+				</if>
+			</field>
+			<field id="regmovim_id" noshow="true" PDFlineas="false"/>
+
+			<field id="orden" noshow="true" PDFlineas="false"/>
+
+			<field id="descripcion_detalle" PDFsize="9" PDFlineas="false">
+				 <expresion><![CDATA[REPLACE(descripcion_detalle, '<br>', '\n')]]></expresion>
+		         <label modpos="nobr" size="1100">DESCRIPCION</label>
+			</field>
+			
+			
+			<field id="total_detalle"  total="true" PDFsize="9" PDFlineas="false" PDFnoborder="true" pdfwidth="100">
+			    <label size="25">PREC.TOTAL.</label>
+			    <tipo>numeric</tipo>
+				<detalle>SubTotal</detalle>
+				<attribute id="print">NoMuestra_iva</attribute>
+			</field>
+			<field id="neto_detalle"  total="true" PDFsize="9" PDFlineas="false" PDFnoborder="true" pdfwidth="100">
+			    <label size="25">PREC.TOTAL</label>
+			    <tipo>numeric</tipo>
+				<detalle>SubTotal</detalle>
+				<attribute id="print">muestra_iva</attribute>
+			</field>
+			
+			<order>
+			    <field id="orden"/>
+			</order>
+		    </table>
+		</form>
+    </histrix>	
+

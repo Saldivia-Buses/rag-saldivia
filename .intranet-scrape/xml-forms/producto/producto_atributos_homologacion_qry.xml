@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="consulta">
+	<title>Atributos</title>
+	<obs/>
+	<form>
+		<table id="PRODUCTO_ATRIBUTO_HOMOLOGACION">
+			<titulo>Atributos</titulo>
+
+			<field id="prdatributo_id" noshow="true">
+				<label>Ctrl</label>
+				<detalle>id_prdatributo</detalle>
+			</field>
+
+			<field id="nombre_ayudas" noshow="true">
+                <expression>CONCAT(PRODUCTO_SECCION.nombre_seccion, ' - ', nombre_atributo, ' - ', descrip_cotizacion)</expression>
+            </field>
+
+			<field id="producto_id" noshow="true" local="true">
+				<label>id producto</label>
+			</field>
+
+			<field id="id_prdatributo" noshow="true">
+				<label>ProdControl</label>
+				<expression>PRODUCTO_ATRIBUTO_HOMOLOGACION.prdatributo_id</expression>
+			</field>
+
+        <field id="homologacion_id" noshow="true" _local="true">
+          <label>Descripcion</label>
+          <helper type="combo" xml="combo_homologacion_modelo.xml" dir="/fabricacion">
+          	      <field id="baja" noshow="true">
+        			<condicion operador="=">0</condicion>
+      			  </field>
+          </helper>
+
+       </field>
+
+
+			<field id="orden_atributo" tabla="PRODUCTO_ATRIBUTOS" noshow="true">
+				<label>Orden</label>
+				<size>3</size>
+			</field>
+
+			<field id="activo_fichatecnica" tabla="PRODUCTO_ATRIBUTOS" noshow="true">
+				<condicion operador="=">1</condicion>
+			</field>
+
+			<field id="prdseccion_id" tabla="PRODUCTO_ATRIBUTOS">
+				<label>Seccion</label>
+					<helper id="PRODUCTO_SECCION" type="combo" empty="true">
+                    <field id="id_prdseccion" />
+                    <field id="nombre_seccion" />
+					<field id="activa_seccion" oculto="true">
+                		<condicion operador="=">0</condicion>
+                	</field>
+					</helper>
+			</field>
+
+			<field id="nombre_atributo" tabla="PRODUCTO_ATRIBUTOS">
+				<label>nombre</label>
+				<size>30</size>
+			</field>
+
+			<order>
+				<field id="prdseccion_id" tabla="PRODUCTO_ATRIBUTOS"/>
+				<field id="orden_atributo" tabla="PRODUCTO_ATRIBUTOS"/>
+			</order>
+		</table>
+		<join tipo="left">
+		    <table id="PRODUCTO_ATRIBUTOS">
+			<field id="id_prdatributo">
+			    <condicion operador="=">PRODUCTO_ATRIBUTO_HOMOLOGACION.prdatributo_id</condicion>	
+			</field>
+		    </table>
+		</join>
+		<join tipo="left">
+		    <table id="PRODUCTO_SECCION">
+			<field id="id_prdseccion">
+			    <condicion operador="=">PRODUCTO_ATRIBUTOS.prdseccion_id</condicion>	
+			</field>
+		    </table>
+		</join>
+		<join tipo="inner">
+		    <table id="PRODUCTO_ATRIB_VALORES">
+			<field id="prdatributo_id">
+			    <condicion operador="=">PRODUCTO_ATRIBUTOS.id_prdatributo</condicion>	
+			</field>
+			<field id="producto_id">
+			    <condicion operador="=">'[__producto_id__]'</condicion>	
+			</field>
+			<field id="valor_atributo">
+			    <condicion operador="=">1</condicion>	
+			</field>
+		    </table>
+		</join>
+	</form>
+</histrix>

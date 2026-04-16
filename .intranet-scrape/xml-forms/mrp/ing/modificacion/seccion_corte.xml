@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix imprime="false" inserta="no" log="false" preFetch="true" tipo="ficha">
+    <title>Corte</title>
+    <obs/>
+    <form>
+        <table id="MRP_DETALLE_REGISTRO" label="Corte">
+            <movimientos>
+                <relacion id="marco_cumplida.xml" />
+            </movimientos>
+
+             <field id="id_mrpordendetalle" noshow="true">
+                <expression>mrpordendetalle_id</expression>
+             </field>
+
+            <field id="fecha_ingreso" >
+                <label>Fecha</label>
+		<tipo>date</tipo>
+            </field>
+
+            <field id="mrpordendetalle_id" noshow="true"/>
+
+            <field id="mrpseccion_id" noshow="true"/>
+<!--
+            <field id="id_mrporden" noshow="true"/>
+-->
+            <field id="id_detalle_reg" noshow="true"/>
+
+            <field id="cantidad" >
+                <label>Cantidad</label>
+<!--                <jseval>cantidad &lt;= objetivo_ordendetalle</jseval> -->
+                <jseval campodestino="hojas_corte">cantidad * multiplo</jseval>
+            </field>
+
+	    <field id="multiplo" local="true" deshabilitado="false">
+		<label>Multiplo</label>
+		<valor>2</valor>
+                <jseval campodestino="hojas_corte">cantidad * multiplo</jseval>
+	    </field>
+
+            <field id="hojas_corte" style="color:green;font-weight:bold;">
+                <label>Paños</label>
+            </field>
+
+	    <field id="paquete_id" >
+		<label>Nro Paquete</label>
+                <helper xml="stkmovimientos_trazables_todos_qry.xml" _id="STK_MOVIMIENTO_TRAZ" type="combo" dir="/mrp/ing/secciones"
+>
+
+                    <field id="stkdeposito_id">
+                        <condicion operador="=">2</condicion>
+                    </field>
+                </helper>        
+	    </field>
+
+	    <field id="descripcion_paquete" >
+		<label>Material</label>
+	    </field>
+	    <field id="alto_corte"  >
+	        <label>Alto</label>
+	    </field>
+	    <field id="ancho_corte" >
+	        <label >Ancho</label>
+	    </field>
+<!--
+            <field deshabilitado="false" editable="true" id="ingreso" local="true" valauto="true">
+                <label>Inicio</label>
+                <tipo>time</tipo>
+                <valor eval="true">date('H:i')</valor>
+            </field>
+            <field deshabilitado="false" editable="true" id="salida" local="true">
+                <label>Finalización</label>
+                <tipo>time</tipo>
+                <valor eval="true">date('H:i')</valor>
+            </field>
+-->
+            <field id="observacion">
+                <label>Observaciones</label>
+                <size>40</size>
+            </field>
+
+
+        </table>
+<!--
+        <join tipo="left">
+            <table id="MRP_ORDEN_DETALLE">
+                <field id="mrporden_id">
+                    <condicion operador="=">MRP_ORDEN_PRODUCCION.id_mrporden</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="inner">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">MRP_ORDEN_DETALLE.stkarticulo_id</condicion>
+                </field>
+            </table>
+        </join>
+-->
+    </form>
+</histrix>

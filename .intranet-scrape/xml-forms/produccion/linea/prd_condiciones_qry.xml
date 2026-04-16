@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+	<title>condiciones de movimientos</title>
+	<obs/>
+	<form detalle="materiales_proceso_qry.xml" inline="true">
+		<table id="PROD_CONDICION_MOVIM" >
+			<title>Condiciones</title>
+			<field id="id_condicion" esclave="true" autoinc="true" noshow="true">
+				<label>Codigo</label>
+			</field>
+			<field id="seccion_id"  _editable="true">
+                            <tabla_ex id="MOMENTO">
+                                <field id="idMomento"></field>
+                                <field id="descripcion"></field>
+                            </tabla_ex>
+                            <label>Sección</label>
+			</field>
+			
+			<field id="estado" max="100" color2="0f0" color1="046723">
+				<label>estado</label>
+				<help>estado para iniciar movimiento</help>
+				<tipo>grafico</tipo>
+			</field>
+			
+			<field id="proceso_id">
+				<detalle>proceso_id</detalle>
+			    <helper type="link" xml="materiales_proceso_ing.xml" modal="true" title="Materiales por proceso">
+				<parameter source="proceso_id" target="proceso_id" />
+				<parameter source="homologacion_id" target="homologacion_id" />
+
+			    </helper>
+			    
+		            <label>Proceso</label>
+		            <help>Rubro del Articulo</help>
+		            <tabla_ex id="PROD_PROCESOS">
+		              <field id="id_proceso"/>
+		              <field id="nombre_proceso">
+		              </field>
+		            </tabla_ex>
+		        </field>
+			<field id="homologacion_id" noshow="true">
+				<detalle>homologacion_id</detalle>				
+			</field>
+			<!--
+			<field id="Articulos" local="true" showObjTabla="true">
+			    <helper type="object" xml="materiales_proceso_qry.xml" >
+				<parameter source="proceso_id" target="proceso_id" />
+				<parameter source="homologacion_id" target="homologacion_id" />
+
+			    </helper>
+			    
+		            <help>Articulos</help>
+		        </field>
+			<field id="homologacion_id" noshow="true">
+			</field>
+		-->
+		</table>
+	</form>
+</histrix>

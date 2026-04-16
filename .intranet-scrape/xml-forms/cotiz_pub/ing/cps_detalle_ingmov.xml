@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+    <title>MOVIMIENTOS DE orden compras</title>
+    <obs></obs>
+    <form >
+        <table id="CPS_DETALLE" label="MOVIMIENTOS" idCampoCond="grabo">
+            <field id="cpsmovimiento_id" 	lastId="cps_movimientos_insert.xml"></field>
+            <field id="fecha_cpsdetalle" 	id_cab="cpsfecha"></field>
+            <field id="stkarticulo_id" 		id_temp="stkarticulo_id"></field>
+            <field id="cpsdetalle" 		id_temp="nombre_articulo"></field>
+        <!--	<field id="unidad_compra_id" id_temp="unidad_compra_id"></field> -->
+            <field id="cantidad_uso"		id_temp="cantidad_compra"></field>
+            <field id="cantidad_compra" 	id_temp="cantidad_compra"></field>
+            <field id="pendiente_compra" 	id_temp="cantidad_compra"></field>
+            <field id="pendiente_uso" 			id_temp="cantidad_compra"></field>
+            <field id="cantidad_uso" 		id_temp="convertido"></field>
+            <field id="pendiente_uso" 		id_temp="cantidad_compra"></field>
+            <field id="fecha_requerido" 	id_temp="fecha_requerido"></field>
+            <field id="observaciones" 	id_temp="cpsobservaciones"></field>
+
+            <field id="costo_unitario" 		id_temp="costo_unitario"></field>
+            <field id="importe_iva"   		id_temp="impiva"></field>
+            <field id="importe_total" 		id_temp="Total"></field>
+
+            <field id="pedido_id" id_temp="pedido_id"></field>
+
+        </table>
+    </form>
+</histrix>

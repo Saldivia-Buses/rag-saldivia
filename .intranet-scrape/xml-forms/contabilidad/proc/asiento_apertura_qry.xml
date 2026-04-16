@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" imprime="false" deleteRow="false">
+  <title>Detalles</title>
+  <obs/>
+  <form>
+    <table id="CTB_CUENTAS" label="Apertura">
+      <movimientos>
+        <relacion id="cierre_apertura_detalle_ins.xml"/>
+      </movimientos>
+      <field id="_ORDEN" local="true" noshow="true"/>
+      <field id="movimiento_id" noshow="true" tabla="CTB_DETALLES" />
+      <field id="ejercicio_id" noshow="true" />
+      <field id="ejercicio_destino" local="true" noshow="true" />
+      <field id="id_cuenta">
+        <label>Cuenta</label>
+        <help>Cuenta contable en la que se hace el detalle</help>
+        <detalle>id_cuenta</detalle>
+      </field>
+      <field id="nombre_cuenta" deshabilitado="true">
+        <label>Nombre</label>
+      </field>
+      <field id="habilitada" noshow="true"></field>
+      <field id="importe" noshow="true">
+        <expression>
+          (CASE WHEN IFNULL(CTB_CUENTAS.tipo_saldo, (CASE WHEN sum((CASE WHEN doh = 0 THEN 1 ELSE -1 END) * importe) &lt; 0 THEN 1 ELSE 0 END)) = 0 THEN 1 ELSE -1 END) * (sum((CASE WHEN doh = 0 THEN 1 ELSE -1 END) * importe) )
+        </expression>
+      </field>
+      <field id="patrimonial" noshow="true" tabla="CTB_TIPOS">
+        <label>Patrimonial</label>
+        <condicion operador="=">1</condicion>
+      </field>
+      <field id="fecha_movimiento" noshow="true" tabla="CTB_MOVIMIENTOS">
+        <label>Fecha movimiento</label>
+        <tipo>date</tipo>
+        <condicion operador="&lt;=">
+          CTB_EJERCICIOS.finaliza and fecha_movimiento &gt;= CTB_EJERCICIOS.comienza
+        </condicion>
+      </field>
+      <field id="doh" noshow="true" tipOrden="ASC">
+        <label>doh</label>
+        <expression>IFNULL(CTB_CUENTAS.tipo_saldo, (CASE WHEN sum((CASE WHEN doh = 0 THEN 1 ELSE -1 END) * importe) &lt; 0 THEN 1 ELSE 0 END))
+        </expression>
+      </field>
+      <field id="tipo_saldo" noshow="true">
+        <expression>(CASE WHEN CTB_CUENTAS.tipo_saldo is null THEN 3 ELSE CTB_CUENTAS.tipo_saldo END)</expression>
+      </field>
+      <field id="debe" suma="true" _noZero="true" deshabilitado="false" local="true">
+        <expression>
+          CASE WHEN 
+            IFNULL(CTB_CUENTAS.tipo_saldo, (CASE WHEN sum((CASE WHEN doh = 0 THEN 1 ELSE -1 END) * importe) &lt; 0 THEN 1 ELSE 0 END)) = 0 
+          THEN
+            (sum((CASE WHEN doh = 0 THEN 1 ELSE -1 END) * importe) )
+          ELSE
+            0
+          END
+        </expression>
+        <label>Debe</label>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="haber" suma="true" _noZero="true" deshabilitado="true" local="true">
+        <expression>
+          CASE WHEN 
+            IFNULL(CTB_CUENTAS.tipo_saldo, (CASE WHEN sum((CASE WHEN doh = 0 THEN 1 ELSE -1 END) * importe) &lt; 0 THEN 1 ELSE 0 END)) = 1 
+          THEN
+            -1 * (sum((CASE WHEN doh = 0 THEN 1 ELSE -1 END) * importe) )
+          ELSE
+            0
+          END
+        </expression>
+        <label>Haber</label>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="test" noshow="true">
+        <help>
+          Utilizado para ocultar los registros con importe cero en el debe y el haber
+        </help>
+        <expression>
+          (CASE WHEN (CASE WHEN sum((CASE WHEN doh = 0 THEN 1 ELSE -1 END) * importe) &lt; 0 THEN 0 ELSE abs(sum((CASE WHEN doh = 0 THEN 1 ELSE -1 END) * importe)) END) = 0 AND (CASE WHEN sum((CASE WHEN doh = 0 THEN 1 ELSE -1 END) * importe) &gt; 0 THEN 0 ELSE abs(sum((CASE WHEN doh = 0 THEN 1 ELSE -1 END) * importe)) END) = 0 THEN 0 ELSE 1 END)
+        </expression>
+        <condicion operador="=">1</condicion>
+      </field>
+      <field id="concepto_id" tabla="CTB_MOVIMIENTOS" noshow="true">
+        <condicion operador="!=">0</condicion>
+      </field>
+      <field id="diferencia" local="true" suma="true" _acumula="true">
+        <label>Saldo</label>
+        <if exp="true">
+          <true>debe - haber</true>
+          <false>0</false>
+        </if>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="referencia" local="true">
+        <label>Referencia</label>
+        <valor>ASIENTO DE APERTURA</valor>
+      </field>
+      <group>
+        <field id="id_cuenta" _tabla="CTB_CUENTAS" />
+      </group>
+      <order>
+        <field id="id_cuenta"/>
+        <field id="doh"/>
+      </order>
+    </table>
+    <join tipo="left">
+      <table id="CTB_EJERCICIOS">
+        <field id="id_ejercicio">
+          <condicion operador="=">CTB_CUENTAS.ejercicio_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="CTB_TIPOS">
+        <field id="id_tipo">
+          <condicion operador="=">CTB_CUENTAS.tipo_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="CTB_DETALLES">
+        <field id="cuenta_id">
+          <condicion operador="=">CTB_CUENTAS.id_cuenta</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="inner">
+      <table id="CTB_MOVIMIENTOS">
+        <field id="id_movimiento">
+          <condicion operador="=">CTB_DETALLES.movimiento_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+<!-- CUENTA RESULTADO -->
+  <form>
+    <table id="CTB_CUENTAS" label="Refundicion">
+      <field id="_ORDEN" local="true" noshow="true"/>
+      <field id="movimiento_id" noshow="true" tabla="CTB_DETALLES" />
+      <field id="ejercicio_id" noshow="true" />
+      <field id="ejercicio_destino" local="true" noshow="true" />
+      <field id="id_cuenta">
+        <label>Cuenta</label>
+        <help>Cuenta contable en la que se hace el detalle</help>
+        <detalle>id_cuenta</detalle>
+        <condicion operador="=">CTB_EJERCICIOS.cuenta_resultado_id</condicion>
+      </field>
+      <field id="nombre_cuenta" deshabilitado="true">
+        <label>Nombre</label>
+      </field>
+      <field id="habilitada" noshow="true"></field>
+      <field id="importe" noshow="true">
+          <expression>
+                     (SELECT        
+                         (CASE WHEN IFNULL(CTB_CUENTAS.tipo_saldo, (CASE WHEN sum((CASE WHEN doh = 0 THEN 1 ELSE -1 END) * importe) &lt; 0 THEN 1 ELSE 0 END)) = 0 THEN 1 ELSE -1 END) * (sum((CASE WHEN doh = 0 THEN 1 ELSE -1 END) * importe) )
+                    from CTB_CUENTAS cc
+                    left JOIN CTB_EJERCICIOS ce on  ( ce.id_ejercicio = cc.ejercicio_id ) 
+                    left JOIN CTB_TIPOS ct on  ( ct.id_tipo = cc.tipo_id )  
+                    left JOIN CTB_DETALLES cd on  ( cd.cuenta_id = cc.id_cuenta )  
+                    inner JOIN CTB_MOVIMIENTOS cm on  ( cm.id_movimiento = cd.movimiento_id )  
+                    where ( ( cc.ejercicio_id = 4 ) ) 
+                    and ( ( ct.patrimonial = 1 ) ) 
+                    and ( ( cm.fecha_movimiento &lt;= ce.finaliza 
+                    and fecha_movimiento &gt;= ce.comienza ) )
+                    and ( ( cm.concepto_id != 0 ) ) )
+          </expression>
+      </field>
+      <field id="patrimonial" noshow="true" tabla="CTB_TIPOS">
+        <label>Patrimonial</label>
+      </field>
+      <field id="fecha_movimiento" noshow="true" tabla="CTB_MOVIMIENTOS">
+        <label>Fecha movimiento</label>
+        <tipo>date</tipo>
+      </field>
+      <field id="doh" noshow="true" tabla="CTB_DETALLES" tipOrden="ASC">
+        <label>doh</label>
+        <expression>(CASE WHEN IFNULL(CTB_CUENTAS.tipo_saldo, (CASE WHEN (SELECT        
+                         (CASE WHEN IFNULL(CTB_CUENTAS.tipo_saldo, (CASE WHEN sum((CASE WHEN doh = 0 THEN 1 ELSE -1 END) * importe) &lt; 0 THEN 1 ELSE 0 END)) = 0 THEN 1 ELSE -1 END) * (sum((CASE WHEN doh = 0 THEN 1 ELSE -1 END) * importe) )
+                    from CTB_CUENTAS cc
+                    left JOIN CTB_EJERCICIOS ce on  ( ce.id_ejercicio = cc.ejercicio_id ) 
+                    left JOIN CTB_TIPOS ct on  ( ct.id_tipo = cc.tipo_id )  
+                    left JOIN CTB_DETALLES cd on  ( cd.cuenta_id = cc.id_cuenta )  
+                    inner JOIN CTB_MOVIMIENTOS cm on  ( cm.id_movimiento = cd.movimiento_id )  
+                    where ( ( cc.ejercicio_id = 4) ) 
+                    and ( ( ct.patrimonial = 1 ) ) 
+                    and ( ( cm.fecha_movimiento &lt;= ce.finaliza 
+                    and fecha_movimiento &gt;= ce.comienza ) )
+                    and ( ( cm.concepto_id != 0 ) ) ) &lt; 0 THEN 1 ELSE 0 END)) = 0 THEN 1 ELSE 0 END)
+        </expression>
+      </field>
+      <field id="tipo_saldo" noshow="true">
+        <expression>CASE WHEN CTB_CUENTAS.tipo_saldo is null THEN 3 ELSE CTB_CUENTAS.tipo_saldo END</expression>
+      </field>
+      <field id="debe" suma="true" _noZero="true" deshabilitado="false" local="true" valauto="true">
+        <expression>
+          CASE WHEN 
+            IFNULL(CTB_CUENTAS.tipo_saldo, (CASE WHEN (SELECT        
+                         (CASE WHEN IFNULL(CTB_CUENTAS.tipo_saldo, (CASE WHEN sum((CASE WHEN doh = 0 THEN 1 ELSE -1 END) * importe) &lt; 0 THEN 1 ELSE 0 END)) = 0 THEN 1 ELSE -1 END) * (sum((CASE WHEN doh = 0 THEN 1 ELSE -1 END) * importe) )
+                    from CTB_CUENTAS cc
+                    left JOIN CTB_EJERCICIOS ce on  ( ce.id_ejercicio = cc.ejercicio_id ) 
+                    left JOIN CTB_TIPOS ct on  ( ct.id_tipo = cc.tipo_id )  
+                    left JOIN CTB_DETALLES cd on  ( cd.cuenta_id = cc.id_cuenta )  
+                    inner JOIN CTB_MOVIMIENTOS cm on  ( cm.id_movimiento = cd.movimiento_id )  
+                    where ( ( cc.ejercicio_id = 4 ) ) 
+                    and ( ( ct.patrimonial = 1 ) ) 
+                    and ( ( cm.fecha_movimiento &lt;= ce.finaliza 
+                    and fecha_movimiento &gt;= ce.comienza ) )
+                    and ( ( cm.concepto_id != 0 ) ) ) &lt; 0 THEN 1 ELSE 0 END)) = 1 
+          THEN
+            -1 * (SELECT        
+                         (CASE WHEN IFNULL(CTB_CUENTAS.tipo_saldo, (CASE WHEN sum((CASE WHEN doh = 0 THEN 1 ELSE -1 END) * importe) &lt; 0 THEN 1 ELSE 0 END)) = 0 THEN 1 ELSE -1 END) * (sum((CASE WHEN doh = 0 THEN 1 ELSE -1 END) * importe) )
+                    from CTB_CUENTAS cc
+                    left JOIN CTB_EJERCICIOS ce on  ( ce.id_ejercicio = cc.ejercicio_id ) 
+                    left JOIN CTB_TIPOS ct on  ( ct.id_tipo = cc.tipo_id )  
+                    left JOIN CTB_DETALLES cd on  ( cd.cuenta_id = cc.id_cuenta )  
+                    inner JOIN CTB_MOVIMIENTOS cm on  ( cm.id_movimiento = cd.movimiento_id )  
+                    where ( ( cc.ejercicio_id = 4 ) ) 
+                    and ( ( ct.patrimonial = 1 ) ) 
+                    and ( ( cm.fecha_movimiento &lt;= ce.finaliza 
+                    and fecha_movimiento &gt;= ce.comienza ) )
+                    and ( ( cm.concepto_id != 0 ) ) )
+          ELSE
+            0
+          END</expression>
+        <label>Debe</label>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="haber" suma="true" _noZero="true" deshabilitado="true" local="true" valauto="true">
+        <expression>
+          CASE WHEN 
+            IFNULL(CTB_CUENTAS.tipo_saldo, (CASE WHEN (SELECT        
+                         (CASE WHEN IFNULL(CTB_CUENTAS.tipo_saldo, (CASE WHEN sum((CASE WHEN doh = 0 THEN 1 ELSE -1 END) * importe) &lt; 0 THEN 1 ELSE 0 END)) = 0 THEN 1 ELSE -1 END) * (sum((CASE WHEN doh = 0 THEN 1 ELSE -1 END) * importe) )
+                    from CTB_CUENTAS cc
+                    left JOIN CTB_EJERCICIOS ce on  ( ce.id_ejercicio = cc.ejercicio_id ) 
+                    left JOIN CTB_TIPOS ct on  ( ct.id_tipo = cc.tipo_id )  
+                    left JOIN CTB_DETALLES cd on  ( cd.cuenta_id = cc.id_cuenta )  
+                    inner JOIN CTB_MOVIMIENTOS cm on  ( cm.id_movimiento = cd.movimiento_id )  
+                    where ( ( cc.ejercicio_id = CTB_CUENTAS.ejercicio_id ) ) 
+                    and ( ( ct.patrimonial = 1 ) ) 
+                    and ( ( cm.fecha_movimiento &lt;= ce.finaliza 
+                    and fecha_movimiento &gt;= ce.comienza ) )
+                    and ( ( cm.concepto_id != 0 ) ) ) &lt; 0 THEN 1 ELSE 0 END)) = 0 
+          THEN
+            (SELECT        
+                         (CASE WHEN IFNULL(CTB_CUENTAS.tipo_saldo, (CASE WHEN sum((CASE WHEN doh = 0 THEN 1 ELSE -1 END) * importe) &lt; 0 THEN 1 ELSE 0 END)) = 0 THEN 1 ELSE -1 END) * (sum((CASE WHEN doh = 0 THEN 1 ELSE -1 END) * importe) )
+                    from CTB_CUENTAS cc
+                    left JOIN CTB_EJERCICIOS ce on  ( ce.id_ejercicio = cc.ejercicio_id ) 
+                    left JOIN CTB_TIPOS ct on  ( ct.id_tipo = cc.tipo_id )  
+                    left JOIN CTB_DETALLES cd on  ( cd.cuenta_id = cc.id_cuenta )  
+                    inner JOIN CTB_MOVIMIENTOS cm on  ( cm.id_movimiento = cd.movimiento_id )  
+                    where ( ( cc.ejercicio_id = 4 ) ) 
+                    and ( ( ct.patrimonial = 1 ) ) 
+                    and ( ( cm.fecha_movimiento &lt;= ce.finaliza 
+                    and fecha_movimiento &gt;= ce.comienza ) )
+                    and ( ( cm.concepto_id != 0 ) ) )
+          ELSE
+            0
+          END</expression>
+        <label>Haber</label>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="test" noshow="true" local="true">
+        <help>
+          Utilizado para ocultar los registros con importe cero en el debe y el haber
+        </help>
+      </field>
+      <field id="concepto_id" tabla="CTB_MOVIMIENTOS" noshow="true">
+      </field>
+      <field id="diferencia" local="true" suma="true" _acumula="true">
+        <label>Saldo</label>
+        <if exp="true">
+          <true>debe + haber</true>
+          <false>0</false>
+        </if>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="referencia" local="true">
+        <label>Referencia</label>
+        <valor>ASIENTO DE APERTURA</valor>
+      </field>
+      <group>
+        <field id="id_cuenta" _tabla="CTB_CUENTAS" />
+      </group>
+      <order>
+        <field id="id_cuenta"/>
+        <field id="doh"/>
+      </order>
+    </table>
+    <join tipo="left">
+      <table id="CTB_EJERCICIOS">
+        <field id="id_ejercicio">
+          <condicion operador="=">CTB_CUENTAS.ejercicio_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="CTB_TIPOS">
+        <field id="id_tipo">
+          <condicion operador="=">CTB_CUENTAS.tipo_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="CTB_DETALLES">
+        <field id="cuenta_id">
+          <condicion operador="=">CTB_CUENTAS.id_cuenta</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="inner">
+      <table id="CTB_MOVIMIENTOS">
+        <field id="id_movimiento">
+          <condicion operador="=">CTB_DETALLES.movimiento_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

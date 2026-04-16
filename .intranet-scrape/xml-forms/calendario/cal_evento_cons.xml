@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="consulta">
+	<title>Eventos de Calendario</title>
+	<obs></obs>
+	<form>
+		<table id="CAL_EVENTO" >
+			<title>Eventos</title>
+			<campo id="fecha" noshow="true">
+				<label></label>
+
+			</campo>			
+			<campo id="descripcion">
+				<label></label>
+				<help>Descripción del Evento</help>
+			</campo>
+
+<!--			<campo id="time">
+				<label>Hora</label>
+			</campo> -->
+			<campo id="login" noshow="true">
+				<label>login</label>
+			</campo>
+			
+			
+		</table>
+	</form>	   
+</histrix> 

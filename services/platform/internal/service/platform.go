@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"hash/fnv"
 	"regexp"
 	"strings"
 
@@ -15,6 +16,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
@@ -83,7 +85,7 @@ type TenantDetail struct {
 	UpdatedAt string `json:"updated_at"`
 }
 
-func tenantToDetail(t db.Tenant) TenantDetail {
+func idRowToDetail(t db.GetTenantByIDRow) TenantDetail {
 	d := TenantDetail{
 		ID:        t.ID,
 		Slug:      t.Slug,
@@ -155,6 +157,18 @@ func (p *Platform) ListTenants(ctx context.Context, limit, offset int32) ([]db.L
 		return nil, fmt.Errorf("list tenants: %w", err)
 	}
 	return tenants, nil
+}
+
+// GetTenantByID returns a tenant by ID (safe view without connection strings).
+func (p *Platform) GetTenantByID(ctx context.Context, id string) (TenantDetail, error) {
+	tenant, err := p.queries.GetTenantByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return TenantDetail{}, ErrTenantNotFound
+		}
+		return TenantDetail{}, fmt.Errorf("get tenant by id: %w", err)
+	}
+	return idRowToDetail(tenant), nil
 }
 
 // GetTenant returns a tenant by slug (safe view without connection strings).
@@ -272,16 +286,36 @@ func (p *Platform) DisableModule(ctx context.Context, tenantID, moduleID string)
 
 // FeatureFlag represents a feature flag.
 type FeatureFlag struct {
-	ID       string `json:"id"`
-	Name     string `json:"name"`
-	TenantID string `json:"tenant_id,omitempty"`
-	Enabled  bool   `json:"enabled"`
+	ID         string  `json:"id"`
+	Name       string  `json:"name"`
+	TenantID   string  `json:"tenant_id,omitempty"`
+	Enabled    bool    `json:"enabled"`
+	RolloutPct int     `json:"rollout_pct"`
+	UpdatedAt  string  `json:"updated_at,omitempty"`
+	UpdatedBy  *string `json:"updated_by,omitempty"`
+}
+
+// CreateFlagParams holds parameters for creating a feature flag.
+type CreateFlagParams struct {
+	ID          string  `json:"id"`
+	Name        string  `json:"name"`
+	Description string  `json:"description,omitempty"`
+	TenantID    *string `json:"tenant_id,omitempty"`
+	RolloutPct  int     `json:"rollout_pct"`
+}
+
+// UpdateFlagParams holds parameters for updating a feature flag.
+type UpdateFlagParams struct {
+	Enabled    *bool   `json:"enabled,omitempty"`
+	RolloutPct *int    `json:"rollout_pct,omitempty"`
+	UpdatedBy  string  `json:"-"`
 }
 
 // ListFeatureFlags returns all feature flags (global + tenant-specific).
 func (p *Platform) ListFeatureFlags(ctx context.Context) ([]FeatureFlag, error) {
 	rows, err := p.pool.Query(ctx,
-		`SELECT id, name, tenant_id, enabled FROM feature_flags ORDER BY name`)
+		`SELECT id, name, tenant_id, enabled, rollout_pct, updated_at, updated_by
+		 FROM feature_flags ORDER BY name`)
 	if err != nil {
 		return nil, fmt.Errorf("list feature flags: %w", err)
 	}
@@ -290,13 +324,18 @@ func (p *Platform) ListFeatureFlags(ctx context.Context) ([]FeatureFlag, error) 
 	var flags []FeatureFlag
 	for rows.Next() {
 		var f FeatureFlag
-		var tenantID *string
-		if err := rows.Scan(&f.ID, &f.Name, &tenantID, &f.Enabled); err != nil {
+		var tenantID, updatedBy *string
+		var updatedAt pgtype.Timestamptz
+		if err := rows.Scan(&f.ID, &f.Name, &tenantID, &f.Enabled, &f.RolloutPct, &updatedAt, &updatedBy); err != nil {
 			return nil, fmt.Errorf("scan feature flag: %w", err)
 		}
 		if tenantID != nil {
 			f.TenantID = *tenantID
 		}
+		if updatedAt.Valid {
+			f.UpdatedAt = updatedAt.Time.Format("2006-01-02T15:04:05Z")
+		}
+		f.UpdatedBy = updatedBy
 		flags = append(flags, f)
 	}
 	if err := rows.Err(); err != nil {
@@ -308,10 +347,80 @@ func (p *Platform) ListFeatureFlags(ctx context.Context) ([]FeatureFlag, error) 
 	return flags, nil
 }
 
+// CreateFeatureFlag creates a new feature flag (default enabled=false).
+func (p *Platform) CreateFeatureFlag(ctx context.Context, params CreateFlagParams, createdBy string) (FeatureFlag, error) {
+	if params.RolloutPct < 0 || params.RolloutPct > 100 {
+		return FeatureFlag{}, fmt.Errorf("rollout_pct must be 0-100")
+	}
+	var f FeatureFlag
+	var tenantID *string
+	err := p.pool.QueryRow(ctx,
+		`INSERT INTO feature_flags (id, name, description, tenant_id, enabled, rollout_pct, updated_by, updated_at)
+		 VALUES ($1, $2, $3, $4, false, $5, $6, now())
+		 RETURNING id, name, tenant_id, enabled, rollout_pct`,
+		params.ID, params.Name, params.Description, params.TenantID, params.RolloutPct, createdBy,
+	).Scan(&f.ID, &f.Name, &tenantID, &f.Enabled, &f.RolloutPct)
+	if err != nil {
+		return FeatureFlag{}, fmt.Errorf("create feature flag: %w", err)
+	}
+	if tenantID != nil {
+		f.TenantID = *tenantID
+	}
+	p.auditor.Write(ctx, audit.Entry{
+		UserID: createdBy, Action: "flag.created", Resource: f.ID,
+	})
+	p.publishLifecycleEvent("platform", "flag.created", map[string]any{"id": f.ID, "name": f.Name})
+	return f, nil
+}
+
+// UpdateFeatureFlag updates a feature flag's enabled state and/or rollout percentage.
+func (p *Platform) UpdateFeatureFlag(ctx context.Context, id string, params UpdateFlagParams) error {
+	if params.RolloutPct != nil && (*params.RolloutPct < 0 || *params.RolloutPct > 100) {
+		return fmt.Errorf("rollout_pct must be 0-100")
+	}
+
+	var setClauses []string
+	var args []any
+	argN := 1
+
+	if params.Enabled != nil {
+		setClauses = append(setClauses, fmt.Sprintf("enabled = $%d", argN))
+		args = append(args, *params.Enabled)
+		argN++
+	}
+	if params.RolloutPct != nil {
+		setClauses = append(setClauses, fmt.Sprintf("rollout_pct = $%d", argN))
+		args = append(args, *params.RolloutPct)
+		argN++
+	}
+	setClauses = append(setClauses, fmt.Sprintf("updated_by = $%d", argN))
+	args = append(args, params.UpdatedBy)
+	argN++
+	setClauses = append(setClauses, "updated_at = now()")
+
+	args = append(args, id)
+	query := fmt.Sprintf("UPDATE feature_flags SET %s WHERE id = $%d",
+		strings.Join(setClauses, ", "), argN)
+
+	result, err := p.pool.Exec(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("update feature flag: %w", err)
+	}
+	if result.RowsAffected() == 0 {
+		return ErrFlagNotFound
+	}
+	p.auditor.Write(ctx, audit.Entry{
+		UserID: params.UpdatedBy, Action: "flag.updated", Resource: id,
+		Details: map[string]any{"enabled": params.Enabled, "rollout_pct": params.RolloutPct},
+	})
+	p.publishLifecycleEvent("platform", "flag.updated", map[string]any{"id": id})
+	return nil
+}
+
 // ToggleFeatureFlag enables or disables a feature flag.
 func (p *Platform) ToggleFeatureFlag(ctx context.Context, id string, enabled bool) error {
 	result, err := p.pool.Exec(ctx,
-		`UPDATE feature_flags SET enabled = $2 WHERE id = $1`,
+		`UPDATE feature_flags SET enabled = $2, updated_at = now() WHERE id = $1`,
 		id, enabled,
 	)
 	if err != nil {
@@ -324,7 +433,69 @@ func (p *Platform) ToggleFeatureFlag(ctx context.Context, id string, enabled boo
 		Action: "flag.toggled", Resource: id,
 		Details: map[string]any{"enabled": enabled},
 	})
+	p.publishLifecycleEvent("platform", "flag.updated", map[string]any{"id": id, "enabled": enabled})
 	return nil
+}
+
+// KillFlag immediately disables a feature flag (kill switch).
+func (p *Platform) KillFlag(ctx context.Context, id string, killedBy string) error {
+	result, err := p.pool.Exec(ctx,
+		`UPDATE feature_flags SET enabled = false, updated_by = $2, updated_at = now() WHERE id = $1`,
+		id, killedBy,
+	)
+	if err != nil {
+		return fmt.Errorf("kill feature flag: %w", err)
+	}
+	if result.RowsAffected() == 0 {
+		return ErrFlagNotFound
+	}
+	p.auditor.Write(ctx, audit.Entry{
+		UserID: killedBy, Action: "flag.killed", Resource: id,
+	})
+	p.publishLifecycleEvent("platform", "flag.killed", map[string]any{"id": id})
+	return nil
+}
+
+// EvaluateFlags evaluates all flags for a given tenant and user.
+// Returns a map of flag_name → bool. Uses deterministic hashing for rollout.
+func (p *Platform) EvaluateFlags(ctx context.Context, tenantID, userID string) (map[string]bool, error) {
+	rows, err := p.pool.Query(ctx,
+		`SELECT id, name, tenant_id, enabled, rollout_pct FROM feature_flags
+		 WHERE tenant_id IS NULL OR tenant_id = $1
+		 ORDER BY name`, tenantID)
+	if err != nil {
+		return nil, fmt.Errorf("evaluate flags: %w", err)
+	}
+	defer rows.Close()
+
+	result := make(map[string]bool)
+	for rows.Next() {
+		var id, name string
+		var tid *string
+		var enabled bool
+		var rolloutPct int
+		if err := rows.Scan(&id, &name, &tid, &enabled, &rolloutPct); err != nil {
+			return nil, fmt.Errorf("scan flag: %w", err)
+		}
+		result[name] = enabled && evaluateRollout(id, userID, rolloutPct)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate flags: %w", err)
+	}
+	return result, nil
+}
+
+// evaluateRollout deterministically decides if a user is in the rollout bucket.
+func evaluateRollout(flagID, userID string, rolloutPct int) bool {
+	if rolloutPct >= 100 {
+		return true
+	}
+	if rolloutPct <= 0 {
+		return false
+	}
+	h := fnv.New32a()
+	h.Write([]byte(flagID + ":" + userID))
+	return int(h.Sum32()%100) < rolloutPct
 }
 
 // ── Global Config ───────────────────────────────────────────────────────
@@ -367,6 +538,74 @@ func (p *Platform) SetConfig(ctx context.Context, key string, value []byte, upda
 		UserID: updatedBy, Action: "config.updated", Resource: key,
 	})
 	return nil
+}
+
+// ── Deploy Log ─────────────────────────────────────────────────────────
+
+// DeployRecord is a safe representation of a deploy log entry.
+type DeployRecord struct {
+	ID          string  `json:"id"`
+	Service     string  `json:"service"`
+	VersionFrom string  `json:"version_from"`
+	VersionTo   string  `json:"version_to"`
+	Status      string  `json:"status"`
+	DeployedBy  string  `json:"deployed_by"`
+	StartedAt   string  `json:"started_at"`
+	FinishedAt  *string `json:"finished_at,omitempty"`
+	Notes       string  `json:"notes,omitempty"`
+}
+
+func deployLogToRecord(d db.DeployLog) DeployRecord {
+	rec := DeployRecord{
+		ID:          d.ID,
+		Service:     d.Service,
+		VersionFrom: d.VersionFrom,
+		VersionTo:   d.VersionTo,
+		Status:      d.Status,
+		DeployedBy:  d.DeployedBy,
+	}
+	if d.StartedAt.Valid {
+		rec.StartedAt = d.StartedAt.Time.Format("2006-01-02T15:04:05Z")
+	}
+	if d.FinishedAt.Valid {
+		s := d.FinishedAt.Time.Format("2006-01-02T15:04:05Z")
+		rec.FinishedAt = &s
+	}
+	if d.Notes.Valid {
+		rec.Notes = d.Notes.String
+	}
+	return rec
+}
+
+// RecordDeploy inserts a deploy log entry and publishes a NATS lifecycle event.
+func (p *Platform) RecordDeploy(ctx context.Context, arg db.InsertDeployLogParams) (DeployRecord, error) {
+	row, err := p.queries.InsertDeployLog(ctx, arg)
+	if err != nil {
+		return DeployRecord{}, fmt.Errorf("record deploy: %w", err)
+	}
+	rec := deployLogToRecord(row)
+	p.publishLifecycleEvent("platform", "deploy.created", rec)
+	p.auditor.Write(ctx, audit.Entry{
+		UserID: arg.DeployedBy, Action: "deploy.created", Resource: rec.ID,
+		Details: map[string]any{"service": arg.Service, "from": arg.VersionFrom, "to": arg.VersionTo},
+	})
+	return rec, nil
+}
+
+// ListDeploys returns recent deploy log entries, newest first.
+func (p *Platform) ListDeploys(ctx context.Context, limit, offset int32) ([]DeployRecord, error) {
+	rows, err := p.queries.ListDeployLogs(ctx, db.ListDeployLogsParams{
+		Limit:  limit,
+		Offset: offset,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("list deploys: %w", err)
+	}
+	records := make([]DeployRecord, 0, len(rows))
+	for _, r := range rows {
+		records = append(records, deployLogToRecord(r))
+	}
+	return records, nil
 }
 
 // isDuplicateKey checks for unique constraint violation (PG error code 23505).

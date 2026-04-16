@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" >
+    <title>Evaluación</title>
+    <obs></obs>
+    <form >
+        <table id="RH_EVALUACION_RESPUESTAS" >
+            <title>Evaluación</title>
+
+            <field id="id_rhevaluacionresp" autoinc="true" noshow="true"/>
+				
+            <field id="rhevaluacion_id" noshow="true" />
+			
+			<field id="rhevaluaciongrupo_id">
+				<label>Punto</label>
+			</field>
+
+			<field id="nombre_grupo" tabla="RH_EVALUACION_GRUPOS">
+				<label>Conceptos</label>
+			</field>
+            <field id="rhevaluacionvalor_id">
+<!--				<helper type="combo" id="RH_EVALUACION_VALORES" >
+					<field id="valor"/>
+					<field id="nombre_valor"/>
+					<field id="rhevaluaciongrupo_id">
+						<condicion operador="=">rhevaluaciongrupo_id</condicion>
+					</field>
+				</helper> -->
+               <label>Clasificación</label>
+            </field>
+			<field id="peso" tabla="RH_EVALUACION_GRUPOS">
+				<label>Peso</label>
+			</field>
+	    	<field id="aporte" suma="true">
+                <label>Aporte</label>
+            </field>
+          
+            <order>
+				<field id="rhevaluaciongrupo_id"/>
+			</order>
+        </table>
+		<join tipo="left">
+			<table id="RH_EVALUACION_GRUPOS">
+                <field id="id_rhevaluaciongrupo">
+                    <condicion operador="=">RH_EVALUACION_RESPUESTAS.rhevaluaciongrupo_id</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix> 

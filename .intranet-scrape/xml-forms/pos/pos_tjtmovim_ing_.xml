@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix exportasuma="true" imprime="false" llenoTemporal="false" llenoreferente="true" tipo="ing">
+	<title>MOVIMIENTOS TARJETAS</title>
+	<obs/>
+	<consulta>
+		<table id="TJTMOVIM" idCampoCond="imputar" label="Mov TARJETA">
+			<movimientos>
+				<relacion id="pos_tjtmovim_ingmov.xml"></relacion>
+			</movimientos>
+			<field id="concod" noshow="true">
+				<valor>1</valor>
+			</field>
+			<field id="ctacod" noshow="true">
+				<label>cta</label>
+			</field>
+			<field id="ctanom" noshow="true">
+				<label>nombre</label>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="ctatel" noshow="true">
+			</field>
+			<field id="movfec" noshow="true">
+				<label>fecha</label>
+				<valor>today</valor>
+			</field>
+			<field id="movnpv" noshow="true">
+				<label>npv</label>
+			</field>
+			<field id="movnro" noshow="true">
+				<label>nro</label>
+			</field>
+			<field id="movtip" noshow="true">
+				<valor>2</valor>
+				<!-- <opciones>
+				    <opcion valor="1">Tarjeta de Credito</opcion>
+				    <opcion valor="2">Tarjeta de Debito</opcion>
+				</opciones>-->
+			</field>
+
+			<field id="cantCuotas" conLabel="true">
+				<label>Cant.Cuotas</label>
+				<valor>1</valor>
+			</field>
+			<field id="cuotaActual" deshabilitado="true" noshow="true">
+				<valor>1</valor>
+			</field>
+			<field id="tjtlote" conLabel="true">
+				<label>Nro Cupón</label>
+			</field>
+			<field id="tjtnro" conLabel="true">
+				<label>Nro Cupón</label>
+			</field>
+			<field id="tjtfec" noshow="true">
+				<label>fec.</label>
+				<valor>today</valor>
+			</field>
+
+			<field id="tjtcod">
+				<label>Concepto</label>
+				<help>Codigo de Concepto</help>
+				<tabla_ex id="TJTTARJE">
+					<field id="tjtcod"/>
+					<field id="tjtnom"/>
+				</tabla_ex>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="tjtimp" suma="true" conLabel="true">
+				<label>Importe</label>
+				<help>Importe del Movimiento</help>
+				<tipo>numeric</tipo>
+				<valor>0</valor>
+
+				<detalle>cajimp</detalle>
+			</field>
+			<field id="cajcod" local="true" noshow="true">
+				<label>cajcod</label>
+				<valor>2</valor>
+				<detalle>cajcod</detalle>
+			</field>
+			<field id="opecla" local="true" noshow="true">
+				<valor eval="true">$_SESSION['usuario']</valor>
+			</field>
+
+			<field id="imputar" local="true" noshow="true">
+				<valor>1</valor>
+			</field>
+			<!-- NUMERADOR INTERNO NOMBRE DE CAMPO RESERVADO-->
+			<field id="_ORDEN" oculto="true">
+				<label>Orden</label>
+			</field>
+			<field ctbtipo="2" id="cajtip" local="true" noshow="true">
+				<valor>2</valor>
+				<detalle>cajtip</detalle>
+			</field>
+
+
+		</table>
+	</consulta>
+</histrix>

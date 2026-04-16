@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="ficha" sololectura="true"  autoprint="true" PDFsincabecera="true" _PDFconpie="true" bottomMargin="-30" path="/fotos/garantia/">
+       <title></title>
+        <obs></obs>
+		<pie>* - URBANO: común o diferencial. Media distancia: clase A, B o C. LARGA DISTANCIA: común con aire acondicionado, diferencial A o B. TURISMO: receptivo, excursión, exclusivo o gran turismo.</pie>
+	   
+               <consulta>
+				   <pdf>
+					  <code><![CDATA[
+					  $pdf->Rect(30,42,165,52);
+				/*	  $pdf->Rect(15,30,$pdf->anchoPagina - 22,260);*/
+
+					  
+					                                            
+					    $pdf->DashedRect(4,260,206,280, 0.1, 80);
+ 					/*  $pdf->DashedRect(80,270,135,270, 0.1, 80);*/
+                                                                                   
+					  ]]></code>
+				  </pdf>
+
+                <table id="CERTFABRICACION" label="CERTIFICADO DE GARANTIA">
+
+				<field id="cabe2" local="true" >
+					<label size="117" posx="75" posy="30" PDFsize="15" PDFnoborder="true" PDFnolabel="true" PDFbold="true">Título</label>
+					<expresion>'CERTIFICADO DE GARANTÍA'</expresion>
+				</field>
+
+				<field id="ctacod" tabla="PEDCOTIZ">
+					<label size="50" posx="28" posy="+5" PDFsize="12" PDFnoborder="true" PDFancho="125">Otorgado a la Empresa: </label>
+					<help>Codigo de Cuenta</help>
+					<tabla_ex condes="true" id="CCTCUENT">
+						<field id="ctacod"/>
+						<field id="ctaNOM"/>
+						<field id="siscod" oculto="true">
+							<condicion operador="=">'02'</condicion>
+						</field>
+					</tabla_ex>
+				</field>
+
+				<field id="ctadir" tabla="CCTCUENT">
+					<label size="35" posx="28" posy="+2" PDFsize="12" PDFnoborder="true" >Domiciliada en: </label>
+				</field>
+
+				<field id="ctaloc" tabla="CCTCUENT">
+					<label size="25" posx="28" posy="+2" PDFsize="12" PDFnoborder="true" >Localidad: </label>
+				</field>
+
+				<field id="prvcod" tabla="CCTCUENT">
+					<helper type="combo" id="FSMPROVS">
+						<field id="prvcod"/>
+						<field id="prvnom"/>
+					</helper>
+					<label size="25" posx="115" posy="0" PDFsize="12" PDFnoborder="true" >Provincia: </label>
+				</field>
+
+				<field id="desabv">
+					<expresion>CARROCERIA.desabv</expresion>
+					<label size="25" posx="28" posy="+2" PDFsize="12" PDFnoborder="true" >Carrocería: </label>
+					<tipo>varchar</tipo>
+				</field>
+
+				<field id="nrovin" local="true" noselect="true">
+					<label size="25" posx="115" posy="0" PDFsize="12" PDFnoborder="true" >Nº V.I.N.: </label>
+					<tipo>varchar</tipo>
+				</field>
+
+                <field id="mardes">
+					<label size="20" posx="28" posy="+2" PDFsize="12" PDFnoborder="true" >Chasis: </label>
+					<expresion>CONCAT(MARCHASIS.mardes, '/', MODCHASIS.moddes)</expresion>
+				</field>
+
+				<field id="chasis" tabla="CHASIS">
+					<label size="25" posx="115" posy="0" PDFsize="12" PDFnoborder="true">Nº Chasis:</label>
+				</field>
+
+			    <field id="plano" _tabla="HOMOLOGMOD">
+					<label size="45" posx="28" posy="+2" PDFsize="12" PDFnoborder="true" >Plano de carrocería: </label>
+					<tipo>varchar</tipo>
+				</field>		
+			
+				<field id="nrofab" >
+					<label size="30" posx="115" posy="0" PDFsize="12" PDFnoborder="true">Certificado Nº: </label>
+				</field> 
+				<field id="year1" >
+					<label size="2" posx="155" posy="0" PDFsize="12" PDFnoborder="true">-</label>
+					 <expresion>DATE_FORMAT(fechaCert, '%y')</expresion>
+				</field> <!--
+				<field id="nrocert">
+					<expresion>CONCAT(CERTFABRICACION.nrofab, '-', DATE_FORMAT(CERTFABRICACION.fechaCert, '%y'))</expresion>
+					<label size="30" posx="95" posy="0" PDFsize="12" PDFnoborder="true">Certificado Nº: </label>
+				</field>-->
+
+				<field id="asientos" tabla="HOMOLOGMOD">
+					<expression>concat('Conductor + ',
+					(case when CARROCERIA.doble_piso = 1 then (CONCAT(asientos, '+', asientos_plantabaja)) else (asientos) end),
+					' pasajeros', ' + acompañante',
+/*					(case when acompañante = 1 then ' + acompañante' else '' end),*/
+					(case when auxiliar = 1 then ' + auxiliar' else '' end))</expression>
+					<label size="45" posx="28" posy="+2" PDFsize="12" PDFnoborder="true" >Cantidad de asientos: </label>
+				</field>
+
+				<field id="fechaCert">
+					<label size="17" posx="115" posy="+2" PDFsize="12" PDFnoborder="true">Fecha: </label>
+					<help>Fecha del Certificado de Fabricación</help>
+				</field>
+<!--
+			    <field id="textgar" _local="true" align="C" style="B">
+					<label PDFalign="J" size="170" posx="25" posy="+8" PDFnolabel="true" PDFsize="12" ></label>
+					<expresion><![CDATA['El presente, otorga al comprador de la unidad una GARANTIA contra defectos, en los términos y condiciones que a continuación se detallan:
+1.- La GARANTIA es válida por el término de doce (12) meses ó doscientos mil (200.000) kilómetros, lo que acontezca primero, contados a partir de la fecha de entrega de la unidad al comprador.
+2.- La misma cubre cualquier defecto de materiales o piezas comprometiéndose a entregar una pieza nueva en reemplazo de la defectuosa, o reparar la pieza defectuosa sin cargo para el cliente.
+3.- La Empresa MARIA CARMEN MURABITO transferirá, al primer propietario de la carrocería, las mismas condiciones recibidas de sus proveedores con relación a: asientos, calefactores, sistemas de limpiaparabrisas y lavaparabrisas, extractores de aire y demás elementos el eléctricos y elementos de sistemas neumáticos. Los plazos de estas GARANTIAS no excederán los previstos por el presente certificado.
+4.- La Empresa MARIA CARMEN MURABITO no se hará cargo de gastos generados por la ejecución de la presente en cuanto a traslados, auxilios, combustibles, viáticos, envíos, lucro cesante, etc.
+5.- La presente GARANTIA no abarca ni cubre defectos causados por:
+a) La Instalación y/o mal funcionamiento de accesorios de terceros, sistemas de audio y vídeo, de aire acondicionado, vigías, radios, etc.
+b) Desgaste natural, accidentes, uso inadecuado, descuidos, excesos de carga o maltratos; así como tampoco defectos originados por piezas del chasis.
+c) Cualquier modificación de la Carrocería que no esté de acuerdo con las especificaciones de los productos marca SALDIVIA.
+d) Cualquier modificación de la Carrocería que no cuente con autorización por escrito de MARIA CARMEN MURABITO o no cumpla con las reglamentaciones vigentes.
+6.- Cualquier reclamo deberá ser hecho por el propietario a la Empresa MARIA CARMEN MURABITO en el momento de la verificación del inconveniente. Esta GARANTIA no cubre fallas o defectos que, una vez constatados, no sen inmediatamente reclamados; como así tampoco por los daños o consecuencias que dicha omisión pudiera tener sobre el producto o terceros.
+7.- La Empresa MARIA CARMEN MURABITO se exime de cualquier otra responsabilidad que no sean las anteriormente descriptas y expresamente previstas; por lo tanto, la presente GARANTIA no incluye ni cubre ningún perjuicio o daño eventual a otras piezas, partes, vehículos o terceros, aunque se originasen por defectos de la carrocería, de materiales o de procesos de fabricación o de cualquier otro origen.']]></expresion>
+				<tipo>varchar</tipo>
+				</field>	
+		-->
+
+				<field id="firmaemp" local="true" >
+					<label posx="84" posy="+15" PDFnoborder="true" PDFsize="11">DPTO. POST VENTA</label>
+				</field>
+				
+				<field id="Conforme" local="true" >
+					<label posx="0" posy="+142" PDFnoborder="true" PDFsize="14" PDFbold="true">Notificación de conformidad de garantía</label>
+				</field>
+				
+				<field id="Firma" local="true" >
+					<label posx="0" posy="+15" PDFnoborder="true" PDFsize="11">Firma:________________    Nombre y Apellido:_______________________________    D.N.I.:________________</label>
+				</field>
+        
+				<field id="term1" local="true" _path="/" PDFsize="150">
+				    <label posx="2" posy="+1" ></label>
+				    <expression>'terminos-1.png'</expression>
+				    <tipo>file</tipo>
+				    <size>200</size>
+				</field>
+				<field id="term2" local="true" _path="/" PDFsize="150">
+				    <label posx="2" posy="+1" ></label>
+				    <expression>'terminos-2.png'</expression>
+				    <tipo>file</tipo>
+				    <size>200</size>
+				</field>
+
+				<field id="term3" local="true" _path="/" PDFsize="150">
+				    <label posx="2" posy="+1" ></label>
+				    <expression>'terminos-3.png'</expression>
+				    <tipo>file</tipo>
+				    <size>200</size>
+				</field>
+				<field id="term4" local="true" _path="/" PDFsize="150">
+				    <label posx="2" posy="+1" ></label>
+				    <expression>'terminos-4.png'</expression>
+				    <tipo>file</tipo>
+				    <size>200</size>
+				</field>
+                  </table>
+					<join tipo="left">
+						<table id="PEDCOTIZ">
+							<field id="nrocha">
+								<condicion operador="=">CERTFABRICACION.nrofab</condicion>
+							</field>
+						</table>
+					</join>		
+					<join tipo="left">
+						<table id="CCTCUENT">
+							<field id="ctacod">
+								<condicion operador="=">PEDCOTIZ.ctacod</condicion>
+							</field>
+							<field id="siscod">
+								<condicion operador="=">'02'</condicion>
+							</field>
+						</table>
+					</join>				   
+		   
+				   
+			       	<join tipo="left">
+						<table id="CHASIS">
+							<field id="nrocha">
+								<condicion operador="=">CERTFABRICACION.nrofab</condicion>
+							</field>
+						</table>
+					</join>
+		
+				<join tipo="left">
+					<table id="MODCHASIS">
+						<field id="modcha">
+							<condicion operador="=">CHASIS.modcod</condicion>
+						</field>
+						<field id="marcod">
+							<condicion operador="=">CHASIS.marcod</condicion>
+						</field>
+					</table>
+				</join>
+					<join tipo="left">
+						<table id="HOMOLOGMOD">
+						    	<field id="id_homologacion">
+							    <condicion operador="=">PEDCOTIZ.homologacion_id</condicion>
+					        	</field>
+
+						</table>
+					</join>						   
+					<join tipo="left">
+						   <table id="CARROCERIA">
+								<field id="nrocar">
+									   <condicion operador="=">HOMOLOGMOD.nrocar</condicion>
+								</field>
+							</table> 		
+					</join>	
+					<join tipo="left">
+						<table id="MARCHASIS">
+							<field id="marcod">
+								<condicion operador="=">HOMOLOGMOD.marcod</condicion>
+							</field>
+						</table> 
+					</join>	
+					<join tipo="left">
+						<table id="MARCAMOTOR">
+							<field id="idMarca">
+								<condicion operador="=">CHASIS.idMarcaMotor</condicion>
+							</field>
+						</table>
+					</join>				   
+				</consulta>
+        </histrix>

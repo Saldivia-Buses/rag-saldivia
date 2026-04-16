@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="cabecera" >
+    <title>Análisis de No Conformidad</title>
+    <obs></obs>
+    <form >
+        <table id="CAL_NOCONFORMIDADES" >
+            <title>Estados</title>
+
+            <fieldGroup deshabilitado="true" >
+                <field id="id_noconformidad" noshow="true">
+                    <label>Número</label>
+                </field>
+                <field id="fecha_nconf" >
+                    <label modpos="nobr">Fecha</label>
+                    <help>Fecha de No conformidad</help>
+                    <valor>today</valor>
+                </field>
+                <field id="estadonconf_id">
+                    <helper xml="calestadosnconf_crud.xml" type="combo" dir="/calidad/man" empty="true"/>
+                    <label>Estado</label>
+                    <help>Estado de la No conformidad</help>
+                </field>
+                <field id="origennconf_id">
+                    <helper xml="calorigennconf_qry.xml" type="combo" dir="/help_local" empty="true"/>
+                    <label>Origen</label>
+                    <help>Origen de la No conformidad</help>
+                </field>
+
+                <field id="rhseccion_id">
+                    <helper xml="rhseccion_qry.xml" type="combo" dir="/help_local" empty="true" />
+                    <label modpos="nobr">Seccion</label>
+                    <help>Seccion de la No conformidad</help>
+                </field>
+
+                <field id="id_noconformidad" >
+                    <label modpos="nobr">Número</label>
+                    <help>Numero de No conformidad</help>
+                
+                </field>
+                <field id="descripcion_nconf">
+                    <label colspan="3">Descripcion</label>
+                    <help>Descripción de la no conformidad</help>
+                    <size>200</size>
+                </field>
+                <field id="contencion_nconf">
+                    <label colspan="3">Acción de contención</label>
+                    <help>Acción de Contencion ante la no conformidad</help>
+                    <size>200</size>
+                </field>
+
+            </fieldGroup>
+            <fieldGroup>
+                <field id="causa_nconf">
+                    <label colspan="3">Causa Raiz</label>
+                    <help>Causa Raiz de la no conformidad</help>
+                    <size>200</size>
+                </field>
+
+            </fieldGroup>
+        </table>
+    </form>
+</histrix>

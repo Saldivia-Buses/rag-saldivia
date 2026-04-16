@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta" PDFlineColor="255,255,255" PDFfontSize="11">
+    <title>DETALLE</title>
+    <obs></obs>
+    <form >
+        <table id="FACDETAL" label="Detalle">
+
+
+            <!--			<field id="artcod" >
+                                <label>Art</label>
+                                <size>13</size>
+                        </field> -->
+            <field id="artcan">
+                <size>3</size>
+
+            </field>
+            <field id="detalle" >
+
+            </field>
+
+            <field id="artnet" >
+                
+                <tipo>numeric</tipo>
+            </field>
+            <field id="artcom" _suma="true">
+                <expression>artnet * artcan</expression>
+                
+                <size>6</size>
+            </field>
+
+            <!-- 			<field id="descuentoUno">
+                                <label>Desc</label>
+                                <expression>concat('-%',descuentoUno)</expression>
+                                <tipo>varchar</tipo>
+
+                        </field>
+                        <field id="artcom">
+                                <label>Importe</label>
+                        </field>-->
+            <field id="concod" oculto="true">
+            </field>
+
+            <field id="movfec" oculto="true">
+            </field>
+            <field id="nropue" oculto="true">
+            </field>
+            <field id="nrofac" oculto="true">
+                
+            </field>
+            <field id="ctacod" oculto="true">
+                
+            </field>
+            <!-- 		<field id="movlet" oculto="true">
+                                <label>let</label>
+                        </field>-->
+
+        </table>
+        <!--		<join tipo="left">
+                        <table id="STKINSUM">
+                                <field id="artcod" oculto="true">
+                                        <condicion operador="=">FACDETAL.artcod</condicion>
+
+                                </field>
+                        </table>
+                </join>
+-->
+    </form>
+</histrix>

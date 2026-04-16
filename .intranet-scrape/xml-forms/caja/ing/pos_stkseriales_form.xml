@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="fichaing" imprime="false" _preFetch="true" _llenoTemporal="true" llenoreferente="true" inserta="false" modifica="false" _saveState="true" _refreshEvent="refresh">
+	<title>Seriales</title>
+	<obs></obs>
+	<form>
+		<table id="STK_SERIALES" label="Seriales">
+			<validation>
+				<condition>
+					<![CDATA[diferencia + 0 != 0]]>
+				</condition>
+				<message>Imputacion Incorrecta</message>
+			</validation>
+			<field id="stkarticulo_id" noshow="true" esClave="true" />
+			<field id="stkarticulo_grid" local="true" export="object">
+				<helper type="object" xml="pos_stkseriales_grid.xml">
+					<parameter source="stkarticulo_id" target="stkarticulo_id" />
+				</helper>
+				<label colspan="2" />
+			</field>
+			<field id="cantidad_detalle" local="true">
+				<label>Esperado</label>
+				<jseval campodestino="diferencia" actxml="true">cantidad_imp - cantidad_detalle + 0</jseval>
+			</field>
+			<field id="cantidad_imp" local="true">
+				<label>Cantidad</label>
+				<jseval campodestino="diferencia" actxml="true">cantidad_imp - cantidad_detalle + 0</jseval>
+			</field>
+			<field id="diferencia" local="true" deshabilitado="true" noshow="true">
+				<label>Diferencia</label>
+				<tipo>numeric</tipo>
+			</field>
+		</table>
+	</form>
+</histrix>

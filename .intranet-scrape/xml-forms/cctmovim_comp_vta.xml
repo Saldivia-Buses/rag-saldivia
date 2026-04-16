@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8" ?>
+   <histrix tipo="ficha" sololectura="true" PDFsincabecera="true" imprime="false">
+       <title>Consulta de Recibos</title>
+        <obs></obs>
+               <form >
+                  <table id="CCTMOVIM" label="Movimientos">
+
+                  <field id="siscod" >
+                      <label>Cod.</label>
+					  <valor>02</valor>
+					  <condicion operador="=">02</condicion>
+                  </field>
+
+				  <field id="condes" tabla="CCTCONCE" >
+       	              <label PDFnolabel="true">Tipo</label>
+           	          <help>Tipo de Comprobante</help>
+                  </field>
+
+	             <field id="movnpv" >
+                      <label _posx="70" _posy="20" PDFnolabel="true" _modpos="nobr">Comprobante</label>
+                      <help> Comprobante</help>
+				      <format>%04d</format>
+                  </field>
+                  <field id="movnro" >
+                      <label _posx="5" _posy="20" PDFnolabel="true" modpos="nobr">-</label>
+                      <help>Número Comprobante</help>
+				      <format>%012d</format> 
+                  </field>					  
+                  <field id="movfec">
+                      <label _posx="145" _posy="51" PDFnolabel="true" PDFsize="20" _modpos="nobr">Fecha </label>
+                  </field>
+					  
+                  <field id="ctacod"  >
+                      <label>Cuenta</label>
+                      <help>Código de Cuenta</help>
+                  </field>
+					  
+                  <field id="ctanom">
+                      <label _modpos ="nobr" _posx="40" _posy="63" PDFnolabel="true">Nombre</label>
+                      <help>Nombre</help>
+                      <size>30</size>
+					  <tipo>varchar</tipo>
+                  </field>
+					  
+                  <field id="ivacod" tabla="CCTCUENT" >
+                      <label  _modpos="nobr" _posx="150" _posy="63" PDFnolabel="true">Iva</label>
+                      <help>Nombre</help>
+					  <tabla_ex id="FSMCTIVA">
+						  <field id="ivacod"></field>
+						  <field id="ivanom"></field>
+					  </tabla_ex>
+                  </field>
+                  <field id="ctanro" tabla="CCTCUENT">
+                      <label  _posx="150" _posy="79" PDFnolabel="true" _modpos="nobr">Cuit</label>
+                      <help>Cuit</help>
+					  <size>18</size>
+                  </field>					  					  				  
+
+                  <field id="ctadir" tabla="CCTCUENT">
+                      <label _colspan="3">Domicilio</label>
+                      <help>Domicilio</help>
+					  <size>40</size>
+                  </field>	
+
+                  <field id="prvcod" tabla="CCTCUENT">
+                      <label  _posx="40" _posy="79" PDFnolabel="true" _modpos="nobr">Provincia</label>
+                      <help>Provincia</help>
+					  <tabla_ex id="FSMPROVS">
+						  <field id="prvcod"></field>
+						  <field id="prvnom"></field>
+					  </tabla_ex>
+                  </field>	
+
+                  <field id="ctaloc" tabla="CCTCUENT">
+                      <label  _modpos="nobr" _posx="40" _posy="74" PDFnolabel="true">Localidad</label>
+                      <help>Localidad</help>
+                  </field>  
+					  <!--
+                  <field id="movvto">
+                      <label>Venc. </label>
+                      <help> </help>
+                  </field>
+					  -->
+					  
+                  <field id="movimp" suma="true">
+                      <label _posx="160" _posy="245" PDFnolabel="true" PDFsize="15" style="color:red;">Importe</label>
+                  </field>
+
+    <!--              <field id="movsal" suma="true">
+                      <label>Saldo</label>
+                      <help> </help>
+                  </field>-->
+
+                  </table>
+
+				  <join tipo="left">
+				 	<table id="CCTCONCE">
+						<field id="siscod" oculto="true">
+						    <label>cctcuent.siscod</label>
+						    <condicion operador="=">CCTMOVIM.siscod</condicion>
+						</field>
+
+						<field id="concod" oculto="true">
+				    		<condicion operador="=">CCTMOVIM.concod</condicion>
+						</field>
+
+						<field id="condes" oculto="true">
+						</field>
+				    </table>
+				  </join>
+				  <join tipo="left">
+				 	<table id="CCTCUENT">
+						<field id="siscod" oculto="true">
+						    <label>cctcuent.siscod</label>
+						    <condicion operador="=">CCTMOVIM.siscod</condicion>
+						</field>
+
+						<field id="ctacod" oculto="true">
+				    		<condicion operador="=">CCTMOVIM.ctacod</condicion>
+						</field>
+				    </table>
+				  </join>				   
+               </form>
+        </histrix>

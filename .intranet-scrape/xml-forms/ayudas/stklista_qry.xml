@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  Ayuda
+Tarea: Ayuda para la Tabla de Tarifas
+Autor: d!ego2k
+Fecha: 27/08/10
+Modificado: 27/09/10 diego2k
+*******************************************************************************
+-->
+<histrix tipo="consulta">
+	<title>Listas de Precios</title>
+	<obs></obs>
+	<form >	    
+		<table id="STK_LISTAS" label="Listas de Precios">
+
+		  <field id="id_stklista" autoinc="true" _noshow="true">
+			<label>Código</label>
+		  </field>
+
+		  <field id="stklista_nombre">
+			<label>Nombre</label>
+			<help>Nombre de Lista de Precio</help>
+		  </field>
+		</table>
+	</form>
+
+</histrix>	

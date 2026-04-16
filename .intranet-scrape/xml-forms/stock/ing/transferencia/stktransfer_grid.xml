@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" subtipo="vertical" imprime="false" procesa="false" updateTotals="true">
+  <title>Transferencia entre depósitos</title>
+  <obs/>
+  <form>
+    <table id="STK_MOVIMIENTOS" label="Transferencia entre depósitos">
+      
+      <movimientos>
+        <relacion id="stkmovimiento_salida_ins.xml"/>
+        <relacion id="stkmovimiento_entrada_ins.xml"/>
+      </movimientos>
+
+    <fieldGroup noshow="true">
+
+        <field id="id_stkmovimiento" deshabilitado="true" noshow="true" autoInc="true">
+          <condicion operador="=">-1</condicion>
+        </field>
+
+        <field id="deporigen_id" local="true" deshabilitado="true">
+          <label>DEP ORIGEN</label>
+        </field>
+
+        <field id="codigo_barra" tabla="STK_ARTICULOS" local="true" required="true">
+          <label>Codigo de Barra</label>
+          <help>Articulo a buscar</help>
+          <helper type="external" xml="stkarticulo_pos.xml" dir="/ayudas">
+            <field id="wstklista_id" local="true">
+              <valor>1</valor>
+            </field>
+            <field id="id_stkarticulo2" noshow="true">
+              <expression>id_stkarticulo</expression>
+              <detalle>stkarticulo_id</detalle>
+            </field>
+          </helper>
+        </field>
+      
+        <field id="stkarticulo_id"/>
+
+        <field id="stkfamilia_id"/>
+
+        <field id="stkrubro_id"/>
+
+        <field id="unidad_id">
+          <tipo>decimal</tipo>
+        </field>
+
+        <field id="precio_costo">
+          <tipo>decimal</tipo>
+        </field>
+
+        <field id="precio_venta">
+          <tipo>decimal</tipo>
+        </field>
+
+        <field id="precio_total">
+          <tipo>decimal</tipo>
+        </field>
+
+        <field id="precio_promedio">
+          <tipo>decimal</tipo>
+        </field>
+
+    </fieldGroup>
+
+    <fieldGroup colstyle="text-align:center;padding:2px 2px 2px 2px;" Formstyle="padding:2px 2px 2px 2px;vertical-align:middle;">
+
+        <field id="id_stkarticulo" tabla="STK_ARTICULOS" local="true" esClave="true" required="true">
+          <label>Codigo</label>
+          <help>Articulo a buscar</help>
+          <helper type="external" xml="stkarticulo_transfer_dep.xml" dir="/ayudas">
+            <field id="wstklista_id" local="true" oculto="true">
+              <valor>1</valor>
+            </field>
+            <field id="id_stkarticulo2" noshow="true">
+              <expression>id_stkarticulo</expression>
+              <detalle>stkarticulo_id</detalle>
+            </field>
+          </helper>
+        </field>
+
+        <field id="descripcion_detalle" local="true"  deshabilitado="true" modpos="nobr">
+          <label>Descripcion</label>
+          <size>50</size>
+        </field>
+
+        <field id="cantidad" suma="true">
+          <label>Cantidad</label>
+          <tipo>decimal</tipo>
+          <jseval>cantidad != 0</jseval>
+          <jseval suma="true" total="true" fielddestino="good_load" actxml="false">cantidad</jseval>
+        </field>
+
+        <field id="stock_actual" deshabilitado="true" modpos="nobr"  local="true" Formstyle="display:none">
+              <label>Stock Actual</label>
+              <expression sql="true">
+              select cantidad_stock FROM STK_STOCKACTUAL 
+                where stkarticulo_id = '[__id_stkarticulo__]' and stkdeposito_id = '[__deporigen_id__]' limit 1
+              </expression> 
+              <tipo>decimal</tipo>
+        </field>
+
+        <!-- NO PONER NOSHOW TRUE PORQUE NO ENVIA EL JSEVAL en h1 -->
+        <field id="nostock"  suma="true" deshabilitado="true" local="true" Formstyle="display:none;" colstyle="display:none;" >
+            <label>Sinstock</label>
+            <if exp="cantidad &gt; stock_actual">
+              <true>1</true>
+              <false>0</false>
+            </if>
+            <jseval suma="true" total="true" fielddestino="stock_sincantidad" actxml="false">nostock</jseval>
+            <tipo>integer</tipo>
+        </field>
+
+        <field id="referencia" maxlength="60"  colspan="4">
+          <label>Referencia</label>
+          <help>Referencia</help>
+          <size>60</size>
+        </field>
+
+
+  </fieldGroup>
+
+    </table>
+  </form>
+</histrix>

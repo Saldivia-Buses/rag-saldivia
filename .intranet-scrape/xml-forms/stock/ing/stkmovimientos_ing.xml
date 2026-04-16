@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" llenoTemporal="false"  subtipo="vertical" imprime="false" xmlImpresion="/stock/qry/imp_inventario_qry.xml">
+  <title>Ingreso Movimientos Stock</title>
+  <obs/>
+  <form>
+    <table id="STK_MOVIMIENTOS" label="Ingreso de movimientos">
+
+    <movimientos cabecera="stkmovimientos_cab.xml">
+	     <relacion id="stkmovimiento_ins.xml" /> 
+        <!--        <relacion id="stkmovimiento_close.xml"/> -->
+    </movimientos>
+     
+      <field id="id_stkmovimiento" deshabilitado="true" noshow="true" autoInc="true">
+          <label>Codigo</label>
+          <help>Codigo de movimiento</help>
+      </field>
+
+      <field id="_ORDEN" local="true" _noshow="true">
+          <label Formstyle="display:none;">#</label>
+      </field>
+
+      <field id="stkarticulo_id" _tabla="STK_ARTICULOS" style="text-align:center;">
+          <label>Codigo de Articulo</label>
+          <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+            <!-- <field id="wstklista_id" local="true">
+              <valor>1</valor>
+            </field> -->
+            <field id="baja_articulo" noshow="true">
+                <condicion operador="!=">1</condicion>
+            </field>
+          </helper>
+          <size>15</size>
+      </field>              
+
+      <field id="separador1" local="true" deshabilitado="true" modpos="nobr" colstyle="display:none;">
+          <size>1</size>
+      </field>
+
+      <field id="nombre_articulo" local="true" deshabilitado="true"  modpos="nobr" _colspan="5">
+          <label></label>
+          <size>60</size>
+      </field>    
+      
+
+      <field id="separador2" local="true" deshabilitado="true" modpos="nobr" colstyle="display:none;">
+          <size>1</size>
+      </field>
+
+
+      <field id="cantidad" modpos="nobr" >
+          <label>Cantidad</label>
+          <tipo>decimal</tipo>
+      </field>
+
+      <field id="separador3" local="true" deshabilitado="true" modpos="nobr" colstyle="display:none;">
+          <size>1</size>
+      </field>
+
+      <field id="stock" modpos="nobr" style="font-weight:bold;">
+                <label >Stock</label>
+                <expresion>SELECT sum( STK_MOVIMIENTOS.cantidad * (CASE WHEN STK_CONCEPTOS.tipo_concepto = 1 THEN -1 ELSE 1 END ))
+                             FROM STK_MOVIMIENTOS 
+                        LEFT JOIN STK_CONCEPTOS ON STK_CONCEPTOS.id_stkconcepto = STK_MOVIMIENTOS.stkconcepto_id
+                            WHERE STK_MOVIMIENTOS.stkarticulo_id = STK_ARTICULOS.id_stkarticulo
+                </expresion>
+                <tipo>numeric</tipo>
+      </field>
+
+      <field id="separador4" local="true" deshabilitado="true" modpos="nobr" colstyle="display:none;">
+          <size>1</size>
+      </field>
+
+
+      <field id="stkunidad_id" local="true" deshabilitado="true" >
+          <label modpos="nobr">Unidad</label>
+          <size>60</size>
+          <helper type="combo" xml="unidad_qry.xml" dir="/ayudas" empty="true"/>
+          <actualiza>
+              <field id="unidad_id" />
+          </actualiza>
+      </field>
+
+      <field id="unidad_id" noshow="true" />
+
+
+
+<!--
+      <field id="fecha_movimiento">
+        <label>Fecha</label>
+        <help>Fecha movimiento</help>
+        <valor>today</valor>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="stkconcepto_id">
+        <label>Concepto</label>
+        <help>Código de concepto</help>
+        <helper type="combo" xml="stkconcepto_qry.xml" dir="/ayudas" />
+      </field>
+
+	<field id="x" local="true">
+		<label>.</label>
+		<expresion>SELECT cantidad GROUP_CONCAT(numero_movimiento, puesto_movimiento) FROM STK_MOVIMIENTOS</expresion>
+		<size>2</size>
+	</field>  
+      <field id="puesto_movimiento" sincelda="true">
+        <label modpos="nobr">Comprobante</label>
+        <size>4</size>
+	<formato>%04d</formato>
+	<tipo>integer</tipo>
+      </field>
+      <field id="numero_movimiento" sincelda="true">
+        <label modpos="nobr">-</label>
+      </field>
+        
+         
+        
+
+      <field id="regcuenta_id" _noshow="true">
+        <label>Cuenta</label>
+        <helper type="external" xml="regcuenta_solamente_qry.xml" dir="/ayudas" empty="true">
+            <field id="subsistema_id" noshow="true">
+                <condicion operador="=">'01'</condicion>
+            </field>
+        </helper>
+        <detalle>regcuenta_id</detalle>
+      </field>
+
+      <field id="nombre" local="true" deshabilitado="true" sincelda="true">
+        <label modpos="nobr" />
+        <size>35</size>
+      </field>
+
+      <field id="stkdeposito_id">
+        <label>Deposito</label>
+        <helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" />
+      </field>
+      <field id="stksector_id" noshow="true" />
+      <field id="stkfamilia_id" noshow="true" />
+      <field id="stkrubro_id" noshow="true" />
+
+
+      <field id="cantidad_compra" local="true">
+        <label>Cantidad</label>
+        <jseval campodestino="cantidad">cantidad_compra * stkvalor_uso</jseval>
+      </field>
+
+      <field id="stkunidad_compra_id" local="true" deshabilitado="true" sincelda="true">
+        <label modpos="nobr"/>
+        <helper type="combo" xml="unidad_qry.xml" dir="/ayudas" empty="true" />
+      </field>
+        
+       <field id="stkvalor_compra" local="true" noshow="true"> </field>
+
+       <field id="stkvalor_uso" local="true" noshow="true"> </field>
+
+    -->
+
+<!--
+      <field id="precio_total">
+        <label>Importe Total</label>
+        <tipo>decimal</tipo>
+        <size>9</size>
+        <jseval fielddestino="precio_costo">precio_total/cantidad</jseval>
+      </field>
+      <field id="precio_costo">
+        <label>Costo Unidad</label>
+        <tipo>decimal</tipo>
+        <size>9</size>
+      </field>
+      <field id="precio_venta" _noshow="true">
+        <label>Precio Venta</label>
+        <tipo>decimal</tipo>
+      </field>
+      <field id="precio_promedio" noshow="true">
+        <label>Precio Promedio</label>
+        <tipo>decimal</tipo>
+      </field>
+      -->
+      <!--
+      <field id="referencia" maxlength="60">
+        <label colspan="5">Referencia</label>
+        <help>Referencia del movimiento</help>
+        <size>60</size>
+      </field>
+          -->
+    </table>
+
+  </form>
+</histrix>

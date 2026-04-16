@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" sololectura="true" autoprint="true">
+    <title>ORDEN DE PRODUCCION</title>
+    <obs></obs>
+    <form>
+        
+        <table id="MRP_ORDEN_PRODUCCION" label="ORDEN DE PRODUCCION" >
+            <field id="fecha_orden" deshabilitado="true">
+                <label posx="5" posy="+3">Fecha</label>
+            </field>
+
+            <field id="ctafan">
+                <label posx="40" posy="0">Prov</label>
+                <expression><![CDATA[IFNULL((select ctafan from CCTCUENT where ctacod = codprv and siscod ='01' ),'')]]></expression>                
+            </field>
+
+            <field id="mrpestado_id">
+                <label posx="90" posy="0">Estado</label>
+                <options>
+                    <option valor="0">En Proceso</option>
+                    <option valor="1">Cumplida</option>
+                </options>
+            </field>
+
+            <field id="id_mrporden" deshabilitado="true">
+                <label posx="150" posy="0" PDFsize="12">Orden Nº</label>
+            </field>
+                
+            <field id="movimientos" local="true" obj="mrp_ordendetalle_impresion.xml">
+                <label posx="10" posy="+4"></label>
+                <paring destino="mrporden_id">id_mrporden</paring>
+            </field>
+
+            <field id="orden_comentarios" deshabilitado="true">
+                <label posx="6" posy="+5">Comentarios</label>
+                <help>Observaciones</help>
+                <tipo>varchar</tipo>
+            </field>                   
+
+        </table>
+    </form>
+</histrix>

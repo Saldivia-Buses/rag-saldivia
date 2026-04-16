@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud" path="/fotos/archivo/pedidos_sistemas/" >
+  <title>Pedidos de Clientes</title>
+  <form >
+    <table id="PEDIDO_SITEMAS">
+      <title>Pedidos de Clientes</title>
+
+      <filters>
+          <field id="idEstado" deshabilitado="false">
+              <label>Estado</label>
+              <operador>=</operador>
+              <valor>1</valor>
+          </field>
+      </filters>
+      
+      <field id="idPedido" deshabilitado="true" autoinc="true"  tipoOrden="DESC">
+        <label>Nro Pedido</label>
+        <help>Numero de Pedido</help>
+        <attribute id="colstyle">pend</attribute>
+      </field>
+
+      <field id="_usu" deshabilitado="true" local="true" noselect="true" noshow="true">
+          <valor eval="true">$_SESSION['usuario']</valor>
+      </field>
+
+      <field id="fecha" deshabilitado="true">
+        <label>Fecha</label>
+        <help>Fecha de Movimiento</help>
+        <tipo>date</tipo>
+        <valor>today</valor>
+        <attribute id="colstyle">pend</attribute>
+      </field>
+
+      <field id="vencimiento" Formstyle="display:none;" deshabilitado="true">
+        <label _modpos="nobr">Vencimiento</label>
+        <help>Vencimiento</help>
+        <tipo>date</tipo>
+        <attribute id="colstyle">pend</attribute>
+      </field>
+
+      <field id="cumplido" Formstyle="display:none;" deshabilitado="true">
+        <label _modpos="nobr">Cumplido</label>
+        <help>Cumplido</help>
+        <tipo>date</tipo>
+        <attribute id="colstyle">pend</attribute>
+      </field>
+
+       <field id="login" deshabilitado="true" valauto="true">
+        <label>Usuario </label>
+        <help>Usuario que hace el pedido</help>
+        <tabla_ex id="HTXUSERS">
+          <field id="login"></field>
+              <field id="nombre">
+                <expression>CONCAT(apellido, ' ', Nombre)</expression>
+              </field>
+          <order>
+            <field id="nombre"></field>
+          </order>
+        </tabla_ex>
+        <valor eval="true">$_SESSION['usuario']</valor>
+        <condicion operador="=" valorde="_usu">_usu</condicion> 
+        <attribute id="colstyle">pend</attribute>
+      </field>
+
+      <field id="user_administrador" deshabilitado="true">
+        <label>Para</label>
+        <help>Quien realiza el pedido</help>
+        <helper type="combo" id="HTXUSERS" empty="true">
+          <field id="login"></field>
+          <field id="nombre">
+            <expression>CONCAT(apellido, ' ', Nombre)</expression>
+            <condicion operador="!=">''</condicion>
+          </field>
+          <field id="baja">
+            <condicion operador="=">0</condicion>
+          </field>
+          <field id="seccion_id">
+            <condicion operador="=">30</condicion>
+          </field>
+          <order>
+            <field id="nombre"></field>
+          </order>
+        </helper>
+        <attribute id="colstyle">pend</attribute>
+      </field>
+    
+      <field id="idEstado" deshabilitado="true">
+        <tabla_ex id="ESTADOSPEDIDOS" xml="estadospedidos.xml" />
+        <label>Estado Pedido</label>
+        <help>Estado del Pedido</help>
+        <valor>1</valor>
+        <attribute id="colstyle">pend</attribute>
+      </field>
+      
+      <field id="fecha" deshabilitado="true" _esclave="true" valauto="true" tipoOrden="DESC">
+        <label>Fecha</label>
+        <help>Fecha</help>
+        <valor>today</valor>
+        <attribute id="colstyle">pend</attribute>
+      </field>
+      
+      <field id="libro" >
+        <label colspan="4">Pedido</label>
+        <help>Encabezado del Pedido</help>
+        <size>250</size>        
+        <attribute id="colstyle">pend</attribute>
+      </field>
+      
+      <field id="observaciones" deshabilitado="true">
+        <label colspan="4">Observaciones</label>
+        <help>Descripcion y Observaciones del Pedido</help>
+          <attribute id="colstyle">pend</attribute>
+      </field>
+
+      <field id="fotos" local="true" imageWidth="165" path="idPedido">
+          <expression>CONCAT('/fotos/archivo/pedidos_sistemas/',idPedido,'/')  </expression>
+          <label  posX="5" posY="+2" >Dir</label>
+          <tipo>dir</tipo>
+          <attribute id="colstyle">pend</attribute>
+      </field>
+
+      <field id="idPrioridad">
+        <label>Prioridad</label>
+        <tabla_ex xml="prioridades.xml"></tabla_ex>
+        <valor>1</valor>
+          <attribute id="colstyle">pend</attribute>
+      </field>
+
+      <field id="Emails" _showTablaObj="true" local="true" Formstyle="display:none;">
+          <helper type="link" xml="email_subj_qry.xml" dir="/email">
+              <parameter target="subject" source="filtmail_param" operator="like"/>
+          </helper>
+          <label>Correos</label>
+          <help></help>
+         <expression sql="true"><![CDATA[
+          SELECT CONCAT(
+          (SELECT COUNT(*)  FROM HTXMAIL WHERE MATCH(subject) AGAINST ('[__filtmail__]' IN BOOLEAN MODE)),' Env.')]]></expression>
+          <attribute id="colstyle">pend</attribute>
+      </field>
+
+      <field id="pend" local="true" _clasefila="true" noshow="true" >
+        <expression>case when idEstado = 1 then (case when vencimiento &lt; str_to_date('[__fecha_hoy__]', '%d/%m/%Y') then 'background-color: #F5A9A9;' else 'background-color: #F2F5A9;' end) else (case when idEstado = 3 then 'background-color: #A9F5A9;' else '' end) end</expression>
+        <tipo>varchar</tipo>
+      </field>          
+
+      <order>
+        <field id="fecha" ></field>
+      </order>
+      
+    </table>
+
+  </form>
+</histrix>

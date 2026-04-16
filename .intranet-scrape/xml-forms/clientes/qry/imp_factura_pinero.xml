@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" PDFsincabecera="true" sololectura="true" autoprint="true" PDFfontSize="8">
+  <title>FACTURA</title>
+  <obs/>
+  <form>
+    <pdf PDForientacion="P">
+      <code>
+
+        <![CDATA[
+		$pdf->SetDrawColor(0);
+		$pdf->SetXY(10,10);
+
+		$tp = 05;
+		$ap = $pdf->anchoPagina - 4;    
+		$mp = ($ap / 2);
+		$lp = $pdf->largoPagina;
+
+		// Nombre Empresa
+		$pdf->Rect(005 + 1, 005, 200, 030, 4);
+
+		$datapath = $_SESSION['datapath'];
+		$file = "../database/$datapath/img/logo_pinero.jpg"; 
+	  
+		if (is_file($file))
+		{
+			$posx = 10;
+			$posy = 7;
+			$width = 20;
+			$pdf->Image($file, $posx + $this->offsetX, $posy + $this->offsetY, $width);
+		}
+
+		$pdf->SetFont('Arial','B',14);
+		$pdf->text(81, 013, iconv('UTF-8', 'windows-1252', html_entity_decode($_SESSION['properties']['nombre'])));  
+		$pdf->SetFontSize(10);
+		$pdf->text(68, 021, $_SESSION['properties']['localidad']); 
+		$pdf->text(074, 026, iconv('UTF-8', 'windows-1252', html_entity_decode($_SESSION['properties']['direccion'])));  
+		$pdf->text(064, 033, $_SESSION['properties']['telefonos'].' - '.$_SESSION['properties']['mail']); 
+
+		//DATOS CONTRIBUYENTE
+		$pdf->Rect(005 + 1, 036, $mp + 25, 030, 0.1); // Datos de contacto
+
+		$pdf->Rect($mp + 32, 036, $mp - 24, 030, 0.1); // Datos de la cuenta    
+
+		//CUADRO SERVICIOS FACTURAR
+		$pdf->Rect(006, 55, 200, 128, 4);
+
+
+
+		/** PRIMER TALON ************/
+		$pdf->Rect(005 +1 , 195, 95, 22, 0.1);
+		$pdf->Rect(005 +1 , 218, 95, 49, 0.1);
+	
+		$pdf->SetFont('Arial','B',12);
+		$pdf->text(32, 200, iconv('UTF-8', 'windows-1252', html_entity_decode($_SESSION['properties']['nombre'])));  
+		$pdf->SetFontSize(9);
+		$pdf->text(19, 205, $_SESSION['properties']['localidad']); 
+		$pdf->text(13, 210, iconv('UTF-8', 'windows-1252', html_entity_decode($_SESSION['properties']['direccion'])));  
+		$pdf->SetFontSize(8);
+		$pdf->text(9, 215, $_SESSION['properties']['telefonos'].' - '.$_SESSION['properties']['mail']); 
+		$pdf->SetFontSize(6);
+		$pdf->text(73, 270, 'TALON PARA LA COMUNA'); 
+		/****************************/
+		
+		/** SEGUNDO TALON ***********/
+		$pdf->Rect($mp + 11 , 195, 95, 22, 0.1);
+		$pdf->Rect($mp + 11 , 218, 95, 49, 0.1);
+
+		$pdf->SetFont('Arial','B',12);
+		$pdf->text(135, 200, iconv('UTF-8', 'windows-1252', html_entity_decode($_SESSION['properties']['nombre'])));  
+		$pdf->SetFontSize(9);
+		$pdf->text(121, 205, $_SESSION['properties']['localidad']); 
+		$pdf->text(115, 210, iconv('UTF-8', 'windows-1252', html_entity_decode($_SESSION['properties']['direccion'])));  
+		$pdf->SetFontSize(8);
+		$pdf->text(112, 215, $_SESSION['properties']['telefonos'].' - '.$_SESSION['properties']['mail']); 
+		$pdf->SetFontSize(6);
+		$pdf->text(180, 270, 'TALON PARA EL BANCO'); 
+		/*****************************/
+	]]>       
+
+      </code>
+    </pdf>
+
+    <table id="REG_MOVIMIENTOS" label="FACTURA">
+
+      <field id="id_regmovim" noshow="false" esClave="true" print="false" />
+      <field id="cajmovimiento_id" noshow="true" print="false" />
+      <field id="muestra_iva" noshow="true" local="true" print="false">
+        <expression>case when letra_movimiento = 'A' or letra_movimiento = 'a'  then 'true' else 'false' end </expression>
+      </field>
+      <field id="subsistema_id" noshow="true" print="false"  />
+      <field id="concepto_id" noshow="true" print="false"  />
+      <field id="regcuenta_id" noshow="true" print="false"  />
+      <field id="nro_movimiento" noshow="true" print="false" />
+
+	  
+	  
+		<fieldGroup id="CABECERA" PDFsize="10">
+			<field id="nombre_cuenta" tabla="REG_CUENTA" PDFbold="true" PDFnoborder="true" pdfancho="98">
+				<label posx="3" posY="+33" size="25">Contribuyente:</label>
+			</field>
+
+			<field id="faclote_periodo" tabla="FAC_LOTES" PDFnoborder="true" pdfancho="35">
+				<label posx="130" posY="0" size="23">Período:</label>
+				<expression>concat(case when substring(FAC_LOTES.faclote_periodo,5) = 1 then 'Enero'
+					 when substring(FAC_LOTES.faclote_periodo,5) = 2 then 'Febrero'
+					 when substring(FAC_LOTES.faclote_periodo,5) = 3 then 'Marzo'
+					 when substring(FAC_LOTES.faclote_periodo,5) = 4 then 'Abril'
+					 when substring(FAC_LOTES.faclote_periodo,5) = 5 then 'Mayo'
+					 when substring(FAC_LOTES.faclote_periodo,5) = 6 then 'Junio'
+					 when substring(FAC_LOTES.faclote_periodo,5) = 7 then 'Julio'
+					 when substring(FAC_LOTES.faclote_periodo,5) = 8 then 'Agosto'
+					 when substring(FAC_LOTES.faclote_periodo,5) = 9 then 'Septiembre'
+					 when substring(FAC_LOTES.faclote_periodo,5) = 10 then 'Octubre'
+					 when substring(FAC_LOTES.faclote_periodo,5) = 11 then 'Noviembre'
+					 when substring(FAC_LOTES.faclote_periodo,5) = 12 then 'Diciembre' else '' end, ' / ',substring(FAC_LOTES.faclote_periodo,1,4))</expression>
+			</field>	
+			  
+			<field id="cod_direccion" tabla="REG_CUENTA" PDFnoborder="true" pdfancho="98">
+				<label posx="3" posY="+2" size="20">Domicilio:</label>
+			</field>
+
+			<field id="metros" tabla="FAC_SUMINISTROS" PDFnoborder="true" pdfancho="35">
+				<label posx="130" posY="0" size="23">Mts. Frente:</label>
+			</field> 
+
+			<field id="localidad_id" tabla="REG_CUENTA" PDFnoborder="true" pdfancho="98">
+				<label posx="3" posY="+2" size="20">Localidad:</label>
+				<expression>SELECT CONCAT( '(', cp, ')',' ',nombre_localidad) FROM GEN_LOCALIDADES where id_localidad = REG_CUENTA.localidad_id</expression>
+			</field>
+
+			<field id="manzana" tabla="FAC_SUMINISTROS" PDFnoborder="true" pdfancho="15">
+				<label posx="130" posY="0" size="23">Manzana:</label>
+			</field> 
+
+			<field id="lote" tabla="FAC_SUMINISTROS" PDFnoborder="true" pdfancho="15">
+				<label posx="175" posY="0" size="15">Lote:</label>
+			</field>
+		</fieldGroup>
+
+		<fieldGroup id="DETALLE">
+			<field id="detalles" local="true" pdfwidth="198">
+				<label PDFnolabel="true" PDFlineas="false" size="25" posx="7" posY="+7"/>
+				<helper xml="imp_factura_detalle_pinero.xml" type="object" dir="/clientes/qry">
+					<parameter source="id_regmovim"   target="regmovim_id"/>
+					<parameter source="subsistema_id" target="subsistema_id"/>
+					<parameter source="muestra_iva"   target="muestra_iva"/>
+				</helper>
+			</field>
+		</fieldGroup>
+
+		<fieldGroup id="CONSUMO">
+			<field id="consumos" local="true" pdfwidth="198">
+				<label PDFnolabel="true" PDFlineas="false" size="25" posx="7" posY="+7"/>
+				<helper xml="imp_factura_consumo_pinero.xml" type="object" dir="/clientes/qry">
+					<parameter source="id_regmovim"   target="regmovim_id"/>
+				</helper>
+			</field>
+		</fieldGroup>
+
+	  
+		<!-- DATOS CORRESPONDIENTES AL TALON PARA LA COMUNA -->
+
+		<fieldGroup id="TALON1" PDFnoborder="true" pdfancho="80" PDFsize="10">
+
+			<field id="nombre_cuenta_comuna" PDFbold="true">
+				<label posx="3" posY="215" size="25">Contribuyente:</label>
+				<expression>concat(REG_CUENTA.nombre_cuenta, REG_CUENTA.apellido_cuenta,' (',REG_CUENTA.nro_cuenta,')')</expression>
+			</field> 
+
+			<field id="periodo_comuna">        
+				<label posx="3" posY="+2" size="25">Período:</label>        
+				<expression>concat(case when substring(FAC_LOTES.faclote_periodo,5) = 1 then 'Enero'
+				when substring(FAC_LOTES.faclote_periodo,5) = 2 then 'Febrero'
+				when substring(FAC_LOTES.faclote_periodo,5) = 3 then 'Marzo'
+				when substring(FAC_LOTES.faclote_periodo,5) = 4 then 'Abril'
+				when substring(FAC_LOTES.faclote_periodo,5) = 5 then 'Mayo'
+				when substring(FAC_LOTES.faclote_periodo,5) = 6 then 'Junio'
+				when substring(FAC_LOTES.faclote_periodo,5) = 7 then 'Julio'
+				when substring(FAC_LOTES.faclote_periodo,5) = 8 then 'Agosto'
+				when substring(FAC_LOTES.faclote_periodo,5) = 9 then 'Septiembre'
+				when substring(FAC_LOTES.faclote_periodo,5) = 10 then 'Octubre'
+				when substring(FAC_LOTES.faclote_periodo,5) = 11 then 'Noviembre'
+				when substring(FAC_LOTES.faclote_periodo,5) = 12 then 'Diciembre' else '' end, ' / ',substring(FAC_LOTES.faclote_periodo,1,4))
+				</expression>
+			</field>
+
+			<field id="vencimiento_comuna" >
+				<label posx="3" posY="+2" size="25">Vencimiento:</label>        
+				<expression>ifnull(REG_MOVIMIENTOS.vencimiento_movimiento, 0)</expression>
+				<tipo>date</tipo>
+			</field>  
+
+			<field id="total_comuna">
+				<label posx="3" posY="+2" size="30">Importe a Pagar:</label>        
+				<expression>ifnull(REG_MOVIMIENTOS.importe_movimiento, 0)</expression>
+			</field>
+
+			<field id="faclote_fechafac_comuna">        
+				<label posx="3" posY="+2" size="25">Hasta:</label>                
+				<expression>ifnull(FAC_LOTES.faclote_fechafac, 0)</expression>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="faclote_fechavto1_comuna">         
+				<label posx="3" posY="+2" size="25">Hasta:</label>                
+				<expression>ifnull(FAC_LOTES.faclote_fechavto1, 0)</expression>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="faclote_fechavto3_comuna">    
+				<label posx="3" posY="+2" size="25">Hasta:</label>             
+				<expression>ifnull(FAC_LOTES.faclote_fechavto3, 0)</expression>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="codigo_comuna" PDFnolabel="true" pdfancho="40" PDFbold="true" grafico="barcode" imageHeight="35" imageWidth="85" imageScale="2">
+				<label posx="2" posY="268" /> 
+				<expression>barcode_movimiento</expression>
+				<tipo>grafico</tipo>
+				<size>60</size>
+			</field>     
+
+		</fieldGroup>
+
+	  
+		<fieldGroup id="TALON2" PDFnoborder="true" pdfancho="80" PDFsize="10" posx="107">
+			
+			<field id="nombre_cuenta_banco" PDFbold="true">
+				<label posx="107" posY="216" size="25">Contribuyente:</label>
+				<expression>concat(REG_CUENTA.nombre_cuenta, REG_CUENTA.apellido_cuenta,' (',REG_CUENTA.nro_cuenta,')')</expression>
+			</field>
+			
+			<field id="periodo_banco">      
+				<label posx="107" posY="222" size="25">Período:</label>        
+				<expression>concat(case when substring(FAC_LOTES.faclote_periodo,5) = 1 then 'Enero'
+				when substring(FAC_LOTES.faclote_periodo,5) = 2 then 'Febrero'
+				when substring(FAC_LOTES.faclote_periodo,5) = 3 then 'Marzo'
+				when substring(FAC_LOTES.faclote_periodo,5) = 4 then 'Abril'
+				when substring(FAC_LOTES.faclote_periodo,5) = 5 then 'Mayo'
+				when substring(FAC_LOTES.faclote_periodo,5) = 6 then 'Junio'
+				when substring(FAC_LOTES.faclote_periodo,5) = 7 then 'Julio'
+				when substring(FAC_LOTES.faclote_periodo,5) = 8 then 'Agosto'
+				when substring(FAC_LOTES.faclote_periodo,5) = 9 then 'Septiembre'
+				when substring(FAC_LOTES.faclote_periodo,5) = 10 then 'Octubre'
+				when substring(FAC_LOTES.faclote_periodo,5) = 11 then 'Noviembre'
+				when substring(FAC_LOTES.faclote_periodo,5) = 12 then 'Diciembre' else '' end, ' / ',substring(FAC_LOTES.faclote_periodo,1,4))
+				</expression>
+			</field>
+
+			<field id="vencimiento_banco">     
+				<label posx="107" posY="228" size="25">Vencimiento:</label>        
+				<expression>ifnull(REG_MOVIMIENTOS.vencimiento_movimiento, 0)</expression>
+			</field>   
+
+			<field id="total_banco">        
+				<label posx="107" posY="234" size="30">Importe a Pagar:</label>        
+				<expression>ifnull(REG_MOVIMIENTOS.importe_movimiento, 0)</expression>
+			</field>
+
+			<field id="faclote_fechafac_banco">
+				<label posx="107" posY="240" size="25">Hasta:</label>                
+				<expression>ifnull(FAC_LOTES.faclote_fechafac, 0)</expression>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="faclote_fechavto1_banco">            
+				<label posx="107" posY="246" size="25">Hasta:</label>                
+				<expression>ifnull(FAC_LOTES.faclote_fechavto1, 0)</expression>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="faclote_fechavto3_banco">            
+				<label posx="107" posY="252" size="25">Hasta:</label>
+				<expression>ifnull(FAC_LOTES.faclote_fechavto3, 0)</expression>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="codigo_banco" PDFnolabel="true" pdfancho="40" PDFbold="true" grafico="barcode" imageHeight="35" imageWidth="85" imageScale="2">
+				<label posx="107" posY="268" /> 
+				<expression>barcode_movimiento</expression>
+				<tipo>grafico</tipo>
+				<size>60</size>
+			</field>
+		</fieldGroup>
+		
+		<group>
+			<field id="id_regmovim"/>
+		</group>
+
+    </table>
+
+    <join tipo="left">
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">concepto_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join>
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="FAC_SUMINISTROS">
+        <field id="regcuenta_id">
+          <condicion operador="=">REG_CUENTA.id_regcuenta</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join>
+      <table id="FAC_LOTES">
+        <field id="id_faclote ">
+          <condicion operador="=">REG_MOVIMIENTOS.faclote_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="REG_DETALLES">
+        <field id="regmovim_id">
+          <condicion operador="=">id_regmovim</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

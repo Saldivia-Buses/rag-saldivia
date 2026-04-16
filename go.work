@@ -8,7 +8,9 @@ use (
 	./services/auth
 	./services/bigbrother
 	./services/chat
+	./services/erp
 	./services/feedback
+	./services/healthwatch
 	./services/ingest
 	./services/notification
 	./services/platform
@@ -16,6 +18,7 @@ use (
 	./services/traces
 	./services/ws
 	./tools/cli
+	./tools/eventsgen
 	./tools/mcp
 	./tools/pkg
 )

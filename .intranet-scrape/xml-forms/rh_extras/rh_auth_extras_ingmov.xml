@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	<histrix  tipo="insert"  grabafinal="true">
+		<title>Autorización de Horas Extras</title>
+		<obs></obs>
+		<form >
+			<table id="RH_AUTH_EXTRAS" label="Horas Extras" >
+			<field id="id_auth"     id_cab="id_auth"></field> 
+			<field id="login_auth"  id_cab="login_auth"></field>
+			<field id="motivo_auth" id_cab="motivo_auth"></field>
+			<field id="fecha_auth"  id_cab="fecha_auth"></field>
+			
+			
+			</table>
+		</form>
+	</histrix>

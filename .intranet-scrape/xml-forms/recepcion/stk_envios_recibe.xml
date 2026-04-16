@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm">
+    <title>Envío de Materiales</title>
+    <obs></obs>
+    <form>
+        <table id="STK_ENVIOS" label="Envío de Materiales">
+            <field id="id_stkenvio" />
+            <field id="nro_envio" />
+            <field id="nro_remito" />
+            <field id="puesto_envio" />
+	    <field id="puesto_remito" />
+	    <field id="fecha_envio" />
+	    <field id="fecha_remito" />
+            <field id="subsistema_id" />
+            <field id="regcuenta_id" />
+            <field id="usuario_id" />
+            <field id="observaciones" />
+        </table>
+    </form>
+</histrix>

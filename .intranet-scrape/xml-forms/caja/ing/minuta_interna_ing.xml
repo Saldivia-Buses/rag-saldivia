@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ing" inserta="true" modifica="true" borra="false" imprime="false" transaccional="true" showCantidad="false" tooltip="false">
+  <title>Minuta Interna</title>
+  <obs/>
+    <form>
+        <table id="CAJ_DETALLES" label="Minuta Interna" >
+
+        <movimientos cabecera="minuta_interna_head.xml">
+             <relacion id="minuta_interna_ins.xml"></relacion>
+             <relacion id="minuta_interna_int.xml"></relacion>
+        </movimientos>
+        
+        <field id="cajmovimiento_id" valauto="true" oculto="true">
+          <condicion operador="=">-1</condicion>
+        </field>
+
+        <field id="ctbcuenta_detalle" local="true">
+            <label>Cuenta</label>
+            <helper type="combo" xml="ctbcuenta_qry.xml" dir="/ayudas" empty="true"/>
+            <size>12</size>
+        </field>
+
+        <field id="doh_detalle" local="true" activa="true" colstyle="display:none;">
+          <label>Tipo</label>
+          <helper type="combo">
+            <option value="0">Debe</option>
+            <option value="1">Haber</option>
+          </helper>
+
+          <jsfunction event="onchange">              
+            if($('[name=debe]', '#minuta_ing_xml').attr('disabled') == true){
+                    $('[name=debe]', '#minuta_ing_xml').removeAttr('disabled');
+                    $('[name=haber]', '#minuta_ing_xml').attr('disabled', 'disable');
+              }
+              else
+              {
+                    $('[name=haber]', '#minuta_ing_xml').removeAttr('disabled');
+                    $('[name=debe]', '#minuta_ing_xml').attr('disabled', 'disable');
+               }
+               </jsfunction>
+        </field>
+
+        <field id="debe" suma="true" noZero="true" deshabilitado="false">
+          <expression>case when doh = 0 then importe_detalle end</expression>
+          <label>Debe</label>
+          <tipo>numeric</tipo>  
+        </field>
+
+        <field id="haber" suma="true" noZero="true" deshabilitado="false">
+          <expression>case when doh = 1 then importe_detalle end</expression>
+          <label>Haber</label>
+          <tipo>numeric</tipo>
+        </field>
+        
+       <field id="importe_detalle" noshow="true" >
+          <if exp="debe + 0 > 0 ">
+            <true>debe</true>
+            <false>haber</false>
+          </if>
+        </field>              
+        
+        <field id="actual" local="true" noshow="true" />
+
+        <field id="idmov" local="true" noshow="true" />
+
+        <field id="coinciden" local="true" noshow="true" clasefila="true">
+          <if exp="'actual' == 'ctbcuenta_detalle'">
+            <true>('idmov' == 'id_detalle')?'resaltadoVioleta':'resaltado'</true>
+            <false>''</false>
+          </if>
+        </field>
+
+
+    <field id="DEB" suma="true" acumula="true" noshow="true" deshabilitado="true" retroalimenta="true" local="true">
+      <label>deb</label>
+        <if exp="true">
+          <true>debe</true>
+          <false>0</false>
+        </if>
+      </field>           
+      <field id="HAB" suma="true" acumula="true" noshow="true" deshabilitado="true" retroalimenta="true" local="true">
+      <label>hab</label>
+        <if  exp="true">
+          <true>haber</true>
+          <false>0</false>
+        </if>
+      </field>  
+
+      <field id="balancea" validar="true" noshow="true" deshabilitado="true" local="true">
+        <label>Bal</label>
+        <if  exp="DEB - HAB == 0 ">
+          <true>'true'</true>
+          <false>DEB - HAB</false>
+        </if>
+        <invalid>Minuta Desbalanceada</invalid>
+      </field>  
+      <order>
+	<field id="doh_dealle"/>
+      </order>
+    </table>
+
+    </form>
+</histrix>  

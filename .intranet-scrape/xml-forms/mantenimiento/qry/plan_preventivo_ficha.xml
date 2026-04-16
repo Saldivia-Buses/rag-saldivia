@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="fichaing" inserta="false" modifica="false" imprime="false" borra="false" procesa="true">
+    <title>Mantenimiento Preventivo</title>
+    <obs/>
+    <eventos>
+        <event id="procesar">close</event>
+        <!--<event id="procesar">refresh</event>-->
+    </eventos>
+    <form>
+        <table id="MANT_PLAN" label="Plan de mantenimiento">
+
+            <movimientos>
+                <relacion id="mant_plan_ins.xml" />
+                <!--<relacion id="mant_plan_evento_ins.xml" />-->
+            </movimientos>
+
+            <field id="id_plan" noshow="true" esClave="true" autoinc="true" />
+
+            <field id="equipo_id" noshow="true" valauto="true" />
+
+            <field id="accion_id" noshow="true" valauto="true">
+                <valor>52</valor>
+            </field>
+
+            <field id="rrule" noshow="true" valauto="true">
+                <valor>RRULE:FREQ=DAILY;COUNT=1</valor>
+            </field>
+
+            <field id="login" noshow="true" valauto="true">
+                <valor eval="true">$_SESSION['usuario']</valor>
+            </field>
+
+            <field id="fecha_accion">
+                <label>Fecha</label>
+                <tipo>date</tipo>
+                <valor>today</valor>
+            </field>
+
+            <field id="hora_accion">
+                <label>Hora</label>
+                <tipo>time</tipo>
+                <valor eval="true">date('H:i:s')</valor>
+            </field>
+
+            <field id="observaciones">
+                <label>Observaciones</label>
+                <size>200</size>
+            </field>
+
+        </table>
+    </form>
+</histrix>

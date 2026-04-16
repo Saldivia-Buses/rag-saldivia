@@ -102,7 +102,7 @@ func (c *ExtractorConsumer) handleResult(msg jetstream.Msg) {
 	if err := json.Unmarshal(msg.Data(), &result); err != nil {
 		slog.Error("invalid extraction result", "error", err)
 		// C2: terminate invalid messages instead of acking
-		msg.Term()
+		_ = msg.Term()
 		return
 	}
 
@@ -116,12 +116,12 @@ func (c *ExtractorConsumer) handleResult(msg jetstream.Msg) {
 		ID:     result.DocumentID,
 	}); err != nil {
 		slog.Error("update status failed", "doc_id", result.DocumentID, "error", err)
-		msg.Nak()
+		_ = msg.Nak()
 		return
 	}
 
 	// B2: check errors on page count update
-	c.repo.UpdateDocumentPages(ctx, repository.UpdateDocumentPagesParams{
+	_ = c.repo.UpdateDocumentPages(ctx, repository.UpdateDocumentPagesParams{
 		TotalPages: pgtype.Int4{Int32: int32(result.TotalPages), Valid: true},
 		ID:         result.DocumentID,
 	})
@@ -147,7 +147,7 @@ func (c *ExtractorConsumer) handleResult(msg jetstream.Msg) {
 	if storedPages == 0 && len(result.Pages) > 0 {
 		slog.Error("all page inserts failed", "doc_id", result.DocumentID)
 		setDocError(ctx, c.repo, result.DocumentID, "all page inserts failed")
-		msg.Nak()
+		_ = msg.Nak()
 		return
 	}
 
@@ -185,18 +185,18 @@ func (c *ExtractorConsumer) handleResult(msg jetstream.Msg) {
 	if failed {
 		setDocError(ctx, c.repo, result.DocumentID, "partial failure during indexing")
 	} else {
-		c.repo.UpdateDocumentStatus(ctx, repository.UpdateDocumentStatusParams{
+		_ = c.repo.UpdateDocumentStatus(ctx, repository.UpdateDocumentStatusParams{
 			Status: "ready",
 			ID:     result.DocumentID,
 		})
 	}
 
-	msg.Ack()
+	_ = msg.Ack()
 	slog.Info("extraction result processed", "doc_id", result.DocumentID, "pages", storedPages, "failed", failed)
 }
 
 func setDocError(ctx context.Context, repo *repository.Queries, docID, errMsg string) {
-	repo.UpdateDocumentStatusWithError(ctx, repository.UpdateDocumentStatusWithErrorParams{
+	_ = repo.UpdateDocumentStatusWithError(ctx, repository.UpdateDocumentStatusWithErrorParams{
 		Status: "error",
 		Error:  pgtype.Text{String: errMsg, Valid: true},
 		ID:     docID,

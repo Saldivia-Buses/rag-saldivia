@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm">
+  <title>Tipos de cuenta bancaria</title>
+  <obs></obs>
+  <consulta>
+    <table id="GEN_TIPOS_CUENTA_BANCARIA" label="Tipos de cuenta bancaria">
+      <filtros>
+        <field id="descripcion_tipocuenta">
+          <label>Nombre</label>
+          <operador>like</operador>
+        </field>
+      </filtros>
+      <field id="id_tipocuenta" autoinc="true" noshow="true">
+        <label>Codigo</label>
+        <help>Código de tipo de cuenta bancaria</help>
+      </field>
+      <field id="descripcion_tipocuenta">
+        <label>Nombre</label>
+        <help>Nombre de tipo de cuenta bancaria</help>
+        <size>50</size>
+        <tipo>varchar</tipo>
+      </field>
+    </table>
+  </consulta>
+</histrix>

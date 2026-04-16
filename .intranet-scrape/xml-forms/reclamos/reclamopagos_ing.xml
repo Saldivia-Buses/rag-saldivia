@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" noform="true">
+	<title>RECLAMOPAGOS</title>
+	<obs/>
+	<form >
+		<table id="RECLAMOPAGOS" label="Accidentes">
+			<movimientos >
+				<relacion id="reclamopagos_ingmov.xml"></relacion>
+			</movimientos>			
+			<filters>
+				<field id="marca">
+				<label >leido</label>
+				<tipo>check</tipo>
+
+					
+<!--					<options>
+						<option valor="0">No Leido</option>						
+						<option valor="1">Leido</option>
+					</options> -->
+					<operador>=</operador>
+					<valor>0</valor>
+				</field>
+			</filters>
+			<field id="idReclamo" autoinc="true" noshow="true">
+				<label>Cod.</label>
+				<help>Codigo de reclamo</help>
+			</field>
+			
+			<field id="fecha" deshabilitado="true">
+				<label>fecha</label>
+				<help>Fecha del Reclamo</help>
+				<valor>today</valor>
+			</field>
+			<field id="login" >
+				<tipo>varchar</tipo>
+			</field>			
+			
+			<field id="ctacod" deshabilitado="true">
+				<label>Proveedor</label>
+				<help>Codigo de Cuenta </help>
+				<ayuda_ex id="REG_CUENTA">
+					<field id="nro_cuenta"></field>
+					<field id="nombre_cuenta">
+						<detalle>nombre_cuenta</detalle>
+					</field>
+					<field id="subsistema_id">
+						<condicion operador="=">'01'</condicion>
+					</field>
+					<field id="baja">
+						<condicion operador="=">0</condicion>
+					</field>
+					
+					<order>
+						<field id="nombre_cuenta"></field>
+					</order>
+					
+				</ayuda_ex>
+				<detalle>ctanom</detalle>
+			</field>
+			<field id="nombre_cuenta"  deshabilitado="true">
+				<expression>REG_CUENTA.nombre_cuenta</expression>
+				<label _colstyle="width:100px;">Nombre</label>
+				<tipo>varchar</tipo>
+				<size>50</size>
+				
+			</field>
+
+            <field id="saldo" suma="true">
+                <expression>sum(REG_MOVIMIENTOS.saldo_movimiento)</expression>
+                <label>Saldo</label>
+                <help></help>
+                <!-- <condicion operador=" != ">0</condicion> -->
+            </field>
+
+			<field id="observacion" deshabilitado="true" Size="50">
+				<label Formstyle="display:none" _colstyle="width:100px;">Observaciones</label>
+				<help>Ingrese el texto de las Observaciones</help>
+				<tipo>varchar</tipo>
+				<size>50</size>
+			</field>
+				<field id="marca">
+					<label>Estado</label>
+					<options>
+						<option valor="0">No Leido</option>						
+						<option valor="1">Leido</option>
+					</options>
+				</field>
+	
+			<field id="marca"  refresh="true">
+				<label >leido</label>
+				<tipo>check</tipo>
+
+			</field>	
+			<field id="pend"  clasefila="true" noshow="true" local="true" deshabilitado="true">
+				<if exp="'marca'=='0'"> 
+					<true>'resaltado'</true>
+					<false>'0'</false>
+				</if>
+				<tipo>varchar</tipo>
+
+			</field>					
+		   <field id="graba" local="true"  noshow="true">         
+			   <label>graba</label>
+					<if exp="marca != 0">            
+							<true>'true'</true>            
+							<false>'false'</false>                     
+					</if>                                           
+					<tipo>varchar</tipo>			   
+			</field> 				
+			<group>
+				<field id="ctacod" />
+			</group>
+		</table>
+		<join tipo="left">
+			<table id="REG_CUENTA">
+				<field id="subsistema_id" >
+					<condicion operador="=">'01'</condicion>
+				</field>
+				<field id="nro_cuenta" >
+					<condicion operador="=">RECLAMOPAGOS.ctacod</condicion>
+				</field>
+			</table>
+		</join>		
+		<join tipo="left">
+			<table id="REG_MOVIMIENTOS">
+				<field id="subsistema_id" >
+					<condicion operador="=">'01'</condicion>
+				</field>
+				<field id="regcuenta_id" >
+					<condicion operador="=">REG_CUENTA.id_regcuenta</condicion>
+				</field>
+			</table>
+		</join>				
+	</form>
+</histrix>

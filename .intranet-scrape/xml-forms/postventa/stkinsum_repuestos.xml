@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="abm-mini" borra="no" inserta="no" path="fotos/articulos">
+	<title>Insumos Trazables</title>
+	<obs></obs>
+	<form >
+		<table id="STKINSUM">
+			<title>Insumos</title>
+			
+			<campo id="siscod" oculto="true">
+				<label>siscod</label>
+				<condicion operador="=">'01'</condicion>
+                <valor>'01'</valor>
+			</campo>
+			
+			<campo id="artcod" deshabilitado="true">
+				<label>Cod.</label>
+				<detalle>artcod</detalle>
+			</campo>
+			<campo id="baja" oculto="true">
+				<condicion operador="!=">1</condicion>
+			</campo>			
+			<campo id="artdes" deshabilitado="true">
+				<label>Articulo</label>
+				<help>Descripcion de Articulo</help>
+			</campo>
+
+			<campo id="prov" >
+				<label>Prov</label>
+				<expression having="false" >select INSPR.ctacod from STKINSPR as INSPR where INSPR.fecult= max(STKINSPR.fecult) and INSPR.artcod = STKINSPR.artcod and INSPR.siscod = STKINSPR.siscod limit 1</expression>
+	                        <tabla_ex id="CCTCUENT" _xml="cctcuent.xml">
+					 <campo id="ctacod">
+						 
+					 </campo>
+					 <campo id="ctafan">
+						 
+					 </campo>
+					 <campo id="siscod" oculto="true">
+						 <condicion operador="=">'01'</condicion>
+
+					 </campo>
+					 
+				 </tabla_ex>
+				<tipo>varchar</tipo>
+			</campo>
+
+
+			<campo id="baja" oculto="true">
+				<condicion operador="!=">1</condicion>
+			</campo>
+
+			<campo id="fecult" local="true">
+				<expression>max(STKINSPR.fecult)</expression>
+				<label>Ult</label>
+			</campo>
+			<campo id="costoult" local="true">
+				<expression>max(STKINSPR.artcos)</expression>
+				<label>Costo</label>
+			</campo>
+
+			<campo id="porcVenta">
+				<label>%</label>
+				<help>Porcentaje</help>
+			</campo>
+
+			<campo id="precioVenta">
+				<label>Precio de Venta</label>
+				<help>Precio de Venta</help>
+				<if exp="0costoult == 0" operador="=">
+					<false>0costoult + (0costoult * 0porcVenta / 100)</false>
+					<true>costoult</true>
+				</if>
+			</campo>
+		
+		
+		
+			<campo id="repuesto">
+				<label>Repuesto</label>
+				<help>Repuesto Si o No </help>
+				<options>
+					<option valor="1">Si</option>
+					<option valor="0">No</option>
+				</options>
+				
+			</campo>
+			
+			<campo id="foto" path="fotopath" download="true">
+	                    <expression>select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = STKINSUM.artcod order by revision desc limit 1 </expression>
+	                    <label>Imagen</label>
+        		    <tipo >file</tipo>
+            		    <size>40</size>
+			</campo>
+
+
+			<group>
+				<campo id="artcod" tabla="STKINSUM">
+				</campo>
+			</group>
+			
+			<filters>
+				<campo id="artcod" deshabilitado="false">
+					<ayuda_ex id="STKINSUM">
+						<clave>artcod</clave>
+						<descripcion>artdes</descripcion>
+					</ayuda_ex>
+					
+					<label>Cod.</label>
+					<operador  modificador="left">=</operador>					
+				</campo>			
+				<campo id="artdes" >
+					<label>Articulo</label>
+					<help>Descripcion de Articulo</help>
+					<operador>like</operador>
+				</campo>					
+				<campo id="repuesto">
+					<operador>=</operador>
+					<label>Repuesto </label>
+					<valor>1</valor>
+				</campo>
+			</filters>
+			
+		</table>
+		
+		<join tipo="left">
+			<table id="STKINSPR">
+			<campo id="siscod" oculto="true">
+				<condicion operador="=">STKINSUM.siscod</condicion>
+			</campo>
+			<campo id="artcod" oculto="true">
+				<condicion operador="=">STKINSUM.artcod</condicion>
+			</campo>
+
+			</table>
+		</join>
+		
+	</form>
+</histrix>

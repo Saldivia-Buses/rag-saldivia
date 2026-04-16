@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini">
+  <title>Reclutamiento y Seleccion de Personal</title>
+  <obs></obs>
+  <form>
+    <table id="RH_RECLUTAMIENTO_PROCEDENCIA" label="Reclutamiento y Seleccion de Personal">
+      
+      <field id="id_reclutamiento_procedencia" noshow="true">
+        <label>Codigo</label>
+        <help>Código del proyecto</help>
+      </field>
+
+      <field id="descripcion_procedencia">
+        <label>Descripcion </label>
+        <help>Descripcion procedencia del postulante</help>
+        <size>30</size>
+      </field>
+
+      <field id="abrev_procedencia">
+        <label>Abreviacion </label>
+        <help>Abreviacion procedencia del postulante</help>
+        <size>30</size>
+      </field>
+
+    </table>
+  </form>
+</histrix>  

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" data_filter="true" data_autodividers="true" filter="true">
+  <title>Ficha de Administraciones</title>
+  <obs/>
+  <form detalle="consorcios_ing.xml">
+    <table id="REG_CUENTA" label="Ficha de Administraciones">
+
+      <fieldGroup>
+        
+        <field id="id_regcuenta" noshow="true">
+		<detalle>regcuentarelacionada_id</detalle>
+	</field>
+
+        <field id="subsistema_id" noshow="true">
+		<detalle>subsistemarelacionada_id</detalle>
+	</field>
+
+        <field id="nro_cuenta">
+          <label>Nro Cuenta</label>
+        </field>
+
+        <field id="nombre_cuenta">
+          <label>Nombre</label>
+        </field>
+        
+        <field id="administracion_id" noshow="true">
+		<condicion operador="=">1</condicion>
+	</field>
+
+      </fieldGroup>
+
+    </table>
+
+  </form>
+</histrix>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="consulta" path="../files/archives/nfsAsterisk" limit="20">
+        <title>titulo</title>
+        <obs></obs>
+        <form detalle="hasdetseg" inline="true" hasDetail="hasdet" >
+            <table id="ASTERIX_CDR" >
+          
+               <field id="calldate">
+              
+                 <label>fecha</label>
+              
+              </field>
+               <field id="src" local="true">
+                       <label>Origen</label>
+                       <help>Origen LLamada</help>
+                    
+              <expression>REPLACE(src,',', '')</expression>
+                 <!--<condicion operador="="></condicion>-->                 
+			<!--<tipo>integer</tipo>-->        
+        </field>
+
+                 <field id="dst">
+                 <label>Destino</label>
+                </field>
+
+
+                 <field id="userfieldwav" _noshow="true">
+        	<expression having="false">case when userfield != '' then SUBSTRING_INDEX(userfield, ':', -1) end</expression>
+        	<label>Audio</label>
+        	<tipo>file</tipo>
+            </field>
+
+       
+
+            </table>
+        </form>
+    </histrix>
+
+

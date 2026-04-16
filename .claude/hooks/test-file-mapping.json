@@ -1,0 +1,213 @@
+{
+  "_comment": "Maps source file patterns to Go test packages. Used by smart-test.sh.",
+  "mappings": [
+    {
+      "pattern": "services/auth/internal/handler/*.go",
+      "tests": ["./services/auth/internal/handler/..."]
+    },
+    {
+      "pattern": "services/auth/internal/service/*.go",
+      "tests": ["./services/auth/internal/service/...", "./services/auth/internal/handler/..."]
+    },
+    {
+      "pattern": "services/chat/internal/handler/*.go",
+      "tests": ["./services/chat/internal/handler/..."]
+    },
+    {
+      "pattern": "services/chat/internal/service/*.go",
+      "tests": ["./services/chat/internal/service/...", "./services/chat/internal/handler/..."]
+    },
+    {
+      "pattern": "services/agent/internal/handler/*.go",
+      "tests": ["./services/agent/internal/..."]
+    },
+    {
+      "pattern": "services/agent/internal/tools/*.go",
+      "tests": ["./services/agent/internal/tools/..."]
+    },
+    {
+      "pattern": "services/ingest/internal/handler/*.go",
+      "tests": ["./services/ingest/internal/handler/..."]
+    },
+    {
+      "pattern": "services/ingest/internal/service/*.go",
+      "tests": ["./services/ingest/internal/service/...", "./services/ingest/internal/handler/..."]
+    },
+    {
+      "pattern": "services/ingest/internal/tree/*.go",
+      "tests": ["./services/ingest/internal/tree/..."]
+    },
+    {
+      "pattern": "services/feedback/internal/handler/*.go",
+      "tests": ["./services/feedback/internal/handler/..."]
+    },
+    {
+      "pattern": "services/notification/internal/handler/*.go",
+      "tests": ["./services/notification/internal/handler/..."]
+    },
+    {
+      "pattern": "services/notification/internal/service/*.go",
+      "tests": ["./services/notification/internal/service/...", "./services/notification/internal/handler/..."]
+    },
+    {
+      "pattern": "services/platform/internal/handler/*.go",
+      "tests": ["./services/platform/internal/handler/..."]
+    },
+    {
+      "pattern": "services/platform/internal/service/*.go",
+      "tests": ["./services/platform/internal/service/...", "./services/platform/internal/handler/..."]
+    },
+    {
+      "pattern": "services/search/internal/service/*.go",
+      "tests": ["./services/search/internal/service/..."]
+    },
+    {
+      "pattern": "services/traces/internal/handler/*.go",
+      "tests": ["./services/traces/internal/handler/..."]
+    },
+    {
+      "pattern": "services/ws/internal/handler/*.go",
+      "tests": ["./services/ws/internal/handler/...", "./services/ws/internal/hub/..."]
+    },
+    {
+      "pattern": "services/ws/internal/hub/*.go",
+      "tests": ["./services/ws/internal/hub/..."]
+    },
+    {
+      "pattern": "services/bigbrother/internal/handler/*.go",
+      "tests": ["./services/bigbrother/internal/handler/..."]
+    },
+    {
+      "pattern": "services/bigbrother/internal/scanner/*.go",
+      "tests": ["./services/bigbrother/internal/scanner/...", "./services/bigbrother/internal/service/..."]
+    },
+    {
+      "pattern": "services/bigbrother/internal/fingerprint/*.go",
+      "tests": ["./services/bigbrother/internal/fingerprint/..."]
+    },
+    {
+      "pattern": "services/erp/internal/handler/*.go",
+      "tests": ["./services/erp/internal/handler/..."]
+    },
+    {
+      "pattern": "services/erp/internal/service/*.go",
+      "tests": ["./services/erp/internal/service/...", "./services/erp/internal/handler/..."]
+    },
+    {
+      "pattern": "services/astro/internal/handler/*.go",
+      "tests": ["./services/astro/internal/handler/..."]
+    },
+    {
+      "pattern": "services/astro/internal/intelligence/*.go",
+      "tests": ["./services/astro/internal/intelligence/..."]
+    },
+    {
+      "pattern": "services/astro/internal/astromath/*.go",
+      "tests": ["./services/astro/internal/astromath/..."]
+    },
+    {
+      "pattern": "services/astro/internal/technique/*.go",
+      "tests": ["./services/astro/internal/technique/..."]
+    },
+    {
+      "pattern": "services/astro/internal/natal/*.go",
+      "tests": ["./services/astro/internal/natal/..."]
+    },
+    {
+      "pattern": "services/astro/internal/context/*.go",
+      "tests": ["./services/astro/internal/context/..."]
+    },
+    {
+      "pattern": "services/astro/internal/quality/*.go",
+      "tests": ["./services/astro/internal/quality/..."]
+    },
+    {
+      "pattern": "pkg/jwt/*.go",
+      "tests": ["./pkg/jwt/...", "./pkg/middleware/..."]
+    },
+    {
+      "pattern": "pkg/middleware/*.go",
+      "tests": ["./pkg/middleware/..."]
+    },
+    {
+      "pattern": "pkg/tenant/*.go",
+      "tests": ["./pkg/tenant/...", "./pkg/database/..."]
+    },
+    {
+      "pattern": "pkg/database/*.go",
+      "tests": ["./pkg/database/..."]
+    },
+    {
+      "pattern": "pkg/nats/*.go",
+      "tests": ["./pkg/nats/..."]
+    },
+    {
+      "pattern": "pkg/security/*.go",
+      "tests": ["./pkg/security/..."]
+    },
+    {
+      "pattern": "pkg/storage/*.go",
+      "tests": ["./pkg/storage/..."]
+    },
+    {
+      "pattern": "pkg/crypto/*.go",
+      "tests": ["./pkg/crypto/..."]
+    },
+    {
+      "pattern": "pkg/guardrails/*.go",
+      "tests": ["./pkg/guardrails/..."]
+    },
+    {
+      "pattern": "pkg/audit/*.go",
+      "tests": ["./pkg/audit/..."]
+    },
+    {
+      "pattern": "pkg/cache/*.go",
+      "tests": ["./pkg/cache/..."]
+    },
+    {
+      "pattern": "pkg/llm/*.go",
+      "tests": ["./pkg/llm/..."]
+    },
+    {
+      "pattern": "pkg/traces/*.go",
+      "tests": ["./pkg/traces/..."]
+    },
+    {
+      "pattern": "pkg/config/*.go",
+      "tests": ["./pkg/config/..."]
+    },
+    {
+      "pattern": "pkg/health/*.go",
+      "tests": ["./pkg/health/..."]
+    },
+    {
+      "pattern": "pkg/pagination/*.go",
+      "tests": ["./pkg/pagination/..."]
+    },
+    {
+      "pattern": "pkg/metrics/*.go",
+      "tests": ["./pkg/metrics/..."]
+    },
+    {
+      "pattern": "pkg/approval/*.go",
+      "tests": ["./pkg/approval/..."]
+    },
+    {
+      "pattern": "pkg/plc/*.go",
+      "tests": ["./pkg/plc/..."]
+    },
+    {
+      "pattern": "pkg/remote/*.go",
+      "tests": ["./pkg/remote/..."]
+    },
+    {
+      "pattern": "db/tenant/migrations/*.sql",
+      "tests": ["_invariants_only"]
+    },
+    {
+      "pattern": "db/tenant/queries/*.sql",
+      "tests": ["_sqlc_regen"]
+    }
+  ]
+}

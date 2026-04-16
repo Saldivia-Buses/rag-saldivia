@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="consulta">
+		<title>Grupos de Precios</title>
+        <obs></obs>
+		<form  >
+			<table id="GRUPOPRECIOS">
+				<title>Grupo de Precios</title>
+				
+				<field id="nrocar" oculto="true">
+				</field>
+				
+				<field id="idGrupo" oculto="true">
+				</field>
+				
+				<field id="desc">
+					<expression>concat(MARCHASIS.mardes,' ', MODCHASIS.moddes)</expression>
+					<tipo>varchar</tipo>
+				</field>
+
+			</table>
+			<join tipo="left">
+				<table id="MARCHASIS">
+					<field id="marcod">
+						<condicion operador="=">GRUPOPRECIOS.marcod</condicion>
+					</field>
+				</table>
+			</join>
+			<join tipo="left">
+				<table id="MODCHASIS">
+					<field id="modcha">
+						<condicion operador="=">GRUPOPRECIOS.modcha</condicion>
+					</field>
+					<field id="marcod">
+						<condicion operador="=">GRUPOPRECIOS.marcod</condicion>
+					</field>
+				</table>
+			</join>
+		</form>
+</histrix>

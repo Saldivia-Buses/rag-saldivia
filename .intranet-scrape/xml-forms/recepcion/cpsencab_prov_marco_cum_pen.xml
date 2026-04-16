@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+    <title>ORDENES DE COMPRA</title>
+    <obs></obs>
+    <form  >
+        <table id="REG_CUENTA" >
+
+            <field id="nro_cuenta"></field>
+            <field id="NOM">
+                <expression>CONCAT(left( nombre_fantasia,18) , ' (', left( nombre_cuenta, 18),')')</expression>
+                <label>Nombre</label>
+
+            </field>
+
+            <!--			<field id="ctanom"></field> -->
+            <field id="subsistema_id" oculto="true">
+                <condicion operador="=">'01'</condicion>
+            </field>
+
+            <field id="nombre_fantasia" noshow="true"></field>
+            <field id="baja" noshow="true">
+                <condicion operador="!=">1</condicion>
+            </field>
+            <field id="ocpest" tabla="CPSENCAB">
+                <!-- <condicion operador="!=">2 and ocpest != 4</condicion> -->
+                                <condicion operador="!=">2 and ocpest != 0 and ocpest != 4</condicion>
+            </field> 
+
+            <group>
+                <field id="nro_cuenta" tabla="REG_CUENTA"></field>
+            </group>
+
+            <order>
+                <field id="nombre_fantasia"></field>
+            </order>
+
+        </table>
+        <join >
+            <table id="CPSENCAB">
+                <field id="ctacod" >
+                    <condicion operador="=">REG_CUENTA.nro_cuenta</condicion>
+                </field>
+
+                    <field id="siscod"  >
+                    <condicion operador="=">'' and CPSENCAB.ctacod = REG_CUENTA.nro_cuenta</condicion>
+                </field>
+
+
+            </table>
+        </join>
+
+
+    </form>
+</histrix>

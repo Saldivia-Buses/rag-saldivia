@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<abm tipo="consulta" >
+	<titulo>CUENTAS</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="CCTCUENT" label="CUENTAS">
+			<campo id="ctacod" >
+				<label>Cuenta</label>
+				<help>Codigo de Cuenta </help>
+			</campo>
+			<campo id="ctanom" >
+				<label>Cuenta</label>
+				<help>Codigo de Cuenta </help>
+			</campo>			
+			<group>
+				<campo id="CCTCUENT.ctacod"></campo>
+			</group>
+		</tabla>
+		<join tipo="right">
+			<tabla id="CCTMOVIM">
+				<campo id="siscod" oculto="true">
+					<condicion operador="=">CCTCUENT.siscod</condicion>
+				</campo>
+				<campo id="ctacod" oculto="true">
+					<condicion operador="=">CCTCUENT.ctacod</condicion>
+				</campo>				
+				<campo id="movsal" oculto="true">
+					<condicion operador="!=">0</condicion>
+				</campo>				
+			</tabla>
+		</join>
+	</consulta>
+</abm>

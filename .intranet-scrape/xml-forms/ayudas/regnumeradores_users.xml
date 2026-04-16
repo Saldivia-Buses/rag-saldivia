@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" >
+  <title>numerador</title>
+  <obs />
+  <form>
+    <table id="REG_USER_POS">
+        
+        <field id="puesto">
+            <expression>REG_NUMERADORES.puesto</expression>
+        </field>
+        
+       	<field id="puesto_nom">
+		    <expression>LPAD(REG_NUMERADORES.puesto, 4, 0)</expression>
+		</field>
+		
+		<field id="login" tabla="HTXUSERS" noshow="true"/>
+        <field id="usuario_id" noshow="true" oculto="true"/>
+		<field id="impresion" noshow="true">
+			<expresion>ejecuta</expresion>
+		</field>
+		<field id="subsistema_id"  oculto="true" tabla="REG_NUMERADORES" />
+		<field id="regconcepto_id" oculto="true" tabla="REG_NUMERADORES" />
+	
+
+    </table>
+    <join tipo="left">
+        <table id="REG_NUMERADORES">
+            <field id="id_regnumerador">
+                <condicion operador="=">REG_USER_POS.regnumerador_id</condicion>
+            </field>
+        </table>
+    </join>
+    <join tipo="left">
+        <table id="HTXUSERS">
+            <field id="id_usuario">
+                <condicion operador="=">REG_USER_POS.usuario_id</condicion>
+            </field>
+        </table>
+    </join>    
+  </form>
+</histrix>

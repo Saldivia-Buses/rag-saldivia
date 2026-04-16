@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<histrix tipo="consulta" imprimetanda="true">
+	<title>PERSONAL CONSULTA MINISTERIO</title>
+	<obs></obs>
+	<form  >
+		<table id="PERSONAL" label="CONSULTA CURSOS MINISTERIO">
+
+<!--			<field id="pervac" local="true" oculto="true">
+				<label>Periodo</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'pervac'</condicion>
+					</field>
+				</parametro>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="comvac" local="true" oculto="true">
+				<label>Com</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'comvac'</condicion>
+					</field>
+				</parametro>
+				<tipo>date</tipo>
+			</field>
+			<field id="impvac" local="true" oculto="true">
+				<label>Comienza</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'impvac'</condicion>
+					</field>
+				</parametro>
+				<tipo>varchar</tipo>
+				<size>50</size>
+			</field>
+-->
+			<field id="fechaEgreso" noshow="true">
+			    <condicion operador="=">'0000-00-00'</condicion>
+			</field>
+
+			<field id="idPersona" noshow="true">
+				<label modpos="nobr">pers</label>
+			</field>
+
+			<field id="legajo" noshow="true">
+				<label modpos="nobr">Legajo</label>
+			</field>
+			<field id="CUIL">
+				<expression>REPLACE(CUIL, '-','')</expression>
+				<label  colspan="6">Cuil</label>
+			</field>
+			<field id="doccod" local="true">
+				<label >Tipo Doc</label>
+				<valor>1</valor>
+			</field>
+			<field id="DNI" >
+				<label >DNI</label>
+			</field>
+			
+			
+			<field id="Nombre">
+				<expression> UPPER(CONCAT(Apellido, ' ', PERSONAL.nombre))</expression>
+				<label >Nombre</label>
+				<help>Nombre</help>
+			</field>
+			
+			<field id="sexo">
+				<label >Sexo</label>
+				<options>
+					<option value="1">M</option>
+					<option value="2">F</option>
+				</options>
+			</field>
+			<field id="nacimiento">
+				<expression>CONCAT( dayofmonth(nacimiento), '/',MONTH(nacimiento), '/',YEAR(nacimiento))</expression>
+				<label  >Fecha Nac.</label>
+			</field>
+			<field id="telefono">
+				<expression>CONCAT(telefono, ' ' , celular)</expression>
+				<label >Teléfono</label>
+				<help>Teléfono</help>
+			</field>
+
+			<field id="calle">
+				<expression>CONCAT(calle, ' ', numero, ' ', (case when piso != 0 then  CONCAT('Piso:', piso) else '' end), ' ', depto)</expression>
+				<label>Dirección</label>
+				<help></help>
+			</field>
+			<field id="localidad">
+				<expression>LOCALIDADES.nombre</expression>
+				<label  colspan="3">Localidad</label>
+				<help>Localidad</help>
+			</field>
+	                <field id="IdCateg2">
+        		    <label style="width:200px;" modpos="nobr">Categoría</label>
+	                    <expression>CONCAT((select nombre from SECCIONHISTORIA left join SECCION on SECCION.id_seccion = SECCIONHISTORIA.id_seccion where SECCIONHISTORIA.IdPersona = PERSONAL.IdPersona order by SECCIONHISTORIA.fechaDesde desc limit 1),' - ',
+	                		      (select descripcion from CATEGHISTORIA left join CATPERSONAL on CATPERSONAL.IdSindicato = CATEGHISTORIA.idSindicato and CATPERSONAL.IdCateg = CATEGHISTORIA.IdCateg where CATEGHISTORIA.IdPersona = PERSONAL.IdPersona order by CATEGHISTORIA.fechaDesde desc limit 1))</expression>
+        		</field>
+
+
+			<order>
+				<field id="apellido"></field>
+				<field id="Nombre"></field>
+
+			</order>
+		</table>
+		<join tipo="left">
+			<table id="FSMPROVS">
+				<field id="prvcod" >
+					<condicion operador="=">PERSONAL.idProvincia</condicion>
+				</field>
+			</table>
+		</join>		
+
+		<join tipo="left">
+			<table id="LOCALIDADES" vacio="true">
+				<field id="idLocalidad" >
+					<condicion operador="=">PERSONAL.localidad</condicion>
+				</field>
+				<field id="idProvincia" >
+					<condicion operador="=">PERSONAL.idProvincia</condicion>
+				</field>
+			</table>
+		</join>		
+
+	</form>
+</histrix>

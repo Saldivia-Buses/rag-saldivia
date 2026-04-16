@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<histrix tipo="consulta" >
+    <title>COTIZACION</title>
+    <obs></obs>
+    <form>
+        <table id="COTIZACION" label="COTIZACION">
+
+
+            <field id="idCotiz1" >
+
+                    <expression>max(idCotiz) + 1</expression>
+            </field>
+            <field id="idCotiz" >
+                    <expression>max(idCotiz) + 1</expression>
+            </field>
+        </table>
+
+    </form>
+</histrix>

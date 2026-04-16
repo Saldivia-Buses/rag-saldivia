@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<histrix tipo="crud">
+  <title>Momentos de Fabricación</title>
+  <obs/>
+  <form  detalle="posicionesfab.xml" inline="true">
+    <table id="MOMENTO" >
+      <title>Secciones de Fabricación</title>
+      <filters>
+      <field id="linea_id">
+        <label>Linea</label>
+        <operador>=</operador>
+      </field>
+      
+      </filters>
+
+      <field id="idMomento" autoinc="true" deshabilitado="true">
+      
+        <label>id</label>
+		  <detalle>idMomento</detalle>
+      </field>
+      <field id="descripcion">
+        <label>descripcion</label>
+        <help>descripcion</help> 
+      </field>
+      <field id="seccion_id">
+	    <label>Seccion</label>
+	    <helper id="SECCION" type="combo" empty="true">
+		<field id="id_seccion" />
+		<field id="nombre" />
+	    </helper>
+      </field >
+      <field id="linea_id">
+            <helper type="combo" xml="lineas.xml"/>
+      
+        <label>Linea</label>
+        <help>Linea de Producción</help>
+      </field>
+
+
+      <field id="abrev">
+        <label>Abreviatura</label>
+        <help>Abreviatura</help>
+      </field>
+      <field id="graficar">
+        <label>Graficar</label>
+        <help>Graficar</help>
+		<options>
+			<option valor="1">Si</option>
+			<option valor="0">No</option>				
+		</options>
+		<tipo>radio</tipo>
+
+      </field>
+	<field id="reportar">
+		<label>Reportar</label>
+		<help>Aparece en el reporte de Entregas por seccion</help>
+		<options>
+			<option valor="1">Si</option>
+			<option valor="0">No</option>				
+		</options>
+		<tipo>radio</tipo>
+	</field>
+         <field id="login">
+	    <label>usuarios</label>
+    	    <help>Usuarios habilitados</help> 
+         </field>		
+         <field id="orden">
+	    <label>Orden</label>
+    	    <help>Orden del mismo</help> 
+         </field>
+
+
+         <field id="ajuste_dias">
+	    <label>Ajuste Días PRFV</label>
+    	    <help>Ajuste de días</help> 
+         </field>
+
+         <field id="color" color="true">
+	    <label>Color</label>
+    	    <help>Color Reporte</help> 
+	    
+         </field>
+
+	<order>
+		<field id="orden"/>
+	</order>
+    </table>
+  </form>
+</histrix>

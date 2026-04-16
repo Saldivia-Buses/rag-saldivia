@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<abm tipo="consulta">
+	<titulo>NUMERO</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="REMITO" >
+			<campo id="num">
+				<expresion>max(numero) + 1</expresion>
+				<label>Entero</label>
+			</campo>
+		</tabla>
+	</consulta>	   
+</abm> 

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>                     
+<histrix tipo="list" showProcessButton="true" deleteRow="false"  modifica="false" procesa="true" inserta="false" imprime="false">
+<title></title>
+<obs></obs>
+<form >
+    <table id="STK_ATRIBUTOS">
+        <movimientos>
+            <relacion id="stkarticulo_atributos_valores_ins.xml" />
+        </movimientos>
+
+        <fieldGroup id="camposOcultos" noshow="true">
+            <field id="id_stkatributo" />
+            <field id="stkgrupoatrib_id" />
+            <field id="orden_atributo" />
+            <field id="stkarticulo_id" local="true" />
+            <field id="tipo_atributo" >
+                <expression>
+                    CASE STK_ATRIBUTOS.tipo_atributo 
+                        WHEN 1 THEN 'varchar'
+                        WHEN 2 THEN 'radio'
+                        WHEN 3 THEN 'check'
+                    END
+                </expression>
+            </field>
+            <field id="deshabilitado_atributo">
+                <condicion operador="=">0</condicion>
+            </field>
+        </fieldGroup>
+    
+        <field id="nombre_atributo" style="width:10em;font-weight:bold;text-align:right;">
+            <label>Atributo</label>
+            <size>30</size>
+        </field>
+
+        <field id="valor_atributo"  tabla="STK_ATRIBUTO_VALORES" editable="true" refresh="true" >
+            <attribute id="TipoDato">tipo_atributo</attribute>
+            <helper xml="atributo_opciones.xml" type="combo" empty="true">
+                <parameter source="id_stkatributo" target="stkatributo_id"/> 
+            </helper>
+        </field>
+
+        <order>
+            <field id="orden_atributo" />
+        </order>
+
+    </table>
+
+    <join tipo="left">
+        <table id="STK_ATRIBUTO_VALORES">
+            <field id="stkatributo_id">
+                <condicion operador="=">STK_ATRIBUTOS.id_stkatributo</condicion>
+            </field>
+            <field id="stkarticulo_id">
+                <condicion operador="=">'[__stkarticulo_id__]'</condicion>
+            </field>
+        </table>
+    </join>
+
+</form>    
+</histrix>

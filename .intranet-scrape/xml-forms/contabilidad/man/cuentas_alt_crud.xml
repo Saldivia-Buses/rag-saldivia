@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <histrix tipo="crud" filter="true">
+  <title>Cuentas Alternativas</title>
+   <obs></obs>
+    <form >
+                <table id="CTB_CUENTAS_ALT" label="Cuentas Alternativas">
+    
+          <field id="cuenta_id2">
+            <label>Cod.Cuenta</label>
+            <expression>cuenta_id</expression>
+          </field>
+
+          <field id="cuenta_id">
+              <helper type="combo" xml="ctbcuenta_qry.xml" dir="/ayudas" empty="true">
+                <field id="habilitada">
+                  <condicion operador="!=">0</condicion>
+                </field>
+              </helper>
+              <label>Cuenta Contable LATAM</label>
+              <label>Desde cuenta</label>
+          </field>
+
+          <field id="id_cuenta_alt">
+            <label>Cuenta Alternativa</label>
+            <label>Desde cuenta</label>
+          </field>
+      
+          <field id="nombre_cuenta_alt">
+            <label>Descripcion</label>
+            <help>Comienzo de la cuenta contable</help>
+          </field>
+
+        <field id="un_id">
+          <label>UN</label>
+          <helper id="PRY_NEGOCIO" type="combo" _empty="true">
+              <field id="id_un" />
+              <field id="codigo_un" />
+          </helper>
+        </field>
+
+                <filters auto="true">
+                        <field id="un_id">
+                          <label>UN</label>
+                    <operador>=</operador>
+                        </field>
+                </filters>
+        
+        <order>
+            <field id="cuenta_id"></field>
+        </order>
+            
+        </table>
+    </form> 
+    </histrix>

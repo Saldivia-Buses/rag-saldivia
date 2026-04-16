@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="arbol" path="fotos/articulos" width="50%">
+    <title>FORMACION DE PRODUCTO</title>
+    <obs></obs>
+    <form>
+        <table id="STKPIEZA" label="Piezas">
+            <field id="id_pieza" esClave="true" noshow="true" >
+            </field>
+
+            <field id="idPadre" arbol="padre" _esClave="true" required="false" >
+                <label colstyle="display:none;" >padre</label>
+                <help>Nombre del Articulo al que pertenece </help>
+                <ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/help_local">
+                    <field id="artcod">
+                        <label>Cod.</label>
+                    </field>
+                    <field id="artdes">
+                        <label>Insumo</label>
+                        <detalle>artdes</detalle>
+                    </field>
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">'01'</condicion>
+                    </field>
+                    <clave>artcod</clave>
+                    <descripcion>artdes</descripcion>
+                </ayuda_ex>
+            </field>
+            <field id="articulo_hijo" arbol="hijo" required="true">
+                <label>Codigo de Pieza</label>
+                <help>Codigo del Articulo</help>
+                <ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/help_local">
+                    <field id="artcod">
+                        <label>Cod.</label>
+                    </field>
+                    <field id="artdes">
+                        <label>Insumo</label>
+                        <detalle>artdes</detalle>
+                    </field>
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">'01'</condicion>
+                    </field>
+                    <clave>artcod</clave>
+                    <descripcion>artdes</descripcion>
+                </ayuda_ex>
+            </field>
+            <!--                  <field id="artcod" _noshow="true">
+                                          <expression>artcod</expression>
+                                          <tipo>varchar</tipo>
+                  </field>
+                  -->
+
+            <field id="artdes">
+                <expression>artdes</expression>
+                <label modpos="nobr">Articulo </label>
+                <tipo>varchar</tipo>
+                <size>50</size>
+            </field>
+            <field id="cantidad">
+                <label>Cantidad</label>
+            </field>
+            <field id="costo_automatico" deshabilitado="true">
+                <label>costo</label>
+            </field>
+            <field id="FOTOPATH" local="true" noshow="true">
+                <if exp="true">
+                    <true>'articulo_hijo/'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="foto" path="FOTOPATH" download="true" colstyle="display:none;">
+                <expression>select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = STKINSUM.artcod order by revision desc limit 1</expression>
+                <label>Imagen</label>
+                <tipo >file</tipo>
+                <size>40</size>
+            </field>
+            <field id="add" local="true" linkint="stkpieza_hoja.xml" linkdes="Agregar Hijo" deshabilitado="true" Formstyle="display:none;">
+                <label></label>
+                <paring destino="idPadre" operador="=">articulo_hijo</paring>
+                <valor>+</valor>
+                <tipo>varchar</tipo>
+            </field><!--Formstyle="display:none;"-->
+
+
+        </table>
+        <join tipo="left">
+            <table id="STKINSUM">
+                <field id="siscod" oculto="true">
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="artcod">
+                    <condicion operador="=">STKPIEZA.articulo_hijo</condicion>
+                </field>
+
+            </table>
+        </join>
+    </form>
+</histrix>
+

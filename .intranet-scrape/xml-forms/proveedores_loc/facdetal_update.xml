@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="update">
+       <title>FACDETAL</title>
+        <obs></obs>
+               <form >	
+					<table id="FACDETAL" label="FACDETAL">
+						<field id="regmovim_id" id_temp="id_regmovim" esClave="true" />
+						<field id="nrofac" id_temp="nro_movimiento" />
+						<field id="nropue" id_temp="puesto_movimiento" />
+						<field id="concod" id_temp="concod" />
+						<field id="regfec" id_temp="fecha_movimiento" />
+						<field id="ctacod" id_temp="nro_cuenta" />					
+					</table>
+               </form>
+        </histrix>

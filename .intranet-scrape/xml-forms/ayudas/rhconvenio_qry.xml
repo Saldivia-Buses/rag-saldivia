@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Convenios</title>
+  <obs></obs>
+  <consulta>
+    <table id="RH_CONVENIOS" label="Convenios">
+      <field id="id_rhconvenio" autoinc="true" noshow="true">
+      </field>
+      <field id="nombre_convenio">
+        <label>Convenios</label>
+        <help>Convenios</help>
+      </field>
+    </table>
+  </consulta>
+</histrix>  

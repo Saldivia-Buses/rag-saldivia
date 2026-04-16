@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<abm tipo="consulta">
+	<titulo>LISTAS DE PRECIOS</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="LISTAPRECIOMODELO" >
+		    <titulo>Listas de precios</titulo>
+				<campo id="idLista2" >
+					<expresion>max(idLista) + 1</expresion>
+				</campo>
+		</tabla>
+	</consulta>	   
+</abm>

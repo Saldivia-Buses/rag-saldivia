@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" deleteRow="false" borra="false" inserta="false" modifica="false" subtipo="vertical" preloadData="false" confirma="CONFIRMAR" tooltip="false" showCantidad="false">
+  <title>Movimientos Bancarios</title>
+  <obs/>
+  <form>
+    <table id="REG_MOVIMIENTOS" label="Movimientos Bancarios" idCampoCond="grabar">
+
+      <movimientos>
+        <relacion id="conciliacion_upd.xml"/>
+      </movimientos>
+
+      <filters>
+        <field id="regcuenta_id">
+          <label>Cuenta</label>
+          <operador>=</operador>
+        </field>
+        <field id="fecha_mov1" deshabilitado="false">
+          <operador>&gt;=</operador>
+          <label modpos="nobr">Desde Fecha</label>
+          <tipo>date</tipo>
+        </field>
+        <field id="fecha_mov2" deshabilitado="false">
+          <operador>&lt;=</operador>
+          <label modpos="nobr">Hasta Fecha</label>
+          <valor>today</valor>
+          <tipo>date</tipo>
+        </field>
+        <field id="tipo_vista" deshabilitado="false">
+          <label modpos="nobr">Filtrar</label>
+          <operador>=</operador>
+          <valor>0</valor>
+        </field>
+        <field id="fecha_a_conciliar">
+          <label>Fecha de Conciliacion</label>
+          <tipo>date</tipo>
+          <operador>=</operador>          
+        </field>
+        <field id="puesto_movimiento" deshabilitado="false" grupo="Avanzado">
+          <label>Lote</label>
+          <operador>=</operador>
+        </field>
+        <field id="concepto_id" deshabilitado="false" grupo="Avanzado">
+          <label modpos="nobr">Concepto</label>
+          <operador>=</operador>
+        </field>
+        <field id="cajpuesto_id" deshabilitado="false" grupo="Avanzado">
+          <label modpos="nobr">Puesto</label>
+          <operador>=</operador>
+        </field>
+        <field id="referencia_movimiento" grupo="Avanzado" colspan="4">
+          <label>Referencia</label>
+          <operador>like</operador>
+        </field>
+        <field id="filtro_nro_movimiento" grupo="Avanzado" deshabilitado="false">
+          <label>Desde Nro. Mov.</label>
+          <operador>&gt;=</operador>          
+        </field>
+        <field id="filtro_nro_movimiento" grupo="Avanzado" deshabilitado="false">
+          <label modpos="nobr">Hasta Nro. Mov.</label>
+          <operador>&lt;=</operador>          
+        </field>
+        <field id="filtro_importe" grupo="Avanzado" deshabilitado="false">
+          <label>Desde Importe</label>
+          <operador>&gt;=</operador>          
+        </field>
+        <field id="filtro_importe" grupo="Avanzado" deshabilitado="false">
+          <label modpos="nobr">Hasta Importe</label>
+          <operador>&lt;=</operador>          
+        </field>
+      </filters>
+
+      <field id="id_regmovim" oculto="true" />
+
+      <field id="filtro_nro_movimiento" noshow="true">
+        <expression>REG_MOVIMIENTOS.nro_movimiento</expression>        
+      </field>
+
+      <field id="filtro_importe" noshow="true">
+        <expression>REG_MOVIMIENTOS.importe_movimiento</expression>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="fecha_a_conciliar" local="true" noshow="true" required="true">
+        <tipo>date</tipo>
+      </field>
+      
+      <field id="cajpuesto_id" noshow="true">
+        <expresion>CAJ_MOVIMIENTOS.cajpuesto_id</expresion>
+        <helper type="combo" xml="cajpuesto_qry.xml" dir="/ayudas" empty="true" />
+      </field>
+
+      <fieldGroup Formstyle="display:none;" deshabilitado="true">
+        <field id="fecha_movimiento" style="width:8%">
+          <label>Fecha Mov.</label>
+          <tipo>date</tipo>
+        </field>
+
+        <field id="vencimiento_movimiento" style="width:8%">
+          <label>Acreditac.</label>
+          <tipo>date</tipo>
+        </field>
+      </fieldGroup>   
+     
+      <fieldGroup>
+        <field id="puesto_movimiento">
+          <label>Lote</label>
+        </field>
+
+        <field id="cuota_movimiento">
+          <label>Cuotas</label>
+        </field>
+      </fieldGroup>
+    
+      <fieldGroup _Formstyle="display:none;" deshabilitado="true">
+        <field id="nro_movimiento">
+          <label>Nro. Movimiento</label>
+          <formato>%010d</formato>
+          <attribute id="linkint">xml_llamar</attribute>
+          <helper type="link" dir="/caja/proc/del">
+            <parameter source="id_regmovim" target="id_regmovim"/>
+            <parameter source="cajmovimiento_id" target="id_cajmovimiento"/>
+          </helper>
+        </field>
+
+     	  <field id="concepto_id" deshabilitado="false">
+  		    <expression>REG_MOVIMIENTOS.concepto_id</expression>
+  		    <helper type="combo" xml="regconcepto_qry.xml" dir="/ayudas" empty="true" >
+  			    <parameter source="subsistema_id" target="subsistema_id" />
+  		    </helper>
+  		    <label>Concepto</label>
+   	    </field>
+
+        <field id="referencia_movimiento" style="width:20%">
+          <label>Referencia</label>
+          <size>40</size>
+        </field>
+
+        <field id="debe" suma="true" style="width:10%" noZero="true">
+          <expresion>(case when REG_CONCEPTOS.imputacion_concepto = 0 then REG_MOVIMIENTOS.importe_movimiento else 0 end)</expresion>
+          <label>Debe</label>
+        </field>
+
+        <field id="haber" suma="true" style="width:10%" noZero="true">
+          <expresion>(case when REG_CONCEPTOS.imputacion_concepto = 1 then REG_MOVIMIENTOS.importe_movimiento else 0 end)</expresion>
+          <label>Haber</label>
+        </field>
+
+        <field id="importe_movimiento" noshow="true" deshabilitado="false">
+          <label>importe</label>
+          <tipo>numeric</tipo>
+          <expresion>(case when REG_CONCEPTOS.imputacion_concepto = 0 then REG_MOVIMIENTOS.importe_movimiento else - REG_MOVIMIENTOS.importe_movimiento end)</expresion>
+        </field>
+
+        <field id="importeconciliado" local="true" suma="true" total="true" refresh="true" noZero="true" style="width:10%">
+          <label>Conciliado</label>
+          <if exp="conciliado != 0">
+            <true>importe_movimiento</true>
+            <false>0</false>
+          </if>
+          <tipo>numeric</tipo>
+          <actualiza>
+            <field id="importeconciliado"/>
+          </actualiza>
+        </field>
+
+        <field id="conciliado" refresh="true" deshabilitado="false" Formstyle="display: none;">
+          <label/>
+          <expresion having="false">IF(conciliado != '0000-00-00',1,0)</expresion>
+          <tipo>check</tipo>
+        </field>
+      </fieldGroup>
+
+      <fieldGroup noshow="true">
+        <field id="fecha" local="true" Formstyle="display:none;" valauto="true" noshow="true">
+          <if exp="'conciliado' != 0">
+            <true>date('Y-m-d', strtotime('fecha_a_conciliar'))</true>
+            <false>''</false>
+          </if>
+        </field>
+
+        <field id="valor_original">
+          <expresion having="false">IF(conciliado != '0000-00-00',1,0)</expresion>
+        </field>
+
+        <field id="grabar" local="true">
+          <if exp="'conciliado' != 'valor_original'">
+            <true>1</true>
+            <false>0</false>
+          </if>
+        </field>
+      </fieldGroup>
+
+      <field id="regcuenta_id" _Formstyle="display:none;" colstyle="display:none;" required="true">
+        <helper type="combo" xml="regcuenta_cmb.xml" dir="/ayudas" empty="true" />
+        <preparam operador="=">true</preparam>
+      </field>
+
+      <field id="fecha_mov1" noshow="true">
+        <expresion having="false">REG_MOVIMIENTOS.fecha_movimiento</expresion>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="fecha_mov2" noshow="true">
+        <expresion having="false">REG_MOVIMIENTOS.fecha_movimiento</expresion>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="subsistema_id" oculto="true" />
+
+      <field id="cajmovimiento_id" oculto="true"/>
+
+      <field id="xml_llamar" local="true" noshow="true">
+        <if exp="cajmovimiento_id==0">
+          <true>'regmovimiento_ficha.xml'</true>
+          <false>'cajmovimiento_ficha.xml'</false>
+        </if>
+      </field>
+
+      <field id="tipo_vista"  noshow="true">
+        <helper type="combo">
+          <option value="">Todos</option>
+          <option value="0">No Conciliados</option>
+          <option value="1">Conciliados</option>
+        </helper>
+        <valor>0</valor>
+        <expresion having="false">IF(conciliado != '0000-00-00',1,0)</expresion>
+      </field>
+
+      <field id="fecha_orden" noshow="true">
+        <expression>REG_MOVIMIENTOS.fecha_movimiento</expression>
+        <tipo>date</tipo>
+      </field>
+
+      <order>
+        <field id="fecha_orden" />
+      </order>
+
+    </table>
+    
+    <join>
+      <table id="REG_CONCEPTOS">
+        <field id="subsistema_id">
+          <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+        </field>
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="CAJ_MOVIMIENTOS">
+        <field id="id_cajmovimiento">
+          <condicion operador="=">REG_MOVIMIENTOS.cajmovimiento_id</condicion>
+        </field>
+      </table>
+    </join>
+    
+  </form>
+</histrix>

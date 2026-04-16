@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" borra="no" inserta="no" _paginar="250" path="fotos/articulos" preloadData="false" >
+  <title>Insumos</title>
+  <obs></obs>
+  <form>
+    <table id="STKINSUM" styleTbody="height:500px;overflow-x:hidden;">
+      <title>Insumos</title>
+
+      <filters> 
+        <field id="artcod" deshabilitado="false" >
+          <label>Cod. 1</label>
+          <operador oplogico="or">like</operador>
+        </field>
+
+        <field id="fabricacion_propia" deshabilitado="false">
+          <operador>=</operador>
+          <label modpos="nobr">Fab.Propia</label>
+        </field>
+
+        <field id="tipocalculo_costo">
+          <label modpos="nobr" >Costo</label>
+          <operador>=</operador>
+        </field>
+
+        <field id="baja" deshabilitado="false">
+          <operador>=</operador>
+          <label modpos="nobr">Estado</label>
+        </field>  
+
+        <field id="creado" deshabilitado="false">
+          <operador>&gt;=</operador>
+          <label modpos="nobr">Desde Creación</label>
+        </field>
+
+        <field id="creado" deshabilitado="false">
+          <operador>&lt;=</operador>
+          <label modpos="nobr">Hasta Creación</label>
+        </field>
+
+        <field id="usuario_id" deshabilitado="false">
+          <operador>=</operador>
+          <label modpos="nobr">Creó</label>
+        </field>
+
+        <field id="artdes" deshabilitado="false" colspan="4">
+          <label _modpos="nobr">Artículo 1</label>
+          <help>Descripción de Artículo</help>
+	         <operador  oplogico="or">like</operador>
+        </field>
+
+        <field id="artrub" deshabilitado="false">
+          <operador>=</operador>
+          <label modpos="nobr">Rubro</label>
+        </field>
+
+      </filters>
+
+      <field id="artrub" noshow="true">
+         <label>Rubro</label>
+         <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true"/>
+      </field>
+
+      <field id="fecha" local="true" noshow="true">
+        <label>Fecha</label>
+        <valor>today</valor>
+        <tipo>date</tipo>
+        <detalle>fecha</detalle>
+      </field>
+
+      <field id="artcod" esclave="false" PDFcolor="000000" _linkint="" _linkdir="articulos" _linkdes="Composición" oplogico="or">
+           <detalle>idPadre</detalle>
+        <helper type="external" xml="HLPstkinsum.xml" dir="/help_local"  >
+          <field id="artcod" >
+            <label>Cod</label>
+          </field>
+          <field id="artdes" >
+            <label>Nombre</label>
+            <detalle>artdes</detalle>
+          </field>
+        </helper>
+        <label>Cod.</label>
+        <detalle>artcod</detalle>
+      </field>
+
+      <field id="artdes" oplogico="or">
+        <label>Artículo</label>
+        <help>Descripción de Artículo</help>
+	       <size>60</size>
+      </field>
+
+      <field id="valcps">
+        <label>Val.Compra</label>
+        <help>Valor de Compra </help>
+      </field>
+      
+      <field id="unicps">
+        <label modpos="nobr">Unidad</label>
+        <help>Unidad de Compra </help>
+        <tabla_ex id="FSMUNIDS">
+          <field id="unicod"></field>
+          <field id="uniabv"></field>
+        </tabla_ex>
+      </field>
+      
+      <field id="valuso">
+        <label>Val.Uso</label>
+        <help>Valor de Uso </help>
+      </field>
+      
+      <field id="artuni">
+        <label modpos="nobr">U.Uso</label>
+        <help>Unidad de Uso </help>
+        <tabla_ex id="FSMUNIDS">
+          <field id="unicod"></field>
+          <field id="uniabv"></field>
+        </tabla_ex>
+      </field>
+      
+      <field id="baja" noshow="true">
+        <options>
+          <option valor="0">Activo</option>
+          <option valor="1">Baja</option>
+        </options>
+      </field>
+
+      <field id="regcuenta_id" tabla="STK_COSTO_REPOSICION" >
+          <label >Prov Reposición</label>
+          <helper type="combo" id="REG_CUENTA" empty="true">
+              <field id="id_regcuenta"/>
+              <field id="nombre_cuenta">
+                <detalle>nombre_cuenta</detalle>
+              </field>
+              <field id="subsistema_id">
+                 <condicion operador="=">'01'</condicion>
+              </field>
+              <field id="baja">
+                 <condicion operador="=">0</condicion>
+              </field>                    
+              <order>
+                  <field id="nombre_cuenta"/>
+              </order>
+          </helper>
+      </field>
+      
+      <field id="costo" noZero="true">
+        <label style="font-weight:bold;">Últ.Compra</label>
+        <expression>round(case WHEN (select sum(round( (costo_automatico * cantidad) * (1 + recargo / 100) , 2)) from STKPIEZA where idPadre  = STKINSUM.artcod and bom_variacion_id = 0 limit 1) != 0 then (select sum(round( (costo_automatico * cantidad) * (1 + recargo / 100) , 2)) from STKPIEZA where idPadre  = STKINSUM.artcod and bom_variacion_id = 0 limit 1)
+    			      when valcps &gt; valuso then costo_calculado * valcps
+    			      when valcps &lt; valuso then costo_calculado 
+    			      when ( costo_calculado * STKINSUM.valcps / STKINSUM.valuso) > 0  then (costo_calculado * STKINSUM.valcps / STKINSUM.valuso) else STKINSUM.artcos end, 2)</expression>
+        <tipo>decimal</tipo>
+      </field>
+
+      <field id="fecult" tabla="STKINSUM" tipoOrden="DESC">
+        <expression>ultima_compra</expression>
+        <label>Fecha últ compra</label>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="costo_reposicion" local="true">
+        <expression>@costo_reposicion :=ifnull(getCostFunc(STKINSUM.artcod, ifnull(STK_COSTO_REPOSICION.moneda_id, 1), STR_TO_DATE('[__fecha__]', '%d/%m/%Y')  ), 0) * (case when (select count(*) from STKPIEZA where STKPIEZA.idPadre = STKINSPR.artcod and bom_variacion_id = 0) then 1 else (valcps / valuso) end)</expression>
+        <label>Costo repo</label>
+        <tipo>numeric</tipo>
+      </field>
+                   
+      
+	    <field id="stock">
+    		<label>Stock</label>
+    		<expression>select sum(cantidad_stock) from STK_STOCKACTUAL join STK_DEPOSITOS on  id_stkdeposito = stkdeposito_id and suma_total = 1 where STK_STOCKACTUAL.stkarticulo_id = STKINSUM.artcod</expression>
+    		<tipo>decimal</tipo>
+	    </field>
+      
+      <field id="demprov">
+        <label>Demora Pr.</label>
+      	<help>Demora del proveedor en suministrar el artículo</help>
+      	<tipo>integer</tipo>
+      </field>
+                                              
+      <field id="artctb" print="false">
+    	  <label colspan="4">Cta.Ctb.</label>
+        <expression>CTBCUENT.ctbcod</expression>
+        <help>Código Cuenta Contable</help>
+      </field>  
+
+      <field id="fabricacion_propia" disabled="true" noshow="true">
+        <label>Fab.Prop</label>
+        <help>Indica si el insumo se fabrica internamente</help>
+        <options>
+          <option valor=""></option>
+          <option valor="0">No</option>
+          <option valor="1">Si</option>
+        </options>
+        <tipo>check</tipo>
+      </field>
+
+       <field id="tipocalculo_costo" disabled="true" noshow="true">
+          <label modpos="nobr">Costo</label>
+          <options> 
+            <option valor=""></option>
+            <option valor="0">Auto</option>
+            <option valor="1">Man</option>
+          </options>
+      </field>
+
+      <field id="creado" noshow="true">
+      	<expression having="false">creado</expression>
+      	<label>Fecha Creación</label>
+      	<tipo>date</tipo>
+      </field>
+
+      <field id="usuario_id" noshow="true">
+          <label modpos="nobr">Creó</label>
+          <helper type="combo" id="HTXUSERS" empty="true">
+              <field id="id_usuario"/>
+              <field id="nombre">
+                <expression>CONCAT(apellido, ' ', Nombre)</expression>
+              </field>
+              <field id="baja">
+                <condicion operador="=">0</condicion>
+              </field>
+              <order>
+                <field id="nombre"/>
+              </order>
+          </helper>
+      </field>  
+
+    <group>
+      <field id="artcod" tabla="STKINSUM"></field>
+    </group>
+
+	  <order>
+      <field id="fecult" ></field>
+    </order>   
+
+    </table>
+
+    <join tipo="left">
+      <table id="STKPIEZA">
+        <field id="idPadre">
+          <condicion operador="=">STKINSUM.artcod</condicion>
+        </field>
+      </table>
+    </join>    
+
+    <join tipo="left">
+      <table id="CTBCUENT">
+          <field id="ctbcod" >
+            <condicion operador="=">STKINSUM.artctb</condicion>
+          </field>
+          <field id="ctbhab">
+            <condicion operador="=">1</condicion>
+          </field>
+      </table>
+    </join>    
+
+    <join tipo="left">
+      <table id="STKINSPR">
+        <field id="siscod">
+          <condicion operador="=">STKINSUM.siscod</condicion>
+        </field>
+        <field id="artcod">
+          <condicion operador="=">STKINSUM.artcod</condicion>
+        </field>
+      </table>
+    </join>    
+
+    <join tipo="left">
+      <table id="STK_COSTO_REPOSICION">
+        <field id="stkarticulo_id">
+          <condicion operador="=">STKINSUM.artcod</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

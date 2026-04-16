@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+	<title>REGINFO_CV_VENTAS_ALICUOTAS</title>
+	<obs/>
+	<form >
+		<table id="IVAVENTAS" label="REGINFO_CV_VENTAS_ALICUOTAS">
+			<fieldGroup id="DEBUG" noshow="true" local="true" print="false" export="false">
+				<field id="anio" />
+
+				<field id="mes" />
+
+				<field id="fecha_desde">
+					<tipo>date</tipo>
+				</field>
+
+				<field id="fecha_hasta">
+					<tipo>date</tipo>
+				</field>
+
+				<field id="archivo" />
+
+				<field id="titulo">
+					<setvar>titulo</setvar>
+					<expression>CONCAT('[__anio__]', '[__mes__]','_[__archivo__]')</expression>
+				</field>
+			</fieldGroup>
+
+			<fieldGroup id="tests" export="false" noshow="true">
+				<field id="_ORDEN" local="true" noshow="false" style="color:blue;font-weight:bold;" />
+
+				<field id="regmovim_id" esClave="true"/>
+
+				<field id="fecha_movimiento" tabla="REG_MOVIMIENTOS">
+					<condicion operador="&gt;=">STR_TO_DATE('[__fecha_desde__]', '%d/%m/%Y') AND IVAVENTAS.fecreg &lt;= STR_TO_DATE('[__fecha_hasta__]', '%d/%m/%Y')</condicion>
+				</field>
+			</fieldGroup>
+
+			<fieldGroup id="exportables">
+				<field id="regconcepto_afip" tabla="REG_NUMERADORES">
+					<label>Tipo comp.</label>
+					<expression>LPAD(REG_NUMERADORES.regconcepto_afip, 3, 0)</expression>
+				</field>
+
+				<field id="puesto_movimiento">
+					<label>P.Vta.</label>
+					<expression>LPAD(REG_MOVIMIENTOS.puesto_movimiento, 5, 0)</expression>
+				</field>
+
+				<field id="nro_movimiento">
+					<label>Nro Comp.</label>
+					<expression>LPAD(REG_MOVIMIENTOS.nro_movimiento, 20, 0)</expression>
+				</field>
+
+				<field id="neto_detalle">
+					<expression>LPAD(round(SUM(IVAIMPORTES.impgra) * 100, 0), 15, '0')</expression>
+					<label>Neto</label>
+					<tipo>integer</tipo>
+				</field>
+
+				<field id="alicuota">
+					<label>Alic</label>
+					<expression>CASE WHEN IVAIMPORTES.impimp = 0 THEN '0003' ELSE (CASE WHEN impali = 0 THEN '0003'
+						     		 WHEN impali = 10.5 THEN '0004'
+						    		 WHEN impali = 21.00 THEN '0005'
+						    		 WHEN impali = 27.00 THEN '0006'
+						    		 WHEN impali = 5.00 THEN '0008'
+						    		 WHEN impali = 2.50 THEN '0009' END) END</expression>
+				</field>
+
+				<field id="iva_detalle">
+					<expression>LPAD(round(sum(IVAIMPORTES.impimp) * 100, 0), 15, '0')</expression>
+					<!--<expression>IF(IVAVENTAS.ivacod = 6, LPAD(round(IVAVENTAS.totcom * 100, 0), 15, '0'), LPAD(round(sum(IVAIMPORTES.impimp) * 100, 0), 15, '0'))</expression>-->
+					<label>Imp. Liq.</label>
+					<tipo>integer</tipo>
+					<!--<condicion operador="!=">0</condicion>-->
+				</field>
+			</fieldGroup>
+
+			<group>
+				<field id="id_regmovim" />
+				<field id="alicuota" />
+			</group>
+
+		</table>
+
+		<join tipo="LEFT">
+			<table id="REG_MOVIMIENTOS">
+				<field id="id_regmovim">
+					<condicion operador="=">IVAVENTAS.regmovim_id</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="IVAIMPORTES">
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">IVAVENTAS.ctacod</condicion>
+				</field>
+				<field id="codcom" oculto="true">
+					<condicion operador="=">IVAVENTAS.codcom</condicion>
+				</field>
+				<field id="nrocom" oculto="true">
+					<condicion operador="=">IVAVENTAS.nrocom</condicion>
+				</field>
+				<field id="nronpv" oculto="true">
+					<condicion operador="=">IVAVENTAS.nronpv</condicion>
+				</field>
+				<field id="tipoiva" oculto="true">
+					<condicion operador="=">2</condicion>
+				</field>	
+				<field id="feciva" oculto="true">
+					<condicion operador="=">IVAVENTAS.fecreg</condicion>
+				</field>				
+			</table>
+		</join>	
+
+		<join tipo="LEFT">
+			<table id="REG_DETALLES">
+				<field id="regmovim_id">
+					<condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join>
+			<table id="REG_CONCEPTOS">
+				<field id="id_concepto">
+					<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="REG_CUENTA">
+				<field id="id_regcuenta">
+					<condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="REG_NUMERADORES">
+				<field id="subsistema_id">
+					<condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+				</field>
+				<field id="regconcepto_id">
+					<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+				</field>
+				<field id="letra">
+					<condicion operador="=">REG_MOVIMIENTOS.letra_movimiento</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join>
+			<table id="GEN_SUBSISTEMAS">
+				<field id="id_subsistema">
+					<condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+				</field>
+				<field id="iva_subsistema">
+					<condicion operador="=">1</condicion>
+				</field>
+			</table>
+		</join>
+		
+	</form>
+</histrix>

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="fichaing" inserta="false" borra="false" modifica="false" imprime="false" log="false" transaccional="true" tooltip="false" _xmlImpresion="/logistica/qry/hojacarga_imp.xml">
+
+	<title>Solicitud nota de credito</title>
+	<obs></obs>
+	<form >
+		
+		<table id="REG_MOVIMIENTOS" label="Solicitud de nota de credito" _graba="true">
+
+			<field id="id_regmovim" _noshow="true"  esClave="true">
+				
+				<actualiza>
+					<field id="mercaderia" destino="regmovim_id"/>
+				</actualiza>
+			</field>
+
+			<field id="regcuenta_id" _noshow="true">
+				
+				<ayuda_ex id="REG_CUENTA" >
+					<field id="id_regcuenta">
+						<label>Nro</label>
+					</field>
+					<field id="nombre">
+						<expresion>nombre_cuenta</expresion>
+						<label>Nombre</label>						
+						<detalle>nombre_cuenta</detalle>	
+						<tipo>varchar</tipo>					
+					</field>
+					<field id="subsistema_id" oculto="true">
+						<label>subsistema_id</label>
+						<condicion operador="=">'02'</condicion>
+					</field>					
+					<clave>regcuenta_id</clave>
+					<descripcion>nombre</descripcion>
+					
+				</ayuda_ex>	
+				
+			</field>
+
+			<field id="fecha_movimiento">
+				<label>Fecha Mov</label>
+				<help>Fecha de Movimiento</help>
+			</field>
+
+			<field id="nro_cuenta"  tabla="REG_CUENTA">
+				<label>Cod Cliente</label>
+				<helper type="external" xml="regcuenta_solamente_nro_qry.xml" dir="/ayudas" empty="true" />
+			</field>
+
+			<field id="nombre_cuenta" local="true" _deshabilitado="true" sincelda="true">
+				<label modpos="nobr">Nombre</label>
+				<help>Nombre del Cliente</help>
+				<size>50</size>
+			</field>
+			
+			
+			
+			<field id="numero_movimiento">
+        		<label _modpos="nobr">Numero</label>
+        		<!--
+        		<expresion>CONCAT(REG_MOVIMIENTOS.letra_movimiento,' ',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,'0'),'-',LPAD(REG_MOVIMIENTOS.nro_movimiento  ,8,'0'))</expresion>
+        	-->
+        		<size>16</size>
+        	</field>
+
+			
+			<!--
+        	 <field id="mercaderia" showObjTabla="true" local="true">
+            		<helper type="object" xml="regdet_fact_grid.xml">
+            			
+            			<parameter source="id_regmovim" target="regmovim_id" operator="="/>
+            		
+            		</helper>
+            		<label colspan="6">Nota credito</label>
+           	</field>
+		-->
+		</table>
+
+		<join tipo="left">
+	      <table id="REG_CUENTA">
+	        <field id="id_regcuenta">
+	          <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+	        </field>
+	      </table>
+	    </join>
+
+	</form>
+</histrix>

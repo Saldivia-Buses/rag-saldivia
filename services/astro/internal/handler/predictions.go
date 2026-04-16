@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -56,12 +57,26 @@ func (h *Handler) CreatePrediction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var sessionID, contactID pgtype.UUID
-	sessionID.Scan(req.SessionID)
-	contactID.Scan(req.ContactID)
+	if req.SessionID != "" {
+		if err := sessionID.Scan(req.SessionID); err != nil {
+			jsonError(w, "invalid session_id", http.StatusBadRequest)
+			return
+		}
+	}
+	if err := contactID.Scan(req.ContactID); err != nil {
+		jsonError(w, "invalid contact_id", http.StatusBadRequest)
+		return
+	}
 
 	var dateFrom, dateTo pgtype.Date
-	dateFrom.Scan(req.DateFrom)
-	dateTo.Scan(req.DateTo)
+	if err := dateFrom.Scan(req.DateFrom); err != nil {
+		jsonError(w, "invalid date_from (expected YYYY-MM-DD)", http.StatusBadRequest)
+		return
+	}
+	if err := dateTo.Scan(req.DateTo); err != nil {
+		jsonError(w, "invalid date_to (expected YYYY-MM-DD)", http.StatusBadRequest)
+		return
+	}
 
 	pred, err := h.q.CreatePrediction(r.Context(), repository.CreatePredictionParams{
 		TenantID:    tid,
@@ -87,7 +102,9 @@ func (h *Handler) CreatePrediction(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(pred)
+	if err := json.NewEncoder(w).Encode(pred); err != nil {
+		slog.Error("encode prediction response", "error", err)
+	}
 }
 
 func (h *Handler) ListPredictions(w http.ResponseWriter, r *http.Request) {
@@ -157,7 +174,10 @@ func (h *Handler) VerifyPrediction(w http.ResponseWriter, r *http.Request) {
 
 	var notes pgtype.Text
 	if req.Notes != "" {
-		notes.Scan(req.Notes)
+		if err := notes.Scan(req.Notes); err != nil {
+			jsonError(w, "invalid notes", http.StatusBadRequest)
+			return
+		}
 	}
 
 	pred, err := h.q.VerifyPrediction(r.Context(), repository.VerifyPredictionParams{

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ayuda" >
+    <title>Localidades segun zona</title>
+    <obs></obs>
+    <form  >
+        <table id="REG_ZONA_LOCALIDADES" >
+	  
+           <field id="localidad_id" _tabla="GEN_LOCALIDADES" />
+           
+		   <field id="nombre_localidad" tabla="GEN_LOCALIDADES" />
+
+           <field id="regzona_id" />
+            
+    	</table>
+	    <join>
+	        <table id="GEN_LOCALIDADES">
+    	        <field id="id_localidad">   
+	                <condicion operador="=">REG_ZONA_LOCALIDADES.localidad_id</condicion>
+    	        </field>
+    	    </table>
+    	</join>
+    </form>
+</histrix>
+

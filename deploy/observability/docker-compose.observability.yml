@@ -86,6 +86,8 @@ services:
       - sda-observability
 
   # ── Alertmanager (alert routing) ──────────────────────────────────────
+  # Connects to sda-backend (external) to reach notification:8005 webhook.
+  # Auth token mounted from shared secrets directory (DS3).
   alertmanager:
     image: prom/alertmanager:v0.27.0
     container_name: sda-alertmanager
@@ -95,11 +97,13 @@ services:
     volumes:
       - ./alertmanager/config.yml:/etc/alertmanager/config.yml:ro
       - alertmanager-data:/alertmanager
+      - ../secrets/alertmanager-webhook-token:/run/secrets/alertmanager_webhook_token:ro
     ports:
-      - "9093:9093"
+      - "127.0.0.1:9093:9093"
     restart: unless-stopped
     networks:
       - sda-observability
+      - sda-backend
 
   # ── Promtail (log shipping to Loki) ─────────────────────────────────
   promtail:
@@ -126,3 +130,5 @@ volumes:
 networks:
   sda-observability:
     driver: bridge
+  sda-backend:
+    external: true

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="insert">
+	<title>Ingreso de Movimientos</title>
+	 <obs></obs>
+		<form>
+		     <table id="REG_DETALLES">
+			
+			<field id="descripcion_detalle"         id_temp="nombre_articulo" />	
+			<field id="codigo_detalle"              id_temp="stkarticulo_id" />
+			<field id="orden"                       id_temp="_ORDEN" />
+			<field id="cantidad_detalle"      	id_temp="cantidad_detalle" />
+			<field id="regmovim_id"      		lastId="remito_ins.xml"/>					
+		    </table>
+		</form>
+    </histrix>	

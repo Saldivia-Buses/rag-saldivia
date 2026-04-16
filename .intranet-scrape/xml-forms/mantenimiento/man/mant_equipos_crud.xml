@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CURD
+Tarea: Tabla de Equipamiento
+Autor: Lmm
+Fecha: 17/08/11
+*******************************************************************************
+-->
+<histrix tipo="crud" PDForientacion="L">
+    <title>Equipos</title>
+    <obs></obs>
+    <form>
+        <table id="MANT_EQUIPOS" label="Equipos">
+    	    <filters>
+                <field id="nombre_equipo">
+                    <label colspan="4">Nombre</label>
+                    <help>Nombre</help>
+                    <operador>like</operador>
+                </field>
+                <field id="tipoequipo_id">
+                    <label>Tipo</label>
+                    <help>Tipo</help>
+                    <operador>=</operador>
+    				<valor>1</valor>
+                </field>			
+    			<field id="deposito_id">
+    				<label modpos="nobr">Depósito</label>
+                    <operador>=</operador>
+    			</field>
+    	    </filters>
+
+            <field id="id_equipo" esClave="true" noshow="true" />
+
+            <field id="articulo_id" _valid="true">
+                <label>Artículo</label>
+                <help>Código de Artículo</help>
+
+                <helper id="STK_ARTICULOS" type="external" _xml="HLPstkinsum.xml" dir="/ayudas">
+                    <field id="id_stkarticulo" >
+                       <label>Cod.</label>
+                    </field>
+                    <field id="nombre_articulo">
+                        <label>Insumo</label>
+                        <detalle>nombre_articulo</detalle>
+                    </field>
+		            <field id="subsistema_id">
+			             <condicion operador="=">'01'</condicion>
+		            </field>
+                </helper>
+            </field>
+
+            <field id="nombre_articulo" tabla="STK_ARTICULOS" deshabilitado="true" colstyle="display:none;">
+                <label>N.Articulo</label>
+                <help>Nombre Articulo</help>
+                <size>60</size>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="nombre_equipo">
+                <label>Nombre</label>
+                <help>Nombre</help>
+                <size>60</size>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="numero_serie" deshabilitado="false">
+                <label>Nro de Serie</label>
+                <help>Número de Serie</help>
+		<helper type="link" xml="mant_herrmovs.xml">
+		    <parameter source="numero_serie" target="id_herramienta" />
+                <size>30</size>
+		</helper>
+            </field>
+            <field id="anio_fabricacion" noZero="true">
+                <label>Año Fabricación</label>
+                <help>Año</help>
+            </field>
+				
+            <field id="tipoequipo_id" required="true">
+                <helper type="combo" xml="mant_tipo_equipo_crud.xml" empty="true"/>
+                <label>Tipo</label>
+                <help>Tipo</help>
+            </field>
+
+            <field id="fecha_alta">
+                <label>Fecha Alta</label>
+                <help>Fecha de Alta</help>
+                <tipo>date</tipo>
+            </field>
+            <field id="fecha_baja">
+                <label>Fecha Baja</label>
+                <help>Fecha de Baja</help>
+                <tipo>date</tipo>
+            </field>
+			
+			<field id="deposito_id">
+				<label>Depósito</label>
+				<helper type="combo" id="DEPOSITO" empty="true">
+					<field id="idDeposito">
+						<label>Cod</label>
+						<help>Codigo</help>
+					</field>
+					<field id="nombre">
+					</field>
+				</helper>
+			</field>
+
+			<field id="repuestos_criticos">
+			    <label>Repuestos Críticos</label>
+			    <size>200</size>
+			</field>
+
+			<field id="repuestos" local="true" FormStyle="display:none;">
+			    <label>Repuestos</label>
+			    <helper type="link" xml="mant_repuestos_crud.xml"  modal="true">
+				<parameter source="id_equipo" target="equipo_id" />
+			    </helper>
+                <expression>'Repuestos'</expression>
+                <label>Repuestos</label>
+			</field>
+
+            <field id="usuario" FormStyle="display:none;">
+                <expression>SELECT usuario FROM HERRMOVS WHERE id_herramienta = MANT_EQUIPOS.numero_serie ORDER BY movfec DESC LIMIT 1</expression>
+                <label>Usuario</label>
+                <helper type="combo" xml="HLPpersonal_ope.xml" dir="/help_local" />
+            </field>
+                                
+			<field id="carga" local="true" linkdes="Carga de Plan" FormStyle="display:none;">
+			
+			    <helper type="link" xml="mant_plan_cal.xml" dir="/mantenimiento/ing" modal="true">
+				<parameter source="id_equipo" target="equipo_id" />
+			    </helper>
+			    <expression>'Cargar'</expression>
+				<label>Preventivo</label>
+		    </field>
+			<field id="titulo" noshow="true" local="true" FormStyle="display:none;">
+			    <if exp="true">
+			    <true>'nombre_equipo -  numero_serie'</true>
+			    <false>''</false>
+			    </if>
+			</field>
+			<field id="consultaplan" local="true" linkdes="Consulta de Plan" FormStyle="display:none;">
+			
+			    <helper type="link" xml="mant_plan_qry.xml" dir="/mantenimiento/qry" modal="true">
+				<parameter source="id_equipo" target="equipo_id" />
+				<parameter source="titulo" target="titulo" />
+			    </helper>
+			    <expression>(CASE WHEN SUM(CASE WHEN MANT_PLAN.accion_id != 52 THEN 1 ELSE 0 END) &gt; 0  THEN 'Plan' ELSE '' END )</expression>
+			    <label>Consulta</label>
+		    </field>
+
+
+			<field id="correciones" _local="true" linkdes="Mantemiento Correctivo" _noZero="true" _tdWidth="10" FormStyle="display:none;">
+          		<label>Correctivo</label>
+			    <expression>SUM(CASE WHEN MANT_PLAN.accion_id = 52 THEN 1 ELSE 0 END)</expression>
+				<helper type="link" xml="mant_correc_herr.xml" dir="/mantenimiento/man" modal="true">
+				<parameter source="id_equipo" target="equipo_id" />
+				<parameter source="cincuentaydos" target="accion_id" />
+			    </helper>
+			</field>
+                                               
+			<field id="realizados" _local="true" linkdes="Mantemiento Realizado" noZero="true" FormStyle="display:none;">
+                <label>Tareas</label>
+			    <expression>count(plan_id)</expression>
+			    <helper type="link" xml="plan_mant_herr.xml" dir="/mantenimiento/man" modal="true">
+				<parameter source="id_equipo" target="equipo_id" />
+			    </helper>
+			    
+			</field>
+
+			<field id="cincuentaydos" noshow="true" local="true">
+				<valor>52</valor>
+			</field>
+
+			<group>
+			    <field id="id_equipo" />
+			</group>
+                        
+        </table>
+
+        <join tipo="left">
+    	     <table id="STK_ARTICULOS">
+    	        <field id="id_stkarticulo">
+    	    	    <condicion operador="=">articulo_id</condicion>
+    	        </field>
+    	        <field id="subsistema_id">
+    	    	    <condicion operador="=">'01'</condicion>
+    	        </field>
+    	     </table>
+        </join>
+
+        <join tipo="left">
+    	     <table id="MANT_PLAN">
+    	        <field id="equipo_id">
+    	    	    <condicion operador="=">id_equipo</condicion>
+    	        </field>
+    	     </table>
+        </join>
+
+        <join tipo="left">
+    	     <table id="MANT_PLAN_EVENTOS">
+    	        <field id="plan_id">
+    	    	    <condicion operador="=">id_plan</condicion>
+    	        </field>
+    	     </table>
+        </join>
+    </form>
+</histrix>	

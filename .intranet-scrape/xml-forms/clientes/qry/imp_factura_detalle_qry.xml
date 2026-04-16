@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="consulta">
+	<title>Detalles</title>
+	 <obs></obs>
+		<consulta>
+		    <table id="REG_DETALLES" label="Detalle de Movimientos" styleTbody="height:150px;overflow-x:hidden;" >
+				<field id="regmovim_id" noshow="true" />
+				       
+				<field id="orden" noshow="true" />
+
+				<field id="codigo_detalle">
+				    <label>Código</label>
+				</field>
+
+				<field id="descripcion_detalle">
+				    <label>Concepto</label>
+				</field>
+			
+				<field id="cantidad_detalle">
+				    <label>Cantidad</label>
+				    <tipo>integer</tipo>
+				</field>
+				
+				<field id="total_detalle" suma="true">
+				    <label>Total</label>
+				    <tipo>numeric</tipo>
+				</field>
+
+				<order>
+				    <field id="orden"/>
+				</order>
+	
+		    </table>
+		</consulta>
+    </histrix>	

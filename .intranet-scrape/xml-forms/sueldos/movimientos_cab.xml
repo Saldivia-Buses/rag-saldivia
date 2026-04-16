@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="cabecera" >
+    <title>Emisión de Vales</title>
+    <obs></obs>
+    <form >
+        <table id="RH_MOVIMIENTOS" label="Movimientos" _styleTbody="height:500px;"
+        >
+            <campo id="fecha">
+                <label>Fecha </label>
+                <help>Fecha de Emisión</help>
+                <valor>today</valor>
+                <tipo>date</tipo>
+            </campo>
+						
+
+            <campo id="concepto_id" >
+            	<tabla_ex xml="rhconceptos.xml"></tabla_ex>
+                <label>Concepto</label>
+                <valor>1</valor>
+            </campo>
+
+            <campo id="importe">
+                <label>Importe</label>
+                <help>Importe</help>
+            </campo>
+
+        </table>
+    </form>
+</histrix>

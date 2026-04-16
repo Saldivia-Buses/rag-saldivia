@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="card" imprime="false" inserta="false">
+  <title>Inventario IT</title>
+  <obs></obs>
+  <form>
+    <table id="ITINVENTARY" label="INVENTARIO IT">
+      
+ 
+      <field id="id_itinventary" autoinc="true" noshow="true">
+        <label>ID</label>
+      </field> 
+      
+       <field id="user_admin" >
+        <label>Usuario</label>
+      </field> 
+
+      <field id="os" >
+        <label>So</label>
+      </field>
+
+
+     <field id="PWD">
+	<expression>pass_admin</expression>
+      <label>Password</label>
+      <size>24</size>
+     </field>
+
+       <field id="ip" noshow="true">
+      <label>IpAddress</label>
+      <size>15</size>
+      </field> 
+
+       <field id="isup" local="true" deshabilitado="true" _noshow="true" _clasefila="true">
+	    <if exp="os==windows">
+		<true>
+                        <![CDATA[(exec(' net rpc SHUTDOWN -I ip -f -U user_admin%PWD   2>/tmp/error_off.log  && echo 1'))?'pass_admin':'APAGADO']]>
+		</true>
+		
+		<false> 
+			function(){
+                        $conectar=ssh2_connect('ip',22);
+                        ssh2_auth_password($conectar, 'user_admin', 'PWD');
+                        ssh2_exec($conectar, 'reboot');
+                        }
+               </false>
+ 	    </if>
+    </field>
+
+
+</table>
+  </form>
+</histrix>  

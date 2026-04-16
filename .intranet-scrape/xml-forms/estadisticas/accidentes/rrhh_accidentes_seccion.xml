@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="chart">
+    <title>Cantidad</title>
+    <obs/>
+    <form>
+        <table id="FRANCOS_PER">
+
+            <grafico id="internos">
+                <ancho>400</ancho>
+                <tipo>P</tipo>
+                <title>Seccion Accidentes</title>
+                <etiquetas>nombre</etiquetas>
+                <datos>cantidad</datos>
+            </grafico>
+
+            <filters>
+                <field id="fechainicio">
+                    <label>Desde</label>
+                    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-1 month')) , 1, date("Y")-1 ))</valor>
+                    <operador>&gt;=</operador>
+                </field>
+                <field id="fechainicio">
+                    <label>Hasta</label>
+                    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-0 month')) , 1, date("Y") )-1)</valor>
+                    <operador>&lt;=</operador>
+                </field>
+            </filters>
+
+            <field id="id" noshow="true"/>
+
+            <field id="fechainicio" noshow="true">
+                <tipo>date</tipo>
+            </field>
+
+            <field id="nombre" tabla="SECCION">
+                <label>Seccion</label>
+            </field>
+
+            <field id="seccion_id" noshow="true">
+                <condicion operador="!=">0</condicion>
+            </field>
+
+            <field id="tipo" noshow="true">
+                <condicion operador="=">1</condicion>
+            </field>
+
+            <field id="cantidad">
+                <expression><![CDATA[COUNT(*)]]></expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <group>
+                <field id="seccion_id" />
+            </group>
+
+            <order>
+                <field id="cantidad" tipoOrden="DESC" />
+            </order>
+
+        </table>
+
+        <join>
+            <table id="SECCION">
+                <field id="id_seccion">
+                    <condicion operador="=">FRANCOS_PER.seccion_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

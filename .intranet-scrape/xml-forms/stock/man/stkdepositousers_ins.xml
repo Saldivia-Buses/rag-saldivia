@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" tipoInsert="IGNORE">
+	<title>Ingreso de usuarios por depositos</title>
+	<obs></obs>
+	<form>
+		<table id="STK_DEPOSITO_USERS" idCampoCond="update">
+
+			<field id="stkdeposito_id" id_temp="stkdeposito_id" />
+			<field id="usuario_id" id_temp="Id_usuario" />
+
+		</table>
+	</form>
+</histrix>

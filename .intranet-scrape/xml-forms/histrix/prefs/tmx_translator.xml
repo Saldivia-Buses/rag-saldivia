@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+	<histrix tipo="liveGrid" noForm="true" dataTable_info="true" dataSource="tmx_translator" tableHeight="400" deleteRow="false"  inserta="false">
+		<title>Tmx Translator</title>
+		<obs></obs>
+		<form >
+			<table id="HTXOPTIONS" label="OPCIONES" >
+				<fieldGroup>
+					<field id="id" noshow="true" esClave="true">
+						
+					</field>				
+					<field id="tmxfile" noshow="true" >
+						<label>archivo</label>
+					</field>
+					<field id="filename" noshow="true">
+						<label>Diccionario</label>
+					</field>
+					<field id="tuid" noshow="true" esClave="true">
+						
+					</field>				
+					<field id="_es" tdWidth="20em">
+						<label>Español</label>
+					</field>
+				</fieldGroup>
+				<fieldGroup>
+					
+					<if> if (strpos($_SESSION['properties']['availableLangs'],'pt') != false) return true; </if>
+
+					<field id="_pt" editable="true" style="border:1px solid #eee;">
+						<label>Portugues</label>
+						
+					</field>
+				</fieldGroup>
+	
+				<fieldGroup>
+					<if> if (strpos($_SESSION['properties']['availableLangs'],'en') != false) return true; </if>
+					<field id="_en" editable="true" style="border:1px solid #eee;">
+						<label>English</label>
+					</field>
+				</fieldGroup>
+
+				<fieldGroup>
+					<if> if (strpos($_SESSION['properties']['availableLangs'],'fr') != false) return true; </if>
+					<field id="_fr" editable="true" style="border:1px solid #eee;">
+						<label>Français</label>
+						
+					</field>				
+				</fieldGroup>
+
+			</table>
+		</form>
+	</histrix>

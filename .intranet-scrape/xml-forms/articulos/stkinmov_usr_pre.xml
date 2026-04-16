@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+	<title>ENTRADA SALIDA STOCK POR CODIGO</title>
+	<obs/>
+	<form >
+		<table id="STKINMOV" label="ENTRADA SALIDA STOCK">
+
+			<field id="opecod">
+				<label>Operador</label>
+				<help></help>
+			</field>
+
+			<field id="nrocha" noselect="true">
+				<label>Num.Fabric</label>
+				<tipo>integer</tipo>
+				<help>Nro de Fabricacion</help>
+			</field>
+			<field id="movfec" noselect="true">
+				<label>Fecha Remito</label>
+				<help>Fecha Remito</help>
+			</field>
+			<field id="siscod" oculto="true">
+				<label>Cod.Sistema</label>
+				<help></help>
+				<condicion operador="=">'01'</condicion>
+			</field>
+			<field id="movref" noselect="true">
+				<label>Referencia</label>
+				<help></help>
+				<format>%10s</format>
+			</field>
+			<field id="artcod" noselect="true">
+				<label>Articulo</label>
+				<help>Codigo de Articulo.</help>
+			</field>
+			<field id="artdes" tabla="STKINSUM" noselect="true">
+				<label>Desc</label>
+				<tipo>varchar</tipo>
+			</field>			
+			<field id="cant" >
+				<expression>count(STKINMOV.artcod)</expression>
+				<label>C.</label>
+				<tipo>decimal</tipo>
+			</field>			
+
+			<field id="movpes" suma="true">
+				<expression>round(sum(STKINMOV.movcos * STKINSUM.valcps / STKINSUM.valuso),4)</expression>
+				<label>Cant</label>
+				<tipo>decimal</tipo>
+			</field>			
+			<group>
+				<field id="opecod" ></field>
+			</group>			
+		</table>
+
+		<join tipo="left">
+			<table id="STKINSUM">
+				<field id="artcod" oculto="true">
+					<condicion operador="=">STKINMOV.artcod</condicion>
+				</field>
+				<field id="siscod" oculto="true">
+					<condicion operador="=">STKINMOV.siscod</condicion>
+				</field>
+
+			</table>
+		</join>		
+	</form>
+</histrix>

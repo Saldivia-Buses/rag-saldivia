@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8" ?>
+	<histrix tipo="ficha" 
+                 modifica="false"
+                 cancel="false"
+                 tabindex="200"
+                 borra="false"
+                 subtipo="vertical"
+                 imprime="false"
+                 createButtonLabel="Crear Contacto">
+		<title>CONTACTOS</title>
+		<obs></obs>
+    <eventos>
+        <event id="insert">close</event>
+    </eventos>
+
+
+		<form>
+			<table id="CCTCONTA" label="Contactos">
+                <movimientos>
+                    <relacion id="tel_add_phone_ins.xml">	</relacion>
+                </movimientos>
+
+				<field id="siscod" noshow="true">
+					<label>Sistema</label>
+					<help></help> 
+				</field>
+				<field id="idconta" autoinc="true" noshow="true">
+					<label>id</label>
+					<help>
+					</help>
+				</field>				
+				<field id="ctacod" deshabilitado="true" noshow="true">
+					<label>Cuenta</label>
+					<help>Código de Cuenta</help>
+				</field>
+            <field id="ctanom" required="true" autocompletar="true" searchRecord="false" local="true">
+                <label colspan="2">Cliente/Empresa</label>
+                <ayuda_ex id="CCTCUENT" condes="true" _xml="HLPcctcuent_conta_cot.xml" dir="/help_local">
+                    <field id="ctacod" noshow="true">
+                        <detalle>ctacod</detalle>
+                    </field>
+						
+                    <field id="ctanom2">
+                        <expression having="false">concat(CCTCUENT.ctanom, ' - ', CCTCUENT.ctafan)</expression>
+                        <tipo>varchar</tipo>
+                    </field>
+                    <field id="siscod" noshow="true" >
+                        <detalle>siscod</detalle>
+                    </field>
+                    
+                    <field id="ctatel" class="informal" noshow="true">
+                        <detalle>ctatel</detalle>
+                    </field>
+                    <field id="baja" oculto="true" >
+                    <condicion operador="!=">1</condicion>
+                    </field>
+                    <clave>ctanom</clave>
+                    <descripcion>ctanom</descripcion>
+                    <order>
+                        <field id="ctanom"></field>
+                    </order>
+                </ayuda_ex>
+	
+                <size>30</size>
+                <valor></valor>
+            </field>
+				<field id="nombre" ldifName="cn,sn">
+					<label >Nombre </label>
+					<help>Nombre del contacto</help>
+				</field>
+				<field id="cargo">
+
+					<label>Cargo </label>
+					<help>Cargo </help>
+					<tabla_ex id="CARGOS">
+						
+						<field id="cargo" clave="true"></field>
+						<field id="nombre"></field>
+						<order>
+							<field id="nombre"></field>							
+						</order>
+					</tabla_ex>
+				</field>
+
+				<field id="Telefono" ldifName="mobile">
+					<label>Teléfono </label>
+					<help></help>
+				</field>
+<!--
+				<field id="movil" >
+					<label modpos="nobr">Celular</label>
+					<help></help>
+				</field>
+				<field id="mail" ldifName="mail" ldifKey="true">
+					<label colspan="5">Mail </label>
+					<help>
+					</help>
+					<size>50</size>
+					<tipo>email</tipo>
+				</field>				
+				<field id="principal">
+					<label>Principal</label>
+					<tipo>check</tipo>
+					<help></help>
+				</field>				
+				-->
+			</table>
+		</form>
+	</histrix>

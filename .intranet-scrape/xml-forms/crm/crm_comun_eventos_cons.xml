@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" path="/fotos/archivo/Comunicaciones/">
+	<title>Respuesta</title>
+	<consulta>
+		<table id="CRM_COMUNIC_EVENTOS">
+			<title>Sugerencias</title>
+			
+			
+			<field id="comunicacion_id" noshow="true">
+			</field>
+			<field id="id_evento" noshow="true">
+			</field>
+			
+			
+			<field id="login" deshabilitado="true">
+				<label>Usuario </label>
+				<help>Usuario que hace el pedido</help>
+				<tabla_ex id="HTXUSERS">
+					<field id="login"></field>
+					<field id="nombre"></field>
+					<order>
+						<field id="nombre"></field>
+					</order>
+				</tabla_ex>
+			</field>
+			
+			<field id="fecha" deshabilitado="true" esclave="true" valauto="true">
+				<label>Fecha</label>
+				<help>Fecha</help>
+				<valor>today</valor>
+			</field>
+
+
+			<field id="evento" _deshabilitado="true" cellMaxLength="100">
+				<label >Respuesta</label>
+				<help>Descripcion </help>
+				<size>200</size>
+				
+			</field>
+			<field id="fieldpath" noshow="true" local="true">
+	                   <expresion>CONCAT('/fotos/archivo/Comunicaciones/',comunicacion_id,'/', id_evento,'/')  </expresion>
+			</field>
+            <field id="fotos" local="true" imageWidth="80" __path="fieldpath">
+                <label >Dir</label>
+	                    <expresion>CONCAT('/fotos/archivo/Comunicaciones/',comunicacion_id,'/', id_evento,'/')  </expresion> 
+
+                <tipo>dir</tipo> 
+            </field>
+
+			
+		</table>
+	</consulta>
+</histrix>

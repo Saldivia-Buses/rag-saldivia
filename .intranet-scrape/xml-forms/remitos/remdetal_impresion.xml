@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta">
+	<title>EMISION DE REMITOS</title>
+	<obs></obs>
+	<form >
+		<table id="REMDETAL" label="DETALLE DEL REMITO">
+			<field id="idRemito" oculto="true"></field>			
+			<field id="artcod" >
+				<label>Cod.</label>
+			</field>
+			<field id="artdes"  tabla="STKINSUM" >
+				<label modpos="nobr">Descripción</label>
+				<tipo>varchar</tipo>
+				<size>20</size>
+			</field>
+			<field id="movref" >
+				<label>Referencia</label>
+			</field>			
+			<field id="cantCompra"   >
+				<label>Cant.</label>
+			</field>
+			<field id="unidadCompra" >
+				<label>Unid. Compras</label>
+				<tabla_ex id="FSMUNIDS">
+					<field id="unicod" clave="true"></field>
+					<field id="uninom"></field>
+				</tabla_ex>				
+				<tipo>varchar</tipo>		
+				
+			</field>						
+
+			
+			<field id="cantUso" >
+				<label>Cant.Uso</label>
+			</field>			
+			<field id="unidadUso" >
+				<label>Unid. uso</label>
+				<tabla_ex id="FSMUNIDS">
+					<field id="unicod" clave="true"></field>
+					<field id="uninom"></field>
+				</tabla_ex>		
+				<tipo>varchar</tipo>		
+			</field>						
+			
+			<field id="nrofab" >
+				<label>Fab.</label>
+			</field>			
+			<field id="fecreq" >
+				<label>Requerido</label>
+			</field>			
+			<field id="usuario" deshabilitado="true" tabla="PEDIDOINT">
+				<label Formstyle="display:none;">por</label>
+				<help>Usuario que hace el pedido</help>
+				<tabla_ex id="HTXUSERS">
+					<field id="login"></field>
+					<field id="nombre">
+						<expression>concat(nombre,' ', apellido)</expression>
+					</field>
+					<order>
+						<field id="nombre"></field>
+					</order>
+				</tabla_ex>
+				<tipo>varchar</tipo>
+			</field>		
+
+	
+		</table>
+		<join tipo="left">
+			<table id="STKINSUM">
+				<field id="siscod" oculto="true">
+					<label>STKINSUM.siscod</label>
+					<condicion operador="=">'01'</condicion>
+				</field>
+				<field id="artcod" oculto="true">
+					<condicion operador="=">REMDETAL.artcod</condicion>
+				</field>
+			</table>
+		</join>		
+		<join tipo="left">
+			<table id="PEDIDOINT">
+				<field id="idPed">
+					<condicion operador="=">REMDETAL.idPed</condicion>
+				</field>
+			</table>
+		</join>
+			
+			
+	</form>
+</histrix>

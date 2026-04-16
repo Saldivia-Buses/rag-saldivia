@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" path="fotos/coches/" tooltip="false" _preloadData="false">
+  <title>Fotos Patententamiento</title>
+  <obs/>
+  <form >
+    <table id="FICHAFOTOS" label="Fotos Patententamiento" style__Tbody="height:100px;overflow-x:hidden;">    
+       <field id="nrofab" oculto="true" >
+       </field>
+
+      <field id="pathpat" noshow="true" local="true">
+        <tipo>varchar</tipo>
+        <label>path</label>
+        <if exp="true">
+            <true>'nrofab/patentamiento/'</true>
+            <false>''</false>
+        </if>                
+        <size>20</size>
+      </field>
+
+      <field  id="foto" foto="true" path="pathpat" deshabilitado="false">
+        <label>Foto</label>
+        <help></help>
+        <tipo Type="image">file</tipo>
+        <size>50</size>
+      </field>         
+      <field  id="descripcion" >
+        <label>Descripción</label>
+        <help>Descripción</help>
+        <tipo>varchar</tipo>
+        <size>20</size>
+      </field>                
+     </table>
+  </form>
+</histrix>

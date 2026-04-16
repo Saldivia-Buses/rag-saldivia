@@ -28,11 +28,6 @@ import (
 
 var ErrJobNotFound = errors.New("job not found")
 
-// EventPublisher can publish notification events. Optional.
-type EventPublisher interface {
-	Notify(tenantSlug string, evt any) error
-}
-
 // Config holds ingest service configuration.
 type Config struct {
 	BlueprintURL string        // http://localhost:8081
@@ -53,16 +48,16 @@ type IngestMessage struct {
 
 // Ingest manages document upload and job tracking.
 type Ingest struct {
-	pool      *pgxpool.Pool
-	repo      *repository.Queries
-	nc        *nats.Conn
-	publisher EventPublisher
-	auditor   *audit.Writer
-	cfg       Config
+	pool    *pgxpool.Pool
+	repo    *repository.Queries
+	nc      *nats.Conn
+	auditor *audit.Writer
+	cfg     Config
 }
 
-// New creates an Ingest service.
-func New(pool *pgxpool.Pool, nc *nats.Conn, publisher EventPublisher, cfg Config) *Ingest {
+// New creates an Ingest service. Event publishing for job completion is handled
+// via the transactional outbox in the Worker (see completeJob).
+func New(pool *pgxpool.Pool, nc *nats.Conn, cfg Config) *Ingest {
 	if cfg.StagingDir == "" {
 		cfg.StagingDir = "/tmp/ingest-staging"
 	}
@@ -71,12 +66,11 @@ func New(pool *pgxpool.Pool, nc *nats.Conn, publisher EventPublisher, cfg Config
 	}
 
 	return &Ingest{
-		pool:      pool,
-		repo:      repository.New(pool),
-		nc:        nc,
-		publisher: publisher,
-		auditor:   audit.NewWriter(pool),
-		cfg:       cfg,
+		pool:    pool,
+		repo:    repository.New(pool),
+		nc:      nc,
+		auditor: audit.NewWriter(pool),
+		cfg:     cfg,
 	}
 }
 
@@ -127,13 +121,13 @@ func (s *Ingest) Submit(ctx context.Context, tenantSlug, userID, collection, fil
 	stagedPath := tmpFile.Name()
 
 	written, err := io.Copy(tmpFile, file)
-	tmpFile.Close()
+	_ = tmpFile.Close()
 	if err != nil {
-		os.Remove(stagedPath)
+		_ = os.Remove(stagedPath)
 		return nil, fmt.Errorf("stage file: %w", err)
 	}
 	if written == 0 {
-		os.Remove(stagedPath)
+		_ = os.Remove(stagedPath)
 		return nil, fmt.Errorf("empty file")
 	}
 
@@ -145,7 +139,7 @@ func (s *Ingest) Submit(ctx context.Context, tenantSlug, userID, collection, fil
 		FileSize:   fileSize,
 	})
 	if err != nil {
-		os.Remove(stagedPath)
+		_ = os.Remove(stagedPath)
 		return nil, fmt.Errorf("create ingest job: %w", err)
 	}
 	job := toJob(row)
@@ -161,14 +155,15 @@ func (s *Ingest) Submit(ctx context.Context, tenantSlug, userID, collection, fil
 		StagedPath: stagedPath,
 	})
 	if err != nil {
-		os.Remove(stagedPath)
+		_ = os.Remove(stagedPath)
 		return nil, fmt.Errorf("marshal ingest message: %w", err)
 	}
 
 	// S7 fix: fail the upload if NATS publish fails — prevents orphaned pending jobs
+	//nolint:forbidigo // Plan 26 Fase 3 migrates ingest publishes to outbox.PublishTx.
 	if err := s.nc.Publish(subject, payload); err != nil {
-		os.Remove(stagedPath)
-		s.repo.DeleteJobByID(ctx, job.ID)
+		_ = os.Remove(stagedPath)
+		_ = s.repo.DeleteJobByID(ctx, job.ID)
 		return nil, fmt.Errorf("publish ingest job: %w", err)
 	}
 

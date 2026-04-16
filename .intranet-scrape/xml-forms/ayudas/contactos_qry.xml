@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Contacto</title>
+  <obs></obs>
+  <form>
+    <table id="GEN_TIPO_CONTACTOS" label="Tipo Contacto">
+	
+		<field id="id_contacto" autoinc="true" noshow="true">
+			<label>Código</label>
+		</field>
+
+		<field id="tipo_contacto">
+			<label>Tipo Contacto</label>
+			<help>Nombre del tipo Contacto</help>
+			<size>25</size>
+		</field>
+
+
+
+    </table>
+  </form>
+</histrix>  

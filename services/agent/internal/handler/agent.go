@@ -3,14 +3,13 @@ package handler
 
 import (
 	"encoding/json"
-	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	chimw "github.com/go-chi/chi/v5/middleware"
 
-	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 	"github.com/Camionerou/rag-saldivia/pkg/llm"
+	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/services/agent/internal/service"
 )
 
@@ -46,26 +45,24 @@ func (h *Handler) Query(w http.ResponseWriter, r *http.Request) {
 
 	var req queryRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, `{"error":"invalid request body"}`, http.StatusBadRequest)
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid request body"))
 		return
 	}
 
 	if req.Message == "" {
-		http.Error(w, `{"error":"message is required"}`, http.StatusBadRequest)
+		httperr.WriteError(w, r, httperr.InvalidInput("message is required"))
 		return
 	}
 
 	userID := r.Header.Get("X-User-ID")
 	result, err := h.svc.Query(r.Context(), jwt, userID, req.Message, req.History)
 	if err != nil {
-		slog.Error("agent query failed", "error", err,
-			"request_id", chimw.GetReqID(r.Context()))
-		http.Error(w, `{"error":"query failed"}`, http.StatusInternalServerError)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(result)
+	_ = json.NewEncoder(w).Encode(result)
 }
 
 type confirmRequest struct {
@@ -81,24 +78,23 @@ func (h *Handler) Confirm(w http.ResponseWriter, r *http.Request) {
 
 	var req confirmRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, `{"error":"invalid request body"}`, http.StatusBadRequest)
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid request body"))
 		return
 	}
 
 	if req.Tool == "" {
-		http.Error(w, `{"error":"tool is required"}`, http.StatusBadRequest)
+		httperr.WriteError(w, r, httperr.InvalidInput("tool is required"))
 		return
 	}
 
 	result, err := h.svc.ExecuteConfirmed(r.Context(), jwt, req.Tool, req.Params)
 	if err != nil {
-		slog.Error("confirm execution failed", "error", err, "tool", req.Tool)
-		http.Error(w, `{"error":"execution failed"}`, http.StatusInternalServerError)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(result)
+	_ = json.NewEncoder(w).Encode(result)
 }
 
 func extractJWT(r *http.Request) string {

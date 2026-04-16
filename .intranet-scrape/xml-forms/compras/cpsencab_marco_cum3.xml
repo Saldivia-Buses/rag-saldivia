@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="liveGrid" deleteRow="false">
+	<title>ORDENES DE COMPRA</title>
+	<obs></obs>
+	<form  >
+		<table id="CPSENCAB" label="ORDENES DE COMPRA">
+
+			<field id="siscod" oculto="true">
+				<detalle>CPSMOVIM.siscod</detalle>
+			</field>
+			
+			<field id="ocpfec" deshabilitado="true">
+				<label>Fecha</label>
+				<help>Fecha de Orden de Compra</help>
+				<detalle>ocpfec</detalle>				
+			</field>
+
+			<field id="ocpnro" deshabilitado="true">
+				<label>Nro</label>
+				<help>Número de Orden de Compra</help>
+				<detalle>ocpnro</detalle>
+			</field>
+			
+			<field id="ctacod" oculto="true">
+				<detalle>ctacod</detalle>
+			</field>
+			
+			<field id="ocpest" editable="true">
+				<label>Estado </label>
+				<help>Estado Actual</help>
+				<options>
+					<option valor="1">Pendiente</option>
+					<option valor="2">Cumplida</option>
+					<option valor="3">Anulada</option>
+				</options>
+			</field>
+
+		</table>
+		
+		<join tipo="left">
+			<table id="CCTCUENT">
+				<field id="siscod" oculto="true">
+					<label>cctcuent.siscoc</label>
+					<condicion operador="=">'01'</condicion>
+				</field>
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">CPSENCAB.ctacod</condicion>
+				</field>
+				<field id="ctanom" oculto="true">
+				</field>
+			</table>
+		</join>
+		
+	</form>
+</histrix>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta"  PDFfontSize="7" showCantidad="false">
+    <title>DETALLE</title>
+    <obs></obs>
+    <form>
+        <table id="MRP_ORDEN_DETALLE" label="DETALLE">
+
+            <field id="mrporden_id" oculto="true" />
+
+            <field id="stkarticulo_id" deshabilitado="true" esClave="true" PDFcolWidth="25px" PDFalign="C">
+                <label>CODIGO</label>
+            </field>
+
+            <field id="nombre_articulo">
+                <expression>MRP_ORDEN_DETALLE.descripcion_articulo</expression>
+                <label>PRODUCTO</label>
+            </field>
+
+            <!-- <field id="texto">
+                <label>Producto</label>
+                <expression having="false"><![CDATA[
+						CONCAT('<b>', STK_ARTICULOS.id_stkarticulo, ' - ', STK_ARTICULOS.nombre_articulo,'</b><br>', (select GROUP_CONCAT(' # ',replace(lpad(round((STK_BOM.cantidad * MRP_ORDEN_DETALLE.objetivo_ordendetalle),2),7,'-'),'-','  '),'  |  ', round(STK_BOM.cantidad,2), ' x ', STK_ARTICULOS.nombre_articulo SEPARATOR '<br>') from STK_BOM
+                        LEFT JOIN STK_ARTICULOS ON STK_ARTICULOS.id_stkarticulo = STK_BOM.stkarticulohijo_id
+                        WHERE STK_BOM.stkarticulopadre_id = MRP_ORDEN_DETALLE.stkarticulo_id))
+                ]]></expression>
+                <tipo>editor</tipo>
+            </field> -->
+
+            <field id="minimo_ordendetalle" PDFcolWidth="15px" PDFalign="C" suma="true">
+                <label>MINIMO</label>
+            </field>
+
+            <field id="objetivo_ordendetalle" PDFcolWidth="17px" PDFalign="C" suma="true">
+                <label modpos="nobr">OBJETIVO</label>
+            </field>
+
+            <field id="tiempo" noZero="true" PDFcolWidth="15px" PDFalign="C">
+                <label modpos="nobr">TIEMPO</label>
+                <expression>concat(round(objetivo_ordendetalle / STK_ARTICULOS.produccion_diaria * 8.5,0), 'hs')</expression>
+            </field>
+
+            <field id="alto_corte" _local="true" style="font-size:1.2em;" deshabilitado="false">
+                <label>ALTO</label>
+                <expression>(case when alto_ordendetalle != 0 then alto_ordendetalle else alto end)</expression>
+            </field>
+            <field id="ancho_corte" _local="true" style="font-size:1.2em;" deshabilitado="false">
+                <label>ANCHO</label>
+                <expression>(case when ancho_ordendetalle != 0 then ancho_ordendetalle else alto end)</expression>
+            </field>
+            <field id="metros_cuadrados" suma="true" deshabilitado="false">
+                <label>M2</label>
+                <expression>(alto_ordendetalle * ancho_ordendetalle * objetivo_ordendetalle)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="producido_ordendetalle" noZero="true" PDFcolWidth="25px" PDFalign="C">
+                <label modpos="nobr">PRODUCIDO</label>
+            </field>
+
+            <field id="observaciones_ordendetalle" deshabilitado="true" PDFalign="C">
+                <label>OBSERVACIONES</label>
+            </field>
+
+        </table>
+
+        <join tipo="left">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">MRP_ORDEN_DETALLE.stkarticulo_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

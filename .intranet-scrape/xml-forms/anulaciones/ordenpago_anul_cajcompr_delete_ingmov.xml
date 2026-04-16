@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="delete">
+       <title>REGISTRO DE CAJA</title>
+        <obs></obs>
+               <form >
+					<table id="CAJCOMPR" label="ANULACION ORDEN DE PAGO" >
+						<field id="siscod" id_temp="siscod" esClave="true">
+						</field>
+						<field id="ctacod" id_temp="ctacod" esClave="true">
+						</field>
+						<field id="concod" id_temp="concod" esClave="true">
+						</field>
+						<field id="nrocom" id_temp="movinc" esClave="true">
+						</field>
+						<field id="movicc" id_temp="movicc" esClave="true">
+						</field>
+						<field id="movipv" id_temp="movipv" esClave="true">
+						</field>
+						<field id="movnpv" id_temp="movnpv" esClave="true">
+						</field>
+						<field id="movnro" id_temp="movnro" esClave="true">
+						</field>
+						
+						
+					</table>
+               </form>
+        </histrix>

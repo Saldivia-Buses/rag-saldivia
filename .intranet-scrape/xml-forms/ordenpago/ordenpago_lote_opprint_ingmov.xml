@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="nosql" impresion="cctmovim_OP.xml" >
+       <title>BANCOS</title>
+        <obs></obs>
+               <form >
+                    <table id="CCTMOVIM" idCampoCond="pagar">
+
+                            <field id="printer" id_padre="printer_orden" local="true" >
+                                <detalle>printer</detalle>
+                                <detalle>directprint</detalle>
+                                <setvar>directprint</setvar>
+                            </field> 
+                            <field id="id_regmovim"  lastId="ordenpago_lote_cctmovim_ingmov.xml" >
+                                    <detalle>id_regmovim</detalle>
+                            </field>
+                            <field id="ctacod"   id_temp="ctacod">
+                                    <detalle>ctacod</detalle>
+                            </field>
+                            <field id="movfec"   id_padre="movfec">
+                                    <detalle>movfec</detalle>
+                            </field>
+
+
+                    </table>
+
+               </form>
+        </histrix>

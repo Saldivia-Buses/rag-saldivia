@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" imprimetanda="true" PDFfontSize="6.5" PDForientacion="L">
+  <title>FICHA PERSONAL</title>
+  <obs></obs>
+  <form  >
+    <table id="PERSONAL" label="Ficha Personal">
+      
+    
+      <field id="pervac" local="true" oculto="true">
+        <label>Periodo</label>
+        <parametro id="fsmparam_paralf.xml" retorna="paralf">
+          <field id="parcla">
+            <condicion operador="=">'pervac'</condicion>
+          </field>
+        </parametro>
+        <tipo>varchar</tipo>
+      </field>
+      
+      <field id="comvac" local="true" oculto="true">
+        <label>Com</label>
+        <parametro id="fsmparam_paralf.xml" retorna="paralf">
+          <field id="parcla">
+            <condicion operador="=">'comvac'</condicion>
+          </field>
+        </parametro>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="impvac" local="true" oculto="true">
+        <label>Comienza</label>
+        <parametro id="fsmparam_paralf.xml" retorna="paralf">
+          <field id="parcla">
+            <condicion operador="=">'impvac'</condicion>
+          </field>
+        </parametro>
+        <tipo>varchar</tipo>
+        <size>50</size>
+      </field>
+      
+      <field id="IdPersona" noshow="true">
+        <label modpos="nobr">pers</label>
+      </field>
+      
+      <field id="legajo" esClave="true">
+        <label modpos="nobr">Legajo</label>
+      </field>
+
+      <field id="apellido">
+        <label modpos="nobr" colspan="6">Apellido</label>
+        <help>Apellido</help>
+      </field>
+
+      <field id="Nombre">
+        <label modpos="nobr">Nombre</label>
+        <help>Nombre</help>
+      </field>
+
+      <field id="CUIL">
+        <label style="width:90px; text-align:center;" modpos="nobr" >C.U.I.L</label>
+        <help></help>
+      </field>
+
+      <field id="DNI">
+        <label style="width:90px; text-align:center;" modpos="nobr" >DNI</label>
+        <help></help>
+      </field>
+            
+      <field id="nacimiento">
+        <label style="width:80px; text-align:center;" modpos="nobr" >Fecha Nac.</label>
+        <help>Fecha de Nacimiento</help>
+      </field>
+
+      <field id="fecing">
+        <label style="width:80px; text-align:center;" modpos="nobr" >Fecha Ing.</label>
+        <help>Fecha de Ingreso</help>
+      </field>      
+
+      <field id="tipoliq" noshow="true">
+          <expression>select tipoliq FROM CONCEPCONV inner join CONVENIOS on CONVENIOS.idSindicato= CONCEPCONV.IdSindicato  where CONCEPCONV.IdSindicato = PERSONAL.IdSindicato and CONCEPCONV.IdCateg = PERSONAL.IdCateg limit 1</expression>
+          <label>Tipo Liq.</label>
+          <tipo>varchar</tipo>
+      </field>   
+
+      <field id="importe" noshow="true">
+        <label>importe</label>
+        <expression><![CDATA[select importe FROM CONCEPCONV inner join CONVENIOS on CONVENIOS.idSindicato= CONCEPCONV.IdSindicato  where CONCEPCONV.IdSindicato = PERSONAL.IdSindicato and CONCEPCONV.desfec <= now() and CONCEPCONV.IdCateg = (select CATEGHISTORIA.idCateg from CATEGHISTORIA left join CATPERSONAL on CATPERSONAL.IdSindicato = CATEGHISTORIA.idSindicato and CATPERSONAL.IdCateg = CATEGHISTORIA.IdCateg where CATEGHISTORIA.IdPersona = PERSONAL.IdPersona order by CATEGHISTORIA.fechaDesde desc limit 1)  order by CONCEPCONV.desfec DESC limit 1]]>
+        </expression>
+        <tipo>decimal</tipo>
+      </field>
+
+      <field id="desc_secc">
+      	<expression>SECCION.nombre</expression>
+      	<label>Sección</label>
+      </field>
+
+      <field id="perfilpuesto_id" tabla="RH_PERSONAL_PERFIL_PUESTO" noshow="true" />
+
+      <field id="ver_perfil">
+        <label>Perfil</label>
+        <helper type="link" xml="perfil_puesto_detalle.xml" dir="/fichadas/" width="60%" height="90%">
+            <parameter target="id_perfilpuesto" source="perfilpuesto_id"/>
+        </helper>
+        <expression>nombre_perfilpuesto</expression>
+      </field>
+
+      <field id="IdCateg2">
+        <label style="width:180px;" modpos="nobr">Categoría</label>
+        <expression>select descripcion from CATEGHISTORIA
+          left join CATPERSONAL
+          on CATPERSONAL.IdSindicato = CATEGHISTORIA.idSindicato
+          and CATPERSONAL.IdCateg = CATEGHISTORIA.IdCateg
+          where CATEGHISTORIA.IdPersona = PERSONAL.IdPersona
+          and CATEGHISTORIA.fechaDesde &lt; CURDATE()
+          order by CATEGHISTORIA.fechaDesde desc limit 1</expression>
+      </field>
+
+      <field id="bruto" local="true" PDFcolWidth="11">
+        <label style="width:70px; text-align:center;">Bruto</label>
+        <if exp="'tipoliq' == '1'">
+          <true>importe * 196</true>
+          <false>importe</false>
+        </if>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="calle" PDFsize="40">
+        <expression>CONCAT(calle, ' ', numero)</expression>
+        <label style="width:220px;">Dirección</label>
+        <help></help>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="numero" noshow="true">
+        <label modpos="nobr">Número</label>
+        <help>Numero</help>
+      </field>
+
+      <field id="piso">
+        <expression>piso</expression>
+        <label modpos="nobr">P</label>
+        <help>Piso</help>
+      </field>
+
+      <field id="depto" _noshow="true">
+        <label modpos="nobr">D</label>
+        <help>Departamento</help>
+      </field>
+
+      <field id="nombre" tabla="LOCALIDADES">
+        <label modpos="nobr" colspan="3">Localidad</label>
+        <help>Localidad</help>
+      </field>
+      
+      <field id="telefono">
+        <label modpos="nobr">Teléfono</label>
+        <help>Teléfono</help>
+      </field>
+
+      <field id="celular">
+        <label modpos="nobr">Celular</label>
+        <help>Celular</help>
+      </field>
+
+      <field id="certificado_trabajo" local="true" noshow="true">
+        <valor>'true'</valor>
+      </field>
+
+      <field id="certificado_renuncia" local="true" noshow="true">
+        <valor>'false'</valor>
+      </field>
+
+      <field id="certificado" local="true" style="width:5em;">
+      	<label>Certificado</label>
+      	<helper type="link" xml="personal_certificado_qry.xml" dir="/personal/qry">
+          <parameter source="IdPersona" target="IdPersona" />
+          <parameter source="certificado_trabajo" target="certificado_trabajo" />
+          <parameter source="certificado_renuncia" target="certificado_renuncia" />
+      	</helper>
+      	<valor>'&gt;&gt;'</valor>
+      </field>
+	
+      <field id="seccion_productiva" tabla="SECCION">
+        <label>Sección Tipo</label>
+        <options>
+          <option valor="0">Prod.</option>
+          <option valor="1">No Prod.</option>
+        </options>
+      </field>
+
+      <field id="fechaEgreso" oculto="true">
+        <condicion operador="=">'0000-00-00'</condicion>
+      </field>
+
+      <field id="zebra" local="true" clasefila="true" noshow="true">
+        <if exp="_ORDEN % 2 == 0">
+          <true>'grisado'</true>
+          <false>''</false>
+        </if>
+      </field>
+
+      <field id="eventual" noshow="true">
+        <condicion operador="=">0</condicion>
+      </field>
+
+      <order>
+        <field id="apellido"></field>
+        <field id="Nombre" tabla="PERSONAL"></field>
+      </order>
+
+    </table>
+
+    <join tipo="left">
+      <table id="SECCION">
+        <field id="id_seccion">
+          <condicion operador="=">PERSONAL.id_seccion</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="CATPERSONAL">
+        <field id="idSindicato">
+          <condicion operador="=">PERSONAL.idSindicato</condicion>
+        </field>
+        <field id="idCateg">
+          <condicion operador="=">PERSONAL.idCateg</condicion>
+        </field>
+      </table>
+    </join>    
+
+    <join tipo="left">
+      <table id="FSMPROVS">
+        <field id="prvcod" >
+          <condicion operador="=">PERSONAL.idProvincia</condicion>
+        </field>
+      </table>
+    </join>    
+    
+    <join tipo="left">
+      <table id="LOCALIDADES" vacio="true">
+        <field id="idLocalidad" >
+          <condicion operador="=">PERSONAL.localidad</condicion>
+        </field>
+        <field id="idProvincia" >
+          <condicion operador="=">PERSONAL.idProvincia</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+            <table id="RH_PERSONAL_PERFIL_PUESTO">
+                <field id="persona_id">
+                    <condicion operador="=">PERSONAL.IdPersona</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="RH_PERFIL_PUESTO">
+                <field id="id_perfilpuesto">
+                    <condicion operador="=">RH_PERSONAL_PERFIL_PUESTO.perfilpuesto_id</condicion>
+                </field>
+            </table>
+        </join>
+
+  </form>
+</histrix>

@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix sololectura="true" tipo="ficha" autoprint="true" sinNumero="true" sinFecha="true">
+	<title>Fichadas</title>
+	<obs/>
+	<form >
+	<pdf>
+	    <code><![CDATA[
+	               $pdf->Rect(5,145,$pdf->anchoPagina - 5,125, 0.1);
+				   $pdf->Rect(5,145,$pdf->anchoPagina - 5,11, 0.1);
+				   $pdf->Rect(5,156,$pdf->anchoPagina - 64 ,7, 0.1);
+				   $pdf->Rect($pdf->anchoPagina - 59, 156,($pdf->anchoPagina - 25) / 3,7, 0.1);
+
+				   $pdf->Rect(5,163,$pdf->anchoPagina - 64 ,6, 0.1);
+				   $pdf->Rect($pdf->anchoPagina - 59, 163,($pdf->anchoPagina - 25) / 3,6, 0.1);
+
+				   $pdf->Rect(5,169,$pdf->anchoPagina - 64 ,6, 0.1);
+				   $pdf->Rect($pdf->anchoPagina - 59, 169,($pdf->anchoPagina - 25) / 3,6, 0.1);
+
+				   $pdf->Rect(5,175,$pdf->anchoPagina - 5 ,6, 0.1);
+
+				   $pdf->Rect(5,181,$pdf->anchoPagina - 5,27, 0.1);
+	                ]]>
+	    </code>
+	</pdf>
+		<table id="PERSONAL" label="Ficha Personal">
+			<field id="legajo">
+				<label posx="5" posy="20" size="14">Legajo</label>
+				<help>Numero de Legajo</help>
+				<valor>0</valor>
+			</field>
+			<field id="nom_trab" _deshabilitado="true" local="true">
+				<label posx="30" posy="20" size="14">Nombre</label>
+				<expression>CONCAT(apellido,', ', PERSONAL.Nombre)</expression>
+				<tipo>varchar</tipo>
+				<size>60</size>
+			</field>
+			<field id="CUIL">
+				<label modpos="nobr" posx="100" posy="0" size="14">C.U.I.L.</label>
+				<help>Numero de Clave Unica de Identificacion Laboral</help>
+			</field>
+			<field id="opecod" print="false"/>
+			<field id="nombre" tabla="JORNADAS">
+				<label posx="140" posy="0" size="14">Horario</label>
+				<help>Horario</help>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="tarjeta" print="false">
+				<label modpos="nobr" posx="10"  posy="+1">Tarjeta</label>
+				<help></help>
+				<valor>0</valor>
+			</field>
+			<field id="desdefecha" local="true" print="false">
+				<label posx="10" posy="+1">Desde Fecha</label>
+				<tipo>date</tipo>
+			</field>
+			<field id="hastafecha" local="true" print="false">
+				<label posx="10" posy="+1">Hasta Fecha</label>
+				<tipo>date</tipo>
+			</field>
+			<field id="idPersona" oculto="true"></field>
+			<field id="idJornada" oculto="true"></field>
+			<field id="conbj" _oculto="true" noshow="true" print="false">
+				<label  >conobj</label>
+				<expression>
+					case when PERSONAL.idJornada >= 4 then 'true' else 'false' end
+				</expression>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="conley" oculto="true">
+				<label>conley</label>
+				<expression>case when JORNADAS.leyenda = '' then 'true' else 'false' end</expression>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="fichadas" local="true" obj="fichadas_impr.xml" >
+				<attribute id="oculto">conobj</attribute>
+				<label posy="+2" posx="5" ></label>
+				<!--				<paring destino="tarjeta" operador="=">tarjeta</paring>
+			-->
+			<paring destino="fecha" operador="&gt;=" reemplazo="false">desdefecha</paring>
+			<paring destino="fecha2" operador="&lt;=" reemplazo="false">hastafecha</paring>
+			<paring destino="idJornada">idJornada</paring>
+			<paring destino="idPersona" >idPersona</paring>
+		</field>
+		<field id="leyenda" tabla="JORNADAS" deshabilitado="true" >
+			<attribute id="oculto">conley</attribute>
+			<label colspan="4" posx="10" posy="50"  PDFsize="10">Horario de Trabajo</label>
+		</field>
+		<field id="firma1" deshabilitado="true" local="true">
+			<label colspan="4" posx="110" posy="+2"  PDFsize="10">Firma y Aclaración:</label>
+			<valor>..................................</valor>
+		</field>
+
+
+		<field id="titulo" local="true" PDFnolabel="true" PDFsize="11">
+			<label posx="20" posy="140" _PDFbackgroundColor="000000" />
+			<valor>
+				ENTREGA DE ROPA DE TRABAJO Y ELEMENTOS DE PROTECCIÓN PERSONAL
+			</valor>
+		</field>
+		<field id="razon_social" local="true">
+			<label posx="5" posy="+1" size="20">Razón Social:</label>
+			<valor>'María Carmen Murabito'</valor>
+		</field>
+		<field id="cuit" local="true">
+			<label posx="140" posy="0" size="20">C.U.I.T.:</label>
+			<valor>27-06508092-9</valor>
+		</field>
+		<field id="direccion" local="true">
+			<label posx="5" posy="+2" size="20">Dirección:</label>
+			<valor>Ruta 21 KM 7 PIA LOTE 0004 7</valor>
+		</field>
+		<field id="localidad" local="true">
+			<label posx="75" posy="0" size="20">Localidad:</label>
+			<valor>Alvear</valor>
+			<tipo>varchar</tipo>
+		</field>
+		<field id="cp" local="true">
+			<label posx="110" posy="0" size="20">C.P.:</label>
+			<valor>2126</valor>
+		</field>
+		<field id="provincia" local="true">
+			<label posx="140" posy="0" size="20">Provincia:</label>
+			<valor>Santa Fe</valor>
+		</field>
+		<field id="nomape" _deshabilitado="true" local="true" autocompletar="true">
+			<label posx="5" posy="+2" size="55">Nombre y Apellido del Trabajador:</label>
+			<expression>CONCAT(apellido,', ', PERSONAL.Nombre)</expression>
+			<tipo>varchar</tipo>
+			<size>60</size>
+		</field>
+		<field id="DNI">
+			<label posx="140" posy="0" size="20">D.N.I.:</label>
+		</field>
+		<field id="lblnombre_ciuo" local="true">
+			<label posx="5" posy="+2" size="55">Descripción breve del puesto/s de trabajo:</label>
+		</field>
+		<field id="nombre_ciuo">
+			<label posx="60" posy="0" />
+			<expression>CIUO.nombre</expression>
+		</field>
+		<field id="lblarticulos_puesto" local="true">
+			<label posx="5" posy="+2" size="85">Elementos de protección personal, según el puesto de trabajo:</label>
+		</field>
+
+		<field id="articulos_puesto" _pdfancho="195">
+			<label posx="5" posy="+1" />
+			<expression>
+				SELECT GROUP_CONCAT( DISTINCT STKINSUM.artdes) FROM CIUO_ARTICULOS INNER JOIN STKINSUM ON CIUO_ARTICULOS.artcod = STKINSUM.artcod 
+    WHERE CIUO_ARTICULOS.idPuesto = PERSONAL.idPuesto
+			</expression>
+		</field>
+		<field id="idPuesto" _local="tue" noshow="true" print="false">
+			<label>Puesto</label>
+			<help>Codigo</help>
+			<detalle>idPuesto</detalle>
+		</field>
+		<field id="movcod" noshow="true" local="true" print="false">
+			<label>concepto</label>
+			<helper type="parameter" id="SIS::01:stock_codigo_concepto_utilizacion" >
+				<label>Codigo de Concepto Stock para Utilizacion de materiales</label>
+				<defaultValue>31</defaultValue>
+			</helper>
+		</field>
+		<field id="movimientos" local="true" showObjTabla="true" pdfwidth="195">
+			<label posx="6" posy="204" />
+			<helper type="object" xml="salida_seguridad_det.xml" dir="/personal/qry">
+				<parameter source="opecod"  target="opecod"/>
+				<parameter source="desdefecha" target="fecha_desde" />
+				<parameter source="hastafecha" target="fecha_hasta" />
+				<parameter source="movcod" target="movcod" />
+			</helper>
+		</field>
+		<field id="ocpobs" deshabilitado="true" local="true">
+			<label colspan="4" posx="110" posy="267"  PDFsize="10">Firma y Aclaración: </label>
+			<valor>..................................</valor>
+		</field>
+	</table>
+	<join tipo="left">
+		<table id="JORNADAS">
+			<field id="idJornada">
+				<condicion operador="=">PERSONAL.idJornada</condicion>
+			</field>
+		</table>
+	</join>
+	<join tipo="left">
+		<table id="CIUO">
+			<field id="idPuesto">
+				<condicion operador="=">PERSONAL.idPuesto</condicion>
+			</field>
+		</table>
+	</join>
+</form>
+</histrix>

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   
+<histrix tipo="ing" inserta="false"  borra="false" modifica="false" imprime="false" preloadData="true" transaccional="true" _subtipo="vertical" preFetch="true">
+       <title>CIERRE</title>
+        <obs></obs>
+               <form >
+		<table id="PAG_DETALLE" label="Detalle">
+			<movimientos >
+				<relacion id="reg_movimientos_ins.xml" />      <!--  Crea los recibos -->
+ 				<relacion id="reg_imputaciones_ins.xml" />    <!-- Crea las impuaciones -->
+			</movimientos>
+			<!-- Datos del comprobante imputado -->
+			<field id="concepto">
+				<label>concepto</label>
+				<expresion>substring(datos,33,2)</expresion>
+			</field>
+			<field id="letra_movimiento">
+				<label>letra</label>
+				<expresion>case when substring(datos,32,1) = 1 then 'A' else case when substring(datos,32,1) = 2 then 'B' else 'C' end end </expresion>
+			</field>
+			<field id="puesto_movimiento">
+				<label>puesto</label>
+				<expresion>substring(datos,35,2) </expresion>
+			</field>
+			<field id="nro_movimiento">
+				<label>nro_comp</label>
+				<expresion>substring(datos,37,7)</expresion>
+			</field>
+			<field id="cuota">
+				<label>cuota</label>
+				<expresion>substring(datos,44,2)</expresion>
+			</field>
+			<field id="id_regmovim" tabla="REG_MOVIMIENTOS">
+				<label>mov</label>
+				<condicion operador="!=">0</condicion>
+			</field>
+			<field id="regcuenta_id" tabla="REG_MOVIMIENTOS">
+				<label>cuenta</label>
+			</field>
+
+<!-- Datos del Recibo Nuevo -->
+			<field id="wfechacob">
+				<label>Fecha Cobro</label>
+				<expresion>concat(substring(datos,65,4),'/',substring(datos,69,2),'/',substring(datos,71,2))</expresion>
+			</field>
+			<field id="subsistema_id" local="true" valauto="true" >
+				<label>subsistema</label>
+			</field>
+			<field id="wletra" local="true">
+				<label>letra</label>
+			</field>
+			<field id="regconceptoing_id"  tabla="GEN_SUBSISTEMAS">
+				<label>Conc Cobr</label>
+			</field>
+			<field id="wimporte" local="true">
+				<label>Importe</label>
+				<expresion>substring(datos,49,10)/100</expresion>
+				<valor>0</valor>
+			</field>
+			<field id="wsaldo" local="true">
+				<label>Saldo</label>
+				<valor>0</valor>
+			</field>
+			
+		</table>
+		<join >
+			<table id="GEN_SUBSISTEMAS">
+				<field id="id_subsistema">
+				    <condicion operador="=">[__subsistema_id__]</condicion>
+				</field>
+			</table>			
+		</join>
+		<join tipo="LEFT">
+			<table id="REG_MOVIMIENTOS">
+				<field id="concepto_id">
+				    <condicion operador="=">substring(PAG_DETALLE.datos,33,2)</condicion>
+				</field>
+				<field id="letra_movimiento">
+				    <condicion operador="=">case when substring(datos,32,1) = 1 then 'A' else case when substring(datos,32,1) = 2 then 'B' else 'C' end end  </condicion>
+				</field>
+				<field id="puesto_movimiento">
+				    <condicion operador="=">substring(datos,35,2)</condicion>
+				</field>
+				<field id="nro_movimiento">
+				    <condicion operador="=">substring(datos,37,7)</condicion>
+				</field>
+				<field id="cuota">
+				    <condicion operador="=">substring(datos,44,2)</condicion>
+				</field>
+			</table>
+		</join> 
+	</form>
+        </histrix>
+
+

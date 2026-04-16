@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ing" inserta="false">
+    <title>LISTAS DE PRECIOS</title>
+    <obs></obs>
+    <form>
+        <table id="LISTAPRECIOS_HOMOLOG" >
+            <title>Listas de precios</title>
+            <movimientos cabecera="listaprecios_homolog_duplica_cab.xml">
+                    <relacion id="listaprecios_homolog_duplica_ingmov.xml"></relacion> 
+            </movimientos>
+                                                                                                                        
+            <filters>
+                <field id="lista_id" PDFsize="14">
+
+                    <label modpos="nobr">Lista</label>
+                    <help>Lista</help>
+                    <operador>=</operador>
+                    <tipo>integer</tipo>
+
+                </field>
+
+
+            </filters>
+            <field id="homologacion_id" _noshow="true">
+            </field> 
+            <field id="lista_id" noshow="true" PDFsize="14" _tabla="PRECIOMODELO">
+                <tabla_ex id="LISTAPRECIOMODELO">
+                    <field id="idLista" >
+                    </field>
+                    <field id="nom" >
+                        <expression>concat('Nro ',idLista,' - Vigencia Desde: ' , DATE_FORMAT(fecha, '%d/%m/%Y'))</expression>
+                    </field>
+                    <field id="fecha" orden="true" tipoOrden="DESC">
+                    </field>
+
+                    <order>
+                        <field id="fecha"></field>
+                    </order>
+
+                </tabla_ex>
+                <actualiza>
+                    <field destino="act" id="act"/>
+                </actualiza>
+                <label modpos="nobr">Lista</label>
+                <help>Lista</help>
+            </field>
+            <field id="marcod" noshow="true" PDFsize="14" tabla="HOMOLOGMOD" >
+                <tabla_ex id="MARCHASIS">
+                    <field id="marcod" >
+                    </field>
+                    <field id="mardes" >
+                    </field>
+                    <order>
+                        <field id="mardes" >
+                        </field>
+
+                    </order>
+                </tabla_ex>
+            </field>
+            <field id="id_precio"  esClave="true" noshow="true">
+            </field>
+
+            <field id="modcar" tabla="CARROCERIA" deshabilitado="true">
+                <label>Modelo</label>
+            </field>
+            <field id="desabv">
+                <label>Chasis</label>
+                <expression>CONCAT(MARCHASIS.desabv, ' ', MODCHASIS.moddes)</expression>
+            </field>
+            <field id="asientos" tabla="HOMOLOGMOD" deshabilitado="true"    >
+                <label>Asientos</label>
+                <label>Cantidad de Asientos</label>
+            </field>
+
+            <field id="banbar" >
+                <expression>(case when banbar = 0 then '--' else 'Si' end)</expression>
+                <label >Bar / Baño</label>
+                <help>Bar y Baño</help>
+            </field>
+            <field id="largo" tabla="HOMOLOGMOD" deshabilitado="true">
+                <label>Largo</label>
+                <label>Largo</label>
+            </field>
+            <field id="Bodega" tabla="HOMOLOGMOD" deshabilitado="true">
+                <label>Bodega</label>
+                <label>Bodega</label>
+            </field>
+            <field id="servdes" tabla="TIPOSERVICIO" deshabilitado="true" >
+                <label >Tipo Serv.</label>
+                <help>Tipo de Servicio</help>
+            </field>
+            <field id="precio"  noshow="true" >
+            </field>
+            <field id="newPrice"  local="true">
+                <label>Precio</label>
+                <help>Precio de Venta</help>
+                <if exp="true">
+                    <true>precio + ( precio * aumento / 100 )</true>
+                    <false>0</false>
+                </if>
+            </field>
+
+            <field id="margen">
+                <label>margen</label>
+                <help>margen</help>
+            </field>
+            <order>
+                <field id="modcar"></field>
+                <field id="desabv"></field>
+
+            </order>
+        </table>
+        <join tipo="inner">
+            <table id="HOMOLOGMOD">
+                <field id="id_homologacion">
+                    <condicion operador="=">LISTAPRECIOS_HOMOLOG.homologacion_id</condicion>
+                </field>
+                <field id="baja">
+                    <condicion operador="=">0</condicion>
+                </field>
+                
+                
+            </table>
+        </join>
+        <join>
+            <table id="CARROCERIA">
+                <field id="nrocar">
+                    <condicion operador="=">HOMOLOGMOD.nrocar</condicion>
+                </field>
+            </table>
+        </join>
+        <join>
+            <table id="MARCHASIS">
+                <field id="marcod">
+                    <condicion operador="=">HOMOLOGMOD.marcod</condicion>
+                </field>
+            </table>
+        </join>
+        <join>
+            <table id="MODCHASIS">
+                <field id="marcod">
+                    <condicion operador="=">HOMOLOGMOD.marcod</condicion>
+                </field>
+                <field id="modcha">
+                    <condicion operador="=">HOMOLOGMOD.modcha</condicion>
+                </field>
+
+            </table>
+        </join>
+        <join>
+            <table id="TIPOSERVICIO">
+                <field id="tipserv">
+                    <condicion operador="=">HOMOLOGMOD.tipserv</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

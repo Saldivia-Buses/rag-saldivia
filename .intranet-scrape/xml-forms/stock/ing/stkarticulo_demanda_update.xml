@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" limit="1">
+<title></title>
+<obs/>
+  <form>
+    <table id="STK_ARTICULOS">
+      <field id="id_stkarticulo"  id_temp="id_stkarticulo" esClave="true"/>
+
+      <field id="dem_diaria" id_temp="dem_diaria" />
+
+
+      <field id="demprov" id_temp="demprov" />
+
+      <field id="stock_minimo" id_temp="stock_minimo" />
+
+      <field id="stock_maximo"  id_temp="stock_maximo" />
+      <field id="stock_seguridad"  id_temp="stock_seguridad" />
+      <field id="dias_acopio"  id_temp="dias_acopio" />
+
+
+      <field id="lote_optimo" id_temp="lote_optimo" />
+
+      <field id="pack_embalaje" id_temp="pack_embalaje" />
+
+    </table>
+
+  </form>
+</histrix>

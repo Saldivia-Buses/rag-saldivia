@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" preloadData="false" preFetch="false" >
+    <title>Forecast Articulos</title>
+    <obs></obs>
+    <form >
+        <table id="STK_ARTICULOS" label="Forecast">
+            <filters>
+                <field id="id_stkarticulo" esClave="true">
+                    <label>Código</label>
+                    <help>Codigo de Articulo</help>
+                </field>
+                <field id="WCantidad" local="true">
+                    <label>Cantidad</label>
+                </field>
+		
+            </filters>
+			
+            <fieldGroup>
+                <field id="id_stkarticulo" esClave="true">
+                    <label>Código</label>
+                    <help>Codigo de Articulo</help>
+                    <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas"/>
+                </field>    
+                <field id="nombre_articulo"/>
+                <field id="WCantidad" local="true">
+                    <label>Cantidad</label>
+			<tipo>numeric</tipo>
+                </field>
+
+		<field id="detalle" local="true" showObjTabla="true">                    
+                    <label>Detalle</label>
+                    <helper type="object" xml="z_mrp_proyprod1_qry.xml" >
+			<parameter source="id_stkarticulo" target="stkarticulopadre_id" operator="="/>
+			<parameter source="WCantidad" target="WCantidad1" />
+                    </helper> 
+                </field>
+        </fieldGroup>
+            <group>
+                <field id="id_stkarticulo" ></field>
+            </group>
+
+        </table>
+
+        <join tipo="left">
+            <table id="STK_BOM">
+                <field id="stkarticulopadre_id">
+                    <condicion operador="=">id_stkarticulo</condicion>
+                </field>
+            </table>
+        </join>
+
+
+
+
+    </form>
+</histrix>

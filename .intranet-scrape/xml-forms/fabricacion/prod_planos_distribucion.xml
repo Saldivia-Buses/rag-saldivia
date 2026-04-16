@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini">
+  <title>Secciones</title>
+  <obs/>
+  <form>
+    <table id="PRD_PLANOS_DISTRIBUCION" label="Secciones">
+
+      <field id="id_prdplanos_distribucion" noshow="true" esClave="true"/>
+
+      <field id="foto_id" noshow="true" _local="true">
+      </field>
+
+      <field id="usuario_entregado">
+        <label>Entregado</label>
+        <help>Usuario Entregado</help>
+        <size>60</size>
+        <helper type="combo" id="HTXUSERS" empty="true">
+          <field id="Id_usuario" />
+          <field id="nombre">
+            <expression>concat(Nombre, ' ', apellido)</expression>
+          </field>
+          <field id="baja">
+            <condicion operador="=">0</condicion>
+          </field>
+          <order>
+            <field id="nombre" />
+          </order>
+        </helper>
+      </field>
+
+      <field id="cantidad_copias">
+          <label>Cant Copias</label>
+      </field>
+
+      <field id="usuario" noshow="true" deshabilitado="true">
+              <label modpos="nobr">Usuario</label>
+              <valor eval="true">$_SESSION['usuario']</valor>
+      </field>
+
+      <field id="userid" >
+        <label>Cargó</label>
+        <expression>concat(HTXUSERS.Nombre,' ', HTXUSERS.apellido,' ', stamp)</expression>
+        <size>25</size>
+      </field>
+
+    </table>
+
+    <join tipo="left">
+        <table id="HTXUSERS">
+          <field id="login">
+            <condicion operador="=">usuario</condicion>
+          </field>
+        </table>
+    </join>
+
+  </form>
+</histrix>

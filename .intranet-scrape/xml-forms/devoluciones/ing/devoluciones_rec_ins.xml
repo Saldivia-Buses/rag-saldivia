@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="ins">
+    <title>Devolución de Materiales</title>
+    <obs></obs>
+    <form>
+        <table id="DEVREMITO_REC" idCampoCond="graba">
+            <title>Estados</title>
+		<field id="devremito_id" id_temp="devremito_id"/>
+		<field id="concepto_recdev_id" id_temp="concepto_recdev_id"/>
+		<field id="fecha_recdev" id_temp="fecha_recdev">
+		    <tipo>date</tipo>
+		</field>
+		<field id="puesto_recdev" id_temp="puesto_recdev"/>
+		<field id="nro_recdev" id_temp="nro_recdev"/>
+		<field id="cantidad_recdev" id_temp="cantidad_recdev"/>
+	</table>
+    </form>
+</histrix>

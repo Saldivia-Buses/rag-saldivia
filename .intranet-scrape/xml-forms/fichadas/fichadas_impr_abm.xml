@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" sqlhardcoded="true">
+	<title>FICHADADIA del Reloj</title>
+	<obs/>
+	<form >
+         <table id="GEN_CALENDAR" label="Fichadas del Reloj" styleTbody="height:300px;overflow-x:hidden;">
+			<field id="dia">
+				<expression>DAYOFWEEK(GEN_CALENDAR.fecha)</expression>
+				<label>Dia</label>
+				<options>
+					<option valor="1">Domingo</option>
+					<option valor="2">Lunes</option>
+					<option valor="3">Martes</option>
+					<option valor="4">Miércoles</option>
+					<option valor="5">Jueves</option>
+					<option valor="6">Viernes</option>
+					<option valor="7">Sábado</option>
+
+				</options>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="tarjeta" local="true" oculto="true">
+				<label>tarjeta</label>
+
+			</field>
+			 <field id="idPersona" local="true" oculto="true">
+				 </field>
+
+			<field id="mitjt" noshow="true">
+				<expression>FICHADADIA.tarjeta</expression>
+				<label >Tarjeta</label>
+				<help>Tarjeta</help>
+				<detalle>tarjeta</detalle>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="desdefecha" local="true" oculto="true">
+				<label>desdefecha</label>
+				<tipo>date</tipo>
+			</field>
+			<field id="hastafecha" local="true" oculto="true">
+				<label>hastafecha</label>
+				<tipo>date</tipo>
+
+			</field>
+			<field id="fecha">
+				<label>fecha</label>
+				<condicion operador="&gt;=" valorde="desdefecha"></condicion>
+				<condicion operador="&lt;=" valorde="hastafecha"></condicion>
+
+			</field>
+			<field id="Hora1">
+				<expression>FICHADADIA.h1</expression>
+				<label>Hora Ent</label>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="idJornada" local="true" oculto="true">
+				<label>aca</label>
+			</field>
+			<field id="Hora2">
+				<expression>FICHADADIA.h2</expression>
+			
+<!--				<expression sql="true">select case when '[__idJornada__]' = 5 then max(FIC.crc) else max(FIC.hora) end from FICHADADIA as FIC where FIC.fecha = '[__fecha__]' and FIC.tarjeta = '[__mitjt__]' and borrado = 0</expression> -->
+
+				<label>Hora Sal</label>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="Hora3">
+				<expression>FICHADADIA.h3</expression>
+				<label>Hora Ent1</label>
+				<tipo>varchar</tipo>
+	 		</field>
+
+
+			<field id="Hora4">
+				<expression>FICHADADIA.h4</expression>
+			
+				<label>Hora Sal2</label>
+				<tipo>varchar</tipo>
+			</field>
+
+            <field id="hIngreso" noshow="true">
+		<expression>FICHADADIA.hingreso</expression>
+            </field>
+            <field id="hEgreso" noshow="true">
+		<expression>FICHADADIA.hegreso</expression>
+            </field>
+
+			<field id="H2" noshow="true">
+				<label>H2</label>
+                <expression sql="true">select case when '[__Hora2__]' &gt; '[__hEgreso__]' then '[__hEgreso__]' else '[__Hora2__]' end</expression>
+
+			</field>
+
+			<field id="H1" noshow="true">
+			<label>H1</label>
+				<expression sql="true">select case when '[__Hora1__]' &lt; '[__hIngreso__]' then '[__hIngreso__]' else '[__Hora1__]' end</expression>
+			</field>
+ 			<field id="Horas" suma="true">
+			    <expression sql="true">select TIMEDIFF(  '[__H2__]' , '[__H1__]')</expression>
+				<label>Horas Trab.</label>
+				<tipo>time</tipo>
+
+			</field>
+            <field id="HorasReal" suma="true">
+		<label>Tot</label>
+                <expression sql="true">select TIMEDIFF(  '[__Hora4__]' , '[__Hora1__]')</expression>
+                <tipo>time</tipo>
+            </field>
+            <field id="X" suma="true">
+                <label>EXTRAS</label>
+                <expression sql="true">select TIMEDIFF(  '[__HorasReal__]' , '[__Horas__]')</expression>
+                <tipo>time</tipo>
+            </field>
+
+			<group>
+				<field id="GEN_CALENDAR.fecha" />
+
+			</group>
+			<order>
+				<field id="fecha" tabla="GEN_CALENDAR"/>
+
+				<field id="hora" />
+			</order>
+		</table>
+		<join tipo="left">
+			<table id="FICHADADIA">
+
+				<field id="tarjeta">
+					<condicion operador="=" valorde="tarjeta">tarjeta</condicion>
+				</field>
+				<field id="fecha">
+					<condicion operador="=">GEN_CALENDAR.fecha</condicion>
+				</field>
+
+			</table>
+
+
+		</join>
+	</form>
+</histrix>

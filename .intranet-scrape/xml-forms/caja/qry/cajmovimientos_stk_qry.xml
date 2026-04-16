@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<histrix tipo="consulta">
+	<title>Movimientos de stock</title>
+	<obs/>
+	<form >
+		<table id="STK_MOVIMIENTOS">
+			<field id="id_stkmovimiento" noshow="true" />
+			<field id="nombre_concepto" tabla="STK_CONCEPTOS">
+				<label>Concepto</label>
+			</field>
+			<field id="stkarticulo_id">
+				<label>Cod.</label>
+			</field>
+			<field id="nombre_articulo" tabla="STK_ARTICULOS">
+				<label>Articulo</label>
+			</field>
+			<field id="cantidad">
+				<label>Cantidad</label>
+			</field>
+			<field id="cajmovimiento_id" noshow="true" />
+		</table>
+		<join tipo="left">
+			<table id="STK_ARTICULOS">
+				<field id="id_stkarticulo">
+					<condicion operador="=">STK_MOVIMIENTOS.stkarticulo_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="STK_CONCEPTOS">
+				<field id="id_stkconcepto">
+					<condicion operador="=">STK_MOVIMIENTOS.stkconcepto_id</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

@@ -1,0 +1,657 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="fichaing"         inserta="false"         borra="false"         modifica="false"
+         imprime="false"         tooltip="false"         confirma="GRABAR"     form="false"
+         transaccional="true"    preFetch="false"        preloadData="false"   processFirst="true">
+    
+    <title>Movimientos</title>
+    <obs></obs>
+    <form >
+
+        <table id="REG_MOVIMIENTOS" label="POS" border="2" >
+
+            <cierraproceso id="cajmovimientos_ing.xml" _condition="(imputa_pago==1)" condition="graba_recibo">
+                <paring destino="imputacion_concepto">imputacion_concepto</paring>
+                <paring destino="moneda_id">moneda_id</paring>
+                <paring destino="cajpuesto_id">cajpuesto_id</paring>
+                <paring destino="cajconcepto_id">cajconceptorel_id</paring>
+                <paring destino="cajregistro_id">cajregistro_id</paring>
+                <paring destino="importe_movimiento">importe_movimiento</paring>
+                <paring destino="fecha_movimiento">fecha_movimiento</paring>
+                <paring destino="referencia_movimiento">referencia_movimiento</paring>
+                <paring destino="nro_movimiento">nro_movimiento</paring>
+                <paring destino="ctbcuenta_reg_id">ctbcuenta_id</paring>
+                <paring destino="ctbcuenta_reg_doh">ctbcuenta_rel_doh</paring>
+                <paring destino="para_cct">para_cct</paring>
+                <paring destino="saldo_a_cct">saldo_a_cct</paring>
+                <paring destino="limite_credito">cero</paring>
+                <paring destino="regcuenta_id">regcuenta_id</paring>
+                <paring destino="importe_iva">importe_IVA</paring>
+            </cierraproceso>
+
+            <validation>
+                <condition><![CDATA['regcuenta_ivaletra' == '']]></condition>
+                    <message>Debe Ingresar una Cuenta</message>
+            </validation>
+
+            <validation>
+                <condition><![CDATA[regconcepto_id + 0 == 0]]></condition>
+                <message>Tipo de Comprobante no válido</message>
+            </validation>
+
+            <validation>
+                <condition><![CDATA[puesto_movimiento + 0 == 0]]></condition>
+                <message>Punto de Venta no válido</message>
+            </validation>
+
+            <validation>
+                <condition><![CDATA[nro_movimiento + 0 == 0]]></condition>
+                <message>Numero de Movimiento no válido</message>
+            </validation>
+
+            <validation  _optional="true">
+                <condition><![CDATA[diferencia + 0 < 0 && limite_credito + 0  > 0 ]]></condition>
+                <message>Límite de crédito excedido</message>
+            </validation>
+
+            <validation>
+                <condition>
+                    <![CDATA[ 'categoria_iva' == '5' && importe_movimiento + 0  >= 1000 && 'regcuenta_doc' == '0' && 'regcuenta_cuit' == '0']]>
+                </condition>
+                <message>Importe mayor a 1000. Debe ingresar un DNI</message>
+            </validation>
+
+        <!-- GRABACION DE CUENTA CORRIENTE -->
+            <movimientos>
+                <relacion id="mos_regmovimientos_ins.xml"/>
+                <relacion id="mos_actualizo_numerador.xml"/>
+                <relacion id="mos_regmovimientos_print.xml"/>
+                <relacion id="mos_regmovimientos_rem_ins.xml"/>  NO GRABO REMITO?? 
+                <relacion id="mos_actualizo_numerador_rem.xml"/>       
+                <relacion id="mos_ctbmovimientos_ins.xml"/>
+                <relacion id="mos_ctbdetalle_ins.xml"/>
+                <relacion id="mos_regmovimientos_rec_ins.xml"/>
+                <relacion id="mos_regimputaciones_rec_ins.xml"/>
+            </movimientos>
+
+        
+            <fieldGroup id="DEBUG" local="true" noshow="true">
+                <field id="cajpuesto_id" />
+                <field id="cajconcepto_id" />
+                <field id="cajregistro_id" />
+                <field id="fecha_movimiento" >
+                    <detalle>fecha_movimiento</detalle>
+                </field>
+                <field id="imputacion_concepto" />
+                <field id="subsistema_id" />
+                <field id="moneda_id">
+                    <valor>1</valor>
+                </field>
+                <field id="ctbcuenta_id">
+                    <actualiza>
+                        <field id="ctbcuenta_reg_id"/>
+                    </actualiza>
+                </field>
+                <field id="ctbcuenta_iva_id" _noshow="false" >
+                </field>
+                <field id="ctbcuenta_reg_id" />
+                <field id="ctbcuenta_rel_doh">
+                    <if exp="imputacion_concepto == 0">
+                        <true>1</true>
+                        <false>0</false>
+                    </if>
+                </field>
+                <field id="ctbcuenta_reg_doh">
+                    <if exp="true">
+                        <true>imputacion_concepto</true>
+                        <false>0</false>
+                    </if>
+                </field>
+                <field id="ctbejercicio_id"/>
+                <field id="stkconcepto_id">
+                    <detalle>stkconcepto_id</detalle>
+                </field>
+                <field id="tiposervicio_afip">
+                    <valor>1</valor>
+                </field>
+                <field id="login" local="true" noshow="true">
+                    <valor eval="true">$_SESSION['usuario']</valor>
+                </field>
+
+                <field id="regcuentavendedor_id" local="true" noshow="true">
+                    <label>Vendedor</label>
+                    <expression sql="true">( SELECT Id_usuario FROM HTXUSERS where login = '[__login__]') </expression>
+                </field>
+                
+            </fieldGroup>
+            
+
+
+            <fieldGroup noshow="true">
+
+                <field id="id_regmovim" noshow="true">
+                    <condicion operador="=">-1</condicion>
+                </field>
+
+                <field id="cajconceptorel_id" local="true" noshow="true">                
+                      <expression sql="true">
+                        (SELECT cajconceptorel_id FROM CAJ_CONCEPTOS WHERE `id_cajconcepto` = '[__cajconcepto_id__]' LIMIT 1)
+                      </expression>
+                 </field> 
+
+                <field id="descripcion_concepto" deshabilitado="true" colspan="12" noshow="true"
+                    style="background-color:#000;color:#fff;padding-top:5px;padding-bottom:5px;text-align:center;">
+                    <attribute id="noshow">oculta_titulos</attribute>
+                    <expression sql="true">
+                        SELECT descripcion_concepto FROM CAJ_CONCEPTOS WHERE id_cajconcepto = [__cajconcepto_id__]
+                    </expression> 
+                    <size>40</size>
+                </field>
+
+                <field id="oculta_titulos" local="true" noshow="true">
+                  <helper type="parameter" id="SIS::02::oculta_titulos">
+                      <label>Oculta titulos identificadores en programas de caja</label>
+                      <defaultValue>false</defaultValue>
+                  </helper>
+                </field>
+
+                <field id="regcuenta_id" local="true" noshow="true" >  //           NECESITO ESTO PARA GRABAR EL DATO EN EL CONTENEDOR
+                    <label>Cuenta</label>
+                    <size>6</size>
+                    <actualiza>
+                        <field id="codigo_detalle"      destino="regcuenta_id"  xml="mos_articulo_grid_pos_cav.xml" />
+                        <field id="combo_pedidos"       destino="regcuenta_id_ped"   />
+                        <field id="Nro_Movimiento_rem"  destino="forzando" />
+                    </actualiza>
+                    <detalle>regcuenta_id</detalle> 
+                </field>
+
+                <field id="printerNameRem" local="true" deshabilitado="true"  noshow="true">
+                   <label>printrem</label>
+                        <parametro id="numerador_paramrem_printer.xml" retorna="printer" >
+                            <field id="letra"  oculto="true" esClave="true">
+                                <condicion operador="=" >'X'</condicion>
+                            </field>
+                            <field id="letra2"  oculto="true" local="true"/>
+                            <field id="puesto"  oculto="true" esClave="true">
+                                <condicion operador="=" valorde="puesto_movimiento"></condicion>
+                            </field>
+                            <field id="imprime"   local="true">
+                                <valor>1</valor>
+                            </field>
+                            <field id="printer">
+                                 <expresion>case when '[__imprime__]' = 1 then printer else '' end</expresion>
+                            </field>                      
+                        </parametro>
+                </field>         
+
+                <field id="para_cct" local="true" noshow="true" modpos="nobr">
+                    <label>Condición</label>
+                    <helper type="combo">
+                            <option value="0">Contado</option>
+                            <option value="1">Cuenta Corriente</option>
+                    </helper>
+                    <jseval campodestino="graba_recibo">(imputacion_concepto == 1)? 0 : ((para_cct == 0 )? 1 : 0)</jseval>
+                    <!-- <jseval campodestino="saldo_movimiento" actxml="true">((para_cct == 0) ? 0 : (importe_movimiento * (imputacion_concepto == 0 ? 1 : -1)))</jseval> -->
+                    <jseval campodestino="saldo_movimiento">(imputacion_concepto == 0 )?(((para_cct == 0) ? 0 : (importe_movimiento * (imputacion_concepto == 0 ? 1 : -1)))):(importe_movimiento*(-1))</jseval>
+                </field>            
+
+                <field id="graba_recibo" local="true" noshow="true">                
+                    <valor>1</valor>   
+                </field>      
+
+                <field id="saldo_a_cct" local="true" noshow="true">
+                    <valor>1</valor>
+                </field>
+
+                <field id="regcuenta_ivaid" local="true" noshow="true">
+                    <label>id_Iva</label>
+                </field>
+
+                <field id="categoria_iva" local="true" noshow="true">
+                    <label>cat_iva</label>
+                </field>
+
+                <field id="imputa_pago" local="true" noshow="true">
+                    <label>Ejecuta cierra proceso</label>
+                </field>
+
+                <field id="subsistemavendedor_id" valauto="true" local="true">
+                    <detalle>xsubsistemav_id</detalle>
+                </field>
+
+                <field id="subsistematransporte_id" valauto="true" local="true"/>
+
+            </fieldGroup>
+
+                             
+            <fieldGroup style="vertical-align:middle;padding:2px 2px 2px 2px;">
+        
+                <field id="nro_cuenta" local="true">
+                    <label>Cod.Cuenta</label>
+                    <helper type="external" xml="regcuenta_relacionescmb_nro.xml" dir="/ayudas"  >
+                        <field id="para_cct" noshow="true">
+                            <expression>CASE WHEN IFNULL(REG_FORMAS.plazo, 0) = 0 THEN 0 ELSE 1 END</expression>
+                            <detalle>para_cct</detalle>
+                       </field>
+                       <field id="graba_recibo" noshow="true">
+                            <expression>CASE WHEN '[__imputacion_concepto__]' = 1 THEN 0 ELSE (CASE WHEN IFNULL(REG_FORMAS.plazo, 0) = 0 THEN 1 ELSE 0 END) END</expression>
+                            <detalle>graba_recibo</detalle>
+                       </field>
+                       <field id="categoria_iva" noshow="true">
+                            <expression>REG_CUENTA.iva_id</expression>
+                            <detalle>categoria_iva</detalle>
+                        </field>
+                    </helper> 
+                    <size>6</size> 
+                </field>
+
+                <field id="regcuenta_nombre" local="true" deshabilitado="true" sincelda="true"   modpos="nobr">
+                    <size>30</size>
+                </field>
+
+                <field id="regcuenta_nuevo" local="true" sincelda="true"  modpos="nobr" >
+                  <helper type="link" xml="mos_main_clienteficha.xml" ventint="true" modal="true" title="Nuevo Cliente">
+                    <parameter source="subsistema_id" target="subsistema_id" />
+                  </helper>
+                  <valor>NUEVO CLIENTE</valor>
+                </field>
+
+                <field id="regconcepto_id" deshabilitado="true" local="true"  modpos="nobr" >
+                    <label>Concepto</label>
+                    <helper type="combo" id="REG_CONCEPTOS">
+                        <field id="id_concepto" />
+                        <field id="descripcion_concepto"/>
+                        <field id="subsistema_id" />
+                    </helper>
+                    <detalle>concepto_id</detalle>
+                     <actualiza>
+                        <field id="fiscal"            destino="regconcepto_id" />
+                     </actualiza>
+                </field>
+
+               
+                <field id="direccion" local="true" deshabilitado="true">
+                    <label>Direccion</label>
+                    <size>40</size>
+                </field>
+                
+
+                <field id="puesto_movimiento" modpos="nobr">
+                    <label>P.Venta</label>
+                    <helper type="combo" xml="npv_x_puesto_qry.xml" />
+                    <detalle>puesto_movimiento</detalle>
+                    <actualiza>
+                        <field id="Nro_Movimiento_rem" destino="Remito_Puesto" />
+                        <field id="Stkdeposito_id" destino="puesto" /> 
+                        <field id="fiscal"         destino="puesto" />
+                        <field id="nro_movimiento" destino="puesto" />
+                    </actualiza>
+                </field>
+
+                <field id="regcuenta_ivaletra" local="true" deshabilitado="true" _modpos="nobr">
+                    <label>Letra</label>
+                    <actualiza>
+                        <field id="nro_movimiento"      destino="letra" /> 
+                        <field id="impresion"           destino="letra" />
+                        <field id="printerNameRem"      destino="letra" />
+                        <field id="printerNameFac"      destino="letra" />
+                        <field id="alertanro"           destino="letra" /> 
+                        <field id="fiscal"              destino="letra" />        
+                    </actualiza>
+                    <size>1</size>
+                    <detalle>letra_movimimento</detalle>
+                </field>
+
+                <field id="wmoneda_idvta" local="true" deshabilitado="true" sincelda="true" modpos="nobr">
+                    <label>.</label>
+                </field>
+
+
+                <field id="nro_movimiento"  deshabilitado="true"  modpos="nobr" >
+                    <label>Nro</label>
+                    <formato>%08d</formato>
+                    <size>8</size>
+                    <parametro id="numerador_param.xml" retorna="numero">
+                        <field id="letra"  esClave="true" oculto="true">
+                            <condicion operador="=" valorde="letra_movimiento"></condicion>
+                        </field>
+                        <field id="puesto"  esClave="true" oculto="true">
+                            <condicion operador="=" valorde="puesto_movimiento"></condicion>
+                        </field>
+                        <field id="numero" />
+                    </parametro>
+                    <detalle>nro_movimiento</detalle>
+                </field>
+
+
+                <field id="alertanro" local="true" deshabilitado="true" Class="error" _style="color:red;" sincelda="true">
+                    <tipo>varchar</tipo>
+                    <parametro id="numerador_param.xml" retorna="error" >            
+                        <field id="letra"  oculto="true">
+                            <condicion operador="=" valorde="letra_movimiento">'A'</condicion>
+                        </field>
+                        <field id="puesto"  oculto="true">
+                            <condicion operador="=" valorde="puesto_movimiento"></condicion>
+                        </field>
+                        <field id="error">
+                            <expression>
+                                case when limite != 0 and limite - numero &lt;= 1000 then 'REPONER COMPROBANTES' else '..' end
+                            </expression>
+                        </field>
+                    </parametro>
+                   <size>30</size>
+                </field>
+
+
+
+                <field id="Nro_Movimiento_rem" local="true" noshow="true"  modpos="nobr">
+                    <label>Nro Rem</label>
+                    <formato>%08d</formato>
+                    <size>8</size>
+                    <parametro id="numerador_paramrem.xml" retorna="numero">
+                         <field id="Remito_Concepto_id" oculto="true" esClave="true">
+                            <expresion having="false" >regconcepto_id</expresion>
+                            <condicion>47</condicion>
+                        </field>
+                        <field id="puesto"         oculto="true" esClave="true">
+                            <condicion operador="=" valorde="puesto_movimiento"></condicion>
+                        </field>
+                        <field id="numero" />
+                    </parametro>
+                </field>          
+
+                <field id="regcuenta_iva" local="true" deshabilitado="true">
+                    <label> IVA </label>
+                </field>
+
+                <field id="regcuenta_cuit" local="true" sincelda="true">
+                    <label modpos="nobr" > CUIT </label>
+                </field>
+
+                <field id="regcuenta_doc" local="true" sincelda="true">
+                    <label modpos="nobr"> DNI </label>
+                </field>
+
+                <field id="vencimiento_movimiento" noshow="true"> // falta calcularla en base a la fecha del comprobante mas cant dias segun cond.Venta
+                    <label  modpos="nobr" >Vencimiento</label>
+                    <tipo>date</tipo>
+                </field>
+
+                <field id="regforma_id" modpos="nobr" >
+                    <label>Condicion de Venta</label>
+                    <helper type="combo" xml="regforma_qry.xml" dir="/ayudas"  >
+                      <field id="para_cct">
+                            <expression>CASE WHEN IFNULL(plazo, 0) = 0 THEN 0 ELSE 1 END</expression>
+                            <detalle>para_cct</detalle>
+                       </field>
+                    </helper>
+                </field>
+
+                
+                <field id="limite_credito" local="true" deshabilitado="true" _modpos="nobr" >
+                    <label>Limite</label>
+                    <formato>%15.2f</formato>
+                    <tipo>numeric</tipo>
+                    <size>8</size>
+                </field>
+
+                <field id="cons_pendiente" local="true" deshabilitado="true" sincelda="true"  modpos="nobr" >
+                    <label>Pendiente</label>
+                    <tipo>numeric</tipo>
+                    <formato>%15.2f</formato>
+                    <size>8</size>
+                </field>
+
+                <field id="diferencia" local="true" deshabilitado="true"  modpos="nobr" sincelda="true" >
+                    <label>Diferencia</label>
+                    <tipo>numeric</tipo>
+                    <size>8</size>
+                </field>
+
+                <field id="wstklista_id"  local="true"  deshabilitado="false" modpos="nobr">
+                    <label>Lista de Precios </label>
+                    <helper type="combo"  xml="stklistacotizacion_qry.xml" dir="/ayudas" empty="true" >
+                        <field id="fecha_movimiento" local="true" oculto="true"/>
+                    </helper>
+                    <actualiza>
+                        <field id="codigo_detalle" destino="wstklista_id" xml="mos_articulo_grid_pos_cav.xml"/>
+                    </actualiza>
+                </field>
+
+     
+                <field id="regcuentavendedor_nombre" local="true">
+                    <label>Vendedor</label>
+                    <size>20</size>
+                    <expression sql="true">( SELECT CONCAT(Nombre,', ',Apellido) FROM HTXUSERS where login = '[__login__]') </expression>
+                </field>
+
+                <field id="regcuentatransporte_id"  modpos="nobr"  >
+                    <label>Transporte</label>
+                    <helper type="combo" xml="regcuenta_simple2_mos_qry.xml" dir="/ayudas" empty="true">
+                        <field id="id_regcuenta" />
+                        <field id="baja_cuenta">
+                            <condicion operador="=">'0000-00-00'</condicion>
+                        </field>
+                        <field id="Subsistema_id" >
+                            <expresion>subsistema_id</expresion>
+                            <condicion operador="=" valorde="subsistematransporte_id"/>
+                        </field>
+                    </helper>
+                </field>
+                
+                <field id="referencia_movimiento">
+                    <size>70</size>
+                    <label>Observaciones</label>
+                </field>
+
+                <field id="Stkdeposito_id" local="true"  modpos="nobr" >
+                    <label>Deposito</label>
+                    <helper type="combo" xml="npv_x_puestodepositos_qry.xml" refresh="true" />
+                    <actualiza>
+                    <!-- esto posiblemente no haga nada <field id="stkdeposito_id" _destino="stkdeposito_id" /> -->
+                        <field id="codigo_detalle" destino="stkdeposito_id" xml="mos_articulo_grid_pos_cav.xml" />
+                    </actualiza>
+                    <detalle>stkdeposito_id</detalle>
+                </field>
+
+
+                <field id="impresion" local="true" noshow="true" deshabilitado="true">
+                    <label>Impresion</label>
+                    <parametro id="numerador_param.xml" retorna="impresion" >
+                        <field id="letra"  oculto="true">
+                            <condicion operador="=" valorde="letra_movimiento">'A'</condicion>
+                        </field>
+                        <field id="imprime" local="true">
+                            <valor>1</valor>
+                        </field>
+                        <field id="impresion">
+                            <expresion>case when '[__imprime__]' = 1 then ejecuta else '' end</expresion>
+                        </field>                      
+                        <field id="puesto"  oculto="true">
+                            <condicion operador="=" valorde="puesto_movimiento"></condicion>
+                        </field>
+                    </parametro>
+                </field>
+                
+
+            </fieldGroup>
+
+            <fieldGroup style="vertical-align:middle; padding:2px 2px 2px 2px;">
+
+            <!-- DETALLE DEL COMPROBANTE  -->
+
+                <field id="detalle" local="true"  colspan="12">
+                    <helper type="object" xml="mos_articulo_grid_pos_cav.xml">
+                        <parameter source="ctbcuenta_iva_id" target="ctbcuenta_iva_id" />
+                    </helper>
+                </field>
+
+
+            <!-- DATOS REMITOS  -->
+                <field id="Remito_Concepto_id" _deshabilitado="true" local="true" noshow="true"  modpos="nobr" colspan="1" _style="font-size: large;" >
+                    <label>...</label>
+                    <helper type="combo" id="REG_CONCEPTOS">
+                        <field id="Id_concepto" >
+                            <expresion>id_concepto</expresion>
+                            <condicion>47</condicion>
+                        </field>            
+                        <field id="Descripcion_concepto">
+                            <expresion>descripcion_concepto</expresion>
+                        </field>            
+                        <field id="subsistema_id" />
+                        <field id="Informa_calculo">
+                            <expresion>informa_calculo</expresion>
+                            <condicion operador="=">1</condicion>
+                        </field>    
+                    </helper> 
+                </field>
+
+            <field id="Controlstk" local="true">
+                <label>Controla Stock</label>
+                <valor default="true">0</valor> 
+                <helper type="combo" >
+                    <option value="0">Si</option>
+                    <option value="1">No</option>
+                </helper>
+                <actualiza>
+                    <field id="combo_pedidos" destino="wcontrolstk"  />         <!-- //ENVIA AL COMBO DE PEDIDOS PARA TRAER LOS PEDIDOS CON O SIN STOCK -->
+                    <field id="codigo_detalle" destino="wcontrolstk" xml="mos_articulo_grid_pos_cav.xml" />  <!--//Envia a Articulo filtrar el F2 -->
+                    <field id="imp_wcontrolstk" />  <!--//Variable magica que por algun motivo envia el valor al xml de importacion -->
+                </actualiza>
+            </field>
+
+            <field id="subtotal_movimiento" local="true" deshabilitado="true" colspan="2" modpos="nobr" 
+                style="font-size: medium; text-align: right; margin-right:10px;">
+                <label>S.Total</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="emiteremito" local="true"  public="true"  >
+                <label> Emitir Remito </label>
+                <helper type="combo" >
+                    <option value="false">No</option>
+                    <option value="true">Si</option>
+                </helper>
+            </field>
+
+            <field id="bonificaciones_movimiento" _sincelda="true"  modpos="nobr" style="font-size: medium; text-align: right; margin-right:10px;">
+                <label>Descuento Gral %</label>
+                <tipo>decimal</tipo>
+                <valor default="true">0.00</valor>
+                <jseval campodestino="importe_bon">((subtotal_movimiento + 0) * (bonificaciones_movimiento + 0) / 100)</jseval>
+                <jseval campodestino="neto_movimiento">subtotal_movimiento + 0 - ((subtotal_movimiento + 0) * (bonificaciones_movimiento + 0) / 100)</jseval>
+                <jseval campodestino="importe_IVA">mi_importe_iva + 0 - ((mi_importe_iva + 0) * (bonificaciones_movimiento + 0) / 100)</jseval>
+                <jseval campodestino="importe_movimiento">neto_movimiento  + (importe_IVA + 0 ) + (importe_exento + 0) </jseval>
+            </field>
+
+
+            <field id="importe_bon" _noshow="true" deshabilitado="true" sincelda="true"  modpos="nobr" 
+               style="font-size: medium; text-align: right; margin-right:10px;">
+                <tipo>decimal</tipo>
+                <valor>0.00</valor>
+                <jseval campodestino="neto_movimiento">subtotal_movimiento + 0 - ((subtotal_movimiento + 0) * (bonificaciones_movimiento + 0) / 100)</jseval>
+                <jseval campodestino="importe_IVA">mi_importe_iva + 0 - ((mi_importe_iva + 0) * (bonificaciones_movimiento + 0) / 100)</jseval>
+                <jseval campodestino="importe_movimiento">neto_movimiento  + (importe_IVA + 0 ) + (importe_exento + 0) </jseval>
+                <size>20</size>
+            </field>
+
+
+            <field id="imprime" local="true" >
+                <label> Imprime</label>
+                <tipo>check</tipo>
+                <jseval campodestino="imprime">imprime</jseval>
+                <actualiza>
+                    <field id="impresion" destino="imprime" /> 
+                    <field id="printerNameFac" destino="imprime" /> 
+                    <field id="printerNameRem" destino="imprime" /> 
+                </actualiza>
+                <valor>1</valor>
+            </field>
+
+            <field id="neto_movimiento"  deshabilitado="true" refresh="true"  colspan="2"  
+                modpos="nobr" style="font-size: medium; text-align: right; margin-right:10px;">
+                <label>Neto</label>
+                <tipo>decimal</tipo>
+                <valor default="true">0.00</valor>
+                <if exp="true">
+                    <true>subtotal_movimiento + 0 - ((subtotal_movimiento + 0) * (bonificaciones_movimiento + 0) / 100)</true>
+                    <false>0</false>
+                </if>
+                <jseval campodestino="importe_movimiento">(neto_movimiento + 0) + (importe_IVA + 0) + (importe_exento + 0)</jseval>
+                <jseval campodestino="valor_declarado">(neto_movimiento + 0) + (importe_exento + 0)</jseval>
+            </field>
+
+
+            <field id="imp_wcontrolstk" local="true" noshow="true" public="true"  modpos="nobr">
+                <valor>0</valor> // valor por defecto
+            </field>
+
+            <field id="valor_declarado" local="true" deshabilitado="true" noshow="true"  colspan="1">
+                <label>Valor Declarado</label>
+            </field>
+            
+            <field id="separator10" local="true" deshabilitado="true"  colspan="2" />
+
+
+            <field id="importe_IVA" deshabilitado="true"  colspan="2"  modpos="nobr" style="font-size: medium; text-align: right; margin-right:10px;" >
+                <label>IVA</label>
+                <valor default="true">0.00</valor>
+                <tipo>decimal</tipo>
+            </field>
+
+            <field id="separator5" local="true" deshabilitado="true"  colspan="2" />
+
+            <field id="importe_exento" deshabilitado="true" colspan="2"  modpos="nobr" style="font-size: medium; text-align: right; margin-right:10px;">
+                <label >Exento</label>
+                <valor default="true">0.00</valor>
+                <tipo>decimal</tipo>
+            </field>
+
+            <field id="separator6" local="true" deshabilitado="true"  colspan="2" />
+
+            <field id="importe_movimiento" deshabilitado="true" colspan="2"
+             modpos="nobr" style="font-size: xx-large; text-align: right; margin-right:10px;">
+                <label>Total</label>
+                <tipo>decimal</tipo>
+                <valor>0</valor>
+                <size>10</size>
+                <if exp="true">
+                    <true>(neto_movimiento + 0) + (importe_IVA + 0) + (importe_exento + 0) </true>
+                    <false>0</false>
+                </if>
+                 <jseval campodestino="saldo_movimiento">(imputacion_concepto == 0 )?(((para_cct == 0) ? 0 : (importe_movimiento * (imputacion_concepto == 0 ? 1 : -1)))):(importe_movimiento*(-1))</jseval>
+                <!-- <jseval campodestino="saldo_movimiento" actxml="true">((para_cct == 0) ? 0 : (importe_movimiento * (imputacion_concepto == 0 ? 1 : -1)))</jseval> -->
+            </field>
+
+            <field id="saldo_movimiento" deshabilitado="true" editable="true" _noshow="true" refresh="true">
+                <label>Saldo</label>
+                <tipo>numeric</tipo>
+                <valor>0</valor>
+            </field>
+
+            <field id="graba_ctb" local="true" noshow="true">
+                <valor eval="true"><![CDATA[ strpos($_SESSION['properties']['modulos'],'contabilidad') != false ? '1' : '0' ]]></valor>
+            </field>
+
+            <field id="mi_importe_iva" local="true" deshabilitado="true" noshow="true">
+                <label>Se almacena el importe original por si tiene descuentos globales para poder recalcularlos y tomar este como base de calculo</label>
+            </field>
+
+            <field id="fiscal" local="true" noshow="true">
+                <label>Fiscal</label>
+                <parametro id="numerador_fiscal.xml" retorna="fiscal" />
+                <actualiza>
+                    <field id="grillafiscal" destino="fiscal" />
+                </actualiza>
+            </field>
+
+            <field id="grillafiscal" colspan="4" local="true" noshow="true">
+                <helper type="object" xml="mos_fiscal_grid.xml" />
+            </field>
+            
+        </fieldGroup>
+
+        </table>
+    </form>
+</histrix>
+

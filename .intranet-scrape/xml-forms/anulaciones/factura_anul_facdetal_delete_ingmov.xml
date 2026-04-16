@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="delete" limit="0">
+       <title>FACDETAL</title>
+        <obs></obs>
+               <form >
+					<table id="FACDETAL" label="ANULACION DETALLE" >
+						<field id="nrofac" id_temp="movnro" esClave="true">
+						</field>
+						<field id="nropue" id_temp="movnpv" esClave="true">
+						</field>
+						<field id="concod" id_temp="concod" esClave="true">
+						</field>
+						<field id="regfec" id_temp="movfec" esClave="true">
+						</field>
+						<field id="ctacod" id_temp="ctacod" esClave="true">
+						</field>
+					</table>
+               </form>
+        </histrix>

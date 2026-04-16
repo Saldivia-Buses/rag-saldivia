@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="abm-mini" subtipo="vertical">
+       <title>OBSERVACIONES</title>
+        <obs></obs>
+               <form >
+                  <table id="REG_MOVIMIENTO_OBS" label="OBSERVACIONES">
+                  <field id="id_regmovimientoobs" autoInc="true" noshow="true">
+                      <label>Cod</label>
+                      <help>Codigo de observación</help>
+                  </field>
+                  <field id="regmovim_id" noshow="true"/>
+                  <field id="fec_observacion">
+                      <label>Fecha</label>
+                      <help>Fecha de la observación</help>
+                      <tipo>date</tipo>
+                      <valor>today</valor>
+                  </field>
+                
+            	 <field id="hora_observacion">
+            	    <label>Hora</label>
+            	    <help>Hora de la observación</help>
+            	 </field>
+            	   <field id="gencontacto_id">
+                    <helper type="combo" id="GEN_TIPO_CONTACTOS" empty="true">
+                	<field id="id_contacto"/>
+                	<field id="tipo_contacto"/>
+	    	    </helper>
+        	    <label>Tipo Contacto</label>
+        	  </field>
+                  <field id="observacion">
+            		<label>Observación</label>
+            		<help>Observación</help>
+            		<size>300</size>
+            	  </field>
+                  
+                
+        	  <field id="tabla_origen" noshow="true">
+        	    <label>Tabla Origen</label>
+        	  </field>
+        	  
+        	  <field id="login" local="true" _noshow="true">
+            	       <valor eval="true">"'".$_SESSION['usuario']."'"</valor>
+            	       <label Formstyle="display:none;">Usuario</label>
+            	       <tipo>varchar</tipo>
+                  </field>
+        	  
+                  </table>
+               </form>
+        </histrix>

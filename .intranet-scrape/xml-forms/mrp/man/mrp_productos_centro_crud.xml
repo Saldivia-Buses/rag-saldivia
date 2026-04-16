@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" >
+  <title>Productos por Centro</title>
+  <obs />
+  <form >
+    <table id="MRP_PRODUCTOS_CENTRO" label="productos">
+
+		<field id="id_producto_centro" noshow="true" autoinc="true">
+		</field>
+
+		<field id="centro_productivo_id" oculto="true">
+			<label>Centro Productivo</label>
+		</field>
+
+		<field id="stkarticulo_id">
+			<helper id="STK_ARTICULOS" type="combo">
+				<field id="id_stkarticulo">
+				</field>
+				<field id="nombre_articulo" />
+
+				<field id="fabricacion_propia">
+					<condicion operador="=">1</condicion>
+				</field>
+			</helper>
+		</field>
+
+
+    </table>
+  </form>
+</histrix>

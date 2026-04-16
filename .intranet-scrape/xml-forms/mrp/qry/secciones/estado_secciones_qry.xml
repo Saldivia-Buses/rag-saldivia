@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="card" modifica="false" inserta="false" grid="46%, 25em" imprime="false" export="false">
+  <title>Controles de Calidad de Producción</title>
+  <obs />
+  <form >
+    <table id="MRP_SECCION" label="Controles de Calidad de Producción">
+
+		<field id="id_mrpseccion" noshow="true" autoinc="true">
+		    <detalle>mrpseccion_id</detalle>
+		</field>
+
+		<field id="nombre_mrpseccion" style="font-weight:bold;font-size:1.5em;">
+			<label>Sección</label>
+		</field>
+		<field id="ordenes" local="true" showObjTabla="true">
+			<helper xml="ordenes_x_seccion_qry.xml"  dir="/mrp/qry/secciones/" type="object">
+				<parameter source="id_mrpseccion" target="mrpseccion_id"/>
+			</helper>
+		</field>
+	
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta"  PDFfontSize="10">
+    <title>DETALLE</title>
+    <obs></obs>
+    <form  >
+        <table id="MRP_ORDEN_DETALLE" label="DETALLE">
+            <field id="mrporden_id" oculto="true">
+            </field>
+            <field id="id_mrpordendetalle" oculto="true">
+            </field>
+
+            <field id="stkarticulo" deshabilitado="true"  _PDFcolWidth="50">
+        	<expression>nombre_articulo</expression>
+                <label >Producto</label>
+            </field>
+            <!--
+            <field id="control" local="true" obj="mrp_controldetalle_qry.xml">
+                <label >Controles</label>
+
+                <paring destino="mrpordendetalle_id">id_mrpordendetalle</paring>
+            </field>
+                -->
+        </table>
+
+        <join tipo="left">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">MRP_ORDEN_DETALLE.stkarticulo_id</condicion>
+                </field>
+            </table>
+        </join>
+    
+    </form>
+</histrix>

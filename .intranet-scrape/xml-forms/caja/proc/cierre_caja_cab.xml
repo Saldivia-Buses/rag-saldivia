@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="cabecera" >
+    <title>Cierre de Puesto de Caja</title>
+    <obs></obs>
+    <form>
+
+        <table id="CAJ_DETALLES" label="Cierre de Puesto de Caja">
+
+
+                <field id="cierre_caja" local="true" noshow="true">
+                    <valor>9</valor>
+                </field>
+
+                <field id="ctbconcepto_id" local="true">
+			        <helper type="combo" xml="ctbconcepto_qry.xml" dir="/ayudas">
+				<field id="integrado">
+					<condicion operador="=">1</condicion>
+				</field>
+				</helper>
+			        <label colspan="4">Concepto</label>
+			        <help>Código de concepto</help>
+                </field>
+                
+                <field id="cajconcepto_cierre_id" local="true">
+            	    <label>concepto caja</label>
+                    <helper type="combo" id="CAJ_CONCEPTOS" _empty="true">
+                        <field id="id_cajconcepto" />
+                        <field id="descripcion_concepto" />
+                        <field id="ejecuta_concepto" oculto="true">
+                            <expresion>ifnull(ejecuta_concepto,'')</expresion>
+                            <condicion operador="=">''</condicion>
+                        </field>
+                        <field id="alta_concepto" oculto="true">
+                            <expresion>ifnull(alta_concepto,0)</expresion>
+                            <condicion operador="=">0</condicion>
+                        </field>
+                        <field id="baja_concepto" oculto="true">
+                            <expresion>ifnull(baja_concepto,0)</expresion>
+                            <condicion operador="=">0</condicion>
+                        </field>
+                        <field id="modif_concepto" oculto="true">
+                            <expresion>ifnull(modif_concepto,0)</expresion>
+                            <condicion operador="=">0</condicion>
+                        </field>
+                        <order>
+                    	    <field id="descripcion_concepto"></field>
+                        </order>
+                    </helper>
+                </field>
+                
+        </table>
+
+		
+    </form>
+</histrix>

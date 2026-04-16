@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<histrix tipo="grid" inserta="false" imprime="false" procesa="true" deleteRow="false"> limit="1"
+	<title>ORDENES DE COMPRA</title>
+	<obs></obs>
+	<form  detalle="cpsmovim.xml" inline="true">
+		<table id="CPSENCAB" label="ORDENES DE COMPRA">
+			<movimientos>
+				<relacion id="cpsencab_upd.xml" />
+				<relacion id="pedidoint_oc_anul.xml" />
+			</movimientos><!--
+			<validation>
+				<condition>
+					<![CDATA[ validacion == 1]]>
+				</condition>
+				<message>Solo se puede seleccionar una opción</message>
+			</validation>-->
+<!--			<filters>
+				<field id="ctacod" >
+					<label>Proveedor</label>
+					<helper type="external" id="CCTCUENT" xml="cpsencab_prov_marco_cum.xml"></helper>
+					<detalle>ctacod</detalle>
+					<operador>=</operador>
+				</field>
+				<field id="ocpfec" >
+					<label>Desde Fecha</label>
+					<operador>&gt;=</operador>
+					<valor>today</valor>
+				</field>
+				<field id="ocpfec" >
+					<label>Hasta Fecha</label>
+					<operador>&lt;=</operador>
+					<valor>today</valor>
+				</field>
+
+				<field id="ocpest" >
+					<label>Estado</label>
+					<help>Estado Actual</help>
+					<helper type="combo">
+						<option value="1">Pendiente</option>
+						<option value="2">Cumplida</option>
+						<option value="3">Parcial</option>
+						<option value="4">Anulada</option>
+					</helper>
+					<operador>=</operador>
+					<valor>1</valor>
+				</field>
+			</filters>
+-->
+			<field id="siscod" oculto="true">
+				<detalle>CPSMOVIM.siscod</detalle>
+			</field>
+
+			<field id="ocpfec" deshabilitado="true">
+				<label>Fecha</label>
+				<help>Fecha de Orden de Compra</help>
+				<detalle>ocpfec</detalle>
+			</field>
+
+			<field id="ocpnro" deshabilitado="true">
+				<label>Nro</label>
+				<help>Número de Orden de Compra</help>
+				<detalle>ocpnro</detalle>
+			</field>
+			<field id="ctacod" deshabilitado="true">
+				<helper type="external" id="CCTCUENT" xml="cpsencab_prov_marco_cum.xml"></helper>
+				<detalle>ctacod</detalle>
+				<label>Cod.Cta.</label>
+			</field>
+
+			<field id="ctanom" tabla="CCTCUENT">
+				<expression>CCTCUENT.ctanom</expression>
+				<label>Nombre de la Cuenta</label>
+			</field>
+
+			<field id="ocpest" colstyle="text-align:center;">
+				<label>Estado</label>
+				<help>Estado Actual</help>
+				<helper type="combo">
+					<option valor="0">No Autorizada</option>
+					<option value="1">Pendiente</option>
+					<option value="2">Cumplida</option>
+					<option value="3">Parcial</option>
+					<option value="4">Anulada</option>
+				</helper>
+				<!--<condicion operador="!=">2 and ocpest != 4</condicion>-->
+			</field>
+
+			<field id="chkpendiente" local="true" refresh="true">
+				<label>Pendiente</label>
+				<tipo>check</tipo>
+				<if exp="'chkcumplida' == 1 || 'chkparcial' == 1 || 'chkanulada' == 1">
+					<true>0</true>
+					<false>'chkpendiente'</false>
+				</if>
+			</field>
+			<field id="chkcumplida" local="true" refresh="true">
+				<label>Cumplida</label>
+				<tipo>check</tipo>
+				<if exp="'chkpendiente' == 1 || 'chkparcial' == 1 || 'chkanulada' == 1">
+					<true>0</true>
+					<false>'chkcumplida'</false>
+				</if>
+			</field>
+			<field id="chkparcial" local="true" refresh="true">
+				<label>Parcial</label>
+				<tipo>check</tipo>
+				<if exp="'chkpendiente' == 1 || 'chkcumplida' == 1 || 'chkanulada' == 1">
+					<true>0</true>
+					<false>'chkparcial'</false>
+				</if>
+			</field>
+			<field id="chkanulada" local="true" refresh="true">
+				<label>Anulada</label>
+				<tipo>check</tipo>
+				<if exp="'chkpendiente' == 1 || 'chkparcial' == 1 || 'chkcumplida' == 1">
+					<true>0</true>
+					<false>'chkanulada'</false>
+				</if>
+			</field>
+
+			<field id="newEstado" local="true" noshow="true">
+				<if exp="'chkpendiente' == 1">
+					<true>1</true>
+					<false>('chkcumplida' == 1)?2:(('chkparcial' == 1)?3:(('chkanulada' == 1)?4:ocpest))</false>
+				</if>
+			</field>
+
+			<field id="marcar" local="true" noshow="true">
+				<if exp="'chkanulada' == 1 || 'chkpendiente' == 1 || 'chkcumplida' == 1 || 'chkparcial' == 1">
+					<true>1</true>
+					<false>0</false>
+				</if>
+			</field>
+
+		</table>
+
+		<join tipo="left">
+			<table id="CCTCUENT">
+				<field id="siscod" oculto="true">
+					<label>cctcuent.siscoc</label>
+					<condicion operador="=">'01'</condicion>
+				</field>
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">CPSENCAB.ctacod</condicion>
+				</field>
+			</table>
+		</join>
+
+	</form>
+</histrix>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Path</title>
+  <obs />
+  <form>
+    <table id="MRP_PATH" >
+		<field id="id_mrppath" noshow="true" autoinc="true">
+		    <label>Id Path</label>
+		</field>
+		<field id="path_name">
+			<label>Proceso</label>
+		</field>
+		<field id="stkrubro_id" oculto="true">
+		</field>
+	
+    </table>
+  </form>
+</histrix>

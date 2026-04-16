@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" limit="99">
+  <form>
+    <table id="REG_NUMERADORES" >
+		NUMERADOR UNIFICADO MATA CONCEPTO! 
+		<field id="regconcepto_id" id_temp="concepto_id" esClave="true"/>
+		<field id="subsistema_id" id_temp="subsistema_id" esClave="true" />
+		<field id="puesto" id_temp="puesto_movimiento" esClave="true"/>
+		<field id="letra"  id_temp="regcuenta_ivaletra"  esClave="true"/>
+		<field id="numero">
+		    <valor>numero + 1</valor>
+		</field>		
+    </table>
+  </form>
+</histrix>

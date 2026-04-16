@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix	tipo="fichaing" 
+			inserta="false" 
+			borra="false" 
+			modifica="false" 
+			imprime="false" 
+			tooltip="false"
+			_form="false" 
+			procesa="false"
+			transaccional="true" 
+			preFetch="true" 
+			preloadData="true">
+    <title>Comprobante en Cuenta Corriente</title>
+    <obs/>
+
+    <form>
+
+	<table id="REG_MOVIMIENTOS">
+
+        <!-- Proceso de eliminarcion -->      
+
+		
+		<field id="id_regmovim" esClave="true" noshow="true" />
+
+
+
+        <!-- Comienzo -->
+
+		<field id="subsistema_id" noshow="true" />
+<!--
+		<field id="id_regmovimheader" esClave="true" noshow="true">
+			<expresion having="true">id_regmovim</expresion>
+		</field>-->
+
+		
+<!--
+		<field id="OPid_regmovim" noshow="true"> 
+			<expresion having="false">id_regmovim</expresion>
+		</field>
+-->
+
+		<field id="fecha_movimiento" deshabilitado="true">
+			<label>Fecha</label>
+			<tipo>date</tipo>
+		</field>
+
+		<field id="descripcion_concepto" tabla="REG_CONCEPTOS" deshabilitado="true">
+			<label>Comprobante</label>
+		</field>
+
+		<field id="nro_movimiento" deshabilitado="true" >
+			<label modpos="nobr" >Numero</label>
+			<expresion>CONCAT(REG_MOVIMIENTOS.letra_movimiento,' ', LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,'0'),'-', LPAD(REG_MOVIMIENTOS.nro_movimiento ,8,'0'))</expresion>
+		    <size>40</size>    
+		</field>
+
+		<field id="nombre_cuenta" tabla="REG_CUENTA" deshabilitado="true">
+			<label>Cuenta</label>
+			<size>30</size>
+		</field>
+
+		<field id="cuit_cuenta" tabla="REG_CUENTA" deshabilitado="true" >
+			<label>CUIT</label>
+		</field>
+
+		<field id="cod_direccion" tabla="REG_CUENTA" deshabilitado="true"  >
+			<label modpos="nobr">Dirección</label>
+		</field>
+
+		<field id="localidad_id" tabla="REG_CUENTA" deshabilitado="true"  >
+			<label _modpos="nobr">Localidad</label>
+			<expresion>SELECT CONCAT(id_localidad,' ', nombre_localidad) FROM GEN_LOCALIDADES where id_localidad = REG_CUENTA.localidad_id</expresion>
+			<size>30</size>
+		</field>
+
+		<field id="provincia_id" tabla="REG_CUENTA" deshabilitado="true"  >
+			<label _modpos="nobr">Provincia</label>
+			<expresion>SELECT nombre_provincia FROM GEN_PROVINCIAS where id_provincia = REG_CUENTA.provincia_id</expresion>
+			<size>20</size>
+		</field>
+
+		<field id="vencimiento_movimiento" deshabilitado="true">
+			<label  modpos="nobr">Vencimiento</label>
+		</field>
+
+		<field id="detdalles" local="true">
+			<label colspan="15">Detalle</label>
+			<helper type="object" xml="factura_detalle_qry.xml" dir="/caja/qry">
+				<parameter source="id_regmovim" target="regmovim_id" operator="="/>	
+				<parameter source="subsistema_id" target="subsistema_id" operator="="/>	
+			</helper>
+		</field>
+
+        <!-- Importes -->
+
+		<field id="neto_movimiento" deshabilitado="true">
+			<label>Neto</label>
+			<tipo>numeric</tipo>
+		</field>
+
+		<field id="total_iva" deshabilitado="true">
+			<label>IVA</label>
+			<expression>SUM(REG_DETALLES.iva_detalle)</expression>
+			<tipo>numeric</tipo>
+		</field>
+
+		<field id="importe_exento" deshabilitado="true">
+			<label>Exento</label>
+			<size>17</size>
+			<tipo>numeric</tipo>
+		</field>           
+
+		<field id="importe_movimiento" deshabilitado="true">
+			<label>Total</label>
+			<size>17</size>
+			<tipo>numeric</tipo>
+		</field>
+
+		<field id="fecha_cae" deshabilitado="true">
+			<label modpos="nobr">Fecha CAI:</label>
+		</field>
+
+		<group>
+			<field id="id_regmovim" />
+		</group>
+    </table>
+
+	<join tipo="left">
+		<table id="REG_CONCEPTOS">
+		    <field id="id_concepto">
+			<condicion operador="=">concepto_id</condicion>
+		    </field>
+		</table>
+	</join>
+
+	<join tipo="left">
+		<table id="REG_CUENTA">
+			<field id="id_regcuenta">
+				<condicion operador="=">regcuenta_id</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join tipo="left">
+		<table id="REG_DETALLES">
+			<field id="regmovim_id">
+				<condicion operador="=">id_regmovim</condicion>
+			</field>
+		</table>
+	</join>
+  </form>
+</histrix>

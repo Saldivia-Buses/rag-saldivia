@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="consulta" _imprime="false" _dataSource="procesos_expandidos" path="fotos/articulos" detailDir="/articulos">
+  <title>ARTICULOS POR SECTOR</title>
+  <obs></obs>
+  <form detalle="stkpieza_qry.xml" inline="true" hasDetail="tienehijos">
+    <table id="STK_ARTICULO_PROCESO" label="Rubros" >
+      <field id="proceso_id"  oculto="true">
+        <label>Cod.</label>
+      </field>
+      <field id="homologacion_id" oculto="true">
+        <label>Homol</label>
+      </field>
+
+      <field id="nombre_proceso" local="true" noshow="true" print="false">
+        <setvar>titulo_div</setvar>
+        <setvar>tituloAbm</setvar>
+      </field>
+
+      <field id="proceso1" _local="true" _noshow="true" print="false" tabla="PROC1">
+      	<label>Proceso 1</label>
+      	<expression>PROC1.nombre_proceso</expression>
+      </field>
+
+      <field id="proceso2" _local="true" _noshow="true" print="false" tabla="PROC2">
+      	<label>Proceso 2</label>
+      	<expression>PROC2.nombre_proceso</expression>
+      </field>
+
+      <field id="proceso3" _local="true" _noshow="true" print="false" tabla="PROC3">
+      	<label>Proceso 3</label>
+      	<expression>PROC3.nombre_proceso</expression>
+      </field>
+
+      <field id="proceso3" _local="true" _noshow="true" print="false" tabla="PROC3">
+        <label>Proceso 3</label>
+        <expression>PROC3.nombre_proceso</expression>
+      </field>
+
+     <field id="proceso4" _local="true" _noshow="true" print="false" tabla="PROC3">
+        <label>Proceso 4</label>
+        <expression>PROC4.nombre_proceso</expression>
+      </field>
+
+      <field id="stkarticulo_id" esClave="true" tabla="STK_ARTICULO_PROCESO">
+        <label>Art.</label>
+        <help>Codigo de Articulo</help>
+        <ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/ayudas_local" >
+          <field id="artcod" >
+            <label>Cod.</label>
+          </field>
+          <field id="artdes">
+            <label>Insumo</label>
+            <detalle>artdes</detalle>
+          </field>
+        </ayuda_ex>
+        <detalle>idPadre</detalle>
+      </field>
+      <field id="artdes">
+        <expression>artdes</expression>
+        <label>Descripcion</label>
+      </field>
+
+        <field id="tienehijos" noshow="true">
+            <expression>ifnull((select 1 from STKPIEZA s where s.idPadre = STK_ARTICULO_PROCESO.stkarticulo_id limit 1), 0)</expression>
+        </field>
+
+      <field id="cantidad" required="true">
+        <label>Cant.</label>
+  	    <tipo>decimal</tipo>
+  	    <helper xml="materiales_proceso_det.xml" type="link" title="desglose por proceso">
+  		  <parameter source="stkarticulo_id"  target="stkarticulo_id" />
+    		<parameter source="homologacion_id" target="homologacion_id" />
+  	    </helper>
+      </field>
+
+      <field id="artuni" deshabilitado="true" tabla="STKINSUM">
+        <label modpos="nobr" >Unidad</label>
+        <help>Unidad de Stock</help>
+        <tabla_ex id="FSMUNIDS">
+          <field id="unicod" clave="true"></field>
+          <field id="uninom"></field>
+        </tabla_ex>
+        <tipo>integer</tipo>
+      </field>
+     
+      <field id="ctbcod" print="false" tabla="CTBCUENT">
+        <label>Nro Cta</label>
+        <tipo>varchar</tipo>
+      </field>
+
+     <field id="ctbnom" tabla="CTBCUENT" print="false">
+        <expression>ctbnom</expression>
+        <label>CtaCtb</label>
+        <tipo>varchar</tipo>
+      </field>
+
+          <field id="siscod" local="true" noshow="true">
+          </field>
+
+        <field id="fecha" local="true" noshow="true">
+            <label>Fecha</label>
+            <valor>today</valor>
+            <tipo>date</tipo>
+            <detalle>fecha</detalle>
+        </field>
+
+        <field id="costo_final_func_cdesc" style="font-weigth:bold;color:red;">
+            <label>Costo c/Desc</label>
+            <expression>ifnull(getCostConDtoFunc(STK_ARTICULO_PROCESO.stkarticulo_id, ifnull(STK_COSTO_REPOSICION.moneda_id, 1), STR_TO_DATE('[__fecha__]', '%d/%m/%Y'),0  ), 0) 
+* (case when (select count(*) from STKPIEZA where IdPadre = STK_ARTICULO_PROCESO.stkarticulo_id) then 1 else (valcps / valuso) end)</expression>            
+            <tipo>numeric</tipo>
+        </field>
+
+        <field id="parcialRCD"  suma="true" local="true">
+            <label>Total</label>
+            <if exp="true">
+                <true>(costo_final_func_cdesc + 0) * cantidad</true>
+                <false></false>
+            </if>
+            <tipo>numeric</tipo>
+        </field>
+
+      <order>
+        <field id="proceso1"/>
+        <field id="proceso2"/>
+        <field id="proceso3"/>
+        <field id="proceso4"/>
+      </order>
+
+       <group>
+        <field id="stkarticulo_id" />
+        <field id="proceso_id" />
+      </group>
+
+    </table>
+    <join tipo="left">
+      <table id="STKINSUM">
+        <field id="artcod">
+          <condicion operador="=">STK_ARTICULO_PROCESO.stkarticulo_id</condicion>
+        </field>
+        <field id="siscod">
+          <condicion operador="=">'01'</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="CTBCUENT">
+        <field id="ctbcod">
+          <condicion operador="=">STKINSUM.artctb</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="PROD_PROCESOS" as="PROC4">
+        <field id="id_proceso">
+          <condicion operador="=">STK_ARTICULO_PROCESO.proceso_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="PROD_PROCESOS" as="PROC3">
+        <field id="id_proceso">
+          <condicion operador="=">PROC4.procesopadre_id</condicion>
+        </field>
+      </table>
+    </join>    
+    <join tipo="left">
+      <table id="PROD_PROCESOS" as="PROC2">
+        <field id="id_proceso">
+          <condicion operador="=">PROC3.procesopadre_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="PROD_PROCESOS" as="PROC1">
+        <field id="id_proceso">
+          <condicion operador="=">PROC2.procesopadre_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="STK_COSTO_REPOSICION">
+        <field id="stkarticulo_id">
+          <condicion operador="=">STK_ARTICULO_PROCESO.stkarticulo_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

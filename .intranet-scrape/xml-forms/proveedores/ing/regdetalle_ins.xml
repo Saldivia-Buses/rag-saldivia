@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+	<title>Ingreso de Movimientos</title>
+	<obs></obs>
+		<form >
+		    <table id="REG_DETALLES" idCampoCond="grabar">
+			<field id="regmovim_id"      		lastId="regmovimiento_ins.xml" />
+
+			<field id="codigo_detalle"          	id_temp="_ORDEN"/>
+			<field id="descripcion_detalle"     	id_temp="referencia_movimiento" />	
+			<field id="cantidad_detalle"      	id_temp="cantidad_detalle"/>
+
+            		<field id="neto_detalle"            	id_temp="neto_detalle" />
+			<field id="iva_detalle"      		id_temp="iva_detalle" />
+			<field id="total_percepcion" 	    	id_temp="per_detalle" />          
+                        <field id="per_detalle" 		id_temp="per_detalle" />
+			<field id="alicuota_iva"      		id_temp="alicuota" />
+			<field id="total_detalle"      	    	id_temp="total_detalle" />
+			
+	        </table>
+		</form>
+</histrix>

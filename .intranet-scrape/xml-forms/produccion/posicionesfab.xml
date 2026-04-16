@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm-mini">
+	<title>Posiciones de Fabricacion</title>
+	<obs></obs>
+	<form >
+		<table id="POSICIONESFAB" >
+			<title>Posiciones</title>
+			<field id="idMomento"   esClave="true" oculto="true">
+				<label>Seccion</label>
+				<help>Codigo de Seccion</help>
+			</field>
+			<field id="idPosicion"   esClave="true">
+				<label>Codigo</label>
+				<help>Codigo de Poscion</help>
+			</field>
+			<field id="nombre">
+				<label>Nombre</label>
+				<help>Nombre de la posicion</help>
+			</field>
+			<field id="pertenece_linea">
+				<label>Linea</label>
+				<help>Pertenece a la linea</help>
+				<options>
+					<option valor="0">No</option>
+					<option valor="1">Si</option>
+				</options>				
+			</field>
+   			<order>
+				<field id="idposic"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

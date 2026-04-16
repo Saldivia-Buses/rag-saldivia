@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" path="fotos/coches" tooltip="false">
+	<title>Fotos Patent</title>
+	<obs/>
+	<form >
+         <table id="FICHAFOTOS" label="Fotos Patent" style__Tbody="height:100px;overflow-x:hidden;">		
+			 <field id="nrofab" oculto="true" >
+				 <label>id</label>
+				 <condicion operador="=">0</condicion>
+				 <valor>0</valor>
+			 </field>
+			<field  id="foto" foto="true" path="nrofab">
+				<label>Foto</label>
+				<help></help>
+				<tipo Type="Image">file</tipo>
+			</field> 	      
+			<field  id="descripcion" >
+				<label>Descripción</label>
+				<help>Descripción</help>
+				<tipo>varchar</tipo>
+				<size>40</size>
+			</field> 	      			 
+		 </table>
+	</form>
+</histrix>

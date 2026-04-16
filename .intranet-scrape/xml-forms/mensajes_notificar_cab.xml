@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm    tipo="cabecera" barraDrag="false" >
+	<titulo>Contenido</titulo>
+	<obs/>
+	<consulta>
+		<tabla id="HTXUSERS" label="Mensajes" styleTbody="height:150px;overflow-x:hidden;" >
+			<campo id="de" deshabilitado="true">
+				<label>de</label>
+				<tipo>varchar</tipo>
+				<valor eval="true">$_SESSION['usuario']</valor>
+			</campo>
+			<campo id="fecha" deshabilitado="true">
+				<label modpos="nobr">Fecha</label>
+				<tipo>date</tipo>
+				<valor>today</valor>
+			</campo>
+			<campo id="hora" deshabilitado="true" noshow="true">
+				<label modpos="nobr">Fecha</label>
+				<valor>NOW()</valor>
+			</campo>			
+			<campo id="contenido" >
+				<label>Texto</label>
+				<tipo>varchar</tipo>
+				
+				<size>200</size>
+			</campo>
+		</tabla>
+	</consulta>
+</abm>

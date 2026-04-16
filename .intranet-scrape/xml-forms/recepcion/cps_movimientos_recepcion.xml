@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert">
+	<title>REMITO</title>
+	<obs></obs>
+	<form >
+		
+		<table id="FACREMIT" label="REMITO DE RECEPCION" >
+
+			<field id="ctacod" id_temp="ctacod">
+			</field>
+			
+			<field id="ocpnro"   id_temp="ocpnro">
+			</field>
+			
+			<field id="ocpfec"   id_temp="ocpfec">
+			</field>
+			<field id="remfec"  id_temp="remfec">
+			</field>			
+			<field id="remnpv"  id_temp="remnpv">
+			</field>
+			<field id="remnro" id_temp="remnro">
+			</field>
+			<field id="movfec__1"  id_temp="movfec__1">
+			</field>		
+
+
+		</table>
+
+	</form>
+</histrix>

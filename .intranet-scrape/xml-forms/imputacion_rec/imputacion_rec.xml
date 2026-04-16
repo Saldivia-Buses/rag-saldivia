@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" >
+    <title>Cuenta Corriente</title>
+    <obs/>
+    <form detalle="imputacion_rec_cab.xml">
+        <table id="CCTMOVIM" label="Movimientos">
+        
+    	    <filters>
+    		<field id="ctacod">
+    		    <label>Cuenta</label>
+    		    <operador>=</operador>
+    		</field>
+    	    
+    	    </filters>
+        
+            <field id="siscod" oculto="true">
+                <label>Cod.</label>
+                <valor>'02'</valor>
+                <condicion operador="=">'02'</condicion>
+                <detalle>siscod</detalle>
+                
+                
+            </field>
+
+            <field id="ctacod" noshow="true">
+                <label>Proveedores con saldo</label>
+                <tabla_ex  xml="cctcuent_c_saldo_neg.xml">
+                    <field id="ctacod2">
+                        <expression>CCTCUENT.ctacod</expression>
+                    </field>
+                    <field id="ctanom2">
+                        <expression>concat(CCTCUENT.ctanom, ' (',CCTCUENT.ctacod,')')</expression>
+                        <label>Nom</label>
+                    </field>
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">02</condicion>
+                    </field>
+                    <order>
+                        <field id="ctanom2"></field>
+                    </order>
+                </tabla_ex>
+                <detalle>ctacod</detalle>
+            </field>
+
+
+            <field id="movnpv" >
+                <label modpos="nobr">PV</label>
+                <help/>
+                <detalle>movnpvOP</detalle>
+            </field>
+
+            <field id="movnro" >
+                <label modpos="nobr">Numero</label>
+                <help/>
+                <detalle>movnroOP</detalle>
+            </field>
+            <field id="concod" noshow="true">
+                <detalle>concodOP</detalle>
+            </field>
+            <field id="condes"  tabla="CCTCONCE">
+		<label>Concep.</label>
+            </field>
+            
+            <field id="movfec" >
+                <label modpos="nobr">Fecha</label>
+                <help/>
+                <tipo>date</tipo>
+                <detalle>movfecOP</detalle>
+            </field>
+            <field id="movsal" >
+        	<condicion operador="!=">0</condicion>
+                <detalle>saldoOP</detalle>
+            </field>
+            <order>
+                <field id="movnro"></field>
+            </order>
+        </table>
+	<join>
+	    <table id="CCTCONCE">
+		<field id="concod">
+		    <condicion operador="=">CCTMOVIM.concod</condicion>
+		</field>
+		<field id="siscod">
+		    <condicion operador="=">CCTMOVIM.siscod</condicion>
+		</field>
+		<field id="conimp">
+		    <condicion operador="=">2</condicion>
+		</field>
+	    </table>
+	</join>
+    </form>
+</histrix>

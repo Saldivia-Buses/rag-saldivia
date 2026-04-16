@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF8"?>
+<histrix tipo="ficha" autoprint="true" PDFsincabecera="true" preFetch="true" PDFfontSize="12">
+  <title>FICHA PERSONAL</title>
+  <obs></obs>
+  <form  >
+    <table id="PERSONAL" label="Ficha Personal">
+
+	<field id="IdPersona" print="false"/>
+
+	<field id="fecha_pdf">
+	    <label posx="110" posy="40" />
+	    <expression>CONCAT('Alvear, Provincia de Santa Fe, Argentina \n', DAY(CURDATE()), ' de ', 
+	    (CASE MONTH(CURDATE()) 
+		WHEN 1 THEN 'Enero' 
+		WHEN 2 THEN 'Febrero' 
+		WHEN 3 THEN 'Marzo' 
+		WHEN 4 THEN 'Abril' 
+		WHEN 5 THEN 'Mayo' 
+		WHEN 6 THEN 'Junio' 
+		WHEN 7 THEN 'Julio'
+		WHEN 8 THEN 'Agosto'
+		WHEN 9 THEN 'Septiembre'
+		WHEN 10 THEN 'Octubre'
+		WHEN 11 THEN 'Noviembre'
+		WHEN 12 THEN 'Diciembre'
+	    END),
+	    ' de ', YEAR(CURDATE()),'.-'
+
+	    )</expression>
+	</field>
+
+	<field id="aquien_corresponda">
+	    <label posx="5" posy="+5" />
+	    <expression>'Para ser presentado ante quien corresponda.-'</expression>
+	</field>
+
+    <field id="certificado_trabajo" local="true" noshow="true" print="false" />
+    <field id="certificado_renuncia" local="true" noshow="true" print="false"/>
+
+	<field id="cuerpo_pdf" PDFalign="J" print="false">
+	    <label posx="5" posy="+5" />
+	    <expression>CONCAT('CERTIFICO: que el Sr. ', PERSONAL. Nombre, ' ', PERSONAL.apellido, ' ; titular del DNI ', PERSONAL.DNI, 
+	    ', trabaja en esta Empresa en relación de dependencia, con fecha de ingreso el ', DATE_FORMAT(PERSONAL.fecing, "%d/%m/%Y"), 
+	    '; percibiendo en la actualidad una remuneración mensual bruta de $ ', 
+	    (CASE WHEN (select tipoliq FROM CONCEPCONV inner join CONVENIOS on CONVENIOS.idSindicato= CONCEPCONV.IdSindicato  where CONCEPCONV.IdSindicato = PERSONAL.IdSindicato
+	    and CONCEPCONV.IdCateg = PERSONAL.IdCateg limit 1) = 1
+	    THEN
+	    (select importe FROM CONCEPCONV inner join CONVENIOS on CONVENIOS.idSindicato= CONCEPCONV.IdSindicato  where CONCEPCONV.IdSindicato = PERSONAL.IdSindicato
+and CONCEPCONV.desfec &lt;= now() and CONCEPCONV.IdCateg = (select CATEGHISTORIA.idCateg from CATEGHISTORIA left join CATPERSONAL
+on CATPERSONAL.IdSindicato = CATEGHISTORIA.idSindicato and CATPERSONAL.IdCateg = CATEGHISTORIA.IdCateg where CATEGHISTORIA.IdPersona = PERSONAL.IdPersona
+order by CATEGHISTORIA.fechaDesde desc limit 1)  order by CONCEPCONV.desfec DESC limit 1) * 196
+ELSE (select importe FROM CONCEPCONV inner join CONVENIOS on CONVENIOS.idSindicato= CONCEPCONV.IdSindicato  where CONCEPCONV.IdSindicato = PERSONAL.IdSindicato
+and CONCEPCONV.desfec &lt;= now() and CONCEPCONV.IdCateg = (select CATEGHISTORIA.idCateg from CATEGHISTORIA left join CATPERSONAL
+on CATPERSONAL.IdSindicato = CATEGHISTORIA.idSindicato and CATPERSONAL.IdCateg = CATEGHISTORIA.IdCateg where CATEGHISTORIA.IdPersona = PERSONAL.IdPersona
+order by CATEGHISTORIA.fechaDesde desc limit 1)  order by CONCEPCONV.desfec DESC limit 1)
+END)
+,
+	    ' la cual no se encuentra gravada, siendo su categoría de ',
+	    (select descripcion from CATEGHISTORIA left join CATPERSONAL on CATPERSONAL.IdSindicato = CATEGHISTORIA.idSindicato and CATPERSONAL.IdCateg = CATEGHISTORIA.IdCateg
+	    where CATEGHISTORIA.IdPersona = PERSONAL.IdPersona and CATEGHISTORIA.fechaDesde &lt; CURDATE() order by CATEGHISTORIA.fechaDesde desc limit 1)
+	    ,' correspondiente al Convenio Colectivo de la Unión Obrera Metalúrgica.-')
+	    </expression>
+        <attribute id="print">certificado_trabajo</attribute>
+	</field>
+
+	<field id="cuerpo_pdf_renuncia" PDFalign="J" print="false">
+	    <label posx="5" posy="+5" />
+	    <expression>CONCAT('CERTIFICO: que el Sr. ', PERSONAL. Nombre, ' ', PERSONAL.apellido, ' ; titular del DNI ', PERSONAL.DNI, 
+	    ', trabajó en esta Empresa en relación de dependencia, con fecha de ingreso el ', DATE_FORMAT(PERSONAL.fecing, "%d/%m/%Y"),
+	    ' desempeñándose como ',
+	    (select descripcion from CATEGHISTORIA left join CATPERSONAL on CATPERSONAL.IdSindicato = CATEGHISTORIA.idSindicato and CATPERSONAL.IdCateg = CATEGHISTORIA.IdCateg
+	    where CATEGHISTORIA.IdPersona = PERSONAL.IdPersona and CATEGHISTORIA.fechaDesde &lt; CURDATE() order by CATEGHISTORIA.fechaDesde desc limit 1)
+	    ,' correspondiente al Convenio Colectivo de la Unión Obrera Metalúrgica de la República Argentina; y renunció el ', DATE_FORMAT(PERSONAL.fechaEgreso, "%d/%m/%Y"),'.-')
+	    </expression>
+        <attribute id="print">certificado_renuncia</attribute>
+	</field>
+
+
+    </table>
+  </form>
+</histrix>

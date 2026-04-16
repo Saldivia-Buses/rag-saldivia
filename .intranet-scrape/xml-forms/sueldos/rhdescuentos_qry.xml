@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="consulta">
+	<title>DESCUENTO</title>
+	<obs></obs>
+	<form >
+		<table id="RHDESCUENTOS" >
+		    <title>Descuentos</title>
+		    
+			<filters>
+			<field id="legajo" >
+			    <label>Legajo</label>
+			    <help>Legajo</help>
+			    <operador>=</operador>
+			</field>
+				<field id="fecha">
+				    <label>Desde Fecha</label>
+				    <help>Fecha del Descuento</help>
+				    <operador>&gt;</operador>
+				    <valor>today</valor>
+				</field>
+				<field id="fecha">
+				    <label>Hasta Fecha</label>
+				    <help>Fecha del Descuento</help>
+				    <operador>&lt;</operador>
+				    <valor>today</valor>
+				    
+				</field>
+			
+			</filters>
+			<field id="idDesc" autoinc="true" _oculto="true" noshow="true">
+			</field>
+			<field id="legajo" >
+			    <label>Legajo</label>
+			    <help>Legajo</help>
+			</field>
+			<field id="apellido" tabla="PERSONAL">
+				<label modpos="nobr" colspan="6">Apellido</label>
+				<help>Apellido</help>
+			</field>
+			<field id="Nombre" tabla="PERSONAL">
+				<label modpos="nobr">Nombre</label>
+				<help>Nombre</help>
+			</field>			
+			<field id="fecha">
+			    <label>Fecha</label>
+			    <help>Fecha del Descuento</help>
+			    
+			</field>
+			
+			<field id="IdMotivoDesc" >
+			    <tabla_ex id="RHMOTIVODESC">
+				<field id="idMotivoDesc"></field>
+				<field id="motivo"></field>
+				
+				
+			    </tabla_ex>
+				<label>Motivo</label>
+				<help>Motivo del Descuento</help>
+			</field>
+			
+			<field id="Importe">
+				<label>Importe</label>
+				<help>Importe</help>
+			</field>
+			<field id="sobre_extras">
+				<label>s/Extras</label>
+				<help>El descuento se aplicara sobre las horas extras</help>
+                                <tipo>check</tipo>
+			</field>
+		</table>
+		<join tipo="left">
+		    <table id="PERSONAL">
+			<field id="legajo">
+			    <condicion operador="=">RHDESCUENTOS.legajo</condicion>
+			</field>
+		    </table>
+		</join>
+		
+	</form>	   
+</histrix>

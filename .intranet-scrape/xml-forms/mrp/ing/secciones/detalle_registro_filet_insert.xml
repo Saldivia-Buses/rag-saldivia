@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" tipoInsert="IGNORE">
+    <title>ORDENES DE PRODUCCION</title>
+    <obs></obs>
+    <form  >
+	        
+	<table id="MRP_DETALLE_REGISTRO" label="Registro de produccion" idCampoCond="cantidad">
+
+
+
+            <field id="mrpordendetalle_id" id_temp="id_mrpordendetalle" />
+            <field id="carro_horno" 	   id_temp="carro_horno" />
+
+            <field id="cantidad" id_temp="cantidad" />
+
+            <field id="mrpconcepto_id" id_temp="mrpconcepto_id" />
+            
+            <field id="ingreso"  id_temp="ingreso"  >
+		      <tipo>time</tipo>
+	        </field>
+
+            <field id="salida"   id_temp="salida"  >
+	    		<tipo>time</tipo>
+	        </field>
+
+
+            <field id="mrpseccion_id" >
+		<valor>6</valor>
+	    </field>
+            <field id="productpath_id" id_temp="next_productpath_id"  />
+
+            <field id="mesa_1" id_temp="mesa_1"  />
+            <field id="mesa_2" id_temp="mesa_2"  />
+
+            <field id="precamara_in"  id_temp="precamara_in"  />
+            <field id="precamara_out" id_temp="precamara_out"  />
+
+            <field id="camara_in"   id_temp="camara_in" />
+            <field id="camara_out"  id_temp="camara_out"  />
+            <field id="observacion" id_temp="observacion" />
+
+            <field id="alto_corte"   id_temp="alto_corte" />
+            <field id="ancho_corte"  id_temp="ancho_corte"  />
+            <field id="hojas_corte" id_temp="hojas_corte" />
+            <field id="paquete_id"   id_temp="paquete_id" />
+            <field id="descripcion_paquete"   id_temp="descripcion_paquete" />
+            <field id="fecha_ingreso"   id_temp="fecha_ingreso" />
+	    <field id="login">
+		<valor eval="true">$_SESSION["usuario"]</valor>
+	    </field>
+        </table>
+    </form>
+</histrix>

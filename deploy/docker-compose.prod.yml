@@ -28,6 +28,10 @@ secrets:
     file: ./secrets/db-platform-password
   bb_kek:
     file: ./secrets/bb-kek
+  alertmanager_webhook_token:
+    file: ./secrets/alertmanager-webhook-token
+  service_account_key:
+    file: ./secrets/service-account-key
 
 x-service-defaults: &service-defaults
   restart: unless-stopped
@@ -43,6 +47,10 @@ x-jwt-public: &jwt-public
 x-redis: &redis-url
   REDIS_URL: "redis:6379"
 
+x-build-args: &build-args
+  GIT_SHA: ${GIT_SHA:-unknown}
+  BUILD_TIME: ${BUILD_TIME:-unknown}
+
 services:
 
   # ── Docker Socket Proxy (L14) ──────────────────────────────────────────
@@ -51,9 +59,10 @@ services:
 
   docker-socket-proxy:
     <<: *service-defaults
-    image: tecnativa/docker-socket-proxy:latest
+    image: tecnativa/docker-socket-proxy@sha256:1f3a6f303320723d199d2316a3e82b2e2685d86c275d5e3deeaf182573b47476
     environment:
       CONTAINERS: 1
+      POST: 1          # needed for autoheal restart calls
       NETWORKS: 0
       SERVICES: 0
       TASKS: 0
@@ -191,7 +200,9 @@ services:
       TRACES_NATS_PASS: ${TRACES_NATS_PASS}
       PLATFORM_NATS_PASS: ${PLATFORM_NATS_PASS}
       EXTRACTOR_NATS_PASS: ${EXTRACTOR_NATS_PASS}
+      ASTRO_NATS_PASS: ${ASTRO_NATS_PASS}
       BIGBROTHER_NATS_PASS: ${BIGBROTHER_NATS_PASS}
+      ERP_NATS_PASS: ${ERP_NATS_PASS}
     volumes:
       - nats_data:/data
       - ./nats/nats-server.conf:/etc/nats/nats-server.conf:ro
@@ -212,14 +223,19 @@ services:
 
   auth:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-auth:${AUTH_VERSION:-latest}
+    image: ghcr.io/camionerou/sda-auth:${AUTH_VERSION:-local}
     build:
       context: ..
       dockerfile: services/auth/Dockerfile
+      args:
+        <<: *build-args
+        VERSION: ${AUTH_VERSION:-dev}
     depends_on:
       postgres-platform:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      nats:
         condition: service_healthy
     environment:
       AUTH_PORT: "8001"
@@ -230,6 +246,7 @@ services:
       - jwt_private_key
       - jwt_public_key
       - db_platform_url
+      - service_account_key
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8001/health || exit 1"]
       interval: 10s
@@ -241,6 +258,7 @@ services:
       - data
     labels:
       - "traefik.enable=true"
+      - "autoheal=true"
       - "traefik.http.routers.auth.rule=PathPrefix(`/v1/auth`) || PathPrefix(`/v1/modules`)"
       - "traefik.http.routers.auth.entrypoints=websecure"
       - "traefik.http.services.auth.loadbalancer.server.port=8001"
@@ -252,20 +270,26 @@ services:
 
   ws:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-ws:${WS_VERSION:-latest}
+    image: ghcr.io/camionerou/sda-ws:${WS_VERSION:-local}
     build:
       context: ..
       dockerfile: services/ws/Dockerfile
+      args:
+        <<: *build-args
+        VERSION: ${WS_VERSION:-dev}
     depends_on:
       redis:
         condition: service_healthy
       nats:
+        condition: service_healthy
+      chat:
         condition: service_healthy
     environment:
       WS_PORT: "8002"
       REDIS_URL: redis:6379
       NATS_URL: nats://ws:${WS_NATS_PASS}@nats:4222
       WS_ALLOWED_ORIGINS: "https://*.${SDA_DOMAIN:-sda.app}"
+      CHAT_GRPC_URL: chat:50052
     secrets:
       - jwt_public_key
     healthcheck:
@@ -278,6 +302,7 @@ services:
       - backend
     labels:
       - "traefik.enable=true"
+      - "autoheal=true"
       - "traefik.http.routers.ws.rule=PathPrefix(`/ws`)"
       - "traefik.http.routers.ws.entrypoints=websecure"
       - "traefik.http.services.ws.loadbalancer.server.port=8002"
@@ -291,10 +316,13 @@ services:
 
   chat:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-chat:${CHAT_VERSION:-latest}
+    image: ghcr.io/camionerou/sda-chat:${CHAT_VERSION:-local}
     build:
       context: ..
       dockerfile: services/chat/Dockerfile
+      args:
+        <<: *build-args
+        VERSION: ${CHAT_VERSION:-dev}
     depends_on:
       postgres-platform:
         condition: service_healthy
@@ -304,12 +332,15 @@ services:
         condition: service_healthy
     environment:
       CHAT_PORT: "8003"
+      CHAT_GRPC_PORT: "50052"
       REDIS_URL: redis:6379
       NATS_URL: nats://chat:${CHAT_NATS_PASS}@nats:4222
       TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
     secrets:
       - jwt_public_key
       - db_tenant_template_url
+    expose:
+      - "50052"  # gRPC — internal only for ws mutations
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8003/health || exit 1"]
       interval: 10s
@@ -321,6 +352,7 @@ services:
       - data
     labels:
       - "traefik.enable=true"
+      - "autoheal=true"
       - "traefik.http.routers.chat.rule=PathPrefix(`/v1/chat`)"
       - "traefik.http.routers.chat.entrypoints=websecure"
       - "traefik.http.services.chat.loadbalancer.server.port=8003"
@@ -332,10 +364,13 @@ services:
 
   agent:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-agent:${AGENT_VERSION:-latest}
+    image: ghcr.io/camionerou/sda-agent:${AGENT_VERSION:-local}
     build:
       context: ..
       dockerfile: services/agent/Dockerfile
+      args:
+        <<: *build-args
+        VERSION: ${AGENT_VERSION:-dev}
     depends_on:
       postgres-platform:
         condition: service_healthy
@@ -353,6 +388,9 @@ services:
       SEARCH_GRPC_URL: search:50051
       INGEST_SERVICE_URL: http://ingest:8007
       NOTIFICATION_SERVICE_URL: http://notification:8005
+      ASTRO_SERVICE_URL: http://astro:8011
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      MODULES_DIR: /modules
       <<: *jwt-public
     secrets:
       - jwt_public_key
@@ -366,6 +404,7 @@ services:
       - backend
     labels:
       - "traefik.enable=true"
+      - "autoheal=true"
       - "traefik.http.routers.agent.rule=PathPrefix(`/v1/agent`)"
       - "traefik.http.routers.agent.entrypoints=websecure"
       - "traefik.http.services.agent.loadbalancer.server.port=8004"
@@ -379,12 +418,19 @@ services:
 
   search:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-search:${SEARCH_VERSION:-latest}
+    image: ghcr.io/camionerou/sda-search:${SEARCH_VERSION:-local}
     build:
       context: ..
       dockerfile: services/search/Dockerfile
+      args:
+        <<: *build-args
+        VERSION: ${SEARCH_VERSION:-dev}
     depends_on:
       postgres-platform:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
         condition: service_healthy
     environment:
       SEARCH_PORT: "8010"
@@ -409,6 +455,7 @@ services:
       - data
     labels:
       - "traefik.enable=true"
+      - "autoheal=true"
       - "traefik.http.routers.search.rule=PathPrefix(`/v1/search`)"
       - "traefik.http.routers.search.entrypoints=websecure"
       - "traefik.http.services.search.loadbalancer.server.port=8010"
@@ -420,12 +467,17 @@ services:
 
   traces:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-traces:${TRACES_VERSION:-latest}
+    image: ghcr.io/camionerou/sda-traces:${TRACES_VERSION:-local}
     build:
       context: ..
       dockerfile: services/traces/Dockerfile
+      args:
+        <<: *build-args
+        VERSION: ${TRACES_VERSION:-dev}
     depends_on:
       postgres-platform:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       nats:
         condition: service_healthy
@@ -448,6 +500,7 @@ services:
       - data
     labels:
       - "traefik.enable=true"
+      - "autoheal=true"
       - "traefik.http.routers.traces.rule=PathPrefix(`/v1/traces`)"
       - "traefik.http.routers.traces.entrypoints=websecure"
       - "traefik.http.services.traces.loadbalancer.server.port=8009"
@@ -459,12 +512,17 @@ services:
 
   notification:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-notification:${NOTIFICATION_VERSION:-latest}
+    image: ghcr.io/camionerou/sda-notification:${NOTIFICATION_VERSION:-local}
     build:
       context: ..
       dockerfile: services/notification/Dockerfile
+      args:
+        <<: *build-args
+        VERSION: ${NOTIFICATION_VERSION:-dev}
     depends_on:
       postgres-platform:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       nats:
         condition: service_healthy
@@ -475,9 +533,12 @@ services:
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_FROM: ${SMTP_FROM:-noreply@${SDA_DOMAIN:-sda.app}}
+      ALERT_CRITICAL_EMAIL: ${ALERT_CRITICAL_EMAIL:-}
     secrets:
       - jwt_public_key
       - db_tenant_template_url
+      - db_platform_url
+      - alertmanager_webhook_token
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8005/health || exit 1"]
       interval: 10s
@@ -489,6 +550,7 @@ services:
       - data
     labels:
       - "traefik.enable=true"
+      - "autoheal=true"
       - "traefik.http.routers.notification.rule=PathPrefix(`/v1/notifications`)"
       - "traefik.http.routers.notification.entrypoints=websecure"
       - "traefik.http.services.notification.loadbalancer.server.port=8005"
@@ -500,12 +562,19 @@ services:
 
   platform:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-platform:${PLATFORM_VERSION:-latest}
+    image: ghcr.io/camionerou/sda-platform:${PLATFORM_VERSION:-local}
     build:
       context: ..
       dockerfile: services/platform/Dockerfile
+      args:
+        <<: *build-args
+        VERSION: ${PLATFORM_VERSION:-dev}
     depends_on:
       postgres-platform:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
         condition: service_healthy
     environment:
       PLATFORM_PORT: "8006"
@@ -527,9 +596,13 @@ services:
       - data
     labels:
       - "traefik.enable=true"
+      - "autoheal=true"
       - "traefik.http.routers.platform.rule=Host(`platform.${SDA_DOMAIN:-sda.app}`) && PathPrefix(`/v1/platform`)"
       - "traefik.http.routers.platform.entrypoints=websecure"
       - "traefik.http.services.platform.loadbalancer.server.port=8006"
+      - "traefik.http.routers.flags.rule=PathPrefix(`/v1/flags`)"
+      - "traefik.http.routers.flags.entrypoints=websecure"
+      - "traefik.http.routers.flags.service=platform"
     deploy:
       resources:
         limits:
@@ -538,12 +611,17 @@ services:
 
   ingest:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-ingest:${INGEST_VERSION:-latest}
+    image: ghcr.io/camionerou/sda-ingest:${INGEST_VERSION:-local}
     build:
       context: ..
       dockerfile: services/ingest/Dockerfile
+      args:
+        <<: *build-args
+        VERSION: ${INGEST_VERSION:-dev}
     depends_on:
       postgres-platform:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       nats:
         condition: service_healthy
@@ -567,6 +645,7 @@ services:
       - data
     labels:
       - "traefik.enable=true"
+      - "autoheal=true"
       - "traefik.http.routers.ingest.rule=PathPrefix(`/v1/ingest`)"
       - "traefik.http.routers.ingest.entrypoints=websecure"
       - "traefik.http.services.ingest.loadbalancer.server.port=8007"
@@ -578,12 +657,17 @@ services:
 
   feedback:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-feedback:${FEEDBACK_VERSION:-latest}
+    image: ghcr.io/camionerou/sda-feedback:${FEEDBACK_VERSION:-local}
     build:
       context: ..
       dockerfile: services/feedback/Dockerfile
+      args:
+        <<: *build-args
+        VERSION: ${FEEDBACK_VERSION:-dev}
     depends_on:
       postgres-platform:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       nats:
         condition: service_healthy
@@ -606,6 +690,7 @@ services:
       - data
     labels:
       - "traefik.enable=true"
+      - "autoheal=true"
       - "traefik.http.routers.feedback.rule=PathPrefix(`/v1/feedback`) || PathPrefix(`/v1/platform/feedback`)"
       - "traefik.http.routers.feedback.entrypoints=websecure"
       - "traefik.http.services.feedback.loadbalancer.server.port=8008"
@@ -619,10 +704,13 @@ services:
   # ── Astro (Plan 13 — astrological intelligence engine, CGO) ────────
   astro:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-astro:${ASTRO_VERSION:-latest}
+    image: ghcr.io/camionerou/sda-astro:${ASTRO_VERSION:-local}
     build:
       context: ..
       dockerfile: services/astro/Dockerfile
+      args:
+        <<: *build-args
+        VERSION: ${ASTRO_VERSION:-dev}
     depends_on:
       postgres-platform:
         condition: service_healthy
@@ -638,6 +726,7 @@ services:
       SGLANG_LLM_URL: ${SGLANG_LLM_URL:-http://host.docker.internal:8102}
       SGLANG_LLM_MODEL: ${SGLANG_LLM_MODEL:-}
       EPHE_PATH: /ephe
+      LLM_API_KEY: ${LLM_API_KEY:-}
       <<: *jwt-public
     secrets:
       - jwt_public_key
@@ -655,6 +744,7 @@ services:
       - data
     labels:
       - "traefik.enable=true"
+      - "autoheal=true"
       - "traefik.http.routers.astro.rule=PathPrefix(`/v1/astro`)"
       - "traefik.http.routers.astro.entrypoints=websecure"
       - "traefik.http.services.astro.loadbalancer.server.port=8011"
@@ -666,14 +756,94 @@ services:
         reservations:
           memory: 128M
 
+  # ── Extractor (Python OCR + Vision pipeline) ──────────────────────────
+
+  extractor:
+    <<: *service-defaults
+    image: ghcr.io/camionerou/sda-extractor:${EXTRACTOR_VERSION:-local}
+    build:
+      context: ..
+      dockerfile: services/extractor/Dockerfile
+    depends_on:
+      nats:
+        condition: service_healthy
+    environment:
+      EXTRACTOR_PORT: "8090"
+      NATS_URL: nats://extractor:${EXTRACTOR_NATS_PASS}@nats:4222
+      SGLANG_OCR_URL: ${SGLANG_OCR_URL:-http://host.docker.internal:8100}
+      SGLANG_VISION_URL: ${SGLANG_VISION_URL:-http://host.docker.internal:8101}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8090/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+
+  # ── ERP (legacy Histrix replacement — modular business modules) ──────
+
+  erp:
+    <<: *service-defaults
+    image: ghcr.io/camionerou/sda-erp:${ERP_VERSION:-local}
+    build:
+      context: ..
+      dockerfile: services/erp/Dockerfile
+      args:
+        <<: *build-args
+        VERSION: ${ERP_VERSION:-dev}
+    depends_on:
+      postgres-platform:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    environment:
+      ERP_PORT: "8013"
+      REDIS_URL: redis:6379
+      NATS_URL: nats://erp:${ERP_NATS_PASS}@nats:4222
+      TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
+      <<: *jwt-public
+    secrets:
+      - jwt_public_key
+      - db_tenant_template_url
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8013/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - frontend
+      - backend
+      - data
+    labels:
+      - "traefik.enable=true"
+      - "autoheal=true"
+      - "traefik.http.routers.erp.rule=PathPrefix(`/v1/erp`)"
+      - "traefik.http.routers.erp.entrypoints=websecure"
+      - "traefik.http.services.erp.loadbalancer.server.port=8013"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "1.0"
+
   # ── BigBrother (Plan 15 — network intelligence, EXCEPTION: Alpine + CAP_NET_RAW) ──
 
   bigbrother:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-bigbrother:${BIGBROTHER_VERSION:-latest}
+    image: ghcr.io/camionerou/sda-bigbrother:${BIGBROTHER_VERSION:-local}
     build:
       context: ..
       dockerfile: services/bigbrother/Dockerfile
+      args:
+        <<: *build-args
+        VERSION: ${BIGBROTHER_VERSION:-dev}
     depends_on:
       postgres-platform:
         condition: service_healthy
@@ -713,6 +883,7 @@ services:
       - lan
     labels:
       - "traefik.enable=true"
+      - "autoheal=true"
       - "traefik.http.routers.bigbrother.rule=PathPrefix(`/v1/bigbrother`)"
       - "traefik.http.routers.bigbrother.entrypoints=websecure"
       - "traefik.http.services.bigbrother.loadbalancer.server.port=8012"
@@ -725,19 +896,73 @@ services:
         reservations:
           memory: 128M
 
+  # ── HealthWatch (Plan 23 — health monitoring + AI triage) ──────────
+
+  healthwatch:
+    <<: *service-defaults
+    image: ghcr.io/camionerou/sda-healthwatch:${HEALTHWATCH_VERSION:-local}
+    build:
+      context: ..
+      dockerfile: services/healthwatch/Dockerfile
+      args:
+        <<: *build-args
+        VERSION: ${HEALTHWATCH_VERSION:-dev}
+    depends_on:
+      postgres-platform:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      HEALTHWATCH_PORT: "8014"
+      PROMETHEUS_URL: http://prometheus:9090
+      DOCKER_PROXY_URL: http://docker-socket-proxy:2375
+      PLATFORM_TENANT_SLUG: platform
+      REDIS_URL: redis:6379
+      <<: *jwt-public
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    secrets:
+      - jwt_public_key
+      - db_platform_url
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8014/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - frontend
+      - backend
+      - data
+    labels:
+      - "traefik.enable=true"
+      - "autoheal=true"
+      - "traefik.http.routers.healthwatch.rule=PathPrefix(`/v1/healthwatch`)"
+      - "traefik.http.routers.healthwatch.entrypoints=websecure"
+      - "traefik.http.services.healthwatch.loadbalancer.server.port=8014"
+      - "traefik.docker.network=frontend"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.5"
+
   # ── Self-Healing ────────────────────────────────────────────────────
   # Autoheal monitors Docker health checks and restarts unhealthy containers.
   # Docker restart policies only restart EXITED containers, not UNHEALTHY ones.
   autoheal:
     image: willfarrell/autoheal
     restart: unless-stopped
+    depends_on:
+      - docker-socket-proxy
     environment:
-      AUTOHEAL_CONTAINER_LABEL: all
+      AUTOHEAL_CONTAINER_LABEL: autoheal
       AUTOHEAL_INTERVAL: 30        # check every 30s
       AUTOHEAL_START_PERIOD: 60    # grace period on startup
       AUTOHEAL_DEFAULT_STOP_TIMEOUT: 10
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      DOCKER_HOST: tcp://docker-socket-proxy:2375
+    networks:
+      - frontend  # same network as docker-socket-proxy
     deploy:
       resources:
         limits:
@@ -746,7 +971,8 @@ services:
 
 networks:
   frontend:    # traefik ↔ Go services
-  backend:     # Go services ↔ NATS
+  backend:     # Go services ↔ NATS (named for cross-compose alertmanager access)
+    name: sda-backend
   data:        # Go services ↔ PostgreSQL, Redis
   lan:         # macvlan for BigBrother physical LAN access
     driver: macvlan

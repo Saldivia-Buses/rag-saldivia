@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="arbol" log="false">
+  <title>Cuentas</title>
+  <obs></obs>
+  <form>
+    <table id="CTB_CUENTAS" label="Cuentas">
+
+    <filtros>
+        <field id="ejercicio_id">
+            <label>Ejercicio</label>
+            <operador>=</operador>
+        </field>
+    </filtros>
+
+    <field id="id_cuenta" noshow="false" arbol="hijo" esClave="true">
+        <label>Codigo</label>
+        <help>Codigo de cuenta</help>
+    </field>
+
+    <field id="nombre_cuenta">
+        <label>Nombre</label>
+        <help>Nombre de la cuenta contable</help>
+    </field>
+
+     <field id="cuenta_superior_id" arbol="padre" colstyle="display:none;" _subItem="true" _style="width: 100px;" esClave="false">
+        <helper type="combo" xml="cuentas_inhabilitadas_qry.xml" dir="/ayudas" />.
+        <label>Cuenta superior</label>
+        <help>Cuenta superior a esta cuenta contable</help>
+        <valor>0</valor>
+        <size>15</size>
+      </field>
+      <field id="tipo_id" colstyle="display:none;"  _subItem="true">
+        <helper type="combo" xml="ctbtipos_crud.xml" />
+        <label>Tipo de cuenta</label>
+        <help>Tipo de cuenta contable</help>
+
+<!--        <actualiza>
+          <field destino="tipo_id" id="cuenta_superior_id" />
+        </actualiza>-->
+      </field>
+
+      <field id="tipo_saldo" colstyle="display:none;" subItem="true" >
+        <options>
+          <option valor="0">Deudor</option>
+          <option valor="1">Acreedor</option>
+        </options>
+        <label>Tipo saldo</label>
+        <help>Tipo de saldo de la cuenta: debe o haber</help>
+      </field>
+
+      <field id="ejercicio_id" subItem="true" esClave="true" valauto="true" deshabilitado="false" colstyle="display:none;">
+        <label Formstyle="display:none;">Ejercicio</label>
+        <helper type="combo" xml="ctbejercicios_crud.xml" dir="/contabilidad/man/">
+          <filtra>ejercicio_id</filtra>
+        </helper>
+      </field>
+      <field id="habilitada" colstyle="display:none;" >
+        <tipo>check</tipo>.
+        <label>Habilitada</label>
+        <help>Indica si la cuenta esta habilitada o no</help>
+      </field>
+      <!--
+      <field id="ctbcentro_id" colstyle="display:none;" >
+        <label>Centro de Costo</label>
+        <helper type="combo" xml="ctbcentros_crud.xml" dir="/contabilidad/man/" empty="true" />
+      </field>
+      -->
+    </table>
+  </form>
+</histrix>

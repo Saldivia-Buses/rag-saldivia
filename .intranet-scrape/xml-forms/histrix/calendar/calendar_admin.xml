@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" width="20%" imprime="false">
+    <title>Servicios por Usuarios</title>
+    <obs></obs>
+    <form detalle="calendar_qry.xml" _inline="true">    
+      <table id="HTXUSERS" label="Calendario de Usuarios">
+
+        <field id="Id_usuario" _noshow="true">
+            <detalle>user_id</detalle>
+        </field>
+
+          <field id="Nombre">       
+            <label>Nombre</label>        
+        </field> 
+
+        <field id="apellido">
+            <label>Apellido</label>        
+        </field>       
+    
+      </table>
+    </form>
+</histrix>

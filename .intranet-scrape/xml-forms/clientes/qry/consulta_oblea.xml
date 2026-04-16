@@ -1,0 +1,143 @@
+<?xml version="1.0"?>
+<histrix tipo="consulta" borra="false" inserta="false" deleteRow="false" _log="true" _editable="true" >
+
+  <title>Planilla de Pendientes</title>
+  <obs/>
+
+   <form>
+    <table id="REG_DETALLES" label="Planilla de Pendientes">
+
+      <filters>
+        <field id="nro_cuenta" tabla="REG_CUENTA" repeat="false" tdWidth="5%">
+          <label>Cliente</label>
+        </field>
+     
+        <field id="codigo_serie" _tdWidth="5%">
+          <label>Oblea</label>
+          <operador>like</operador>
+        </field>
+
+         <field id="tabla_detalle"  _tdWidth="5%">
+          <label>Dominio</label>
+          <operador>like</operador>
+        </field>
+
+        <field id="fecha_movimiento">
+          <label>Hasta Fecha</label>
+          <operador>&lt;=</operador>
+          <valor>today</valor>
+        </field>
+      </filters>    
+
+  <!--    <field id="id_regmovim" noshow="true"/> -->
+      <field id="id_regdetalle" esClave="true" noshow="true" desabilitado="true"/>     
+      <field id="id_regmovim" tabla="REG_MOVIMIENTOS" noshow="true" desabilitado="true"/>
+      <field id="regmovim_id" noshow="true"/>
+     
+      <field id="nro_cuenta" tabla="REG_CUENTA" repeat="false" tdWidth="5%">
+        <label>Codigo</label>
+        <helper type="external" xml="regcuenta_solamente_nro_qry.xml" dir="/ayudas" empty="true"/>
+      </field>
+      <field id="nombre_cuenta" tabla="REG_CUENTA" repeat="false" tdWidth="20%">
+        <label>Nombre</label>
+      </field>
+       
+
+    <field id="fecha_movimiento" noshow="true" tabla="REG_MOVIMIENTOS" >        
+       <tipo>date</tipo>
+    </field>
+             
+    <field id="abreviacion_concepto" tabla="REG_CONCEPTOS" deshabilitado="true" Formstyle="display:none;">
+        <label>Comp</label>
+    </field>
+
+    <field id="nro_movimiento" tdWidth="150" linkdes="Detalle del Comprobante" linkmodal="true" style="text-align: center" deshabilitado="true" Formstyle="display:none;">
+        <label>Numero</label>
+        <expression>CONCAT(REG_MOVIMIENTOS.letra_movimiento,' ',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,'0'),'-',LPAD(REG_MOVIMIENTOS.nro_movimiento  ,8,'0'))</expression>
+    </field>      
+
+    <field id="descripcion_detalle" deshabilitado="true" Formstyle="display:none;">
+          <label>Detalle</label>
+        <tipo>varchar</tipo>
+    </field>
+
+    <field id="tabla_detalle" >
+          <label>Dominio</label>
+        <tipo>varchar</tipo>
+    </field>
+
+    <field id="codigo_serie" >
+         <label>Oblea</label>     
+    </field>
+
+    <field id="fecha_emision" local="true" _tabla="REG_MOVIMIENTOS" deshabilitado="false">
+        <label>Fec.Emision</label>
+        <expression>(CASE WHEN fecha_vencimiento != '' THEN '2015-03-01' ELSE fecha_movimiento END) </expression> 
+        <tipo>date</tipo>
+    </field>  
+
+    <field id="fecha_vencimiento" _noshow="true" deshabilitado="false" >   
+      <label>Fec.Vto.</label>    
+      <tipo>date</tipo>
+    </field>   
+
+    <field id="recibo_movimiento" local="true" desabilitado="true" Formstyle="display:none;">      
+      <label>Recibo</label>
+        <expression>(SELECT CONCAT(RM.letra_movimiento,' ',LPAD(RM.puesto_movimiento,4,'0'),'-',
+                                LPAD(RM.nro_movimiento  ,8,'0')) 
+                          FROM REG_MOVIMIENTOS RM WHERE RM.id_regmovim IN   
+                         (SELECT RI2.regmovim0_id FROM REG_IMPUTACIONES RI2 WHERE 
+                          RI2.regmovim_id IN (SELECT RI.regmovim_id FROM REG_IMPUTACIONES RI 
+                          WHERE RI.regmovim0_id = REG_DETALLES.regmovim_id) AND RI2.regmovim0_id != REG_DETALLES.regmovim_id))
+        </expression>
+        <size>12</size>
+    </field> 
+
+    <order>        
+        <field id="fecha_movimiento" tipoOrden="DESC"/>  
+        <field id="nro_movimiento" tipoOrden="DESC"/>  
+    </order>    
+  </table>
+
+  <join>
+    <table id="CAJ_CTBCUENTA_AUX">
+        <field id="codigo">
+          <condicion operador="=">REG_DETALLES.codigo_detalle</condicion>
+        </field>
+        <field id="con_dominio">
+          <condicion operador="=">'01'</condicion>
+        </field>      
+      </table>
+    </join>
+
+    <join>
+      <table id="REG_MOVIMIENTOS">
+        <field id="id_regmovim">
+          <condicion operador="=">REG_DETALLES.regmovim_id</condicion>
+        </field>
+        <field id="subsistema_id">
+          <condicion operador="=">'02'</condicion>
+        </field>      
+      </table>
+    </join>
+
+    <join>
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+        <field id="tipo_concepto">
+          <condicion operador="=">1</condicion>
+        </field>      
+      </table>
+    </join>
+
+    <join>
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

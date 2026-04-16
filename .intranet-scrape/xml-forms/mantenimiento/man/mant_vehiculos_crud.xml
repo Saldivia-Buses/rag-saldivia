@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CRUD
+Tarea: Tabla de Vehiculos
+Autor: 
+Fecha: 22/08/12
+*******************************************************************************
+-->
+<histrix tipo="crud" PDForientacion="L" path="/fotos/vehiculos">
+	 <title>Vehiculos</title>
+	<obs></obs>
+	<form detalle="mant_doc_vehiculo_crud.xml" inline="true">
+		<table id="MANT_VEHICULOS" label="Vehiculos">
+
+			<filters>
+				<!--
+			<field id="nombre_equipo">
+				<label>Nombre</label>
+				<help>Nombre</help>
+				<operador>like</operador>
+			</field>
+			<field id="deposito_id">
+				<label modpos="nobr">Depósito</label>
+				<helper type="combo" id="DEPOSITO">
+					<field id="idDeposito">
+						<label>Cod</label>
+						<help>Codigo</help>
+					</field>
+					<field id="direccion">
+						<label>Direccion</label>
+						<help>Direccion</help>
+					</field>
+				</helper>
+				<operador>=</operador>
+
+			</field>
+		-->
+			<field id="manttipovehiculo_id">
+				<label>Tipo Vehículo</label>
+				<help>Tipo de vehículo</help>
+				<operador>=</operador>
+			<!--	<valor>1</valor> -->
+			</field> 
+			
+			</filters>
+		   
+			<field id="id_mantvehiculo"  esClave="true" autoinc="true" noshow="true">
+				<label>Vehiculo</label>
+				<help>Id de vehiculo</help>
+				<detalle>mantvehiculo_id</detalle>
+				
+			</field>
+
+			<field id="manttipovehiculo_id"  required="true">
+				<label>Tipo de vehículo</label>
+				<help>Tipo de vehículo</help>
+				<helper type="combo" xml="mant_tipo_vehiculo_crud.xml" empty="true">
+					
+					 <field id="descripcion"></field>
+					 <order>
+						<field id="descripcion" table="MANT_TIPO_VEHICULO"></field>
+					</order>
+				</helper>
+				
+			</field>  
+			<field id="dominio" >
+				<label>Dominio</label>
+				<help>Número de dominio</help>
+			</field>
+			<field id="interno" >
+				<label>Interno</label>
+				<help>Número de interno</help>
+			</field>
+
+			<!--
+			<field id="descripcion_vehiculo">
+				<label>Descripcion</label>
+				<help>Descripcion del vehiculo</help>
+				<operador>like</operador>
+			</field>
+-->
+<!--
+			<field id="marca">
+				<label>Marca</label>
+				<help>Marca del vehiculo</help>
+			</field>
+	-->		
+<!--
+			<field id="registro">
+				<label>Registro</label>
+				<help>Registro del vehiculo</help>
+			</field>
+	-->		
+			<field id="modelo">
+				<label>Modelo</label>
+				<help>Modelo del vehículo</help>
+			</field>
+<!--
+			<field id="mantduenio_id" >
+				<label>Dueño</label>
+				<help>Dueño del vehiculo</help>
+				<operador>=</operador>
+			</field>
+
+			<field id="poder_fiscal" >
+				<label>Poder fiscal</label>
+				<help>Poder fiscal</help>
+			</field>
+	-->		
+			<field id="marcachasis_id">
+				<label>Marca Chasis</label>
+				<help>Marca del Chasis</help>
+				<helper type="combo" xml="mant_marcas.xml" empty="true">
+					
+				</helper>
+				
+			</field>  
+			<field id="nro_chasis" >
+				<label>Nº de chasis</label>
+				<help>Nº de chasis</help>
+			</field>
+
+			<field id="marcacarroceria_id">
+
+				<label>Marca Carrocería</label>
+				<help>Marca de Carrocería</help>
+				<helper type="combo" xml="mant_marcas.xml" empty="true">
+					
+				</helper>
+				
+			</field>  
+
+			<field id="nro_carroceria" >
+				<label>Nº de carrocería</label>
+				<help>Nº de carrocería</help>
+			</field>
+<!--
+			<field id="mantconductor_id" >
+				<label>Conductor</label>
+				<help>Conductor del vehiculo</help>
+				<operador>=</operador>
+			</field>
+	-->		
+			<!--
+			<field id="manttipovehiculo_id" >
+				<label>Tipo de vehiculo</label>
+				<help>Tipo de vehiculo</help>
+				<operador>=</operador>
+				<valor>1</valor> 
+			</field> 
+			-->
+			
+			<field id="mantcombustible_id">
+				<label>Combustible</label>
+				<help>Combustible del vehículo</help>
+				<helper type="combo" xml="mant_combustible_crud.xml" empty="true">
+					<field id="descripcion"></field>
+					<order>
+						<field id="descripcion" table="MANT_COMBUSTIBLES"></field>
+					</order>
+				</helper>
+			</field>
+		
+		<!--
+			<field id="mantcombustible_id">
+				<label>Combustible</label>
+				<help>Combustible del vehiculo</help>
+				<helper type="combo" id="STK_ARTICULOS">
+					<field id="id_stkarticulo" />
+					<field id="nombre_articulo " />
+				</helper>
+			<field>
+-->
+		<!-- sin join  no deja modificar el tipo 
+		
+			<field id="manttipovehiculo_id" tabla="MANT_VEHICULOS">
+				<helper type="combo" id="MANT_TIPO_VEHICULO">
+					<field id="id_manttipovehiculo"/> 
+					<field id="descripcion"/> 
+				</helper>
+				<label>Tipo de vehiculo</label>
+			</field>
+	--> 
+
+			<field id="referencia_compra"  colstyle="display:none">
+				<label>Referencia compra</label>
+				<help>Referencia de la compra</help>
+			</field>
+
+			<field id="fecha_compra"  colstyle="display:none">
+				<label>Fecha compra</label>
+				<help>Fecha de compra</help>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="precio_compra" colstyle="display:none">
+				<label>Precio compra</label>
+				<help>Precio de compra</help>
+			</field>
+<!--
+			<field id="descripcion_garantia" colstyle="display:none">
+				<label>Descripcion garantia</label>
+				<help>Descripcion de la garantia</help>
+			</field>     
+
+			<field id="duracion_garantia" colstyle="display:none">
+				<label>Duracion garantia</label>
+				<help>Duracion de la garantia</help>
+			</field> 
+
+			<field id="fecha_reforma" >
+				<label>Fecha reforma</label>
+				<help>Fecha de la reforma</help>
+				<tipo>date</tipo>
+			</field>      
+
+			<field id="descripcion_reforma" >
+				<label>Descripcion reforma</label>
+				<help>Descripcion de la reforma</help>
+			</field>      
+-->
+			<field id="color" noshow="true">
+				<label>Color</label>
+				<help>Color del vehiculo</help>
+			</field>  
+
+			<field id="asientos" >
+				<label>Cant Asientos</label>
+				<help>Cantidad de Asientos</help>
+			</field>
+      		<!-- documentacion del vehiculo -->
+<!--
+            <field id="documentos" local="true" posX="10" posY="+10">
+            	<label>Documentacion</label>
+            	<help>Documentacion del vehiculo</help>
+            	<helper type="link" xml="mant_doc_vehiculo_crud.xml">
+            		<parameter source="id_mantvehiculo" target="mantvehiculo_id" operator="=" />
+            	</helper>
+
+            </field>  
+-->
+		<!--
+			<field id="documentos" local="true" _obj="mant_doc_vehiculo_crud.xml" showObjTabla="true">
+				<paring destino="mantvehiculo_id">id_mantvehiculo</paring> 
+
+            	<helper type="object" xml="mant_doc_vehiculo_crud.xml">
+            		<parameter source="id_mantvehiculo" target="mantvehiculo_id" operator="=" />
+            	</helper>				
+            	<valor>'cargar'</valor> 
+
+			</field>	
+			-->
+		
+<!--
+			<field id="foto">
+				<label>Foto</label>
+				<help>Foto del vehiculo</help>
+				<tipo >file</tipo>
+				<size>70</size>
+			</field>
+
+			<field  id="foto" _foto="true" path="id_mantvehiculo">
+                    <label>Foto</label>
+                    <help>Foto del Vehiculo</help>
+                    <tipo Type="Image">file</tipo>
+                     <size>40</size>
+                </field>
+-->
+	    <field id="mantduenio_id">
+		<label>Dueño</label>
+		<helper type="combo" id="REG_CUENTA" empty="true">
+		    <field id="id_regcuenta" />
+		    <field id="nombre_cuenta" />
+		    <field id="subsistema_id">
+			<condicion operador="=">01</condicion>
+		    </field>
+		</helper>
+	    </field>
+
+            <field id="fotopath" local="true" noshow="true">
+        		<tipo>varchar</tipo>
+        		<expresion>CONCAT('/', id_mantvehiculo, '/fotos')</expresion>
+      		</field>
+
+      		<field id="foto" path="fotopath" _download="true">
+                <label>Foto</label>
+                <tipo Type="Image">file</tipo>
+                <size>50</size>
+      		</field> 
+
+			<group>
+				<field id="id_mantvehiculo" />
+			</group>
+						
+		</table>
+		
+		<join tipo="left">
+			 <table id="MANT_COMBUSTIBLES">
+				<field id="id_mantcombustible">
+					<condicion operador="=">mantcombustible_id</condicion>
+				</field>
+			 </table>
+		</join>
+		
+		<!--
+		<join tipo="left">
+			 <table id="STK_ARTICULOS">
+				<field id="id_mantcombustible">
+					<condicion operador="=">mantcombustible_id</condicion>
+				</field>
+			 </table>
+		</join>
+		-->
+
+		<join tipo="left">
+			 <table id="MANT_TIPO_VEHICULO">
+				<field id="id_manttipovehiculo">
+					<condicion operador="=">manttipovehiculo_id</condicion>
+				</field>
+			 </table>
+		</join>
+
+		<join tipo="left">
+			 <table id="MANT_DOCUMENTOS_VEHICULO">
+				<field id="mantvehiculo_id">
+					<condicion operador="=">id_mantvehiculo</condicion>
+				</field>
+			 </table>
+		</join>
+	   
+	</form>
+</histrix>  

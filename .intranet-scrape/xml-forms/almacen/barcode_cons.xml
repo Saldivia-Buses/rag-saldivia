@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<histrix tipo="grid" form="false" noform="true" modifica="false" borra="no" inserta="no" imprime="false" confirma="Reimprimir" styleTbody="height:300px;"
+paginar="200" procesa="true">
+	<title>CONSULTA ETIQUETAS</title>
+	<obs></obs>
+	<form  >
+		<table id="HERRAMIENTAS" label="recepcion de trazables"  >
+			<movimientos >
+				<relacion id="barcode_reimp.xml"></relacion>
+				<relacion id="barcode_reimp_close.xml"></relacion> 
+			</movimientos>
+
+			<filters auto="true">
+				<field id="ctacod">
+					<label>Prov.</label>
+					<operador>=</operador>
+				</field>
+
+				<field id="artcod">
+					<label modpos="nobr">Art</label>
+					<operador>=</operador>
+					<valor>0</valor>
+				</field>
+
+				<field id="nomherr" deshabilitado="true" colspan="4" local="true">
+					<label modpos="nobr">Desc</label>
+					<help>Descripción de Artículo</help>
+				</field>
+
+				<field id="fgenerada" deshabilitado="false">
+					<label>Generada</label>
+					<tipo>date</tipo>
+					<operador>=</operador>
+				</field>
+						
+				<field id="remfec" >
+					<label modpos="nobr">Fecha Remito</label>				
+						<operador>=</operador>
+				</field>			
+				<field id="ocpnro">
+					<label modpos="nobr">Orden Compra</label>
+						<operador>=</operador>				
+				</field>					
+			<field id="destino" local="true">
+				<label modpos="nobr">Impresora Destino</label>
+				<operador>=</operador>	
+				<valor>zebralocacion</valor>			
+			</field>
+
+				<field id="copias" >
+				    <label modpos="nobr">Cant. Copias</label>
+				    <valor>1</valor>
+				</field>
+
+			</filters>
+			
+			<field id="id_etiqueta" esClave="true" autoinc="true">
+				<label>Etiqueta</label>
+			</field>
+			<field id="fgenerada">
+			    <expression having="false">date(generada)</expression>
+				<label>Generada</label>
+				<tipo>date</tipo>
+			</field>
+			
+			
+			<field id="grucod" deshabilitado="true">
+				<condicion operador="!=">1</condicion>
+				<detalle>grucod</detalle>
+
+			</field>
+			<field id="codTemp" deshabilitado="true">
+				<expression>'1'</expression>
+
+				<valor>1</valor>
+			</field>
+			
+			<field id="artcod" deshabilitado="true">
+				<label>Artículo</label>
+				<helper type="external" id="STK_ARTICULOS">
+					<field id="id_stkarticulo">
+						<detalle>artcod</detalle>
+					</field>
+					<field id="nombre_articulo">
+						<detalle>nomherr</detalle>
+					</field>
+				</helper>
+			</field>
+			
+			<field id="id_herramienta" deshabilitado="true">
+				<label Formstyle="display:none">Etiqueta</label>
+				
+			</field>
+			<field id="barcode" deshabilitado="true" grafico="barcode">
+				<expression>id_herramienta</expression>
+				<label>Barcode</label>
+				<tipo>grafico</tipo>
+				
+			</field>			
+
+			<field id="ctacod" >
+				<label>Prov</label>
+			    <helper type="external" xml="HLPcctcuent.xml" dir="/help_local">
+					<field id="siscod">
+					    <condicion operador="=">01</condicion>
+					</field>
+			    </helper>
+			</field>
+			<field id="ctanom" tabla="CCTCUENT" deshabilitado="true">
+				<label>Nombre</label>
+				<tipo>varchar</tipo>
+			</field>			
+			<field id="ocpnro" deshabilitado="true">
+				<label>Orden Compra</label>
+				
+			</field>
+			<field id="ocpfec" deshabilitado="true">
+				<label>Fecha</label>
+				
+			</field>
+			<field id="remnpv" deshabilitado="true">
+				<label>Npv Remito</label>
+
+			</field>
+			
+			<field id="remnro" deshabilitado="true">
+				<label>Nro Remito</label>
+			</field>
+			<field id="remfec" deshabilitado="true">
+				<label>Fec.</label>				
+			</field>
+			
+			<field id="nomherr" deshabilitado="true" local="true" noshow="true">
+				<label _Formstyle="display:none">Desc</label>
+				<size>80</size>
+			</field>
+			<field id="nombre">
+			    <label>Desc</label>
+			    <expression>nomherr</expression>
+			</field>
+	
+			<field id="unidad">
+				<label>Unidad</label>
+				<expression>CONCAT('U', CPSMOVIM.nrocha)</expression>
+			</field>
+			<field id="copias" local="true" noshow="true">
+			    <label>Cant. Copias</label>
+			</field>
+			<field id="destino" local="true" noshow="true">
+			    <helper type="combo" id="HTXPRINTERS">
+				<field id="systemName">
+				</field>
+				<field id="description" />
+				<field id="idPrinter">
+    
+				    <condicion operador="like">'%z%'</condicion>
+				</field>				
+				
+			    </helper>
+			</field>
+
+			<field id="check" local="true" refresh="true">
+				<label >Leído</label>
+				<tipo>check</tipo>
+			</field>			
+		   <field id="graba" local="true"  noshow="true">         
+			   <label>graba</label>
+					<if exp="check != 0">            
+							<true>'true'</true>            
+							<false>'false'</false>                     
+					</if>                                           
+			</field> 			
+
+			<group>
+				<field id="id_etiqueta" />
+			</group>
+			<order>
+				<field id="id_herramienta"></field>
+			</order>
+			
+		</table>
+		<join>
+			<table id="CCTCUENT">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">'01'</condicion>
+				</field>
+				<field id="ctacod">
+					<condicion operador="=">HERRAMIENTAS.ctacod</condicion>
+				</field>
+				
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CPSMOVIM">
+				<field id="ocpnro">
+					<condicion operador="=">HERRAMIENTAS.ocpnro</condicion>
+				</field>
+				
+				<field id="artcod">
+					<condicion operador="=">HERRAMIENTAS.artcod</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

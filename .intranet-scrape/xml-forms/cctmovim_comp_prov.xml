@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <abm tipo="ficha" sololectura="true" PDFsincabecera="true">
+       <titulo>Consulta de Recibos</titulo>
+        <obs></obs>
+               <consulta>
+                  <tabla id="CCTMOVIM" label="Movimientos">
+
+                  <campo id="siscod" >
+                      <label>Cod.</label>
+                      <help> </help>
+					  <valor>'01'</valor>
+					  <condicion operador="=">'01'</condicion>
+
+                  </campo>
+
+
+				  <campo id="condes" tabla="CCTCONCE" oculto="true">
+       	              <label PDFnolabel="true">Tipo</label>
+           	          <help>Tipo de Comprobante</help>
+                  </campo>
+
+                  <campo id="ctacod" oculto="true" >
+                      <label PDFnolabel="true">Cuenta</label>
+                      <help>Codigo de Cuenta </help>
+                  </campo>
+                  <campo id="movfec">
+                      <label posx="145" posy="51" PDFnolabel="true" PDFsize="20">Fecha </label>
+                      <help> </help>
+					  <formato>d  m  y</formato>
+                  </campo>
+
+                  <campo id="ctanom">
+                      <label modpos ="nobr" posx="40" posy="63" PDFnolabel="true">Nombre</label>
+                      <help>Nombre</help>
+					  <tipo>character</tipo>
+                  </campo>
+
+                  <campo id="ivacod" tabla="CCTCUENT" >
+                      <label  modpos="nobr" posx="150" posy="63" PDFnolabel="true">Iva</label>
+                      <help>Nombre</help>
+					  <tabla_ex id="FSMCTIVA">
+						  <campo id="ivacod"></campo>
+						  <campo id="ivanom"></campo>
+					  </tabla_ex>
+                  </campo>
+
+                  <campo id="ctadir" tabla="CCTCUENT">
+                      <label  posx="40" posy="69" PDFnolabel="true">Domicilio</label>
+                      <help>Domicilio</help>
+                  </campo>
+                  <campo id="ctaloc" tabla="CCTCUENT">
+                      <label  modpos="nobr" posx="40" posy="74" PDFnolabel="true">Localidad</label>
+                      <help>Localidad</help>
+                  </campo>
+                  <campo id="prvcod" tabla="CCTCUENT">
+                      <label  posx="40" posy="79" PDFnolabel="true">Provincia</label>
+                      <help>Provincia</help>
+					  <tabla_ex id="FSMPROVS">
+						  <campo id="prvcod"></campo>
+						  <campo id="prvnom"></campo>
+					  </tabla_ex>
+                  </campo>
+                  <campo id="ctanro" tabla="CCTCUENT">
+                      <label  posx="150" posy="79" PDFnolabel="true">Cuit</label>
+                      <help>Cuit</help>
+                  </campo>
+
+	             <campo id="movnpv" oculto="true">
+                      <label posx="70" posy="20" PDFnolabel="true">Comprobante</label>
+                      <help> Comprobante</help>
+				      <formato>%04d</formato>
+                  </campo>
+                  <campo id="movnro" >
+                      <label posx="5" posy="20" PDFnolabel="true"></label>
+                      <help> Numero Comprobante</help>
+				<!--      <formato>%012d</formato> -->
+                  </campo>
+
+
+					  <!--
+                  <campo id="movvto">
+                      <label>Venc. </label>
+                      <help> </help>
+                  </campo>
+					  -->
+  				  <campo id="text1"  >
+						<expresion>movimp</expresion>
+	  				    <label posx="20" posy="100" PDFnolabel="true">Recibimos</label>
+						<tipo aletras="true" >char</tipo>
+						<prefijo>Importe Pesos </prefijo>
+				 </campo>
+<!--  				 <campo id="facdetal" local="true" obj="factura_detalle_prov.xml" >
+	  				    <label colspan="6" posx="20" posy="+1" PDFnolabel="true">Detalle Fact.</label>
+				 </campo>
+   				  <campo id="cajmovim" local="true" obj="cajmovim_recibo.xml" >
+	  				    <label colspan="6" posx="20" posy="+1" PDFnolabel="true">Concepto</label>
+				 </campo>
+
+				  <campo id="cctimput" local="true" obj="cctimput_recibo.xml" >
+	  				  <label colspan="6" posx="20" posy="+1"  PDFsize="7">Imputaciones</label>
+	  				  <paring destino="siscod">siscod</paring>
+  				 </campo>
+				  <campo id="cctimput2" local="true" obj="cctimput_recibo_2.xml" >
+	  				  <label colspan="6" posx="20" posy="+1"  PDFsize="7">Comp.Imputados</label>
+	  				  <paring destino="ctacoddes">ctacod</paring>
+				 </campo>
+                 <campo id="carchequ" local="true" obj="carchequ_recibo.xml">
+                      <label colspan="6" posx="20" posy="+1" PDFsize="5">Detalle de Valores</label>
+                      <help> </help>
+                  </campo>
+
+                 <campo id="carchehi" local="true" obj="carchehi_recibo.xml">
+                      <label colspan="6" posx="20" posy="-1"  PDFsize="5">Detalle de valores</label>
+                      <help> </help>
+                  </campo>-->
+
+                  <campo id="movimp" suma="true">
+                      <label posx="160" posy="245" PDFnolabel="true" PDFsize="15">Importe</label>
+                      <help> </help>
+				<!--	  <formato>%01.2f</formato> -->
+                  </campo>
+
+
+    <!--              <campo id="movsal" suma="true">
+                      <label>Saldo</label>
+                      <help> </help>
+
+                  </campo>-->
+
+                  </tabla>
+
+				  <join tipo="left">
+				 	<tabla id="CCTCONCE">
+						<campo id="siscod" oculto="true">
+						    <label>cctcuent.siscod</label>
+						    <condicion operador="=">CCTMOVIM.siscod</condicion>
+						</campo>
+
+						<campo id="concod" oculto="true">
+				    		<condicion operador="=">CCTMOVIM.concod</condicion>
+						</campo>
+
+						<campo id="condes" oculto="true">
+						</campo>
+				    </tabla>
+				  </join>
+				  <join tipo="left">
+				 	<tabla id="CCTCUENT">
+						<campo id="siscod" oculto="true">
+						    <label>cctcuent.siscod</label>
+						    <condicion operador="=">CCTMOVIM.siscod</condicion>
+						</campo>
+
+						<campo id="ctacod" oculto="true">
+				    		<condicion operador="=">CCTMOVIM.ctacod</condicion>
+						</campo>
+				    </tabla>
+				  </join>
+               </consulta>
+        </abm>

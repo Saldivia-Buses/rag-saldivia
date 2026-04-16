@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+	<title>Control Calidad</title>
+	<obs/>
+	<form>
+		<table id="PROD_CONTROLES">
+
+			<field id="id_prodcontrol" noshow="true" />
+
+			<field id="habilitado" oculto="true">
+			    <condicion operador="=">0</condicion>
+			</field>
+
+			<field id="nrofab_id" noshow="true" _local="true" tabla="PROD_CONTROL_MOVIM" />
+
+			<field id="id_controlmovim" noshow="true" tabla="PROD_CONTROL_MOVIM" />
+
+			<field id="seccion_id" noshow="true" _break="true">
+			    <condicion operador="=">15</condicion>
+			</field>
+
+			<field id="orden_control" noshow="true" tipoOrder="ASC"/>
+
+			<field id="nombre_control">
+				<label>Nombre Control</label>
+			</field>
+    
+			<field id="observacion_control" tabla="PROD_CONTROL_MOVIM">
+				<help>Observaciones</help>
+				<label>Observación</label>
+			</field>
+			<field id="conforme" tabla="PROD_CONTROL_MOVIM" colstyle="background-color: green; text-align: center;" PDFcolWidth="10">
+    				<label>si</label>
+				<tipo>check</tipo>
+			</field>
+
+			<field id="no_conforme" tabla="PROD_CONTROL_MOVIM" colstyle="background-color: pink; text-align: center;" PDFcolWidth="10">
+				<label>no</label>
+				<tipo>check</tipo>
+			</field>
+			<field id="oculta_control" noshow="true" _validRow="true">
+			    <expression>case when conforme = 1 or no_conforme = 1 then '1' else '0' end</expression>
+			    <condicion operador="=">1</condicion>
+			</field>
+			<group>
+				<field id="id_prodcontrol" />
+			</group>
+
+			<order>
+				<field id="orden_control" />
+			</order>
+
+		</table>
+
+		<join>
+			<table id="PROD_CONTROL_MOVIM">
+<!--				<field id="nrofab_id">
+					<condicion operador="=">'[__nrofab_id__]'</condicion>
+				</field>
+-->
+				<field id="prodcontrol_id">
+					<condicion operador="=">PROD_CONTROLES.id_prodcontrol</condicion>
+				</field>
+			</table>
+		</join>
+
+	</form>
+</histrix>

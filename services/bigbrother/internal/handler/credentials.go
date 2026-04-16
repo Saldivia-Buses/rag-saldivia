@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 	"github.com/Camionerou/rag-saldivia/services/bigbrother/internal/service"
 )
 
@@ -30,12 +31,12 @@ func (h *Credentials) Store(w http.ResponseWriter, r *http.Request) {
 		KeyFingerprint string `json:"key_fingerprint,omitempty"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid body"))
 		return
 	}
 
 	if body.DeviceID == "" || body.CredType == "" || body.Secret == "" {
-		http.Error(w, `{"error":"device_id, cred_type, and secret are required"}`, http.StatusBadRequest)
+		httperr.WriteError(w, r, httperr.InvalidInput("device_id, cred_type, and secret are required"))
 		return
 	}
 
@@ -50,39 +51,39 @@ func (h *Credentials) Store(w http.ResponseWriter, r *http.Request) {
 		IP:             r.RemoteAddr,
 	})
 	if err != nil {
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(meta)
+	_ = json.NewEncoder(w).Encode(meta)
 }
 
 // List returns credential metadata (never plaintext).
 func (h *Credentials) List(w http.ResponseWriter, r *http.Request) {
 	creds, err := h.credSvc.List(r.Context())
 	if err != nil {
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"credentials": creds})
+	_ = json.NewEncoder(w).Encode(map[string]any{"credentials": creds})
 }
 
 // Delete removes a credential.
 func (h *Credentials) Delete(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	if id == "" {
-		http.Error(w, `{"error":"id required"}`, http.StatusBadRequest)
+		httperr.WriteError(w, r, httperr.InvalidInput("id required"))
 		return
 	}
 
 	userID := r.Header.Get("X-User-ID")
 
 	if err := h.credSvc.Delete(r.Context(), id, userID, r.RemoteAddr); err != nil {
-		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		httperr.WriteError(w, r, httperr.NotFound("credential"))
 		return
 	}
 

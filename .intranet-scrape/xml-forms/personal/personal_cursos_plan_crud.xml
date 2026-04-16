@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud" subtipo="vertical" PDForientacion="L" PDFfontSize="8">
+    <title>Programa Anual Capacitación</title>
+    <obs/>
+    <form >
+        <table id="RH_CURSOS_PLAN" label="Programa Anual Capacitación">
+			
+			<filters>
+				<field id="anio" deshabilitado="false">
+					<label posx="5" posy="+2">Año</label>
+					<operador>=</operador>
+					<valor eval="true">date('Y')</valor>
+				</field>
+
+			</filters>
+
+     		<field id="id_cursoplan" autoinc="true" noshow="true"/>
+
+			<field id="estado_cursoplan" _oculto="true">
+				<options>
+					<option valor="0">Pendiente</option>
+					<option valor="1">Realizada</option>
+				</options>
+				<label>Estado</label>
+			</field>
+
+			<field id="fechainicio_cursoplan" colstyle="display:none;">
+				<label>Fecha Inicio</label>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="fechafin_cursoplan" colstyle="display:none;">
+				<label>Fecha Fin</label>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="tema_cursoplan">
+				<label>Tema</label>
+                <size>200</size>
+			</field>
+
+			<field id="detalle_cursoplan" colstyle="display:none;">
+				<label>Detalle</label>
+                <size>200</size>
+			</field>
+
+			<field id="causaraiz_cursoplan" colstyle="display:none;">
+				<label>Causa Raiz</label>
+                <size>200</size>
+                <tipo>varchar</tipo>
+			</field>
+
+			<field id="anio" noshow="true">
+				<label posx="5" posy="+2">Año</label>
+				<expression>YEAR(fechainicio_cursoplan)</expression>
+				<helper type="combo" id="RH_CURSOS_PLAN">
+					<field id="anio1">
+						<expression>YEAR(fechainicio_cursoplan)</expression>
+					</field>
+					<field id="anio2">
+						<expression>YEAR(fechainicio_cursoplan)</expression>
+					</field>
+				</helper>
+			</field>
+
+			<field id="enero">
+				<label style="text-align:center;" Formstyle="display:none;">Enero</label>
+				<expression>CASE WHEN month(fechainicio_cursoplan) = 1 THEN 'X' ELSE '' END</expression>
+			</field>
+
+			<field id="febrero">
+				<label style="text-align:center;" Formstyle="display:none;">Febrero</label>
+				<expression>CASE WHEN month(fechainicio_cursoplan) &lt;= 2 and month(fechafin_cursoplan) &gt;= 2 THEN 'X' ELSE '' END</expression>
+			</field>
+
+			<field id="marzo">
+				<label style="text-align:center;" Formstyle="display:none;">Marzo</label>
+				<expression>CASE WHEN month(fechainicio_cursoplan) &lt;= 3 and month(fechafin_cursoplan) &gt;= 3 THEN 'X' ELSE '' END</expression>
+			</field>
+
+			<field id="abril">
+				<label style="text-align:center;" Formstyle="display:none;">Abril</label>
+				<expression>CASE WHEN month(fechainicio_cursoplan) &lt;= 4 and month(fechafin_cursoplan) &gt;= 4 THEN 'X' ELSE '' END</expression>
+			</field>
+
+			<field id="mayo">
+				<label style="text-align:center;" Formstyle="display:none;">Mayo</label>
+				<expression>CASE WHEN month(fechainicio_cursoplan) &lt;= 5 and month(fechafin_cursoplan) &gt;= 5 THEN 'X' ELSE '' END</expression>
+			</field>
+
+			<field id="junio">
+				<label style="text-align:center;" Formstyle="display:none;">Junio</label>
+				<expression>CASE WHEN month(fechainicio_cursoplan) &lt;= 5 and month(fechafin_cursoplan) &gt;= 5 THEN 'X' ELSE '' END</expression>
+			</field>
+
+			<field id="julio">
+				<label style="text-align:center;" Formstyle="display:none;">Julio</label>
+				<expression>CASE WHEN month(fechainicio_cursoplan) &lt;= 7 and month(fechafin_cursoplan) &gt;= 7 THEN 'X' ELSE '' END</expression>
+			</field>
+
+			<field id="agosto">
+				<label style="text-align:center;" Formstyle="display:none;">Agosto</label>
+				<expression>CASE WHEN month(fechainicio_cursoplan) &lt;= 8 and month(fechafin_cursoplan) &gt;= 8 THEN 'X' ELSE '' END</expression>
+			</field>
+
+			<field id="septiembre">
+				<label style="text-align:center;" Formstyle="display:none;">Septiembre</label>
+				<expression>CASE WHEN month(fechainicio_cursoplan) &lt;= 9 and month(fechafin_cursoplan) &gt;= 9 THEN 'X' ELSE '' END</expression>
+			</field>
+
+			<field id="octubre">
+				<label style="text-align:center;" Formstyle="display:none;">Octubre</label>
+				<expression>CASE WHEN month(fechainicio_cursoplan) &lt;= 10 and month(fechafin_cursoplan) &gt;= 10 THEN 'X' ELSE '' END</expression>
+			</field>
+
+			<field id="noviembre">
+				<label style="text-align:center;" Formstyle="display:none;">Noviembre</label>
+				<expression>CASE WHEN month(fechainicio_cursoplan) &lt;= 11 and month(fechafin_cursoplan) &gt;= 11 THEN 'X' ELSE '' END</expression>
+			</field>
+
+			<field id="diciembre">
+				<label style="text-align:center;" Formstyle="display:none;">Diciembre</label>
+				<expression>CASE WHEN month(fechainicio_cursoplan) &lt;= 12 and month(fechafin_cursoplan) &gt;= 12 THEN 'X' ELSE '' END</expression>
+			</field>
+
+			<order>
+			</order>
+       </table>
+
+    </form>
+</histrix>

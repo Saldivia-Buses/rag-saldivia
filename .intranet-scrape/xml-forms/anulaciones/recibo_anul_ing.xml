@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="ing"  inserta="false" modifica="false" llenoTemporal="true"  imprime="false"  transaccional="true" >
+	<title>Orden de pago</title>
+	<obs/>
+	<form >
+		<table id="CCTIMPUT" label="ORDEN DE PAGO" idCampoCond="anular">
+
+
+			
+			<movimientos >
+
+<!-- Borro OP -->	    <relacion id="ordenpago_anul_cctmovim_delete_ingmov.xml" />  
+<!-- restauro saldo -->	<relacion id="ordenpago_anul_cctmovim_update_ingmov.xml" /> 
+<!-- borro CCTIMPUT -->	<relacion id="ordenpago_anul_cctimput_delete_ingmov.xml" /> 
+<!-- borro CAJCOMPR 	<relacion id="ordenpago_anul_cajcompr_delete_ingmov.xml" /> 
+
+     borro RETACUMU 	<relacion id="ordenpago_anul_retacumu_delete_ingmov.xml" /> 
+     borro RET1598U 	<relacion id="ordenpago_anul_ret1598_delete_ingmov.xml" /> 
+     -->				
+     borro CAJMOVIM	<relacion id="ordenpago_anul_cajmovim_delete_ingmov.xml" /> 
+ 
+ borro BCSMOVIM 	<relacion id="recibo_anul_bcsmovim_delete_ingmov.xml" /> 				
+ 
+ 
+<!-- borro CTBREGIS -->	<relacion id="ordenpago_anul_ctbregis_delete_ingmov.xml" />  				
+	<!-- reingreso CARCHEQU 	<relacion id="ordenpago_anul_carchequ_ins_ingmov.xml" /> 				
+	      borro CARCHEHI 	<relacion id="ordenpago_anul_carchehi_delete_ingmov.xml" /> 				
+ -->
+
+
+			</movimientos> 
+
+			<field id="siscod" _oculto="true" >
+				<label>Cod.</label>
+				<help/>
+			</field>			
+
+			<field id="ctacod"  _noshow="true">
+				<label>Cta</label>
+			</field>
+
+			
+			<field id="concod"   tabla="CCTCONCE" _noshow="true">
+				<label>conc</label>
+				<help>Tipo de Comprobante</help>
+
+			</field>
+			<field id="condes" oculto="true" tabla="CCTCONCE">
+				<label>Tipo</label>
+				<help>Tipo de Comprobante</help>
+			</field>
+			<field id="movfec" >
+				<label >Fecha</label>
+				<help></help>
+
+			</field>
+			<field id="movicc" >
+				<label modpos="nobr">C.OP</label>
+			</field>			
+			<field id="movipv" >
+				<label modpos="nobr">PV</label>
+			</field>
+			<field id="movinc" >
+				<label modpos="nobr">OP</label>
+			</field>
+			<field id="movife" >
+				<label modpos="nobr"/>
+			</field>
+
+			<field id="movnpv" >
+				<label modpos="nobr">npv</label>
+				<help>Comprobante</help>
+				<format>%04d</format>
+
+				
+			</field>
+			<field id="movnro" >
+				<label modpos="nobr"/>
+				<help>Numero</help>
+				<format>%012d</format>
+
+				
+			</field>
+			
+			<field id="importeOrig" >
+				<expression>CCTMOVIM.movimp</expression>
+				<label PDFsize="12" posx="130" posy="+1">Imp.Orig</label>
+			</field>			
+			<field id="newsaldo" >
+				<expression>(CCTMOVIM.movsal + CCTIMPUT.movimp)</expression>
+				<label PDFsize="12" posx="130" posy="+1">Nuevo Saldo</label>
+			</field>			
+			
+
+			<field id="movimp" >
+				<label PDFsize="12" posx="130" posy="+1">Total Pago</label>
+				<help></help>
+				<format>%01.2f</format>
+				
+			</field>
+			
+			<field id="movsal" suma="true"  ctbimporte="1" calcsuma="true" >
+				<label>saldo</label>
+				<help></help>
+			</field>
+
+			<field id="minuta" local="true" >
+				<label>Minuta</label>
+				<tipo>integer</tipo>
+			</field>
+
+			<field id="carint" tabla="CARCHEQU" noshow="true"/>
+
+			<field id="siscod_ch" noshow="true">
+				<expression>CARCHEQU.siscod</expression>
+			</field>
+
+			<field id="succod_ch" noshow="true">
+				<expression>CARCHEQU.succod</expression>
+			</field>
+
+		</table>
+		<join tipo="left">
+			<table id="CCTCONCE">
+				<field id="siscod" oculto="true">
+					<label>cctcuent.siscod</label>
+					<condicion operador="=">CCTIMPUT.siscod</condicion>
+				</field>
+				<field id="concod" oculto="true">
+					<condicion operador="=">CCTIMPUT.concod</condicion>
+				</field>
+				<field id="condes" oculto="true"></field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CCTCUENT">
+				<field id="siscod" oculto="true">
+					<label>cctcuent.siscod</label>
+					<condicion operador="=">CCTIMPUT.siscod</condicion>
+				</field>
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">CCTIMPUT.ctacod</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CCTMOVIM">
+				<field id="siscod" oculto="true">
+					<label>cctcuent.siscod</label>
+					<condicion operador="=">CCTIMPUT.siscod</condicion>
+				</field>
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">CCTIMPUT.ctacod</condicion>
+				</field>
+				<field id="movnro" oculto="true">
+					<condicion operador="=">CCTIMPUT.movnro</condicion>
+				</field>
+				<field id="movnpv" oculto="true">
+					<condicion operador="=">CCTIMPUT.movnpv</condicion>
+				</field>
+				<field id="movfec" oculto="true">
+					<condicion operador="=">CCTIMPUT.movfec</condicion>
+				</field>
+				
+				
+				
+			</table>
+		</join>		
+		<join tipo="left">
+			<table id="CARCHEQU">
+				<field id="carrec">
+					<condicion operador="=">CCTIMPUT.movinc</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

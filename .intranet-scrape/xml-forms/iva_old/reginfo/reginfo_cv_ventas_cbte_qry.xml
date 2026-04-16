@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+	<title>REGINFO_CV_VENTAS_CBTE</title>
+	<obs/>
+	<form >
+		<table id="IVAVENTAS" label="REGINFO_CV_VENTAS_CBTE">
+			<fieldGroup id="DEBUG" noshow="true" local="true" print="false" export="false">
+				<field id="anio" />
+
+				<field id="mes" />
+
+				<field id="fecha_desde">
+					<tipo>date</tipo>
+				</field>
+
+				<field id="fecha_hasta">
+					<tipo>date</tipo>
+				</field>
+
+				<field id="archivo" />
+
+				<field id="titulo">
+					<setvar>titulo</setvar>
+					<expression>CONCAT('[__anio__]', '[__mes__]','_[__archivo__]')</expression>
+				</field>
+			</fieldGroup>
+
+			<fieldGroup id="tests" export="false" noshow="true">
+				<field id="_ORDEN" local="true" noshow="false" style="color:blue;font-weight:bold;" />
+
+				<field id="iva_detalle">
+				    <!--<expression>LPAD(round(sum(IVAIMPORTES.impimp) * 100, 0), 15, '0')</expression>-->
+				    <expression>IF(IVAVENTAS.ivacod = 6, LPAD(round(IVAVENTAS.totcom * 100, 0), 15, '0'), LPAD(round(sum(IVAIMPORTES.impimp) * 100, 0), 15, '0'))</expression>
+				    <label>Imp. Liq.</label>
+				    <tipo>integer</tipo>
+<!--				    <condicion operador="!=">0</condicion>-->
+				</field>
+
+				<field id="style_cuit">
+					<expression>IF(LPAD(REPLACE(CCTCUENT.ctanro, '-', ''), 20, 0) = 0 and (CASE WHEN IVAVENTAS.codcom = 7 THEN '99' ELSE FSMDOCUM.codafip END) != '99', 'background-color:red;', '')</expression>
+				</field>
+
+				<field id="style_coddoc">
+					<expression>IF(IFNULL(FSMDOCUM.codafip, 0) = 0,'background-color:red;','')</expression>
+				</field>
+			</fieldGroup>
+
+			<fieldGroup id="table_fields" export="false" noshow="true">
+				<field id="feciva" tabla="IVAVENTAS">
+					<condicion operador="&gt;=">STR_TO_DATE('[__fecha_desde__]', '%d/%m/%Y') AND IVAVENTAS.fecreg &lt;= STR_TO_DATE('[__fecha_hasta__]', '%d/%m/%Y')</condicion>
+				</field>
+ 
+				<field id="codlet" tabla="IVAVENTAS" />
+				<field id="nronpv" tabla="IVAVENTAS" />
+				<field id="nrocom" tabla="IVAVENTAS" />
+				<field id="ctacod" tabla="IVAVENTAS" />
+			</fieldGroup>
+
+			<fieldGroup id="exportables">
+				<field id="fecha_comp">
+					<label>Fecha comp.</label>
+					<expression>REPLACE(IVAVENTAS.feciva, '-', '')</expression>
+				</field>
+
+				<field id="regconcepto_afip">
+					<label>Tipo comp.</label>
+					<expression>LPAD((CASE WHEN IVAVENTAS.codcom in (1, 36) and CCTMOVIM.movlet = 'A' THEN 1
+							 			   WHEN IVAVENTAS.codcom = 2 and CCTMOVIM.movlet = 'A' THEN 2
+							 			   WHEN IVAVENTAS.codcom = 3 and CCTMOVIM.movlet = 'A' THEN 3
+							 			   WHEN IVAVENTAS.codcom = 4 and CCTMOVIM.movlet = 'A' THEN 4
+							 			   WHEN IVAVENTAS.codcom in (1, 36) and CCTMOVIM.movlet = 'B' THEN 6
+							 			   WHEN IVAVENTAS.codcom = 2 and CCTMOVIM.movlet = 'B' THEN 7
+							 			   WHEN IVAVENTAS.codcom = 3 and CCTMOVIM.movlet = 'B' THEN 8
+							 			   WHEN IVAVENTAS.codcom = 4 and CCTMOVIM.movlet = 'B' THEN 9
+							 			   WHEN IVAVENTAS.codcom = 7 THEN 83 END), 3, 0)</expression>
+				</field>
+
+				<field id="puesto_movimiento">
+					<label>P.Vta.</label>
+					<expression>LPAD(IVAVENTAS.nronpv, 5, 0)</expression>
+				</field>
+
+				<field id="nro_movimiento">
+					<label>Nro. Comp.</label>
+					<expression>LPAD(IVAVENTAS.nrocom, 20, 0)</expression>
+				</field>
+
+				<field id="nro_movimiento_hta">
+					<label>Nro. Comp. h</label>
+					<expression>LPAD(IVAVENTAS.nrocom, 20, 0)</expression>
+				</field>
+
+				<field id="tipo_documento_id">
+					<label>Cod. Doc.</label>
+					<expression>CASE WHEN IVAVENTAS.codcom = 7 THEN '99' ELSE FSMDOCUM.codafip END</expression>
+				</field>
+
+				<field id="cuit_cuenta" getStyle="style_cuit">
+					<label>Nro. id.</label>
+					<expression>LPAD(REPLACE(REPLACE(CCTCUENT.ctanro , '-', ''), '/', ''), 20, 0)</expression>
+					<tipo>integer</tipo>
+				</field>
+
+				<field id="nombre_cuenta">
+					<expression>RPAD(REPLACE(IF(IVAVENTAS.ctanom != '',IVAVENTAS.ctanom,CCTCUENT.ctanom),'Ñ', 'N'), 30, ' ')</expression>
+					<label>Ap.Nom.</label>
+				</field>
+
+				<field id="importe_movimiento">
+					<expression>LPAD(round(REPLACE(IVAVENTAS.totcom, '-', '') * 100, 0), 15, '0')</expression>
+					<label>Total</label>
+					<tipo>integer</tipo>
+				</field>
+
+				<field id="total_neto_no_gravado">
+					<expression>LPAD(round(IVAVENTAS.nogcom * 100, 0), 15, '0')</expression>
+				</field>
+
+				<field id="percepcion_no_cat">
+					<expression>'000000000000000'</expression>
+				</field>
+
+				<field id="importe_exento">
+					<expression>LPAD(round(IVAVENTAS.execom * 100, 0), 15, '0')</expression>
+					<label>Exento</label>
+					<tipo>integer</tipo>
+				</field>
+
+				<field id="percepciones_o_imp_nac">
+					<expression>'000000000000000'</expression>
+				</field>
+
+				<field id="importe_percepcion">
+					<label>Percepcion</label>
+					<expression>LPAD(round(ifnull(0, 0) * 100, 0), 15, '0')</expression>
+					<tipo>integer</tipo>
+				</field>
+
+				<field id="percepcion_imp_munic">
+					<expression>'000000000000000'</expression>
+				</field>
+
+				<field id="impuestos_int">
+					<expression>'000000000000000'</expression>
+				</field>
+
+				<field id="codigo_moneda">
+					<label>Moneda</label>
+					<expression>'PES'</expression>
+				</field>
+
+				<field id="tipo_cambio">
+					<label>Tipo Cambio</label>
+					<expression>'0001000000'</expression>
+				</field>
+
+				<field id="cantidad_alic">
+					<label>Cant. alicuota</label>
+					<expression>(SELECT count(distinct(IVAIMPORTES.impali)) 
+									FROM IVAIMPORTES 
+									WHERE IVAIMPORTES.tipoiva = 2 
+	  								  AND IVAIMPORTES.codcom = IVAVENTAS.codcom 
+	  								  AND IVAIMPORTES.nronpv = IVAVENTAS.nronpv 
+	  								  AND IVAIMPORTES.nrocom = IVAVENTAS.nrocom 
+	  								  AND IVAIMPORTES.ctacod = IVAVENTAS.ctacod
+	  								  AND IVAIMPORTES.feciva = IVAVENTAS.fecreg
+	  								  )</expression>
+					<!--<condicion operador="!=">0</condicion>-->
+					<tipo>integer</tipo>
+				</field>
+
+				<field id="codigo_operacion">
+					<expression>CASE WHEN IVAIMPORTES.impimp = 0 THEN 'E' ELSE '0' END</expression>
+				</field>
+
+				<field id="otros_tributos">
+					<label>Otros Tributos</label>
+					<expression>'000000000000000'</expression>
+				</field>
+
+				<field id="fecha_vencimiento">
+					<expression>LPAD(REPLACE(ifnull(CCTMOVIM.movvto, 0), '-', ''), 8, '0')</expression>
+				</field>
+			</fieldGroup>
+
+            <group>
+                <field id="id_ivaventa" tabla="IVAVENTAS" />
+            </group>
+
+		</table>
+
+		<join tipo="left">
+			<table id="IVAIMPORTES">
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">IVAVENTAS.ctacod</condicion>
+				</field>
+				<field id="codcom" oculto="true">
+					<condicion operador="=">IVAVENTAS.codcom</condicion>
+				</field>
+				<field id="nrocom" oculto="true">
+					<condicion operador="=">IVAVENTAS.nrocom</condicion>
+				</field>
+				<field id="nronpv" oculto="true">
+					<condicion operador="=">IVAVENTAS.nronpv</condicion>
+				</field>
+				<field id="tipoiva" oculto="true">
+					<condicion operador="=">2</condicion>
+				</field>
+				<field id="feciva" oculto="true">
+					<condicion operador="=">IVAVENTAS.fecreg</condicion>
+				</field>				
+			</table>
+		</join>	
+
+        <join tipo="left">
+            <table id="CCTMOVIM">
+                <field id="id_regmovim">
+                    <condicion operador="=">IVAVENTAS.regmovim_id</condicion>
+                </field>
+            </table>
+        </join>
+
+		<join tipo="left">
+			<table id="CCTCONCE">
+		    	<field id="siscod">
+		    		<condicion operador="=">'02'</condicion>
+		    	</field>        
+		    	<field id="concod">
+		      		<condicion operador="=">IVAVENTAS.codcom</condicion>
+		    	</field>
+		  	</table>
+		</join>  
+
+    	<join tipo="left">
+      		<table id="CCTCUENT">
+        		<field id="siscod">
+          			<condicion operador="=">'02'</condicion>
+        		</field>        
+        		<field id="ctacod">
+          			<condicion operador="=">IVAVENTAS.ctacod</condicion>
+        		</field>
+      		</table>
+    	</join>            
+            
+		<join tipo="left">
+			<table id="FSMDOCUM">
+				<field id="doccod">
+					<condicion operador="=">CCTCUENT.doccod</condicion>
+				</field>
+			</table>
+		</join>
+		
+	</form>
+</histrix>

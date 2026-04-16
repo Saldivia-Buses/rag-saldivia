@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="card" imprime="true" inserta="false" modifica="false" sidePanel="false" calendarAspectRatio="2"
+	>
+    <title>Calendario Vencimientos</title>
+    <obs/>
+    <form  _detalle="detalle_calendario_vencimientos_compras_semanal.xml">
+        <table id="REG_MOVIMIENTOS" label="Calendario Vencimientos">
+
+        	<filters>
+        		<field id="fecha_movimiento" deshabilitado="false">
+        			<label>Desde</label>
+        			<operador>&gt;=</operador>
+        			<tipo>date</tipo>
+        		</field>
+        		<field id="fecha_movimiento" deshabilitado="false">
+        			<label modpos="nobr">Hasta</label>
+        			<operador>&lt;=</operador>
+        			<tipo>date</tipo>
+        		</field>
+           	</filters>
+
+        	<field id="id_regmovim" calendarId="true" noshow="true"/>
+
+
+	        <field id="subsistema_id" noshow="true">
+	        	<condicion operador="=">'01'</condicion>
+	        </field>
+		<field id="regcategoria_id" tabla="REG_CUENTA" noshow="true">
+	        	<condicion operador="!=">3</condicion>
+		</field>
+		<field id="filtracat" local="true" noshow="true">
+		    <valor>3</valor>
+		    <detalle>filtracat</detalle>
+		</field>
+
+	        <!--
+	        <field id="edit" local="true" calendarEditable="true">
+	        	<valor>1</valor>
+	        </field>
+	    -->
+			<field id="estado" local="true" noshow="true">
+			</field>
+
+			<field id="saldo_movimiento" noshow="true">
+				<label>Saldo</label>
+				<condicion operador="&gt;">0</condicion>
+			</field>
+
+	        <field id="vence"  _calendarStartDate="true" noshow="true">
+	        	<tipo>date</tipo>
+				<expression having="false">(case when date_add(fecha_movimiento, interval plazo day)  &lt; date(now()) then date(now()) else date_add(fecha_movimiento, interval plazo day) end)</expression>
+
+	        </field>
+	        <field id="desde" noshow="true">
+	        	<expression>min(fecha_movimiento)</expression>
+	        	<detalle>desde</detalle>
+	        	<tipo>date</tipo>
+	        </field>
+
+	        <field id="fecha_movimiento" noshow="true">
+	        	<tipo>date</tipo>
+	        </field>
+
+			<field id="mes"  deshabilitado="true" style="background-color:#444;color:white;padding:0.5em;font-weight:bold;">
+				<label>Mes</label>
+		        <helper type="combo">
+		          <option value="1">Enero</option>
+		          <option value="2">Febrero</option>
+		          <option value="3">Marzo</option>
+		          <option value="4">Abril</option>
+		          <option value="5">Mayo</option>
+		          <option value="6">Junio</option>
+		          <option value="7">Julio</option>
+		          <option value="8">Agosto</option>
+		          <option value="9">Septiembre</option>
+		          <option value="10">Octubre</option>
+		          <option value="11">Noviembre</option>
+		          <option value="12">Diciembre</option>
+		        </helper>
+
+    				<expression having="false">month((case when date_add(fecha_movimiento, interval plazo day)  &lt; date(now()) then date(now()) else date_add(fecha_movimiento, interval plazo day) end))</expression>
+    				<detalle>semana</detalle>
+			</field>
+			<field id="vencidas" noshow="true">
+				<expression>(case when date_add(fecha_movimiento, interval plazo day) &lt; date(now()) then 1 else 0 end)</expression>
+				<tipo>custom_numeric</tipo>
+			</field>
+			<field id="subject" calendarSubject="true" calendarTitle="true" style="text-align:right;">
+				<attribute id="style">color</attribute>
+				<!--				<expression>concat('NRO MOVIM: ', nro_movimiento ,' - ', nombre_movimiento , ' - $', saldo_movimiento)</expression> -->
+				<expression>concat((case when date_add(fecha_movimiento, interval plazo day) &lt; date(now()) then 'Fact.Vencidas $ ' else 'Facturas $ ' end), format(sum(saldo_movimiento), 2, 'es_AR'))</expression>
+				<tipo>custom_numeric</tipo>
+			</field>
+
+			<field id="color" calendarColor="true" noshow="true">
+			    <expression>(case when date_add(fecha_movimiento, interval plazo day) &lt; date(now()) then 'background-color:#ffa500;padding:1em;color:white;font-weight:bold;' else 'background-color:#0000ff; color:white;padding:1em;font-weight:bold;' end)</expression>
+			</field>
+
+			<group>
+			    <field id="mes" />
+			    <field id="vencidas" />
+			</group>
+        </table>
+        <join>
+        	<table id="REG_CONCEPTOS">
+        		<field id="id_concepto">
+        			<condicion operador="=">concepto_id</condicion>
+        		</field>
+        		<field id="tipo_concepto">
+        			<condicion operador="=">1</condicion>
+        		</field>
+        	</table>
+        </join>
+
+	<join>
+	    <table id="REG_CUENTA">
+			<field id="id_regcuenta">
+			    <condicion operador="=">regcuenta_id</condicion>
+			</field>
+	    </table>
+	</join>
+	<join>
+	    <table id="REG_FORMAS">
+			<field id="id_regforma">
+			    <condicion operador="=">REG_CUENTA.regforma_id</condicion>
+			</field>
+	    </table>
+	</join>
+
+    </form>
+    COMPROMISOS
+
+    <form  _detalle="detalle_calendario_vencimientos_compras_semanal.xml">
+        <table id="REG_MOVIMIENTOS" label="Calendario Vencimientos">
+
+        	<filters>
+        		<field id="fecha_movimiento" deshabilitado="false">
+        			<label>Desde</label>
+        			<operador>&gt;=</operador>
+        			<tipo>date</tipo>
+        		</field>
+        		<field id="fecha_movimiento" deshabilitado="false">
+        			<label modpos="nobr">Hasta</label>
+        			<operador>&lt;=</operador>
+        			<tipo>date</tipo>
+        		</field>
+           	</filters>
+
+        	<field id="id_regmovim" calendarId="true" noshow="true"/>
+
+
+	        <field id="subsistema_id" noshow="true">
+	        	<condicion operador="=">'01'</condicion>
+	        </field>
+		<field id="regcategoria_id" tabla="REG_CUENTA" noshow="true">
+	        	<condicion operador="=">3</condicion>
+		</field>
+		<field id="filtracat" local="true" noshow="true">
+		    <valor>3</valor>
+		    <detalle>filtracat</detalle>
+		</field>
+
+	        <!--
+	        <field id="edit" local="true" calendarEditable="true">
+	        	<valor>1</valor>
+	        </field>
+	    -->
+			<field id="estado" local="true" noshow="true">
+			</field>
+
+			<field id="saldo_movimiento" noshow="true">
+				<label>Saldo</label>
+				<condicion operador="&gt;">0</condicion>
+			</field>
+
+	        <field id="vence"  _calendarStartDate="true" noshow="true">
+	        	<tipo>date</tipo>
+				<expression having="false">(case when date_add(fecha_movimiento, interval plazo day)  &lt; date(now()) then date(now()) else date_add(fecha_movimiento, interval plazo day) end)</expression>
+
+	        </field>
+	        <field id="desde" noshow="true">
+	        	<expression>min(fecha_movimiento)</expression>
+	        	<detalle>desde</detalle>
+	        	<tipo>date</tipo>
+	        </field>
+
+	        <field id="fecha_movimiento" noshow="true">
+	        	<tipo>date</tipo>
+	        </field>
+
+			<field id="mes"  deshabilitado="true" style="background-color:#444;color:white;padding:0.5em;font-weight:bold;">
+				<label>Mes</label>
+		        <helper type="combo">
+		          <option value="1">Enero</option>
+		          <option value="2">Febrero</option>
+		          <option value="3">Marzo</option>
+		          <option value="4">Abril</option>
+		          <option value="5">Mayo</option>
+		          <option value="6">Junio</option>
+		          <option value="7">Julio</option>
+		          <option value="8">Agosto</option>
+		          <option value="9">Septiembre</option>
+		          <option value="10">Octubre</option>
+		          <option value="11">Noviembre</option>
+		          <option value="12">Diciembre</option>
+		        </helper>
+
+    				<expression having="false">month((case when date_add(fecha_movimiento, interval plazo day)  &lt; date(now()) then date(now()) else date_add(fecha_movimiento, interval plazo day) end))</expression>
+    				<detalle>semana</detalle>
+			</field>
+			<field id="vencidas" noshow="true">
+				<expression>(case when date_add(fecha_movimiento, interval plazo day) &lt; date(now()) then 1 else 0 end)</expression>
+				<tipo>custom_numeric</tipo>
+			</field>
+			<field id="subject" calendarSubject="true" calendarTitle="true" style="text-align:right;">
+				<attribute id="style">color</attribute>
+				<!--				<expression>concat('NRO MOVIM: ', nro_movimiento ,' - ', nombre_movimiento , ' - $', saldo_movimiento)</expression> -->
+				<expression>concat((case when date_add(fecha_movimiento, interval plazo day) &lt; date(now()) then 'Compromisos Venc.$ ' else 'Compromisos $ ' end), format(sum(saldo_movimiento), 2, 'es_AR'))</expression>
+				<tipo>custom_numeric</tipo>
+			</field>
+
+			<field id="color" calendarColor="true" noshow="true">
+			    <expression>(case when date_add(fecha_movimiento, interval plazo day) &lt; date(now()) then 'background-color:#ff66ff;padding:1em;color:white;font-weight:bold;' else 'background-color:#ff00ff; color:white;padding:1em;font-weight:bold;' end)</expression>
+			</field>
+
+			<group>
+			    <field id="mes" />
+			    <field id="vencidas" />
+			</group>
+        </table>
+        <join>
+        	<table id="REG_CONCEPTOS">
+        		<field id="id_concepto">
+        			<condicion operador="=">concepto_id</condicion>
+        		</field>
+        		<field id="tipo_concepto">
+        			<condicion operador="=">1</condicion>
+        		</field>
+        	</table>
+        </join>
+
+	<join>
+	    <table id="REG_CUENTA">
+			<field id="id_regcuenta">
+			    <condicion operador="=">regcuenta_id</condicion>
+			</field>
+	    </table>
+	</join>
+	<join>
+	    <table id="REG_FORMAS">
+			<field id="id_regforma">
+			    <condicion operador="=">REG_CUENTA.regforma_id</condicion>
+			</field>
+	    </table>
+	</join>
+
+    </form>
+
+	<form>
+		<table id="CPSMOVIM" label="DETALLE">
+
+        	<filters>
+        		<field id="fecha_movimiento" deshabilitado="false">
+        			<label>Desde</label>
+        			<operador>&gt;=</operador>
+        			<tipo>date</tipo>
+        		</field>
+        		<field id="fecha_movimiento" deshabilitado="false">
+        			<label modpos="nobr">Hasta</label>
+        			<operador>&lt;=</operador>
+        			<tipo>date</tipo>
+        		</field>
+           	</filters>
+			<field id="id_cpsmovim" deshabilitado="true" calendarId="true" />
+
+
+			<field id="siscod" oculto="true">
+				<condicion operador='='>''</condicion>
+			</field>
+		<field id="regcategoria_id" local="true" noshow="true">
+		</field>
+		<field id="filtracat" local="true" noshow="true">
+		</field>
+
+			<!--
+	        <field id="edit" local="true" calendarEditable="true">
+	        	<valor>1</valor>
+	        </field>
+	    -->
+
+			<field id="ocpest" noshow="true" tabla="CPSENCAB">
+				<label _modpos="nobr">Estado</label>
+				<help>Estado Actual</help>
+				<condicion operador="!=">1</condicion>
+<!--
+				<options>
+					<option valor=""></option>
+					<option valor="0">No Autorizada</option>
+					<option valor="1">Pendiente</option>
+					<option valor="2">Cumplida</option>
+					<option valor="3">Parcial</option>
+				</options>
+-->
+			</field>
+
+			<field id="anuladas" noshow="true">
+				<expression having="false">ocpest</expression>
+				<condicion operador="!=">4</condicion>
+			</field>
+
+			<field id="vence"  deshabilitado="true" calendarStartDate="true">
+				<label>Fecha Entrega</label>
+    				<expression having="false">(case when date_add(fecreq, interval 30 day) &lt; date(now()) then date(now()) else date_add(fecreq, interval 30 day) end)</expression>
+				<tipo>date</tipo>
+			</field>
+
+	        <field id="desde" >
+	        	<expression>min(movfec)</expression>
+	        	<tipo>date</tipo>
+	        	<detalle>desde</detalle>
+	        </field>
+
+			<field id="fecha_movimiento">
+			    <expression having="false">movfec</expression>
+			    <tipo>date</tipo>
+			</field>
+
+			<field id="mes"  deshabilitado="true" style="background-color:#444;color:white;padding:0.5em;font-weight:bold;">
+				<label>mes</label>
+		        <helper type="combo">
+		          <option value="1">Enero</option>
+		          <option value="2">Febrero</option>
+		          <option value="3">Marzo</option>
+		          <option value="4">Abril</option>
+		          <option value="5">Mayo</option>
+		          <option value="6">Junio</option>
+		          <option value="7">Julio</option>
+		          <option value="8">Agosto</option>
+		          <option value="9">Septiembre</option>
+		          <option value="10">Octubre</option>
+		          <option value="11">Noviembre</option>
+		          <option value="12">Diciembre</option>
+		        </helper>
+
+    				<expression having="false">month((case when date_add(fecreq, interval 30 day) &lt; date(now()) then date(now()) else date_add(fecreq, interval 30 day) end))</expression>
+    				<detalle>semana</detalle>
+			</field>
+			<field id="vencidas" >
+				<expression>(case when date_add(fecreq, interval 30 day) &lt; date(now()) then 1 else 0 end)</expression>
+				<tipo>custom_numeric</tipo>
+			</field>
+
+			<field id="subject" calendarSubject="true" >
+				<attribute id="style">color</attribute>
+				<expression>concat( (case when date_add(fecreq, interval 30 day) &lt; date(now()) then 'O.C.Vencidas: ' else 'O.C: ' end), format(sum(importe_total), 2, 'es_AR'))</expression>
+			</field>
+			<field id="color" calendarColor="true">
+			    <expression>(case when date_add(fecreq, interval 30 day) &lt; date(now()) then 'background-color:#ff0000;padding:1em;color:white;font-weight:bold;' else 'background-color:#00AA11; color:white;padding:1em;font-weight:bold;' end)</expression>
+			</field>
+
+
+			<group>
+				<field id="mes" />
+				<field id="vencidas" />
+			</group>
+
+		</table>
+
+		<join tipo="left">
+			<table id="CPSENCAB">
+				<field id="ocpnro" >
+					<condicion operador="=">CPSMOVIM.ocpnro</condicion>
+				</field>
+				<field id="ocpfec" >
+					<condicion operador="=">CPSMOVIM.movfec</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

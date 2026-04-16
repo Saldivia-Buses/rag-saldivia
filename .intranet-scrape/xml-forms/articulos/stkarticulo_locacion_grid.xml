@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" >
+  <titulo>Locación</titulo>
+  <obs/>
+  <form>
+    <table id="STK_ARTICULO_LOCACION">
+      <title>locación </title>
+      
+      <field id="id_articulo_locacion" noshow="true" autoinc="true" />
+
+    <field id="stkarticulo_id" oculto="true">
+    </field>
+
+      <field id="stklocacion_id">
+        <helper id="STK_LOCACION" type="combo" empty="true">
+          <field id="id_stklocacion" />
+          <field id="locacion" >
+            <expression>concat(codigo_locacion, ' ', nombre_locacion)</expression>
+          </field>
+        </helper>
+
+      </field>
+      
+
+
+    <field id="stock_minimo">
+      <label>Mínimo</label>
+    </field>
+
+    <field id="stock_maximo">
+      <label>Máximo</label>
+    </field>
+    <field id="codigo_locacion" noshow="true">
+      <expression>codigo_locacion</expression>
+    </field>    
+    <field id="etiqueta" local="true" deshabilitado="true">
+      <label>etiqueta</label>
+      <helper xml="stkarticulo_etiqueta_qr.xml" dir="/stock/qry/" type="link">
+        <parameter source="stkarticulo_id" target="id_stkarticulo" />
+        <parameter source="stklocacion_id" target="stklocacion_id" />
+        <parameter source="codigo_locacion" target="codigo_locacion" />
+      </helper>
+      <valor>'Imprimir Etiqueta'</valor>
+    </field>
+
+    </table>
+    <join>
+      <table id="STK_LOCACION">
+        <field id="id_stklocacion">
+          <condicion operador="=">stklocacion_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

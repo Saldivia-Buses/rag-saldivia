@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="fichaing" inserta="false" modifica="false"  transaccional="true" log="false">
+  <title>Cambio de código de Artículo</title>
+  <obs/>
+  <form>
+    <table id="STK_ARTICULO" label="Tranferencia de Stock entre Depositos">
+     <movimientos>
+        <relacion id="cal_noconformidades_upd.xml"/>
+        <relacion id="cps_demeritos_movimientos_upd.xml"/>
+        <relacion id="cps_detalle_upd.xml"/>
+        <relacion id="mrp_forecast_upd.xml"/>
+        <relacion id="mrp_orden_detalle_upd.xml"/>
+        <relacion id="mrp_trazabilidad_upd.xml"/>
+        <relacion id="stk_articulo_upd.xml"/>
+        <relacion id="stk_bom_upd.xml"/>
+        <relacion id="stk_bom2_upd.xml"/>
+        <relacion id="stk_articulos_vendedores_upd.xml"/>
+        <relacion id="stk_articulo_existencias_upd.xml"/>
+        <relacion id="stk_descuentosartcli_upd.xml"/>
+
+        <relacion id="stk_hist_costos_upd.xml"/>
+        <relacion id="stk_listadetalle_upd.xml"/>
+        <relacion id="stk_movimientos_upd.xml"/>
+        
+<!--        <relacion id="stk_stockactual_upd.xml"/> -->
+        <relacion id="stk_trazabilidad_upd.xml"/>
+        <relacion id="reg_detalles_upd.xml"/>
+      
+      </movimientos>
+      
+      <field id="id_stkarticulo"  required="true">
+        <label>Codigo de Origen</label>
+        <help>origen</help>
+
+        <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas" /> 
+      </field>
+
+      <field id="nombre_articulo" local="true" deshabilitado="true">
+        <label modpos="nobr">Nombre</label>
+        <size>40</size>
+      </field>
+
+      <field id="stkarticulo_destino_id" local="true">
+        <label>Codigo de Destino</label>
+        <help>Destino</help>
+
+      </field>
+    
+    </table>
+  </form>
+</histrix>

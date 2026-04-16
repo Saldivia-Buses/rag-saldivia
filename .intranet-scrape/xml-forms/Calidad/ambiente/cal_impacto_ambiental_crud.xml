@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud">
+        <title>IMPACTO AMBIENTAL</title>
+        <obs/>
+        <form >
+                <table id="CAL_IMPACTO_AMBIENTAL">
+                        <title>Impacto Ambiental</title>
+                        <field id="id_impacto" esClave="true" autoinc="true" noshow="true">
+                        </field>
+
+                        <field id="descripcion_impacto">
+                                <help>Descripción del Impacto ambiental</help>
+                                <size>100</size>
+                        </field>
+                </table>
+        </form>
+</histrix>
+
+
+
+

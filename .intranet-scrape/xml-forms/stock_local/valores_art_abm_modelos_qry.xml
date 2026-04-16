@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" inserta="false" modifica="false" procesa="true" deleteRow="false">
+	<title>Actualización masiva de valores en artículos tras cambio de dem diaria</title>
+	<obs></obs>
+	<form>
+
+		<table id="STK_ARTICULOS">
+
+		<title>Actualización masiva de valores en artículos tras cambio de dem diaria</title>
+
+			<movimientos>
+				<relacion id="valores_art_abm_modelos_upd.xml"/>
+			</movimientos>
+
+			 <filters>
+			    <field id="id_stkarticulo">
+					<label>Cod. Art.</label>
+					<operador>=</operador>
+			    </field>
+				<field id="conmodelos" deshabilitado="false">
+		    		<label>Modelos</label>
+					<operador>=</operador>
+			    </field>
+			</filters>
+
+			<field id="pedido_automatico" noshow="true">
+		        <label>Pedido Automático</label>
+		        <condicion operador="=">1</condicion>
+		      </field>
+
+			<field id="conmodelos" >
+			<label>Modelos</label>
+			    <expression>ifnull((select 1 from MRP_CANTIDAD_ARTICULO_MODELO where stkarticulo_id = id_stkarticulo limit 1), 0)</expression>
+			    <helper type="combo" empty="true">
+				<option value="">Todos</option>
+
+				<option value="0">Sin Modelos</option>
+				<option value="1">Con Modelos</option>
+			    </helper>
+			</field>
+			<field id="id_stkarticulo">
+				<label>Artículo</label>
+			</field>
+
+			<field id="nombre_articulo">
+				<label>Descripción</label>
+			</field>
+
+			<field id="tack_time">
+				<label>Tack T</label>
+				<expression>@tack:=(SELECT tack_time FROM PROD_LINEAS WHERE id_linea=1)</expression>
+				<tipo>numeric</tipo>
+			</field>  
+
+			<field id="demprov">
+				<label>Lead T</label>
+				<tipo>integer</tipo>
+			</field>
+			
+			<field id="dem_diaria">
+				<label>Dem D</label>
+				<tipo>numeric</tipo>
+			</field>
+
+			<!-- <field id="dem_diaria2" local="true">
+				<label>Dem D2</label>
+				<expression>@dem_diaria:=(sum(((select porciento_incidencia from CARROCERIA_INCIDENCIA_HISTORICO HIS where HIS.nrocar = CARROCERIA.nrocar order by fecha DESC limit 1) / 100 ) * cantidad_modelo ) * @tack)</expression>
+				<tipo>numeric</tipo>
+			</field> -->
+
+			<field id="stock_minimo">
+				<label>St Mín</label>
+				<tipo>integer</tipo>
+			</field>
+
+				 SE MIGRO A TRIGGER !!
+
+			<field id="stock_minimo2" local="true">  
+				<label>St Mín2</label>
+				<expression>@stock_min:=ceil(demprov * dem_diaria)</expression>
+				<tipo>integer</tipo>
+			</field>
+
+			 <field id="stock_seguridad">
+		        <label>St Seg</label>
+		        <help>Stock crítico en depósito</help>
+	            <tipo>integer</tipo>
+		    </field>
+
+			SE MIGRO A TRIGGER !!
+
+		    <field id="stock_seguridad2" local="true">
+		        <label>St Seg2</label>
+		        <help>Stock crítico en depósito</help>
+		        <expression>@stock_seguridad:=round((select sum(porcentaje_opcion) + 10 from STK_ATRIBUTO_OPCIONES inner join STK_ATRIBUTOS on stkatributo_id = id_stkatributo inner join STK_ATRIBUTOS_GRUPOS on id_stkgrupoatrib = stkgrupoatrib_id  inner join STK_ATRIBUTO_VALORES on STK_ATRIBUTO_VALORES.stkatributo_id = STK_ATRIBUTO_OPCIONES.stkatributo_id and valor_atributo = id_atribopciones where  STK_ATRIBUTO_VALORES.stkarticulo_id = id_stkarticulo and id_stkgrupoatrib = 1)/100 * demprov * dem_diaria, 0)</expression>
+	            <tipo>integer</tipo>		       
+		    </field>
+
+		    <field id="stock_reposicion">
+		        <label>Pto Ped</label>
+		        <tipo>integer</tipo>
+	      	</field> 
+
+			SE MIGRO A TRIGGER !! 
+
+	      	<field id="stock_reposicion2" local="true"> stock_seguridad + stock_minimo
+		        <label>Pto Ped2</label>
+		        <expression>ifnull(@stock_seguridad,0) + @stock_min </expression>  SUMAR STOCK ACOPIO
+	            <tipo>integer</tipo>
+	      	</field>
+			
+			<field id="stock_maximo">
+				<label>St Máx</label>
+				<tipo>integer</tipo>
+			</field>
+
+			<field id="stock_maximo2" local="true"> stock_reposicion + stock_minimo
+				<label>St Máx2</label>
+				<expression>@stock_max:=ifnull(@stock_seguridad,0) + @stock_min + @stock_min</expression>
+	            <tipo>integer</tipo>
+			</field>
+
+		      <field id="lote_optimo">
+		        <label modpos="nobr">Lot Ópt</label>
+		        <help>Lote Óptimo Pedido</help>
+		        <tipo>integer</tipo>
+		      </field>
+
+		      <field id="pack_embalaje" _noshow="true">
+			    <label>pack</label>
+		      	<condicion operador="!=">0</condicion>
+		      </field>
+
+		      <field id="lote_minimo" _noshow="true">
+			    <label>Lote Min</label>
+			</field>
+
+		      <field id="lote_optimo2" local="true">
+		        <label modpos="nobr">Lot Ópt2</label>
+		        <help>Lote Óptimo Pedido</help>
+		        <expression>(case when lote_minimo &lt;= ((((@stock_max - ceil(demprov * dem_diaria) ) div pack_embalaje) 
+								+ (case when ( ( @stock_max - ceil(demprov * dem_diaria) ) mod pack_embalaje ) != 0 then 1 else 0 end)) 
+								* pack_embalaje)
+							then ((((@stock_max - ceil(demprov * dem_diaria) ) div pack_embalaje)
+								+ (case when ( ( @stock_max - ceil(demprov * dem_diaria) ) mod pack_embalaje ) != 0 then 1 else 0 end)) 
+								* pack_embalaje)
+							else ((lote_minimo div  pack_embalaje) + ( case when ( lote_minimo mod pack_embalaje != 0 ) then 1 else 0 end)) * pack_embalaje end) </expression> // RESTAR STOCK DE ACOPIO
+				<tipo>integer</tipo>
+		      </field>
+
+			<field id="check" local="true" _refresh="true">
+				<tipo>check</tipo>
+				<valor>1</valor>
+			</field>
+		 
+			<!-- <group>
+			    <field id="id_stkarticulo" />
+			</group> -->
+
+		</table>
+
+		<!-- <join>
+		    <table id="MRP_CANTIDAD_ARTICULO_MODELO">
+				<field id="stkarticulo_id">
+				    <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+				</field>
+		    </table>
+		</join>
+
+		<join>
+		    <table id="CARROCERIA">
+				<field id="nrocar">
+				    <condicion operador="=">MRP_CANTIDAD_ARTICULO_MODELO.carroceria_id</condicion>
+				</field>
+		    </table>
+		</join> -->
+
+	</form>
+</histrix>

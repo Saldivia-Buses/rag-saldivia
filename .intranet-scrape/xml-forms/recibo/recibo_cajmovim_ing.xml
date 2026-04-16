@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix graboasiento="true" muestraasiento="false" tipo="ing" llenoTemporal="false" imprime="false" procesa="false" >
+	<title>Movimientos de Caja</title>
+	<obs/>
+	<form >
+		<table id="CAJMOVIM" label="Movimientos de caja" >
+		
+			<importar xml="recibo_carchequ_ing.xml"  label="Cheques" 	titulo="Cheques">
+				<field id="ctacod">ctacod</field>
+				<field id="ctanro">ctanro</field>
+				<field id="movnroOP">movnroOP</field>
+				<field id="movnpv">movnpv</field>
+
+			</importar> 
+			<importar xml="recibo_transf_ing.xml"  label="Transferencia" 	titulo="Transferencia">
+				<field id="movnroOP">movnroOP</field>
+				<field id="ctacod">ctacod</field>
+				<field id="ctanro">ctanro</field>
+
+				
+			</importar> 
+			<importar xml="recibo_documentos_ing.xml"  label="Documentos" 	titulo="Documentos">
+				<field id="ctacod">ctacod</field>
+				<field id="ctanro">ctanro</field>
+				<field id="movnroOP">movnroOP</field>
+
+			</importar> 
+			<movimientos > 
+				<relacion id="recibo_cajmovim_ingmov.xml">	</relacion>  
+			</movimientos> 					
+							
+			<field id="siscaj" oculto="true" local="true">
+				<label>siscaj</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'siscaj'</condicion>
+					</field>
+				</parametro>
+			</field>
+			<field id="siscod" oculto="true">
+				<label>Cod.</label>
+				<help></help>
+				<valor>'02'</valor>
+				<condicion operador="=" valorde="siscaj"/>
+			</field>
+			<field id="cajcod" >
+			
+				<label>Tipo</label>
+				<help>tipo de movimiento</help>
+				<tabla_ex id="CAJCONCE">
+					<field id="cajcod"></field>
+					
+					<field id="cajdes"></field>
+					<field id="siscod">
+						<condicion operador="=" valorde="siscaj"/>
+					</field>
+					<field id="cajtip">
+						<condicion operador="=" >1</condicion>
+					</field>					
+					<order>
+						<field id="cajcod"></field>
+					</order>
+				</tabla_ex>				
+			</field>
+			<field id="cajctb" noshow="true" ctbcuenta="2" valop="true">
+				<label>Ctb</label>
+				<tabla_ex id="CAJCONCE" >
+					<field id="cajcod"></field>
+					
+					<field id="ctbcod__1"></field>
+					<field id="siscod">
+						<condicion operador="=" valorde="siscaj"/>
+					</field>
+					<field id="cajtip">
+						<condicion operador="=" >1</condicion>
+					</field>					
+					<order>
+						<field id="cajcod"></field>
+					</order>
+				</tabla_ex>				
+				<if exp="true" operador="=">
+					<true>cajcod</true>
+					<false>0</false>
+				</if>
+				<tipo>varchar</tipo>
+			</field>			
+			<field id="cajimp" local="true" suma="true" ctbimporte="2">
+				<label>Importe</label>
+				<help>Importe</help>
+				<tipo>numeric</tipo>
+			</field>
+			<field id="succod" local="true" noshow="true">
+				<valor>1</valor>
+			</field>
+			<field id="cajtip" noshow="true" local="true" ctbtipo="2">
+				<valor>1</valor>
+			</field>
+
+			<field id="cajcon" local="true" noshow="true">
+				<valor>45</valor>
+			</field>
+		
+		</table>
+	</form>
+</histrix>

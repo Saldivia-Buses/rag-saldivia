@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<histrix tipo="update">
+		<title>FACTURA</title>
+		<obs></obs>
+			<form >
+				<table id="CCTMOVIM" label="FACTURAS" idCampoCond="actacte">
+					<field id="siscod" id_temp="siscod" esClave="true"></field>
+					<field id="ctacod" id_temp="ctacod" esClave="true"></field>
+					<field id="concod" id_temp="concod" esClave="true"></field>
+					<field id="movnpv" id_temp="movnpv" esClave="true"></field>
+					<field id="movnro" id_temp="movnro" esClave="true"></field>
+					<field id="movlet" id_temp="movlet" esClave="true"></field>
+					<field id="movsal"    id_temp="movimp"></field>	
+				</table>
+			</form>
+	</histrix>

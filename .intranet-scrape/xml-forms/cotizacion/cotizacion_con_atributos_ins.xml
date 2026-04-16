@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<histrix tipo="insert">
+		<title>Cotizacion</title>
+		<obs></obs>
+		<form >
+			<table id="COTIZACION">
+				<field id="idCotiz" id_temp="idCotiz"></field>
+				<field id="ctacod"  id_temp="ctacod"></field>
+				<field id="fecha"   id_temp="fecha"></field>				
+				<field id="ctanom"  id_temp="ctanom"></field>
+				<field id="ctatel"  id_temp="ctatel"></field>
+				<field id="ctadir"  id_temp="ctadir"></field>
+				<field id="ctanro"  id_temp="ctanro"></field>
+				<field id="ctacon"  id_temp="ctacon"></field>
+				<field id="ctamail" id_temp="ctamail"></field>
+
+				<field id="modcar"  id_temp="modcar"></field>
+				<field id="marcod"  id_temp="marcod"></field>
+				<field id="modcha"  id_temp="modcha"></field>
+				<field id="asientos" id_temp="asientos2"></field>
+
+				<field id="pie" id_temp="pie"></field>
+
+				<field id="showPrecioCon" id_temp="showPrecioCon"></field>
+				<field id="showPrecioPub" id_temp="showPrecioPub"></field>
+				<field id="precioCon" id_temp="precio"></field>
+				<field id="precioPub" id_temp="prePub"></field>
+                                <field id="leyenda_precio" id_temp="leyenda_precio"></field>
+
+				<field id="moneda_id" id_temp="moneda_id"></field>
+
+				<field id="tipoCli" id_temp="tipoCli"></field>
+				<field id="idLista" id_temp="idLista"></field>				
+				<field id="idGrupo" id_temp="idGrupo"></field>				
+			    <field id="formaPago" id_temp="formaPago"></field>				
+			    <field id="plazo" id_temp="plazo"   ></field>								
+				<field id="homologacion_id" id_temp="homologacion_id"   ></field>								
+			</table>
+		</form>
+	</histrix>

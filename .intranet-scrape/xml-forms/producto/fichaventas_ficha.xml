@@ -1,0 +1,856 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="ficha" log="true" paginar="100" path="fotos/coches" logreference="ctafan" marginTabs="false"  preFetch="true" imprime="false">
+  <title>FICHA DE VENTAS</title>
+  <obs/>
+  <form  _formTbody="height:450px; overflow:auto;">
+    <table id="PEDCOTIZ" label="Ficha de Ventas">
+    <filters>
+	<field id="nrocha">
+	    <label>Nro.Fab</label>
+	    <operador>=</operador>
+	</field>
+    </filters>
+
+      <field id="id" noshow="true" deshabilitado="true" log="false">
+      <valor>0</valor>
+      </field>
+  <field id="color" local="true" clasefila="true" noshow="true">
+    <expression><![CDATA[(CASE WHEN PEDCOTIZ.nrocar = 0 or PEDCOTIZ.cantasi = 0    THEN  'resaltado'  ELSE '' END)]]></expression>
+  </field>
+              <field id="subj2" noshow="true" print="false">
+            <expression><![CDATA[concat('Cotizacion de Accesorios Unidad: ', PEDCOTIZ.nrocha)]]></expression>
+        </field>
+        <field id="subj" noshow="true" print="false">
+            <expression><![CDATA[concat('Cotizacion+de+Accesorios+Unidad: +', PEDCOTIZ.nrocha)]]></expression>
+        </field>
+   
+      <field id="revfec" valauto="true" deshabilitado="true" noshow="true">
+        <label >Ultima Modif.</label>
+        <help>Fecha de Pedido</help>
+        <valor>today</valor>
+      </field>
+      <field id="pedfec" _deshabilitado="true" _valauto="true">
+        <label size="23" posx="6" posy="+1" PDFsize="12" colstyle="display:none;" >Fecha</label>
+        <help>Fecha de Pedido</help>
+        <valor>today</valor>
+      </field>
+
+      <field id="nrocha" esClave="true" tipoOrden="DESC" deshabilitado="false" _required="true" >
+        <helper id="CHASIS" type="external">
+          <field id="nrocha"></field>
+          <field id="desc">
+          <expression having="false">CONCAT(nrocha, ' Chasis:', chasis ,' Motor:', nromotor)</expression>
+            </field>
+             <field id="marcod">
+          <label>Marca</label>
+          <detalle>marcod</detalle> 
+      </field>
+
+  
+            <field id="modcod">
+          <label>Modelo</label>
+            <detalle>modcod</detalle> 
+           </field>    
+        </helper>
+    <!--      <expression>LPAD(nrocha,3,'0')</expression> -->
+        <label size="25" modpos="nobr" posx="110" posy="0" PDFsize="11">N.Fab.</label>
+        <help>Numero de Fabricacion</help>
+        <jseval>nrocha != 0</jseval>
+        <valor>-1</valor>
+      </field>
+      <field id="estado_ficha" style="font-weight:bold;color:green;">
+        <label modpos="nobr">Estado</label>
+        <tipo>radio</tipo>
+        <options>
+          <option valor="0">Borrador</option>
+          <option valor="1">Publicada</option>
+        </options>
+      </field>    
+    <field id="dupli" local="true">
+    <expression><![CDATA[(select 'Dup' FROM PEDCOTIZ as ped where ped.id  < PEDCOTIZ.id and ped.nrocha = PEDCOTIZ.nrocha LIMIT 1)]]></expression>
+    <label Formstyle="display:none;" style="color:red;">DUP</label>
+  
+    </field>
+
+ <!--   <field id="entraEn" local="true">
+    <expression>DATEDIFF((case when PEDCOTIZ.ingresoLinea != '0000-00-00' then PEDCOTIZ.ingresoLinea else fechaing end), CURDATE())</expression>
+    <label Formstyle="display:none;">Dias</label>
+    </field> -->
+
+      <field id="nro2" noshow="true" >
+      <label modpos="nobr"></label>
+        <expression><![CDATA[(case when PEDCOTIZ.nrocha < 1000 then LPAD(PEDCOTIZ.nrocha,3,'0') else PEDCOTIZ.nrocha end)]]></expression>
+      </field>
+
+  <!--    <field id="fic" local="true" noshow="true" >
+        <valor>'fichaventas_abm.xml'</valor>
+        <tip>varchar</tip>
+      </field>
+      <field id="log" local="true" linkint="log_cons.xml" linkdes="Historial" required="false">
+                <label style="color:red;"  Formstyle="display:none;">Hist.</label>
+        <tipo>varchar</tipo>
+        <paring destino="xmlprog" operador="="   >fic</paring>
+        <paring destino="obs"     operador="like">nrocha</paring>
+        <valor><![CDATA['<img alt="Historial" src="../img/appointment-new.png" />']]></valor>
+
+      </field>  -->
+
+      <field id="ctacod">
+        <label size="23" posx="6" posy="+1" PDFsize="12" colspan="3" colstyle="display:none;">Cliente</label>
+        <help>Codigo de Cuenta</help>
+        <tabla_ex condes="true" id="CCTCUENT">
+          <field id="ctacod"/>
+          <field id="ctafan2">
+              <expression>CCTCUENT.ctafan</expression>
+          </field>
+          <field id="siscod" oculto="true">
+            <condicion operador="=">'02'</condicion>
+          </field>
+          <field id="baja" oculto="true">
+            <condicion operador="=">0</condicion>
+          </field>
+
+          <order>
+            <field id="ctafan" />
+          </order>
+        </tabla_ex>
+        <actualiza>
+          <field destino="ctacod" id="idconta"/>
+          <field destino="ctacod" id="otros"/>
+        </actualiza> 
+<!--                                <jsfunction event="change" >refrescaCampo('fichaventas_abm.xml', 'analisis');</jsfunction> -->
+      </field>
+      <field id="Cuenta" linkint="cctconta_consulta.xml" deshabilitado="false"  local="true">
+        <expression>CCTCUENT.ctafan</expression>
+
+      <expression>ctacod</expression>
+      <label FormStyle="display:none">Cli.</label>
+        <paring destino="ctacod">ctacod</paring>
+        <paring destino="siscod">02</paring>
+    </field>      
+      
+<!--
+                        <field id="analisis" local="true" linkint="analisis_fichas_x_cliente.xml" linkdes="Total de Coches" print="false" linkdir="clientes_local/">
+                            <valor>ctacod   </valor>
+                            <label mospos="nobr">Caract.</label>
+                            <help>Codigo de Cuenta</help>
+                            <paring destino="ctacod">analisis</paring>
+                            <paring destino="nombre">ctanom</paring>
+                            <tipo>varchar</tipo>
+                        </field> -->
+
+
+
+  <field id="ctafan" tabla="CCTCUENT" noshow="true">
+    <label>ctafan</label>
+  </field>
+
+            <field deshabilitado="true" id="otros" 
+           local="true" linkint="fichas_x_cliente.xml" linkdes="Total de Coches" print="false">
+                <expression>(select count(*) from VUNIDADES as PED where PED.ctacod = PEDCOTIZ.ctacod) </expression>
+    
+
+                <label modpos="nobr" Formstyle="display:none;">Ot.</label>
+                <help>Codigo de Cuenta</help>
+                <paring destino="ctacod">ctacod</paring>
+<!--                <valor>0</valor> -->
+            </field>
+      <field id="idconta" >
+        <label size="23" posx="6" posy="+1" PDFsize="12" colspan="5" colstyle="display:none;" >Contacto</label>
+        <help>Codigo de Cuenta</help>
+        <tabla_ex condes="true" id="CCTCONTA" vacio="true">
+          <field id="idconta"/>
+          <field id="nombre">
+            <expression>CONCAT(nombre,'-' , mail, ' - ', Telefono)</expression>
+          </field>
+          <field id="ctacod" oculto="true" />
+
+          <field id="siscod" oculto="true">
+            <condicion operador="=">'02'</condicion>
+          </field>
+        </tabla_ex>
+      </field>
+      <field id="marcod" _local="true" deshabilitado="false">
+        <expression>CHASIS.marcod</expression>
+
+        <label colstyle="display:none;">Marca Chasis</label>
+        <help>Marca del Chasis</help>
+        <tabla_ex id="MARCHASIS" vacio="true">
+          <field id="marcod" clave="true">
+            <label>Codigo</label>
+            <help>Codigo de Chasis</help>
+          </field>
+          <field id="mardes">
+            <help>Abreviatura a Utilizar</help>
+          </field>
+        </tabla_ex>
+        <actualiza>
+          <field destino="marcod" id="modcod"/>
+<!--
+          <field destino="marcod" id="homologacion_id"/> -->
+        </actualiza>
+                
+      </field>
+
+      <field id="modcod" deshabilitado="false">
+        <label colstyle="display:none;" modpos="nobr">Modelo Chasis</label>
+        <expression>CHASIS.modcod</expression>
+        
+        <help>Modelo del Chasis</help>
+        <tabla_ex id="MODCHASIS" vacio="true">
+          <field clave="true" id="modcha">
+            <label>Modelo</label>
+            <help>Codigo del Modelo de Chasis</help>
+          </field>
+          <field id="moddes">
+            <label>Descripcion</label>
+            <help>Descripcion del Modelo</help>
+          </field>
+          <field id="marcod" oculto="true">
+          </field>
+
+        </tabla_ex>
+<!--        <actualiza>
+          <field destino="modcod" id="homologacion_id"/>
+        </actualiza>
+    -->    
+      </field>
+
+      <field id="nrocar" >
+        <tabla_ex xml="carroceria.xml">
+          <field id="siscod" oculto="true">
+            <condicion operador="=">03</condicion>
+          </field>
+        </tabla_ex>
+        <actualiza>
+          <field destino="nrocar" id="homologacion_id"/>
+        </actualiza>
+
+        <label colstyle="display:none;" size="23" posx="110" posy="0" PDFsize="10" modpos="nobr">Carroceria</label>
+        <help></help>
+      </field>
+
+      <field id="homologacion_id" _required="true">
+        <label colstyle="display:none;" colspan="3">Homologacion</label>
+        <helper type="combo" xml="combo_homologacion_modelo.xml" dir="/fabricacion" empty="true">
+        </helper>
+      </field>
+      
+      <field id="tiphab">
+        <tabla_ex xml="tipohabil.xml" dir="/produccion">
+          <field id="siscod" oculto="true">
+            <condicion operador="=">03</condicion>
+          </field>
+        </tabla_ex>
+
+        <label size="23" posx="6" posy="+1" PDFsize="10" colstyle="display:none;" modpos="nobr">Habilitacion</label>
+        <help></help>
+      </field>
+<!--  <field id="prvcod">
+        <label size="23" posx="60" posy="0" modpos="nobr" colspan="4"  xml="fsmprovs.xml" PDFsize="10" colstyle="display:none;">Provincia</label>
+        <help></help>
+        <tabla_ex xml="fsmprovs.xml" vacio="true"></tabla_ex>
+      </field>
+-->
+      <field id="tipserv">
+        <label size="23" posx="6" posy="+1"  PDFsize="10" colstyle="display:none;">Tipo Serv.</label>
+        <help>Tipo de Servicio</help>
+        <helper type="combo" xml="tiposervicio.xml" dir="/produccion" />
+      </field>
+
+      <field id="cantasi" _deshabilitado="true">
+        <label colstyle="display:none;" size="23" posx="6" posy="+1" PDFsize="10" modpos="nobr">Cant.Asientos</label>
+        <help></help>
+      </field>
+      <field id="marasi">
+        <label size="23" posx="60" posy="0" modpos="nobr" xml="marcaasi.xml" PDFsize="10" colstyle="display:none;" colspan="2">Marca</label>
+        <help></help>
+        <tabla_ex xml="marcaasi.xml">
+          <field id="siscod" oculto="true">
+            <condicion operador="=">03</condicion>
+          </field>
+        </tabla_ex>
+      </field>
+      <field id="tipasi">
+        <tabla_ex xml="tipoasiento.xml" dir="/produccion">
+          <field id="siscod" oculto="true">
+            <condicion operador="=">03</condicion>
+          </field>
+        </tabla_ex>
+        <label size="23" posx="6" posy="+1"  PDFsize="10" colstyle="display:none;">Tipo As.</label>
+        <help></help>
+      </field>
+ <!--     <field id="piston">
+        <label size="23" posx="60" posy="0" modpos="nobr" PDFsize="10" colstyle="display:none;">Pistones</label>
+        <help></help>
+         <options>
+          <option valor="0">S/D</option>
+          <option valor="1">No</option>
+          <option valor="2">Si</option>
+        </options>
+      </field>
+        <field id="cabeza">
+        <label size="23" posx="110" posy="0" modpos="nobr" PDFsize="10" colstyle="display:none;">Cabezales</label>
+        <help></help>
+        <tipo>check</tipo>
+      </field>
+-->
+      <field id="portavasos">
+        <label size="23" posx="110" posy="0" modpos="nobr" PDFsize="10" colstyle="display:none;">Porta Vasos</label>
+        <help>Posee porta vasos</help>
+        <tipo>check</tipo>
+
+      </field>
+  <!--    <field id="portalatas">
+        <label size="23" posx="60" posy="0"  modpos="nobr" PDFsize="10" colstyle="display:none;">Porta Latas</label>
+        <help>Posee porta latas</help>
+        <tipo>check</tipo>
+
+      </field>
+      <field id="mesas">
+        <label size="23" posx="110" posy="0" modpos="nobr" PDFsize="10" colstyle="display:none;">Mesas</label>
+        <help>Posee Mesas</help>
+        <tipo>check</tipo>
+
+      </field>
+-->
+      <field id="cotizar" local="true"  linkmodal="true">
+        <label Formstyle="display:none;">Cotizar</label>
+        <helper type="link" xml="cotizar_coche_acc_ing.xml" dir="cotizacion" >
+          <parameter source="nrocha" target="nrofab_id"/>
+          <parameter source="nrocha" target="nrofab"/>
+          <parameter source="ctacod" target="ctacod"/>
+          <parameter source="ctafan" target="ctanom"/>
+          <parameter source="id" target="ficha_id"/>
+        </helper>
+       <expression>select sum(precio_adicional) from ACCESORIOS_COCHE AS ACC where estado != 2 and precio_unitario != 0 and ACC.ficha_id = PEDCOTIZ.id and ACC.cotizacion_id = 0 limit 1</expression>
+
+<!--        <valor>'Cotizar'</valor>   -->
+      </field>
+      <field id="ultima"   _linkmodal="true" showObjTabla="true" local="true">
+        <label style="display:none;">Cotiz.</label>
+
+      <helper type="object" xml="cotizaciones_btn.xml" dir="/cotizacion" >
+          <parameter source="id" target="ficha_id"/>
+      </helper>
+
+
+               <!--
+        <expression>select cotizacion_id from ACCESORIOS_COCHE AS ACC where ACC.nrofab = PEDCOTIZ.nrocha  and ACC.cotizacion_id != 0 limit 1</expression>
+        <label Formstyle="display:none;">Cotizacion</label>
+        <helper type="link" xml="cotizacion_imp_acc.xml" dir="cotizacion" >
+          <parameter source="id" target="ficha_id"/>
+
+          <parameter source="ultima" target="idCotiz"/>
+          <parameter source="nrocha" target="nrofab_id"/>
+          <parameter source="nrocha" target="nrofab"/>
+          <parameter source="ctacod" target="ctacod"/>
+        </helper> 
+          -->
+
+    </field>
+
+    <field id="emails" _showTablaObj="true" local="true">
+      <helper type="link" xml="contaemail_qry.xml" dir="/email">
+        <parameter target="subject" source="subj2" operator="like"/>
+      </helper>
+      <label >Correos</label>
+      <help></help>
+      <expression sql="true"><![CDATA[select CONCAT(RIGHT(fecha, 2), '/', SUBSTRING(fecha, 6, 2)) from HTXMAIL where match(subject,body) against ('[__subj__]' IN BOOLEAN MODE) limit 1]]></expression>
+    </field>      
+  
+    <field id="cantPend" local="true" >
+      <label>Pend.</label>
+      <expression>CASE WHEN (SELECT COUNT(*) FROM ACCESORIOS_COCHE ac WHERE estado = 0 and precio_unitario != 0 and ac.ficha_id = PEDCOTIZ.id) THEN CONCAT((SELECT COUNT(*) FROM ACCESORIOS_COCHE ac WHERE estado = 0 and precio_unitario != 0 and ac.ficha_id = PEDCOTIZ.id), '/', (SELECT COUNT(*) FROM ACCESORIOS_COCHE ac WHERE ac.ficha_id = PEDCOTIZ.id and precio_unitario != 0)) END</expression>
+    </field>
+      <!--
+  <field id="subj" noshow="true" email="subject" print="false" local="true">
+            <expression><![CDATA[concat('Cotizacion de adicionales Unidad:', PEDCOTIZ.nrocha, ' -  SALDIVIA')]]></expression>
+
+        </field> -->
+
+    <field id="terceros"  _colstyle="width:auto;" deshabilitado="false" local="true" Formstyle="display:none;">
+        <label >Terceros</label>
+      <!--<expression><![CDATA['<img src="../img/mail_generic.png"/>']]></expression>-->
+      <valor>'Avisos'</valor>
+        <help>Enviar correo electrónico</help>
+      <helper type="link" xml="mails_send.xml" dir="/histrix/mensajeria" title="Ficha de ventas" width="600" height="450">
+        <parameter source="body" target="mensaje" operator="=" />
+        <parameter source="subject" target="subject" operator="=" />
+      </helper>
+    </field>
+
+  <field id="body" noshow="true">
+    <expression><![CDATA[ CONCAT('Atención. Debajo le detallo los datos del cliente que solicitó/consultó alguno de sus productos, por favor comunicarse con el para confirmar su colocación.', '</br></br>',
+
+'Nro. de Unidad: ', PEDCOTIZ.nrocha, '</br>', 'Modelo: ', (SELECT modcar FROM CARROCERIA where nrocar = PEDCOTIZ.nrocar), '</br>', 'Cliente: ', CCTCUENT.ctafan, '</br>', 'Contactos: ', '</br>', (SELECT REPLACE(
+                      GROUP_CONCAT(
+                            DISTINCT CONCAT(nombre, (CASE WHEN Telefono = '' THEN '' ELSE CONCAT(' - ', Telefono) END), (CASE WHEN mail = '' THEN '' ELSE CONCAT(' - ', mail) END)
+                                    )
+                            )
+                      , ",", "</br>")
+               FROM CCTCONTA WHERE ctacod = PEDCOTIZ.ctacod ORDER BY principal DESC))
+
+    ]]></expression>
+  </field>
+
+  <field id="subject" noshow="true">
+    <expression>CONCAT('Solicitud de trabajo en unidad Saldivia U', PEDCOTIZ.nrocha)</expression>
+  </field>
+
+      <field id="bagno" colstyle="display:none;">
+        <label size="23" posx="6" posy="+1" PDFsize="10" >Baño</label>
+        <help></help>
+        <options>
+          <option valor="0"></option>
+          <option valor="1">No</option>
+          <option valor="2">Si</option>
+          <option valor="3">S/D</option>
+        </options>
+      </field>
+
+      <field id="miniba">
+        <label size="23" posx="60" posy="0" modpos="nobr" PDFsize="10" colstyle="display:none;">Minibar</label>
+        <help></help>
+         <options>
+          <option valor="0"></option>
+          <option valor="1">No</option>
+          <option valor="2">Si</option>
+           <option valor="3">S/D</option>
+        </options>
+      </field>
+
+<!--      <field id="barcom">
+        <label size="23" posx="110" posy="0"  PDFsize="10" colstyle="display:none;">Bar Completo</label>
+        <help></help>
+        <tipo>check</tipo>
+      </field>
+-->
+<!--      <field id="camare">
+        <label size="23" posx="160" posy="0" modpos="nobr" PDFsize="10" colstyle="display:none;">Camarera</label>
+        <help></help>
+        <tipo>check</tipo>
+      </field>
+-->
+      <field id="cucheta">
+        <label size="23" colstyle="display:none;" modpos="nobr">Cucheta</label>
+        <help></help>
+            <helper type="combo" xml="prd_helper_propiedades.xml" dir="/produccion" emtpy="true">
+                <field id="campoficha_id">
+                    <condicion operador="=">'cucheta'</condicion>
+                </field>
+            </helper>
+      </field>
+
+
+ <!--   <field id="conaac" activa="true">
+        <label  size="23" posx="6" posy="+1" PDFsize="10" colstyle="display:none;">Con Aire</label>
+        <help></help>
+        <tipo>check</tipo>
+        <valor>0</valor>
+      </field>   -->
+
+      <field id="preair" _activador="conaac">
+        <label size="23" posx="60" posy="0"  PDFsize="10"  colstyle="display:none;">Prepara Aire</label>
+        <help></help>
+        <options>
+          <option valor="0"></option>
+          <option valor="1">Preparado</option>
+          <option valor="2">Colocado</option>
+          <option valor="3">NO</option>
+          <option valor="4">S/D</option>
+        </options>
+      </field>
+<!--      <field id="colair" activador="conaac">
+        <label modpos="nobr" size="23" posx="110" posy="0" PDFsize="10" colstyle="display:none;">Coloca</label>
+        <help></help>
+        <tipo>check</tipo>
+      </field> -->
+   <field id="marair" _activador="conaac">
+        <label size="23" posx="6" posy="+1" xml="marcaair.xml" PDFsize="10" modpos="nobr" colstyle="display:none;">Marca A/Ac.</label>
+        <help></help>
+        <tabla_ex xml="marcaair.xml" vacio="true">
+          <field id="siscod" oculto="true">
+            <condicion operador="=">03</condicion>
+          </field>
+        </tabla_ex>
+        <actualiza>
+          <field destino="marair2" id="modair"/>
+        </actualiza>
+      </field>
+      <field id="posair" _activador="conaac">
+        <label size="23" posx="160" posy="0" modpos="nobr" xml="posicair.xml" PDFsize="10" colstyle="display:none;">Posicion</label>
+        <help></help>
+        <tabla_ex xml="posicair.xml">
+          <field id="siscod" oculto="true">
+            <condicion operador="=">03</condicion>
+          </field>
+        </tabla_ex>
+      </field>
+
+     <field id="modair" _activador="conaac" sincelda="true">
+        <label size="23" posx="60" posy="0" modpos="nobr" PDFsize="10" colstyle="display:none;" _xml="modelair.xml" >Modelo A/Ac</label>
+        <help></help>
+        <tabla_ex id="MODELAIR" vacio="true">
+          <field id="modair"></field>
+          <field id="moddes"></field>
+          <field id="marair2">
+              <expression having="false">marair</expression>
+          </field>
+        </tabla_ex>
+
+      </field>  
+
+<!--      <field id="condensador" activador="conaac">
+        <label size="24" posx="110" posy="0" PDFsize="10" colstyle="display:none;" colspan="4">Condensador</label>
+        <help>Condensador</help>
+      </field>
+-->
+
+<!--      <field id="previd">
+        <label size="23" posx="6" posy="+1" PDFsize="10" colstyle="display:none;">Prep. Video</label>
+        <help></help>
+        <options>
+          <option valor="0"></option>
+          <option valor="1">Preparado</option>
+          <option valor="2">Colocado</option>
+          <option valor="3">NO</option>
+
+        </options>
+      </field> -->
+<!--      <field id="canttv">
+        <label size="23" posx="160" posy="0"  PDFsize="10" colstyle="display:none;">Cant.TV</label>
+        <help></help>
+      </field>
+      <field id="tipotv">
+        <label size="23" posx="6" posy="+1" PDFsize="10" colstyle="display:none;" modpos="nobr">tipo.TV</label>
+        <help></help>
+        <options>
+          <option valor="-1"></option>
+          <option valor="0">Tubo</option>
+          <option valor="1">LCD</option>
+        </options>
+
+      </field>
+
+      <field id="prvtv">
+        <label size="23" posx="60" posy="0"  colspan="4" PDFsize="10" colstyle="display:none;">Prov.TV</label>
+        <help></help>
+        <tabla_ex  id="PROVAUDIOVID" >
+          <field id="idprov"/>
+          <field id="nombre"/>
+        </tabla_ex>
+      </field>
+-->
+<!--      <field id="preaud">
+        <label size="23" posx="6" posy="+1" PDFsize="10" colstyle="display:none;">Prepara Audio</label>
+        <help></help>
+        <options>
+          <option valor="0"></option>
+          <option valor="1">Preparado</option>
+          <option valor="2">Colocado</option>
+          <option valor="3">NO</option>
+
+        </options>
+      </field>
+      <field id="microf">
+        <label modpos="nobr" size="23" posx="60" posy="0" PDFsize="10" colstyle="display:none;">Microfono</label>
+        <help></help>
+        <tipo>check</tipo>
+
+      </field>
+      <field id="jacks">
+        <label modpos="nobr" size="23" posx="60" posy="0" PDFsize="10" colstyle="display:none;">Jacks</label>
+        <help></help>
+        <size>1</size>
+      </field>
+      <field id="prvaudio">
+        <label  colspan="3" size="23" posx="110" posy="0" PDFsize="10" colstyle="display:none;">Prov. Audio</label>
+        <help></help>
+        <tabla_ex  id="PROVAUDIOVID" >
+          <field id="idprov"/>
+          <field id="nombre"/>
+        </tabla_ex>
+
+      </field>
+      -->
+
+      <!--
+      <field id="colaud">
+        <label modpos="nobr" size="23" posx="6" posy="+1" PDFsize="10" colstyle="display:none;">Colocado</label>
+        <help></help>
+        <tipo>check</tipo>
+      </field>
+  -->
+      <field id="vtnmov">
+        <label size="23" posx="6" posy="+1" PDFsize="10" colstyle="display:none;">Cantidad Movil x lado</label>
+        <help></help>
+            <helper type="combo" xml="prd_helper_propiedades.xml" dir="/produccion" emtpy="true">
+                <field id="campoficha_id">
+                    <condicion operador="=">'cant_ventanas'</condicion>
+                </field>
+            </helper>
+      </field>
+      <field id="tipvtn">
+        <label size="23" posx="26" posy="0" PDFsize="10" colstyle="display:none;">Tipo Ventana</label>
+            <helper type="combo" xml="prd_helper_propiedades.xml" dir="/produccion" emtpy="true">
+                <field id="campoficha_id">
+                    <condicion operador="=">'tipo_ventana'</condicion>
+                </field>
+            </helper>
+      </field>
+      <field id="vtnpuerta">
+        <label size="23" posx="60" posy="0" PDFsize="10" colstyle="display:none;" modpos="nobr">En Puerta de Ascenso</label>
+        <help></help>
+        <options>
+          <option valor="0"></option>
+          <option valor="1">Fija</option>
+          <option valor="2">Movil</option>
+          
+          
+        </options>
+      </field>
+      <field id="luneta">
+        <label size="23" posx="110" posy="0" PDFsize="10" colstyle="display:none;" modpos="nobr">Luneta</label>
+        <help></help>
+        <options>
+          <option valor="0"></option>
+          <option valor="1">Con Vidrio</option>
+          <option valor="2">Ciega</option>
+          <option valor="3">Sin definir</option>
+        </options>
+      </field>
+      <field id="calefn" activa="true">
+        <label size="23" posx="6" posy="+1" PDFsize="10" colstyle="display:none;">Calefaccion</label>
+        <help></help>
+        <tipo>check</tipo>
+      </field>
+      <field id="tipcal" _activador="calefn">
+        <tabla_ex xml="tipcalef.xml" dir="/produccion"></tabla_ex>
+        <label size="23" posx="60" posy="0" modpos="nobr"  PDFsize="10" colstyle="display:none;">Tipo.</label>
+        <help></help>
+
+      </field>
+      <field id="calcan" _activador="calefn">
+        <label size="23" posx="110" posy="0" modpos="nobr" PDFsize="10" colstyle="display:none;">Cant.</label>
+            <helper type="combo" xml="prd_helper_propiedades.xml" dir="/produccion" emtpy="true">
+                <field id="campoficha_id">
+                    <condicion operador="=">'cant_calefactores'</condicion>
+                </field>
+            </helper>
+        <help></help>
+      </field>
+
+      <field id="tanque_id">
+        <label size="23" posx="6" posy="+1" PDFsize="10" colstyle="display:none;" >Tanque Combust.</label>
+        <helper type="combo" xml="tipotanque.xml" dir="/producto/man/" />
+
+        <help></help>
+      </field>
+<!--      <field id="colorPana" color="true">
+        <label colstyle="display:none;">Muestra Color</label>
+        <help></help>
+        <size>2</size>
+      </field> -->
+        <field id="panpath" local="true=" oculto="true">
+                    <valor>../archivo/Panas</valor>
+            </field>
+
+      <field id="fotoPana" path="panpath">
+        <label colstyle="display:none;" _modpos="nobr" colspan="2">Pana Asiento</label>
+        <help></help>
+        <size>20</size>
+               <tipo>file</tipo>
+      </field>
+
+      <field id="pana" path="panpath">
+        <label modpos="nobr" colspan="3" size="23" posx="6" posy="+1" PDFsize="10" colstyle="display:none;">Centro Techo</label>
+        <size>20</size>
+        <help></help>
+    <tipo>file</tipo>
+      </field>
+
+
+<!--      <field id="tippin">
+        <label  size="23" posx="6" posy="+1" PDFsize="10" colstyle="display:none;" >Tipo Pint</label>
+        <help></help>
+        <size>15</size>
+      </field>
+-->
+      <field id="ninterno" colstyle="display:none;">
+        <label  size="23" posx="160" posy="0" PDFsize="10"   _modpos="nobr">N.Int.</label>
+        <help></help>
+        <size>10</size>
+      </field>
+
+      <field id="corpath" local="true" noshow="true" _noselect="true">
+        <!-- <expression>CONCAT('fotos/coches/', PEDCOTIZ.nrocha,'/corte/')</expression>-->
+
+      <if exp="true">
+          <true>'nro2/corte'</true>
+          <false>''</false>
+        </if>
+        <tipo>varchar</tipo>
+      </field>
+
+
+      <field id="ctepin">
+        <label size="23" posx="6" posy="+1" PDFsize="10" colstyle="display:none;" colspan="5">Corte</label>
+        <help></help>
+        <tipo>check</tipo>
+
+      </field>
+      <field id="cortePint" path="corpath" _path="nrocha" sincelda="true">
+     <label modpos="nobr" size="23" posx="15" posy="0" PDFsize="10" colstyle="display:none;" colspan="4">Corte Pintura</label>
+        <help></help>
+        <tipo>file</tipo>
+        <size>10</size>
+
+      </field>
+      <field id="colorllantas">
+        <label _modpos="nobr" size="23" posx="60" posy="0" PDFsize="10" colstyle="display:none;">Color Llantas</label>
+        <help></help>
+      <options>
+          <option valor="0"></option>
+          <option valor="1">Original</option>
+          <option valor="2">Según corte pint</option>
+          <option valor="3">S/D</option>
+        </options>
+      <size>10</size>
+      </field>
+      <field id="colorespej">
+        <label  size="23" posx="110" posy="0" PDFsize="10" colstyle="display:none;" modpos="nobr">Color Espejos</label>
+        <help></help>
+        <size>10</size>
+      </field>
+
+
+      <field id="cartel" activa="true">
+        <label size="23" posx="6" posy="+1" PDFsize="10" colstyle="display:none;">Cartel Ruta</label>
+        <help></help>
+        <options>
+          <option valor="0"></option>
+          <option valor="1">No</option>
+          <option valor="2">Si</option>
+          <option valor="3">S/D</option>
+        </options>
+
+      </field>
+      <field id="tipcartel">
+        <label modpos="nobr" size="23" posx="60" posy="0" PDFsize="10" colstyle="display:none;" colspan="3">Tipo Cartel</label>
+        <help></help>
+        <tabla_ex id="TIPOCARTEL" xml="tipocartel.xml" dir="/produccion" vacio="true">
+
+        </tabla_ex>
+<!--        <options>
+          <option valor="0"></option>
+          <option valor="1">Motorizado</option>
+          <option valor="2">Electronico (LEDS)</option>
+        </options>   -->
+      </field>
+      <field id="localidades" style="color:green;">
+        <label colspan="4" size="23" posx="6" posy="+2" PDFsize="10" colstyle="display:none;">Localidades</label>
+        <help>Localidades</help>
+        <pdfancho>150</pdfancho>
+        <size>200</size>
+      </field>
+  <!-- para insertar pdf de vidrio falta poner en la impresion incrustado el pdf
+
+
+   <field id="vidrio" local="true" noshow="true" _noselect="true">
+        <if exp="true">
+      <true>'nro2/vidrio'</true>
+      <false>''</false>
+    </if>
+        <tipo>varchar</tipo>
+      </field>
+
+
+
+       <field id="vidrio" path="vidrio" local="true">
+        <label colstyle="display:none;" _modpos="nobr" colspan="5">Plano Vidrio</label>
+        <help></help>
+        <size>20</size>
+        <tipo>file</tipo>
+      </field>
+-->
+
+
+
+<!--    <field id="obsesp">
+        <label colspan="8" size="23" posx="6" posy="+2" PDFsize="10" colstyle="display:none;">Observ.</label>
+        <help></help>
+        <pdfancho>150</pdfancho>
+        <size>600</size>
+      </field>  -->
+<!--      <field id="adic" obj="adicionales_coche.xml" local="true" dir="/produccion/man/">
+        <label colspan="3" colstyle="display:none;">Adicicionales</label>
+        <paring destino="nrofab" operador="=">nrocha</paring>
+      </field>
+-->
+      <field id="acces" obj="accesorios_coche_precio.xml" local="true" noshow="true" dir="/produccion/man">
+        <label colspan="3" colstyle="display:none;">Accesorios</label>
+        <paring destino="nrofab" operador="=">nrocha</paring>
+        <paring destino="ficha_id">id</paring>
+  <paring destino="ctafan">ctafan</paring>
+<!--        <paring destino="showprecios" >1</paring>  -->
+
+      </field>
+<!--      <field id="observ" obj="fichaobs.xml" local="true">
+        <label colspan="2" colstyle="display:none;">Observaciones</label>
+        <paring destino="idFicha" operador="=">id</paring>
+           <paring destino="nrofab" operador="null">nrocha</paring>
+      </field> -->
+      <!--
+      <field id="fichafotos" obj="fichafotos.xml" local="true" noshow="true">
+        <label colspan="2" colstyle="display:none;">Imagenes</label>
+        <paring destino="nrofab" operador="=">nrocha</paring>
+      </field>-->
+<!--      <field id="planos" obj="prd_planos.xml" local="true" objdir="/produccion">
+        <label colspan="2" colstyle="display:none;">Planos Adjuntos</label>
+        <paring destino="nrofab" operador="=">nrocha</paring>
+      </field> -->
+    <field id="pathpat" noshow="true">
+  <expression>CONCAT(PEDCOTIZ.nrocha, '/patentamiento/')</expression>
+    
+    </field>
+    <field id="fichafotospat" obj="fichafotospat.xml" local="true" noshow="true">
+        <label colspan="2" colstyle="display:none;">Fotos Patentamiento</label>
+        <paring destino="nrofab" >nrocha</paring>
+        <paring destino="pathpat" >pathpat</paring>
+    </field>
+     
+
+   <order>
+        <field id="nrocha" tabla="PEDCOTIZ"/>
+      </order>
+    </table>
+  <join tipo="left">
+            <table id="TURNOSPRODUCCION">
+                <field id="nrofab">
+                    <condicion operador="=">PEDCOTIZ.nrocha</condicion>
+                </field>
+            </table>
+        </join> 
+
+    <join>
+    <table id="CCTCUENT">
+        <field id="ctacod">
+       <condicion operador="=">PEDCOTIZ.ctacod</condicion>
+        </field>
+        <field id="siscod">
+     <condicion operador="=">'02'</condicion>
+        </field>     
+    </table>
+
+    </join>
+    <join tipo="left">
+    <table id="CHASIS">
+        <field id="nrocha">
+       <condicion operador="=">PEDCOTIZ.nrocha</condicion>
+        </field>
+    </table>
+    </join>
+
+  </form>
+</histrix>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm">
+	<title>Registros de Calidad</title>
+	<obs/>
+	<form >
+		<table id="CAL_REGISTROS">
+			<title>Registros de Calidad</title>
+			<field id="id_registro" esClave="true" autoinc="true" noshow="true">
+				<label>id</label>
+			</field>
+			<field id="codigo">
+				<label>Código</label>
+				<help>Cod. del Registro</help>
+			</field>
+
+			<field id="descripcion">
+				<label>Nombre</label>
+				<help>Nombre del Trabajo</help>
+			</field>
+			<field id="fecha" >
+				<label>Fecha</label>
+				<help>Fecha</help>
+				<tipo>date</tipo>
+			</field>
+			<field id="revision" >
+				<label>revision</label>
+				<help>Número de revisión</help>
+			</field>
+			
+			
+			<field id="xml_file" >
+			    <label>Programa</label>
+			</field>
+
+			
+		</table>
+	</form>
+</histrix>

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" inserta="no" >
+    <title>ORDENES DE PRODUCCION</title>
+    <obs></obs>
+    <form  >
+	        
+        <table id="MRP_ORDEN_PRODUCCION" label="Ordenes de Producción por mes">
+            <filters>
+                <field id="year_orden" deshabilitado="false">
+                    <label>Año</label>
+                    <operador>=</operador>
+                    <valor eval="true">date('Y')</valor>
+                </field>
+                <field id="mes_orden" deshabilitado="false">
+                    <label modpos="nobr">mes</label>
+                    <operador>=</operador>
+                    <valor eval="true">date('m')</valor>
+                </field>
+                <field id="producto"  deshabilitado="false" >
+                    <label modpos="nobr">Producto</label>
+                    <operador>like</operador>
+                </field>
+
+<!--                <field id="rhpersonal_id" >
+                    <helper empty="true" type="combo" xml="rhpersonal_qry.xml" dir="/ayudas" />
+                    <label modpos="nobr" >Empleado</label>
+                
+                    <help >Empleado responsable de la Orden de Producción</help>
+                    <operador>=</operador>
+                </field>-->
+
+            </filters>
+            <field id="year_orden" noshow="true">
+                <label>Año</label>
+                <expresion>year(fecha_orden)</expresion>
+            </field>
+            <field id="mes_orden" noshow="true">
+                <label>Mes</label>
+                <expresion>month(fecha_orden)</expresion>
+                <options>
+                    <option valor="1">Enero</option>
+                    <option valor="2">Febrero</option>
+                    <option valor="3">Marzo</option>
+                    <option valor="4">Abril</option>
+                    <option valor="5">Mayo</option>
+                    <option valor="6">Junio</option>
+                    <option valor="7">Julio</option>
+                    <option valor="8">Agosto</option>
+                    <option valor="9">Septiempre</option>
+                    <option valor="10">Octubre</option>
+                    <option valor="11">Noviembre</option>
+                    <option valor="12">Diciembre</option>
+
+                </options>
+            </field>
+            <field id="fecha_orden">
+                <label>Fecha</label>
+                <help>Fecha de Orden de Fabricación</help>
+            </field>
+            <field id="mrpestado_id" >
+                <label>Estado </label>
+                <help>Estado Actual</help>
+                <options>
+                    <option valor="0">Pendiente</option>
+                    <option valor="1">Cumplida</option>
+                </options>
+                <valor>0</valor>
+            </field>
+            <field id="id_mrporden">
+                <helper xml="ordenproduccion_imp.xml" type="link" modal="true">
+                    <parameter source="id_mrporden"  target="id_mrporden" />
+                </helper>
+                <label>Nro</label>
+                <help>Numero de Orden de Fabricación</help>
+                <detalle>mrporden_id</detalle>
+            </field>
+<!--            <field id="rhpersonal_id" >
+                <helper type="combo" xml="rhpersonal_qry.xml" dir="/ayudas" empty="true"/>
+                <label posx="80" posy="0" PDFsize="16" >Empleado</label>
+                
+                <help >Empleado responsable de la Orden de Producción</help>
+            </field>-->
+
+
+            <field id="producto" >
+                <label>Producto</label>
+                <expresion>CONCAT(stkarticulo_id, ' - ',nombre_articulo )</expresion>
+            </field>
+
+            <field id="objetivo_ordendetalle" tabla="MRP_ORDEN_DETALLE">
+                <label modpos="nobr">Objetivo</label>
+                <tipo>numeric</tipo>
+            </field>
+            <field id="producido_ordendetalle" noZero="true" tabla="MRP_ORDEN_DETALLE">
+                <label modpos="nobr">Producido</label>
+              <tipo>numeric</tipo>
+            </field>
+            <field id="color" clasefila="true" noshow="true">
+                <expresion>case when mrpestado_id = 1 then 'resaltado' end</expresion>
+
+            </field>
+            <order>
+                <field id="fecha_orden"></field>
+            </order>
+        </table>
+        <join tipo="left">
+            <table id="MRP_ORDEN_DETALLE">
+                <field id="mrporden_id">
+                    <condicion operador="=">MRP_ORDEN_PRODUCCION.id_mrporden</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="inner">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion  operador="=">MRP_ORDEN_DETALLE.stkarticulo_id</condicion>
+                </field>
+            </table>
+    	    
+        </join>
+        
+    </form>
+</histrix>

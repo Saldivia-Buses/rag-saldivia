@@ -4,35 +4,28 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/nats-io/nats.go"
 
-	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/config"
-	"github.com/Camionerou/rag-saldivia/pkg/health"
-	"github.com/Camionerou/rag-saldivia/pkg/build"
 	"github.com/Camionerou/rag-saldivia/pkg/database"
+	"github.com/Camionerou/rag-saldivia/pkg/health"
+	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
-	"github.com/Camionerou/rag-saldivia/pkg/security"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
-	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
+	"github.com/Camionerou/rag-saldivia/pkg/security"
+	"github.com/Camionerou/rag-saldivia/pkg/server"
 	"github.com/Camionerou/rag-saldivia/services/feedback/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/feedback/internal/service"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 func main() {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
-	slog.SetDefault(logger)
+	app := server.New("sda-feedback", server.WithPort("FEEDBACK_PORT", "8008"))
+	ctx := app.Context()
 
-	port := config.Env("FEEDBACK_PORT", "8008")
 	tenantDBURL := config.Env("POSTGRES_TENANT_URL", "")
 	platformDBURL := config.Env("POSTGRES_PLATFORM_URL", "")
 
@@ -45,22 +38,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer cancel()
-
-	// Initialize OpenTelemetry
-	otelShutdown, err := sdaotel.Setup(ctx, sdaotel.Config{
-		ServiceName:    "sda-feedback",
-		ServiceVersion: "0.1.0",
-		Endpoint:       config.Env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
-		Insecure:       true,
-	})
-	if err != nil {
-		slog.Warn("otel init failed, traces disabled", "error", err)
-	} else {
-		defer otelShutdown(context.Background())
-	}
-
 	// Token blacklist (shared Redis)
 	blacklist := security.InitBlacklist(ctx, config.Env("REDIS_URL", "localhost:6379"))
 
@@ -70,7 +47,7 @@ func main() {
 		slog.Error("failed to connect to tenant database", "error", err)
 		os.Exit(1)
 	}
-	defer tenantPool.Close()
+	app.OnShutdown(tenantPool.Close)
 	if err := tenantPool.Ping(ctx); err != nil {
 		slog.Error("failed to ping tenant database", "error", err)
 		os.Exit(1)
@@ -82,7 +59,7 @@ func main() {
 		slog.Error("failed to connect to platform database", "error", err)
 		os.Exit(1)
 	}
-	defer platformPool.Close()
+	app.OnShutdown(platformPool.Close)
 	if err := platformPool.Ping(ctx); err != nil {
 		slog.Error("failed to ping platform database", "error", err)
 		os.Exit(1)
@@ -95,7 +72,7 @@ func main() {
 		slog.Error("failed to connect to NATS", "error", err)
 		os.Exit(1)
 	}
-	defer nc.Drain()
+	app.OnShutdown(func() { _ = nc.Drain() })
 	slog.Info("connected to NATS", "url", config.RedactURL(natsURL))
 
 	// Initialize services
@@ -109,7 +86,7 @@ func main() {
 		slog.Error("failed to start feedback consumer", "error", err)
 		os.Exit(1)
 	}
-	defer consumer.Stop()
+	app.OnShutdown(consumer.Stop)
 
 	// Start aggregator
 	aggInterval := 1 * time.Hour
@@ -120,7 +97,7 @@ func main() {
 	tenantSlug := config.Env("TENANT_SLUG", "dev")
 	aggregator := service.NewAggregator(tenantPool, platformPool, feedbackSvc, alerter, aggInterval)
 	aggregator.Start(ctx, tenantID, tenantSlug)
-	defer aggregator.Stop()
+	app.OnShutdown(aggregator.Stop)
 
 	// Health checker
 	hc := health.New("feedback")
@@ -137,17 +114,10 @@ func main() {
 	}
 
 	// Router
-	r := chi.NewRouter()
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Recoverer)
-	r.Use(sdamw.SecureHeaders())
-	r.Use(middleware.Timeout(30 * time.Second))
-
 	publicKey := sdajwt.MustLoadPublicKey("JWT_PUBLIC_KEY")
 
+	r := app.Router()
 	r.Get("/health", hc.Handler())
-	r.Get("/v1/info", build.Handler("sda-feedback"))
 
 	// Tenant-scoped feedback endpoints (require auth)
 	feedbackHandler := handler.NewFeedback(feedbackSvc.Repo(), platformPool)
@@ -163,36 +133,5 @@ func main() {
 		r.Mount("/v1/platform/feedback", platformFeedbackHandler.Routes())
 	})
 
-	// Server
-	srv := &http.Server{
-		Addr:         ":" + port,
-		Handler:      otelhttp.NewHandler(r, "sda-feedback"),
-		ReadTimeout:  10 * time.Second,
-		ReadHeaderTimeout: 10 * time.Second,
-		WriteTimeout: 30 * time.Second,
-		IdleTimeout:  60 * time.Second,
-	}
-
-	go func() {
-		slog.Info("feedback service starting", "port", port)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			slog.Error("server error", "error", err)
-			os.Exit(1)
-		}
-	}()
-
-	// Graceful shutdown
-	<-ctx.Done()
-	slog.Info("feedback service shutting down")
-
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer shutdownCancel()
-
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		slog.Error("shutdown error", "error", err)
-	}
-	slog.Info("feedback service stopped")
+	app.Run()
 }
-
-
-

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+  <title>Concepto Facturables</title>
+  <obs></obs>
+  <form>
+    <table id="STK_ARTICULOS" label="Concepto Facturables">
+	
+	<fieldGroup>
+	       	<field id="id_stkarticulo" esClave="true">
+			<label colspan="8">Código</label>
+			<tipo>varchar</tipo>
+		</field>
+
+		<field id="orden" noshow="true">
+			<expression>id_stkarticulo * 1</expression>
+		</field>
+
+		<field id="nombre_articulo">
+			<label colspan="8">Servicio</label>
+		</field>
+	
+		<field id="gravado">
+			<label>Gravado</label>
+			<options>
+				<option valor="1">Si</option>
+		                <option valor="0">No</option>
+		        </options>
+		</field>
+
+		<field id="ivaregimen_id">
+			<label modpos="nobr">Regimen</label>
+		        <helper type="combo" xml="ivaregimen_qry.xml" dir="/ayudas" _empty="true" />
+		        <valor>1</valor>
+		</field>
+	</fieldGroup>
+
+	<fieldGroup>
+		<if>
+                    if (strpos($_SESSION['properties']['modulos'],'contabilidad') != false) return true;
+                </if>
+                <field id="cuentadebe_id" colstyle="display:none;">
+                    <label>CTB. Debe</label>
+                    <helper type="external" xml="cuentas_habilitadas_qry.xml" dir="/ayudas" empty="true" />
+                    <help>Cuenta Contable Debe</help>
+                </field>
+
+                <field id="ctbcuentacps_id" colstyle="display:none;">
+                    <label  modpos="nobr">CTB. Haber</label>
+                    <helper type="external" xml="cuentas_habilitadas_qry.xml" dir="/ayudas" empty="true" />
+                    <help>Cuenta Contable Haber</help>
+                </field>
+
+                <field id="cuenta_debe" Formstyle="display:none;">
+                    <label>Debe</label>
+		    <expression sql="true">select nombre_cuenta from CTB_CUENTAS where id_cuenta = '[__cuentadebe_id__]' limit 1</expression>
+                </field>
+
+                <field id="cuenta_haber" Formstyle="display:none;">
+                    <label>Haber</label>
+		    <expression sql="true">select nombre_cuenta from CTB_CUENTAS where id_cuenta = '[__ctbcuentacps_id__]' limit 1</expression>
+                </field>
+	</fieldGroup>
+
+	<order>
+		<field id="orden" />
+	</order>
+
+    </table>
+  </form>
+</histrix>  
+

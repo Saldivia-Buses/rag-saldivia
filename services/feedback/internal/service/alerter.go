@@ -194,7 +194,7 @@ func (a *Alerter) CheckAndAlert(ctx context.Context, tenantID, tenantSlug string
 		// Service, which requires a valid user_id FK). Platform admins subscribe
 		// to the feedback.alerts channel on the WS Hub.
 		if a.publisher != nil {
-			a.publisher.Broadcast(tenantSlug, "feedback.alerts", map[string]any{
+			_ = a.publisher.Broadcast(tenantSlug, "feedback.alerts", map[string]any{
 				"type":     "feedback_alert",
 				"alert_id": check.AlertType + "-" + tenantID,
 				"data": map[string]string{

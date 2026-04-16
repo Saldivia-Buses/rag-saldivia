@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="chart">
+	<title>Cantidad</title>
+	<obs></obs>
+	<form>
+		<table id="ASTERIX_CDR" >
+		   <title>Tareas</title>
+
+		   <grafico id="internos" >
+			   <ancho>400</ancho>
+			   <tipo>C</tipo>
+                           <title>Llamadas Entrantes por Interno</title>
+			   <etiquetas>dst</etiquetas>
+			   <datos>cantidad</datos>
+			   <serie>cantidad</serie>
+			   
+                           
+			   <subtitulo></subtitulo>
+		   </grafico>
+		    <filters>
+			     <field id="calldate2" deshabilitado="false">
+				    <label>Desde</label>
+					    <valor>today</valor>
+				    <operador>&gt;=</operador>
+				    <tipo>date</tipo>
+			    </field>
+			    <field id="calldate2" deshabilitado="false">
+			            <label>Hasta</label>
+				    <valor>today</valor>
+				    <operador>&lt;=</operador>
+				   		<tipo>date</tipo>	
+			    </field>
+		    </filters>
+			<field id="calldate2">
+				<expression having="false">date(calldate)</expression>		
+			<tipo>date</tipo>
+			</field>
+
+                        <field id="dst">
+                             <condicion operador="!=">0</condicion>
+                              <label>Interno</label>
+                        </field>
+                        <field id="dst2">
+				<expression having="false">LENGTH(dst)</expression>
+                             <condicion operador="=">3</condicion>
+                        </field>
+			<field id="src">
+				<expression having="false">LENGTH(src)</expression>
+				<condicion operador="!=">3</condicion>
+			</field>
+			<!--<field id="idTarea" tabla="SERVICE_TAREA_UNIDAD">
+			    <condicion operador="!=">0</condicion>
+
+			</field>-->
+			
+			<field id="cantidad" local="true" tipoOrden="DESC">
+				<expression>count(case when LENGTH(dst) = 3 and disposition = 'ANSWERED' then trim(dst) end)</expression>
+				<label>Entrantes</label>
+			<!--	 <condicion operador="&gt;">2</condicion> -->
+			</field>
+			
+			<field id="entreinternos">
+				<expression having="false">(case when LENGTH(src) = 3 and LENGTH(dst) = 3 then 1 else 0 end)</expression>
+				<condicion operador="=">0</condicion>
+		
+			</field>
+                      
+			<group>
+                                <field id="dst"></field>
+			</group>
+                        <order>
+                                <field id="cantidad"></field>
+			</order>
+
+		</table>
+		
+
+
+	</form>
+</histrix>

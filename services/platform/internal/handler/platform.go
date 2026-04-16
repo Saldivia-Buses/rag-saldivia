@@ -7,16 +7,18 @@ import (
 	"crypto/ed25519"
 	"encoding/json"
 	"errors"
-	"log/slog"
 	"net/http"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	"github.com/jackc/pgx/v5/pgtype"
 
+	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
-	"github.com/Camionerou/rag-saldivia/pkg/security"
+	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
+	"github.com/Camionerou/rag-saldivia/pkg/security"
+	"github.com/Camionerou/rag-saldivia/pkg/tenant"
 	"github.com/Camionerou/rag-saldivia/services/platform/db"
 	"github.com/Camionerou/rag-saldivia/services/platform/internal/service"
 )
@@ -25,6 +27,7 @@ import (
 type PlatformService interface {
 	ListTenants(ctx context.Context, limit, offset int32) ([]db.ListTenantsRow, error)
 	GetTenant(ctx context.Context, slug string) (service.TenantDetail, error)
+	GetTenantByID(ctx context.Context, id string) (service.TenantDetail, error)
 	CreateTenant(ctx context.Context, arg db.CreateTenantParams) (service.TenantDetail, error)
 	UpdateTenant(ctx context.Context, arg db.UpdateTenantParams) error
 	DisableTenant(ctx context.Context, id string) error
@@ -34,9 +37,15 @@ type PlatformService interface {
 	EnableModule(ctx context.Context, arg db.EnableModuleForTenantParams) error
 	DisableModule(ctx context.Context, tenantID, moduleID string) error
 	ListFeatureFlags(ctx context.Context) ([]service.FeatureFlag, error)
+	CreateFeatureFlag(ctx context.Context, params service.CreateFlagParams, createdBy string) (service.FeatureFlag, error)
+	UpdateFeatureFlag(ctx context.Context, id string, params service.UpdateFlagParams) error
 	ToggleFeatureFlag(ctx context.Context, id string, enabled bool) error
+	KillFlag(ctx context.Context, id string, killedBy string) error
+	EvaluateFlags(ctx context.Context, tenantID, userID string) (map[string]bool, error)
 	GetConfig(ctx context.Context, key string) (service.ConfigEntry, error)
 	SetConfig(ctx context.Context, key string, value []byte, updatedBy string) error
+	RecordDeploy(ctx context.Context, arg db.InsertDeployLogParams) (service.DeployRecord, error)
+	ListDeploys(ctx context.Context, limit, offset int32) ([]service.DeployRecord, error)
 }
 
 // Platform handles HTTP requests for platform operations.
@@ -61,6 +70,7 @@ func (h *Platform) Routes() chi.Router {
 	r.Route("/tenants", func(r chi.Router) {
 		r.Get("/", h.ListTenants)
 		r.Post("/", h.CreateTenant)
+		r.Get("/by-id/{tenantID}", h.GetTenantByID)
 		r.Get("/{slug}", h.GetTenant)
 		r.Put("/{tenantID}", h.UpdateTenant)
 		r.Post("/{tenantID}/disable", h.DisableTenant)
@@ -75,14 +85,29 @@ func (h *Platform) Routes() chi.Router {
 	// Modules catalog
 	r.Get("/modules", h.ListModules)
 
-	// Feature flags
+	// Feature flags (admin CRUD)
 	r.Get("/flags", h.ListFeatureFlags)
+	r.Post("/flags", h.CreateFeatureFlag)
+	r.Put("/flags/{flagID}", h.UpdateFeatureFlag)
 	r.Patch("/flags/{flagID}", h.ToggleFeatureFlag)
+	r.Delete("/flags/{flagID}/kill", h.KillFlag)
 
 	// Global config
 	r.Get("/config/{key}", h.GetConfig)
 	r.Put("/config/{key}", h.SetConfig)
 
+	// Deploy log
+	r.Post("/deploys", h.RecordDeploy)
+	r.Get("/deploys", h.ListDeploys)
+
+	return r
+}
+
+// FlagsRoutes returns a chi router for flag evaluation (standard auth, not platform admin).
+func (h *Platform) FlagsRoutes() chi.Router {
+	r := chi.NewRouter()
+	r.Use(sdamw.Auth(h.publicKey))
+	r.Get("/evaluate", h.EvaluateFlags)
 	return r
 }
 
@@ -93,7 +118,7 @@ func (h *Platform) ListTenants(w http.ResponseWriter, r *http.Request) {
 	pg := pagination.Parse(r)
 	tenants, err := h.svc.ListTenants(r.Context(), int32(pg.Limit()), int32(pg.Offset()))
 	if err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusOK, tenants)
@@ -105,10 +130,25 @@ func (h *Platform) GetTenant(w http.ResponseWriter, r *http.Request) {
 	tenant, err := h.svc.GetTenant(r.Context(), slug)
 	if err != nil {
 		if errors.Is(err, service.ErrTenantNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": "tenant not found"})
+			httperr.WriteError(w, r, httperr.NotFound("tenant"))
 			return
 		}
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
+		return
+	}
+	writeJSON(w, http.StatusOK, tenant)
+}
+
+// GetTenantByID handles GET /v1/platform/tenants/by-id/{tenantID}
+func (h *Platform) GetTenantByID(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "tenantID")
+	tenant, err := h.svc.GetTenantByID(r.Context(), id)
+	if err != nil {
+		if errors.Is(err, service.ErrTenantNotFound) {
+			httperr.WriteError(w, r, httperr.NotFound("tenant"))
+			return
+		}
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusOK, tenant)
@@ -127,12 +167,12 @@ func (h *Platform) CreateTenant(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 	var req createTenantRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid request body"))
 		return
 	}
 
 	if req.Slug == "" || req.Name == "" || req.PlanID == "" || req.PostgresURL == "" || req.RedisURL == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "slug, name, plan_id, postgres_url, and redis_url are required"})
+		httperr.WriteError(w, r, httperr.InvalidInput("slug, name, plan_id, postgres_url, and redis_url are required"))
 		return
 	}
 
@@ -146,14 +186,14 @@ func (h *Platform) CreateTenant(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		if errors.Is(err, service.ErrInvalidSlug) {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "slug must be lowercase alphanumeric with hyphens, 2-63 chars"})
+			httperr.WriteError(w, r, httperr.InvalidInput("slug must be lowercase alphanumeric with hyphens, 2-63 chars"))
 			return
 		}
 		if errors.Is(err, service.ErrSlugTaken) {
-			writeJSON(w, http.StatusConflict, map[string]string{"error": "tenant slug already taken"})
+			httperr.WriteError(w, r, httperr.Conflict("tenant slug already taken"))
 			return
 		}
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusCreated, tenant)
@@ -172,7 +212,7 @@ func (h *Platform) UpdateTenant(w http.ResponseWriter, r *http.Request) {
 
 	var req updateTenantRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid request body"))
 		return
 	}
 
@@ -187,7 +227,7 @@ func (h *Platform) UpdateTenant(w http.ResponseWriter, r *http.Request) {
 		PlanID:   req.PlanID,
 		Settings: settings,
 	}); err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -197,7 +237,7 @@ func (h *Platform) UpdateTenant(w http.ResponseWriter, r *http.Request) {
 func (h *Platform) DisableTenant(w http.ResponseWriter, r *http.Request) {
 	tenantID := chi.URLParam(r, "tenantID")
 	if err := h.svc.DisableTenant(r.Context(), tenantID); err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -207,7 +247,7 @@ func (h *Platform) DisableTenant(w http.ResponseWriter, r *http.Request) {
 func (h *Platform) EnableTenant(w http.ResponseWriter, r *http.Request) {
 	tenantID := chi.URLParam(r, "tenantID")
 	if err := h.svc.EnableTenant(r.Context(), tenantID); err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -219,7 +259,7 @@ func (h *Platform) EnableTenant(w http.ResponseWriter, r *http.Request) {
 func (h *Platform) ListModules(w http.ResponseWriter, r *http.Request) {
 	modules, err := h.svc.ListModules(r.Context())
 	if err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusOK, modules)
@@ -230,7 +270,7 @@ func (h *Platform) GetTenantModules(w http.ResponseWriter, r *http.Request) {
 	tenantID := chi.URLParam(r, "tenantID")
 	modules, err := h.svc.GetTenantModules(r.Context(), tenantID)
 	if err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusOK, modules)
@@ -249,12 +289,12 @@ func (h *Platform) EnableModule(w http.ResponseWriter, r *http.Request) {
 
 	var req enableModuleRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid request body"))
 		return
 	}
 
 	if req.ModuleID == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "module_id is required"})
+		httperr.WriteError(w, r, httperr.InvalidInput("module_id is required"))
 		return
 	}
 
@@ -269,7 +309,7 @@ func (h *Platform) EnableModule(w http.ResponseWriter, r *http.Request) {
 		Config:    config,
 		EnabledBy: adminID,
 	}); err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -281,7 +321,7 @@ func (h *Platform) DisableModule(w http.ResponseWriter, r *http.Request) {
 	moduleID := chi.URLParam(r, "moduleID")
 
 	if err := h.svc.DisableModule(r.Context(), tenantID, moduleID); err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -293,7 +333,7 @@ func (h *Platform) DisableModule(w http.ResponseWriter, r *http.Request) {
 func (h *Platform) ListFeatureFlags(w http.ResponseWriter, r *http.Request) {
 	flags, err := h.svc.ListFeatureFlags(r.Context())
 	if err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusOK, flags)
@@ -310,19 +350,144 @@ func (h *Platform) ToggleFeatureFlag(w http.ResponseWriter, r *http.Request) {
 
 	var req toggleFlagRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid request body"))
 		return
 	}
 
 	if err := h.svc.ToggleFeatureFlag(r.Context(), flagID, req.Enabled); err != nil {
 		if errors.Is(err, service.ErrFlagNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": "feature flag not found"})
+			httperr.WriteError(w, r, httperr.NotFound("feature flag"))
 			return
 		}
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+type createFlagRequest struct {
+	ID          string  `json:"id"`
+	Name        string  `json:"name"`
+	Description string  `json:"description,omitempty"`
+	TenantID    *string `json:"tenant_id,omitempty"`
+	RolloutPct  *int    `json:"rollout_pct,omitempty"`
+}
+
+// CreateFeatureFlag handles POST /v1/platform/flags
+func (h *Platform) CreateFeatureFlag(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+
+	var req createFlagRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid request body"))
+		return
+	}
+	if req.ID == "" || req.Name == "" {
+		httperr.WriteError(w, r, httperr.InvalidInput("id and name are required"))
+		return
+	}
+
+	rollout := 0
+	if req.RolloutPct != nil {
+		rollout = *req.RolloutPct
+		if rollout < 0 || rollout > 100 {
+			httperr.WriteError(w, r, httperr.InvalidInput("rollout_pct must be 0-100"))
+			return
+		}
+	}
+
+	createdBy := r.Header.Get("X-User-ID")
+
+	flag, err := h.svc.CreateFeatureFlag(r.Context(), service.CreateFlagParams{
+		ID:          req.ID,
+		Name:        req.Name,
+		Description: req.Description,
+		TenantID:    req.TenantID,
+		RolloutPct:  rollout,
+	}, createdBy)
+	if err != nil {
+		httperr.WriteError(w, r, httperr.Internal(err))
+		return
+	}
+	writeJSON(w, http.StatusCreated, flag)
+}
+
+type updateFlagRequest struct {
+	Enabled    *bool `json:"enabled,omitempty"`
+	RolloutPct *int  `json:"rollout_pct,omitempty"`
+}
+
+// UpdateFeatureFlag handles PUT /v1/platform/flags/{flagID}
+func (h *Platform) UpdateFeatureFlag(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+	flagID := chi.URLParam(r, "flagID")
+
+	var req updateFlagRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid request body"))
+		return
+	}
+	if req.Enabled == nil && req.RolloutPct == nil {
+		httperr.WriteError(w, r, httperr.InvalidInput("at least one of enabled or rollout_pct is required"))
+		return
+	}
+	if req.RolloutPct != nil && (*req.RolloutPct < 0 || *req.RolloutPct > 100) {
+		httperr.WriteError(w, r, httperr.InvalidInput("rollout_pct must be 0-100"))
+		return
+	}
+
+	updatedBy := r.Header.Get("X-User-ID")
+
+	err := h.svc.UpdateFeatureFlag(r.Context(), flagID, service.UpdateFlagParams{
+		Enabled:    req.Enabled,
+		RolloutPct: req.RolloutPct,
+		UpdatedBy:  updatedBy,
+	})
+	if err != nil {
+		if errors.Is(err, service.ErrFlagNotFound) {
+			httperr.WriteError(w, r, httperr.NotFound("feature flag"))
+			return
+		}
+		httperr.WriteError(w, r, httperr.Internal(err))
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// KillFlag handles DELETE /v1/platform/flags/{flagID}/kill
+func (h *Platform) KillFlag(w http.ResponseWriter, r *http.Request) {
+	flagID := chi.URLParam(r, "flagID")
+
+	killedBy := r.Header.Get("X-User-ID")
+
+	err := h.svc.KillFlag(r.Context(), flagID, killedBy)
+	if err != nil {
+		if errors.Is(err, service.ErrFlagNotFound) {
+			httperr.WriteError(w, r, httperr.NotFound("feature flag"))
+			return
+		}
+		httperr.WriteError(w, r, httperr.Internal(err))
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// EvaluateFlags handles GET /v1/flags/evaluate
+// Identity comes from JWT claims only (DS7 — no query params for identity).
+func (h *Platform) EvaluateFlags(w http.ResponseWriter, r *http.Request) {
+	tenantID := r.Header.Get("X-Tenant-ID")
+	userID := r.Header.Get("X-User-ID")
+	if tenantID == "" || userID == "" {
+		httperr.WriteError(w, r, httperr.Unauthorized("missing identity"))
+		return
+	}
+
+	flags, err := h.svc.EvaluateFlags(r.Context(), tenantID, userID)
+	if err != nil {
+		httperr.WriteError(w, r, httperr.Internal(err))
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"flags": flags})
 }
 
 // ── Global Config ───────────────────────────────────────────────────────
@@ -333,10 +498,10 @@ func (h *Platform) GetConfig(w http.ResponseWriter, r *http.Request) {
 	config, err := h.svc.GetConfig(r.Context(), key)
 	if err != nil {
 		if errors.Is(err, service.ErrConfigNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": "config key not found"})
+			httperr.WriteError(w, r, httperr.NotFound("config key"))
 			return
 		}
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusOK, config)
@@ -354,15 +519,89 @@ func (h *Platform) SetConfig(w http.ResponseWriter, r *http.Request) {
 
 	var req setConfigRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid request body"))
 		return
 	}
 
 	if err := h.svc.SetConfig(r.Context(), key, req.Value, adminID); err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// ── Deploy Log ──────────────────────────────────────────────────────────
+
+type recordDeployRequest struct {
+	Service     string `json:"service"`
+	VersionFrom string `json:"version_from"`
+	VersionTo   string `json:"version_to"`
+	Status      string `json:"status"`
+	Notes       string `json:"notes,omitempty"`
+}
+
+// RecordDeploy handles POST /v1/platform/deploys
+func (h *Platform) RecordDeploy(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+
+	var req recordDeployRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid request body"))
+		return
+	}
+
+	if req.Service == "" || req.VersionTo == "" {
+		httperr.WriteError(w, r, httperr.InvalidInput("service and version_to are required"))
+		return
+	}
+
+	deployedBy := r.Header.Get("X-User-ID")
+	if deployedBy == "" {
+		deployedBy = "system"
+	}
+
+	status := req.Status
+	if status == "" {
+		status = "pending"
+	}
+
+	switch status {
+	case "pending", "success", "failed", "rollback":
+		// valid
+	default:
+		httperr.WriteError(w, r, httperr.InvalidInput("status must be one of: pending, success, failed, rollback"))
+		return
+	}
+
+	var notes pgtype.Text
+	if req.Notes != "" {
+		notes = pgtype.Text{String: req.Notes, Valid: true}
+	}
+
+	record, err := h.svc.RecordDeploy(r.Context(), db.InsertDeployLogParams{
+		Service:     req.Service,
+		VersionFrom: req.VersionFrom,
+		VersionTo:   req.VersionTo,
+		Status:      status,
+		DeployedBy:  deployedBy,
+		Notes:       notes,
+	})
+	if err != nil {
+		httperr.WriteError(w, r, httperr.Internal(err))
+		return
+	}
+	writeJSON(w, http.StatusCreated, record)
+}
+
+// ListDeploys handles GET /v1/platform/deploys
+func (h *Platform) ListDeploys(w http.ResponseWriter, r *http.Request) {
+	pg := pagination.Parse(r)
+	deploys, err := h.svc.ListDeploys(r.Context(), int32(pg.Limit()), int32(pg.Offset()))
+	if err != nil {
+		httperr.WriteError(w, r, httperr.Internal(err))
+		return
+	}
+	writeJSON(w, http.StatusOK, deploys)
 }
 
 // ── Middleware & Helpers ─────────────────────────────────────────────────
@@ -380,27 +619,31 @@ func (h *Platform) requirePlatformAdmin(next http.Handler) http.Handler {
 
 		auth := r.Header.Get("Authorization")
 		if !strings.HasPrefix(auth, "Bearer ") {
-			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "missing authorization"})
+			httperr.WriteError(w, r, httperr.Unauthorized("missing authorization"))
 			return
 		}
 
 		claims, err := sdajwt.Verify(h.publicKey, strings.TrimPrefix(auth, "Bearer "))
 		if err != nil {
-			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid token"})
+			httperr.WriteError(w, r, httperr.Unauthorized("invalid token"))
 			return
 		}
 
-		// Check blacklist (revoked tokens)
+		// Check blacklist (revoked tokens) — fail-closed for admin endpoints
 		if h.blacklist != nil && claims.ID != "" {
 			revoked, err := h.blacklist.IsRevoked(r.Context(), claims.ID)
-			if err == nil && revoked {
-				writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "token revoked"})
+			if err != nil {
+				httperr.WriteError(w, r, httperr.Wrap(err, httperr.CodeInternal, "auth check unavailable", 503))
+				return
+			}
+			if revoked {
+				httperr.WriteError(w, r, httperr.Unauthorized("token revoked"))
 				return
 			}
 		}
 
 		if claims.Role != "admin" || claims.Slug != h.platformSlug {
-			writeJSON(w, http.StatusForbidden, map[string]string{"error": "platform admin access required"})
+			httperr.WriteError(w, r, httperr.Forbidden("platform admin access required"))
 			return
 		}
 
@@ -410,18 +653,22 @@ func (h *Platform) requirePlatformAdmin(next http.Handler) http.Handler {
 		r.Header.Set("X-User-Role", claims.Role)
 		r.Header.Set("X-Tenant-ID", claims.TenantID)
 		r.Header.Set("X-Tenant-Slug", claims.Slug)
-		next.ServeHTTP(w, r)
+
+		// Set context values to align with pkg/middleware.AuthWithConfig
+		ctx := tenant.WithInfo(r.Context(), tenant.Info{
+			ID:   claims.TenantID,
+			Slug: claims.Slug,
+		})
+		ctx = sdamw.WithRole(ctx, claims.Role)
+		ctx = sdamw.WithUserID(ctx, claims.UserID)
+		ctx = sdamw.WithUserEmail(ctx, claims.Email)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(v)
+	_ = json.NewEncoder(w).Encode(v)
 }
 
-func serverError(w http.ResponseWriter, r *http.Request, err error) {
-	reqID := middleware.GetReqID(r.Context())
-	slog.Error("internal error", "error", err, "request_id", reqID)
-	writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
-}

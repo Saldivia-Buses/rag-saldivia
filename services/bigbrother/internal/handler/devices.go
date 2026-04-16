@@ -11,6 +11,7 @@ import (
 	"github.com/nats-io/nats.go"
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
+	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/remote"
 	"github.com/Camionerou/rag-saldivia/services/bigbrother/internal/inventory"
@@ -107,7 +108,7 @@ func (h *Devices) Routes() chi.Router {
 // ExecCommand handles remote command execution.
 func (h *Devices) ExecCommand(w http.ResponseWriter, r *http.Request) {
 	if h.remoteSvc == nil {
-		http.Error(w, `{"error":"remote exec not configured"}`, http.StatusNotImplemented)
+		httperr.WriteError(w, r, httperr.Wrap(nil, httperr.CodeInternal, "remote exec not configured", http.StatusNotImplemented))
 		return
 	}
 
@@ -118,7 +119,7 @@ func (h *Devices) ExecCommand(w http.ResponseWriter, r *http.Request) {
 		Command string `json:"command"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid body"))
 		return
 	}
 
@@ -131,19 +132,18 @@ func (h *Devices) ExecCommand(w http.ResponseWriter, r *http.Request) {
 		UserAgent: r.UserAgent(),
 	})
 	if err != nil {
-		slog.Error("exec failed", "error", err, "device", deviceID, "command", body.Command)
-		http.Error(w, `{"error":"command execution failed"}`, http.StatusBadRequest)
+		httperr.WriteError(w, r, httperr.Wrap(err, httperr.CodeInvalidInput, "command execution failed", http.StatusBadRequest))
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(result)
+	_ = json.NewEncoder(w).Encode(result)
 }
 
 // StoreCredential handles credential creation.
 func (h *Devices) StoreCredential(w http.ResponseWriter, r *http.Request) {
 	if h.credentials == nil {
-		http.Error(w, `{"error":"credentials not configured"}`, http.StatusNotImplemented)
+		httperr.WriteError(w, r, httperr.Wrap(nil, httperr.CodeInternal, "credentials not configured", http.StatusNotImplemented))
 		return
 	}
 	h.credentials.Store(w, r)
@@ -152,7 +152,7 @@ func (h *Devices) StoreCredential(w http.ResponseWriter, r *http.Request) {
 // ListCredentials handles credential listing (metadata only).
 func (h *Devices) ListCredentials(w http.ResponseWriter, r *http.Request) {
 	if h.credentials == nil {
-		http.Error(w, `{"error":"credentials not configured"}`, http.StatusNotImplemented)
+		httperr.WriteError(w, r, httperr.Wrap(nil, httperr.CodeInternal, "credentials not configured", http.StatusNotImplemented))
 		return
 	}
 	h.credentials.List(w, r)
@@ -161,7 +161,7 @@ func (h *Devices) ListCredentials(w http.ResponseWriter, r *http.Request) {
 // DeleteCredential handles credential deletion.
 func (h *Devices) DeleteCredential(w http.ResponseWriter, r *http.Request) {
 	if h.credentials == nil {
-		http.Error(w, `{"error":"credentials not configured"}`, http.StatusNotImplemented)
+		httperr.WriteError(w, r, httperr.Wrap(nil, httperr.CodeInternal, "credentials not configured", http.StatusNotImplemented))
 		return
 	}
 	h.credentials.Delete(w, r)
@@ -191,14 +191,12 @@ func (h *Devices) ListDevices(w http.ResponseWriter, r *http.Request) {
 	if search != "" {
 		query += fmt.Sprintf(` AND (hostname ILIKE $%d OR ip::TEXT ILIKE $%d OR vendor ILIKE $%d OR model ILIKE $%d)`, argN, argN, argN, argN)
 		args = append(args, "%"+search+"%")
-		argN++
 	}
 	query += ` ORDER BY last_seen DESC LIMIT 100`
 
 	rows, err := h.db.Query(r.Context(), query, args...)
 	if err != nil {
-		slog.Error("list devices failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	defer rows.Close()
@@ -234,7 +232,7 @@ func (h *Devices) ListDevices(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
+	_ = json.NewEncoder(w).Encode(map[string]any{
 		"devices": devices,
 		"total":   len(devices),
 	})
@@ -244,32 +242,30 @@ func (h *Devices) ListDevices(w http.ResponseWriter, r *http.Request) {
 func (h *Devices) GetDevice(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	if id == "" {
-		http.Error(w, `{"error":"id is required"}`, http.StatusBadRequest)
+		httperr.WriteError(w, r, httperr.InvalidInput("id is required"))
 		return
 	}
 
 	doc, err := h.documenter.GenerateDoc(r.Context(), id)
 	if err != nil {
-		slog.Error("get device failed", "error", err, "id", id)
-		http.Error(w, `{"error":"device not found"}`, http.StatusNotFound)
+		httperr.WriteError(w, r, httperr.NotFound("device"))
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(doc)
+	_ = json.NewEncoder(w).Encode(doc)
 }
 
 // GetTopology returns the network map.
 func (h *Devices) GetTopology(w http.ResponseWriter, r *http.Request) {
 	entries, err := h.documenter.GetTopology(r.Context())
 	if err != nil {
-		slog.Error("get topology failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
+	_ = json.NewEncoder(w).Encode(map[string]any{
 		"devices": entries,
 		"total":   len(entries),
 	})
@@ -282,8 +278,7 @@ func (h *Devices) ListEvents(w http.ResponseWriter, r *http.Request) {
 		 WHERE tenant_id = (SELECT id FROM tenants WHERE slug = $1 LIMIT 1)
 		 ORDER BY created_at DESC LIMIT 100`, h.tenantSlug)
 	if err != nil {
-		slog.Error("list events failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	defer rows.Close()
@@ -299,7 +294,9 @@ func (h *Devices) ListEvents(w http.ResponseWriter, r *http.Request) {
 	var events []event
 	for rows.Next() {
 		var e event
-		rows.Scan(&e.ID, &e.DeviceID, &e.EventType, &e.Details, &e.CreatedAt)
+		if err := rows.Scan(&e.ID, &e.DeviceID, &e.EventType, &e.Details, &e.CreatedAt); err != nil {
+			continue
+		}
 		events = append(events, e)
 	}
 	if events == nil {
@@ -307,7 +304,7 @@ func (h *Devices) ListEvents(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
+	_ = json.NewEncoder(w).Encode(map[string]any{
 		"events": events,
 		"total":  len(events),
 	})
@@ -317,24 +314,23 @@ func (h *Devices) ListEvents(w http.ResponseWriter, r *http.Request) {
 func (h *Devices) GetStats(w http.ResponseWriter, r *http.Request) {
 	stats, err := h.documenter.GetStats(r.Context())
 	if err != nil {
-		slog.Error("get stats failed", "error", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(stats)
+	_ = json.NewEncoder(w).Encode(stats)
 }
 
 // TriggerScan triggers an immediate manual scan cycle.
 func (h *Devices) TriggerScan(w http.ResponseWriter, r *http.Request) {
 	if h.scanLoop == nil {
-		http.Error(w, `{"error":"scanner not configured"}`, http.StatusNotImplemented)
+		httperr.WriteError(w, r, httperr.Wrap(nil, httperr.CodeInternal, "scanner not configured", http.StatusNotImplemented))
 		return
 	}
 	h.scanLoop.Trigger()
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
+	_ = json.NewEncoder(w).Encode(map[string]any{
 		"status": "scan_triggered",
 		"mode":   string(h.scanLoop.Mode()),
 	})
@@ -343,7 +339,7 @@ func (h *Devices) TriggerScan(w http.ResponseWriter, r *http.Request) {
 // SetScanMode changes the scan mode at runtime.
 func (h *Devices) SetScanMode(w http.ResponseWriter, r *http.Request) {
 	if h.scanLoop == nil {
-		http.Error(w, `{"error":"scanner not configured"}`, http.StatusNotImplemented)
+		httperr.WriteError(w, r, httperr.Wrap(nil, httperr.CodeInternal, "scanner not configured", http.StatusNotImplemented))
 		return
 	}
 
@@ -352,7 +348,7 @@ func (h *Devices) SetScanMode(w http.ResponseWriter, r *http.Request) {
 		Mode string `json:"mode"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid body"))
 		return
 	}
 
@@ -361,11 +357,11 @@ func (h *Devices) SetScanMode(w http.ResponseWriter, r *http.Request) {
 	case scanner.ModePassive, scanner.ModeActive, scanner.ModeFull:
 		h.scanLoop.SetMode(mode)
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]any{
+		_ = json.NewEncoder(w).Encode(map[string]any{
 			"status": "mode_changed",
 			"mode":   body.Mode,
 		})
 	default:
-		http.Error(w, `{"error":"invalid mode, must be: passive, active, full"}`, http.StatusBadRequest)
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid mode, must be: passive, active, full"))
 	}
 }

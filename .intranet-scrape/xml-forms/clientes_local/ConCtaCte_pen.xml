@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="consulta">
+    <title>Cuenta Corriente</title>
+    <obs></obs>
+    <form >
+        <table id="REG_MOVIMIENTOS" label="Movimientos">
+
+            <filters>
+                <field id="nro_cuenta">
+                    <label>Desde Cod.</label>
+                    <help>Código de Cuenta </help>
+                    <operador>=</operador>
+                </field>
+                <field id="fecha_movimiento">
+                    <label>Desde Fecha</label>
+                    <help> </help>
+                    <operador>&gt;=</operador>
+                </field>
+                <field id="fecha_movimiento">
+                    <label>Hasta Fecha</label>
+                    <help> </help>
+                    <operador>&lt;=</operador>
+                </field>
+                <field id="impali">
+                    <label>Alícuota</label>
+                    <help> </help>
+                    <operador>=</operador>
+                </field>
+            </filters>
+
+            <field id="id_regmovim" noshow="true"/>
+
+            <field id="nro_cuenta">
+                <label>Cod.</label>
+                <help>Código de Cuenta </help>
+                <condicion operador="=">0</condicion>
+                <ayuda_ex id="CCTCUENT">
+                    <field id="ctacod">
+                        <detalle>ctacod</detalle>
+                    </field>
+                    <field id="ctanom">
+                        <detalle>ctanom</detalle>
+                    </field>
+                    <field id="siscod" oculto="true"></field>
+                    <field id="baja">
+                        <condicion operador="=">0</condicion>
+                    </field>
+                    <order>
+                        <field id="ctanom"></field>
+                    </order>
+                    <filtra>ctacod</filtra>
+                </ayuda_ex>
+            </field>
+
+            <field id="nombre_movimiento">
+                <label>Nombre</label>
+            </field>
+
+            <field id="subsistema_id" oculto="true">
+                <label>Cod.</label>
+                <help> </help>
+            </field>
+
+            <field id="concoddesc">
+                <expression>descripcion_concepto</expression>
+                <label>Cod.Concepto</label>
+                <tipo></tipo>
+            </field>
+
+            <field id="puesto_movimiento">
+                <label>P.V.</label>
+                <help>Punto Venta</help>
+                <format>%04d</format>
+            </field>
+
+            <field id="nro_movimiento">
+                <label>Número</label>
+                <help>Número Comprobante</help>
+                <format>%12d</format>
+            </field>
+
+            <field id="fecha_movimiento">
+                <label>Fecha </label>
+                <help> </help>
+            </field>
+
+            <field id="vencimiento_movimiento">
+                <label>Venc. </label>
+                <help> </help>
+            </field>
+
+            <field id="impali" tabla="IVAIMPORTES">
+                <tabla_ex id="IVAIMPUESTOS">
+                    <field id="impali">
+                    </field>
+                    <field id="impnom">
+                    </field>
+                </tabla_ex>
+                <label>Alícuota</label>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="importe_movimiento" suma="true">
+                <label>Importe</label>
+                <help> </help>
+            </field>
+
+            <field id="saldo_movimiento" suma="true">
+                <label>Saldo</label>
+                <help> </help>
+                <condicion operador="!=">0</condicion>
+            </field>
+
+            <field id="imputacion_concepto"  tabla="REG_CONCEPTOS" noshow="true">
+                <condicion operador="=">0</condicion>
+            </field>
+
+            <group>
+                <field id="id_regmovim" />
+            </group>
+
+        </table>
+
+        <join tipo="left">
+            <table id="REG_CONCEPTOS">
+                <field id="subsistema_id" oculto="true">
+                    <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+                </field>
+                <field id="cod_concepto" oculto="true">
+                    <condicion operador="=">REG_MOVIMIENTOS.concod</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="IVAVENTAS">
+                <field id="ctacod" >
+                    <condicion operador="=">REG_MOVIMIENTOS.nro_cuenta</condicion>
+                </field>
+                <field id="nronpv" >
+                    <condicion operador="=">REG_MOVIMIENTOS.puesto_movimiento</condicion>
+                </field>
+                <field id="nrocom" >
+                    <condicion operador="=">REG_MOVIMIENTOS.nro_movimiento</condicion>
+                </field>
+                <field id="codcom" >
+                    <condicion operador="=">REG_MOVIMIENTOS.concod</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="IVAIMPORTES">
+                <field id="tipoiva" >
+                    <condicion operador="=">2</condicion>
+                </field>
+                <field id="codcom" >
+                    <condicion operador="=">IVAVENTAS.codcom</condicion>
+                </field>
+                <field id="codlet" >
+                    <condicion operador="=">IVAVENTAS.codlet</condicion>
+                </field>
+                <field id="nronpv" >
+                    <condicion operador="=">IVAVENTAS.nronpv</condicion>
+                </field>
+                <field id="nrocom" >
+                    <condicion operador="=">IVAVENTAS.nrocom</condicion>
+                </field>
+                <field id="ctacod" >
+                    <condicion operador="=">IVAVENTAS.ctacod</condicion>
+                </field>
+
+            </table>
+        </join>
+    </form>
+</histrix>

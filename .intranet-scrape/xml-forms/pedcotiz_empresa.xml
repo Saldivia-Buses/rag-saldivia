@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="ficha" preFetch="true" borra="false" imprime="false">
+<titulo>Cambio de Empresa</titulo>
+<obs></obs>
+	   
+<form>
+  
+    <table id="PEDCOTIZ" label="CHAPA IDENTIFICATORIA">
+
+          <field id="nrocha" oculto="true"></field>
+
+            <field id="empresa_id">
+                <label>Empresa </label>
+                <helper type="combo" id="HTX_EMPRESAS">
+                    <field id="id_empresa"></field>
+                    <field id="razon_social"></field>
+                </helper>
+            </field>
+			  
+    </table>
+
+    </form>
+</histrix>

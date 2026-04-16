@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix   log="false"  _modifica="false"  procesa="false" tableHeight="auto" tipo="ing" preloadData="false">
+    <title>Laminado</title>
+    <obs/>
+
+    <form>
+        <table id="MRP_ORDEN_PRODUCCION" label="Laminado">
+            <movimientos>
+                <relacion id="carro_laminado_insert.xml"/>
+                <!--<relacion id="ingreso_stock_insert.xml"/>
+                <relacion id="marco_orden_cumplida.xml" />
+            -->
+            </movimientos>
+            <field id="mrpconcepto_id" local="true" noshow="true" valauto="true">
+                <valor>1</valor>
+            </field>
+            <field id="graba_stock" local="true" noshow="true"/>
+            <field id="stkconcepto_id" noshow="true">
+                <expression>select id_stkconcepto from STK_CONCEPTOS where produccion_concepto = 1 and tipo_concepto = 0 limit 1</expression>
+            </field>
+            <field id="fecha_orden" noshow="true">
+                <label>Fecha</label>
+            </field>
+
+            <field id="id_mrpordendetalle" _noshow="true" tabla="MRP_ORDEN_DETALLE" deshabilitado="false" esClave="true">
+		<label>orden</label>
+		<helper dir="/mrp/ing/secciones/" xml="ordenes_x_seccion_plano_siempre_combo.xml" type="combo" empty="true">
+
+		    <field id="mrpseccion_id" local="true">
+			<valor>3</valor>
+			<condicion operador="=">3</condicion> 
+		    </field>
+
+		</helper>
+	    </field>
+
+            <field id="mrpseccion_id" local="true" noshow="true"/>
+            
+
+            <field id="id_mrporden" noshow="true"/>
+
+            <field deshabilitado="true" id="stkarticulo_id" noshow="true" tabla="MRP_ORDEN_DETALLE">
+                <label>Código</label>
+                <size>12</size>
+            </field>
+<!--
+            <field deshabilitado="true" id="nombre_articulo" local="true" tabla="STK_ARTICULOS">
+                <label>Artículo</label>
+                <size>30</size>
+            </field>
+-->
+            <field deshabilitado="true" id="objetivo_ordendetalle" local="true"  noshow="true">
+                <label>Objetivo</label>
+            </field>
+            <field id="pendiente" deshabilitado="true" style="color:red;" local="true" noshow="true">
+                <label>Pend</label>
+            </field>   
+	    <!--       
+            <field id="falta" local="true" deshabilitado="true" style="color:red;font-weight:bold;">
+                <label></label>
+                <if exp="true">
+                    <true>'Pendiente: pendiente de objetivo_ordendetalle'</true>
+                    <false>''</false>
+                </if>
+                <size>30</size>
+            </field>
+	    -->
+            <field id="id_detalle_reg" local="true" noshow="true"/>
+            <field deshabilitado="false" _editable="true" id="cantidad" local="true" suma="true">
+                <label>Cantidad</label>
+                <jseval>cantidad &lt;= objetivo_ordendetalle</jseval>
+		        <tipo>integer</tipo>
+            </field>
+        
+            <field deshabilitado="false" _editable="true" id="codigo_pvb" local="true">
+                <label>Codigo PVB</label>
+                <helper xml="stkmovimientos_trazables_qry.xml" _id="STK_MOVIMIENTO_TRAZ" type="combo">
+                    <field id="stkdeposito_id">
+                        <condicion operador="=">1</condicion>
+                    </field>
+                </helper>
+            </field>
+            <field id="productpath_id" local="true" noshow="true"/>
+            <group>
+                <field id="id_mrpordendetalle"/>
+            </group>
+            <order>
+                <field id="fecha_orden"/>
+            </order>
+        </table>
+        <join tipo="left">
+            <table id="MRP_ORDEN_DETALLE">
+                <field id="mrporden_id">
+                    <condicion operador="=">MRP_ORDEN_PRODUCCION.id_mrporden</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="inner">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">MRP_ORDEN_DETALLE.stkarticulo_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="inner">
+            <table id="MRP_PRODUCT_PATH">
+                <field id="id_productpath">
+                    <condicion operador="=">[__productpath_id__]</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

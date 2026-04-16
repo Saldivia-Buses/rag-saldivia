@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+  <title>Movimientos</title>
+  <obs/>
+  <consulta>
+  
+    <table id="REG_MOVIMIENTOS" label="Resumen Cta Cte">
+
+      <field id="subsistema_id">
+	<tipo>varchar</tipo>
+      </field>
+
+
+      <field id="regcuenta_id"  />
+
+      <field id="id_regmovim" noshow="true" />
+
+      <field id="fecha_movimiento">
+        <label>Fecha</label>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="abreviacion_concepto" local="true">
+        <label>Comp</label>
+        <expresion>'SALDO ANTERIOR'</expresion>
+      </field>
+
+      <field id="nro_movimiento">
+        <label>Numero</label>
+        <expresion>''</expresion>
+      </field>
+      
+      <field id="importe_movimiento">
+        <label>Importe</label>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="imputacion_concepto" tabla="REG_CONCEPTOS" noshow="true" />
+
+      <field id="debe">
+        <expresion>sum(case when REG_CONCEPTOS.imputacion_concepto = 0 then REG_MOVIMIENTOS.importe_movimiento else 0 end)</expresion>
+        <help>saldo de movimiento</help>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="haber">
+        <expresion>sum(case when REG_CONCEPTOS.imputacion_concepto = 1 then REG_MOVIMIENTOS.importe_movimiento else 0 end)</expresion>
+        <tipo>numeric</tipo>
+      </field>
+      
+      <field id="imputaciones">
+        <expresion>sum(case when isnull(REG_IMPUTACIONES.subsistema0_id) then 0 else  REG_IMPUTACIONES.movimiento_imputacion end)</expresion>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="saldo_movimiento">
+	    <expresion>sum(case when REG_IMPUTACIONES.subsistema0_id = REG_MOVIMIENTOS.subsistema_id then 0 else  REG_MOVIMIENTOS.saldo_movimiento end)</expresion>
+        <tipo>numeric</tipo>
+      </field>
+      
+      <field id="acumulado" suma="true" acumula="true" local="true">
+        <if exp="true">
+          <true>debe - haber</true>
+          <false>0</false>
+        </if>
+        <tipo>numeric</tipo>
+      </field>
+<group>
+      <field id="subsistema_id" />
+</group>    
+    </table>
+    <join tipo="left">
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id and informa_calculo = 0</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="REG_IMPUTACIONES">
+        <field id="regmovim_id">
+          <condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion> 
+        </field>
+        <field id="subsistema0_id">
+          <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion> 
+        </field>
+      </table>
+    </join>
+    
+  </consulta>
+</histrix>

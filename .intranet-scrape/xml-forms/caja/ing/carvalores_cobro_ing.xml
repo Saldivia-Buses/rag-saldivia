@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" subtipo="vertical" preloadData="false" imprime="false" exportasuma="true" llenoreferente="true" confirma="CONFIRMAR"
+ resume="true" >
+  <title>Ingreso de Valores</title>
+  <obs/>
+  <form >
+    <table id="CAR_VALORES" label="Carga de Valores">
+
+      <movimientos>
+        <relacion id="carvalores_ins.xml"/>
+        <relacion id="carmovimientos_ins.xml"/>
+      </movimientos>
+
+      <field id="id_carvalor" autoinc="true" esClave="true" noshow="true"/>
+
+      <field id="cajformapago_id" local="true" esClave="true" noshow="true">
+        <detalle>cajformapago_id</detalle>
+      </field>
+
+      <fieldGroup id="parametros_ingreso" local="true" noshow="true">
+        <field id="importe_movimiento"/>
+        <field id="imputacion_concepto"/>
+        <field id="fecha_movimiento"/>
+        <field id="referencia_movimiento"/>
+        <field id="regcuentapadre_id"/>
+      </fieldGroup>
+
+      <!--
+       <validation>
+            <condition><![CDATA[carbanco_id + 0 == '0']]></condition>
+            <message>Debe Ingresar una Cuenta Bancaria</message>
+        </validation>
+
+       <validation>
+            <condition><![CDATA[carplaza_id + 0 == '0']]></condition>
+            <message>Debe Ingresar una Cuenta Bancaria</message>
+        </validation>
+
+       <validation>
+            <condition><![CDATA[nro_valor + 0 == '0']]></condition>
+            <message>Debe Ingresar un Numero de Valor</message>
+        </validation>
+
+       <validation>
+            <condition><![CDATA[importe_valor + 0 == '0']]></condition>
+            <message>Debe Ingresar un Importe de Valor</message>
+        </validation>
+      -->
+      
+      <!-- Banco / Sucursal / Plaza -->
+
+
+<fieldGroup style="padding:2px 2px 2px 2px;vertical-align:middle;" colstyle="text-align:center;">
+
+      <field id="carbanco_id" valauto="000" esClave="true">
+        <label>ID Banco</label>
+        <helper type="external" xml="carbanco_qry.xml" dir="/ayudas" />
+        <size>3</size>
+      </field>
+
+      <field id="nombre_banco" deshabilitado="true" tabla="CAR_BANCOS" sincelda="true" modpos="nobr">
+        <label>Nombre</label>
+        <size>50</size>
+      </field>
+
+      <field id="sucursal_banco" valauto="000" modpos="nobr">
+        <label>Sucursal</label>
+        <size>3</size>
+      </field>
+
+
+      <field id="carplaza_id" valauto="0000">
+        <label>ID Plaza</label>
+        <helper type="external" xml="carplaza_qry.xml" dir="/ayudas" />
+        <size>4</size>
+      </field>
+
+      <field id="nombre_plaza" deshabilitado="true" tabla="CAR_PLAZAS" modpos="nobr" sincelda="true">
+        <label>Plaza</label>
+        <size>50</size>
+      </field>
+
+      <field id="nro_valor" modpos="nobr" >
+        <label>Nº Valor</label>
+      </field>
+
+      <field id="cuenta_valor" _modpos="nobr">
+        <label>Nº Cuenta</label>
+      </field>
+
+
+      <field id="fecha_valor" _modpos="nobr">
+        <label>Fecha de Emision</label>
+        <valor>today</valor>
+      </field>
+
+      <field id="separador0" deshabilitado="true" local="true"  colstyle="display:none;" modpos="nobr"/>
+
+      <field id="acreditacion_valor" modpos="nobr">
+        <label>Fecha de Acreditación</label>
+        <valor>today</valor>
+      </field>
+
+      <field id="moneda_id">
+        <helper type="combo" xml="monedas_qry.xml" dir="/ayudas" />
+        <label>Moneda</label>
+      </field>
+
+      <field id="separador1" deshabilitado="true" local="true"  colstyle="display:none;" modpos="nobr"/>
+
+      <field id="importe_valor" valauto="0.00" suma="true" modpos="nobr">
+        <label>Importe</label>
+        <detalle>pago_valor</detalle>
+      </field>
+
+      <field id="titular_valor">
+        <label colspan="2">Titular</label>
+        <size>50</size>
+      </field>
+
+      <field id="cuit_valor">
+        <label modpos="nobr">CUIT</label>
+        <size>13</size>
+      </field>
+
+      <field id="tipo_movimiento" local="true"  valauto="true" noshow="true">
+        <expression>[__imputacion_concepto__]</expression>
+      </field>
+
+</fieldGroup>
+
+    </table>
+
+    <join>
+      <table id="CAR_BANCOS">
+        <field id="id_carbanco">
+          <condicion operador="=">CAR_VALORES.carbanco_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join>
+      <table id="CAR_PLAZAS">
+        <field id="id_carplaza">
+          <condicion operador="=">CAR_VALORES.carplaza_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

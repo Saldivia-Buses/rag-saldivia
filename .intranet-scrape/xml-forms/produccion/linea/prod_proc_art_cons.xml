@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="arbol" form="false" inserta="false" imprime="false" width="45%" >
+	<title>Procesos de Produccion</title>
+	<obs/>
+	<form detalle="materiales_proceso_det.xml" _inline="true" hasDetail="hasdet">
+		<table id="PROD_PROCESOS">
+			<title>Arbol de procesos</title>
+			<field id="homologacion_id"  noshow="true" >
+				<detalle>homologacion_id</detalle>
+			</field>
+			<field id="titulo" local="true"  oculto="true">
+				<setvar>titulo_div</setvar>
+				<setvar>titulo</setvar>
+			</field>
+			<field id="id_proceso" esClave="true" autoinc="true" noshow="true" arbol="hijo" deshabilitado="true">
+				<label>Codigo</label>
+				<detalle>proceso_id</detalle>
+			</field>
+			<field id="procesopadre_id" arbol="padre" colstyle="display:none;" >
+				<helper type="combo" xml="procesos_qry.xml" empty="true">
+					<field id="homologacion_id">
+						<condicion operador="=" valorde="homologacion_id"></condicion>
+					</field>
+				</helper>
+				<label>Codigo padre</label>
+				<valor>0</valor>
+			</field>
+			<field id="orden_proceso" noshow="true">
+				<label>Orden</label>
+				<tipo>integer</tipo>
+			</field>
+			<field id="nombre_proceso">
+				<label>Proceso</label>
+				<help>nombre del proceso</help>
+				<size>150</size>
+			</field>
+			<field id="hasdet" noshow="true">
+				<expression>
+					(case when (select count(*) from PROD_PROCESOS PR where PR.procesopadre_id =  PROD_PROCESOS.id_proceso  ) != 0 then '' else ifnull((select count(*) from STK_ARTICULO_PROCESO where STK_ARTICULO_PROCESO.proceso_id = PROD_PROCESOS.id_proceso and STK_ARTICULO_PROCESO.homologacion_id = PROD_PROCESOS.homologacion_id), '+') end )
+				</expression>
+			</field>
+			<order>
+				<field id="procesopadre_id" />
+				<field id="orden_proceso" />
+			</order>
+		</table>
+	</form>
+</histrix>

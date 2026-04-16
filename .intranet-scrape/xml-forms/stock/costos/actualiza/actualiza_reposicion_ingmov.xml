@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" limit="1">
+    <title>Articulos</title>
+    <obs></obs>
+    <form >
+        <table id="STK_COSTO_REPOSICION" label="Articulos" idCampoCond="grabar">
+                <field id="id_costoreposicion" 	id_temp="id_costoreposicion" esClave="true" />
+                <field id="costo_proveedor" 	id_temp="nuevocosto" />
+        </table>
+
+    </form>
+</histrix>  

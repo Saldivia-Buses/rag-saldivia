@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="insert" grabafinal="true" _xmlImpresion="retgan_reimp.xml">
+       <title>ACUMULADO</title>
+        <obs></obs>
+               <form >
+					<table id="RETACUMU" label="FACTURAS" idCampoCond="graba_acuret">
+						<field id="siscod" id_cab="sisret">
+							<valor>'10'</valor>
+						</field>
+						<field id="ctacod" id_cab="ctacod">
+						    <detalle>ctacod</detalle>
+
+						</field>
+						<field id="acufec" id_cab="movfec">
+						</field>
+						<field id="acupag" id_temp="Impgraprop">
+						</field>
+						<field id="acuret" id_temp="RR">
+						</field>
+						<field id="year"  id_cab="year" >
+						</field>
+						<field id="mes" id_cab="mes">
+						</field>
+						<field id="nropag" id_cab="movnroOP">
+						    <detalle>nropag</detalle>
+						</field>
+					</table>
+               </form>
+        </histrix>

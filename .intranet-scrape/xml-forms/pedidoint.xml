@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix class="consultaing2" tipo="abm-mini" subtipo="vertical" borra="false" path="fotos/articulos">
+	<title>Pedidos Internos</title>
+	<obs/>
+	<form >
+		<table id="PEDIDOINT" label="Pedidos Internos" styleTbody="height:300px">
+
+			<filters>
+				<field id="codprv">
+					<operador>=</operador>
+					<label>Proveedor</label>
+				</field>
+				<field id="fechaemi">
+					<operador>&gt;=</operador>
+					<label>Desde Fecha</label>
+				</field>
+				<field id="fechaemi">
+					<operador>&lt;=</operador>
+					<label>Hasta Fecha</label>
+				</field>
+				<field id="estado">
+					<label>Estado</label>
+					<operador>=</operador>
+					<valor>0</valor>
+				</field>
+			</filters>
+
+			<field id="usuario" _esclave="true">
+				<label>Usuario</label>
+				<tabla_ex id="HTXUSERS">
+					<field id="login2" >
+					<expression>LCASE(login)</expression>
+					</field>
+					<field id="nombre" >
+						<expression>CONCAT(nombre, ' ', apellido)</expression>
+					</field>
+				</tabla_ex>
+			</field>
+<!--			<field id="tipocomp" esclave="true">
+				<label>Tipo</label>
+				<help>Tipo Comprobante</help>
+			</field> -->
+			<field id="fechaemi" _esclave="true" noshow="false">
+				<label modpos="nobr">Emisión</label>
+				<help>Fecha de Emisión</help>
+			</field>
+<!--			<field id="puesto" esclave="true">
+				<label>Npv</label>
+				<help>Puesto de Venta</help>
+			</field> -->
+			<field id="idPed" esClave="true">
+				<label>id</label>
+				<help>Puesto de Venta</help>
+			</field> 
+			
+			<field id="nrocom" _esclave="true">
+				<label modpos="nobr">Nro.Comp.</label>
+				<help>Número de Comprobante</help>
+			</field>
+			<field id="ocpnro" deshabilitado="true">
+				<label modpos="nobr">O.Compra</label>
+				<help>Orden de Compra</help>
+			</field>
+			<field id="nrofab" _esclave="true">
+				<label>Nro Fab.</label>
+				<help>Número de Fabricación</help>
+			</field>
+<!--			<field id="renglon" esclave="true">
+				<label>Renglon</label>
+				<help></help>
+			</field> -->
+			<field id="artcod" _esclave="true">
+				<!--
+					<ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/help_local">
+						<field id="artcod">
+							<label>Cod.</label>
+						</field>
+						<field id="artdes">
+							<label>Insumo</label>
+						<detalle>artdes</detalle>
+					</field>
+
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'01'</condicion>
+					</field>
+					<clave>artcod</clave>
+					<descripcion>artdes</descripcion>
+					</ayuda_ex>
+						-->
+				<label modpos="nobr">Código Artículo</label>
+				<help>Código de Artículo</help>
+			</field>
+			<field id="artdes" tabla="STKINSUM">
+				<expression>STKINSUM.artdes</expression>
+				<label modpos="nobr">Desc</label>
+				<tipo>varchar</tipo>
+					</field>
+			<field id="movref" >
+				<label Formstyle="display:none;">Ref.</label>
+				<help>Referencia </help>
+				<size>5</size>
+				<detalle>observaciones</detalle>
+			</field> 
+            <field id="mensaje" deshabilitado="true">
+				<label style="color:green;" Formstyle="display:none;" modpos="nobr">Msj</label>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="cant">
+				<label>Cantidad</label>
+				<help>Cantidad</help>
+			</field>
+			<field id="unimed">
+				<label modpos="nobr">Unidad de Medida</label>
+				<help>Unidad de Medida</help>
+				<tabla_ex id="FSMUNIDS">
+					<field id="unicod"/>
+					<field id="uninom"/>
+					<order>
+						<field id="uninom"/>
+					</order>
+				</tabla_ex>
+			</field>
+			<field  id="fecreq">
+				<label modpos="nobr">Fec.Req.</label>
+				<help>Fecha de Requerimiento</help>
+				<detalle>fecreq</detalle>
+<!-- 				<jseval>aFecha(\'fecreq\') &gt;= aFecha(\'fechaemi\')</jseval>
+ -->			</field>
+			<field id="codprv" >
+				<ayuda_ex id="CCTCUENT" xml="HLPcctcuent_saldo.xml" dir="/help_local">
+					<field id="siscod" oculto="true">
+						<label>siscod</label>
+						<condicion operador="=">'01'</condicion>
+					</field>
+					<field id="ctacod">
+						<label>Nro</label>
+					</field>
+					<field id="ctanom">
+						<label>Nombre</label>
+						<detalle>ctanom</detalle>
+					</field>
+					<field id="movsal">
+						<expression>sum(CCTMOVIM.movsal)</expression>
+						<label>Saldo</label>
+						<detalle>saldoPR</detalle>
+					</field>
+					<clave>ctacod</clave>
+					<descripcion>ctanom</descripcion>
+				</ayuda_ex>
+				<label modpos="nobr">Proveedor</label>
+				<help>Código de Proveedor</help>
+			</field>
+			<field id="ctanom" tabla="CCTCUENT" deshabilitado="true">
+				<label>Prov</label>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="estado" deshabilitado="false" noshow="false"  >
+				<label modpos="nobr">Estado</label>
+				<help>Estado</help>
+				<options>
+					<option valor="0">Pendiente</option>
+					<option valor="1">Cumplido</option>					
+					<option valor="2">Anulado</option>
+				</options>
+			</field>
+			<field id="confirmado" oculto="true">
+				<condicion operador="=">1</condicion>
+			</field>
+      <field id="centrocostos_id" modpos="nobr" _required="true">
+	<label>Centro de costos</label>
+        <helper id="CTB_CENTROS"  type="combo" empty="true">
+          <field id="id_ctbcentro" />
+          <field id="centro">
+            <expression>concat(referencia_centro,' ', nombre_centro)</expression>
+          </field> 
+        </helper>
+      </field>
+			
+			<!-- <field id="fecreq">
+				<label >Fec.Req.</label>
+				<help>Fecha de Requerimiento</help>
+			</field> -->
+			
+			<field id="ocpnro" linkint="cpsencab_cabreimp.xml" linkdes="Orden de Compra" linkdir="/compras">
+				<label modpos="nobr">Nro Orden Compra</label>
+				<paring destino="ctacod">ctacod</paring>
+				<paring destino="ocpnro">ocpnro</paring>
+			</field>
+		     <field id="fotopath" local="true" noshow="true" _print="false">
+			<if exp="true">
+			    <true>'artcod/'</true>
+				<false>''</false>
+			</if>
+			<tipo>varchar</tipo>
+		    </field>
+	    	<field id="foto" path="fotopath" download="true"  _print="false">
+          		<expression>select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = STKINSUM.artcod and ARTICULO_FOTO.foto != '' order by revision desc limit 1</expression> 
+				<label>Imagen</label>
+	            <tipo >file</tipo>
+	            <size>40</size>
+			</field>
+
+		</table>
+		<join tipo="left">
+			<table id="CCTCUENT">
+			<field id="ctacod">
+				<condicion operador="=">PEDIDOINT.codprv</condicion>
+			</field>
+			<field id="siscod" oculto="true">
+				<condicion operador="=">'01'</condicion>
+			</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="STKINSUM">
+			<field id="artcod">
+				<condicion operador="=">PEDIDOINT.artcod</condicion>
+			</field>
+			<field id="siscod" oculto="true">
+				<condicion operador="=">'01'</condicion>
+			</field>
+			</table>
+		</join>
+	</form>
+</histrix>

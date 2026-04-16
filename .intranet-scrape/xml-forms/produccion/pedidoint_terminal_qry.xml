@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--<histrix tipo="consulta" path="fotos/pedidoint/">-->
+<histrix tipo="horizontalGrid"  path="fotos/pedidoint/">
+    <title>Pedidos Internos</title>
+    <obs></obs>
+    <form >
+        <table id="PEDIDOINT" label="Detalle de insumos pedidos">
+            <field id="nrofab" oculto="true"></field>
+            <field id="nrofab2" oculto="true">
+		<expression having="false">nrofab</expression>
+		<condicion operador="!=">0</condicion>
+	    </field>
+
+            <field id="estado" oculto="true">
+            <condicion operador="!=">9</condicion>
+            </field>            
+            <field id="pedidopath" local="true" noshow="true">
+            <expression>directorio</expression>
+            </field>
+
+            <field id="archivo" path="pedidopath" open="true" width="15" >
+              
+                <tipo >file</tipo>
+                <size>33</size>
+                <condicion operador="!=">''</condicion>
+		</field>
+        </table>
+    </form>
+</histrix>

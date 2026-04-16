@@ -5,3 +5,8 @@
 /packages/db/ @Camionerou
 /apps/web/src/proxy.ts @Camionerou
 /apps/web/src/lib/auth/ @Camionerou
+
+# FREEZE — solo bug fixes hasta que Plan 28 migre a pkg/spine.
+# Features nuevas requieren label `traces-exception` + justificación.
+# Ver docs/plans/2.0.x-plan26-spine.md → "Nota a futuro: traces sobre spine".
+/services/traces/internal/ @Camionerou

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" path="/fotos/carreocerias/">
+	<title>CARROCERIAS</title>
+	<obs></obs>
+	<form >
+		<table id="CARROCERIA" >
+		    <title>Carrocerias</title>
+
+			<field id="nrocar">
+				<label>Código</label>
+				<help>Código de Carrocería</help>
+			</field>
+
+			<field id="modcar">
+				<label>Modelo</label>
+				<help>Modelo de Carrocería</help>
+			</field>
+
+			<field id="descar">
+				<label>Descripción</label>
+				<help>Descripción</help>
+			</field>
+
+			<field id="desabv">
+				<label>Abrev.</label>
+				<help>Abreviatura</help>
+			</field>
+
+			<field id="codvds">
+				<label>VDS</label>
+				<help>código de VDS</help>
+			</field>
+
+			<field id="publicar" >
+				<label>Publicar</label>
+				<options>
+					<option valor="0">No</option>
+					<option valor="1">Si</option>
+				</options>
+			</field>			
+
+			<field id="siscod" noshow="true">
+				<label>Cod</label>
+			</field>
+
+			<field id="vigente">
+				<label>Vigente</label>
+				<options>
+					<option valor="0">No</option>
+					<option valor="1">Si</option>
+				</options>
+			</field>
+
+			<field id="porciento_incidencia" local="true"  Formstyle="display:none;">
+        		<label modpos="nobr">% Incidencia</label>
+
+        		<helper xml="carroceria_incidencia_historico_crud.xml" type="link" width="30%">
+        			<parameter source="nrocar" target="nrocar" />
+        		</helper>
+
+        		<valor>.</valor>
+
+          		<expression>IFNULL((select CARROCERIA_INCIDENCIA_HISTORICO.porciento_incidencia from CARROCERIA_INCIDENCIA_HISTORICO where CARROCERIA_INCIDENCIA_HISTORICO.nrocar = CARROCERIA.nrocar order by fecha DESC limit 1),'+')
+          		</expression>
+        	</field>
+
+
+			<field id="porcentaje_sobrea365">
+				<label>% Sobre A365</label>
+				<tipo>decimal(10,9)</tipo>
+			</field>
+
+			<field id="hs_productivas_x_estacion">
+				<label>Hs x Sección</label>
+				<help>Hs Productivas x Sección</help>
+				<tipo>time</tipo>
+			</field>
+
+	 		<field id="carpeta_planos" local="true" linkint="prod_carpeta_planos_crud.xml" linkdir="fabricacion" linkdes="Carpeta Planos" linkWidth="90%" Formstyle="display:none;">
+        		<label modpos="nobr">PL STD</label>
+             	<paring destino="nrocar_id">nrocar</paring>
+          		<!--<expression>select CONCAT(count(*), ' PL') FROM PRD_CARPETA_PLANOS where PRD_CARPETA_PLANOS.nrocar_id = CARROCERIA.nrocar</expression>-->
+        	</field>
+
+			<field id="doble_piso">
+			    <label>Doble piso</label>
+			    <tipo>check</tipo>
+			</field>
+			<field id="imagen_ficha" path="nrocar">
+			    <label>Imagen Ficha Ventas</label>
+			    <tipo>file</tipo>
+			</field>
+    		<order>
+				<field id="nrocar"/>
+			</order>
+        </table>
+
+	</form>	   
+</histrix> 

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<histrix tipo="crud">
+  <title>Carteras de Cheques</title>
+  <obs/>
+  <form >
+    <table id="REG_CARTERAS_CHEQ" >
+      <title>Carteras</title>
+	<field id="id_cartera" noshow="true" />
+	<field id="nombre_cartera">
+	    <label>Nombre</label>
+	</field>
+    </table>
+  </form>
+</histrix>

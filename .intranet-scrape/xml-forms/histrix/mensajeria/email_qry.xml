@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="ficha"
+sololectura="true"
+preFetch="true"
+  imprime="false" tabindex="1000" borra="false" tooltip="false" inserta="false" modifica="false"
+path="../tmp">
+    <title>MAILS</title>
+    <obs/>
+    <form >
+        <table id="HTXMAIL" label="enviar Correo" styleTbody="height:325px;overflow-x:hidden;">
+            <field  id="idMail" noshow="true" tipoOrden="DESC">
+                <label>id</label>
+            </field>
+            <field id="fecha"  deshabilitado="true">
+                <label>Fecha</label>
+                <valor>today</valor>
+                <tipo>date</tipo>
+            </field>
+            <field  id="hora"  deshabilitado="true">
+                <label modpos="nobr">Hora</label>
+                <valor eval="true">date('H:i:s')</valor>
+                <tipo>varchar</tipo>
+            </field>
+            <field deshabilitado="true" id="fromMail" >
+                <label>de</label>
+                <help></help>
+            </field>
+            <field id="to_email">
+                <label colspan="4">Para</label>
+                <size>60</size>
+            </field>
+            <field id="subject">
+                <label colspan="4">Asunto</label>
+                <tipo>varchar</tipo>
+                <size>60</size>
+            </field>
+<!--            <field id="checkAdjunto" >
+                 <label colspan="4">Adjunto</label>
+                <tipo>check</tipo>
+            </field> -->
+            <field id="fileAttach">
+                <label colspan="4">Adjuntos</label>
+                <size>50</size>
+            </field>
+
+            <field id="body" >
+                <label colspan="3">mensaje</label>
+                <help>Texto del mensaje</help>
+                <size>200</size>
+            </field>
+        </table>
+    </form>
+</histrix>

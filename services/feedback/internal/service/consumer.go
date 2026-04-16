@@ -118,13 +118,13 @@ func (c *Consumer) handleEvent(msg jetstream.Msg) {
 	tenantSlug, category := parseSubject(msg.Subject())
 	if tenantSlug == "" || category == "" {
 		slog.Warn("invalid feedback subject", "subject", msg.Subject())
-		msg.Term()
+		_ = msg.Term()
 		return
 	}
 
 	if !validCategories[category] {
 		slog.Warn("unknown feedback category", "category", category, "subject", msg.Subject())
-		msg.Term()
+		_ = msg.Term()
 		return
 	}
 
@@ -132,7 +132,7 @@ func (c *Consumer) handleEvent(msg jetstream.Msg) {
 	var payload map[string]any
 	if err := json.Unmarshal(msg.Data(), &payload); err != nil {
 		slog.Warn("invalid feedback payload", "error", err, "subject", msg.Subject())
-		msg.Term()
+		_ = msg.Term()
 		return
 	}
 
@@ -172,7 +172,7 @@ func (c *Consumer) handleEvent(msg jetstream.Msg) {
 			"category", category,
 			"tenant", tenantSlug,
 		)
-		msg.Nak()
+		_ = msg.Nak()
 		return
 	}
 
@@ -181,7 +181,7 @@ func (c *Consumer) handleEvent(msg jetstream.Msg) {
 		"tenant", tenantSlug,
 		"module", evt.Module,
 	)
-	msg.Ack()
+	_ = msg.Ack()
 }
 
 // parseSubject extracts tenant slug and category from: tenant.{slug}.feedback.{category}

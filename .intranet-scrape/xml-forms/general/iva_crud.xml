@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm">
+  <title>Categorias de IVA</title>
+  <obs></obs>
+  <form>
+    <table id="GEN_IVA" label="Categorias de IVA">
+      <filters>
+        <field id="nombre_iva">
+          <label>Nombre categoria</label>
+          <operador>like</operador>
+        </field>
+      </filters>  
+      <field id="id_iva" autoinc="true" noshow="true">
+        <label>Código </label>
+        <help>Código de IVA</help>
+      </field> 
+      <field id="abreviacion_iva">
+        <label>Abrev.</label>
+        <help>Nombre abreviado de la categoria de IVA</help>
+      </field>
+      
+      <field id="nombre_iva">
+        <label>Nombre </label>
+        <help>Nombre de la categoria de IVA</help>
+        <size>15</size>
+      </field>
+      
+      <field id="letra">
+        <label>Letra</label>
+        <help>Letra</help>
+	<helper type="combo">
+	    <option value=""></option>
+	    <option value="A">A</option>
+	    <option value="B">B</option>
+	    <option value="C">C</option>
+	</helper>
+     </field>
+
+     <field id="codigo_afip">
+          <label>Codigo para AFIP</label>
+     </field>
+    </table>
+  </form>
+</histrix>  

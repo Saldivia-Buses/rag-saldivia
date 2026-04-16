@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="ficha" tipoInsert="IGNORE"	 imprime="false" borra="false" modifica="false" path="/fotos/archivo/Coches/" _preFetch="true" limit="1">
+	<title>Foto Control Calidad</title>
+	<obs/>
+	<!--
+        <eventos>
+               <event id="insert">$.mobile.navigate(document.referrer);</event>
+               <event id="update">$.mobile.navigate(document.referrer);</event>
+        </eventos>		
+    -->
+	<form>
+		
+		<table id="HTX_MEDIA">
+		  
+			<title>Foto de Control de Calidad</title>
+
+
+            <field id="table_name" valauto="true" noshow="true">
+                <valor>PROD_CONTROL_MOVIM</valor>
+            </field>
+            <field id="uid" noshow="true">
+            <tipo>varchar</tipo>
+            </field>
+			<field id="fotopath" local="true" noshow="true">
+			</field>
+
+			<field id="filename"  path="fotopath"  style="text-align:center;">
+				<label>Adjunte Imagen</label>
+				<tipo>file</tipo>
+			</field>
+            <!--
+			<field id="observacion_control"  >
+				
+				<size>10</size> 
+				<label>Observaciones</label>
+				<help>Observaciones</help>
+
+			</field>
+            -->
+
+		</table>
+
+	</form>
+</histrix>

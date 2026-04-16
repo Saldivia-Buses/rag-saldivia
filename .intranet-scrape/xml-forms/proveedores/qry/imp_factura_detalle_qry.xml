@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="consulta">
+	<title>Detalles</title>
+	 <obs></obs>
+		<consulta>
+		    <table id="REG_DETALLES" label="Detalle de Movimientos" styleTbody="height:150px;overflow-x:hidden;" >
+				  <field id="regmovim_id" noshow="true">
+					<label>Codigo de movimiento</label>
+					<help></help>
+				   </field> 
+				   
+				<field id="id_regdetalle" noshow="true">
+					<label>Codigo de detalle </label>
+					<help>codigo del detalle</help>
+				</field>
+				<field id="codigo_detalle" noshow="true">
+				</field>
+			        
+				<field id="orden" esClave="true" noshow="true">
+				</field>
+				<field id="descripcion_detalle" >
+				    <label>Concepto</label>
+				</field>
+			
+				<field id="cantidad_detalle">
+				    <label >Cantidad</label>
+				    <tipo>integer</tipo>
+				</field>
+				<field id="precio_venta" tabla="STK_ARTICULOS">
+				<label>Precio Unitario</label>
+				<tipo>numeric</tipo>
+				</field>
+					  	
+<!--				<field id="regcuenta_id" tabla="REG_CUENTA">
+					<label>Cuenta </label>
+					<help>Cuenta contable en la que se hace el detalle</help>
+				</field>
+				<field id="nombre_cuenta" tabla="REG_CUENTA">
+				    <label>Nombre</label>
+				</field> -->
+				<!--
+				<field id="iva_detalle">
+				    <label>iva</label>
+				    
+				</field>
+				<field id="rni_detalle">
+				    <label>RNI</label>
+				</field>
+				
+				<field id="alicuota_iva">
+				    <label>alicuota</label>
+				    <expresion>CONCAT(REG_DETALLES.alicuota_iva,'%')</expresion>
+				</field>
+				-->
+				<field id="total_detalle" suma="true">
+				    <label>Total</label>
+				    <!--<expresion>(STK_ARTICULOS.precio_articulo1) * cantidad_detalle</expresion>-->
+				</field>
+
+				<order>
+				    <field id="orden"/>
+				</order>
+						
+		    </table>
+		 <join tipo="left">
+	   <tabla id="STK_ARTICULOS">
+	      <field id="id_stkarticulo">
+		<condicion operador="=">REG_DETALLES.codigo_detalle</condicion>
+	      </field>
+	   </tabla>
+	</join>
+		</consulta>
+    </histrix>	

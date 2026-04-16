@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+  <title>Perfiles</title>
+  <obs></obs>
+  <consulta>
+    <table id="HTXPROFILEDIR" label="Perfiles">
+      <field id="idPerfil">
+        <tabla_ex id="HTXPROFILES" label="Perfiles">
+          <field id="Id_perfil">
+            <label>Perfil</label>
+          </field>
+          <field id="nombre">
+            <label>Nombre Perfil</label>
+          </field>
+        </tabla_ex>
+
+        <label>Perfil</label>
+        <help></help>
+      </field>
+      <field id="dir">
+        <label>Directorio</label>
+        <help></help>
+      </field>
+      <field id="access">
+        <label>Permisos</label>
+        <options>
+          <option valor="rwd">Completo</option>
+          <option valor="rd">Solo Lectura</option>
+
+        </options>
+        <help>Permisos</help>
+      </field>
+
+    </table>
+
+  </consulta>
+</histrix>

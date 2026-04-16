@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="abm">
+       <title>Perfiles</title>
+        <obs></obs>
+               <form  detalle="perfildir.xml">
+                  <table id="HTXPROFILES" label="Perfiles">
+                  <field id="Id_perfil">
+                      <label>Perfil </label>
+                      <help> </help>
+                      <detalle>idPerfil</detalle>
+                  </field>
+                  <field id="nombre">
+                      <label>Nombre Perfil </label>
+                      <help> </help>
+                  </field>
+                  </table>
+               </form>
+        </histrix>

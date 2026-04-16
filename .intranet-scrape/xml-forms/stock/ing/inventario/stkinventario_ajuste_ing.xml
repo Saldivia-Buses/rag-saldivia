@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" subtipo="vertical" tooltip="false" inserta="false" preloadData="false" deleteRow="false" procesa="true" log="false"
+imprime="false" >
+  <title>Ajuste de Stock</title>
+  <obs/>
+  <form>
+    <table id="STK_ARTICULOS" label="Ajuste de Stock" idCampoCond="grabar">
+
+      <movimientos>
+        <relacion id="stkinventario_ajuste_ins.xml"/>
+      </movimientos>
+
+      <field id="_ORDEN" local="true" noshow="true">
+      </field>
+      
+      <field id="codigo_barra">
+        <label>Cod. Articulo</label>
+      </field>
+
+      <field id="nombre_articulo">
+        <label>Descripcion</label>
+        <detalle>nombre_articulo</detalle>
+      </field>
+
+
+      <field id="fecha_movimiento" noshow="true" local="true">
+        <label>fecha</label>
+        <valor>today</valor>
+        <tipo>date</tipo>
+      </field>
+
+
+      <field id="stock" local="true" suma="true">
+        <label>stock</label>
+        <expresion>SELECT SUM(CASE WHEN STK_CONCEPTOS.tipo_concepto = 0 THEN cantidad ELSE -(cantidad) END) 
+        </expresion>
+      </field>
+
+      <field id="cantidad" local="true" editable="true" suma="true" _refresh="true">
+        <label>Ajuste</label>
+        <tipo>decimal</tipo>
+      </field>
+
+      <field id="cantNueva" local="true" noshow="true">
+        <label>New</label>
+        <if exp="cantidad + 0 != 0">
+    	    <true>stock - cantidad</true>
+    	    <false>0</false>
+        </if>
+        <tipo>decimal</tipo>
+      </field>
+    
+      <field id="absNueva" local="true" noshow="true">
+        <if exp="true">
+    	    <true>abs(cantNueva)</true>
+    	    <false>0</false>
+        </if>
+        <tipo>decimal</tipo>
+      </field>
+      
+      <field id="concepNuevo" local="true" noshow="true">
+        <label>Con</label>         
+        <if exp="cantNueva + 0 &gt;= 0">
+    	    <true>11</true>
+    	    <false>10</false>
+        </if>
+      </field>
+      
+
+      <field id="referencia" local="true" noshow="true">
+        <tipo>varchar</tipo>
+        <valor>'AJUSTE DE STOCK'</valor>
+      </field>
+
+      <field id="stkfamilia_id"  noshow="true"/>
+      <field id="stksector_id" noshow="true"/>
+      <field id="unidad_id"  noshow="true"/>
+
+      <field id="precio_costo" noshow="true"/>
+      <field id="precio_lista" noshow="true"/>
+      <field id="precio_venta" noshow="true"/>
+      <field id="precio_promedio" noshow="true"/>
+      <field id="id_stkarticulo" noshow="true">
+      </field>
+
+      <field id="grabar" local="true" noshow="true">
+        <if exp="cantidad + 0 != 0">
+          <true>'true'</true>
+          <false>'false'</false>
+        </if>
+      </field>
+
+
+
+
+
+      <field id="stkdeposito_id"  noshow="true" tabla="STK_MOVIMIENTOS">
+	    <helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" />
+      </field>
+
+
+      <filtros>
+	    <field id="stkdeposito_id" >
+		<label>Deposito</label>
+	    </field>
+	    <field id="fecha_movimiento">
+		<label>Fecha</label>
+		<valor>today</valor>
+	    </field>
+      </filtros>
+	<group>
+	    <field id="stkarticulo_id" />
+	</group>
+      <order>
+        <field id="nombre_articulo" />
+      </order>
+
+    </table>
+    <join tipo="inner">
+	<table id="STK_MOVIMIENTOS">
+	    <field id="stkarticulo_id">
+		<condicion operador="=">id_stkarticulo</condicion>
+	    </field>
+	</table>
+    </join>
+    <join tipo="inner">
+	<table id="STK_CONCEPTOS">
+	    <field id="id_stkconcepto">
+		<condicion operador="=">stkconcepto_id</condicion>
+	    </field>
+	</table>
+    </join>
+
+  </form>
+</histrix>

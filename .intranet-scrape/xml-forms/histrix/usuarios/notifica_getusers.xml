@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+  <title>Notificar</title>
+  <obs/>
+  <form>
+    <table id="HTXNOTIFUSER" label="Notificar">
+      <!--			<field id="login" >
+			<tipo>varchar</tipo>
+		</field>
+		-->
+      <field id="destino">
+        <expression>HTXNOTIFUSER.login</expression>
+        <tipo>varchar</tipo>
+      </field>
+      <field id="__MENUID" oculto="true" noselect="true">
+        <tipo>varchar</tipo>
+        <valor eval="true">$_SESSION['_menuId']</valor>
+      </field>
+      <field id="menuId">
+        <tipo>varchar</tipo>
+        <condicion operador="=" valorde="__MENUID"/>
+      </field>
+      <field id="baja" tabla="USU" oculto="true">
+        <expression having="false">USU.baja</expression>
+        <condicion operador="=">0</condicion>
+      </field>
+    </table>
+    <join tipo="left">
+      <table id="HTXUSERS" as="USU">
+        <field id="login">
+          <condicion operador="=">HTXNOTIFUSER.login</condicion>
+        </field>
+        <!--			<field id="baja" >
+			<condicion operador="=">0</condicion>
+		</field>
+		-->
+      </table>
+    </join>
+  </form>
+</histrix>

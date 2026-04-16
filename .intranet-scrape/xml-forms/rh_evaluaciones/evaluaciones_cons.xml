@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" imprimetanda="true" _imprime="false">
+    <title>Evaluación de desempeño</title>
+    <obs></obs>
+    <form detalle="evaluaciones_det.xml" hasDetail="id_rhevaluacion">
+        <table id="PERSONAL" >
+            <title>Evaluación</title>
+            <filters>
+                <field id="legajo" deshabilitado="false">
+                    <label>Legajo</label>
+                    <operador>=</operador>
+                </field>
+               	<field id="id_seccion">
+			<label>Sección</label>
+			<operador>=</operador>
+		</field>
+                <field id="fecevaluacion1">
+                    <label>Desde</label>
+                    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-1 month')) , 1, date("Y") - 1))</valor>
+                    <operador>&gt;=</operador>
+                </field>
+
+                <field id="fecevaluacion2">
+                    <label>Hasta</label>
+                    <valor>today</valor>
+                    <operador>&lt;=</operador>
+                </field>
+		
+		<field id="sinevaluacion" deshabilitado="false">
+		    <label>Sin Evaluación</label>
+		    <valor>1</valor>
+		    <tipo>check</tipo>
+		</field>
+            </filters>
+            
+            <field id="id_rhevaluacion"  noshow="true" tabla="RH_EVALUACIONES">
+                <detalle>id_rhevaluacion</detalle>
+            </field>
+
+                <field id="fecevaluacion1" local="true" noshow="true">
+		    <tipo>date</tipo>
+                </field>
+
+                <field id="fecevaluacion2" local="true" noshow="true">
+		    <tipo>date</tipo>
+                </field>
+
+
+	    <field id="col" clasefila="true" noshow="true">
+		<expression>case when isnull(id_rhevaluacion) then 'error resaltado' else '' end</expression>
+	    </field>
+            <field id="fec_evaluacion" deshabilitado="true" tabla="RH_EVALUACIONES">
+                <label>Fecha de Evaluación</label>
+                <tipo>date</tipo>
+		<condicion operador="=">'' or fec_evaluacion between str_to_date('[__fecevaluacion1__]','%d/%m/%Y') and str_to_date('[__fecevaluacion2__]','%d/%m/%Y') or isnull(fec_evaluacion)</condicion>
+                <detalle>fec_evaluacion</detalle>
+            </field>
+
+	    <field id="sinevaluacion" local="true" noshow="true">
+		<tipo>check</tipo>
+	    </field>
+
+	    <field id="tiene_evaluacion" noshow="true">
+		<expression>(CASE WHEN ('[__sinevaluacion__]' = '0' and (fec_evaluacion != '' or fec_evaluacion is not null)) or '[__sinevaluacion__]' = '1' then 1 else 0 end)</expression>
+		<condicion operador="=">1</condicion>
+	    </field>
+
+            <field id="legajo" tabla="PERSONAL" deshabilitado="true" linkint="personal_qry.xml" linkdes="Datos del personal" linkdir="/personal" print="false">
+                <label>Legajo</label>
+                <detalle>legajo</detalle>
+				<paring destino="legajo">legajo</paring>
+            </field>
+
+            <field id="nombre" tabla="PERSONAL" deshabilitado="true">
+                <label>Apellido y Nombre</label>
+                <expression>CONCAT(apellido, ' ', Nombre)</expression>
+                <detalle>evaluado</detalle>
+				<size>40</size>
+            </field>
+		<field id="id_seccion" tabla="PERSONAL" Formstyle="display:none;" colstyle="display:none;">
+			<helper type="combo" id="SECCION" empty="true">
+				<field id="id_seccion" />
+				<field id="nombre" />
+				<field id="activa" noshow="true">
+				    <condicion operador="=">1</condicion>
+				</field>
+				<order>
+					<field id="nombre"/>
+				</order>
+			</helper>
+			<label>Sección</label>
+			<detalle>id_seccion</detalle>
+		</field>
+
+            <field id="fechaEgreso" tabla="PERSONAL" noshow="true">
+                <label>Fecha Egr.</label>
+                <condicion operador="=">'0000-00-00'</condicion>
+            </field>
+
+
+            <order>
+                <field id="nombre"/>
+            </order>
+        </table>
+        <join tipo="left">
+            <table id="RH_EVALUACIONES">
+                <field id="rhpersona_id">
+                    <condicion operador="=">idPersona</condicion>
+                </field>
+		<field id="fec_evaluacion">
+		    <condicion operador="&gt;=">str_to_date('[__fecevaluacion1__]','%d/%m/%Y') and fec_evaluacion &lt;= str_to_date('[__fecevaluacion2__]','%d/%m/%Y')</condicion>
+		</field>
+            </table>
+        </join>
+    </form>
+</histrix> 

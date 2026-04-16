@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud">
+    <title>Modifica Orden Detalle</title>
+    <obs></obs>
+    <form>
+        <table id="MRP_ORDEN_DETALLE" label="Modifica Orden Detalle">
+
+            <field id="id_mrpordendetalle" noshow="true" esClave="true" />
+
+            <field id="mrporden_id" oculto="true">
+                <label>Orden</label>
+            </field>
+
+            <field id="stkarticulo_id"  forceUpdate="true">
+                <label>Articulo</label>
+                <helper xml="stkarticulo_qry.xml" dir="/ayudas/" type="external">
+                    <field id="alto" oculto="true">
+                        <detalle>alto</detalle>
+                    </field>
+                    <field id="ancho" oculto="true">
+                        <detalle>ancho</detalle>
+                    </field>
+                    <field id="descripcion_articulo" oculto="true">
+                        <expression>nombre_articulo</expression>
+                        <detalle>descripcion_articulo</detalle>
+                    </field>
+                </helper>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="descripcion_articulo" deshabilitado="false" >
+                <label>Descripcion</label>
+                <size>45</size>
+
+            </field>
+
+
+            <field id="nombre_rubro" tabla="STK_RUBROS" Formstyle="display:none;">
+                <label>Rubro</label>
+            </field>
+
+            <field id="objetivo_ordendetalle">
+                <label>Cantidad</label>
+                <jseval fielddestino="minimo_ordendetalle">objetivo_ordendetalle</jseval>
+            </field>
+            
+            <field id="minimo_ordendetalle" noshow="true">
+                <label>Cantidad minimo</label>
+
+            </field>
+            
+            <field id="alto_ordendetalle">
+                <label>Alto</label>
+            </field>
+
+            <field id="ancho_ordendetalle">
+                <label>Ancho</label>
+            </field>
+
+            <field id="observaciones_ordendetalle">
+                <label>Observaciones</label>
+            </field>
+
+
+            <field id="validacion" local="true" bloqueafila="true" noshow="true">
+                <expression>ifnull((SELECT '1' FROM MRP_DETALLE_REGISTRO
+                                        WHERE MRP_DETALLE_REGISTRO.mrpordendetalle_id =  MRP_ORDEN_DETALLE.id_mrpordendetalle LIMIT 1),0)</expression>
+            </field>
+
+            <field id="en-proceso" local="true">
+                <label>Estado</label>
+                <expression>SELECT IF(EXISTS(SELECT * FROM `MRP_DETALLE_REGISTRO` WHERE `mrpordendetalle_id` = MRP_ORDEN_DETALLE.id_mrpordendetalle ),'En proceso','Sin procesar')</expression>
+            </field>
+
+        </table>
+
+        <join tipo="left">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">MRP_ORDEN_DETALLE.stkarticulo_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="STK_RUBROS">
+                <field id="id_stkrubro">
+                    <condicion operador="=">STK_ARTICULOS.stkrubro_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

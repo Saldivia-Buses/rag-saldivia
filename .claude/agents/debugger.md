@@ -1,7 +1,7 @@
 ---
 name: debugger
 description: "Debugging sistemático de problemas en SDA Framework. Usar cuando algo no funciona, hay un error, un traceback, comportamiento inesperado, o se dice 'está roto', 'falla X', 'no funciona Y', 'error en Z'. Sigue protocolo: failure modes conocidos -> logs -> config -> código. NO usar para code review (usar gateway-reviewer o frontend-reviewer)."
-model: opus
+model: sonnet
 tools: Bash, Read, Grep, Glob, Write, Edit
 permissionMode: acceptEdits
 effort: high

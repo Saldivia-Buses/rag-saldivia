@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="insert">
+	<title>ingreso de  DEMERITOS en la recepcion</title>
+	<obs></obs>
+	<form >
+		<table id="MOVDEMERITO" label="generacion de Demeritos" idCampoCond="grabo" >
+			<field id="prvcod" id_cab="ctacod">
+			</field>
+			<field id="demfec" id_cab="movfec__1">
+			</field>
+			<field id="coddem" id_temp="coddem">
+			</field>
+			<field id="puesto" id_cab="remnpv">
+			</field>
+			<field id="nrocomp" id_cab="remnro">
+			</field>
+			<field id="movfec" id_cab="ocpfec">
+			</field>
+			<field id="artcod" id_temp="artcod">
+			</field>
+		</table>
+	</form>
+</histrix>

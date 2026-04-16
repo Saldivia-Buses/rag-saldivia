@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="grid" 
+	_limit="15"
+ deleteRow="false" imprime="false" procesa="true" inserta="false">
+	<title>Control Calidad</title>
+	<obs/>
+	<!--
+        <eventos>
+
+                <event id="insert">close</event>
+                
+                <event id="procesar">close</event>
+                
+                <event id="procesar">refresh</event>
+        </eventos>	
+        -->
+        <customScript><![CDATA[
+        	$('[campo="observacion_control"] div').css({'border':'0px'});
+
+        	$('td[campo="conforme"] input:checkbox').change(function(){
+        		var tr = $(this).closest('tr');
+
+        		if ($(this).prop('checked')){
+
+	        		
+
+	        		$(tr).css({'background-color':'greenyellow'});
+
+	        		$('td[campo="no_conforme"] input:checkbox', tr).prop('checked', !$(this).prop('checked')).checkboxradio("refresh");
+        		} else {
+        			tr.css({'background-color':'transparent'});
+        		}
+        	});
+        	$('td[campo="no_conforme"] input:checkbox').change(function(){
+        		var tr = $(this).closest('tr');
+        		if ($(this).prop('checked')){
+	        		$('td[campo="observacion_control"] input', tr).show();
+
+	        		tr.css({'background-color':'transparent'});
+	        		$('td[campo="conforme"] input:checkbox', tr).prop('checked', !$(this).prop('checked')).checkboxradio("refresh");
+        		} else {
+        			$('td[campo="observacion_control"] input', tr).hide();
+        		}
+        	});        	
+        	]]>
+        </customScript>
+	<form>
+		
+		<table id="PROD_CONTROLES">
+		    <movimientos>
+				<relacion id="prod_controlmovim_ins.xml" />
+		    </movimientos>
+			<title>Controles</title>
+			<field id="habilitado" oculto="true">
+			    <condicion operador="=">0</condicion>
+			</field>
+			<field id="id_prodcontrol" noshow="true">
+			</field>
+			<field id="nrofab_id" noshow="true" local="true" />
+<!--
+			<field id="homologacion_id" noshow="true" tabla="PROD_CONTROL_HOMOLOG" />
+-->
+			<field id="id_controlmovim" noshow="true">
+			    <expression>id_controlmovim</expression>
+			</field>
+
+			<field id="seccion_id" noshow="true" />
+			<field id="modelo_control" noshow="true" break="true"/>
+			<field id="orden_control" noshow="true" />
+
+			<!--
+			<field id="tipo_control" >
+				<label>Tipo</label>
+				<options>
+				    <option valor="0"></option>
+				    <option valor="1">Externa</option>
+				    <option valor="2">Interna</option>
+
+                                </options>
+			</field>
+-->
+			<field id="nombre_control"  _style="font-size:12px;" >
+				
+			</field>
+			
+			<!--
+			<field id="valor_control"   tabla="PROD_CONTROL_MOVIM" style="font-size:16px;" _local="true" PDFcolWidth="10">
+				<label>Valor</label>
+				<tipo>check</tipo>
+			</field>
+			-->
+			<field id="observacion_control"  tabla="PROD_CONTROL_MOVIM"   style="font-size:10px;display:none;" editable="true" >
+				<size>10</size> 
+				<help>Observaciones</help>
+			</field>
+
+			<field id="conforme"   tabla="PROD_CONTROL_MOVIM" _inputstyle="width:2em;height:2em;min-height:3em;min-width:3em;" _local="true" 
+				colstyle="background-color:greenyellow;text-align:center;" PDFcolWidth="10">
+    
+				<tipo>check</tipo>
+			</field>
+			<field id="no_conforme"   tabla="PROD_CONTROL_MOVIM" _inputstyle="width:2em;height:2em;" _local="true"
+			colstyle="background-color:red;text-align:center;" PDFcolWidth="10">
+				
+				<tipo>check</tipo>
+			</field>
+
+
+			
+			<field id="fecha_control"  tabla="PROD_CONTROL_MOVIM"  _editable="true" _deshabilitado="false">
+				<label>Fecha</label>
+				<tipo>date</tipo>
+			</field>			
+
+			<!--
+			<order>
+				<field id="seccion_id" />
+				<field id="orden_control" />
+				<field id="nombre_control" />
+			</order>
+-->
+		</table>
+		<join tipo="left">
+			<table id="PROD_CONTROL_HOMOLOG">
+					<field id="prodcontrol_id">
+						<condicion operador="=">id_prodcontrol</condicion>
+					</field>
+<!--					<field id="homologacion_id">
+						<condicion operador="=">[__homologacion_id__]</condicion>
+					</field>		
+					-->			
+			</table>
+		</join>
+
+		<join tipo="left">
+		    <table id="PROD_CONTROL_MOVIM">
+			<field id="nrofab_id">
+			    <condicion operador="=">[__nrofab_id__]</condicion>
+			</field>
+			<field id="prodcontrol_id">
+			    <condicion operador="=">id_prodcontrol</condicion>
+			</field>
+		    </table>
+		</join>
+
+	</form>
+</histrix>

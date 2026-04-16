@@ -3,6 +3,11 @@ SELECT id, slug, name, plan_id, postgres_url, redis_url, enabled, logo_url, doma
 FROM tenants
 WHERE slug = $1 AND enabled = true;
 
+-- name: GetTenantByID :one
+SELECT id, slug, name, plan_id, postgres_url, redis_url, enabled, logo_url, domain, settings, created_at, updated_at
+FROM tenants
+WHERE id = $1;
+
 -- name: ListTenants :many
 SELECT id, slug, name, plan_id, enabled, created_at
 FROM tenants

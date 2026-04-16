@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="abm">
+	<title>Concesionario</title>
+	<obs></obs>
+	<form >
+		<table id="CONCESIONARIO" >
+			<title>Concesionario</title>
+			<field id="idconces" autoinc="true" noshow="true">
+				<label>Codigo</label>
+				<help>Codigo de Concesionario</help>
+
+			</field>
+			<field id="nombre">
+				<label>Nombre</label>
+				<help>Nombre de Concesionario</help>
+			</field>
+			<field id="ctacod">
+				<label>Cliente</label>
+				<tabla_ex id="CCTCUENT">
+					<field id="ctacod"></field>
+					<field id="ctanom"></field>
+				    <field id="siscod" oculto="true">
+						<condicion operador="=">'02'</condicion>
+					</field>
+				</tabla_ex>
+
+			</field>			
+   			<order>
+				<field id="nombre"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

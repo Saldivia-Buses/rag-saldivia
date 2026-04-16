@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="chart">
+	<title>ESTADISTICAS DE ACCIDENTES</title>
+	<obs></obs>
+	<form>
+		<table id="GEN_CALENDAR" label="ESTADISTICAS ACCIDENTES">
+ 		
+ 		   <grafico id="Accidentes">
+			   <ancho>400</ancho>
+			   <tipo>L</tipo>
+
+			   <etiquetas>year</etiquetas>
+			   <serie>indice_frecuencia</serie>
+			   <serie>accidentes</serie>
+			   <title>Indice Anual Frecuencia Accidentes</title>
+			   <subtitulo>50sem 44hs 4%aus</subtitulo>
+		   </grafico> 	
+
+			<filters>
+				<field id="fecha_desde">
+					<label>Desde</label>
+					
+					<valor eval="true">date("d/m/Y", mktime(0, 0, 0, 1, 1, date("Y") - 10))</valor>
+					<operador>&gt;=</operador>
+				</field>
+				<field id="fecha_hasta">
+					<label modpos="nobr">Hasta</label>
+					<valor eval="true">date('d/m/Y', strtotime('-1 year', strtotime(date('Y-12-31'))))</valor>
+					<operador>&lt;=</operador>
+				</field>
+  			</filters>
+
+			<field id="fecha_desde" local="true">
+            	<label>FecDesde</label>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="fecha_hasta" local="true">
+            	<label>FecHasta</label>
+				<tipo>date</tipo>
+			</field>
+
+            <field id="fecha">
+            	<label>Fecha</label>
+				<tipo>date</tipo>
+				<condicion operador="&gt;=">STR_TO_DATE('[__fecha_desde__]', '%d/%m/%Y') and GEN_CALENDAR.fecha &lt;= STR_TO_DATE('[__fecha_hasta__]', '%d/%m/%Y')</condicion>
+			</field>
+
+            <field id="year">
+            	<label>Año</label>
+				<expression>YEAR(GEN_CALENDAR.fecha)</expression>
+			</field>
+
+			<field id="accidentes">
+				<expression sql="true">SELECT COUNT(*) FROM FRANCOS_PER WHERE FRANCOS_PER.tipo = 1 AND YEAR(fechainicio) = '[__year__]'</expression>
+				<label>CantAccidentes</label>
+			</field>
+
+			<field id="personal">				
+				<label>CantPersonal</label>			
+				<expression>count(distinct(PERSONAL.IdPersona))</expression>									
+				<tipo>integer</tipo>
+			</field>
+
+			<field id="semanas" local="true" noshow="true">
+				<valor>'4'</valor>
+				<label>Semanas del Año</label>				
+				<tipo>integer</tipo>
+			</field>
+
+			<field id="hs_semana" local="true" noshow="true">
+				<valor>'44'</valor>
+				<label>Hs Semanales</label>				
+				<tipo>integer</tipo>
+			</field>
+
+			<field id="porcentaje_ausentismo" local="true" noshow="true">
+				<valor>'4'</valor>
+				<label>Porcentaje Ausentismo</label>				
+				<tipo>integer</tipo>
+			</field>
+
+			<field id="indice_frecuencia" local="true">
+				<label>Indice Frec</label>				
+				<expression sql="true">select ROUND((('[__accidentes__]' + 0)*1000000)/
+					((('[__personal__]' + 0)*(50 + 0)*(44 + 0)) - (('[__personal__]' + 0)*(50 + 0)*(44 + 0)*(4 + 0)/100)), 2)</expression>
+ 			</field>
+
+	 		<group>
+				<field id="year" />
+			</group>
+
+		</table>
+
+		<join tipo="left">
+			<table id="PERSONAL">
+				<field id="fecing">
+					<condicion operador="&lt;=">STR_TO_DATE('[__fecha_hasta__]', '%d/%m/%Y')</condicion>
+				</field>
+				<field id="fechaEgreso">
+					<condicion operador="&gt;">STR_TO_DATE('[__fecha_desde__]', '%d/%m/%Y') or PERSONAL.FechaEgreso = '0000-00-00'</condicion>
+				</field>
+			</table>
+		</join>
+
+	</form>
+</histrix>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm-mini">
+	<title>CATEGORIAS DE IVA</title>
+	<obs></obs>
+	<form >
+		<table id="FSMCTIVA"> 
+		    <title>IVA</title>
+			<field id="ivacod">
+				<label>Codigo</label>
+				<help>Cod.IVA</help>
+			</field>
+			<field id="ivanom">
+				<label>Nombre</label>
+				<help>Nombre </help>
+			</field>
+			<field id="ivaabv">
+				<label>Abrev.</label>
+				<help>Abreviatura</help>
+			</field>			
+			<order>
+				<field id="ivacod"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

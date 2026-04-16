@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha" preFetch="true" sololectura="true" imprime="false" accordion="false">
+	<title>Libro diario</title>
+	<obs/>
+	<form >
+		<table id="CTB_MOVIMIENTOS" label="Libro diario">
+		
+			<field id="id_movimiento" noshow="true" />
+			
+			<field id="regmovim_id" noshow="true" />
+
+			<field id="cajregistro_id" noshow="true" />
+		
+			<field id="ejercicio_id">
+				<helper type="combo" xml="ctbejercicios_qry.xml" dir="/ayudas" />
+				<label>Ejercicio</label>
+				<help>Ejercicio contable</help>
+			</field>
+			
+			<field id="concepto_id">
+				<helper type="combo" xml="ctbconcepto_qry.xml" dir="/ayudas" />
+				<label>Concepto</label>
+			</field>
+			
+			<field id="nro_minuta">
+				<label>Nro de Asiento</label>
+				<help>Nº minuta</help>
+				<size>4</size>
+			</field>
+			
+			<field id="fecha_movimiento">
+				<label>Fecha</label>
+				<tipo>date</tipo>
+				<help>Fecha movimiento</help>
+			</field>
+			
+			<field id="referencia">
+				<label>Referencia</label>
+			</field>
+
+			<field id="detalle" local="true">
+				<helper type="object" xml="minuta_detalle_qry.xml">
+					<parameter source="id_movimiento" target="movimiento_id" />
+					<parameter source="ejercicio_id" target="ejercicio_id" />
+				</helper>
+			</field>
+		</table>
+	</form>
+</histrix>

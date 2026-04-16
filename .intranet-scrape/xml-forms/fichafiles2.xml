@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="consulta" path="anexos/coches">
+	<titulo>Fotos por Coche</titulo>
+	<obs/>
+	<consulta>
+         <tabla id="FICHAFILES" label="Archivos Anexos" style__Tbody="height:100px;overflow-x:hidden;">		
+			 <campo id="nrofab" oculto="true" >
+				 <label>id</label>
+			 </campo>
+			<campo  id="file" foto="true" path="nrofab">
+				<label>Foto</label>
+				<help></help>
+				<tipo _Type="Image">file</tipo>
+			</campo> 	      
+			<campo  id="descripcion" >
+				<label>Descripción</label>
+				<help>Descripción</help>
+				<tipo>varchar</tipo>
+			</campo> 	      			 
+		 </tabla>
+	</consulta>
+</abm>

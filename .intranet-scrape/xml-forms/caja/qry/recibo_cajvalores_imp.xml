@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<histrix tipo="consulta">
+  <title>Monedas</title>
+  <obs></obs>
+
+	  <form >
+
+
+			<table id="CAJ_VALORES">
+
+				<field id="cajmovimiento_id" esClave="true" noshow="true"/>
+
+				<field id="id_cajvalor" noshow="true"/>
+				
+				<field id="descripcion_forma" tabla="CAJ_FORMAS_PAGO">
+					<label>Tipo</label>
+				</field>    	
+
+				<field id="pago_valor" suma="true" noZero="true">
+					<label>Ingreso</label>
+					<expression>IF(CAJ_FORMAS_PAGO.tipo_forma = 0, pago_valor - pago_vuelto,0)</expression>
+				</field>    	
+
+				<field id="pago_vuelto" suma="true" noZero="true">
+					<label>Egreso</label>
+					<expression>IF(CAJ_FORMAS_PAGO.tipo_forma = 1, pago_valor - pago_vuelto,0)</expression>
+				</field>
+			
+			</table>
+
+			 <join>
+				<table id="CAJ_FORMAS_PAGO">
+					<field id="id_cajformapago">
+						<condicion operador="=">CAJ_VALORES.cajformapago_id</condicion>
+	   			    </field>
+				</table>
+			</join>
+			
+
+	</form>
+	
+</histrix>

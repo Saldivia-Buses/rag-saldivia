@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" inserta="no" paginar="150">
+    <title>REIMPRESION DE ORDENES DE COMPRA</title>
+    <obs></obs>
+    <form  detalle="cpsencab_cabreimp_empresa.xml">
+        <table id="CPSENCAB" label="ORDENES DE COMPRA">
+
+            <filters>
+
+                <field id="ctacod">
+                    <label>Proveedor</label>
+                    <operador>=</operador>
+                </field>
+
+                <field id="ocpnro" >
+                    <label>Nro O.C</label>
+                    <operador>=</operador>
+                </field>
+
+                <field id="ocpest" >
+                    <label>Estado </label>
+                    <operador>=</operador>
+                    <valor>1</valor>
+                </field>
+
+            </filters>
+
+
+            <field id="siscod" noshow="true">
+                <detalle>CPSMOVIM.siscod</detalle>
+            </field>
+
+            <!--
+                <field id="garnro">
+                <label>Doc.Garantes </label>
+                <help> </help>
+                </field>
+                <field id="movpor">
+                <label>Porc descuento </label>
+                <help>Porcentaje de descuento </help>
+                </field>
+                <field id="ocpbon">
+                <label>Bonificaciones </label>
+                <help>Bonificaciones esperadas para esta compra. </help>
+                </field>
+                <field id="ocpent">
+                <label>Lugar Entrega </label>
+                <help>Lugar de Entrega/Descarga. </help>
+                </field>
+                        -->
+            <field id="ocpfec" tipoOrden="DESC" esClave="false">
+                <label>Fecha</label>
+                <help>Fecha de Orden de Compra. </help>
+                <detalle>ocpfec</detalle>
+            </field>
+
+            <field id="ocpnro">
+                <label>Nro</label>
+                <help>Número de Orden de Compra</help>
+                <detalle>ocpnro</detalle>
+            </field>
+
+            <field id="ctacod" _noshow="true">
+                <label>Proveedor</label>
+                <helper type="combo" _id="CCTCUENT" xml="cctcuent_c_ordencompra.xml" empty="true">
+                    <field id="ctacod"></field>
+                    <field id="ctanom">
+                        <detalle>ctacod</detalle>
+                    </field>
+                    <field id="baja">
+                        <condicion operador="=">0</condicion>
+                    </field>
+                    <order>
+                        <field id="ctanom"></field>
+                    </order>
+                </helper>
+                <tipo>varchar</tipo>
+            </field>
+
+            <!--
+            <field id="ctanom" tabla="CCTCUENT">
+
+            </field>
+                    -->
+
+            <!--                  <field id="ctacod2">
+            <expresion>ctanom</expresion>
+            <label>Proveedor </label>
+            <help>Codigo de Cuenta PROVEEDOR. </help>
+            <tipo>string</tipo>
+
+            </field>
+            -->
+
+            <field id="ocpfen" noshow="true">
+                <label>Entrega</label>
+                <help>Fecha de Entrega </help>
+                <detalle>fecreq</detalle>
+            </field>
+            <!--
+            <field id="ocpimp" suma="true">
+                <label>Monto </label>
+                <help> Monto de la Orden de compra</help>
+            </field>
+            -->
+            <field id="ocpest" noshow="true">
+                <label>Estado </label>
+                <help>Estado Actual</help>
+		<helper type="combo" empty="true">
+
+                    <option value=""> </option>
+
+                    <option value="0">No Autorizada</option>
+                    <option value="1">Pendiente</option>
+                    <option value="2">Cumplida</option>
+                    <option value="3">Parcial</option>
+                    <option value="4">Anulada</option>
+                </helper>
+                <!-- <tipo>radio</tipo> -->
+                <!-- <condicion operador="!=">2 and ocpest != 4</condicion>  -->
+            </field>
+
+            <!--
+            <field id="ocpest" >
+                    <label>Estado</label>
+                    <condicion operador="!=">2</condicion>
+            </field>
+            <field id="ocpobs">
+            <label>Observaciones </label>
+            <help>Observaciones. </help>
+            </field>
+            <field id="opecla">
+            <label>Firma Electronica </label>
+            <help>Firma Electronica </help>
+            </field>
+            <field id="seccod">
+            <label>Cod.Seccion </label>
+            <help>Codigo de Seccion. </help>
+            </field>
+
+            <field id="succod">
+            <label>Cod. Sucursal </label>
+            <help>Codigo de Sucursal </help>
+            </field>
+            <field id="tracod">
+            <label>Nombre Transporte </label>
+            <help> </help>
+            </field>
+            -->
+            <!--
+            <filters>
+            <field id="ocpfec">
+            <operador>>=</operador>
+            <label>Desde Fecha</label>
+            </field>
+            <field id="ocpfec">
+            <operador>&lt;=</operador>
+            <label>Hasta Fecha</label>
+            </field>
+            </filters>
+            -->
+            <order>
+                <field id="ocpfec"></field>
+            </order>
+        </table>
+
+        <join tipo="left">
+            <table id="CCTCUENT">
+                <field id="siscod" oculto="true">
+                    <label>cctcuent.siscoc</label>
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="ctacod" oculto="true">
+                    <condicion operador="=">CPSENCAB.ctacod</condicion>
+                </field>
+                <field id="ctanom" oculto="true">
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

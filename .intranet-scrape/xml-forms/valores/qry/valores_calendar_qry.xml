@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="calendar" calendarAspectRatio="2" sololectura="true" sidePanel="false">
+	<title>Consulta Cartera de Valores</title>
+	<obs/>
+	<form>
+		<table id="CAR_VALORES" label="Cartera de Cheques">
+		
+			<filters>
+				<field id="fecha_valor">
+					<operador>&gt;=</operador>
+					<label>Desde Fecha</label>
+					<tipo>date</tipo>					
+				</field>
+
+				<field id="fecha_valor">
+					<operador>&lt;=</operador>
+					<label>Hasta Fecha</label>
+					<tipo>date</tipo>
+					<valor eval="true">date('d/m/Y', mktime(0,0,0, date("m"), date("d"), date("Y") + 1 ))</valor>
+				</field>
+
+				<field id="importe_valor" deshabilitado="false">
+					<operador>&gt;=</operador>
+					<label>Desde Importe</label>
+					<tipo>decimal</tipo>					
+				</field>		
+
+				<field id="importe_valor" deshabilitado="false">
+					<operador>&lt;=</operador>
+					<label>Hasta Importe</label>
+					<tipo>decimal</tipo>					
+				</field>
+
+				<field id="moneda_id" grupo="Avanzado">
+					<operador>=</operador>
+					<label>Moneda</label>
+				</field>
+
+				<field id="carbanco_id" grupo="Avanzado">
+					<label>Banco</label>
+					<operador>=</operador>
+				</field>
+
+				<field id="carplaza_id" grupo="Avanzado">
+					<label>Plaza</label>
+					<operador>=</operador>
+				</field>
+
+				<field id="nro_valor" grupo="Avanzado">
+					<label>Nº</label>
+					<operador>=</operador>
+				</field>
+
+				<field id="cuit_valor" grupo="Avanzado">
+					<label>Cuit</label>
+					<operador>=</operador>
+				</field>
+
+			</filters>
+
+			<field id="id_carvalor" noshow="true" calendarId="true" calendarEditable="false"/>
+
+			<field id="carbanco_id">
+				<label>Banco</label>
+				<tabla_ex xml="carbanco_qry.xml" dir="/ayudas" vacio="true" />
+			</field>
+
+			<field id="carplaza_id">
+				<label>Plaza</label>
+				<tabla_ex xml="carplaza_qry.xml" dir="/ayudas" vacio="true" />
+			</field>
+
+			<field id="fecha_valor">
+				<label>Fec.Emisión</label>
+				<tipo>date</tipo>
+			</field>
+			
+			<field id="fecha_calendario" calendarStartDate="true" noshow="true">
+				<expression>acreditacion_valor</expression>
+			</field>
+
+			<field id="acreditacion_valor">
+				<label>Fec.Acreditación</label>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="vencimiento_valor">
+				<expression>DATE_ADD(acreditacion_valor,INTERVAL 30 DAY)</expression>
+				<label>Fec.Vencimiento</label>
+				<tipo>date</tipo>
+			</field>
+			
+			<field id="nro_valor">
+				<label>Nº Valor</label>
+			</field>
+
+			<field id="subject" calendarSubject="true" noshow="true">
+				<expression>CONCAT('Nº ', CAR_VALORES.nro_valor, ' - ', CAR_VALORES.titular_valor, ' $', CAR_VALORES.importe_valor)</expression>
+			</field>
+
+			<field id="regcuenta_id" tabla="car_ing" noZero="true">
+				<helper type="combo" xml="regcuenta_cmb.xml" dir="/ayudas" _empty="true" >
+					<field id="subsistema_id">
+						<condicion operador="=">'02'</condicion>
+					</field>
+				</helper>
+				<label>Cliente</label>
+			</field>
+
+			<field id="fecha_movimiento" deshabilitado="true" tabla="caj_ing">
+				<label>Fecha Ingreso</label>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="tipo_movimiento_ingreso" local="true" noshow="true">
+				<valor>0</valor>
+			</field>
+
+			<field id="egreso_valor">
+				<label>Fecha Egreso</label>
+				<condicion operador="=">'0000-00-00'</condicion>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="tipo_movimiento_egreso" local="true" noshow="true">
+				<valor>1</valor>
+			</field>
+
+			<field id="cuenta_valor">
+				<label>Nº Cuenta</label>
+				<help>Cuenta del cheque</help>
+			</field>
+			
+			<field id="cuit_valor">
+				<label>CUIT</label>
+			</field>
+			
+			<field id="titular_valor">
+				<label>Titular</label>
+			</field>
+			
+			<field id="importe_valor" suma="true" >
+				<label>importe</label>
+				<tipo>numeric</tipo>
+			</field>
+
+			<field id="moneda_id" noshow="true">
+				<tabla_ex xml="monedas_qry.xml" dir="/ayudas" vacio="true" />
+			</field>
+
+			<field id="color" calendarColor="true" noshow="true">
+				<expression>'green'</expression>
+			</field>
+			<group>
+				<field id="id_carvalor" />
+			</group>
+
+		</table>
+
+		<!-- JOINS -->
+
+		<join tipo="left">
+			<table id="CAR_MOVIMIENTOS" as="car_ing">
+				<field id="carvalor_id">
+					<condicion operador="=">CAR_VALORES.id_carvalor</condicion>
+				</field>
+				<field id="tipo_movimiento">
+					<condicion operador="=">0</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CAR_MOVIMIENTOS" as="car_egr">
+				<field id="carvalor_id">
+					<condicion operador="=">CAR_VALORES.id_carvalor</condicion>
+				</field>
+				<field id="tipo_movimiento">
+					<condicion operador="=">1</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CAJ_MOVIMIENTOS" as="caj_ing">
+				<field id="id_cajmovimiento">
+					<condicion operador="=">car_ing.cajmovimiento_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CAJ_MOVIMIENTOS" as="caj_egr">
+				<field id="id_cajmovimiento">
+					<condicion operador="=">car_egr.cajmovimiento_id</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+
+	<form>
+		<table id="CAR_VALORES" label="Cartera de Cheques">
+			<field id="id_carvalor" noshow="true" calendarId="true" calendarEditable="false"/>
+
+			<field id="carbanco_id">
+				<label>Banco</label>
+				<tabla_ex xml="carbanco_qry.xml" dir="/ayudas" vacio="true" />
+			</field>
+
+			<field id="carplaza_id">
+				<label>Plaza</label>
+				<tabla_ex xml="carplaza_qry.xml" dir="/ayudas" vacio="true" />
+			</field>
+
+			<field id="fecha_valor">
+				<label>Fec.Emisión</label>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="fecha_calendario" calendarStartDate="true" noshow="true">
+				<expression>DATE_ADD(acreditacion_valor,INTERVAL 30 DAY)</expression>
+			</field>
+
+			<field id="acreditacion_valor">
+				<label>Fec.Acreditación</label>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="vencimiento_valor">
+				<expression>DATE_ADD(acreditacion_valor,INTERVAL 30 DAY)</expression>
+				<label>Fec.Vencimiento</label>
+				<tipo>date</tipo>
+			</field>
+			
+			<field id="nro_valor">
+				<label>Nº Valor</label>
+			</field>
+
+			<field id="subject" calendarSubject="true" noshow="true">
+				<expression>CONCAT('Nº ', CAR_VALORES.nro_valor, ' - ', CAR_VALORES.titular_valor, ' $', CAR_VALORES.importe_valor)</expression>
+			</field>
+
+			<field id="regcuenta_id" tabla="car_ing" noZero="true">
+				<helper type="combo" xml="regcuenta_cmb.xml" dir="/ayudas" _empty="true" >
+					<field id="subsistema_id">
+						<condicion operador="=">'02'</condicion>
+					</field>
+				</helper>
+				<label>Cliente</label>
+			</field>
+
+			<field id="fecha_movimiento" deshabilitado="true" tabla="caj_ing">
+				<label>Fecha Ingreso</label>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="tipo_movimiento_ingreso" local="true" noshow="true">
+				<valor>0</valor>
+			</field>
+
+			<field id="egreso_valor">
+				<label>Fecha Egreso</label>
+				<condicion operador="=">'0000-00-00'</condicion>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="tipo_movimiento_egreso" local="true" noshow="true">
+				<valor>1</valor>
+			</field>
+
+			<field id="cuenta_valor">
+				<label>Nº Cuenta</label>
+				<help>Cuenta del cheque</help>
+			</field>
+			
+			<field id="cuit_valor">
+				<label>CUIT</label>
+			</field>
+			
+			<field id="titular_valor">
+				<label>Titular</label>
+			</field>
+			
+			<field id="importe_valor" suma="true" >
+				<label>importe</label>
+				<tipo>numeric</tipo>
+			</field>
+
+			<field id="moneda_id" noshow="true">
+				<tabla_ex xml="monedas_qry.xml" dir="/ayudas" vacio="true" />
+			</field>
+
+			<field id="color" calendarColor="true" noshow="true">
+				<expression>'red'</expression>
+			</field>
+			<group>
+				<field id="id_carvalor" />
+			</group>
+
+		</table>
+
+		<!-- JOINS -->
+
+		<join tipo="left">
+			<table id="CAR_MOVIMIENTOS" as="car_ing">
+				<field id="carvalor_id">
+					<condicion operador="=">CAR_VALORES.id_carvalor</condicion>
+				</field>
+				<field id="tipo_movimiento">
+					<condicion operador="=">0</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CAR_MOVIMIENTOS" as="car_egr">
+				<field id="carvalor_id">
+					<condicion operador="=">CAR_VALORES.id_carvalor</condicion>
+				</field>
+				<field id="tipo_movimiento">
+					<condicion operador="=">1</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CAJ_MOVIMIENTOS" as="caj_ing">
+				<field id="id_cajmovimiento">
+					<condicion operador="=">car_ing.cajmovimiento_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CAJ_MOVIMIENTOS" as="caj_egr">
+				<field id="id_cajmovimiento">
+					<condicion operador="=">car_egr.cajmovimiento_id</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>
+

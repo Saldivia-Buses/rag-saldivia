@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" >
+    <title>Fichadas</title>
+    <obs/>
+    <form>
+        <table id="FICHADAS" label="Fichadas del Reloj" idCampoCond="grabar">
+            <field id="tarjeta" id_temp="tarjeta" />
+
+	    <field id="fechaChar" id_temp="fecha" />
+
+	    <field id="fecha" id_temp="fecha" />
+
+            <field id="crc" id_temp="hora"  />
+            
+            <field id="hora" id_temp="hora" />
+        </table>
+    </form>
+</histrix>

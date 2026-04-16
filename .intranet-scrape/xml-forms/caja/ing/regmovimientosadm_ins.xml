@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+    <title/>
+    <obs/>
+    <form>
+        <table id="REG_MOVIMIENTOS" idCampoCond="graba_adm">
+            <field id="subsistema_id"      	    id_temp="subsistema_id">
+        	<tipo>varchar</tipo>
+            </field>
+            <field id="regcuenta_id"     	    id_temp="regcuenta_id" />            
+            <field id="concepto_id"      	    id_padre="regconcepto_id"/>
+
+            <field id="fecha_movimiento"     	id_padre="fecha_movimiento"/>
+            <field id="letra_movimiento"     	id_padre="regcuenta_ivaletra"/>
+            <field id="puesto_movimiento"     	id_padre="puesto_movimiento"/>    
+            <field id="nro_movimiento">
+                <valor>(select numero from CAJ_NUMERADORES where subsistema_id = '03' and cajpuesto_id = '[__cajpuesto_id__]' and cajconcepto_id = '[__cajconcepto_id__]')</valor>
+                <tipo>integer</tipo>
+            </field>
+            <field id="reg_fecha" 	            id_padre="fecha_movimiento"/>
+            <field id="vencimiento_movimiento" 	id_padre="vencimiento_movimiento"/>
+
+            <field id="conciliado" 		        id_padre="fecha_movimiento" />
+
+            <field id="importe_movimiento"     	id_temp="total_imputado"/>
+            <field id="referencia_movimiento"   id_padre="referencia_movimiento">
+          	  <tipo>varchar</tipo>
+          	</field>
+            
+            <field id="cajmovimiento_id"    lastId="cajmovimientos_ins.xml"/>
+        </table>
+    </form>
+</histrix>	

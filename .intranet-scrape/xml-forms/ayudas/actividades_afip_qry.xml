@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini">
+  <title>Actividades</title>
+  <obs></obs>
+  <form>
+    <table id="GEN_AFIP_ACTIVIDADES">
+      <field id="id_afipactividad" _noshow="true">
+        <label>Codigo</label>
+      </field>
+      <field id="nombre_afipactividad">
+        <label>Cod. Actividad</label>
+		<help>Código de actividad principal s/ AFIP</help>
+      </field>
+	  <order>
+		<field id="nombre_afipactividad"/>
+	  </order>
+    </table>
+  </form>
+</histrix>  

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  Ayuda
+Tarea: Ayuda para la Tabla de Plazas bancarias
+Autor: d!ego2k
+Fecha: 09/09/10
+*******************************************************************************
+-->
+    <histrix tipo="consulta">
+	<title>Plazas</title>
+	 <obs></obs>
+		<form >
+		    <table id="CAR_PLAZAS" label="Plazas">
+				<field id="id_carplaza" esClave="true" _noshow="true">
+					<label>Codigo</label>
+				</field>
+				<field id="nombre_plaza">
+					<label>Nombre</label>
+					<detalle>nombre_plaza</detalle>
+				</field>
+				<order>
+					<field id="nombre_plaza" />
+				</order>
+		    </table>
+		</form>
+    </histrix>	

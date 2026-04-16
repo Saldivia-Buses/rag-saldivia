@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="nosql" >
+	<title/>
+    <obs/>
+    <form>
+        <table id="REG_MOVIMIENTOS" idCampoCond="facturar">
+		
+			<ejecuta>
+			    <![CDATA[ if( 'fiscal' == '1' ) {
+					try
+					{
+						$calculo = new EmiteFiscal();
+						$calculo->setHomo( $_SESSION['properties']['wsafiphomo'] );
+						$calculo->imprimir('id_regmovim');
+						$Nheader = 'Factura Electrónica Emitida';
+						$Ntext   = 'Cliente: nombre_movimiento';
+						\Histrix\Storage\Database::endTransaction();
+					}
+					catch(Exception $e)
+					{
+						loger( $e->getMessage(), 'webservice.log');
+						$Nheader = 'Factura Electrónica nombre_movimiento';
+						$Ntext   = 'Error: '.trim(addslashes($e->getMessage()));
+						\Histrix\Storage\Database::rollbackTransaction('',false);
+					}
+					$code = array('0'=>"Histrix.notification('id_regmovim', {icon:'mail_send.png',title:'$Nheader',text:\"$Ntext\"})");
+					echo \Histrix\Html\Html::scriptTag($code);
+					\Histrix\Storage\Database::beginTransaction();
+				} else { } ]]>
+			</ejecuta>
+			
+			<field id="id_regmovim" lastId="regmovimiento_dup.xml" />
+			<field id="fiscal" id_temp="fiscal" />
+			<field id="nombre_movimiento" id_temp="nombre_movimiento" />
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" limit="200">
+	<title>ABRE ORDEN DE COMPRA</title>
+	<obs></obs>
+	<form  >
+		<table id="CPSENCAB" label="ORDENES DE COMPRA">
+			<field id="ocpnro"  />
+			<field id="ocpnro2"  >
+			    <expression>concat(ocpnro, ' - ', date_format(ocpfec, '%d/%m/%Y'))</expression>
+			</field>
+
+			<field id="ocpfec" >
+				<tipo>date</tipo>
+			</field>
+			<field id="ctacod" oculto="true">
+			    <condicion operador="=">-1</condicion>
+			</field>
+			<order>
+			<field id="ocpfec" orderType="DESC">
+			</field>
+
+			</order>
+		</table>
+	</form>
+</histrix>

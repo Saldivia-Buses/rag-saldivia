@@ -10,8 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-chi/chi/v5/middleware"
-
+	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
@@ -33,20 +32,14 @@ type AuthService interface {
 	ListUsers(ctx context.Context, limit, offset int32) ([]service.UserListItem, error)
 }
 
-// EventPublisher can publish notification events via NATS.
-type EventPublisher interface {
-	Notify(tenantSlug string, evt any) error
-	Broadcast(tenantSlug, channel string, data any) error
-}
-
 // Auth handles HTTP requests for authentication.
 type Auth struct {
-	authSvc   AuthService      // static service (single-tenant mode)
-	resolver  *tenant.Resolver // per-request resolution (multi-tenant mode)
-	jwtCfg    sdajwt.Config
-	publisher EventPublisher
-	blacklist *security.TokenBlacklist // for multi-tenant service wiring
-	svcCache  sync.Map         // slug → AuthService (multi-tenant cache)
+	authSvc         AuthService      // static service (single-tenant mode)
+	resolver        *tenant.Resolver // per-request resolution (multi-tenant mode)
+	jwtCfg          sdajwt.Config
+	blacklist       *security.TokenBlacklist // for multi-tenant service wiring
+	svcCache        sync.Map         // slug → AuthService (multi-tenant cache)
+	serviceTokenCfg *ServiceTokenConfig      // for POST /v1/auth/service-token
 }
 
 // NewAuth creates auth HTTP handlers in single-tenant mode.
@@ -55,11 +48,11 @@ func NewAuth(authSvc AuthService) *Auth {
 }
 
 // NewMultiTenantAuth creates auth HTTP handlers that resolve the tenant DB per request.
-func NewMultiTenantAuth(resolver *tenant.Resolver, jwtCfg sdajwt.Config, publisher EventPublisher, blacklist *security.TokenBlacklist) *Auth {
+// Event publishing is handled via the transactional outbox inside the service layer.
+func NewMultiTenantAuth(resolver *tenant.Resolver, jwtCfg sdajwt.Config, blacklist *security.TokenBlacklist) *Auth {
 	return &Auth{
 		resolver:  resolver,
 		jwtCfg:    jwtCfg,
-		publisher: publisher,
 		blacklist: blacklist,
 	}
 }
@@ -93,7 +86,7 @@ func (h *Auth) resolveService(r *http.Request) (AuthService, error) {
 		return nil, err
 	}
 
-	svc := service.NewAuth(pool, h.jwtCfg, tenantID, slug, h.publisher)
+	svc := service.NewAuth(pool, h.jwtCfg, tenantID, slug)
 	svc.SetBlacklist(h.blacklist)
 	h.svcCache.Store(slug, svc)
 	return svc, nil
@@ -115,19 +108,22 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 
 	var req loginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "invalid request body"})
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid request body"))
 		return
 	}
 
 	if req.Email == "" || req.Password == "" {
-		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "email and password are required"})
+		httperr.WriteError(w, r, httperr.InvalidInput("email and password are required"))
+		return
+	}
+	if len(req.Email) > 254 {
+		httperr.WriteError(w, r, httperr.InvalidInput("email too long"))
 		return
 	}
 
 	svc, err := h.resolveService(r)
 	if err != nil {
-		slog.Error("failed to resolve tenant for login", "error", err)
-		writeJSON(w, http.StatusBadGateway, errorResponse{Error: "tenant not available"})
+		httperr.WriteError(w, r, httperr.Wrap(err, httperr.CodeInternal, "tenant not available", http.StatusBadGateway))
 		return
 	}
 
@@ -140,13 +136,11 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidCredentials):
-			writeJSON(w, http.StatusUnauthorized, errorResponse{Error: "invalid email or password"})
+			httperr.WriteError(w, r, httperr.Unauthorized("invalid email or password"))
 		case errors.Is(err, service.ErrAccountLocked):
-			writeJSON(w, http.StatusTooManyRequests, errorResponse{Error: "too many attempts, try again later"})
+			httperr.WriteError(w, r, httperr.Wrap(nil, httperr.CodeForbidden, "too many attempts, try again later", http.StatusTooManyRequests))
 		default:
-			reqID := middleware.GetReqID(r.Context())
-			slog.Error("login failed", "error", err, "request_id", reqID)
-			writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "internal error"})
+			httperr.WriteError(w, r, httperr.Internal(err))
 		}
 		return
 	}
@@ -184,13 +178,13 @@ func (h *Auth) Refresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if refreshToken == "" {
-		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "refresh token is required"})
+		httperr.WriteError(w, r, httperr.InvalidInput("refresh token is required"))
 		return
 	}
 
 	svc, err := h.resolveService(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadGateway, errorResponse{Error: "tenant not available"})
+		httperr.WriteError(w, r, httperr.Wrap(err, httperr.CodeInternal, "tenant not available", http.StatusBadGateway))
 		return
 	}
 
@@ -199,11 +193,9 @@ func (h *Auth) Refresh(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case errors.Is(err, service.ErrInvalidRefreshToken):
 			clearRefreshCookie(w)
-			writeJSON(w, http.StatusUnauthorized, errorResponse{Error: "invalid or expired refresh token"})
+			httperr.WriteError(w, r, httperr.Unauthorized("invalid or expired refresh token"))
 		default:
-			reqID := middleware.GetReqID(r.Context())
-			slog.Error("refresh failed", "error", err, "request_id", reqID)
-			writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "internal error"})
+			httperr.WriteError(w, r, httperr.Internal(err))
 		}
 		return
 	}
@@ -258,13 +250,13 @@ func (h *Auth) Logout(w http.ResponseWriter, r *http.Request) {
 func (h *Auth) Me(w http.ResponseWriter, r *http.Request) {
 	userID := r.Header.Get("X-User-ID")
 	if userID == "" {
-		writeJSON(w, http.StatusUnauthorized, errorResponse{Error: "not authenticated"})
+		httperr.WriteError(w, r, httperr.Unauthorized("not authenticated"))
 		return
 	}
 
 	svc, err := h.resolveService(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadGateway, errorResponse{Error: "tenant not available"})
+		httperr.WriteError(w, r, httperr.Wrap(err, httperr.CodeInternal, "tenant not available", http.StatusBadGateway))
 		return
 	}
 
@@ -272,11 +264,9 @@ func (h *Auth) Me(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrUserNotFound):
-			writeJSON(w, http.StatusNotFound, errorResponse{Error: "user not found"})
+			httperr.WriteError(w, r, httperr.NotFound("user"))
 		default:
-			reqID := middleware.GetReqID(r.Context())
-			slog.Error("me failed", "error", err, "request_id", reqID)
-			writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "internal error"})
+			httperr.WriteError(w, r, httperr.Internal(err))
 		}
 		return
 	}
@@ -293,7 +283,7 @@ func (h *Auth) EnabledModules(w http.ResponseWriter, r *http.Request) {
 	if h.resolver != nil && tenantID != "" {
 		modules, err := h.resolver.ListEnabledModules(r.Context(), tenantID)
 		if err != nil {
-			slog.Error("list enabled modules failed", "error", err)
+			slog.Warn("list enabled modules failed, using defaults", "error", err)
 		} else {
 			writeJSON(w, http.StatusOK, modules)
 			return
@@ -344,7 +334,7 @@ func (h *Auth) UpdateMe(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 	userID := r.Header.Get("X-User-ID")
 	if userID == "" {
-		writeJSON(w, http.StatusUnauthorized, errorResponse{Error: "not authenticated"})
+		httperr.WriteError(w, r, httperr.Unauthorized("not authenticated"))
 		return
 	}
 
@@ -352,13 +342,13 @@ func (h *Auth) UpdateMe(w http.ResponseWriter, r *http.Request) {
 		Name string `json:"name"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "invalid request body"})
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid request body"))
 		return
 	}
 
 	svc, err := h.resolveService(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadGateway, errorResponse{Error: "tenant not available"})
+		httperr.WriteError(w, r, httperr.Wrap(err, httperr.CodeInternal, "tenant not available", http.StatusBadGateway))
 		return
 	}
 
@@ -366,12 +356,11 @@ func (h *Auth) UpdateMe(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrUserNotFound):
-			writeJSON(w, http.StatusNotFound, errorResponse{Error: "user not found"})
+			httperr.WriteError(w, r, httperr.NotFound("user"))
 		case errors.Is(err, service.ErrValidation):
-			writeJSON(w, http.StatusBadRequest, errorResponse{Error: err.Error()})
+			httperr.WriteError(w, r, httperr.InvalidInput(err.Error()))
 		default:
-			slog.Error("update profile failed", "error", err, "user_id", userID)
-			writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "internal error"})
+			httperr.WriteError(w, r, httperr.Internal(err))
 		}
 		return
 	}
@@ -383,16 +372,14 @@ func (h *Auth) UpdateMe(w http.ResponseWriter, r *http.Request) {
 func (h *Auth) ListUsers(w http.ResponseWriter, r *http.Request) {
 	svc, err := h.resolveService(r)
 	if err != nil {
-		writeJSON(w, http.StatusBadGateway, errorResponse{Error: "tenant not available"})
+		httperr.WriteError(w, r, httperr.Wrap(err, httperr.CodeInternal, "tenant not available", http.StatusBadGateway))
 		return
 	}
 
 	pg := pagination.Parse(r)
 	users, err := svc.ListUsers(r.Context(), int32(pg.Limit()), int32(pg.Offset()))
 	if err != nil {
-		reqID := middleware.GetReqID(r.Context())
-		slog.Error("list users failed", "error", err, "request_id", reqID)
-		writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "internal error"})
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 
@@ -402,5 +389,5 @@ func (h *Auth) ListUsers(w http.ResponseWriter, r *http.Request) {
 func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(v)
+	_ = json.NewEncoder(w).Encode(v)
 }

@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" _sololectura="true" path="/fotos/coches">
+    <title>CONSULTA DE FICHA DE VENTAS</title>
+    <form  >
+        <table id="PEDCOTIZ" label="Ficha de Ventas">
+            <field id="id" noshow="true">
+            </field>
+            <field id="nrocha" esclave="true" tipoOrden="DESC" noshow="true">
+                <label>Nro Fab</label>
+                <help>Numero de Fabricacion</help>
+            </field>
+            <field id="nrofab" esclave="true" tipoOrden="DESC" noshow="true">
+	    			<expresion>PEDCOTIZ.nrocha</expresion>
+            </field>
+
+            <field id="chapita" deshabilitado="true" local="true" linkint="chapita.xml" linkdes="Imprimir Chapita" Formstyle="display:none;" >
+                <expression>'Chapa Ident.'</expression>
+                <label>Chapa Identif</label>
+                <tipo>varchar</tipo>
+                <valor>"Chapa Identif"</valor>
+                <paring destino="nrocha" operador="=">nrofab</paring>
+                <paring destino="nrovin" >nrovin</paring>
+            </field>
+
+            <field id="idCotiz" local="true" linkint="cotizacion_imp.xml" linkdir="cotizacion" linkdes="Cotización" noshow="true">
+        	<label>Cotizacion</label>
+        	<paring destino="idCotiz">idCotiz</paring>
+            </field>
+
+	        <field id="orden_compra" local="true" linkint="ordencompra_qry.xml" linkdir="/compras" linkdes="Orden de Compra">
+        	<label>O.C</label>
+				<valor>'Compras por Unidad'</valor>
+        	 <paring destino="nrocha">nrocha</paring>
+            </field>
+            
+            <field id="ctacod" esclave="true" tipoOrden="DESC" noshow="true">
+            </field>
+            <field id="ctanom" noshow="true">
+                        <expresion>CONCAT(CCTCUENT.ctacod, ' - ', CCTCUENT.ctafan)</expresion>
+            </field>
+	    
+            <field deshabilitado="true" id="chasis" tabla="CHASIS" linkint="chasis_cons.xml" linkdes="Ver Datos del Chasis">
+                <expresion>RIGHT(CHASIS.chasis, 6)</expresion>
+                <label>Chasis</label>
+                <help>Numero de Serie del chasis</help>
+                <paring destino="nrocha">nrofab</paring>
+
+            </field>
+
+            <field deshabilitado="true" id="ctacod2" local="true" linkint="fichas_x_cliente.xml" linkdes="Total de Coches" print="false">
+                <expresion>select count(*) from VUNIDADES as PED where PED.ctacod = PEDCOTIZ.ctacod</expresion>
+
+                <label >Ot.</label>
+                <help>Codigo de Cuenta</help>
+                <paring destino="ctacod">ctacod</paring>
+                <tipo>varchar</tipo>
+            </field>
+            <field deshabilitado="true" id="analisis" local="true" linkint="analisis_fichas_x_cliente.xml" linkdes="Total de Coches" print="false" linkdir="clientes_local/">
+		<valor>'Fichas Anteriores'</valor>
+                <label >Caract.</label>
+                <help>Codigo de Cuenta</help>
+                <paring destino="ctacod">ctacod</paring>
+                <paring destino="nombre">ctanom</paring>
+                <tipo>varchar</tipo>
+            </field>
+            
+            
+            <field id="ninterno">
+                <expression>atributoUnidad(id, 'ninterno')</expression>
+               <label  size="23" posx="160" posy="0" PDFsize="10"  colspan="2">Interno</label>
+                <help></help>
+            </field>
+            <field id="corpath" local="true" noshow="true">
+                <if exp="true">
+                    <true>'nrocha/corte'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="cortePint"  path="corpath" open="true" print="false">
+	        	<expression>atributoUnidad(id, 'cortepint')</expression>
+            	<label>Corte</label>
+                <tipo>file</tipo>
+            </field>
+
+
+            <field id="panpath" local="true=" oculto="true">
+                <valor>../archivo/Panas</valor>
+            </field>
+
+            <field id="fotoPana"  path="panpath" _noshow="true" print="false">
+	       		<expression>atributoUnidad(id, 'fotoPana')</expression>
+                <label  >Pana</label>
+                <help></help>
+                <tipo>file</tipo>
+                <size>50</size>
+           </field>
+			<field id="localidades">
+	       		<expression>atributoUnidad(id, 'localidade')</expression>
+                <label colspan="6" size="24" posx="9" posy="+2" PDFsize="9" PDFnolabel="true">Localidades</label>
+            </field>
+
+
+
+<!--            <field id="observ" obj="accesorios_coche.xml" dir="/produccion/man" local="true" showObjTabla="true">
+                    <label colspan="6" size="24" posx="9" posy="+2" PDFsize="9" PDFnolabel="true">Accesorios y Observaciones</label>
+                    <paring destino="nrofab" operador="=">nrocha</paring>
+
+            </field>
+	    <field id="observ"  obj="accesorios_coche.xml" dir="/produccion/man" local="true">
+		<label colspan="6" size="24" posx="9" posy="+2" PDFsize="9" PDFnolabel="true">Accesorios y Observaciones</label>
+		<paring destino="ficha_id" operador="=">id</paring>
+		<paring destino="nrofab" operador="=">nrocha</paring>
+            </field> -->
+                    
+
+<!--			<field id="obsesp"></field> -->
+			<!--			
+			<field id="modcod" tabla="CHASIS">
+				<label PDFsize="10" modpos="nobr" posx="60" posy="0" size="23">Modelo</label>
+				<help/>
+				<tabla_ex id="MODCHASIS">
+					<field clave="true" id="modcha">
+						<label>Modelo</label>
+						<help>Codigo del Modelo de Chasis</help>
+					</field>
+					<field id="moddes">
+						<label>Descripcion</label>
+						<help>Descripcion del Modelo</help>
+					</field>
+					<field id="marcod">
+						<label>Marca Chasis</label>nrocha
+					</field>
+				</tabla_ex>
+			</field> -->
+		<!--	<field id="pedfec">
+				<label>fecha</label>
+				<help>fecha</help>
+			</field> -->
+			<!-- <field id="chasis">
+                      <label>Nro.Chasis </label>
+                      <help>Nro de serie del Chasis </help>
+                  </field>
+ -->
+            <order>
+                <field id="nrocha" tabla="PEDCOTIZ"/>
+            </order>
+        </table>
+        <join tipo="left">
+            <table id="CHASIS">
+                <field id="nrocha">
+                    <condicion operador="=">PEDCOTIZ.nrocha</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="MODCHASIS">
+                <field clave="true" id="modcha">
+                    <condicion operador="=">CHASIS.modcod</condicion>
+
+                </field>
+                <field id="marcod">
+                    <condicion operador="=">CHASIS.marcod</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+                <table id="CCTCUENT">
+                    <field id="ctacod">
+                        <condicion operador="=">PEDCOTIZ.ctacod</condicion>
+                    </field>
+
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">'02'</condicion>
+                    </field>
+                </table>
+         </join>
+        <join tipo="left">
+            <table id="HOMOLOGMOD">
+                <field id="id_homologacion">
+                    <condicion operador="=">PEDCOTIZ.homologacion_id</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+	<histrix tipo="liveGrid" imprime="false" deleteRow="false" inserta="false" delete="false">
+		<title>Preferencias</title>
+		<obs></obs>
+		<form detalle="htxplugins_options.xml" inline="true" hasDetail="options">
+			<table id="HTXOPTIONS" label="OPCIONES" >
+				<field id="id_option" deshabilitado="true"  noshow="true" autoinc="true">
+				</field>
+				<field id="option_name" _editable="true" noshow="true" >
+					<label>Nombre</label>
+					<help>Nombre de la opcion</help>
+				</field>
+
+				<field id="option_description" _Class="boton"
+				style="font-size:15px; padding:5px;">
+					<label>Opcion</label>
+					
+				</field>
+
+				<field id="option_value" editable="true">
+					<label>Valor</label>
+					<size>50</size>
+				</field>
+				<field id="opname" noshow="true">
+				    <expression>substr(substr(HTXOPTIONS.option_name, 9),  locate(':', substr(HTXOPTIONS.option_name, 9)) + 2)</expression>
+				    <condicion operador="!=">'enable'</condicion>
+				</field>
+
+				<field id="basename" noshow="true">
+				    <expression>substr(substr(HTXOPTIONS.option_name, 9), 1, locate('::', substr(HTXOPTIONS.option_name, 9)) - 1)</expression>
+				</field>
+				             
+				
+				<order>
+				    <field id="option_description"/>
+				</order>
+			</table>                 
+		</form>
+	</histrix>

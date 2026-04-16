@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CRUD
+Tarea: Tabla de Sectores de Articulos
+Autor: d!ego2k
+Fecha: 13/10/10
+*******************************************************************************
+-->
+<histrix tipo="abm">
+    <title>Sectores</title>
+    <obs></obs>
+    <form>
+        <table id="STK_SECTORES" label="Sectores">
+            <field id="id_stksector" esClave="true" noshow="true" />
+
+            <field id="nombre_sector">
+                <label>Nombre</label>
+            </field>
+
+        </table>
+    </form>
+</histrix>	

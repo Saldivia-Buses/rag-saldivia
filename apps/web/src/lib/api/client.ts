@@ -140,7 +140,8 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
     res = await fetch(url, init);
   }
 
-  if (!res.ok) {
+  // 206 Partial Content is OK (dashboard KPIs with partial failures)
+  if (!res.ok && res.status !== 206) {
     const body = await res.json().catch(() => ({ error: res.statusText }));
     throw new ApiError(res.status, body.error ?? res.statusText);
   }

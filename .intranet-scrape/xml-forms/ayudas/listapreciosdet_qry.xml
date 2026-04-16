@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="consulta"  PDFfontSize="10" PDFlineColor="0,0,0">
+	<title>LISTAS DE PRECIOS</title>
+	<obs></obs>
+	<form >
+		<table id="LISTAPRECIOSDET" >
+		    <title>Listas de precios</title>
+		 <!--
+				<field id="idArticulo" _noshow="true">
+					<label>Art</label>
+					<detalle>artcod</detalle>
+				</field>
+				                    -->
+				<field id="artcod" tabla="STKINSUM" _noshow="true">
+					<label>cod</label>
+					<detalle>artcod</detalle>
+				</field>                 
+				<field id="artdes" tabla="STKINSUM">
+					<label>Nombre</label>
+					<tipo>varchar</tipo>
+					<expression>concat(artdes,  ' (', artcod, ')')</expression>
+					<detalle>artdes</detalle>
+				</field>
+
+				<field id="idLista"  PDFsize="12" _noshow="true">
+					<label>Lista</label>
+					<label>Lista</label>
+					<help>Lista</help>
+					<condicion operador="in">select max(idLista) from LISTAPRECIOSDET</condicion>
+				</field>
+
+				
+			
+			    <field id="obs" noshow="true">
+					<label>Observaciones</label>
+					<tipo>varchar</tipo>
+				</field>
+					   
+				<field id="vigencia" tipoOrden="DESC" noshow="true">
+					<label>vig</label>
+					<tipo>date</tipo> 
+				</field>
+
+		
+
+			    <field id="precio1" noshow="true">
+					<label>Precio</label>
+					<tipo>custom_numeric</tipo>
+					<detalle>precio_unitario</detalle>
+				</field>
+                
+                <field id="artrub" noshow="true" tabla="STKINSUM">
+                    <label>Sección</label>
+                    <detalle>prdseccion_id</detalle>
+                </field>
+                
+			    <field id="pie" tabla="LISTAPRECIOSCAB" noshow="true">
+				</field>
+			<order>
+				<field id="vigencia"></field>
+			</order>			
+		</table>
+		<join tipo="left">
+			<table id="STKINSUM">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">'02'</condicion>
+				</field>
+				<field id="artcod">
+					<condicion operador="=">LISTAPRECIOSDET.idArticulo</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="LISTAPRECIOSCAB">
+				<field id="idLista">
+					<condicion operador="=">LISTAPRECIOSDET.idLista</condicion>
+				</field>
+
+			</table>
+		</join>
+		
+	</form>	   
+</histrix>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="crud"  >
+	<titulo>Calificacion</titulo>
+	<obs/>
+	<form>
+		<table id="PROD_CONTROLES">
+		    <filters>
+
+			<field id="habilitado">
+				<label modpos="nobr">Habilitado</label>
+				<operador>=</operador>
+                <valor>0</valor>
+			</field>
+		    </filters>
+
+			<field id="id_prodcontrol" autoinc="true" noshow="true">
+			</field>
+
+			<field id="seccion_id" noshow="true">
+				<label>Seccion</label>
+				<condicion operador="=">0</condicion>
+			</field>
+
+			<field id="nombre_control"  >
+				<label>Control</label>
+				<size>60</size>
+			</field>
+
+			<field id="habilitado" >
+				<label>Habilitado</label>
+				<options>
+				    <option valor="0">Si</option>
+				    <option valor="1">No</option>
+                </options>
+				<tipo>radio</tipo>
+			</field>
+
+		</table>
+
+	</form>
+</histrix>

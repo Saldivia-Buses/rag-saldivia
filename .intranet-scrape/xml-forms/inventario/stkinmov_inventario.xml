@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<histrix tipo="consulta">
+	<title>INVENTARIO</title>
+	<obs></obs>
+	<form >
+		<table id="STKINMOV" label="INVENTARIO">
+	
+			
+			<field id="siscod" oculto="true">
+					<condicion operador="=">'INV'</condicion>
+			</field> 
+
+			<field id="artcod" >
+				<label>Código</label>
+				
+			</field>
+			<field id="artdes" tabla="STKINSUM" >
+				<label>Artículo</label>
+				<tipo>char</tipo>
+			</field>
+			<field id="movpes"  >
+				<label>Cantidad</label>
+			</field>
+			<field id="uninom" tabla="FSMUNIDS" >
+				<label>Unidad</label>
+				<tipo>char</tipo>
+			</field>
+			<field id="costo" >
+				<label>Costo</label>
+				<expression>STKINSUM.artcos * STKINSUM.valcps / STKINSUM.valuso</expression>
+			</field>
+
+			<order>
+				<field id="artdes"></field>>
+			</order>
+		</table>
+		<join tipo="left">
+		
+			<table id="STKINSUM">
+				<field id="siscod" oculto="true">
+					<label>siscod</label>
+					<condicion operador="=">'01'</condicion>
+		
+				</field>
+				<field id="artcod" oculto="true">
+					<condicion operador="=">STKINMOV.artcod</condicion>
+				</field>
+		
+			</table>
+		</join>		
+		<join tipo="left">
+		
+			<table id="FSMUNIDS">
+				<field id="unicod" oculto="true">
+					<condicion operador="=">STKINSUM.unicps</condicion>
+				</field>
+		
+			</table>
+		</join>				
+	</form>
+</histrix>

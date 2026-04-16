@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert">
+    <title>Actualiza seccion</title>
+    <form>
+        <table id="MRP_PEDIDO_PRODUCCION" idCampoCond="avanzar">
+
+            <field id="carpetaplanos_id"	id_temp="id_carpetaplanos" />
+            <field id="seccion_id"		id_temp="seccion_id" />
+            <field id="nrofab_id"		id_temp="nrofab" />
+            <field id="posicionfab_alarma_id"	id_temp="posicionfab_alarma_id" />
+            <field id="posicionfab_id"		id_temp="posicionfab_id" />
+            <field id="stkarticulo_id"		id_temp="stkarticulo_id" />
+            <field id="cantidad_pieza_unidad"	id_temp="cantidad_pieza_unidad" />
+            <field id="creacion_usuario_id"	id_padre="usuario_id" />
+            <field id="creacion_hora">
+                <valor>NOW()</valor>
+                <tipo>integer</tipo>
+            </field>
+
+        </table>
+    </form>
+</histrix>

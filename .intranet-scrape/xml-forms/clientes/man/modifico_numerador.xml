@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" inserta="false">
+  <title>Numeradores</title>
+  <obs></obs>
+  <form >
+    <table id="REG_NUMERADORES" label="Numeradores">
+
+		<field id="id_regnumerador" esClave="true" noshow="true" />
+		
+        <field id="subsistema_id" oculto="true" />
+
+		<field id="puesto" _oculto="true" deshabilitado="true">
+			<label>Punto de Venta</label>
+			<formato>%04d</formato>
+		</field>
+	
+       <field id="regconcepto_id" deshabilitado="true" >
+	    <helper type="combo" xml="regconcepto_qry.xml" dir="/ayudas" empty="true">
+	    </helper>
+		<label>Concepto</label>
+      </field>
+      
+      <field id="letra">
+      	<label>Letra</label>
+      	<helper type="combo" empty="true">
+      		<option value="A">A</option>
+      		<option value="B">B</option>
+      		<option value="C">C</option>
+      		<option value="E">E</option>
+      		<option value="R">R</option>
+      		<option value="X">X</option>
+		</helper>
+      </field>
+
+		<field id="numero">
+			<label>Numero</label>
+			<size>8</size>
+			<formato>%08d</formato>
+		</field>
+
+
+		<order>
+			<field id="puesto" />
+			<field id="regconcepto_id" />			
+			<field id="letra" />			
+		</order>
+    </table>
+  </form>
+</histrix>  

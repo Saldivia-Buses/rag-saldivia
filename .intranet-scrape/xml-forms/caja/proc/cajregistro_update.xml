@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert">
+	<title>Apertura Caja</title>
+	<obs></obs>
+	<form >
+		
+		<table id="CAJ_REGISTROS" label="Apertura Caja">
+            
+			<field id="cajpuesto_id" 		id_temp="cajpuesto_id">			</field>
+			<field id="fecha_registro" 		id_temp="fecha_registro">		</field>                                                           
+			<field id="turno_registro" 		id_temp="turno_registro">		</field>
+			<field id="apertura_caja" 		id_temp="apertura_caja">		</field>
+			<field id="operador_nombre" 	id_temp="operador_nombre">		</field>
+		    <field id="apertura_recuento"   id_temp="apertura_recuento">    </field>
+		    
+        </table>
+	</form>
+</histrix>

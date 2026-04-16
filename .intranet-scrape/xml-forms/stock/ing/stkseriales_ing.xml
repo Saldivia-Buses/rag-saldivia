@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ing" preloadData="false" limit="1" deleteRow="false" modifica="false" inserta="false" imprime="false">
+	<title>Seriales</title>
+	<obs></obs>
+	<form>
+		<table id="GEN_CALENDAR" label="Seriales">
+			<movimientos>
+				<relacion id="stkseriales_ins.xml" />
+			</movimientos>
+			<filters>
+				<field id="codigo_barra">
+					<label>Cod. Barra</label>
+				</field>
+
+				<field id="nombre_articulo"  local="true" deshabilitado="true" oculto="true">
+					<label modpos="nobr" colspan="5">Nombre Articulo</label>
+					<help>Nombre de Articulo a buscar</help>
+				</field>
+				<field id="stkarticulo_id" deshabilitado="true">
+					<label modpos="nobr">Cod. Art.</label>
+				</field>
+				<field id="prefijo">
+					<label>Prefijo</label>
+				</field>
+				<field id="desde">
+					<label>Desde</label>
+				</field>
+				<field id="hasta">
+					<label>Hasta</label>
+				</field>
+				<field id="cantidad" deshabilitado="true">
+					<label modpos="nobr">Cantidad</label>
+					<valor>1</valor>
+				</field>
+				<field id="sufijo">
+					<label>Sufijo</label>
+				</field>
+			</filters>
+			<field id="_ORDEN" local="true" />
+			<fieldGroup noshow="true">
+				<field id="codigo_barra" tabla="STK_ARTICULOS" local="true" _esClave="true" required="false">
+					<label>Codigo de Barra</label>
+					<help>Articulo a buscar</help>
+					<helper type="external" xml="stkarticulo_pos.xml" dir="/ayudas">
+						<field id="wstklista_id" local="true">
+							<valor>1</valor>
+						</field>
+						<field id="id_stkarticulo2" noshow="true">
+							<expression>id_stkarticulo</expression>
+							<detalle>stkarticulo_id</detalle>
+						</field>
+					</helper>                
+				</field>      
+				<field id="numorden" local="true">
+					<if exp="true">
+						<true>_ORDEN - 1</true>
+						<false>0</false>
+					</if>
+				</field>
+				<field id="cantidad" local="true" >
+					<setvar>limit</setvar>
+					<label>cant</label>
+				</field>
+				<field id="prefijo" local="true">
+					<label>Prefijo</label>
+				</field>
+				<field id="desde" local="true">
+					<label>Desde</label>
+					<jseval fielddestino="cantidad">(hasta >= desde)?(hasta - desde + 1):1</jseval>
+				</field>
+				<field id="hasta" local="true">
+					<label>Hasta</label>
+					<jseval fielddestino="cantidad">(hasta >= desde)?(hasta - desde + 1):1</jseval>
+				</field>
+				<field id="sufijo" local="true">
+					<label>Sufijo</label>
+				</field>
+				<field id="stkarticulo_id" local="true" >
+					<label>Articulo</label>
+					<helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas" >
+					</helper>
+					    
+				</field>
+				<field id="nombre_articulo" oculto="true" local="true" noselect="true">
+					<label>Nombre</label>
+					<size>40</size>
+				</field>
+			</fieldGroup>
+			<field id="codigo_serie" local="true">
+				<label>Serie</label>
+				<if exp="true">
+					<true>'prefijo'.(desde + numorden).'sufijo'</true>
+					<false>0</false>
+				</if>
+			</field>
+		</table>
+	</form>
+</histrix>

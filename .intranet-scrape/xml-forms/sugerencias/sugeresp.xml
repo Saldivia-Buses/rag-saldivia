@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" >
+	<title>Respuesta</title>
+	<consulta>
+		<table id="SUGERESP">
+			<title>Sugerencias</title>
+			
+			
+			<field id="idSugerencia" oculto="true">
+			</field>
+			<field id="idResp" noshow="true">
+			</field>
+			<field id="login" deshabilitado="true" >
+				<label>Usuario </label>
+				<help>Usuario que hace el pedido</help>
+				<tabla_ex id="HTXUSERS">
+					<field id="login"></field>
+					<field id="nombre"></field>
+					<order>
+						<field id="nombre"></field>
+					</order>
+				</tabla_ex>
+				<valor eval="true">$_SESSION['usuario']</valor>
+			</field>
+
+
+			<field id="fecha" deshabilitado="true" esClave="true" valauto="true">
+				<label>Fecha</label>
+				<help>Fecha</help>
+				<valor>today</valor>
+			</field>
+
+
+			<field id="respuesta" _deshabilitado="true">
+				<label >Respuesta</label>
+				<help>Descripcion </help>
+				<size>200</size>
+				
+			</field>
+		
+			<order>
+				<field id="idSugerencia" ></field>
+			</order>
+
+		</table>
+	</consulta>
+</histrix>

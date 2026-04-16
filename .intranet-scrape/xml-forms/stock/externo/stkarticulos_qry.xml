@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="liveGrid" deleteRow="false" inserta="false" paginar="150" preloadData="false">
+    <title>Insumos</title>
+    <obs></obs>
+    <form  detalle="reg_cuenta_x_articulo.xml" inline="true" _hasDetail="hasdet">
+        <table id="STK_ARTICULOS" styleTbody="height:500px;overflow-x:hidden;" >
+            <title>Consulta general de Artículos</title>
+            <filters>
+                <field id="stkrubro_id"   >
+                    <label modpos="nobr">Rubro</label>
+                </field>
+
+              <field id="id_stkarticulo"  PDFcolor="000000" esClave="true" style="font-weight:bold;">
+                <label>Articulo</label>
+               </field>
+
+               <field id="alto" deshabilitado="false">
+                <label>Alto(mm) desde</label>
+                <operador>&gt;=</operador>
+               </field>
+
+               <field id="alto" deshabilitado="false">
+                <label modpos="nobr">Alto(mm) hasta</label>
+                <operador>&lt;=</operador>
+               </field>
+
+               <field id="ancho" deshabilitado="false">
+                <label>Ancho(mm) desde</label>
+                <operador>&gt;=</operador>
+               </field>
+
+               <field id="ancho" deshabilitado="false">
+                <label modpos="nobr">Ancho(mm) hasta</label>
+                <operador>&lt;=</operador>
+               </field>
+
+               <field id="m2" deshabilitado="false">
+                <label>m2(mm) desde</label>
+                <operador>&gt;=</operador>
+               </field>
+
+               <field id="m2" deshabilitado="false">
+                <label modpos="nobr">m2(mm) hasta</label>
+                <operador>&lt;=</operador>
+               </field>
+
+            </filters>
+            <field id="id" _noshow="true" style="white-space:nowrap">
+                <label>Codigo</label>
+                <expresion>group_concat(distinct concat(left(id_stkarticulo, 1),'/', substr(id_stkarticulo, 2,4),'-' ,
+                    substr(id_stkarticulo, 6,4) ))</expresion>
+            </field> 
+
+            <field id="id_stkarticulo"  PDFcolor="000000" esClave="true" style="font-weight:bold;">
+
+                <ayuda_ex id="STK_ARTICULOS" >
+                    <field id="id_stkarticulo" >
+                        <label>Cod</label>
+                    </field>
+                    <field id="nombre_articulo" >
+                        <label>Nombre</label>
+                        <detalle>nombre_articulo</detalle>
+                    </field>
+
+                </ayuda_ex>
+                <label>Cod.</label>
+                <detalle>id_stkarticulo</detalle>
+            </field>
+            <field id="stkrubro_id"   noshow="true">
+                <label modpos="nobr">Rubro</label>
+                <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true" />
+            </field>
+
+            <field id="nombre_articulo" _autocompletar="false" fullSearch="true">
+                <label>Nom. Articulo</label>
+                <help>Descripcion de Articulo. (ENTER = Retorna a ingreso de codigo).
+                </help>
+            </field>
+            
+            <field id="baja_articulo" oculto="true">
+                <condicion operador="!=">1</condicion>
+            </field>
+
+            <field id="stock2" noZero="true" style="text-align:right;" suma="true">
+                <label>Stock Begerman</label>
+                <expression having="false">round(stk_CantUM1,0)</expression>
+                <tipo>integer</tipo>
+                <condicion operador="!=">0</condicion>
+            </field>
+
+                <field id="ancho" _noZero="true" editable="true" forceUpdate="true">
+                    <label>Ancho (mm)</label>
+                    <help>Ancho</help>
+                    <tipo>numeric</tipo>
+                    <expression>IFNULL(STK_ARTICULOS.ancho, 0)</expression>
+                </field>
+                <field id="alto" _noZero="true" editable="true" forceUpdate="true">
+                    <label>Alto (mm)</label>
+                    <help>Alto</help>
+                    <tipo>numeric</tipo>
+                    <expression>IFNULL(STK_ARTICULOS.alto, 0)</expression>
+                </field>
+                <field id="m2" _noZero="true">
+                    <label>m2(mm)</label>
+                    <expression>round((ancho * alto ) , 2)</expression>
+                    <tipo>numeric</tipo>
+                </field>                
+
+            <field id="fotopath" local="true" noshow="true">
+                <if exp="true">
+                    <true>'id_stkarticulo/'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="no_listar" noshow="true">
+                <helper type="combo">
+                    <option value="0">Listables</option>
+                    <option value="1">No Listables</option>
+                    <option value="">Todos</option>
+                </helper>
+            </field>        
+
+            <group>
+                <field id="id_stkarticulo" tabla="STK_ARTICULOS"/>
+            </group>
+
+            <filters>
+                <field id="id_stkarticulo" deshabilitado="false">
+                    <ayuda_ex id="STK_ARTICULOS">
+                        <clave>id_stkarticulo</clave>
+                        <descripcion>nombre_articulo</descripcion>
+                    </ayuda_ex>
+                    <label>Cod.</label>
+                    <operador modificador="left">=</operador>
+                </field>
+                <field id="nombre_articulo" fullSearch="true">
+                    <label>Articulo</label>
+                    <help>Descripcion de Articulo</help>
+                    <operador>like</operador>
+                </field>
+            </filters>
+
+
+        </table>
+
+        <join tipo="left">
+            <table id="Stock">
+                <field id="stkart_CodGen">
+                    <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+                </field>
+                <field id="stkdep_Cod">
+                    <condicion operador="=">1</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

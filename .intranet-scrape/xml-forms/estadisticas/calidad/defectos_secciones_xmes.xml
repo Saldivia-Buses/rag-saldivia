@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="chart">
+	<title>COCHES</title>
+	<obs></obs>
+	<form >
+		<table id="PEDCOTIZ" >
+			<title>% Defectos por Mes</title>
+	 
+		   <grafico id="modelosfab" >
+			   <ancho>400</ancho>
+			   <tipo>C</tipo>
+			   
+			   <etiquetas>descripcion</etiquetas>
+			   <serie>defectos</serie>
+			   
+			   <title>% Defectos por Mes</title>
+			   <subtitulo></subtitulo>
+		   </grafico>
+		
+		    <filters>
+			    <field id="terminacion">
+				    <label>Desde</label>
+				    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-1 month')) , 1, date("Y") ))</valor>
+				    <operador>&gt;=</operador>
+			    </field>
+			    <field id="terminacion">
+                                    <label>Hasta</label>
+				    <valor eval="true">date('d/m/Y', strtotime('-1 second', strtotime(date('Y-m-01'))))</valor>
+				    <operador>&lt;=</operador>
+			    </field>
+		    </filters> 
+
+			<field id="mes">
+				<expression>month(terminacion)</expression>
+				<label>Mes</label>
+				<options>
+					<option valor="1">Ene</option>
+					<option valor="2">Feb</option>
+					<option valor="3">Mar</option>
+					<option valor="4">Abr</option>
+					<option valor="5">May</option>
+					<option valor="6">Jun</option>
+					<option valor="7">Jul</option>
+					<option valor="8">Ago</option>
+					<option valor="9">Sep</option>
+					<option valor="10">Oct</option>
+					<option valor="11">Nov</option>
+					<option valor="12">Dic</option>
+
+				</options>
+       				<tipo>varchar</tipo>
+			</field>
+                    <field id="terminacion" oculto="true">
+<!--                        <condicion operador="&gt;="> DATE_FORMAT(date_sub(date(now()) , interval 1 year) ,'%Y-%m-01') and CALENDAR.fecha &lt;= now()</condicion> -->
+			<tipo>date</tipo>
+                    </field>
+                    <field id="year" oculto="true">
+                        <expression>year(terminacion)</expression>
+
+                    </field>
+
+			<field id="defectos">
+                             <expression><![CDATA[(100*
+				SUM(no_conforme)/ count(*)
+                                )]]></expression>
+
+
+				<label>% Defectos</label>
+                                <tipo>numeric</tipo>
+			</field>
+
+			<field id="seccion_id" tabla="PROD_CONTROLES" noshow="true">
+				<condicion operador="!=">23</condicion><!--sacamos plasticos hasta que no carguemos todoos los controles a cada una de las homologacoines-->
+			</field>
+			<field id="descripcion" tabla="MOMENTO" noshow="true" />
+			<field id="graficar" tabla="MOMENTO" noshow="true">
+			    <condicion operador="=">1</condicion>
+			</field>
+			<group>
+                                <field id="year"></field>
+				<field id="mes"></field>
+				<field id="seccion_id"></field>
+			</group>
+		</table>
+		<join>
+		    <table id="PROD_CONTROL_MOVIM">
+			<field id="nrofab_id">
+			    <condicion operador="=">PEDCOTIZ.nrocha</condicion>
+			</field><!--
+	                <field id="no_conforme">
+			    <condicion operador="=">1</condicion>
+	                </field>-->
+		    </table>
+		</join>
+		<join>
+		    <table id="PROD_CONTROLES">
+			<field id="id_prodcontrol">
+			    <condicion operador="=">PROD_CONTROL_MOVIM.prodcontrol_id</condicion>
+			</field>
+		    </table>
+		</join>
+		<join tipo="left">
+                    <table id="MOMENTO">
+                        <field id="idMomento">
+                            <condicion operador="=">PROD_CONTROLES.seccion_id</condicion>
+                            </field>
+                    </table>
+                </join>
+	</form>	   
+</histrix> 

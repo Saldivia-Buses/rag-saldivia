@@ -1,0 +1,383 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  sololectura="true" tipo="ficha" autoprint="true" path="fotos">
+	<title>Entrada de Vehículos Terminados</title>
+	<obs/>
+	<pie>Remitimos a Uds. La presente por haberte registrado la entrada de la unidad en nuestra planta, declarando que el estado general de la misma es el arriba descripto.</pie>
+	<form >
+       <pdf>
+          
+          <code><![CDATA[
+
+          $pdf->DashedRect(10,204,$pdf->anchoPagina,204, 0.1, 70);
+          $pdf->DashedRect(10,211,$pdf->anchoPagina,211, 0.1, 70);
+          $pdf->DashedRect(10,218,$pdf->anchoPagina,218, 0.1, 70);
+
+
+
+          $pdf->RoundedRect(10,250,90,25, 2);
+          $pdf->Line(10,260,100,260);
+          $pdf->Line(30,250,30,275);
+
+          $pdf->RoundedRect(110,250,90,25, 2);
+          $pdf->Line(110,260,200,260);
+          $pdf->Line(130,250,130,275);
+          $pdf->Line(170,250,170,275);
+
+          $pdf->RoundedRect(110,220,90,25, 2);
+          $pdf->Line(110,230,200,230);
+          $pdf->Line(130,220,130,245);
+          $pdf->Line(170,220,170,245);
+
+          ]]></code>
+      </pdf>
+
+
+
+		<table id="SERVICE_TURNOS" label="Entrada de Vehículos Terminados">
+			<field id="idTurno" noshow="true" oculto="true" esclave="true">
+				
+			</field>
+			<field id="destino" local="true">
+				<label posx="5" posy="+0.2" PDFsize="11">Destino:</label>
+				<size>40</size>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="Deposito" local="true">
+				<label posx="35" posy="0" PDFsize="11">Depósito:</label>
+				<size>40</size>
+				<tipo>check</tipo>
+			</field>
+			<field id="Repara" local="true">
+				<label posx="72" posy="0" PDFsize="11">Reparación:</label>
+				<size>40</size>
+				<tipo>check</tipo>
+			</field>
+			<field id="Servicio" local="true">
+				<label posx="110" posy="0" PDFsize="11">Servicio:</label>
+				<size>40</size>
+				<tipo>check</tipo>
+			</field>
+
+
+			<field id="numero">
+				<label colspan="6" size="17" posx="160" posy="0" PDFsize="16">Nro</label>
+				<size>40</size>
+				<tipo>varchar</tipo>
+			</field>
+
+
+			<field id="entrega" tabla="ENTREGASCOCHES">
+				<label size="24" posx="5" posy="+1" PDFsize="11">Entregado</label>
+				<tipo>date</tipo>
+			</field>
+			<field id="fecha" >
+				<label size="24" modpos="nobr" posx="54" posy="0" PDFsize="11">Turno</label>
+			</field>				
+			
+			<field id="nrofab" >
+				<label size="25" modpos="nobr" posx="110" posy="0" PDFsize="11">Fabricacion</label>
+				<help>Numero de Fabricacion</help>
+			</field>
+			<field id="ninterno" tabla="PEDCOTIZ">
+				<label  size="23" posx="160" posy="0" PDFsize="10">Nro Interno</label>
+				<help></help>
+			</field>
+			
+			<field id="ctacod" >
+				<label colspan="6" size="24" posx="5" posy="+1" PDFsize="12">Cliente</label>
+				<help>Codigo de Cuenta</help>
+				<tabla_ex condes="true" id="CCTCUENT">
+					<field id="ctacod"/>
+					<field id="ctafan"/>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'02'</condicion>
+					</field>
+				</tabla_ex>
+			</field>
+
+			<field id="nombre" tabla="CCTCONTA">
+				<label colspan="6" size="24" posx="80" posy="0" PDFsize="12">Contacto</label>
+				<size>40</size>		
+
+				<tipo>varchar</tipo>
+				
+			</field>
+
+			<field id="fechaFin">
+				<label posx="145" posy="0" size="26" PDFsize="16" _PDFbold="true">Entrega</label>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="mail" tabla="CCTCONTA">
+				<label colspan="6" size="24" posx="5" posy="+1" PDFsize="12">e-mail</label>
+				<help>Mail</help>
+				<size>50</size>		
+
+				<tipo>varchar</tipo>
+			</field>	
+
+			<field id="Telefono" tabla="CCTCONTA">
+				<label colspan="6" size="25" posx="80" posy="0" PDFsize="12">Teléfono</label>
+				<help>Telefono</help>
+				<size>40</size>		
+
+				<tipo>varchar</tipo>				
+			</field>	
+
+			<field id="dat00" local="true">
+				<label  size="200" posx="5" posy="+1" PDFsize="11" pdffill="150">.</label>
+			</field>				
+			<field id="dat" local="true">
+				<label  size="29" posx="90" posy="0" PDFsize="12">     DATOS</label>
+			</field>						
+
+			<field id="marcod" tabla="CHASIS" >
+			
+				<label size="24" posx="5" posy="+2" PDFsize="10">Chasis Marca</label>
+				<help></help>
+				<tabla_ex xml="marchasis.xml"></tabla_ex>
+				<tipo>integer</tipo>
+				<actualiza>
+					<field destino="marcod" id="modcod" />
+				</actualiza>
+			</field>
+			<field id="moddes" tabla="MODCHASIS" >
+				<label size="23" posx="60" posy="0" modpos="nobr" PDFsize="10">Modelo</label>
+				<help></help>
+			</field>			
+<!--			<field id="modcod" tabla="CHASIS" >
+				<label size="23" posx="60" posy="0" modpos="nobr" PDFsize="10">Modelo</label>
+				<help></help>
+				<tabla_ex id="MODCHASIS">
+					<field clave="true" id="modcha">
+						<label>Modelo</label>
+						<help>Codigo del Modelo de Chasis</help>
+					</field>
+					<field id="moddes">
+						<label>Descripcion</label>
+						<help>Descripcion del Modelo</help>
+					</field>
+					<field id="marcod">
+						<label>Marca Chasis</label>
+					</field>
+				</tabla_ex>
+			</field>			-->
+		
+			<field id="chasis" tabla="CHASIS">
+				<label colspan="6" size="23" posx="110" posy="0" PDFsize="10">Nro Chasis</label>
+				<help></help>
+				<tipo>varchar</tipo>
+				<size>40</size>
+
+			</field>					
+<!--			<field id="tiphab" tabla="PEDCOTIZ">
+				<label size="24" posx="5" posy="+1"  PDFsize="10">Habilitacion</label>
+				<help></help>
+				<tabla_ex xml="tipohabil.xml" dir="/produccion"></tabla_ex>
+			</field>
+			<field id="prvcod" tabla="PEDCOTIZ">
+				<label size="23" posx="60" posy="0" modpos="nobr" colspan="4"  xml="fsmprovs.xml" PDFsize="10">Provincia</label>
+				<help></help>
+				<tabla_ex xml="fsmprovs.xml" vacio="true"></tabla_ex>
+			</field>			-->
+			<field id="nrocar" tabla="PEDCOTIZ">
+				<label size="24" posx="5" posy="+1" PDFsize="10">Carroceria</label>
+				<help></help>
+				<tabla_ex xml="carroceria.xml"></tabla_ex>
+			</field>
+
+            <field id="nromotor" tabla="CHASIS">
+				<label colspan="6" size="23" posx="110" posy="0" PDFsize="10">Nro Motor</label>
+				<help></help>
+				<tipo>varchar</tipo>
+				<size>40</size>
+
+			</field>				
+<!--			<field id="tipserv" tabla="PEDCOTIZ">
+				<label size="23" posx="60" posy="0" PDFsize="10">Tipo Serv.</label>
+				<help>Tipo de Servicio</help>
+				<tabla_ex xml="tiposervicio.xml" dir="/produccion"></tabla_ex>
+			</field>
+			<field id="conces" tabla="CHASIS">
+				<tabla_ex xml="concesionario.xml" vacio="true"></tabla_ex>	          
+				<label colspan="6" size="23" posx="110" posy="0" PDFsize="10">Conces.</label>
+				<help></help>
+				<tipo>varchar</tipo>
+			</field>				-->
+
+			<field id="dat01" local="true">
+				<label  size="200" posx="5" posy="+2" PDFsize="11" pdffill="150">.</label>
+			</field>
+			<field id="dat02" local="true">
+				<label  size="124" posx="40" posy="0" PDFsize="12">COMPONENTES A VERIFICAR AL INGRESAR EL VEHICULO</label>
+			</field>
+			<field id="componentes" obj="service_componentes_cons.xml" showTabla="true" local="true">
+				<label posx="10" posy="+2" PDFsize="11"></label>
+			</field>
+			<field id="dat03" local="true">
+				<label  size="200" posx="5" posy="+1" PDFsize="11" pdffill="150">.</label>
+			</field>
+			<field id="dat04" local="true">
+				<label  size="28" posx="80" posy="0" PDFsize="12">!ATENCION!</label>
+			</field>
+			<field id="dat05" local="true">
+				<label  size="205" posx="5" posy="+1" PDFsize="12" pdffill="150"></label>
+                <valor>El chequeo de la unidad que realiza MARIA CARMEN MURABITO en la recepción de vehículos completo, se limita a la verificación o no de los elementos, al control visual del estado de los mismos y ver si funcionan o no; pero no implica dar conformidad a las condiciones de funcionamiento de los mismos.
+La empresa no se responsabiliza por la pérdida de objetos personales en el interior de la unidad.</valor>
+			</field>
+			<field id="dat06" local="true">
+				<label  size="200" posx="5" posy="+1" PDFsize="11" pdffill="150">.</label>
+			</field>
+			<field id="dat07" local="true">
+				<label  size="72" posx="60" posy="0" PDFsize="12">CHEQUEO DE FUNCIONAMIENTO</label>
+			</field>
+            <field id="grFunc" local="true" oculto="true">
+                 <valor>1</valor>
+            </field>
+			<field id="func" obj="service_componentes_cons1.xml" showTabla="true" local="true">
+				<label posx="10" posy="+2" PDFsize="11"></label>
+                <paring destino="idGrupo">grFunc</paring>
+			</field>
+<!--
+			<field id="dat08" local="true">
+				<label  size="200" posx="5" posy="+1" PDFsize="11" pdffill="150">.</label>
+			</field>
+			<field id="dat09" local="true">
+				<label  size="42" posx="75" posy="0" PDFsize="12">ESTADO GENERAL</label>
+			</field>
+            <field id="grGral" local="true" oculto="true">
+                 <valor>2</valor>
+            </field>
+			<field id="Gral" obj="service_componentes_cons2.xml" showTabla="true" local="true">
+				<label posx="10" posy="+2" PDFsize="11"></label>
+			</field>
+-->
+			<field id="Obs" local="true">
+				<label posx="5" posy="+2" PDFsize="12">Observaciones:</label>
+
+			</field>
+			<field id="Chofer0" local="true">
+				<label size="15" posx="108" posy="217" PDFsize="10">Chofer</label>
+                <size>10</size>
+			</field>
+			<field id="fecyh0" local="true">
+				<label size="25" posx="168" posy="217" PDFsize="10">Fecha y Hora</label>
+				<size>10</size>
+			</field>
+			<field id="Firma0" local="true">
+				<label size="15" posx="108" posy="227" PDFsize="10">Firma Ingreso</label>
+			</field>
+
+			<field id="Ela1" local="true">
+				<label size="15" posx="8" posy="247" PDFsize="10">Elaboro</label>
+                <size>10</size>
+			</field>
+			<field id="Chofer1" local="true">
+				<label size="15" posx="108" posy="247" PDFsize="10">Chofer </label>
+                <size>10</size>
+			</field>
+			<field id="fecyh1" local="true">
+				<label size="25" posx="168" posy="247" PDFsize="10">Fecha y Hora </label>
+				<size>10</size>
+			</field>
+			<field id="Firma1" local="true">
+				<label size="15" posx="8" posy="257" PDFsize="10">Firma </label>
+                
+			</field>
+			<field id="Firma2" local="true">
+				<label size="15" posx="108" posy="257" PDFsize="10">Firma Egreso</label>
+			</field>
+
+<!--
+			<field id="Fax" local="true">
+				<label size="200"  posx="8" posy="275" PDFsize="12"></label>
+                <valor>ENVIO DE FAX A:....................................      ATT.SR.:....................................</valor>
+                
+			</field>
+-->
+			<field id="lbltarea" local="true">
+				<label posx="10" posy="275" PDFsize="12">TAREASS A REALIZAR</label>
+			</field>
+			<field id="lbltipo" local="true">
+				<label posx="85" posy="+1" PDFsize="8">Tipo: 0.Sin Cargo - 1.Con Cargo - 2.Con Cargo 3ro - 3.Envio de repuestos - 4.Viaje</label>
+			</field>
+			<field id="Tareas" obj="service_tarea_unidad_cons.xml" showTabla="true" local="true">
+				<label posx="10" posy="+2" PDFsize="10"></label>
+			</field>
+			<field id="Tareas2" obj="service_nullTable.xml" showTabla="true" local="true">
+				<label posx="10" posy="+2" PDFsize="10"></label>
+			</field>
+			
+
+            <field id="fotos" _local="true" imageWidth="165" watermark="chasis">
+                <expression>CONCAT('/fotos/archivo/Services/',numero,'/')  </expression>
+                <label modpos="nobr" posX="5" posY="+2"></label>
+
+                <tipo>dir</tipo>
+            </field>
+		</table>
+		<join tipo="left">
+			<table id="PEDCOTIZ">
+				<field id="nrocha">
+					<condicion operador="=">SERVICE_TURNOS.nrofab</condicion>
+				</field>
+			</table>
+		</join>		
+		
+		<join tipo="left">
+			<table id="CHASIS">
+				<field id="nrocha">
+					<condicion operador="=">PEDCOTIZ.nrocha</condicion>
+				</field>
+			</table>
+		</join>		
+		<join tipo="left">
+			<table id="CCTCUENT">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">'02'</condicion>
+				</field>
+
+				<field id="ctacod">
+					<condicion operador="=">PEDCOTIZ.ctacod</condicion>
+				</field>
+			</table>
+		</join>						
+		<join tipo="left">
+			<table id="CCTCONTA">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">CCTCUENT.siscod</condicion>
+				</field>
+
+				<field id="ctacod">
+					<condicion operador="=">SERVICE_TURNOS.ctacod</condicion>
+				</field>
+				<field id="idconta">
+					<condicion operador="=">SERVICE_TURNOS.idconta</condicion>
+				</field>
+				
+			</table>
+		</join>			
+		<join tipo="left">
+			<table id="MODCHASIS">
+					<field clave="true" id="modcha">
+						<condicion operador="=">CHASIS.modcod</condicion>
+
+					</field>
+					<field id="marcod">
+						<condicion operador="=">CHASIS.marcod</condicion>
+					</field>			
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="ENTREGASCOCHES">
+					<field clave="true" id="nrofab">
+						<condicion operador="=">PEDCOTIZ.nrocha</condicion>
+
+					</field>
+				<field id="entrega">
+					<condicion operador="IS NOT NULL"></condicion>
+				</field>   					
+			</table>
+		</join>
+	</form>
+</histrix>

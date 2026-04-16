@@ -37,7 +37,7 @@ func (s *ARPScanner) Scan(ctx context.Context) ([]Device, error) {
 	if err != nil {
 		return nil, fmt.Errorf("arp dial on %s: %w", s.iface.Name, err)
 	}
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	addrs, err := s.iface.Addrs()
 	if err != nil {
@@ -82,11 +82,7 @@ func (s *ARPScanner) Scan(ctx context.Context) ([]Device, error) {
 	// Collect responses
 	var devices []Device
 	seen := make(map[string]bool)
-
-	for {
-		if ctx.Err() != nil {
-			break
-		}
+	for ctx.Err() == nil {
 
 		pkt, _, err := client.Read()
 		if err != nil {

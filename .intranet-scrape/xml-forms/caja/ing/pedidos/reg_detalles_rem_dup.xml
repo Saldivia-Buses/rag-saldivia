@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" sqlhardcoded="true">
+    <title>CONSULTA DE PEDIDOS DE FABRICACION</title>
+    <form  >
+    
+        <table id="REG_DETALLES" label="Pedido de Fabricacion" idCampoCond="grabar_rem">
+    	    <sql>
+    	    create temporary table temp_orden as select * from REG_DETALLES WHERE REG_DETALLES.regmovim_id = 
+            [__id_regmovim__];
+
+
+            create temporary table temp_orden2 as select * from REG_DETALLES WHERE REG_DETALLES.regmovim_id = 
+            [__id_regmovim__];
+
+
+            update  temp_orden set regmovim_id= [__reg_movimientos_rem_ins.xml__] , id_regdetalle = 0 ;
+            
+    	    insert into REG_DETALLES select * from temp_orden ;
+
+            create temporary table temp_orden3 as select * from REG_DETALLES WHERE REG_DETALLES.regmovim_id = 
+            [__reg_movimientos_rem_ins.xml__];
+
+    	    insert IGNORE into REG_IMPUTACIONESDETALLES ( regdetallefac_id, regdetalleped_id,  cantidad_imputada )    	    
+        	    select RD.id_regdetalle, temp_orden2.id_regdetalle, RD.cantidad_detalle 
+        	      from temp_orden2 
+                  join temp_orden3 RD on RD.codigo_detalle = temp_orden2.codigo_detalle 
+                                      and RD.regmovim_id    = [__reg_movimientos_rem_ins.xml__] 
+                                      and RD.orden          = temp_orden2.orden ;
+
+    	    drop temporary table temp_orden;
+            drop temporary table temp_orden2;            
+            drop temporary table temp_orden3;            
+
+            </sql>
+    	    <field id="regmovim_id"         id_temp="id_regmovim" />
+            <field id="regcuenta_id"         id_temp="regcuenta_id" />
+            <field id="stkdeposito_id"         id_cab="stkdeposito_id" />            
+            <field id="importe_iva"             id_temp="importe_iva"/>
+            <field id="importe_movimiento"      id_temp="importe_movimiento"/>            
+
+            <field id="idregmovim"         lastId="reg_movimientos_rem_ins.xml" />      
+        </table>
+        
+    </form>
+</histrix>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="fichaing" imprime="true" export="true" PDForientacion="L" inserta="false" modifica="false" borra="false" accordion="false" preFetch="true" limit="1" procesa="false">
+  <title>Cuentas</title>
+  <obs></obs>
+  <form>
+    <table id="CTB_CUENTAS" label="Cuentas">
+
+	<field id="id_cuenta" noshow="true" print="false" />
+	
+	<field id="nombre_cuenta" deshabilitado="true" style="text-align:center;color:#fff;background-color:#000;" PDFbold="true" PDFsize="13">
+	  <label posx="20" posY="21" />
+	  <expression>concat(CTB_CUENTAS.id_cuenta,' - ',CTB_CUENTAS.nombre_cuenta)</expression>
+	  <size>80</size>
+	</field>
+	
+	<field id="ejercicio_id" noshow="true" print="false" />
+
+	<field id="concepto_id" local="true" noshow="true" print="false" />
+
+	<field id="fecha_minima" local="true" noshow="true" print="false" />
+
+	<field id="fecha_maxima" local="true" noshow="true" print="false" />
+	
+	<field id="detalle" local="true">
+		<label posx="5" posY="+5" />
+		<helper type="object" xml="movimientos_lib_mayor_qry.xml">
+		        <parameter target="cuenta_id" 	  source="id_cuenta" />
+		        <parameter target="ejercicio_id"  source="ejercicio_id" />
+		        <parameter target="fecha_minima"  source="fecha_minima" />
+		        <parameter target="fecha_maxima"  source="fecha_maxima" />
+			<parameter target="concepto_id"  source="concepto_id" />
+		</helper>
+	</field>
+
+    </table>
+  </form>
+</histrix>  

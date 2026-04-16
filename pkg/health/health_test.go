@@ -24,7 +24,9 @@ func TestAllHealthy(t *testing.T) {
 	}
 
 	var resp Response
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 
 	if resp.Status != "ok" {
 		t.Errorf("expected status ok, got %s", resp.Status)
@@ -56,7 +58,9 @@ func TestDegradedOnFailure(t *testing.T) {
 	}
 
 	var resp Response
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 
 	if resp.Status != "degraded" {
 		t.Errorf("expected status degraded, got %s", resp.Status)
@@ -85,7 +89,9 @@ func TestNoDependencies(t *testing.T) {
 	}
 
 	var resp Response
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 
 	if resp.Status != "ok" {
 		t.Errorf("expected ok, got %s", resp.Status)
@@ -101,7 +107,9 @@ func TestExtras(t *testing.T) {
 	hc.Handler().ServeHTTP(w, r)
 
 	var resp Response
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 
 	if resp.Extra["clients"] != float64(42) {
 		t.Errorf("expected clients=42, got %v", resp.Extra["clients"])
@@ -150,7 +158,9 @@ func TestLatencyTracked(t *testing.T) {
 	hc.Handler().ServeHTTP(w, r)
 
 	var resp Response
-	json.NewDecoder(w.Body).Decode(&resp)
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
 
 	if resp.Dependencies["fast"].LatencyMs < 0 {
 		t.Errorf("expected non-negative latency, got %d", resp.Dependencies["fast"].LatencyMs)

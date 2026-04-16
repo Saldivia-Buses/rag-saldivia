@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update" >
+    <title>AUTORIZACION</title>
+    <obs></obs>
+    <form  >
+        <table id="CPSENCAB" label="ORDENES DE COMPRA" idCampoCond="ocpest">
+            <field id="ocpfec" id_temp="ocpfec" esClave="true" />
+            <field id="ocpnro" id_temp="ocpnro" esClave="true" />
+
+            <field id="ctacod" id_temp="ctacod" esClave="true" />
+
+
+            <field id="ocpest"   id_temp="ocpest" />
+
+            <field id="fecha_autorizado" id_temp="fecha_autorizado" />
+        </table>
+    </form>
+</histrix>

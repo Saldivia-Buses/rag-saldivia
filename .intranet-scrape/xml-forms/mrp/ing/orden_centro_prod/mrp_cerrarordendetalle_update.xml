@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update">
+    <title>DETALLE ORDEN PRODUCCION</title>
+    <obs></obs>
+    <form >
+        <table id="MRP_ORDEN_DETALLE" label="MOVIMIENTOS" >
+            <field id="id_mrpordendetalle" 	id_temp="id_mrpordendetalle" esClave="true"></field>
+            <field id="producido_ordendetalle"	id_temp="producido_ordendetalle"></field>
+            <field id="observaciones_ordendetalle"	id_temp="observaciones_ordendetalle"></field>
+            <field id="demora_justificada"	id_temp="demora_justificada"></field>
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" _autoupdate="180" path="../files/archives/nfsAsterisk" _limit="10" paginar="40">
+    <title>CONSULTA DE LLAMADAS</title>
+    <form detalle="hasdetseg" inline="true" hasDetail="hasdet">
+        <table id="ASTERIX_CDR">
+            <title>Llamadas</title>
+            <filters>
+                <field id="fecha" deshabilitado="false">
+                    <label>Desde Fecha</label>
+                    <operador>&gt;=</operador>
+                    <valor>today</valor>
+          
+                </field>
+                <field id="fecha" deshabilitado="false">
+                    <label modpos="nobr">Hasta Fecha</label>
+                    <operador>&lt;=</operador>
+                    <valor>today</valor>
+          
+                </field>
+                <field id="telefonos" deshabilitado="false">
+                    <label>Teléfono</label>
+                    <operador>like</operador>
+                </field>
+        
+            </filters>
+            
+            <field id="uniqueid" oculto="true" >
+        	<label>id</label>
+            </field>
+            
+            <field id="calldate" noshow="true" tipoOrden="DESC">
+            </field>
+            
+            <field id="fecha">
+        	<expression>date(calldate)</expression>
+                <label>Fecha</label>
+                <tipo>date</tipo>
+                <detalle>fecha</detalle>
+            </field>
+            <field id="hora" style="padding:0px 5px;">
+        	<expression>date_format( calldate, '%H:%i:%s' )</expression>
+                <label>Hora</label>
+                <tipo>time</tipo>
+            </field>
+            
+            <field id="tipo" noshow="true" local="true">
+                <options>
+                    <option valor="">Todos</option>
+                    <option valor="entrantes">Entrantes</option>
+                    <option valor="salientes">Salientes</option>
+                </options>
+            </field>
+            
+<!--            <field id="src" >
+                <label>Origen</label>
+            </field>             -->
+            <field id="newsrc" >
+        	<expression>@newsrc:=(case when src != '' then src else (substring(channel,5,3)) end)</expression>
+                <label>Origen</label>
+            </field>
+
+            <field id="telefonos" noshow="true">
+        	<expression having="false">CONCAT(src,dst)</expression>
+            </field>
+
+            <field id="InternoSrc" noshow="true">
+                <expression>@internosrc := (case when length(@newsrc) = 3 then (select CONCAT(Nombre, ' ', apellido) from HTXUSERS where HTXUSERS.interno = @newsrc limit 1) end)</expression>
+            </field>
+            <field id="empresaSrc" noshow="true">
+                <expression>@empresasrc :=  ifnull((SELECT CCTCUENT.ctafan  FROM CCTCONTA
+          left join CCTCUENT on CCTCUENT.siscod = CCTCONTA.siscod and CCTCUENT.ctacod = CCTCONTA.ctacod
+          WHERE   length(@newsrc) != 3 and (
+          (replace(CONCAT(Telefono,'.',movil), ' ','') like CONCAT('%' ,trim(@newsrc) ,'%') and trim( @newsrc) != '' )  or  
+          (replace(CONCAT(Telefono,'.',movil), ' ','') like CONCAT('%' ,right(trim(@newsrc), 6 ) ,'%') and trim( @newsrc) != '' ) or
+          (replace(CONCAT(Telefono,'.',movil), '-','') like CONCAT('%' ,trim(@newsrc) ,'%') and trim( @newsrc) != '' )  or  
+          (replace(CONCAT(Telefono,'.',movil), '-','') like CONCAT('%' ,right(trim(@newsrc), 6 ) ,'%') and trim( @newsrc) != '' ))
+          group by CCTCONTA.siscod, CCTCONTA.ctacod limit 1),'')
+          
+                </expression>
+		
+            </field>
+            <field id="cuentaSrc" noshow="true">
+        
+	    <expression><![CDATA[@fan1 := (SELECT group_concat( ctafan separator '<br>')  FROM CCTCUENT  where
+                        (replace(ctatel, ' ','') like CONCAT('%' ,trim(@newsrc) ,'%') and trim( @newsrc) != '' )
+                         and baja = 0 and length(@newsrc) > 3 )]]></expression>
+          </field> 
+
+            <field id="srcNom" local="true">
+                <label>Nombre Origen</label>
+                <if exp="true">
+            	    <true>'InternoSrc empresaSrc cuentaSrc'</true>
+            	    <false>''</false>
+                </if>
+            </field>
+
+            <field id="dst" >
+                <label>Destino</label>
+<!--		<condicion operador="!=">998 and dst != 999</condicion> -->
+            </field>
+                                         
+    	<field id="hasdetseg" noshow="true">
+    	    <expression>case when dst = 998 then 'seguimiento_tel.xml' else '' end</expression>
+    	</field>                           
+     	<field id="hasdet" noshow="true">
+    	    <expression>case when dst = 998 then 1 else '' end</expression>
+    	</field>                           
+
+    	<field id="seg" noshow="true">
+    	
+    	    <expression>case when dst = 998 then left(dstchannel, 15) end</expression>
+    	    <detalle>channel</detalle>
+    	</field>                           
+
+    	<field id="horaCorte">
+    	              
+    	    <expression>case when dst = 998 then (select AST.calldate from ASTERIX_CDR AST where left(ASTERIX_CDR.dstchannel, 15) = left(AST.channel, 15) and 
+    	    date(AST.calldate) = date(ASTERIX_CDR.calldate) and
+    	    AST.calldate &gt;= ASTERIX_CDR.calldate order by calldate ASC
+    	    limit 1 ) end</expression>
+    	    <detalle>maxtime</detalle>
+    	</field>                           
+                                         
+
+            <field id="InternoDst" noshow="true">
+                <expression>@internodst := (case when length(dst) = 3 then (select CONCAT(Nombre, ' ', apellido) from HTXUSERS where HTXUSERS.interno = dst limit 1) end)</expression>
+            </field>
+            <field id="empresaDst" noshow="true">
+                <expression>@empresadst :=  ifnull((SELECT CCTCUENT.ctafan  FROM CCTCONTA
+          left join CCTCUENT on CCTCUENT.siscod = CCTCONTA.siscod and CCTCUENT.ctacod = CCTCONTA.ctacod
+          WHERE   length(dst) != 3 and (
+          (replace(CONCAT(Telefono,'.',movil), ' ','') like CONCAT('%' ,trim(dst) ,'%') and trim(dst) != '' )  or  
+          (replace(CONCAT(Telefono,'.',movil), ' ','') like CONCAT('%' ,right(trim(dst), 6 ) ,'%') and trim(dst) != '' ) or
+          (replace(CONCAT(Telefono,'.',movil), '-','') like CONCAT('%' ,trim(dst) ,'%') and trim( dst) != '' )  or  
+          (replace(CONCAT(Telefono,'.',movil), '-','') like CONCAT('%' ,right(trim(dst), 6 ) ,'%') and trim(dst) != '' ))
+          group by CCTCONTA.siscod, CCTCONTA.ctacod limit 1),'')
+          
+                </expression>
+		
+            </field>
+            <field id="cuentaDst" noshow="true">
+        
+	    <expression><![CDATA[@fan1 := (SELECT group_concat( ctafan separator '<br>')  FROM CCTCUENT  where
+                        (replace(ctatel, ' ','') like CONCAT('%' ,trim(dst) ,'%') and trim(dst) != '' )
+                         and baja = 0 and length(dst) > 3 )]]></expression>
+          </field> 
+
+            <field id="DstNom" local="true">
+                <label>Nombre Destino</label>
+                <if exp="true">
+            	    <true>'InternoDst empresaDst cuentaDst'</true>
+            	    <false>''</false>
+                </if>
+            </field>
+
+            <field id="disposition" _noshow="true">
+        	<label>Estado</label>
+            </field>
+
+            
+            <field id="duration" suma="true">
+        	<expression>sec_to_time(duration)</expression>
+                <label>Tiempo </label>
+                <tipo>time</tipo>
+            </field>
+      
+            <!--
+            <field id="personal" noshow="true">
+                <expression><![CDATA[@pers := (SELECT CONCAT(Nombre, ' ', apellido) from PERSONAL where
+                        (replace(PERSONAL.telefono, ' ','') like CONCAT('%' ,trim(entrantes) ,'%') and trim( entrantes) != '' )  or
+                        (replace(PERSONAL.telefono, ' ','') like CONCAT('%' ,trim(salientes) ,'%') and trim( salientes) != '' ) OR
+                        (replace(PERSONAL.celular, ' ','') like CONCAT('%' ,trim(entrantes) ,'%') and trim( entrantes) != '' )  or
+                        (replace(PERSONAL.celular, ' ','') like CONCAT('%' ,trim(salientes) ,'%') and trim( salientes) != '' )                        
+                        limit 1)
+                        ]]>
+                </expression>
+            </field>
+            -->
+	    <field id="nroNuevo" noshow="true" local="true">
+		<if exp="trim('srcNom') == ''">
+			<true>"newsrc"</true>
+			<false>"dst"</false>
+		</if>
+
+	    </field>
+			
+
+	   <field id="addPhone"  linkint="tel_add_phone.xml" linkWidth="600px" linkHeight="250px" _linkReposition="true" linkdes="Teléfono" local="true">
+                <label>+</label>
+	        <if exp="trim('DstNom') == '' || trim('srcNom') == ''">
+                    <true><![CDATA['<img Src="../img/list-add.png">']]></true>
+                    <false>''</false>
+                </if>
+                <!--<expression><![CDATA[case when trim( concat(ifnull(@fan1, ''),
+    						   ifnull(@fan2, ''),
+    						   ifnull(@emp , ''),
+    						   ifnull(@pers, '')  )) = '' then '<img src=\"../img/list-add.png\">' else  concat(@fan1, @fan2, @emp , @pers) end]]>
+                </expression>         -->
+                <paring destino="Telefono">nroNuevo</paring>
+
+            </field>
+
+<!--
+            <field id="empresa" noshow="true">
+        
+                <expression>@fan2:=  (SELECT CCTCUENT.ctafan  FROM CCTCONTA
+          left join CCTCUENT on CCTCUENT.siscod = CCTCONTA.siscod and CCTCUENT.ctacod = CCTCONTA.ctacod
+          
+          WHERE 
+          (replace(CONCAT(Telefono,'.',movil), ' ','') like CONCAT('%' ,trim(entrantes) ,'%') and trim( entrantes) != '' )  or  
+          (replace(CONCAT(Telefono,'.',movil), ' ','') like CONCAT('%' ,trim(salientes) ,'%') and trim( salientes) != '' ) or
+          (replace(CONCAT(Telefono,'.',movil), ' ','') like CONCAT('%' ,right(trim(entrantes), 6 ) ,'%') and trim( entrantes) != '' ) or
+          (replace(CONCAT(Telefono,'.',movil), ' ','') like CONCAT('%' ,right(trim(salientes), 6 ) ,'%') and trim( salientes) != '' ) or
+          (replace(CONCAT(Telefono,'.',movil), '-','') like CONCAT('%' ,trim(entrantes) ,'%') and trim( entrantes) != '' )  or  
+          (replace(CONCAT(Telefono,'.',movil), '-','') like CONCAT('%' ,trim(salientes) ,'%') and trim( salientes) != '' ) or
+          (replace(CONCAT(Telefono,'.',movil), '-','') like CONCAT('%' ,right(trim(entrantes), 6 ) ,'%') and trim( entrantes) != '' ) or
+          (replace(CONCAT(Telefono,'.',movil), '-','') like CONCAT('%' ,right(trim(salientes), 6 ) ,'%') and trim( salientes) != '' )
+          group by CCTCONTA.siscod, CCTCONTA.ctacod limit 1)
+          
+                </expression>
+		
+            </field>
+-->
+            <!--
+            <field id="empleado" noshow="true">
+                <expression><![CDATA[@emp := (SELECT CONCAT(Nombre, ' ', apellido) from HTXUSERS where
+                        (replace(HTXUSERS.telefono, ' ','') like CONCAT('%' ,trim(entrantes) ,'%') and trim( entrantes) != '' )  or
+                        (replace(HTXUSERS.telefono, ' ','') like CONCAT('%' ,trim(salientes) ,'%') and trim( salientes) != '' ) limit 1)
+                        ]]>
+                </expression>
+        
+            </field>
+            
+            <field id="nombreEmp">
+                <label>Empresa</label>
+                <expression>case when @fan1  != ''  then @fan1
+          when  @fan2 != '' then @fan2 
+          when  @emp != '' then @emp 
+          when  @pers != '' then @pers 
+          end
+                </expression>
+            </field>
+            -->
+                       <!--
+            <field id="destnom">
+                <label>Nombres</label>
+        
+                <expression><![CDATA[SELECT group_concat( nombre separator '<br>')  FROM CCTCONTA WHERE
+                        (replace(CONCAT(Telefono,'.',movil), ' ','') like CONCAT('%' ,trim(entrantes) ,'%') and trim( entrantes) != '' )  or  
+                        (replace(CONCAT(Telefono,'.',movil), ' ','') like CONCAT('%' ,trim(salientes) ,'%') and trim( salientes) != '' ) or
+                        (replace(CONCAT(Telefono,'.',movil), ' ','') like CONCAT('%' ,right(trim(entrantes), 7 ) ,'%') and trim( entrantes) != '' ) or
+                        (replace(CONCAT(Telefono,'.',movil), ' ','') like CONCAT('%' ,right(trim(salientes), 7 ) ,'%') and trim( salientes) != '' ) or
+                        (replace(CONCAT(Telefono,'.',movil), '-','') like CONCAT('%' ,trim(entrantes) ,'%') and trim( entrantes) != '' )  or  
+                        (replace(CONCAT(Telefono,'.',movil), '-','') like CONCAT('%' ,trim(salientes) ,'%') and trim( salientes) != '' ) or
+                        (replace(CONCAT(Telefono,'.',movil), '-','') like CONCAT('%' ,right(trim(entrantes), 7 ) ,'%') and trim( entrantes) != '' ) or
+                        (replace(CONCAT(Telefono,'.',movil), '-','') like CONCAT('%' ,right(trim(salientes), 7 ) ,'%') and trim( salientes) != '' )                         
+                        ]]>
+                </expression>
+            </field>
+            -->
+            <!--
+            <field id="lastdata" _noshow="true">
+        	<label>data</label>
+            </field>
+            <field id="channel" _noshow="true">
+        	<label>channel</label>
+            </field>
+            <field id="dstchannel" _noshow="true">
+        	<label>dstchannel</label>
+            </field>
+            <field id="lastapp" _noshow="true">
+        	<label>lastapp</label>
+            </field>
+                -->
+              <!--  
+            <field id="userfieldwav" _noshow="true">
+        	<expression having="false">case when userfield != '' then SUBSTRING_INDEX(userfield, ':', -1) end</expression>
+        	<label>File</label>
+        	<tipo>file</tipo>
+            </field>
+                  
+            <field id="clase" noshow="true" clasefila="true">
+                <expression><![CDATA[(case when length(dst) = 3 then 'resaltadoVioleta' when disposition = 'FAILED' THEN 'resaltadoRojo' else '' end)]]>
+                </expression>
+            </field>
+                  -->
+                  
+                       <!--
+            <field id="DuracionSalientes" suma="true">
+                <label>Tiempo</label>
+                <expression><![CDATA[(case when LOCATE('<', dst) = 0 then trim(duration) end)]]>
+                </expression>
+                <tipo>time</tipo>
+            </field>
+            -->       
+                                          <!--
+       		 <field id="msg2" noshow="true" local="true">
+         <expression><![CDATA[CONCAT(' dst TEL:  ',dst,' EMPRESA:  ','[__empresa__]',' EMPLEADO:  ',Nombre, '  ', apellido , ' FECHA:  ', calldate )]]>
+                	</expression>
+            	 </field>
+            	 
+      	     <field id="responder" local="true" print="false"  linkint="mensajes_reply.xml" linkdir="histrix/mensajeria" linkdes="Enviar este Mensaje">
+       		 <label Formstyle="display:none;">Enviar</label>
+       		 <tipo>varchar</tipo>
+		<valor><![CDATA['<img alt="../img/mail_generic.png" src="../img/mail_generic.png"/>']]></valor>
+		<paring destino="idHilo" >0</paring>
+		<paring destino="mensaje" operador="=">msg2</paring>          
+	      </field>      
+	      -->
+            <order>
+                <field id="calldate"></field>
+            </order>
+      
+        </table>
+    </form>
+</histrix>

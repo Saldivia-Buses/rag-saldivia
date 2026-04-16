@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha" imprime="false" _conBusqueda="true" log="false" sololectura="true">
+    <title>Cuentas</title>
+    <obs></obs>
+
+    <form >
+
+        <table id="REG_CUENTA" label="Cuentas">
+    	    <fieldGroup>
+            <field id="id_regcuenta" noshow="true" esClave="true" />
+            <field id="subsistema_id" noshow="true"   />
+            <field id="subsistemarelacionada_id" local="true" oculto="true" valauto="true" />
+            <field id="subsistemavendedor_id" valauto="true" noshow="true" local="true">
+<!--	      <detalle>subsistemavendedor_id</detalle> -->
+    	    </field>
+
+	    </fieldGroup>
+            <fieldGroup>
+
+                <field id="nombre_cuenta" style="color:red;">
+                    <label colspan="3">Nombre</label>
+                    <help>Nombre de la cuenta</help>
+                    <size>80</size>
+                </field>
+
+                <field id="nro_cuenta"  style="color:green;">
+                    <label modpos="nobr" >Nro</label>
+                </field>
+                <field id="tel_cuenta"  _style="color:green;">
+                    <label  >Tel</label>
+                </field>
+            <field id="telefono" >
+                <label _modpos="nobr">Telefonos</label>
+                <expresion>SELECT group_concat(valor, ' ') 
+                             FROM REG_CUENTAS_CONTACTOS
+                             JOIN GEN_TIPO_CONTACTOS on ( GEN_TIPO_CONTACTOS.id_contacto = REG_CUENTAS_CONTACTOS.contacto_id  )
+                            WHERE regcuenta_id = REG_CUENTA.id_regcuenta and vcard_type like 'TEL%' LIMIT 1
+                </expresion>
+                <size>30</size>
+	  		</field>
+                
+        	    <!-- Dirección -->
+
+                <field id="cod_direccion">
+                    <label colspan="4">Calle</label>
+                    <size>40</size>
+                </field>
+
+                <field id="bis_direccion" sincelda="true">
+                    <label modpos="nobr">Bis</label>
+                    <tipo>check</tipo>
+                </field>
+
+                <field id="nro_direccion" sincelda="true">
+                    <label modpos="nobr">Nº</label>
+                    <size>10</size>
+                </field>
+
+                <field id="abreviacion_direccion" sincelda="true">
+                    <label modpos="nobr">Piso/Dpto</label>
+                    <size>15</size>
+                </field>
+
+                <!-- Localidad -->
+
+                <field id="cp" tabla="GEN_LOCALIDADES">
+                    <label>Cód Postal</label>
+                    <size>6</size>
+                </field>
+
+                <field id="nombre_localidad">
+                    <label modpos="nobr">Localidad</label>
+                    <expresion>nombre_localidad</expresion>
+                    <help>Nombre de la localidad</help>
+                    <size>20</size>
+                </field>
+
+                <field id="nombre_provincia">
+                    <label modpos="nobr">Provincia</label>
+                    <expresion>nombre_provincia</expresion>
+                    <size>20</size>
+                </field>
+
+	    <!-- Fechas -->
+
+                <field id="alta_cuenta">
+                    <label>Alta</label>
+                    <tipo>date</tipo>
+                </field>
+
+                <field id="baja_cuenta">
+                    <label modpos="nobr">Baja</label>
+                    <tipo>date</tipo>
+                </field>
+
+                <field id="regzona_id">
+                    <tabla_ex id="REG_ZONAS">
+                        <field id="id_regzona" />
+                        <field id="nombre_zona" />
+                        <field id="subsistema_id" />
+                    </tabla_ex>
+                    <label  modpos="nobr">Zona</label>
+                </field>
+		<field id="vendedor">
+		    <label>Vendedor</label>
+		    <expresion>select RG.nombre_cuenta from REG_CUENTA_RELACIONES join REG_CUENTA RG on RG.id_regcuenta = regcuentarelacionada_id where regcuenta_id = REG_CUENTA.id_regcuenta and subsistemarelacionada_id = '22' order by fecha_vigencia DESC limit 1</expresion>
+		    <size>50</size>
+		</field>
+
+		</fieldGroup>
+
+        
+		<fieldGroup>
+            <field id="deuda" linkdes="Cuenta Corriente" local="true" style="color:red;">
+                <label>Deuda</label>                
+                <helper type="link" xml="regdetalles_all_qry.xml" dir="/clientes/qry" modal="true">
+                    <parameter source="id_regcuenta" target="regcuenta_id" operator="="/>
+                    <parameter source="subsistema_id" target="subsistema_id" operator="="/>
+                </helper>
+                
+                <valor>'Cuenta Corriente'</valor>
+            </field>
+        </fieldGroup>
+        <!--
+        <fieldGroup>
+            <field id="detallefacturas" linkdes="Detalle facturas" local="true" style="color:blue;">
+                <label modpos="nobr"></label>
+                <helper type="link" xml="regdetalles_facturas_qry.xml" dir="/clientes/qry" modal="true">
+                    <parameter source="id_regcuenta" target="regcuenta_id" operator="="/>
+                    <parameter source="subsistema_id" target="subsistema_id" operator="="/>
+                </helper>
+                
+                <valor>'Detalle facturado'</valor>
+            </field>
+        </fieldGroup>
+        -->
+		<fieldGroup>
+
+	    <!-- Fiscales -->
+
+                <field id="separator_1" local="true" style="background-color: #c9c9c9; height: 20px;" colspan="9">
+                    <valor>DATOS IMPOSITIVOS</valor>
+                    <size>60</size>
+                </field>
+
+                <field id="tipo_documento_id">
+                    <tabla_ex xml="tipos_documento_qry.xml" dir="/ayudas"/>
+                    <label>Documento</label>
+                </field>
+
+                <field id="nro_documento" sincelda="true">
+                    <label modpos="nobr"></label>
+
+                </field>
+
+                <field id="iva_id">
+                    <tabla_ex xml="iva_qry.xml" dir="/ayudas" vacio="true" />
+                    <label modpos="nobr">Cat. IVA</label>
+                    <help>Categoria de IVA</help>
+                </field>
+
+                <field id="cuit_cuenta">
+                    <label _modpos="nobr">Nº CUIT</label>
+                    <help>Número de CUIT</help>
+                </field>
+            </fieldGroup>
+
+              <fieldGroup>
+                <if> if (strpos($_SESSION['properties']['modulos'],'retenciones') != false) return true; </if>
+                <field id="nro_ingbrutos">
+                  <label modpos="nobr">Nº IBR</label>
+                  <help>Numero de ingresos brutos de la cuenta</help>
+                </field>
+
+                <field id="percepcion">
+                  <label modpos="nobr">Agente Percepcion</label>
+                  <tipo>check</tipo>
+                </field>
+                <field id="categoria_ganancia">
+                  <helper type="combo" empty="true" id="REG_CATEGORIAS">
+                    <field id="id_regcategoria" />
+                    <field id="nombre_categoria" />
+                    <field id="subsistema_id" />
+                  </helper>
+                  <label >Categoria</label>
+                </field>                    
+		<!--                
+                <field id="afipcategoria_id">
+                  <helper type="combo" xml="actividades_afip_qry.xml" dir="/ayudas"/>
+                  <label  modpos="nobr">Cod. Actividad</label>
+                  <help>Código de actividad principal según AFIP</help>
+                </field>
+                -->
+              </fieldGroup>
+
+            
+            <!-- Comerciales -->
+
+            <fieldGroup>
+                <field id="separator_2" local="true" style="background-color: #c9c9c9; height: 20px;" colspan="9">
+                    <valor>CONDICIONES COMERCIALES</valor>
+                    <size>60</size>
+                </field>
+            
+                <field id="limite_credito">
+                  <label>Limite de Credito</label>
+                  <tipo>numeric</tipo>
+                </field>
+
+                <field id="regforma_id">
+                  <label modpos="nobr">Condicion de Venta</label>
+                  <tabla_ex id="REG_FORMAS" vacio="true">
+                    <field id="id_regforma"/>
+                    <field id="nombre_forma"/>
+                    <field id="subsistema_id"/>
+                  </tabla_ex>
+                </field>   
+
+            </fieldGroup>
+      <fieldGroup>
+        <field id="resumendeuda" obj="regdetalles_vencida_qry.xml" local="true">
+          <paring destino="regcuenta_id">id_regcuenta</paring>
+        </field>
+      </fieldGroup>
+
+      <fieldGroup>
+        <field id="contacto" obj="cuenta_contactos_qry.xml" local="true">
+          <paring destino="regcuenta_id">id_regcuenta</paring>
+        </field>
+      </fieldGroup>
+
+      <!-- SISTEMA DE VENDEDORES ******************************************* -->
+      <fieldGroup>
+        <if> if (strpos($_SESSION['properties']['modulos'],'vendedores') != false) return true; </if>
+        <field id="vendedores" obj="cuenta_relaciones_crud.xml" local="true">
+          <paring destino="regcuenta_id">id_regcuenta</paring>
+          <paring destino="subsistemavendedor_id">subsistemavendedor_id</paring>
+          <paring destino="subsistemarelacionada_id">subsistemavendedor_id</paring>
+        </field>
+      </fieldGroup>
+
+      <!-- SISTEMA DE TRANSPORTISTAS *************************************** -->      
+      <fieldGroup>
+        <if> if (strpos($_SESSION['properties']['modulos'],'transportistas') != false) return true; </if>
+        <field id="subsistematransporte_id" valauto="true" local="true" noshow="true">
+          <detalle>subsistematransporte_id</detalle>
+        </field>
+        <field id="transportes" obj="cuenta_relaciontr_crud.xml" local="true">
+          <paring destino="regcuenta_id">id_regcuenta</paring>
+          <paring destino="subsistematransporte_id">subsistematransporte_id</paring>
+          <paring destino="subsistemarelacionada_id">subsistematransporte_id</paring>
+        </field>
+        <field id="flete_a_cargo">
+          <label _modpos="nobr"  _colspan="5">Flete a Cargo</label>
+          <helper type="combo" empty="true">
+            <option value="0">No Definido</option>
+            <option value="1">En Origen</option>
+            <option value="2">En Destino</option>
+          </helper>
+        </field>
+      </fieldGroup>
+            
+        </table>
+        <join tipo="left">
+            <table id="GEN_PROVINCIAS">
+                <field id="id_provincia">
+                    <condicion operador="=">REG_CUENTA.provincia_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="GEN_LOCALIDADES">
+                <field id="id_localidad">
+                    <condicion operador="=">REG_CUENTA.localidad_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

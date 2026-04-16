@@ -16,16 +16,24 @@ const (
 	tracesSubject    = "tenant.*.traces.>"
 )
 
+// TraceRecorder is the narrow set of Traces methods the Consumer needs.
+// Defined as an interface so tests can substitute a fake without a real pool.
+type TraceRecorder interface {
+	RecordTraceStart(ctx context.Context, evt TraceStartEvent) error
+	RecordTraceEnd(ctx context.Context, evt TraceEndEvent) error
+	RecordEvent(ctx context.Context, evt TraceEvent) error
+}
+
 // Consumer listens to NATS trace events and persists them via the Traces service.
 type Consumer struct {
 	nc     *nats.Conn
-	svc    *Traces
+	svc    TraceRecorder
 	ctx    context.Context
 	cancel context.CancelFunc
 }
 
 // NewConsumer creates a traces NATS consumer.
-func NewConsumer(nc *nats.Conn, svc *Traces) *Consumer {
+func NewConsumer(nc *nats.Conn, svc TraceRecorder) *Consumer {
 	return &Consumer{nc: nc, svc: svc}
 }
 
@@ -100,7 +108,7 @@ func (c *Consumer) handleEvent(msg jetstream.Msg) {
 	parts := strings.Split(subject, ".")
 	if len(parts) < 4 {
 		slog.Warn("invalid traces subject", "subject", subject)
-		msg.Term()
+		_ = msg.Term()
 		return
 	}
 	subjectTenant := parts[1]
@@ -113,17 +121,17 @@ func (c *Consumer) handleEvent(msg jetstream.Msg) {
 		var evt TraceStartEvent
 		if err := json.Unmarshal(msg.Data(), &evt); err != nil {
 			slog.Error("invalid trace start event", "error", err)
-			msg.Term()
+			_ = msg.Term()
 			return
 		}
 		if subjectTenant != "" && evt.TenantID != subjectTenant {
 			slog.Error("tenant mismatch", "subject", subjectTenant, "payload", evt.TenantID)
-			msg.Term()
+			_ = msg.Term()
 			return
 		}
 		if err := c.svc.RecordTraceStart(ctx, evt); err != nil {
 			slog.Error("record trace start failed", "error", err, "trace_id", evt.TraceID)
-			msg.Nak()
+			_ = msg.Nak()
 			return
 		}
 
@@ -131,17 +139,17 @@ func (c *Consumer) handleEvent(msg jetstream.Msg) {
 		var evt TraceEndEvent
 		if err := json.Unmarshal(msg.Data(), &evt); err != nil {
 			slog.Error("invalid trace end event", "error", err)
-			msg.Term()
+			_ = msg.Term()
 			return
 		}
 		if subjectTenant != "" && evt.TenantID != "" && evt.TenantID != subjectTenant {
 			slog.Error("tenant mismatch in trace end", "subject", subjectTenant, "payload", evt.TenantID)
-			msg.Term()
+			_ = msg.Term()
 			return
 		}
 		if err := c.svc.RecordTraceEnd(ctx, evt); err != nil {
 			slog.Error("record trace end failed", "error", err, "trace_id", evt.TraceID)
-			msg.Nak()
+			_ = msg.Nak()
 			return
 		}
 
@@ -149,25 +157,25 @@ func (c *Consumer) handleEvent(msg jetstream.Msg) {
 		var evt TraceEvent
 		if err := json.Unmarshal(msg.Data(), &evt); err != nil {
 			slog.Error("invalid trace event", "error", err)
-			msg.Term()
+			_ = msg.Term()
 			return
 		}
 		if subjectTenant != "" && evt.TenantID != "" && evt.TenantID != subjectTenant {
 			slog.Error("tenant mismatch in trace event", "subject", subjectTenant, "payload", evt.TenantID)
-			msg.Term()
+			_ = msg.Term()
 			return
 		}
 		if err := c.svc.RecordEvent(ctx, evt); err != nil {
 			slog.Error("record event failed", "error", err, "trace_id", evt.TraceID)
-			msg.Nak()
+			_ = msg.Nak()
 			return
 		}
 
 	default:
 		slog.Warn("unknown traces action", "action", action, "subject", subject)
-		msg.Term()
+		_ = msg.Term()
 		return
 	}
 
-	msg.Ack()
+	_ = msg.Ack()
 }

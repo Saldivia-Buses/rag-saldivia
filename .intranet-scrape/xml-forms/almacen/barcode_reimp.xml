@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="nosql" sqlhardcoded="true">
+	<title>ingreso de  trazables en la recepcion</title>
+	<obs></obs>
+	<form >
+		<table id="HERRAMIENTAS" label="recepcion de trazables" idCampoCond="graba" >
+			<!-- codigo que se ejecuta en cada grabacion -->
+			<ejecuta>
+				<![CDATA[
+					if (!isset($this->Etiquetas)){
+					    $this->Etiquetas = new BarcodeEtiq("[__codest__]", "[__artcod__]", "[__nomherr__]", "[__ctacod__]", "[__ctanom__]", "[__ocpnro__]", "[__ocpfec__]","[__id_herramienta__]", "[__remfec__]","[__remnro__]","[__remnpv__]","[__unidad__]");	
+					    $this->Etiquetas->setFormato= true;
+					}
+
+		$this->Etiquetas->addRenglon("\n");
+		$this->Etiquetas->addRenglon('N'."\n");
+		$this->Etiquetas->addRenglon('D10'."\n"); // Density 10
+		$this->Etiquetas->addRenglon('ZB'."\n");
+		$this->Etiquetas->addRenglon('O'."\n");
+		$this->Etiquetas->addRenglon('q790'."\n");
+		$this->Etiquetas->addRenglon('Q254,19'."\n");
+
+		$this->Etiquetas->addRenglon('A3,2,0,1,1,2,N,"Saldivia"'."\n");
+
+    	        $this->Etiquetas->addRenglon('A160,2,0,2,2,1,N,"'."[__codTemp__]".'"'."\n");
+		$this->Etiquetas->addRenglon('LO1,25,345,2'."\n");
+	        $this->Etiquetas->addRenglon('A3,31,0,1,1,2,N,"('."[__artcod__]".') '.addslashes(substr("[__nomherr__]", 0, 27)).'"'."\n");
+	        $this->Etiquetas->addRenglon('A3,57,0,1,1,2,N,"('."[__ctacod__]".') '.addslashes(substr("[__ctanom__]", 0, 31)).'"'."\n");
+    //		$this->Etiquetas->addRenglon('A3,85,0,1,1,1,N,"Fecha: '.date('d/m/Y').'  '."[__unidad__]".'"'."\n");
+    		$this->Etiquetas->addRenglon('A3,97,0,1,1,1,N,"O.Compra: '."[__ocpnro__]".' Fec: '."[__ocpfec__]".'"'."\n");
+		$this->Etiquetas->addRenglon('A3,109,0,1,1,1,N,"Remito  : '."[__remnpv__]".'-'."[__remnro__]".' Fec: '."[__remfec__]".'"'."\n");
+    		$this->Etiquetas->addRenglon('B4,149,0,1,2,7,50,B,"'."[__id_herramienta__]".'"'."\n");
+	    	$this->Etiquetas->addRenglon('A428,2,0,2,2,1,R,"COPIA AL REMITO"'."\n");
+    		$this->Etiquetas->addRenglon('LO426,25,345,2'."\n");
+
+    		$this->Etiquetas->addRenglon('A428,31,0,1,1,2,N,"('."[__artcod__]".') '.addslashes(substr("[__nomherr__]", 0, 27)).'"'."\n");
+    		$this->Etiquetas->addRenglon('A428,57,0,1,1,2,N,"('."[__ctacod__]".') '.addslashes(substr("[__ctanom__]", 0, 31)).'"'."\n");
+
+    		// $this->Etiquetas->addRenglon('A428,85,0,1,1,1,N,"Fecha: '.date('d/m/Y').'  '."[__unidad__]".'"'."\n");
+    		$this->Etiquetas->addRenglon('A428,97,0,1,1,1,N,"O.Compra: '."[__ocpnro__]".' Fec: '."[__ocpfec__]".'"'."\n");
+ 		$this->Etiquetas->addRenglon('A428,109,0,1,1,1,N,"Remito  : '."[__remnpv__]".'-'."[__remnro__]".' Fec: '."[__remfec__]".'"'."\n");
+
+//	     	$this->Etiquetas->addRenglon('A3,119,0,1,1,1,N,"PRUEBAPRUEBA"'."\n");
+
+	        $this->Etiquetas->addRenglon('B429,149,0,1,2,7,50,B,"'."[__id_herramienta__]".'"'."\n");
+		$this->Etiquetas->addRenglon('P'."[__copias__]\n");
+	        $this->Etiquetas->addRenglon('N'."\n");
+        
+				]]>
+			</ejecuta>
+			<field id="id_herramienta" id_temp="id_herramienta">
+			</field>			
+			<field id="artcod" id_temp="artcod">
+			</field>			
+			
+			<field id="codest" id_temp="codTemp">
+				<label>tipo</label>
+			</field>
+			<field id="ctacod" id_temp="ctacod">
+				<label>Cta</label>
+				
+			</field>
+			<field id="ocpnro"  id_temp="ocpnro">
+				<label>O.P.</label>
+				
+			</field>
+			<field id="ocpfec"  id_temp="ocpfec">
+				
+			</field>
+			<field id="remfec"  id_temp="remfec">
+			</field>
+			<field id="[__remnpv__]"  id_temp="remnpv">
+			</field>
+
+
+			<field id="nomherr" id_temp="nomherr">
+			</field>
+			
+			<field id="ctanom"  local="true" id_temp="ctanom">
+			</field>
+			<field id="remnro"  id_temp="remnro">
+			</field>
+			<field id="unidad"	id_temp="unidad" />
+			<field id="grucod" id_temp="grucod">
+				<label>grupo </label>
+				<help>grupo </help>
+			</field> 
+			<field id="copias"	id_temp="copias" />
+			
+		</table>
+	</form>
+</histrix>

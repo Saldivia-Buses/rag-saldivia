@@ -80,6 +80,13 @@ http:
       entryPoints: [web]
       middlewares: [dev-cors]
 
+    # Feature flags evaluate — any authenticated user
+    flags:
+      rule: "PathPrefix(`/v1/flags`)"
+      service: platform
+      entryPoints: [web]
+      middlewares: [dev-cors, dev-tenant]
+
     # Ingest — document upload + job tracking
     ingest:
       rule: "PathPrefix(`/v1/ingest`)"
@@ -93,6 +100,20 @@ http:
       service: astro
       entryPoints: [web]
       middlewares: [dev-cors, dev-tenant]
+
+    # ERP — legacy Histrix replacement modules
+    erp:
+      rule: "PathPrefix(`/v1/erp`)"
+      service: erp
+      entryPoints: [web]
+      middlewares: [dev-cors, dev-tenant]
+
+    # HealthWatch — platform-level health monitoring (no dev-tenant: admin only)
+    healthwatch:
+      rule: "PathPrefix(`/v1/healthwatch`)"
+      service: healthwatch
+      entryPoints: [web]
+      middlewares: [dev-cors]
 
   services:
     auth:
@@ -139,6 +160,14 @@ http:
       loadBalancer:
         servers:
           - url: "http://host.docker.internal:8011"
+    erp:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8013"
+    healthwatch:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8014"
 
   middlewares:
     # CORS for dev — frontend on :3000, API on :80

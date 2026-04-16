@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="grid" deleteRow="false" imprime="false" preloadData="false" procesa="true" inserta="false" transaccional="true">
+	<title>Movimiento de Herramientas por USUARIO</title>
+	<obs></obs>
+	<form >
+		<table id="HERRMOVS" label="MOVIMIENTOS">
+		<movimientos>
+		    <relacion id="herrmovs_devol_ins.xml"/>
+		    <relacion id="herrmovs_ingr_ins.xml"/>
+		</movimientos>
+
+			<filters>
+				<field id="usuario_egreso" deshabilitado="false">
+				<label>Operario</label>
+					<operador>=</operador>
+					<valor>0</valor>
+		                    <size>50</size>
+                		</field>
+				<field id="usuario_ingreso" deshabilitado="false">
+				<label modpos="nobr">Operario ing.</label>
+					<operador>=</operador>
+					<valor>0</valor>
+		                    <size>50</size>
+                		</field>
+				<field id="nombre_egr" local="true" deshabilitado="true">
+				<label>Nombre</label>
+					<operador>=</operador>
+		                        <size>200</size>
+				</field>
+				<field id="nombre_ing" local="true" deshabilitado="true">
+				<label modpos="nobr">Nombre </label>
+					<operador>=</operador>
+		                        <size>200</size>
+				</field>
+				<field id="movher_egreso">
+				    <label>Movimiento Egreso</label>
+				    <valor>2</valor>
+				    <operador>=</operador>
+				</field>
+				<field id="movher_ingreso">
+				    <label modpos="nobr">Movimiento Ingreso</label>
+
+				</field>
+				<field id="fecmov">
+				    <label>Fecha Movimiento</label>
+				    <valor>today</valor>
+				</field>
+			</filters>
+			
+			<field id="id_herr">
+				<label>Cod.</label>
+				<expression>id_herramienta</expression>
+				<tipo>varchar</tipo>
+				<format>(%s)</format>
+				<help>Cod. de Herramienta</help>
+			</field>
+			
+          <field id="id_herramienta">
+				<label>Herramienta</label>
+				<help>Herramienta </help>
+			
+            <tabla_ex id="HERRAMIENTAS">
+			
+              <field id="id_herramienta"></field>
+					<field id="nomherr"></field>
+					<field id="grucod" oculto="true">
+						<condicion operador="!=">2</condicion>
+					</field>
+
+										<order>
+						<field id="nomherr"></field>
+					</order>
+				</tabla_ex>
+				
+			</field>
+
+			
+	    		<field id="movher" noshow="true">
+				<label>Movimiento </label>
+				<help>Tipo de Movimiento de la Herramienta. </help>
+			</field>
+						
+			<field id="movfec" tipo="date" noshow="true">
+                 <tipo>date</tipo>
+				<label>Fecha Movimiento </label>
+				<help>Fecha de Movimiento de la Herramienta. </help>
+			</field>
+
+		<field id="cantidad_act" noshow="true">
+		    <label>Cantidad</label>
+		    <expression having="false">cant_herr_act(HERRMOVS.id_herramienta, HERRMOVS.usuario, CURDATE())</expression>
+		    <condicion operador="!=">0</condicion>
+		</field>
+		
+          <field id="usuario_egreso" noshow="true" autocompletar="true">
+		<expression having="false">usuario</expression>
+				<label>Usuario </label>
+				<help>Usuario </help>
+				   <ayuda_ex id="FSMOPERA" xml="HLPpersonal_ope.xml" dir="/help_local">
+					<!-- campos a agregar al contenedor Filtro-->
+					  <field id="opecod">
+						  <detalle>usuario_egreso</detalle>
+
+					  </field>
+                        <field id="nombres">
+                            <expression>CONCAT(apellido,', ', Nombre)</expression> 
+                            <detalle>nombre_egr</detalle>
+                             <size>80</size>
+                        </field>
+
+				    </ayuda_ex>	
+				<valor default="true">0</valor>
+			    <size>50</size>
+          </field>
+
+			<field id="nombre_egr" local="true" noshow="true" deshabilitado="true" noselect="true">
+				<label>Nombre</label>
+				<size>50</size>
+			</field>
+          <field id="usuario_ingreso" local="true" noshow="true" autocompletar="true">
+				<label>Usuario </label>
+				<help>Usuario </help>
+				   <ayuda_ex id="FSMOPERA" xml="HLPpersonal_ope.xml" dir="/help_local">
+					<!-- campos a agregar al contenedor Filtro-->
+					  <field id="opecod">
+						  <detalle>usuario_ingreso</detalle>
+
+					  </field>
+                        <field id="nombres">
+                            <expression>CONCAT(apellido,', ', Nombre)</expression> 
+                            <detalle>nombre_ing</detalle>
+                             <size>80</size>
+                        </field>
+
+				    </ayuda_ex>	
+				<valor default="true">0</valor>
+			    <size>50</size>
+          </field>	
+			<field id="nombre_ing" local="true" noshow="true" deshabilitado="true" noselect="true">
+				<label>Nombre </label>
+				<size>50</size>
+			</field>
+			<field id="graba_ing" local="true" noshow="true">
+			    <if exp="'usuario_ingreso' == '0'||'usuario_ingreso' == ''">
+				<true>0</true>
+				<false>1</false>
+			    </if>
+			</field>
+			<field id="fecmov" local="true" noshow="true">
+			    <valor>today</valor>
+			    <tipo>date</tipo>
+			</field>
+			<field id="movher_egreso" local="true" noshow="true">
+			    <label>Movimiento Egreso</label>
+			    <helper type="combo" id="CONCHERR">
+				<field id="movher"></field>
+				<field id="movnom"></field>
+				<field id="movtip" noshow="true">
+				    <condicion operador="=">1</condicion>
+				</field>
+			    </helper>
+			</field>
+			<field id="movher_ingreso" local="true" noshow="true">
+			    <label>Movimiento Ingreso</label>
+			    <helper type="combo" id="CONCHERR">
+				<field id="movher"></field>
+				<field id="movnom"></field>
+				<field id="movtip" noshow="true">
+				    <condicion operador="=">2</condicion>
+				</field>
+			    </helper>
+			</field>
+
+			<order>
+				<field id="movfec" tipo="numeric" tipoOrden="DESC" ></field>
+			</order>
+			
+		</table>
+		
+	</form>
+</histrix>

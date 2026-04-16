@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+    <title>Cotizaciones Pendientes</title>
+    <obs></obs>
+    <form >
+        <table id="CPS_MOVIMIENTOS" label="Pedidos Internos">
+
+            <field id="nro_cuenta" >
+                <expression>nro_cuenta</expression>
+                <label>Cod.Proveedor </label>
+                <help>Codigo de Proveedor </help>
+                <detalle>ctacod</detalle>
+            </field>
+            <field id="nombre_cuenta" tabla="REG_CUENTA" muestra="true">
+                <tipo>varchar</tipo>
+            </field>
+            <field id="id_regcuenta" tabla="REG_CUENTA" noshow="true">
+            </field>
+            <field id="ctacod" >
+                <expression>nro_cuenta</expression>
+                <detalle>ctacod</detalle>
+            </field>
+            <group>
+                <field id="id_regcuenta"> </field>
+            </group>
+
+        </table>
+        <join >
+            <table id="CPS_DETALLE">
+                <field id="cpsmovimiento_id">
+                    <condicion operador="=">id_cpsmovimiento</condicion>
+                </field>
+            </table>
+        </join>        
+        <join >
+            <table id="CPS_COTIZACION_DETALLE">
+                <field id="cpsdetalle_id">
+                    <condicion operador="=">CPS_DETALLE.id_cpsdetalle</condicion>
+                </field>
+                <field id="comprar">
+                    <condicion operador="=">1</condicion>
+                </field>
+                <field id="ordencompra_id">
+                    <condicion operador="=">0</condicion>
+                </field>
+            </table>
+        </join>        
+
+        <join >
+            <table id="REG_CUENTA">
+                <field id="id_regcuenta">
+                    <condicion operador="=">CPS_COTIZACION_DETALLE.regcuenta_id</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

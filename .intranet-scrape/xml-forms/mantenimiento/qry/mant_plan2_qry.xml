@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  Consulta
+Tarea: PLAN DE MANTENIMIENTO
+Autor: 
+Fecha: 
+*******************************************************************************
+-->
+<histrix tipo="consulta">
+    <title>Mantenimiento</title>
+    <obs></obs>
+    <form>
+    
+        <table id="MANT_PLAN_EVENTOS" label="Plan de mantenimiento" >
+        
+            <field id="id_planevento" />
+
+            <field id="plan_id" />
+            
+            <field id="fecha_accion">
+               <label>Fecha</label>
+               <tipo>date</tipo>
+            </field>
+
+
+            <field id="equipo_id" noshow="true" oculto="true" autoing="true" />
+
+            <field id="titulo" noshow="true" local="true" style="display:none;" />
+                                                                                                                                        
+<!--             <field id="accion_id" >
+            <label>ACCION</label>
+                    <helper type="combo" id="MANT_ACCIONES" empty="true">
+                        <field id="id_accion" noshow="true" />
+                        <field id="nombre_accion" />
+                </helper>
+            </field> -->
+
+<!--             <field id="estado">
+                <label>Estado</label>
+                <help>Estado Actual</help>
+                <options>
+                    <option valor=""></option>
+                    <option valor="1">Pendiente</option>
+                    <option valor="2">Cumplido</option>
+                </options>
+            </field>
+
+            <field id="observaciones">
+                <label>Obs.</label>
+            </field> -->
+                                                                      
+
+        </table>
+
+<!--         <join tipo="left">
+            <table id="MANT_ACCIONES">
+                <field id="id_accion" >
+                    <condicion operador="=">accion_id</condicion>
+                </field>
+            </table>
+        </join> -->
+
+    </form>
+</histrix>  

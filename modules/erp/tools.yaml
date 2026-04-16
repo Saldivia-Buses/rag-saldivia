@@ -1,0 +1,271 @@
+module: erp
+name: "ERP — Administración"
+
+tools:
+  # ─── Entidades ──────────────────────────────────────────────────────────────
+
+  - id: search_entities
+    service: erp
+    endpoint: GET /v1/erp/entities
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Buscar clientes, proveedores o empleados. Filtrar por tipo y texto de búsqueda."
+    parameters:
+      type: object
+      properties:
+        type:
+          type: string
+          description: "Tipo de entidad: customer, supplier, employee"
+        search:
+          type: string
+          description: "Texto de búsqueda (nombre, código, email)"
+        page_size:
+          type: integer
+          description: "Cantidad de resultados (default 20)"
+
+  - id: get_entity_detail
+    service: erp
+    endpoint: GET /v1/erp/entities/{id}
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Detalle completo de una entidad: datos, contactos, documentos, notas."
+    parameters:
+      type: object
+      properties:
+        id:
+          type: string
+          description: "ID de la entidad"
+      required: [id]
+
+  # ─── Contabilidad ───────────────────────────────────────────────────────────
+
+  - id: list_journal_entries
+    service: erp
+    endpoint: GET /v1/erp/accounting/entries
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Listar asientos contables con filtros de fecha y paginación."
+    parameters:
+      type: object
+      properties:
+        page_size:
+          type: integer
+          description: "Cantidad de resultados"
+        page:
+          type: integer
+          description: "Número de página"
+
+  - id: get_account_balance
+    service: erp
+    endpoint: GET /v1/erp/accounting/balance
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Balance de sumas y saldos — debe, haber y saldo por cuenta contable."
+
+  - id: list_accounts
+    service: erp
+    endpoint: GET /v1/erp/accounting/accounts
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Plan de cuentas completo. Filtrable por activas/inactivas."
+
+  # ─── Tesorería ──────────────────────────────────────────────────────────────
+
+  - id: list_treasury_movements
+    service: erp
+    endpoint: GET /v1/erp/treasury/movements
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Movimientos de tesorería: ingresos, egresos, depósitos, retiros, cheques, transferencias."
+    parameters:
+      type: object
+      properties:
+        page_size:
+          type: integer
+          description: "Cantidad de resultados"
+
+  - id: get_treasury_balance
+    service: erp
+    endpoint: GET /v1/erp/treasury/balance
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Saldos bancarios actuales: ingresos, egresos y saldo por banco."
+
+  - id: list_checks
+    service: erp
+    endpoint: GET /v1/erp/treasury/checks
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Cheques en cartera: recibidos y emitidos con estado y vencimiento."
+
+  # ─── Facturación ────────────────────────────────────────────────────────────
+
+  - id: list_invoices
+    service: erp
+    endpoint: GET /v1/erp/invoicing/invoices
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Comprobantes: facturas emitidas y recibidas con tipo, entidad, total y estado."
+    parameters:
+      type: object
+      properties:
+        page_size:
+          type: integer
+          description: "Cantidad de resultados"
+        direction:
+          type: string
+          description: "Filtrar: issued (emitidas) o received (recibidas)"
+
+  # ─── Stock ──────────────────────────────────────────────────────────────────
+
+  - id: search_articles
+    service: erp
+    endpoint: GET /v1/erp/stock/articles
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Buscar artículos por código o nombre. Incluye tipo, costo promedio y estado."
+    parameters:
+      type: object
+      properties:
+        search:
+          type: string
+          description: "Texto de búsqueda"
+        page_size:
+          type: integer
+          description: "Cantidad de resultados"
+
+  - id: get_stock_levels
+    service: erp
+    endpoint: GET /v1/erp/stock/levels
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Niveles de stock actuales: cantidad, reservado y disponible por artículo y depósito."
+
+  # ─── Compras ────────────────────────────────────────────────────────────────
+
+  - id: list_purchase_orders
+    service: erp
+    endpoint: GET /v1/erp/purchasing/orders
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Órdenes de compra con proveedor, total y estado (borrador, aprobada, recibida, etc.)."
+    parameters:
+      type: object
+      properties:
+        page_size:
+          type: integer
+          description: "Cantidad de resultados"
+
+  # ─── Ventas ─────────────────────────────────────────────────────────────────
+
+  - id: list_quotations
+    service: erp
+    endpoint: GET /v1/erp/sales/quotations
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Cotizaciones de venta con cliente, total y estado."
+    parameters:
+      type: object
+      properties:
+        page_size:
+          type: integer
+          description: "Cantidad de resultados"
+
+  # ─── Cuentas Corrientes ─────────────────────────────────────────────────────
+
+  - id: get_account_balances
+    service: erp
+    endpoint: GET /v1/erp/accounts/balances
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Saldos de cuentas corrientes: clientes que nos deben y proveedores a quienes debemos."
+
+  - id: get_overdue_invoices
+    service: erp
+    endpoint: GET /v1/erp/accounts/overdue
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Facturas vencidas: entidad, número, vencimiento, monto y saldo pendiente."
+
+  # ─── Producción ─────────────────────────────────────────────────────────────
+
+  - id: list_production_orders
+    service: erp
+    endpoint: GET /v1/erp/production/orders
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Órdenes de producción con producto, cantidad, prioridad y estado."
+    parameters:
+      type: object
+      properties:
+        page_size:
+          type: integer
+          description: "Cantidad de resultados"
+
+  # ─── Analytics ──────────────────────────────────────────────────────────────
+
+  - id: get_dashboard_kpis
+    service: erp
+    endpoint: GET /v1/erp/analytics/dashboard/kpis
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "KPIs consolidados del negocio: facturación mensual, gastos, saldo, cuentas por cobrar/pagar, OPs activas, stock bajo mínimo, headcount, ausencias, NCs abiertas."
+
+  - id: get_income_expense
+    service: erp
+    endpoint: GET /v1/erp/analytics/accounting/income-expense
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Reporte de ingresos vs egresos por período. Filtrable por rango de fechas."
+    parameters:
+      type: object
+      properties:
+        date_from:
+          type: string
+          description: "Fecha desde (YYYY-MM-DD)"
+        date_to:
+          type: string
+          description: "Fecha hasta (YYYY-MM-DD)"
+
+  - id: get_cash_flow
+    service: erp
+    endpoint: GET /v1/erp/analytics/treasury/cash-flow
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Flujo de caja mensual: ingresos vs egresos de tesorería por período."
+    parameters:
+      type: object
+      properties:
+        date_from:
+          type: string
+          description: "Fecha desde (YYYY-MM-DD)"
+        date_to:
+          type: string
+          description: "Fecha hasta (YYYY-MM-DD)"
+
+  - id: get_stock_below_minimum
+    service: erp
+    endpoint: GET /v1/erp/analytics/stock/below-minimum
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Artículos con stock por debajo del mínimo: código, nombre, stock mínimo, actual y déficit."

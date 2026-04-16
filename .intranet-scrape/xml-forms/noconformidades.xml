@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" path="/fotos/archivo/Conformidades/" >
+    <title>No Conformidades</title>
+    <form >
+        <table id="NOCONFORMIDADES">
+            <title>No Conformidades</title>
+			
+			
+            <field id="idNoConformidad" deshabilitado="true" autoinc="true"  tipoOrden="DESC" _noshow="true">
+            </field>
+
+            <field id="login" deshabilitado="true">
+                <label>Usuario </label>
+                <help>Usuario que hace el pedido</help>
+                <tabla_ex id="HTXUSERS">
+                    <field id="login"></field>
+                    <field id="nombre"></field>
+                    <order>
+                        <field id="nombre"></field>
+                    </order>
+                </tabla_ex>
+                <valor eval="true">$_SESSION['usuario']</valor>
+            </field>
+
+            <field id="yo" local="true"  noshow="true">
+			
+                <valor eval="true">"'".$_SESSION['usuario']."'"</valor>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="editable" local="true" bloqueafila="true" noshow="true" >
+                <label>Editable</label>
+                <if exp="'yo'=='login'">
+                    <true>"0"</true>
+                    <false>"1"</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="leida" deshabilitado="true" noshow="true">
+                <options>
+                    <option valor="0">No</option>
+                    <option valor="1">Si</option>
+                </options>
+            </field>
+
+            <field id="fecha" deshabilitado="true" esclave="true" valauto="true">
+                <label>Fecha</label>
+                <help>Fecha</help>
+                <valor>today</valor>
+            </field>
+            <field id="origen" _deshabilitado="true">
+                <label >Origen</label>
+                <help>Origen de la Sugerencia</help>
+                <size>40</size>
+            </field>
+
+            <field id="noconformidad" _deshabilitado="true">
+                <label>No Conformidad</label>
+                <help>Descripcion</help>
+                <size>200</size>
+				
+            </field>
+            <field id="fotos" _local="true" imageWidth="165" watermark="chasis"  path="idNoConformidad">
+                <expresion>CONCAT('/fotos/archivo/Conformidades/',idNoConformidad,'/')  </expresion>
+                <label modpos="nobr" posX="5" posY="+2" formStyle="display:none;">Dir</label>
+
+                <tipo>dir</tipo>
+            </field>
+
+            <field id="cantrest" clasefila="true" noshow="true">
+                <expresion>select case when count(*) = 0 then 'resaltado' end from NOCONFORMESP where NOCONFORMESP.idNoConformidad= NOCONFORMIDADES.idNoConformidad</expresion>
+            </field>
+            <field id="respuesta" obj="noconformesp_cons.xml" showObjTabla="true"  showValor="true" linkint="noconformesp.xml" local="true" >
+                <label>Respuesta</label>
+                <paring destino="idNoConformidad">idNoConformidad</paring>
+                <paring destino="referencia">noconformidad</paring>
+                <valor>'Respuesta'</valor>
+            </field>
+            <field id="claseCierre" clasefila="true" noshow="true">
+                <expresion>select case when count(*) != 0 then 'resaltadoVioleta' end from NOCONFORMESP where NOCONFORMESP.idNoConformidad= NOCONFORMIDADES.idNoConformidad and cierre = 1</expresion>
+
+            </field>
+            <field id="Est" >
+        	<label>Estado</label>
+                <expresion>select case when count(*) != 0 then 'Cerrado' end from NOCONFORMESP where NOCONFORMESP.idNoConformidad= NOCONFORMIDADES.idNoConformidad and cierre = 1</expresion>
+
+            </field>
+
+		
+            <order>
+                <field id="idNoConformidad" ></field>
+            </order>
+
+        </table>
+    </form>
+</histrix>

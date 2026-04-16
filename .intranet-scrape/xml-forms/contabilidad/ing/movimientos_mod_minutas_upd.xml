@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" grabafinal="true" >
+	<title>Actualizacion Movimientos</title>
+	<obs></obs>
+	<consulta>
+		<table id="CTB_MOVIMIENTOS" idCampoCond="actualizar">
+			<field id="id_movimiento" esClave="true" id_temp="id_movimiento" />
+			<field id="ejercicio_id" id_temp="ejercicio_id" />
+			<field id="concepto_id" id_temp="concepto_id" />
+			<field id="fecha_movimiento" id_temp="fecha_movimiento" >
+				<tipo>date</tipo>
+			</field>
+			<field id="referencia" id_temp="referencia_minuta" />
+			<field id="fecha_modificacion"     id_temp="fecha_modificacion">
+				<tipo>date</tipo>
+			</field>
+			<field id="usuario_modificacion"     id_temp="usuario_modificacion"/>
+			<field id="detalles" id_temp="detalles" local="true" />
+		</table>
+	</consulta>
+</histrix>

@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" autoprint="true" preFetch="true">
+  <title>Reclamos a clientes</title>
+  <obs/>
+  <form >
+    <table id="REG_CUENTA" label="Reclamo a cliente">
+      <field id="id_regcuenta" esClave="true" noshow="true" print="false">
+      </field>
+      <field id="nro_cuenta" print="false">
+        <label>Nro Cuenta</label>
+      </field>
+      <field id="nombre_cuenta" print="false">
+        <label>Nombre</label>
+      </field>
+      <field id="id_reclamo" local="true" print="false">
+        <label>id_reclamo</label>
+      </field>
+
+        <field id="modelo_reclamo" print="false" local="true" />
+
+        <field id="titulo_cab" print="false">
+          <expression>SELECT option_description FROM HTXOPTIONS WHERE option_name = 'SIS::02::MOD_RECLAMO' and id_option = [__id_reclamo__]</expression>
+          <setvar>titulo_div</setvar>
+        </field>
+
+        <field id="cabecera_reclamo" _noshow="true" PDFnolabel="true">
+          <label posx="5" posy="+10"/>
+          <expression> <![CDATA[SUBSTRING_INDEX(SUBSTRING_INDEX(
+
+            REPLACE(
+            REPLACE(
+            REPLACE(
+            REPLACE(
+            REPLACE(
+            REPLACE(
+            REPLACE(
+            REPLACE(
+            REPLACE(
+            REPLACE(
+            REPLACE(
+            REPLACE(
+            REPLACE(
+            REPLACE( (SELECT option_value FROM HTXOPTIONS WHERE option_name = 'SIS::02::MOD_RECLAMO' and id_option = [__id_reclamo__]),
+              '%CODIGO%', REG_CUENTA.nro_cuenta),
+              '%CLIENTE%', REG_CUENTA.nombre_cuenta ),
+              '%DOMICILIO%', REG_CUENTA.cod_direccion),
+              '%CP%', IFNULL(GEN_LOCALIDADES.cp, '')),
+              '%LOCALIDAD%', IFNULL(GEN_LOCALIDADES.nombre_localidad, '')),
+              '%CATIVA%', IFNULL(GEN_IVA.nombre_iva, '')),
+              '%CUIT%', IFNULL(REG_CUENTA.cuit_cuenta, '')),
+              '%CVENTA%', IFNULL(REG_FORMAS.nombre_forma, '')),
+              '%LIMCREDITO%', REG_CUENTA.limite_credito),
+              '%LIMCARTERA%', REG_CUENTA.limite_cartera),
+              '%SALDO%', (SELECT SUM(saldo_movimiento) FROM REG_MOVIMIENTOS WHERE regcuenta_id = REG_CUENTA.id_regcuenta and vencimiento_movimiento != '0000-00-00' and vencimiento_movimiento is not null and vencimiento_movimiento <= '[__fecha_hasta__]' and saldo_movimiento != 0 and concepto_id IN (SELECT id_concepto FROM REG_CONCEPTOS WHERE subsistema_id = REG_CUENTA.subsistema_id and informa_calculo = 0 )) ),
+
+
+              '<div>', ''),
+              '<br>', '\n'),
+              '</div>', '\n') 
+
+              , '[cabecera]', 2)
+              , '[cabecera]', -1)
+              ]]>
+          </expression>
+          <tipo>editor</tipo>
+        </field>
+                                   
+        <field id="detalle_imp" local="true">
+          <label posx="15" posy="+50" PDFwidth="150"/>
+          <helper type="object" xml="reclamos_imp_detalle_qry.xml">
+            <parameter source="id_regcuenta" target="regcuenta_id" />
+            <parameter source="fecha_hasta" target="fecha_hasta" />
+          </helper>
+        </field>                    
+
+        <field id="pie_reclamo" _noshow="true" PDFnolabel="true">
+          <label posx="5" posy="+20"/>
+          <expression> <![CDATA[SUBSTRING_INDEX(SUBSTRING_INDEX(
+
+            REPLACE(
+            REPLACE(
+            REPLACE(
+            REPLACE(
+            REPLACE(
+            REPLACE(
+            REPLACE(
+            REPLACE(
+            REPLACE(
+            REPLACE(
+            REPLACE(
+            REPLACE(
+            REPLACE(
+            REPLACE( (SELECT option_value FROM HTXOPTIONS WHERE option_name = 'SIS::02::MOD_RECLAMO' and id_option = [__id_reclamo__]),
+              '%CODIGO%', REG_CUENTA.nro_cuenta),
+              '%CLIENTE%', REG_CUENTA.nombre_cuenta ),
+              '%DOMICILIO%', REG_CUENTA.cod_direccion),
+              '%CP%', IFNULL(GEN_LOCALIDADES.cp, '')),
+              '%LOCALIDAD%', IFNULL(GEN_LOCALIDADES.nombre_localidad, '')),
+              '%CATIVA%', IFNULL(GEN_IVA.nombre_iva, '')),
+              '%CUIT%', IFNULL(REG_CUENTA.cuit_cuenta, '')),
+              '%CVENTA%', IFNULL(REG_FORMAS.nombre_forma, '')),
+              '%LIMCREDITO%', REG_CUENTA.limite_credito),
+              '%LIMCARTERA%', REG_CUENTA.limite_cartera),
+              '%SALDO%', (SELECT SUM(saldo_movimiento) FROM REG_MOVIMIENTOS WHERE regcuenta_id = REG_CUENTA.id_regcuenta and vencimiento_movimiento != '0000-00-00' and vencimiento_movimiento is not null and vencimiento_movimiento <= '[__fecha_hasta__]' and saldo_movimiento != 0 and concepto_id IN (SELECT id_concepto FROM REG_CONCEPTOS WHERE subsistema_id = REG_CUENTA.subsistema_id and informa_calculo = 0 )) ),
+
+
+              '<div>', ''),
+              '<br>', '\n'),
+              '</div>', '\n') 
+
+              , '[pie]', 2)
+              , '[pie]', -1)
+              ]]>
+          </expression>
+          <tipo>editor</tipo>
+        </field>
+
+        <field id="nro_modelo" local="true" print="false" />
+        <field id="subsistema_id" noshow="true" print="false"/>
+        <field id="fecha_hasta" local="true" print="false" />
+
+        <fieldGroup id="email" print="false" noshow="true">
+            <field id="email_cuenta" email="to" tabla="REG_CUENTA" />
+            <field id="asunto" email="subject">
+                <expression>SELECT option_description FROM HTXOPTIONS WHERE option_name = 'SIS::02::MOD_RECLAMO' and id_option = [__id_reclamo__]</expression>
+            </field>
+        </fieldGroup>
+
+    </table>
+    <join tipo="left">
+      <table id="GEN_LOCALIDADES">
+        <field id="id_localidad">
+          <condicion operador="=">REG_CUENTA.localidad_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="GEN_IVA">
+        <field id="id_iva">
+          <condicion operador="=">REG_CUENTA.iva_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_FORMAS">
+        <field id="id_regforma">
+          <condicion operador="=">REG_CUENTA.regforma_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>
+

@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" borra="no" inserta="no" modifica="false" noform="true" form="false" imprime="false" log="false" transaccional="true">
+	<title>Movimientos Bancarios</title>
+	<obs></obs>
+	<form >
+		<table id="BCS_IMPORTACION" label="Movimientos Bancarios">
+		
+
+			<filters>
+			    <field id="nro_cuenta">
+				<label>CUENTA</label>
+				<tabla_ex id="BCSCUENT">
+					<field id="ccbcod"></field>
+					<field id="ccbnom"></field>
+					<order>
+							<field id="ccbcod"></field>
+					</order>
+				</tabla_ex>
+				<operador>=</operador>				
+			    </field>
+
+			    <field id="fecha_movimiento">
+					<operador>>=</operador>
+					<label>Desde Fecha </label>
+					<valor>today</valor>
+			    </field>
+			    <field id="fecha_movimiento">
+				<operador>&lt;=</operador>
+				<label>Hasta Fecha</label>
+				<valor>today</valor>
+			    </field>
+			<field id="procesado" >
+			    <label>procesado</label>
+				<operador>=</operador>
+			</field>
+
+
+			</filters>
+			<field id="id_importacion" 	noshow="true" esClave="true"/>
+
+			<field id="nro_cuenta" noshow="true">
+				<label>Codigo Cuenta</label>
+				<tabla_ex id="BCSCUENT">
+					<field id="ccbcod"></field>
+					<field id="ccbnom"></field> -
+					<field id="siscod" oculto="true"></field>
+					<order>
+							<field id="ccbcod"></field>
+					</order>
+					<filtra>bcscta</filtra>
+				</tabla_ex>				
+				<help>Codigo de Cuenta Bancaria </help>
+				<preparam operador="=">true</preparam>	
+			</field>
+			
+			<field id="cod_movimiento" noshow="true">
+			</field>
+							
+			<field id="fecha_movimiento" >
+				<label>Fecha</label>
+				
+			</field>
+			<field id="procesado" noshow="true">
+				<label>estado</label>
+				<options>
+				    <option valor="">Todos</option>
+				    <option valor="0">No procesados</option>
+				    <option valor="1">Procesados</option>
+				    <option valor="2">Anulados</option>
+				</options>
+			</field>
+			
+
+			<field id="nombre_concepto" >
+				<label>Concepto</label>
+				
+			</field>
+			<field id="nro_movimiento" noZero="true">
+				<helper xml="bcsmovim_imp.xml" type="link">
+				    <parameter source="regmovim_id" target="id_bcsmovim" />
+				</helper>
+				<label>Numero</label>
+				<help>Numero de Movimiento </help>				
+			</field>
+			
+		
+			<field id="debito" noZero="true" suma="true">
+				<label>Debitos</label>
+			</field>
+
+			<field id="credito" noZero="true" suma="true">
+				<label>Créditos</label>
+			</field>
+			<field id="saldo">
+				<label>Saldo Bancario</label>
+			</field>
+
+			<field id="regmovim_id" _noshow="true">
+			</field>
+			<field id="conci" clasefila="true" noshow="true" local="true">
+			    <if exp="'regmovim_id' != '0'">
+				<true>'resaltado'</true>
+				<false>''</false>
+			    </if>
+			</field>
+			<field id="importefinal" noshow="true">
+			    <expression>debito + credito</expression>
+			</field>
+1
+			<field id="cod_concepto" noshow="true">
+				<expression>REG_CONCEPTOS.cod_concepto</expression>
+			</field>
+			<field id="mes" noshow="true">
+			    <expression>month(fecha_movimiento)</expression>
+			</field>
+<!--
+
+    			<field id="ctbhaber" noshow="true">
+			    <expression>case when debito = 0 then REG_CONCEPTOS.ctbcuenta_id else BCSCUENT.ctbcod end</expression>
+			</field>
+    			<field id="ctbdebe" noshow="true">
+			    <expression>case when debito != 0 then REG_CONCEPTOS.ctbcuenta_id else BCSCUENT.ctbcod end</expression>
+			</field>
+-->
+		    <order>
+			<field id="fecha_movimiento" />
+		    </order>
+
+		</table>
+		<join tipo="left">
+			<table id="BCSCUENT">
+				<field id="ccbcod">
+					<condicion operador="=">BCS_IMPORTACION.nro_cuenta</condicion>
+				</field>
+
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="BCS_CONCEPTO_IMP">
+				<field id="nro_cuenta">
+					<condicion operador="=">BCS_IMPORTACION.nro_cuenta</condicion>
+				</field>
+
+				<field id="nombre_concepto">
+					<condicion operador="=">BCS_IMPORTACION.nombre_concepto</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="REG_CONCEPTOS">
+				<field id="id_concepto">
+				    <condicion operador="=">(case when debito != 0 then BCS_CONCEPTO_IMP.regconceptohaber_id else BCS_CONCEPTO_IMP.regconceptodebe_id end)</condicion>
+				</field>
+			</table>
+		</join>
+
+		
+	</form>
+</histrix>

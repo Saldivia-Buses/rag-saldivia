@@ -1,0 +1,356 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- LAS NOTAS DE PEDIDOS SE DEJARON LOS CALCULOS DE PRECIOS IDEM A LA FACTURA POR SI ES NECESARIO COMO DATOS AL MOMENTO DE HACER LOS PEDIDOS Y LA FACTURACION
+CON ESTA INFORMACION SE PUEDEN TOMAR LOS PRECIOS HISTORICOS DE SER NECESARIOS PARA ASIGNARLOS A LA FACTURA-->
+<histrix tipo="ing" preFetch="false" preloadData="false" procesa="false" llenoreferente="true" llenotemporal="true" tooltip="false" showCantidad="false" updateTotals="true"  transaccional="true" subtipo="vertical">
+  <title>Detalle</title>
+  <obs/>
+  <form >
+    <table id="REG_DETALLES" label="movimientos">
+	<movimientos>
+		<relacion id="mos_regdetalles_ins.xml"/>
+ 		<relacion id="regimputaciondetalles_ins.xml"/>  // Imputacion entre la Np y la Factura		
+		<relacion id="mos_regdetalles_rem_ins.xml"/>
+    	<relacion id="regimputaciondetallesrem_ins.xml"/>  // Imputacion entre el Remito y la Factura
+		<relacion id="mos_stkmovimientos_ins.xml"/>
+		<!--<relacion id="cajdetalle_iva_ins.xml" /> // Grabacion de la partida contable correspondiente al iva de los articulos-->
+		<relacion id="mos_ctbdetalle_con.xml" />
+		<!--<relacion id="cajdetalle_mos_ins.xml" /> // Grabacion de la partida contable correspondiente al neto de los articulos-->
+	</movimientos>
+	
+	<fieldGroup colstyle="text-align:center;padding 2px 2px 2px 2px;">
+		
+		<field id="stkdeposito_id" deshabilitado="true" noshow="true">
+		    <label>dep</label>
+			<detalle>stkdeposito_id</detalle>
+		</field>
+	
+		<field id="codigo_detalle" deshabilitado="false" esClave="true" valid="true">
+			<label>Codigo</label>
+			<helper type="external" xml="stkarticulo_mos.xml" dir="/ayudas">
+		     		<field id="regcuenta_id"	local="true" noshow="true"></field>
+				<field id="wstklista_id" local="true" noshow="true">
+				    <valor>1</valor>
+				</field> 
+				<field id="wcontrolstk"  local="true" noshow="true">    // Receptores magico para el filtro
+					<valor default="true">0</valor>
+				</field>
+				<field id="stkdeposito_id"   local="true" noshow="true">
+				    <condicion valorde="stkdeposito_id"></condicion>
+				</field>
+	            <field id="alicuota_iva" noshow="true">
+	                <expresion>0</expresion>
+	            </field>
+			</helper>
+			<size>12</size>
+		</field>
+
+		<field id="genmoneda_venta_id" local="true" deshabilitado="true" noshow="true">
+			<label style="color:green;"  modpos="nobr">MVTA</label>
+		</field>
+
+		<field id="cantidadStk" deshabilitado="true" style="color:blue;" local="true">
+			<label modpos="nobr">Stock</label>
+			<tipo>decimal</tipo>   
+		</field>
+
+	    <field id="libre" activa="true" local="true" colstyle="display:none;"  modpos="nobr">
+	      <label>Libre</label>
+	      <tipo>check</tipo>
+	    </field>
+	    
+	    <field id="descripcion_detalle" deshabilitado="true" activador="libre">
+	      <label modpos="nobr" colspan="3">Descripción</label>
+	      <size>50</size>
+	    </field>
+		
+		<field id="alerta_stock" deshabilitado="true" sincelda="true" local="true" colstyle="display:none;">
+			<label modpos="nobr" style="text-decoration:blink;color:red;font-weight:bold;"></label>
+		</field>
+
+		<field id="separador0" editable="false" deshabilitado="true" local="true" colstyle="display:none;"/>
+
+		<field id="cantidad_detalle" replace="true" >
+			<label >cantidad</label>
+			<tipo>decimal</tipo>
+			<size>8</size>
+			<valor dafault="true">1.00</valor>  
+			<jseval fielddestino="neto_detalle" actxml="false" suma="true">subtotal1 * cantidad_detalle</jseval>	
+		</field>
+
+	<!-- PRECIOS -->
+
+		<field id="precio_dolar" local="true" modpos="nobr" activador="cambia">
+			<label>u$s</label>
+			<size>6</size>
+			<jseval fielddestino="precio_venta" actxml="false" suma="true">precio_dolar * mi_Cotizacion</jseval>
+		</field>
+
+		<field id="cambia" activa="true" local="true" colstyle="display:none;" modpos="nobr" sincelda="true">
+		  <label></label>
+		  <tipo>check</tipo>
+		</field>
+
+		<field id="mi_Cotizacion" local="true" deshabilitado="true" _noshow="true">
+			<label colstyle="text-align:center;padding 2px 2px 2px 2px;color:green;"  modpos="nobr">Cot</label>
+			<tipo>numeric</tipo>
+			<valor>1</valor>
+			<size>6</size>
+		</field>
+
+
+		<field id="precio_venta" local="true" _deshabilitado="true">
+			<label modpos="nobr">Precio</label>
+			<valor default="true">0.00</valor>
+			<size>8</size>
+			<tipo>decimal</tipo>   
+ 			<jseval fielddestino="subtotal0" actxml="false" suma="true">( ( precio_venta + 0 ) - (  ( precio_venta + 0 )  * (porcentaje_desc0 + 0 ) / 100 ))</jseval>
+			<jseval fielddestino="subtotal1" actxml="false" suma="true">(( subtotal0 + 0 ) - (( subtotal0 + 0 )  * ( porcentaje_desc1 + 0 ) / 100 ))</jseval>
+			<jseval fielddestino="neto_detalle" actxml="false" suma="true">subtotal1 * cantidad_detalle</jseval>
+	        <jseval fielddestino="precio_dolar" actxml="false" suma="true">(genmoneda_venta_id ==2) ? ( precio_venta / mi_Cotizacion) : 0</jseval>
+            <size>10</size>
+		</field>
+	
+		<field id="separador1" editable="false" deshabilitado="true" local="true"  colstyle="display:none;"/>
+
+
+
+		<field id="precio_vta" local="true" noshow="true">
+			<if exp="true">
+				<true>precio_venta</true>
+				<false>0</false>
+			</if>
+			<tipo>decimal</tipo>   
+		</field> 
+
+		<field id="porcentaje_desc0" deshabilitado="false" noZero="true">
+			<label _modpos="nobr">% 1</label>
+			<size>5</size>
+			<valor default="true">0.00</valor>
+			<tipo>decimal</tipo>
+			<jseval fielddestino="subtotal0" actxml="false" suma="true">( ( precio_venta + 0 ) - ( ( ( precio_venta + 0 ) )  * (porcentaje_desc0 + 0 ) / 100 ))</jseval>
+			<jseval fielddestino="subtotal1" actxml="false" suma="true">(( subtotal0 + 0 ) - (( subtotal0 + 0 )  * ( porcentaje_desc1 + 0 ) / 100 ))</jseval>
+		</field>
+
+		<field id="aviso_desc" local="true" noshow="true">
+			<helper type="parameter" id="SIS::02::aviso_desc">
+				<label>Aviso limite de descuento</label>
+				<defaultValue>15</defaultValue>
+			</helper>
+		</field>
+
+		<field id="alerta_desc" clasefila="true" noshow="true">
+			<label>Alerta</label>
+			<if exp="'porcentaje_desc0' &gt; 'aviso_desc'">
+				<true>'resaltadoRojo'</true>
+				<false>''</false>
+			</if>
+		</field>
+
+		<field id="subtotal0" local="true" deshabilitado="true" noshow="true">
+			<label modpos="nobr"  _colstyle="display: none;">SubTotal</label>
+			<valor default="true">0.00</valor>
+			<tipo>decimal</tipo>
+		    	<if exp="true">
+		            <true>( ( precio_venta + 0 ) - (( ( precio_venta + 0 ))  * ( porcentaje_desc0 + 0 ) / 100 ))</true>
+		            <false>0</false>
+		        </if>
+			<jseval fielddestino="neto_detalle" actxml="false" suma="true">subtotal0 * cantidad_detalle</jseval>
+		</field>
+
+		<field id="porcentaje_desc1"   deshabilitado="false" noZero="true" >
+			<label modpos="nobr">% 2</label>
+			<size>5</size>
+			<tipo>decimal</tipo>
+			<valor default="true">0.00</valor>
+			<jseval fielddestino="subtotal1" actxml="false" suma="true">(( subtotal0 + 0 ) - (( subtotal0 + 0 )  * ( porcentaje_desc1 + 0 ) / 100 ))</jseval>
+		</field>
+
+		<field id="subtotal1" local="true" deshabilitado="true" noshow="true" >
+			<label   _colstyle="display: none;">SubTotal1</label>
+			<tipo>decimal</tipo>
+			<valor default="true">0.00</valor>
+		        <if exp="true">
+		            <true>(( subtotal0 + 0 ) - (( subtotal0 + 0 )  * ( porcentaje_desc1 + 0 ) / 100 ))</true>
+		            <false>0</false>
+		        </if>                		
+			<jseval fielddestino="neto_detalle" actxml="false" suma="true">subtotal1 * cantidad_detalle</jseval>
+		</field>
+
+		<field id="neto_detalle" suma="true" deshabilitado="true" >
+			<label modpos="nobr">Neto</label>
+			<valor default="true">0.00</valor>
+			<tipo>decimal</tipo>
+		        <if exp="true">
+		            <true>round(subtotal1 * cantidad_detalle, 2)</true>
+		            <false>0</false>
+		        </if>               
+			<jseval fielddestino="iva_detalle" actxml="false">( ( neto_detalle + 0) * ( alicuota_iva + 0) / 100 )</jseval>
+			<jseval fielddestino="subtotal_movimiento" total="true">neto_detalle</jseval> 
+			<jseval fielddestino="neto_movimiento" total="true">neto_detalle</jseval>
+            <size>10</size>
+		</field>
+
+		<field id="alicuota_iva" oculto="true" esClave="true" colstyle="display:none;">
+			<label modpos="nobr">Alic</label>
+			<valor default="true">0</valor>
+			<tipo>decimal</tipo>
+		</field>
+
+		<field id="iva_detalle" suma="true" 	deshabilitado="true" sincelda="true">
+			<label   modpos="nobr"  Formstyle="display: none;">Iva</label>
+			<tipo>numeric</tipo>
+			<valor default="true">0.00</valor>
+		        <if exp="true">
+		            <true>round(( (neto_detalle + 0)  * (alicuota_iva + 0) / 100 ), 2 )</true>
+		            <false>0</false>
+		        </if>          <!--
+			<jseval fielddestino="importe_IVA" total="true">iva_detalle</jseval> 
+			<jseval fielddestino="mi_importe_iva" total="true">iva_detalle</jseval>    -->
+			<jseval fielddestino="total_detalle" actxml="false">(neto_detalle +  ((iva_detalle + 0)) )</jseval> 
+		</field>
+
+		<field id="importe_iva" noshow="true">
+		        <if exp="true">
+		            <true>iva_detalle</true>
+		            <false>0</false>
+		        </if>          
+		</field>
+
+		<field id="total_detalle" suma="true" deshabilitado="true">
+			<label modpos="nobr">Total</label>
+			<valor default="true">0.00</valor>
+			<tipo>decimal</tipo> 
+		        <if exp="true">
+		            <true>round((neto_detalle + 0) +  ((iva_detalle + 0)), 2 )</true>
+		            <false>0</false>
+		        </if>               
+			<jseval fielddestino="importe_movimiento" total="true">total_detalle</jseval> 
+
+			<detalle>importe_movimiento</detalle>
+		</field>
+
+		<field id="id_regdetalle" 	autoinc="true"		 noshow="true" esClave="true"/>
+
+		<field id="id_pedidosregdetalle" esClave="true" noshow="true" local="true">
+			<label>Notas de Pedidos</label>
+		</field>
+
+		<field id="NOTAS" deshabilitado="true" noshow="true">
+			<label>Notas</label>
+		</field>
+		
+	</fieldGroup>
+
+		<field id="stkconcepto_id" local="true" noshow="true">
+			<expresion>(SELECT option_value FROM HTXOPTIONS where option_name = 'ID_STKREMITOS')</expresion>
+			<detalle>stkconcepto_id</detalle>
+		</field>
+
+		<field id="grabastk" local="true" noshow="true" valauto="true">
+		    <valor>true</valor>
+		</field>
+
+		<field id="emite_det_remito" local="true" noshow="true" >
+			<label>emite</label>                     
+		    <if exp="true">
+				<true>'emiteremito'</true>
+				<false>''</false>
+		    </if>
+		</field>
+
+		<field id="NOEmite_det_remito" local="true" noshow="true" >
+			<label>no emite</label>
+		    <if exp="'emiteremito' == 'false'">
+				<true>'true'</true>
+				<false>'false'</false>
+		    </if>
+		</field>
+
+		<!--<field id="grabastk" local="true" noshow="true">
+			<detalle>grabastk</detalle>
+		        <helper type="combo" >
+		            <option value="true">Si</option>
+		            <option value="false">No</option>
+		        </helper>
+		</field>   -->
+
+	<fieldGroup noshow="true"  local="true"  _style="display: none;">
+
+      <!-- CONTABLE -->
+      
+		<field id="imputacion_concepto" />
+		<field id="ctbcuenta_stk_id" />
+		<field id="ctbcuenta_stk_doh">
+			<if exp="imputacion_concepto == 0">
+			    <true>'1'</true>
+			    <false>'0'</false>
+			</if>
+		</field>
+        
+        <!--<field id="ctbcuenta_iva_id" noshow="false">
+					<if exp="true">
+			    <true>'CTBiva'</true>
+			    <false>''</false>
+			</if>
+		</field> -->
+
+		<field id="ctbcuenta_iva_doh">
+			<if exp="imputacion_concepto == 0">
+			    <true>'1'</true>
+			    <false>'0'</false>
+			</if>
+		</field>
+		
+      <!-- Otros Datos  -->
+		<field id="orden" deshabilitado="true" oculto="true">
+			<label>Orden</label>
+			<size>35</size>
+		</field>
+
+	</fieldGroup>
+
+	<fieldGroup local="true" noshow="true">
+
+		<field id="wcontrolstk" deshabilitado="true" _noshow="true" >
+			<label modpos="nobr" colspan="3">sssss</label>
+			<valor default="true">0</valor>
+		</field>
+
+		<field id="stkunidad_id"/>
+		<field id="stksector_id"/>
+		<field id="stkfamilia_id"/>
+		<field id="stkrubro_id"/>
+		<field id="precio_costo"/>
+		<field id="referencia">
+			<valor>'SALIDA POR VENTA'</valor>
+		</field>
+<!--		<field id="wcontrolstk"/>  --> // Variable declarada para poder controlar la existencia desde la carga de la grilla
+
+	</fieldGroup>
+
+    <importar xml="mos_npedidos_qrytz.xml" label="Notas de Pedido" title="Seleccione" reemplazar="true" >
+		<field id="fecha_movimiento">fecha_movimiento</field>
+		<field id="regcuenta_id">regcuenta_id</field>
+		<field id="id_stklista">id_stklista</field>
+		<field id="regmovim_id">id_pedidos</field>
+		<field id="subsistemav_id" >subsistemav_id</field>
+		<field id="pedido_regmovim">pedido_regmovim</field>
+		<field id="imp_wcontrolstk">imp_wcontrolstk</field>
+		<field id="stkdeposito_id">stkdeposito_id</field>
+	</importar>
+
+        <importar xml="mos_remitos_art_qry.xml" label="Remitos" title="Seleccione" reemplazar="true" >
+		<field id="fecha_movimiento">fecha_movimiento</field>
+		<field id="regcuenta_id">regcuenta_id</field>
+		<field id="id_stklista">id_stklista</field>
+		<field id="regmovim_id">id_pedidos</field>
+		<field id="subsistemav_id" >subsistemav_id</field>
+		<field id="pedido_regmovim">pedido_regmovim</field>
+		<field id="imp_wcontrolstk">imp_wcontrolstk</field>
+		 
+	</importar>
+
+	
+    </table>
+  </form>
+</histrix>

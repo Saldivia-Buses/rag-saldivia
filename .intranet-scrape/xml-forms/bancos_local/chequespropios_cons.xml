@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="ing">
+	<titulo>Movimientos Bancarios</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="BCSMOVIM" label="Movimientos Bancarios">
+
+			<movimientos >
+				<relacion id="chequesendprint.xml">	</relacion>
+
+			</movimientos>
+			<filtro_ex>
+				<label>CUENTA</label>
+				<tabla_ex id="BCSCUENT">
+					<campo id="ccbcod"></campo>
+					<campo id="ccbnom"></campo>
+					<campo id="siscod" oculto="true"></campo>
+					
+					<filtra>bcscta</filtra>
+                    </tabla_ex>
+			</filtro_ex>
+			
+			<campo id="bcscta">
+				<label>Codigo Cuenta</label>
+				<help>Codigo de Cuenta Bancaria </help>
+				<detalle>bcscta</detalle>
+			</campo>
+			
+			<campo id="siscod" oculto="true">
+				<label>Codigo Sistema.</label>
+				<help>
+
+				</help>
+				<detalle>siscod</detalle>
+
+			</campo>
+			
+			<campo id="bcsfev">
+				<label>Acreditacion</label>
+				<help>Fecha de Acreditacion</help>
+
+			</campo>
+			<campo id="cnbabvE">
+				<expresion>cnbabv</expresion>
+				<label>Tipo</label>
+				<help>Codigo de tipo de Movimiento </help>
+				
+				<!--                      <tabla_ex id="BCSCONCE">
+				<campo id="cnbcod"></campo>
+				<campo id="cnbabv"></campo>
+				</tabla_ex>
+				-->
+				<tipo>string</tipo>
+			</campo>
+			<campo id="bcsmov">
+                <condicion operador="=">2</condicion>
+			</campo>
+			<campo id="bcsnro">
+				<label>Número</label>
+				<help>Numero de Movimiento </help>
+				<formato>%010d</formato>
+				<detalle>bcsnro</detalle>
+				
+			</campo>
+			
+			<campo id="referencia">
+				<expresion>bcsref__1</expresion>
+				<tipo>char</tipo>
+				<label>Referencia</label>
+				<help>Referencia Adicional. </help>
+			</campo>
+			
+			<campo id="debe" suma="true">
+				<expresion>bcsimp * (case when cnbtip = '1' then 1 else 0 end)</expresion>
+				
+				<label>Debe</label>
+				<help>Importe del Movimiento en el Debe</help>
+			</campo>
+			
+			<campo id="haber" suma="true">
+				<expresion>bcsimp * (case when cnbtip = '2' then 1 else 0 end)</expresion>
+				
+				<label>Haber</label>
+				<help>Importe del Movimiento en el Haber</help>
+			</campo>
+			
+			<campo id="bcsimp" aletras="true" noshow="true">
+			<label >Importe</label>
+			<help>Importe total del movimiento </help>
+            <tipo >varchar</tipo>
+			</campo>
+            <campo id="Let1" local="true" noshow="true">
+                <if exp="true">
+                    <verdadero>urlencode(substrWords( 'bcsimp', 0, 7))</verdadero>
+                    <!--<verdadero>substr('bcsimp', 0 ,40)</verdadero> -->
+                    <falso>'0'</falso>
+                </if>
+                 <tipo>varchar</tipo>
+            </campo>
+            <campo id="Let2" local="true" noshow="true">
+                <if exp="true">
+                    <verdadero>urlencode(substrWords('bcsimp', 7 ))</verdadero>
+                    <falso>'0'</falso>
+                </if>
+                 <tipo>varchar</tipo>
+            </campo>
+
+
+			
+			<campo id="bcsfec">
+				<label>Fecha</label>
+				<help>Fecha del Movimiento</help>
+			</campo>
+			
+			<campo id="regmin">
+				<label>Asiento</label>
+				<help>Numero de Asiento</help>
+			</campo>
+                  <campo id="Reimprimir"  linkint="cheque.xml" linkdes="Reimprimir" linkPrint="true" >
+		    <expresion>'Reimprimir'</expresion>
+                      <label>Reimprimir</label>
+                      <help> Numero Comprobante</help>
+		      <paring destino="bcsnro">bcsnro</paring>
+		      <paring destino="bcscta">bcscta</paring>
+		      
+		      <paring destino="copies">1</paring>
+		      <paring destino="autoprint">true</paring>
+		      <paring destino="printer">cheques</paring>
+              <paring destino="Let1">Let1</paring>
+              <paring destino="Let2">Let2</paring>
+
+                  </campo> 
+
+			
+			<!--
+			<campo id="bcsfev">
+			<label>Fecha Vencimiento    . </label>
+			<help>Fecha de vencimiento del Movimiento </help>
+			</campo>
+			<campo id="bcsmar">
+			<label>Marca </label>
+			<help> </help>
+			</campo>
+			<campo id="bcspre">
+			<label>F.Presentado </label>
+			<help>Fecha de Presentacion. </help>
+			</campo>
+			<campo id="bcstil">
+			<label>Presentado </label>
+			<help>[ ] = Sin Presentar  |  [1] = Presentado. </help>
+			</campo>
+			<campo id="opecla">
+			<label>Firma Electronica </label>
+			<help>Firma Electronica </help>
+			</campo>
+			<campo id="presentado">
+			<label>Presentado </label>
+			<help>Indica si el Valor ya fue Presentado </help>
+			</campo>
+			<campo id="succod">
+			<label>Cod. Sucursal </label>
+			<help>Codigo de Sucursal </help>
+			</campo>
+			
+			-->
+			<filtros>
+				<campo id="bcsfev">
+					<operador>>=</operador>
+					<label>Desde Fecha Acreditación</label>
+					<valor>today</valor>
+				</campo>
+				<campo id="bcsfev">
+					<operador>&lt;=</operador>
+					<label>Hasta Fecha Acreditación</label>
+					<valor>today</valor>
+					
+				</campo>
+			</filtros>
+			
+			<orden>
+				<campo id="bcsfev"></campo>
+			</orden>
+			
+		</tabla>
+		
+		<join tipo="left">
+			<tabla id="BCSCONCE">
+				<campo id="siscod" oculto="true">
+					<condicion operador="=">BCSMOVIM.siscod</condicion>
+					
+				</campo>
+				
+				<campo id="cnbcod" oculto="true">
+					<condicion operador="=">BCSMOVIM.bcsmov</condicion>
+				</campo>
+				<campo id="cnbtip" oculto="true"></campo>
+			</tabla>
+		</join>
+		
+	</consulta>
+</abm>

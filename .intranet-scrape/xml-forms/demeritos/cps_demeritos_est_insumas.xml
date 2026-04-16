@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="consulta">
+  <title>Proveedores aprobados</title>
+  <obs></obs>
+  <form detalle="cps_demerito_prov_insumas.xml" inline="true" hasDetail="pesoDem">
+    <table id="REG_CUENTA" label="Proveedores aprobados">
+
+      <filters>
+        <field id="id_regcuenta">
+          <label>Cuenta</label>
+          <help>Cuenta</help>
+          <operador>=</operador>
+        </field>
+      </filters>
+
+      <field id="subsistema_id" oculto="true">
+        <label>subsistema_id</label>
+        <help>subsistema_id</help>
+        <detalle>subsistema_id</detalle>
+      </field>
+      <field id="baja" oculto="true">
+          <condicion operador="=">0</condicion>
+      </field>
+
+      <field id="id_regcuenta" noshow="true">
+        <label>Codigo de Cuenta </label>
+        <help>Codigo</help>
+        <detalle>regcuenta_id</detalle>
+        <helper type="combo" id="REG_CUENTA" empty="true">
+            <field id="id_regcuenta"></field>
+            <field id="nombre_cuenta"></field>
+            <field id="subsistema_id" oculto="true">
+              <condicion operador="=">'01'</condicion>
+            </field>
+          </helper>
+      </field>
+      <field id="nombre_cuenta">
+        <label>Nombre</label>
+        <help>Proveedor </help>
+      </field> 
+        <field id="nombre_fantasia" noshow="true">
+        <label>Nombre fantasia</label>
+        <help>Proveedor </help>
+      </field> 
+
+      <field id="COLORACT" local="true" noshow="true">
+          <label>color</label>
+          <if exp="puntosAct &lt; 26">
+            <true>(puntosAct == 0)?'color:black;text-align:center;font-weight:bold;':((puntosAct &gt;= 11)?'color:green;text-align:center;font-weight:bold;':'color:violet;text-align:center;font-weight:bold;')
+            </true>
+            <false>(puntosAct &gt; 40)?'color:red;text-align:center;font-weight:bold':'color:blue;text-align:center;font-weight:bold'</false>
+          </if>
+      </field>   
+
+      <field id="COLORACT2" local="true" noshow="true">
+          <label>color2</label>
+          <if exp="puntosAct2 &lt; 6">
+            <true>(puntosAct2 == 0)?'color:black;text-align:center;font-weight:bold;':((puntosAct2 &gt;= 4)?'color:green;text-align:center;font-weight:bold;':'color:violet;text-align:center;font-weight:bold;')
+            </true>
+            <false>(puntosAct2 &gt; 8)?'color:red;text-align:center;font-weight:bold':'color:blue;text-align:center;font-weight:bold'</false>
+          </if>
+      </field>   
+
+      <field id="recepcionesAct" noZero="true" tipoOrden="ASC" _noshow="true">
+          <label>Recepciones</label>
+          <expresion>@recepcionesAct:= (select  count(*)  from CPS_MOVIMIENTOS where CPS_MOVIMIENTOS.regcuenta_id  = REG_CUENTA.id_regcuenta 
+            and CPS_MOVIMIENTOS.cpsfecha &gt;= '2013-11-27'
+            and CPS_MOVIMIENTOS.cpsfecha &gt;= DATE_SUB(CURDATE(), INTERVAL 6 MONTH))</expresion>
+
+        <tipo>integer</tipo>
+        <condicion operador="!=">0</condicion> 
+      </field>
+
+      <field id="nroDem" noZero="true" _noshow="true">  
+          <label>Cant. Dem</label>
+          <expresion>(select count(*) from 
+            CPS_MOVIMIENTOS left join  CPS_DEMERITOS_MOVIMIENTOS on 
+                CPS_DEMERITOS_MOVIMIENTOS.cpsmovimiento_id = CPS_MOVIMIENTOS.id_cpsmovimiento
+                 left join CPS_DEMERITOS on CPS_DEMERITOS.id_demerito = CPS_DEMERITOS_MOVIMIENTOS.demerito_id  
+                  where 
+                  CPS_MOVIMIENTOS.regcuenta_id = REG_CUENTA.id_regcuenta 
+                  and CPS_DEMERITOS_MOVIMIENTOS.fecha_demerito &gt;= '2013-11-27'
+                  and CPS_DEMERITOS_MOVIMIENTOS.fecha_demerito &gt;= DATE_SUB(CURDATE(), INTERVAL 6 MONTH) and CPS_DEMERITOS_MOVIMIENTOS.demerito_id != 0)</expresion>
+      </field>
+
+      <field id="pesoDem" noZero="true" _noshow="true">  
+          <label>Peso Demeritos</label>
+          <expresion>@contraAct:= (select sum(peso_demerito) from 
+            CPS_MOVIMIENTOS left join  CPS_DEMERITOS_MOVIMIENTOS on 
+                CPS_DEMERITOS_MOVIMIENTOS.cpsmovimiento_id = CPS_MOVIMIENTOS.id_cpsmovimiento
+                 left join CPS_DEMERITOS on CPS_DEMERITOS.id_demerito = CPS_DEMERITOS_MOVIMIENTOS.demerito_id 
+            where 
+                    CPS_DEMERITOS_MOVIMIENTOS.fecha_demerito &gt;= '2013-11-27' 
+                    and CPS_DEMERITOS_MOVIMIENTOS.fecha_demerito &gt;= DATE_SUB(CURDATE(), INTERVAL 6 MONTH) and 
+                  CPS_DEMERITOS_MOVIMIENTOS.demerito_id != 0 and 
+                  CPS_MOVIMIENTOS.regcuenta_id = REG_CUENTA.id_regcuenta)</expresion>
+
+
+      </field>
+
+      <field id="puntosAct2" _noshow="true" local="true" noZero="true">
+          <label>porcentaje</label>
+          <expresion>ifnull(round(@contraAct / @recepcionesAct, 2), 0)</expresion>
+      </field>    
+      <field id="recepAct" local="true" noshow="true">
+        <label>recep</label>
+        <expresion>round(@recepcionesAct, 2)</expresion>
+        
+      </field>
+
+      <field id="LetraAct2" local="true" style="text-align:center"  tipoOrden="ASC">
+          <attribute id="style">COLORACT2</attribute>
+          <label>Calif.</label>
+        
+          <if exp="puntosAct2 &lt; 6">
+            <true>(puntosAct2 == 0)?'-': ((puntosAct2 &gt;= 4)?'B':'A')</true>
+            <false>(puntosAct2 &gt; 8)?'X':'C'</false>
+          </if>
+    
+      <!-- 
+          <if exp="puntosAct2 == 0">
+            <true>(recepAct == 0)?'-':'A'</true>
+            <false>(puntosAct2 &gt; 8)?'X': ((puntosAct2 &gt; 6)?'C':'B')</false>
+            
+          </if>
+        -->
+       </field>
+
+<!--
+      <field id="puntosAct" _noshow="true" local="true" noZero="true">
+          <label>porcent</label>
+          <expresion>ifnull(round(@contraAct, 2), 0)</expresion>
+      </field>      
+
+      
+      <field id="LetraAct" local="true" style="text-align:center"  tipoOrden="ASC">
+          <attribute id="style">COLORACT</attribute>
+          <label>Actual</label>
+    
+          <if exp="puntosAct &lt; 26">
+            <true>(puntosAct == 0)?'-': ((puntosAct &gt;= 11)?'B':'A')</true>
+            <false>(puntosAct &gt; 40)?'X':'C'</false>
+          </if>
+
+      </field>
+-->
+
+      <comentado>
+      <!--
+      <field id="cert_iso">
+          <label modpos="nobr">ISO9000</label>
+          <helper type="combo">
+        <option value="0"></option>
+        <option value="1">No Cert.</option>
+        <option value="2">Certificado</option>
+          </helper>
+          <tipo>radio</tipo>
+      </field>
+      -->
+<!--
+      <field id="afavor" noZero="true" noshow="true">
+          <label>A Favor</label>
+          <expresion>(case when cert_iso = 2 then  10 else 0 end)</expresion>
+      </field>
+      
+      <field id="clasecert" clasefila="true" noshow="true">
+          <expresion>case when cert_iso = 2 then 'resaltado' else '' end</expresion>
+      </field>
+     
+
+	// Trimestre Ant2 
+      <field id="recepcionesAnt2" noshow="true">
+          <expresion>@recepcionesAnt2:= (select  count(*)  from CPS_MOVIMIENTOS where CPS_MOVIMIENTOS.regcuenta_id  = REG_CUENTA.id_regcuenta and 
+          CPS_MOVIMIENTOS.cpsfecha &gt;= DATE_SUB(CURDATE(), INTERVAL 12 MONTH) and
+          CPS_MOVIMIENTOS.cpsfecha &lt; DATE_SUB(CURDATE(), INTERVAL 8 MONTH))</expresion>
+        <tipo>integer</tipo>
+      </field>
+
+      <field id="pesoDemAnt2" noshow="true">  
+          <expresion>@contraAnt2:= (select sum(peso_demerito) from 
+        		CPS_MOVIMIENTOS left join  CPS_DEMERITOS_MOVIMIENTOS on 
+        		    CPS_DEMERITOS_MOVIMIENTOS.cpsmovimiento_id = CPS_MOVIMIENTOS.id_cpsmovimiento
+        		     left join CPS_DEMERITOS on CPS_DEMERITOS.id_demerito = CPS_DEMERITOS_MOVIMIENTOS.demerito_id 
+        		where 
+                   	      CPS_DEMERITOS_MOVIMIENTOS.fecha_demerito &gt;= DATE_SUB(CURDATE(), INTERVAL 12 MONTH) and 
+        		      CPS_DEMERITOS_MOVIMIENTOS.fecha_demerito &lt; DATE_SUB(CURDATE(), INTERVAL 8 MONTH)  and 
+        		      CPS_DEMERITOS_MOVIMIENTOS.demerito_id != 0 and 
+        		      CPS_MOVIMIENTOS.regcuenta_id = REG_CUENTA.id_regcuenta)</expresion>
+      </field>
+
+      <field id="puntosAnt2" noshow="true">
+         <expresion>ifnull(round(100 / @recepcionesAnt2  * (@contraAnt2 ), 2), 0)</expresion>
+
+      </field>      
+
+      <field id="LetraAnt2" local="true" style="text-align:center" >
+          <attribute id="style">COLORANT2</attribute>
+          <label>1do Cuat.</label>
+          <if exp="puntosAnt2 &lt; 70">
+	          <true>(puntosAnt2 == 0)?'X':'A'</true>
+            <false>(puntosAnt1 &lt; 140)?'B':'C'</false>
+          </if>
+      </field>
+      
+	// Trimestre Ant1 
+      <field id="recepcionesAnt1" noshow="true">
+          <expresion>@recepcionesAnt1:= (select  count(*)  from CPS_MOVIMIENTOS where CPS_MOVIMIENTOS.regcuenta_id  = REG_CUENTA.id_regcuenta and 
+          CPS_MOVIMIENTOS.cpsfecha &gt;= DATE_SUB(CURDATE(), INTERVAL 8 MONTH) and
+          CPS_MOVIMIENTOS.cpsfecha &lt; DATE_SUB(CURDATE(), INTERVAL 4 MONTH))</expresion>
+        <tipo>integer</tipo>
+      </field>
+
+      <field id="pesoDemAnt1" noshow="true">  
+          <label>Peso Demeritos</label>
+          <expresion>@contraAnt1:= (select sum(peso_demerito) from 
+        		CPS_MOVIMIENTOS left join  CPS_DEMERITOS_MOVIMIENTOS on 
+        		    CPS_DEMERITOS_MOVIMIENTOS.cpsmovimiento_id = CPS_MOVIMIENTOS.id_cpsmovimiento
+        		     left join CPS_DEMERITOS on CPS_DEMERITOS.id_demerito = CPS_DEMERITOS_MOVIMIENTOS.demerito_id 
+        		where 
+                   	      CPS_DEMERITOS_MOVIMIENTOS.fecha_demerito &gt;= DATE_SUB(CURDATE(), INTERVAL 8 MONTH) and 
+        		      CPS_DEMERITOS_MOVIMIENTOS.fecha_demerito &lt; DATE_SUB(CURDATE(), INTERVAL 4 MONTH)  and 
+        		      CPS_DEMERITOS_MOVIMIENTOS.demerito_id != 0 and 
+        		      CPS_MOVIMIENTOS.regcuenta_id = REG_CUENTA.id_regcuenta)</expresion>
+
+      </field>
+
+      <field id="puntosAnt1" noshow="true">
+          <expresion>ifnull(round(100 / @recepcionesAnt1  * (@contraAnt1 ), 2), 0)</expresion>
+      </field>      
+
+      <field id="LetraAnt1" local="true" style="text-align:center" >
+          <attribute id="style">COLORANT1</attribute>
+          <label>2do Cuat.</label>
+          <if exp="puntosAnt1 &lt; 70">
+	          <true>(puntosAnt2 == 0)?'X':'A'</true>
+            <false>(puntosAnt1 &lt; 140)?'B':'C'</false>
+          </if>
+      </field>
+	
+	// ACTUAL 
+      
+      <field id="recepcionesAct" noZero="true" tipoOrden="ASC" noshow="true">
+          <label>Recepciones</label>
+          <expresion>@recepcionesAct:= (select  count(*)  from CPS_MOVIMIENTOS where CPS_MOVIMIENTOS.regcuenta_id  = REG_CUENTA.id_regcuenta and CPS_MOVIMIENTOS.cpsfecha &gt;= DATE_SUB(CURDATE(), INTERVAL 4 MONTH))</expresion>
+
+        <tipo>integer</tipo>
+      </field>
+
+      <field id="nroDem" noZero="true" noshow="true">  
+          <label>Cant. Dem</label>
+          <expresion>(select count(*) from 
+        		CPS_MOVIMIENTOS left join  CPS_DEMERITOS_MOVIMIENTOS on 
+        		    CPS_DEMERITOS_MOVIMIENTOS.cpsmovimiento_id = CPS_MOVIMIENTOS.id_cpsmovimiento
+        		     left join CPS_DEMERITOS on CPS_DEMERITOS.id_demerito = CPS_DEMERITOS_MOVIMIENTOS.demerito_id  
+where CPS_MOVIMIENTOS.regcuenta_id = REG_CUENTA.id_regcuenta and CPS_DEMERITOS_MOVIMIENTOS.fecha_demerito &gt;= DATE_SUB(CURDATE(), INTERVAL 4 MONTH) and CPS_DEMERITOS_MOVIMIENTOS.demerito_id != 0)</expresion>
+      </field>
+
+      <field id="pesoDem" noZero="true" noshow="true">  
+          <label>Peso Demeritos</label>
+          <expresion>@contraAnt:= (select sum(peso_demerito) from 
+        		CPS_MOVIMIENTOS left join  CPS_DEMERITOS_MOVIMIENTOS on 
+        		    CPS_DEMERITOS_MOVIMIENTOS.cpsmovimiento_id = CPS_MOVIMIENTOS.id_cpsmovimiento
+        		     left join CPS_DEMERITOS on CPS_DEMERITOS.id_demerito = CPS_DEMERITOS_MOVIMIENTOS.demerito_id 
+        		where 
+                   	      CPS_DEMERITOS_MOVIMIENTOS.fecha_demerito &gt;= DATE_SUB(CURDATE(), INTERVAL 4 MONTH) and 
+        		      CPS_DEMERITOS_MOVIMIENTOS.demerito_id != 0 and 
+        		      CPS_MOVIMIENTOS.regcuenta_id = REG_CUENTA.id_regcuenta)</expresion>
+
+
+      </field>
+
+      <field id="puntosAct" noshow="true" local="true">
+          <label>porcent</label>
+
+          <expresion>ifnull(round(100 / @recepcionesAct  * @contraAct , 2), 0)</expresion>
+
+      </field>      
+      <field id="LetraAct" local="true" style="text-align:center"  tipoOrden="ASC" >
+          <attribute id="style">COLORACT</attribute>
+          <label>Actual</label>
+          <if exp="puntosAct &lt; 70">
+	          <true>(puntosAnt2 == 0)?'X':'A'</true>
+            <false>(puntosAct &lt; 140)?'B':'C'</false>
+          </if>
+      </field>
+
+      
+     <field id="puntosAct" noshow="true">
+          <label>Total </label>
+          <expresion>@contraAct - ((cert_iso = 2) * 10 )</expresion>
+      </field>
+      <field id="relAct" local="true" noZero="true" noshow="true">
+          <label>Coefic</label>
+          <if exp="'puntosAct' &gt; '0'">
+            <true>(puntosAct / recepcionesAct) * 10</true>
+            <false>0</false>
+          </if>
+          <tipo>numeric</tipo>
+      </field>
+      <field id="COLORACT" local="true" noshow="true">
+          <label>color</label>
+          <if exp="relAct &lt; 0.03">
+        <true>'color:green;text-align:center;font-weight:bold;'</true>
+        <false>(relAct &gt; 0.06)?'color:red;text-align:center;font-weight:bold':'color:blue;text-align:center;font-weight:bold'</false>
+          </if>
+      </field>      
+      
+      <field id="Letra" local="true" style="text-align:center"  tipoOrden="ASC" >
+          <attribute id="style">COLORACT</attribute>
+          <label>Actual</label>
+          <if exp="relAct &lt; 0.03">
+	          <true>'A'</true>
+            <false>(relAct &gt; 0.06)?'C':'B'</false>
+          </if>
+      </field>
+      -->
+      
+      </comentado>
+       <order>
+        <field id="pesoDem" orderType="DESC" />
+	
+      </order> 
+    </table>
+  </form>
+</histrix>

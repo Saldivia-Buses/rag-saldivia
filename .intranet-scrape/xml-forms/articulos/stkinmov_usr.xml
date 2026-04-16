@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" _limit="5">
+	<title>ENTRADA SALIDA STOCK POR CODIGO</title>
+	<obs/>
+	<form detalle="stkinmov_usr_det.xml" inline="true">
+		<table id="STKINMOV" label="ENTRADA SALIDA STOCK">
+			<preconsultas>
+				<xmlfile id="stkinmov_usr_pre.xml"/>
+			</preconsultas>			
+				
+			<field id="opecod">
+				<label>Operador</label>
+				<help></help>
+				<preparam operador="=">true</preparam>						
+				<helper type="combo" xml="HLPpersonal_ope.xml" dir="/help_local" empty="true"/>
+				<detalle>opecod</detalle>
+			</field>
+<!--			<field id="openom" tabla="FSMOPERA">
+				<label>Nombre</label>
+				<help></help>
+				<tipo>string</tipo>
+			</field> --><!--
+			<field id="nrocha">
+				<label>Num.Fabric</label>
+				<tipo>integer</tipo>
+				<help>Nro de Fabricacion</help>
+			</field>        -->
+			<field id="movfec" noshow="true">
+				<label>Fecha Remito</label>
+				<help>Fecha Remito</help>
+				<tipo>date</tipo>
+			</field>
+			<field id="hasta" local="true"  noshow="true">
+				<label>h</label>
+				<help>Hasta</help>
+				<detalle>hasta</detalle>
+				<tipo>date</tipo>
+			</field>
+			<field id="desde" local="true" noshow="true">
+				<label>test</label>
+				<help>Fecha Remito</help>
+				<preparam campo="movfec" operador="&lt;">true</preparam>
+				<tipo>date</tipo>
+				<detalle>desde</detalle>
+			</field>					
+			<field id="siscod" oculto="true">
+				<label>Cod.Sistema</label>
+				<help></help>
+				<condicion operador="=">'01'</condicion>
+			</field>              
+			<field id="movref" noshow="true">
+				<label>Referencia</label>
+				<help></help>
+				<format>%10s</format>
+			</field>         <!--
+			<field id="artcod">
+				<label>Articulo</label>
+				<help>Codigo de Articulo.</help>
+			</field>
+			<field id="artdes" tabla="STKINSUM">
+				<label>Desc</label>
+				<tipo>varchar</tipo>
+			</field>--><!--			
+			<field id="cant" >
+				<expression>count(STKINMOV.artcod)</expression>
+				<label>C.</label>
+				<tipo>decimal</tipo>
+			</field>			
+
+			<field id="movpes" suma="true">
+				<expression>round(sum(STKINMOV.movcos * STKINSUM.valcps / STKINSUM.valuso),4)</expression>
+				<label>Cant</label>
+				<tipo>decimal</tipo>
+			</field>-->			     
+			<field id="visitas" tipoOrden="DESC">
+			    <expression>COUNT(DISTINCT RPAD(LEFT(UNIX_TIMESTAMP(CONCAT(movfec, ' ', CONVERT(REPLACE(LEFT(movref, 8), ":", ""), TIME))), 8), 10, 0))</expression>
+			    <label>Visitas</label>
+			    <condicion operador="!=">''</condicion>
+			</field>                                   
+			
+			<filters>
+				<field id="movfec" copia="desde">
+					<operador>>=</operador>
+					<label>Desde Fecha</label>
+					<valor>today</valor>
+				</field>             
+				<field deshabilitado="true" id="desde" local="true" noshow="true">
+					<label modpos="nobr"/>
+					<valor>today</valor>
+				</field>					
+				<field id="movfec" copia="hasta">
+					<operador>&lt;=</operador>
+					<label>Hasta Fecha</label>
+					<valor>today</valor>					
+				</field> 
+				<field deshabilitado="true" id="hasta" local="true" noshow="true">
+					<label modpos="nobr"/>
+					<valor>today</valor>
+				</field>      <!--
+				<field id="opecod">
+				    <label>Usuario</label>
+				    <operador>=</operador>
+				</field>             -->
+			</filters>
+			<group>
+			    <field id="opecod" />
+			</group>			
+			<order>
+			    <field id="visitas" />
+			</order>
+		</table>
+
+		<join tipo="left">
+			<table id="STKINSUM">
+				<field id="artcod" oculto="true">
+					<condicion operador="=">STKINMOV.artcod</condicion>
+				</field>
+				<field id="siscod" oculto="true">
+					<condicion operador="=">STKINMOV.siscod</condicion>
+				</field>
+
+			</table>
+		</join>		
+	</form>
+</histrix>

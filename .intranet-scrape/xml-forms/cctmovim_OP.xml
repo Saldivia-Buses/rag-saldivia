@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="ficha" sololectura="true" autoprint="true" preFetch="true" limit="1">
+       <title>Orden de pago</title>
+        <obs></obs>
+               <form >
+                  <table id="CCTMOVIM" label="ORDEN DE PAGO">
+                    <field id="concod" oculto="true" />
+                  <field id="siscod" print="false">
+                      <label>Cod.</label>
+                      <help> </help>
+		      <valor>'01'</valor>
+                      <condicion operador="=">'01'</condicion>
+                  </field>
+                  <field id="id_regmovim" oculto="true">
+                  </field>
+
+                  <field id="condes" tabla="CCTCONCE" oculto="true">
+       	              <label >Tipo</label>
+           	          <help>Tipo de Comprobante</help>
+                  </field>
+                <field id="mail"  deshabilitado="true" email="to" print="false" noshow="true">
+                    <expression>select GROUP_CONCAT(IF(mail='', null, mail) SEPARATOR '; ') from CCTCONTA where siscod = '01' and pagos = 1 and CCTCONTA.ctacod = CCTMOVIM.ctacod </expression>
+                    <!-- <expression>select mail from CCTCONTA where siscod = '01' and CCTCONTA.ctacod = CCTMOVIM.ctacod order by principal DESC limit 1</expression> -->
+                </field>
+                <field id="subject"  deshabilitado="true" email="subject" print="false" noshow="true">
+                    <expression>concat('Orden pago Emitida: ', CCTMOVIM.movnro)</expression>
+                </field>
+                <field id="mensaje"  deshabilitado="true" email="body" print="false" noshow="true">
+                    <expression><![CDATA[
+                      concat('Se Informa de la emisión de la Orden de pago Nro ', CCTMOVIM.movnro, ' por $ ', movimp, '\n</br>Por favor solicitamos tengan a bien traer el recibo correspondiente a dicha orden de pago cuando la retiren en fábrica, caso contrario no podremos entregársela. Gracias. \n</br>Saludos')]]></expression>
+                </field>
+                  <field id="ctacod" oculto="true" >
+                      <label >Cuenta</label>
+                      <help>Codigo de Cuenta </help>
+                  </field>
+                  <field id="ctanom2" tabla="CCTCUENT">
+    		      <expression>CCTCUENT.ctanom</expression>
+                      <label posx="10" posy="+1" size="22">Sres.</label>
+                      <help>Nombre</help>
+					  <tipo>varchar</tipo>
+                  </field>
+                  <field id="movfec">
+                      <label posx="165"  posy="0" modpos="nobr">Fecha</label>
+                      <help> </help>
+				<!--	  <format>d  m  y</format>  -->
+						<tipo>date</tipo>
+                  </field>
+
+                  <field id="ctadir" tabla="CCTCUENT">
+                      <label posx="10" posy="-1" >Domicilio    </label>
+                      <help>Domicilio</help>
+					  <tipo>varchar</tipo>					  
+                  </field>
+	             <field id="movnpv" >
+                      <label posx="100"  posy="0" modpos="nobr">Orden de Pago Número</label>
+                      <help> Comprobante</help>
+				      <format>%04d</format>
+                  </field>
+                  <field id="movnro" >
+                      <label posx="160"  posy="0" modpos="nobr"></label>
+                      <help> Número Comprobante</help>
+		       <format>%012d</format>
+                       <detalle>movnro</detalle>
+                  </field>
+
+                  <field id="ctaloc" tabla="CCTCUENT">
+					  <expression>CONCAT('(',CCTCUENT.ctapos,') ',CCTCUENT.ctaloc)</expression>
+                      <label posx="10" posy="-1" >Localidad   </label>
+                      <help>Localidad</help>
+					  <tipo>varchar</tipo>
+                  </field>
+                  <field id="prvcod" tabla="CCTCUENT">
+                      <label  posx="100"  posy="0" modpos="nobr"></label>
+                      <help>Provincia</help>
+					  <tabla_ex id="FSMPROVS">
+						  <field id="prvcod"></field>
+						  <field id="prvnom"></field>
+					  </tabla_ex>
+					  <tipo>varchar</tipo>
+					  
+                  </field>
+                  <field id="ctatel" tabla="CCTCUENT">
+                      <label  posx="10" posy="-1">Teléfono    </label>
+                      <help>Tel</help>
+					  <tipo>varchar</tipo>
+                  </field>
+                  <field id="ctafax" tabla="CCTCUENT">
+                      <label posx="100"  posy="0" modpos="nobr" >Fax</label>
+                      <help>Fax</help>
+					  <tipo>varchar</tipo>
+                  </field>
+
+                  <field id="ctanro" tabla="CCTCUENT">
+                      <label posx="10" posy="-1" >C.u.i.t.        </label>
+                      <help>Cuit</help>
+					  <tipo>varchar</tipo>
+					  
+                  </field>
+                  <field id="ivanom" tabla="FSMCTIVA" >
+                      <label posx="100"  posy="0" modpos="nobr">Iva</label>
+                      <help>Nombre</help><!--
+					  <tabla_ex id="FSMCTIVA">
+						  <field id="ivacod"></field>
+						  <field id="ivanom"></field>
+					  </tabla_ex>-->
+					  <tipo>varchar</tipo>					  
+                  </field>
+		
+				<field id="regmin" oculto="true">
+					<label>minuta</label>
+					<detalle>regmin</detalle>
+				</field>
+
+
+
+   				  <field id="cajcompr" local="true" _obj="cajcompr_op.xml">
+	  				    <label colspan="6" posx="10" posy="+10" >Detalle de Comprobantes</label>
+
+	  				    <helper type="object" xml="cajcompr_op.xml">
+                          <parameter source="ctacod" target="cajcta" />
+
+                          <parameter source="ctacod" target="ctacod" />
+
+                          
+                          <parameter source="movnpv" target="movnpv" />
+
+                          <parameter source="movnro" target="movnro" />
+                          <parameter source="movnro" target="nrocom" />
+                          <parameter source="movnro" target="carpag" />
+                          <parameter source="movnro" target="carrec" />
+                          <parameter source="movnro" target="cajnro" />
+                          <parameter source="movnro" target="nropag" />
+
+	  					
+	  				    </helper>
+	  				    <help>Comprobantes</help>
+
+
+				 </field>
+         
+				  <field id="cajmovim" local="true" obj="cajmovim_recibo.xml" >
+
+                <helper type="object" xml="cajmovim_recibo.xml">
+                          <parameter source="ctacod" target="cajcta" />
+
+                          <parameter source="ctacod" target="ctacod" />
+
+                          
+                          <parameter source="movnpv" target="movnpv" />
+
+                          <parameter source="movnro" target="movnro" />
+                          <parameter source="movnro" target="nrocom" />
+                          <parameter source="movnro" target="carpag" />
+                          <parameter source="movnro" target="carrec" />
+                          <parameter source="movnro" target="cajnro" />
+                          <parameter source="movnro" target="nropag" />
+
+                          <parameter source="concod" target="concod" />      
+                </helper>
+
+	  				    <label colspan="6" posx="10" posy="+2">Forma de Pago</label>
+	  				    <help>recibo</help>
+
+				 </field>
+
+					  
+                 <field id="carchequ" local="true" _obj="carchequ_recibo.xml">
+                      <label colspan="6" posx="20" posy="+1" PDFsize="5">Detalle de Valores</label>
+                      <help> </help>
+                       <helper type="object" xml="carchequ_recibo.xml">
+
+                          <parameter source="regmin" target="regmin" />                        
+                          <parameter source="ctacod" target="cajcta" />
+
+                          <parameter source="ctacod" target="ctacod" />
+
+                          
+                          <parameter source="movnpv" target="movnpv" />
+
+                          <parameter source="movnro" target="movnro" />
+                          <parameter source="movnro" target="nrocom" />
+                          <parameter source="movnro" target="carpag" />
+                          <parameter source="movnro" target="carrec" />
+
+                          <parameter source="movnro" target="cajnro" />
+                          <parameter source="movnro" target="nropag" />
+
+                          <parameter source="concod" target="concod" />                             
+                        </helper>
+                  </field>
+
+
+
+                 <field id="carchehi" local="true" _obj="carchehi_OP.xml">
+                      <label colspan="6" posx="10" posy="+1"  PDFsize="7">Detalle de Valores </label>
+
+                       <helper type="object" xml="carchehi_OP.xml">
+                          <parameter source="ctacod" target="cajcta" />
+
+                          <parameter source="ctacod" target="ctacod" />
+<!--
+                          
+                          <parameter source="movnpv" target="movnpv" />
+
+                          <parameter source="movnro" target="movnro" />
+                          <parameter source="movnro" target="nrocom" /> 
+-->
+                          <parameter source="movnro" target="carpag" />
+<!--
+                          <parameter source="movnro" target="carrec" />
+                          <parameter source="movnro" target="cajnro" />
+                          <parameter source="movnro" target="nropag" />
+                          <parameter source="movnro" target="referencia" />
+-->
+
+                          <parameter source="concod" target="concod" />                            
+
+
+
+                        </helper>                      
+                      <help> </help>
+                  </field>
+                -
+                 <field id="carchehidocs" local="true" _obj="carchehi_docs_OP.xml">
+                      <label colspan="6" posx="10" posy="+1"  PDFsize="7">Detalle de Documentos</label>
+                      <help> </help>
+                       <helper type="object" xml="carchehi_docs_OP.xml">
+                          <parameter source="ctacod" target="cajcta" />
+
+                          <parameter source="ctacod" target="ctacod" />
+
+                          
+                          <parameter source="movnpv" target="movnpv" />
+
+                          <parameter source="movnro" target="movnro" />
+                          <parameter source="movnro" target="nrocom" />
+                          <parameter source="movnro" target="carpag" />
+                          <parameter source="movnro" target="carrec" />
+                          <parameter source="movnro" target="cajnro" />
+                          <parameter source="movnro" target="nropag" />
+
+                          <parameter source="concod" target="concod" />      
+
+
+                        </helper>                        
+                  </field>
+
+				  <field id="bcsmovim" local="true" _obj="bcsmovim_OP.xml" >
+	  				  <label colspan="6" posx="10" posy="+1"  PDFsize="7">Movimientos Bancarios</label>
+                       <helper type="object" xml="bcsmovim_OP.xml">
+<!--                           <parameter source="ctacod" target="cajcta" /> -->
+                          <parameter source="ctacod" target="ctacod" />                         
+<!--                          <parameter source="movnpv" target="movnpv" />
+                          <parameter source="movnro" target="movnro" />
+                          <parameter source="movnro" target="nrocom" />
+                          <parameter source="movnro" target="carpag" />
+                          <parameter source="movnro" target="carrec" /> 
+                          <parameter source="movnro" target="cajnro" />
+                          <parameter source="concod" target="concod" />      
+                        -->
+                          <parameter source="movnro" target="nropag" />
+
+
+                        </helper>             
+				 </field>
+        
+                  <field id="movimp" suma="true">
+                      <label posx="130" posy="+1"  PDFsize="12">Total Pago</label>
+                      <help> </help>
+					<!--  <format>%01.2f</format> -->
+					<!-- <tipo>numeric</tipo> -->	
+                  </field>
+                  <field id="movnet" suma="true">
+                      <label posx="6" posy="+4"  PDFsize="10">Neto</label>
+                      <help> </help>
+					<!--  <format>%01.2f</format> -->
+					<tipo>numeric</tipo>
+                  </field>
+                  
+                  <field id="movref__3" >
+                      <label posx="6" posy="+1"  PDFsize="8">Obs:</label>
+                      <help> </help>
+					<!--  <format>%01.2f</format> -->
+                  </field>
+
+
+
+                  <field id="firma"  local="true" posx="10" posy="+3">
+                      <label posx="6" posy="+6" size="25">Firma:</label>
+			<valor>............................................................</valor>
+		
+                  </field>
+
+                  <field id="aclaracionf"  local="true" >
+                      <label posx="6" posy="+4" size="25">Aclaración:</label>
+			<valor>............................................................</valor>
+
+                  </field>
+                  <field id="fechaf"  local="true" >
+                      <label posx="6" posy="+4" size="25">Fecha:</label>
+			<valor>......../........./...............</valor>
+
+                  </field>
+
+
+                  </table>
+
+				  <join tipo="left">
+				 	<table id="CCTCONCE">
+						<field id="siscod" oculto="true">
+						    <label>cctcuent.siscod</label>
+						    <condicion operador="=">CCTMOVIM.siscod</condicion>
+						</field>
+
+						<field id="concod">
+				    		<condicion operador="=">CCTMOVIM.concod</condicion>
+						</field>
+
+						<field id="condes" oculto="true">
+						</field>
+				    </table>
+				  </join>
+				  <join tipo="left">
+				 	<table id="CCTCUENT">
+						<field id="siscod" oculto="true">
+						    <label>cctcuent.siscod</label>
+						    <condicion operador="=">CCTMOVIM.siscod</condicion>
+						</field>
+
+						<field id="ctacod" oculto="true">
+				    		<condicion operador="=">CCTMOVIM.ctacod</condicion>
+						</field>
+				    </table>
+				  </join>		
+				  <join tipo="left">
+				 	<table id="FSMCTIVA">
+						<field id="ivacod" oculto="true">
+						    <condicion operador="=">CCTCUENT.ivacod</condicion>
+						</field>
+				    </table>
+				  </join>			
+							   
+               </form>
+        </histrix>

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini">
+    <title>Variaciones (RB)</title>
+    <obs/>
+    <form>
+        <table id="STK_ARTICULO_VARIACION" label="Variaciones">
+            <fieldGroup>
+                <field autoinc="true" id="id_artic_variacion" noshow="true"/>
+                <field id="stkarticulo_id" noshow="true"/>
+                <field id="bom_variacion_id">
+                    <tipo>RB</tipo>
+                    <helper dir="/stock/man/" type="combo" xml="stk_bom_variaciones_qry.xml"/>
+                </field>
+                <field id="composicion" local="true">
+                    <tipo>RB</tipo>
+                    <expression>'Ver composicion'</expression>
+                    <helper dir="/stock/man/" type="link" xml="stk_bom_variaciones_composicion.xml">
+                        <parameter source="stkarticulo_id" target="stkarticulo_id"/>
+                        <parameter source="bom_variacion_id" target="bom_variacion_id"/>
+                    </helper>
+                </field>
+                <field id="arma">
+                    <label>Arma</label>
+                    <expression>arma</expression>
+                </field>                    
+                <field deshabilitado="true" id="ancho" tabla="ART">
+                    <label>Ancho (mm)</label>
+                    <help>Ancho</help>
+                    <tipo>numeric</tipo>
+                </field>
+                <field deshabilitado="true" id="alto" tabla="ART">
+                    <label>Alto (mm)</label>
+                    <help>Alto</help>
+                    <tipo>numeric</tipo>
+                </field>
+                <field id="espesor">
+                    <label>Espesor (mm)</label>
+                    <expression>espesor</expression>
+                    <tipo>numeric</tipo>
+                </field>                
+                <field id="m2">
+                    <label>m2</label>
+                    <expression>round((ancho / 1000 * alto  / 1000) , 2)</expression>
+                    <tipo>numeric</tipo>
+                </field>
+
+                <field deshabilitado="true" id="peso" tabla="STK_BOM_VARIACIONES">
+                    <label>peso kg/m2</label>
+                    <tipo>numeric</tipo>
+                </field>
+                <field id="peso_total">
+                    <label>Peso Real (Kg)</label>
+                    <expression>round(peso * (ancho / 1000 * alto / 1000) , 2)</expression>
+                    <tipo>numeric</tipo>
+                </field>
+            </fieldGroup>
+        </table>
+        <join tipo="left">
+            <table as="ART" id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">stkarticulo_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join>
+            <table id="STK_BOM_VARIACIONES" label="Paletas de Colores">
+                <field id="id_bom_variacion" >
+                    <condicion operador="=">bom_variacion_id</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

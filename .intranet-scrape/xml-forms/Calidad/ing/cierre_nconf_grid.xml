@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="liveGrid"  subtipo="vertical" imprime="false"  _deleteRow="false" inserta="false">
+    <title>Origenes de No Conformidad</title>
+    <obs></obs>
+    <form >
+        <table id="CAL_ACCIONES_NCONF" >
+            <title>Estados</title>
+            <movimientos cabecera="cierre_nconf_cab.xml">
+
+            </movimientos>
+		<fieldGroup PDFsize="10">
+            <field id="id_accionnconf" autoinc="true" noshow="true" esClave="true">
+                <label>Cod.</label>
+                <help>Codigo</help>
+            </field>
+            <field id="noconformidad_id" oculto="true">
+            </field>
+            <field id="descripcion_accionnconf" >
+                <label colspan="3">Descripción</label>
+                <size>100</size>
+            </field>
+
+            <field id="muestra_fecha_term" noshow="true" print="false">
+                <expression>case when tipo_accionnconf = 3 then 'true' else 'false' end</expression>
+            </field>
+
+            <field id="fecha" PDFcolWidth="20">
+                <label>Fecha</label>
+                <expression>case when tipo_accionnconf = 3 then (case when fecha_realizacion = '0000-00-00' then '' else DATE_FORMAT(fecha_realizacion, '%d/%m/%y') end) when tipo_accionnconf = 4 then (DATE_FORMAT(fecha_terminada, '%d/%m/%y'))  else DATE_FORMAT(fecha_accionnconf, '%d/%m/%y') end</expression>
+            </field>
+
+            <field id="fecha_ter" PDFcolWidth="20">
+                <label>Term</label>
+                <expression>case when fecha_terminada = '0000-00-00' then '' else DATE_FORMAT(fecha_terminada, '%d/%m/%y') end</expression>
+                <attribute id="print">muestra_fecha_term</attribute>
+            </field>
+
+            <field id="resp_rhpersonal_id" PDFcolWidth="20"><!--
+                <helper type="combo" xml="rhpersonal_qry.xml" dir="/help_local" empty="true"/>-->
+				<helper type="combo" id="HTXUSERS" empty="true">
+					<field id="id_usuario"/>
+					<field id="nombre">
+                        <expression>CONCAT(Nombre, LEFT(apellido,1))</expression>
+					</field>
+				</helper>
+                <label modpos="nobr">Resp.</label>
+
+                <help >Empleado responsable de la Acción</help>
+            </field>
+
+			<field id="tipo_accionnconf" noshow="true">
+				<label>Tipo de Acción</label>
+				<options>
+					<option valor="0">Análisis</option>
+					<option valor="1">Preventiva</option>
+					<option valor="2">Correctiva</option>		
+				</options>
+			</field>
+<!--			
+           <field id="control_accionnconf" editable="true" PDFcolWidth="10">
+                <label>Ok</label>
+                <tipo>check</tipo>
+            </field>-->
+		</fieldGroup>
+        </table>
+    </form>
+</histrix>

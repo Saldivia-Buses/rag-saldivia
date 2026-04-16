@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert"  tipoInsert="IGNORE">
+  <title>Bloqueos</title>
+  <obs/>
+  <form >
+    <table id="HtxMailgunSuppressions">
+
+
+      <field id="id"  	     id_temp="id" />
+      <field id="timestamp"  id_temp="timestamp" />
+      <field id="address"    id_temp="address" />
+      <field id="error"      id_temp="error" />
+      <field id="type"   id_temp="type" />
+      <field id="domain" id_temp="domain" />
+      <field id="item"   id_temp="item" />
+
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+	<histrix tipo="ficha" inserta="false" cancel="false" borra="false" imprime="false" preFetch="true"> 
+	<title>Gestion Llamados</title>
+	<obs></obs>
+	
+	 <eventos>
+        <event id="update">close</event>
+        <event id="update">refresh</event>
+        <event id="update">reload</event>
+    </eventos>
+    
+	<form>
+		<table id="REG_MOVIMIENTOS">
+			<field id="id_regmovim" noshow="true" valauto="true" />
+
+			<field id="prox_llamado" valauto="true">
+				<label>Proximo llamado</label>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="posible_pago" valauto="true">
+				<label modpos="nobr">Posible Pago</label>
+				<tipo>date</tipo>
+			</field>
+
+
+		</table>
+	</form>
+</histrix>	
+
+

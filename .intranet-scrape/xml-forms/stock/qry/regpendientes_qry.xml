@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" deleteRow="false">
+  <title>Cta Ctes</title>
+  <obs/>
+  <consulta >
+    <tabla id="REG_DETALLES">
+     
+      <!-- CONSULTA -->
+    
+
+  
+    <field id="regmovim_id" noshow="true">
+    </field>
+	<field id="codigo_detalle">
+	    <label>Codigo</label>
+	</field>
+	<field id="nombre_articulo" tabla="STK_ARTICULOS">
+	    <label>Articulos</label>
+	</field>
+	<field id="colorlabel" local="true"  noshow="true">
+		<label>colorlabel</label>
+		<if exp="actual==0">
+			<true>'color:red;'</true>
+			<false>'color:green;'</false>
+		</if>
+	</field>
+	<field id="actual" local="true" >
+		<label>Stock Actual</label>
+		<attribute id="colstyle">colorlabel</attribute> 
+		<expresion>ifnull((SELECT sum(cantidad_stock) FROM STK_STOCKACTUAL SA WHERE SA.stkarticulo_id= REG_DETALLES.codigo_detalle), 0)</expresion>
+		<!--
+		<expresion>ifnull((SELECT sum(case when tipo_concepto=0 then 1 else -1 end * cantidad) 
+				FROM STK_MOVIMIENTOS SM join STK_CONCEPTOS SC on SC.id_stkconcepto = SM.stkconcepto_id  
+				WHERE stkarticulo_id=REG_DETALLES.codigo_detalle), 0) -->
+		</expresion>
+		<tipo>numeric</tipo>
+	</field>     
+
+	<field id="Pedido" local="true" >
+		<label>Pedido</label>
+		<expresion>sum(ifnull(REG_DETALLES.cantidad_detalle,0) )</expresion>
+		<tipo>numeric</tipo>
+	</field>
+	<field id="facturado" local="true">
+		<label>Facturado</label>
+		<expresion>select sum(ifnull(RD1.cantidad_detalle,0) )  from REG_DETALLES RD1  
+				JOIN REG_IMPUTACIONESDETALLES on  REG_IMPUTACIONESDETALLES.regdetallefac_id = RD1.id_regdetalle  
+				where REG_IMPUTACIONESDETALLES.regdetalleped_id = REG_DETALLES.id_regdetalle
+		</expresion> 
+		<tipo>numeric</tipo>
+	</field>
+	<field id="pendiente" local="true">
+		<label>Pendiente</label>
+		<if exp="true">
+		  	<true>Pedido - facturado</true>
+			<false>0</false>
+		</if>
+		<tipo>numeric</tipo>
+			
+	</field>
+<!--	<field id="color" local="true" clasefila="true" noshow="true">
+		<label>color</label>
+		<if exp="pendiente != 0">
+			<true>'grisado'</true>
+			<false>''</false>
+		</if>
+	</field>
+-->
+	<group>
+		<field id="codigo_detalle" tabla="REG_DETALLES"/>
+	</group>
+
+    </tabla>
+    <join tipo="left">
+      <table id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">REG_DETALLES.codigo_detalle</condicion>
+        </field>
+      </table>
+    </join>    
+
+  </consulta>
+</histrix>

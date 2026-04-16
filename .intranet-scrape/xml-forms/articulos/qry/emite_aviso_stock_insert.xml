@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" >
+	<title>Envio notificacion</title>
+	<obs></obs>
+	<form >
+		<table id="HTXMESSAGES" label="Marca Leidos" >
+			<field id="de"  >
+                <valor>histrix</valor>         
+            </field>
+			<field id="para"  id_temp="destino">
+
+            </field>
+			<field id="mensaje"  id_temp="mensaje" ></field>
+
+            <field id="hora"     >
+                <tipo>integer</tipo>
+                <valor>curtime()</valor>         
+            </field>            
+			<field id="fecha"     >
+                <tipo>integer</tipo>
+                <valor>curdate()</valor>         
+            </field>
+			<field id="title" >
+                    <valor>'Stock Critico alcanzado'</valor>         
+            </field>
+			<field id="notification" id_temp="mensaje"></field>
+		</table>
+	</form>
+</histrix>

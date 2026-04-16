@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" _limit="20">
+  <title>Fechas</title>
+  <obs></obs>
+  <consulta detalle="arbol_prod_lista_hist_det_qry.xml">
+    <table id="STK_BOM_HIST" label="Fechas">
+	<filters>
+      <field id="bom_variacion_id" _oculto="true">
+        <label>Homologacion</label>
+	<operador>=</operador>
+      </field>
+	    
+	</filters>
+      <field id="fecha_costo">
+        <label>Fecha</label>
+        <tipo>date</tipo>
+        <detalle>fecha_costo</detalle>
+
+      </field>
+<!--
+      <field id="fecha_costo2">
+        <label>Fecha</label>
+        <expression>DATE_FORMAT(fecha_costo,"%d/%m/%Y")</expression>
+        <tipo>date</tipo>
+        <detalle>fecha_costo2</detalle>
+      </field>
+-->
+      <field id="bom_variacion_id" _oculto="true">
+        <label>Homologacion</label>
+        <detalle>bom_variacion_id</detalle>
+      </field>
+
+      <field id="id_stkbomhist"  noshow="true">
+        <label>ID</label>
+      </field>
+    
+	<order>
+    	    <field id="fecha_costo" orderType="DESC"/>
+	</order>
+      <group>
+        <field id="fecha_costo" />
+      </group> 
+
+    </table>
+
+  </consulta>
+</histrix>  

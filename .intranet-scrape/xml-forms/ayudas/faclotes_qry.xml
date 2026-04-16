@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ayuda">
+  <title>Lotes de Facturacion</title>
+  <obs></obs>
+  <consulta>
+    <table id="FAC_LOTES">
+	<field id="id_faclote" autoinc="true" esClave="true">
+		<label>Codigo</label>
+	</field>
+	<field id="faclote_periodo">
+		<label>Periodo</label>
+		<help>Periodo</help>
+		<detalle>wfaclote_periodo</detalle>
+	</field>
+
+	<field id="faclote_fechafac" >
+		<label>Fecha Fact.</label>
+		<detalle>wfaclote_fechafac</detalle>
+	</field>
+	<field id="faclote_fechavto1" >
+		<label>Fec.1er.Vto.</label>
+		<detalle>wfaclote_fechavto1</detalle>
+	</field>
+
+
+
+
+
+
+
+
+
+
+
+
+	<field id="faclote_fechavto2" >
+		<tipo>date</tipo>	
+		<label>Fec.2do.Vto.</label>
+		<help>Fecha 2do. Vencimiento</help>
+		<detalle>wfaclote_fechavto2</detalle>
+	</field>
+	<field id="faclote_fechavto3">
+		<tipo>date</tipo>	
+		<label>Fec.3er.Vto.</label>
+		<help>Fecha 3er. Vencimiento</help>
+		<detalle>wfaclote_fechavto3</detalle>
+	</field>
+	<field id="faclote_recargo2">
+		<tipo>decimal</tipo>	
+		<label>% Recargo 2do. Vto.</label>
+		<help>% Recargo 2do. Vto.</help>
+		<detalle>wfaclote_recargo2</detalle>
+	</field>
+	<field id="faclote_recargo3">
+		<tipo>decimal</tipo>	
+		<label>% Recargo 3er. Vto.</label>
+		<help>% Recargo 3er. Vto.</help>
+		<detalle>wfaclote_recargo3</detalle>
+	</field>
+	<field id="faclote_fechapxv">
+		<tipo>date</tipo>	
+		<label>Fec.Prox.Fact.</label>
+		<help>Fecha de Proxima Factura</help>
+		<detalle>wfaclote_fechapxv</detalle>
+	</field>
+	<field id="faclote_fechadesc">
+		<tipo>date</tipo>	
+		<label>Fec.Desc.</label>
+		<help>Fecha de Desconexion</help>
+		<detalle>wfaclote_fechadesc</detalle>
+	</field>
+	<field id="faclote_importerec">
+		<tipo>decimal</tipo>	
+		<label>Importe Reconexion</label>
+		<help>Importe Reconexion</help>
+		<detalle>wfaclote_importerec</detalle>
+	</field>
+	<field id="faclote_leyenda">
+		<label>Leyenda</label>
+		<help>Leyenda</help>
+		<detalle>wfaclote_leyenda</detalle>
+	</field> 
+
+
+
+<!--  Revisar lo que sobra y comom impacta en tros programas -->
+
+	<field id="punto_venta" tabla="FAC_SERVICIO_GRUPOS">
+		<label>NPV</label>
+		<help>NPV</help>
+		<detalle>puesto_movimiento</detalle>
+	</field> 
+	<field id="subsistema_id" tabla="FAC_SERVICIO_GRUPOS">
+		<label>subsistema</label>
+		<help>subsistema</help>
+		<detalle>subsistema_id</detalle>
+	</field> 
+	<field id="regconcepto_id" tabla="FAC_SERVICIO_GRUPOS">
+		<label>Concepto</label>
+		<help>Concepto</help>
+		<detalle>regconcepto_id</detalle>
+	</field> 
+
+    </table>
+        <join _tipo="left">
+            <table id="FAC_SERVICIO_GRUPOS">
+		<field id="id_facgrupo">
+		    <condicion operador="=">FAC_LOTES.facgrupo_id</condicion>
+		</field>
+            </table>
+        </join>
+
+  </consulta>
+</histrix>  

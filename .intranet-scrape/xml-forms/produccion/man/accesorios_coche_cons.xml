@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini">
+	<title>Accesorios por coche</title>
+	<obs/>
+	<form >
+         <table id="ACCESORIOS_COCHE" label="Accesorios Estandar" style__Tbody="height:100px;overflow-x:hidden;">		
+			 <field id="nrofab" oculto="true" esClave="true">
+				 <label>Num</label>
+				 <condicion operador="=">0</condicion>
+				 <valor>0</valor>
+			 </field>
+		        <field id="prdseccion_id" noshow="true" >
+		        </field>
+
+			 <field id="artcod" tabla="STKINSUM">
+				 <label>Cod.</label>
+				 <tipo>varchar</tipo>
+			 </field>
+			 
+			 <field id="artdes" tabla="STKINSUM">
+
+				 <label>Descripción</label>
+				 <tipo>varchar</tipo>
+			 </field>
+	      </table>
+		  <join>
+			  <table id="STKINSUM">
+					 <field id="artcod">
+						 <condicion operador="=">ACCESORIOS_COCHE.artcod</condicion>
+					 </field>
+					 <field id="siscod" oculto="true">
+						 <condicion operador="=">'02'</condicion>
+					 </field>			  
+			  </table>
+		  </join>
+	</form>
+</histrix>

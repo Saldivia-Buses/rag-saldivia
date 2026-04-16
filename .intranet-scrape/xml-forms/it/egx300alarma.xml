@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--Comentario-->
+<histrix tipo="consulta" paginar="300">
+  <title>Tableros electricos</title>
+  <obs></obs>
+  <form>
+    <table id="EGX_ALARMAS" label="Tableros Electricos">
+     
+      
+      <field id="id">
+      
+      <label>Id</label>
+      
+      
+      </field>
+      
+      
+      <field id="id_nave">
+      	<label>Nave</label>
+      
+      </field>
+      
+      
+           <field id="date_time">
+          <label>Fecha-Hora</label>
+          
+          </field>
+      
+      
+       <field id="valor" >
+      
+      	<label>Valor</label>
+      </field>
+        
+       <field id="mensaje" >
+      
+      	<label>Mensaje</label>
+      </field>
+      
+        
+       <field id="destinatario" >
+      
+      	<label>Destinatario</label>
+      </field>
+      
+        <field id="enviado" >
+      
+      	<label>Enviado</label>
+      </field>
+      
+      <order>
+       <field id="id" typeOrder="ASC"></field>
+      </order>
+          </table>
+  </form>
+</histrix>  
+
+

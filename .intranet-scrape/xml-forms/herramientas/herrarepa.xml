@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<histrix tipo="abm-mini" >
+		<title>Relacion de Reparacion</title>
+		<obs></obs>
+		<form >
+			<table id="HERRAREPA" label="Relacion de Reparacion">
+				<field id="tipoherr" oculto="true">
+					<label>Articulo</label>
+					<help>Codigo de Articulo</help>
+					<valor>0</valor>
+					<condicion operador="!=">''</condicion>
+				</field>
+				<field id="repcod">
+					<tabla_ex id="REPCODIGO">
+						<field id="repcod" clave="true"></field>
+						<field id="repnom"></field>
+					</tabla_ex>
+					<label>Codigo Reparacion</label>
+					<help>
+					</help>
+				</field>
+		</table>
+		</form>
+	</histrix>

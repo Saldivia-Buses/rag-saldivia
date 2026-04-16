@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta" paginar="500">
+	<title>Inspeccion de Recepcion</title>
+	<obs></obs>
+	<form  detalle="stkinspec.xml">
+		<table id="STKINSUM" label="Inspeccion de Recepcion">
+			<filters>
+				<field id="artcod" deshabilitado="false">
+					<ayuda_ex id="STKINSUM">
+						<clave>artcod</clave>
+						<descripcion>artdes</descripcion>
+					</ayuda_ex>
+					<valor></valor>
+					<label>Cod.</label>
+					<operador  modificador="left">=</operador>					
+				</field>			
+				<field id="artdes" >
+					<label>Articulo</label>
+					<help>Descripcion de Articulo. (ENTER = Retorna a ingreso de codigo).
+						</help>
+					<operador>like</operador>
+					<size>20</size>
+				</field>
+                                                          
+			    <field id="filtnorma" deshabilitado="false">
+				<label>Con Normas</label>
+
+				<operador>=</operador>
+				<valor></valor>
+				
+			    </field>                    
+			</filters>	
+			<field id="artcod">
+				<label>Articulo</label>
+				<help>Codigo de Articulo</help>
+				<detalle>artcod</detalle>
+				<condicion operador="!=">''</condicion>
+			</field>
+			<field id="artdes">
+				<label>Descripcion</label>
+				<help>Descripcion</help>
+				<size>20</size>
+
+			</field>
+			<field id="baja" oculto="true">
+				<condicion operador="!=">1</condicion>
+			</field>			
+			<field id="siscod" oculto="true">
+				<label>Codigo Sistema.. </label>
+				<help>
+				</help>
+			<!--	<condicion operador="=">01</condicion> -->
+				<detalle>siscod</detalle>
+			</field>
+			<field id="filtnorma" noshow="true">
+				<label>Con Normas</label>
+				<expression having="false">ifnull((select 1 from STKINSPEC WHERE STKINSPEC.artcod = STKINSUM.artcod limit 1), 0)</expression>
+				<options>
+				    <option valor="">Todos</option>
+				    <option valor="0">No</option>
+				    <option valor="1">Si</option>
+				</options>
+				<tipo>integer</tipo>
+			</field>
+        <!--
+			<field id="connor" clasefila="true" noshow="true">
+				<expression>(case when count(nronor) > 0 then 'resaltado' else '' end)</expression>
+			</field> -->
+<!--			<group>
+				<field id="artcod" tabla="STKINSUM"></field>
+			</group> -->
+		</table>
+<!--		<join tipo="left">
+			<table id="STKINSPEC">
+				<field id="artcod">
+					<condicion operador="=">STKINSUM.artcod</condicion>
+				</field>
+			</table>
+		</join> -->
+	</form>
+</histrix>

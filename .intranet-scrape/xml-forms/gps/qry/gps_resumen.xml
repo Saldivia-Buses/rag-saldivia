@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <histrix tipo="consulta" limit="50">
+   <title>Resumen GPS</title>
+  
+ <form>
+ <table id="GPS_TACOEXTEND">
+
+
+<field id="id_package">
+<label>Id</label>
+
+
+</field>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</table>
+</form>
+</histrix>
+  

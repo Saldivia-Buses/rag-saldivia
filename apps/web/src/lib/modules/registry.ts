@@ -22,6 +22,7 @@ import {
   FileText,
   Database,
   Star,
+  BusFront,
   type LucideIcon,
 } from "lucide-react";
 
@@ -45,6 +46,23 @@ export interface ModuleManifest {
 }
 
 export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
+  // ── Manufactura ──────────────────────────────────────────
+  manufactura: {
+    id: "manufactura",
+    nav: { label: "Manufactura", icon: BusFront, path: "/manufactura", position: 20 },
+    routes: [
+      "/manufactura",
+      "/manufactura/unidades",
+      "/manufactura/controles",
+      "/manufactura/certificaciones",
+    ],
+    subnav: [
+      { path: "/manufactura/unidades", label: "Unidades" },
+      { path: "/manufactura/controles", label: "Controles" },
+      { path: "/manufactura/certificaciones", label: "Certificaciones" },
+    ],
+  },
+
   // ── Operaciones ──────────────────────────────────────────
   produccion: {
     id: "produccion",
@@ -141,11 +159,13 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
       "/administracion/facturacion",
       "/administracion/pagos",
       "/administracion/contable",
+      "/administracion/sugerencias",
     ],
     subnav: [
       { path: "/administracion/facturacion", label: "Facturación" },
       { path: "/administracion/pagos", label: "Pagos" },
       { path: "/administracion/contable", label: "Contabilidad" },
+      { path: "/administracion/sugerencias", label: "Sugerencias" },
     ],
   },
   rrhh: {

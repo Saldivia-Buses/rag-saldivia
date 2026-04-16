@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="nosql" _log="false" _grabafinal="true" xmlImpresion="/stock/qry/imp_inventario_qry.xml" >
+	<title>Cierra Movimiento</title>
+	 <obs></obs>
+		<form>
+		    <table id="STK_MOVIMIENTOS" idCampoCond="imprimereport" >
+
+		      <field id="stkconcepto_id" id_temp="stkconcepto_id">
+				<detalle>stkconcepto_id</detalle>
+		      </field>
+
+  		      <field id="user_id" id_temp="user_id">
+				<detalle>user_id</detalle>
+		      </field>
+
+  		      <field id="stkdeposito_id" id_temp="stkdeposito_id">
+				<detalle>stkdeposito_id</detalle>
+		      </field>
+
+		      <field id="stkrubro_id" id_temp="stkrubro_id">
+				<detalle>stkrubro_id</detalle>
+		      </field>
+
+		      <field id="referencia" id_temp="referencia">
+				<detalle>referencia</detalle>
+		      </field>
+
+  		      <field id="numero_movimiento" id_temp="numero_movimiento">
+				<detalle>numero_movimiento</detalle>
+		      </field>
+
+
+		      <field id="fecha_movimiento" id_temp="fecha_movimiento">
+				<detalle>fecha_movimiento</detalle>
+		      </field>
+
+		    </table>
+		</form>
+    </histrix>	
+
+

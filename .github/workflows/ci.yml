@@ -2,16 +2,19 @@ name: CI
 
 on:
   pull_request:
-    branches: [2.0.x, 2.0.1, main]
+    branches: [2.0.x, 2.0.5, main]
   push:
-    branches: [2.0.x, 2.0.1, main]
+    branches: [2.0.x, 2.0.5, main]
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# ══════════════════════════════════════════════════════════════════════════
+# Gate 1: Verify — lint, vet, build (parallel within gate)
+# ══════════════════════════════════════════════════════════════════════════
+
 jobs:
-  # ── Commitlint ────────────────────────────────────────────────────────────
   commitlint:
     name: Lint commit messages
     runs-on: ubuntu-latest
@@ -35,12 +38,26 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Validate PR commits
-        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+        run: |
+          MERGE_BASE=$(git merge-base ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
+          npx commitlint --from "$MERGE_BASE" --to ${{ github.event.pull_request.head.sha }} --verbose
 
-  # ── Go Build ──────────────────────────────────────────────────────────────
+  events-validate:
+    name: Validate event codegen (CUE -> Go/TS/docs)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.work
+          cache-dependency-path: "**/go.sum"
+      - name: Validate pkg/events/gen is in sync with pkg/events/spec
+        run: make events-validate
+
   go-build:
     name: Build Go services
     runs-on: ubuntu-latest
+    needs: [events-validate]
     steps:
       - uses: actions/checkout@v4
 
@@ -56,12 +73,17 @@ jobs:
         run: |
           for svc in services/*/; do
             [ -f "${svc}cmd/main.go" ] || continue  # skip non-Go (extractor)
-            echo "::group::Building ${svc}"
-            go build "./${svc}cmd/"
+            SVC_NAME=$(basename "$svc")
+            echo "::group::Building ${SVC_NAME}"
+            if [ "$SVC_NAME" = "astro" ]; then
+              CGO_ENABLED=1 CGO_LDFLAGS="-L${GITHUB_WORKSPACE}/services/astro -lm" \
+                go build "./${svc}cmd/"
+            else
+              go build "./${svc}cmd/"
+            fi
             echo "::endgroup::"
           done
 
-  # ── Go Vet ────────────────────────────────────────────────────────────────
   go-vet:
     name: Vet Go code
     runs-on: ubuntu-latest
@@ -77,8 +99,14 @@ jobs:
         run: |
           for svc in services/*/; do
             [ -f "${svc}go.mod" ] || continue
-            echo "::group::Vetting ${svc}"
-            go vet "./${svc}..."
+            SVC_NAME=$(basename "$svc")
+            echo "::group::Vetting ${SVC_NAME}"
+            if [ "$SVC_NAME" = "astro" ]; then
+              CGO_ENABLED=1 CGO_LDFLAGS="-L${GITHUB_WORKSPACE}/services/astro -lm" \
+                go vet "./${svc}..."
+            else
+              go vet "./${svc}..."
+            fi
             echo "::endgroup::"
           done
           echo "::group::Vetting pkg/"
@@ -88,11 +116,14 @@ jobs:
           go vet ./gen/go/...
           echo "::endgroup::"
 
-  # ── Go Test ───────────────────────────────────────────────────────────────
+  # ══════════════════════════════════════════════════════════════════════════
+  # Gate 2: Test — unit + integration (needs Gate 1: build + vet)
+  # ══════════════════════════════════════════════════════════════════════════
+
   go-test:
     name: Test Go services
     runs-on: ubuntu-latest
-    needs: [go-build]
+    needs: [go-build, go-vet]
     steps:
       - uses: actions/checkout@v4
 
@@ -101,22 +132,67 @@ jobs:
           go-version-file: go.work
           cache-dependency-path: "**/go.sum"
 
-      - name: Test all modules
+      - name: Test all services
         run: |
           for svc in services/*/; do
             [ -f "${svc}go.mod" ] || continue
-            echo "::group::Testing ${svc}"
-            go test -race -count=1 "./${svc}..."
+            SVC_NAME=$(basename "$svc")
+            echo "::group::Testing ${SVC_NAME}"
+            if [ "$SVC_NAME" = "astro" ]; then
+              CGO_ENABLED=1 CGO_LDFLAGS="-L${GITHUB_WORKSPACE}/services/astro -lm" \
+                go test -race -count=1 "./${svc}..."
+            else
+              go test -race -count=1 "./${svc}..."
+            fi
             echo "::endgroup::"
           done
+
+      - name: Test shared packages
+        run: |
           echo "::group::Testing pkg/"
           go test -race -count=1 ./pkg/...
           echo "::endgroup::"
+          echo "::group::Testing gen/go/"
+          go test -race -count=1 ./gen/go/...
+          echo "::endgroup::"
 
-  # ── Security Scanning ──────────────────────────────────────────────────
+      - name: Test tools
+        run: |
+          for tool in tools/*/; do
+            [ -f "${tool}go.mod" ] || continue
+            echo "::group::Testing ${tool}"
+            go test -race -count=1 "./${tool}..."
+            echo "::endgroup::"
+          done
+
+  go-test-integration:
+    name: Integration tests (Docker)
+    runs-on: ubuntu-latest
+    needs: [go-build, go-vet]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.work
+          cache-dependency-path: "**/go.sum"
+
+      # Runners already have Docker for testcontainers — no services: block needed.
+      - name: Verify Docker is available
+        run: docker version
+
+      - name: Run integration tests
+        run: make test-integration
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # Gate 3: Security — gosec + trivy (needs Gate 1: build + vet)
+  # ══════════════════════════════════════════════════════════════════════════
+
   security:
     name: Security scan
     runs-on: ubuntu-latest
+    needs: [go-build, go-vet]
     steps:
       - uses: actions/checkout@v4
 
@@ -132,8 +208,14 @@ jobs:
         run: |
           for svc in services/*/; do
             [ -f "${svc}go.mod" ] || continue
-            echo "::group::gosec ${svc}"
-            gosec -quiet "./${svc}..."
+            SVC_NAME=$(basename "$svc")
+            echo "::group::gosec ${SVC_NAME}"
+            if [ "$SVC_NAME" = "astro" ]; then
+              CGO_ENABLED=1 CGO_LDFLAGS="-L${GITHUB_WORKSPACE}/services/astro -lm" \
+                gosec -quiet "./${svc}..."
+            else
+              gosec -quiet "./${svc}..."
+            fi
             echo "::endgroup::"
           done
           echo "::group::gosec pkg/"
@@ -141,9 +223,53 @@ jobs:
           echo "::endgroup::"
 
       - name: Trivy filesystem scan
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.35.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
           severity: 'HIGH,CRITICAL'
           exit-code: '1'
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # Gate 4: Docker — build all images (needs Gate 2 + 3)
+  # ══════════════════════════════════════════════════════════════════════════
+
+  discover-services:
+    name: Discover Go services
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.find.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: find
+        name: Generate service matrix from filesystem
+        run: |
+          SERVICES=$(ls services/*/Dockerfile 2>/dev/null \
+            | grep -v '\.scaffold' | grep -v extractor \
+            | sed 's|services/||;s|/Dockerfile||' \
+            | jq -Rc -s 'split("\n") | map(select(. != ""))')
+          echo "matrix={\"service\":$SERVICES}" >> $GITHUB_OUTPUT
+          echo "Discovered services: $SERVICES"
+
+  docker-build:
+    name: "Docker build: ${{ matrix.service }}"
+    runs-on: ubuntu-latest
+    needs: [go-test, go-test-integration, security, discover-services]
+    strategy:
+      matrix: ${{ fromJson(needs.discover-services.outputs.matrix) }}
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          SERVICE="${{ matrix.service }}"
+          echo "::group::Building sda-${SERVICE}"
+          docker build \
+            --build-arg VERSION=ci-test \
+            --build-arg GIT_SHA=${{ github.sha }} \
+            --build-arg BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ) \
+            -t "sda-${SERVICE}:ci" \
+            -f "services/${SERVICE}/Dockerfile" .
+          echo "::endgroup::"
+          echo "Image sda-${SERVICE}:ci built successfully"

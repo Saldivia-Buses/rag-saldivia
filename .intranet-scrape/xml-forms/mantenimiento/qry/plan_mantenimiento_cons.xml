@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CURD
+Tarea: PLAN DE MANTENIMIENTO
+Autor: Lmm
+Fecha: 17/08/11
+*******************************************************************************
+-->
+<histrix tipo="calendar" _subtipo="vertical" inserta="false" modifica="false" borra="false" calendarAspectRatio="2" sidePanel="false" calendarDefaultView="agendaWeek" tooltip="false" PDForientation="L">
+    <title>Mantenimiento</title>
+    <obs></obs>
+    <pie>                                             Firma Realizado: ________________________</pie>
+    <form detalle="plan_evento_crud.xml">
+        <table id="MANT_PLAN" label="Plan de mantenimiento">
+             
+		<filters>
+            <field id="nombre_equipo_cal" deshabilitado="false">
+                <label colspan="4">Nombre</label>
+                <help>Nombre</help>
+                <operador>like</operador>
+            </field>
+ 			<field id="tipoequipo_id" >
+                <label>Tipo</label>
+                <help>Tipo</help>
+                <operador>=</operador>
+				<valor>1</valor>
+            </field>
+			<field id="deposito_id">
+				<label modpos="nobr">Depósito</label>
+				<helper type="combo" id="DEPOSITO">
+					<field id="idDeposito">
+						<label>Cod</label>
+						<help>Codigo</help>
+					</field>
+					<field id="direccion">
+						<label>Direccion</label>
+						<help>Direccion</help>
+					</field>
+				</helper>
+                <operador>=</operador>
+			</field>
+
+			<field id="fecha_accion" grupo="Impresion">
+			    <label>Desde</label>
+			    <operador>&gt;=</operador>
+			</field>
+			<field id="fecha_accion" grupo="Impresion">
+			    <label modpos="nobr">Hasta</label>
+			    <operador>&lt;=</operador>
+			</field>
+		</filters>
+		
+		
+	   	<field id="rrule" noshow="true" calendarRecurringRule="true" />
+
+	   	<field id="id_plan" noshow="true" calendarId="true" _calendarEditable="true">
+			<detalle>plan_id</detalle>
+	   	
+	   	</field>
+
+	        <field id="fecha_accion" deshabilitado="true" calendarStartDate="true">
+			<label>Fecha</label>
+			<help>Fecha de la acción</help>
+			<tipo>date</tipo>
+			<detalle>fecha_accion</detalle>
+			<condicion operador="&gt;=">'01/01/2017'</condicion>
+		</field>
+		
+		<field id="nombre_equipo_cal"  calendarSubject="true" deshabilitado="false" print="false"> 
+		    <expression>CONCAT((CASE WHEN MANT_EQUIPOS.nombre_equipo = '' THEN STK_ARTICULOS.nombre_articulo ELSE MANT_EQUIPOS.nombre_equipo END), ' - ', nombre_accion)</expression>
+			<label >Equipo</label>
+			<size>60</size>
+		</field>
+
+		<field id="nombre_equipo_imp"> 
+		    <label>Equipo </label>
+			    <expression>CONCAT( MANT_EQUIPOS.nombre_equipo)</expression>
+		    <size>60</size>
+			</field>
+
+		<field id="numero_serie" tabla="MANT_EQUIPOS">
+		    <label>Nro Serie</label>
+		</field>
+
+		<field id="id_equipo" noshow="true" tabla="MANT_EQUIPOS">
+		    <label>equipo</label>
+		</field>
+
+		<field id="tipoequipo_id" tabla="MANT_EQUIPOS" noshow="true">
+			<helper type="combo" id="MANT_TIPO_EQUIPO" empty="true">
+				<field id="id_tipo_equipo"/>
+				<field id="nombre_tipoequipo"/>
+			</helper>
+			<label>Tipo</label>
+		</field>
+	
+		<field id="deposito_id" tabla="MANT_EQUIPOS" noshow="true">
+			<label>Depósito</label>
+			<helper type="combo" id="DEPOSITO" empty="true">
+				<field id="idDeposito">
+					<label>Cod</label>
+					<help>Codigo</help>
+				</field>
+				<field id="direccion">
+					<label>Direccion</label>
+					<help>Direccion</help>
+				</field>
+			</helper>
+		</field>
+		<field id="accion_id" deshabilitado="true">
+
+			<helper type="combo" id="MANT_ACCIONES" empty="true">
+				<field id="id_accion"/>
+				<field id="nombre_accion"/>
+			</helper>
+			<label>Acción</label>
+			<detalle>accion_id</detalle>
+		</field>
+		
+
+		<field id="obs_temp=" local="true">
+		    <label>Observaciones</label>
+		</field>
+		
+		<field id="color"  noshow="true" calendarColor="true">
+			    <expression>'blue'</expression>
+          	</field>
+          
+	    </table>
+	    
+	    <join tipo="left">
+	        <table id="MANT_EQUIPOS">
+            	    <field id="id_equipo">
+                	<condicion operador="=">MANT_PLAN.equipo_id</condicion>
+                    </field>
+
+        	</table>
+            </join>
+
+	    <join tipo="left">
+
+                <table id="MANT_ACCIONES">
+            	    <field id="id_accion">
+                	<condicion operador="=">accion_id</condicion>
+                    </field>
+    	        </table>
+
+	    </join> 
+        <join tipo="left">
+	     <table id="STK_ARTICULOS">
+	        <field id="id_stkarticulo">
+		    <condicion operador="=">MANT_EQUIPOS.articulo_id</condicion>
+	        </field>
+	        <field id="subsistema_id">
+		    <condicion operador="=">'01'</condicion>
+	        </field>
+	     </table>
+        </join>            
+    </form>
+    <form>
+                  <table id="MANT_PLAN_EVENTOS">
+    		   	<field id="rrule" noshow="true" >
+    		   	    <expression>''</expression>
+    		   	</field>
+    
+    		    <field id="id_plan" _noshow="true" calendarId="true" calendarEditable="true">
+    	   		<expression>plan_id</expression>
+    			<detalle>plan_id</detalle>
+       	
+    		    </field>
+    
+    	            <field id="fecha_accion" deshabilitado="true" calendarStartDate="true">
+    				<label>Fecha</label>
+    			    <help>Fecha de la acci..n</help>
+    				<tipo>date</tipo>
+    				<detalle>fecha_accion</detalle>
+					<condicion operador="&gt;=">'01/01/2017'</condicion>
+    			</field>
+    
+    			<field id="nombre_equipo_cal" print="false" calendarSubject="true">
+    			    <expression>CONCAT( MANT_EQUIPOS.nombre_equipo, '', nombre_accion)</expression>
+			    <size>60</size>
+    			</field>
+    			<field id="nombre_equipo_imp"> 
+			    <label>Equipo </label>
+    			    <expression>CONCAT( MANT_EQUIPOS.nombre_equipo)</expression>
+			    <size>60</size>
+    			</field>
+
+			<field id="numero_serie" tabla="MANT_EQUIPOS">
+			    <label>Nro Serie</label>
+			</field>
+    			<field id="deposito_id" tabla="MANT_EQUIPOS" noshow="true">
+    				<label>Dep..sito</label>
+    				<helper type="combo" id="DEPOSITO" empty="true">
+    					<field id="idDeposito">
+    						<label>Cod</label>
+    						<help>Codigo</help>
+    					</field>
+    					<field id="direccion">
+    						<label>Direccion</label>
+    						<help>Direccion</help>
+    					</field>
+    				</helper>
+    			</field>
+
+		<field id="id_equipo" noshow="true" tabla="MANT_EQUIPOS">
+		    <label>equipo</label>
+		</field>
+
+    			<field id="tipoequipo_id" tabla="MANT_EQUIPOS" noshow="true">
+    				<helper type="combo" id="MANT_TIPO_EQUIPO" empty="true">
+    					<field id="id_tipo_equipo"/>
+    					<field id="nombre_tipoequipo"/>
+    				</helper>
+    				<label>Tipo</label>
+    			</field>
+    
+              <field id="accion_id">
+      	    </field>
+		<field id="obs_temp=" local="true">
+		    <label>Observaciones</label>
+		</field>    
+    			<field id="color"  noshow="true" calendarColor="true">
+    			    <expression>'green'</expression>
+            	</field>
+    
+		<order>
+		    <field id="nombre_equipo_imp" />
+		</order>
+          	</table>
+          	
+    	    <join tipo="left">
+    	        <table id="MANT_PLAN">
+              	    <field id="id_plan">
+                  	<condicion operador="=">plan_id</condicion>
+                      </field>
+    
+          	</table>
+              </join>
+    
+    	    <join tipo="inner">
+    	        <table id="MANT_EQUIPOS">
+              	    <field id="id_equipo">
+                  	<condicion operador="=">MANT_PLAN.equipo_id</condicion>
+                      </field>
+    
+          	</table>
+              </join>
+    
+    	    <join tipo="left">
+    
+                  <table id="MANT_ACCIONES">
+              	    <field id="id_accion">
+                  	<condicion operador="=">MANT_PLAN_EVENTOS.accion_id</condicion>
+                      </field>
+      	        </table>
+    
+    	    </join> 
+            <join tipo="left">
+	     <table id="STK_ARTICULOS">
+	        <field id="id_stkarticulo">
+		    <condicion operador="=">MANT_EQUIPOS.articulo_id</condicion>
+	        </field>
+	        <field id="subsistema_id">
+		    <condicion operador="=">'01'</condicion>
+	        </field>
+	     </table>
+        </join>
+      </form>
+</histrix>	

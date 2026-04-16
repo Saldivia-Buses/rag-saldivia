@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bell, Check, CheckCheck, Settings } from "lucide-react";
+import {
+  Bell,
+  CheckCheck,
+  MessageSquare,
+  ShieldCheck,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
-import { NotificationPreferences } from "@/components/notification-preferences";
 
 interface Notification {
   id: string;
@@ -33,9 +36,47 @@ function formatDate(dateStr: string): string {
   return date.toLocaleDateString("es-AR", { day: "numeric", month: "short" });
 }
 
+function groupByDate(notifications: Notification[]): { label: string; items: Notification[] }[] {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today.getTime() - 86400000);
+  const weekAgo = new Date(today.getTime() - 7 * 86400000);
+
+  const groups: Record<string, Notification[]> = {
+    Hoy: [],
+    Ayer: [],
+    "Esta semana": [],
+    Anteriores: [],
+  };
+
+  for (const n of notifications) {
+    const date = new Date(n.created_at);
+    if (date >= today) groups["Hoy"].push(n);
+    else if (date >= yesterday) groups["Ayer"].push(n);
+    else if (date >= weekAgo) groups["Esta semana"].push(n);
+    else groups["Anteriores"].push(n);
+  }
+
+  return Object.entries(groups)
+    .filter(([, items]) => items.length > 0)
+    .map(([label, items]) => ({ label, items }));
+}
+
+function getNotificationIcon(type: string) {
+  switch (type) {
+    case "login":
+    case "security":
+      return ShieldCheck;
+    case "chat":
+    case "message":
+      return MessageSquare;
+    default:
+      return Bell;
+  }
+}
+
 export default function NotificationsPage() {
   const queryClient = useQueryClient();
-  const [showPrefs, setShowPrefs] = useState(false);
 
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ["notifications"],
@@ -67,33 +108,20 @@ export default function NotificationsPage() {
     );
   }
 
-  if (notifications.length === 0 && !showPrefs) {
+  if (notifications.length === 0) {
     return (
       <div className="flex flex-1 flex-col">
-        {/* Header with prefs button even on empty state */}
         <div className="flex items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-lg font-semibold">Notificaciones</h1>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowPrefs((v) => !v)}
-            className="gap-1.5"
-          >
-            <Settings className="size-3.5" />
-            Preferencias
-          </Button>
+          <h1 className="text-sm font-semibold">Notificaciones</h1>
         </div>
-
         <div className="flex flex-1 flex-col items-center justify-center gap-4">
-          <div className="flex size-16 items-center justify-center rounded-full bg-muted">
-            <Bell className="size-8 text-muted-foreground" />
+          <div className="flex size-12 items-center justify-center rounded-2xl bg-card border border-border/40">
+            <Bell className="size-6 text-muted-foreground" />
           </div>
           <div className="text-center">
-            <h2 className="text-lg font-semibold">Sin notificaciones</h2>
+            <h2 className="text-base font-medium">Sin notificaciones</h2>
             <p className="text-sm text-muted-foreground mt-1">
-              Cuando haya novedades, van a aparecer aca.
+              Cuando haya novedades, van a aparecer acá.
             </p>
           </div>
         </div>
@@ -101,83 +129,85 @@ export default function NotificationsPage() {
     );
   }
 
+  const grouped = groupByDate(notifications);
+
   return (
     <div className="flex flex-1 flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4">
-        <div>
-          <h1 className="text-lg font-semibold">Notificaciones</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-sm font-semibold">Notificaciones</h1>
           {unreadCount > 0 && (
-            <p className="text-sm text-muted-foreground">
+            <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
               {unreadCount} sin leer
-            </p>
+            </span>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          {unreadCount > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => markAllReadMutation.mutate()}
-              disabled={markAllReadMutation.isPending}
-              className="gap-1.5"
-            >
-              <CheckCheck className="size-3.5" />
-              Marcar todas como leidas
-            </Button>
-          )}
+        {unreadCount > 0 && (
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
-            onClick={() => setShowPrefs((v) => !v)}
-            className="gap-1.5"
+            onClick={() => markAllReadMutation.mutate()}
+            disabled={markAllReadMutation.isPending}
+            className="gap-1.5 text-muted-foreground"
           >
-            <Settings className="size-3.5" />
-            Preferencias
+            <CheckCheck className="size-3.5" />
+            Marcar todas como leídas
           </Button>
-        </div>
+        )}
       </div>
 
-      {/* Preferences collapsible section */}
-      {showPrefs && (
-        <div>
-          <NotificationPreferences />
-        </div>
-      )}
-
-      {/* List */}
+      {/* Grouped list */}
       <ScrollArea className="flex-1">
-        <div className="flex flex-col">
-          {notifications.map((notification) => (
-            <div
-              key={notification.id}
-              className={cn(
-                "flex items-start gap-3 px-6 py-4 transition-colors rounded-lg mx-2",
-                !notification.read_at && "bg-accent/30",
-              )}
-            >
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">{notification.title}</p>
-                {notification.body && (
-                  <p className="text-sm text-muted-foreground mt-0.5 truncate">
-                    {notification.body}
-                  </p>
-                )}
-                <p className="text-xs text-muted-foreground mt-1">
-                  {formatDate(notification.created_at)}
-                </p>
-              </div>
-              {!notification.read_at && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-7 shrink-0"
-                  onClick={() => markReadMutation.mutate(notification.id)}
-                  disabled={markReadMutation.isPending}
-                >
-                  <Check className="size-3.5" />
-                </Button>
-              )}
+        <div className="flex flex-col pb-4">
+          {grouped.map((group) => (
+            <div key={group.label}>
+              <p className="px-6 pt-4 pb-2 text-[11px] text-muted-foreground uppercase tracking-wider font-medium">
+                {group.label}
+              </p>
+              {group.items.map((notification) => {
+                const Icon = getNotificationIcon(notification.type);
+                const isUnread = !notification.read_at;
+
+                return (
+                  <div
+                    key={notification.id}
+                    className={cn(
+                      "flex items-start gap-3 px-6 py-3 transition-colors cursor-pointer hover:bg-accent/30",
+                      isUnread && "hover:bg-accent/40",
+                    )}
+                    onClick={() => {
+                      if (isUnread) markReadMutation.mutate(notification.id);
+                    }}
+                  >
+                    {/* Icon */}
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-card border border-border/40 mt-0.5">
+                      <Icon className="size-4 text-muted-foreground" />
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        {/* Unread dot */}
+                        {isUnread && (
+                          <span className="size-2 shrink-0 rounded-full bg-primary" />
+                        )}
+                        <p className={cn("text-sm truncate", isUnread && "font-medium")}>
+                          {notification.title}
+                        </p>
+                      </div>
+                      {notification.body && (
+                        <p className="text-sm text-muted-foreground mt-0.5 truncate">
+                          {notification.body}
+                        </p>
+                      )}
+                      <p className="text-[11px] text-muted-foreground/70 mt-1">
+                        {formatDate(notification.created_at)}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           ))}
         </div>

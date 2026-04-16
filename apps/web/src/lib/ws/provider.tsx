@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useCallback, useRef } from "react";
+import { createContext, useContext, useEffect, useCallback, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { wsManager, type WsMessageHandler, type WsMessage } from "./manager";
 import { useAuthStore } from "@/lib/auth/store";
@@ -16,17 +16,18 @@ const WsContext = createContext<WsContextValue | null>(null);
 export function WsProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const stateRef = useRef(wsManager.state);
+  const [wsState, setWsState] = useState(wsManager.state);
 
-  // Connect/disconnect based on auth state
+  // Connect/disconnect based on auth state + track state changes
   useEffect(() => {
+    const unsubState = wsManager.onStateChange(setWsState);
     if (isAuthenticated) {
       wsManager.connect();
     } else {
       wsManager.disconnect();
     }
 
-    return () => wsManager.disconnect();
+    return () => { unsubState(); wsManager.disconnect(); };
   }, [isAuthenticated]);
 
   // Invalidate TanStack Query caches when WS events arrive
@@ -62,6 +63,35 @@ export function WsProvider({ children }: { children: React.ReactNode }) {
       }),
     );
 
+    // ERP domain events → invalidate corresponding TanStack Query caches.
+    // Some domains span multiple query key prefixes (e.g., accounting uses
+    // entries, accounts, balance, fiscal-years, cost-centers). Each handler
+    // invalidates all relevant prefixes for its domain.
+    const erpHandlers: Record<string, readonly (readonly unknown[])[]> = {
+      erp_accounting: [["erp", "entries"], ["erp", "accounts"], ["erp", "balance"], ["erp", "fiscal-years"], ["erp", "cost-centers"], ["erp", "ledger"]],
+      erp_treasury: [["erp", "treasury"]],
+      erp_invoicing: [["erp", "invoicing"]],
+      erp_stock: [["erp", "stock"]],
+      erp_purchasing: [["erp", "purchasing"]],
+      erp_catalogs: [["erp", "catalogs"]],
+      erp_accounts: [["erp", "accounts"]],
+      erp_production: [["erp", "production"]],
+      erp_hr: [["erp", "hr"]],
+      erp_quality: [["erp", "quality"]],
+      erp_maintenance: [["erp", "maintenance"]],
+      erp_suggestions: [["erp", "suggestions"]],
+    };
+
+    for (const [event, queryKeys] of Object.entries(erpHandlers)) {
+      unsubs.push(
+        wsManager.subscribe(event, () => {
+          for (const queryKey of queryKeys) {
+            queryClient.invalidateQueries({ queryKey });
+          }
+        }),
+      );
+    }
+
     // Preload event → hydrate cache directly
     unsubs.push(
       wsManager.subscribe("preload", (data) => {
@@ -92,7 +122,7 @@ export function WsProvider({ children }: { children: React.ReactNode }) {
   const value: WsContextValue = {
     subscribe,
     send,
-    state: stateRef.current,
+    state: wsState,
   };
 
   return <WsContext.Provider value={value}>{children}</WsContext.Provider>;

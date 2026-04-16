@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="ficha" sololectura="true" PDFsincabecera="true"  autoprint="true"  PDFconpie="true" sinFecha="true">
+<titulo>Chapa Tdentificatoria</titulo>
+<obs></obs>
+	   
+<form>
+   <pdf>
+	  <code><![CDATA[
+
+
+		$pdf->SetDrawColor(0);
+		$pdf->SetXY(10,10);
+
+		$tp = 05;
+		$ap = $pdf->anchoPagina - 5;
+		$mp = ($ap / 2);
+		$lp = $pdf->largoPagina;
+
+		// Frame Principal
+		//$pdf->Rect(005, 005, $ap, $lp, 0.1);
+
+		// Nombre Empresa
+		//$pdf->Rect(005, 005, $mp, 045, 0.1);
+
+		$datapath = $_SESSION['datapath'];
+
+        $dataContainer = $pdf->Container;
+        
+        if (method_exists($dataContainer, 'getCampo') ){
+            $field = $dataContainer->getCampo('logo_pdf');
+            $filename = $field->getValor();
+          
+        } else {
+            $field = $dataContainer->getField('logo_pdf');
+            $filename = $field->getValue();
+        }
+        
+
+		$file = HTX_ROOT_DIR."/database/$datapath/img/$filename"; 
+
+		if (is_file($file))
+		{
+		    $posx = 1;
+		    $posy = 1;
+		    $width = 45;
+            $height = 10;
+		    $pdf->Image($file, $posx + $pdf->offsetX, $posy + $pdf->offsetY, 0, $height);
+		} else {
+            die($file);
+        }
+	
+		// Datos Comprobante
+		//$pdf->Rect($mp + 5, 005, $mp, 045, 0.1);
+		$pdf->RoundedRect($pdf->offsetX, 2 + $pdf->offsetY, $pdf->anchoPagina - 2, 15, 2);
+		
+		
+
+       
+
+        $pdf->SetFont($pdf->defaultFont, '', 9);
+     //   $fecha = utf8_decode( $pdf->i18n['printDate'].':' . date('d/m/Y'));
+        $anchoFecha = $pdf->GetStringWidth($fecha) + 3;
+        $anchorecuadro = $anchoFecha + 2;
+        $posRecuadro = $pdf->offsetX + $pdf->anchoPagina - $anchorecuadro;
+
+           // $pdf->RoundedRect($posRecuadro, 3 + $pdf->offsetY, $anchoFecha, 8, 2);
+            $pdf->setXY($posRecuadro , 5 + $pdf->offsetY);
+            $pdf->Cell(0, 0, $fecha, 0, 0, 'L');
+
+        $nonum = (isset($pdf->sinNumero)) ? $pdf->sinNumero : 'false';
+        $hoja = '';
+        if ($nonum != 'true') {
+            $hoja = $pdf->i18n['page'] .': '. $pdf->PageNo() ;
+            if ($pdf->pageNumber == 0){
+                $hoja .= '/{nb}';
+            }
+            $pdf->setXY($posRecuadro + 1, 8 + $pdf->offsetY);
+      //      $pdf->Cell(0, 0, $hoja, 0, 0, 'L');
+        }
+
+
+
+		// DATOS EMPRESA
+		$pdf->SetFontSize(8);
+		
+
+
+		$pdf->RoundedRect(35,35,120,60, 5);
+//						$pdf->RoundedRect(5,155,$pdf->anchoPagina,42, 5);
+
+	  ]]></code>
+  </pdf>
+
+    <tabla id="PEDCOTIZ" label="CHAPA IDENTIFICATORIA">
+
+
+
+				<field id="cabe2" local="true"    PDFsize="16" PDFbold="true" >
+					<label  posx="55" posy="5" />
+					<valor>CHAPA IDENTIFICATORIA</valor>
+					<setvar>titulo_div</setvar>
+					<setvar>titulo</setvar>
+					<setvar>nombre_div</setvar>
+				</field>
+
+				<field id="logo_pdf" print="false">
+					<label posx="10" posy="1" PDFsize="16" ></label>
+					<expression>(case when PEDCOTIZ.empresa_id = 2 then 
+								(select option_value from saldivia_sa.HTXOPTIONS where option_name = 'CONFIG::logo_pdf_1' limit 1) else 
+								(select option_value from saldivia.HTXOPTIONS where option_name = 'CONFIG::logo_pdf_1' limit 1)
+								end)</expression>
+					
+				</field>
+
+				<field id="nombre_empresa" posx="5" posY="20" PDFsize="7" PDFbold="true">
+					<label posx="5" posy="12"></label>
+					<expression>HTX_EMPRESAS.razon_social</expression>
+				</field>
+				
+				<field id="dir_empresa"  PDFsize="7" _PDFbold="true">
+					<label posx="45" posy="12"></label>
+					<expression>concat(direccion, ' - email: ',HTX_EMPRESAS.email, ' - Tel: ', telefono, ' - CUIT: ', LEFT(cuit,2), '-', SUBSTR(cuit,3,8),'-',  RIGHT(cuit,1))</expression>
+				</field>
+
+
+			    <field id="plano" tabla="HOMOLOGMOD">
+					<label size="18" posx="40" posy="40"  PDFsize="10">Plano</label>
+					<tipo>varchar</tipo>
+				</field>					  
+
+				<field id="nrocha" >
+                     <label size="18" posx="105" posy="0"  PDFsize="10">Nro Prod</label>
+				</field> 
+
+			    <field id="expte" tabla="HOMOLOGMOD">
+					<label size="18" posx="40" posy="+3"  PDFsize="10">Expte.</label>
+					<tipo>varchar</tipo>
+				</field>					  
+
+				<field id="fecha" tabla="TURNOSPRODUCCION">
+					<expresion>concat(WEEKOFYEAR((select TUR.fechaing from TURNOSPRODUCCION as TUR where
+					TUR.fechaing &gt; TURNOSPRODUCCION.fechaing order by TUR.fechaing ASC limit 15, 1)),'/',DATE_FORMAT((select TUR.fechaing from TURNOSPRODUCCION as TUR where
+					TUR.fechaing &gt; TURNOSPRODUCCION.fechaing order by TUR.fechaing ASC limit 15, 1), '%y'))</expresion>
+					<label size="18" posx="105" posy="0" PDFsize="10"  >Semana</label>
+				</field>					  					  
+				  
+			    <field id="dispos" tabla="HOMOLOGMOD">
+					<label size="18" posx="40" posy="+3"  PDFsize="10">Disp.</label>
+					<tipo>varchar</tipo>
+				</field>
+
+				<field id="cantasi">
+					<label size="18" posx="105" posy="0" PDFsize="10"  >Asientos</label>
+            		<expression>(case when CARROCERIA.doble_piso = 1 then (CONCAT(HOMOLOGMOD.asientos, '+', HOMOLOGMOD.asientos_plantabaja)) else (HOMOLOGMOD.asientos + HOMOLOGMOD.acompañante) end)</expression>
+				</field>					  
+					  
+				<field id="tipserv" tabla="HOMOLOGMOD">
+					<label size="18" posx="40" posy="+3" PDFsize="10"  >Servicio</label>
+					<tabla_ex id="TIPOSERVICIO">
+							<field id="tipserv">
+							</field>
+							<field id="servdes">
+							</field>					
+					</tabla_ex>
+				</field>					  
+<!--
+-                               <field id="nrovin" local="true" noselect="true">
+-                                       <label size="18" posx="40" posy="+3" PDFsize="10"  >VIN</label>
+-                                       <tipo>varchar</tipo>
+-                               </field>
+-->
+
+			  
+                  </tabla>
+					<join tipo="left">
+						<table id="HTX_EMPRESAS">
+							<field id="id_empresa">
+								<condicion operador="=">PEDCOTIZ.empresa_id</condicion>
+							</field>
+						</table>
+					</join>		
+					<join tipo="left">
+						<tabla id="TURNOSPRODUCCION">
+							<field id="nrofab">
+								<condicion operador="=">PEDCOTIZ.nrocha</condicion>
+							</field>
+						</tabla>
+					</join>								   
+				   
+					<join tipo="left">
+						<tabla id="HOMOLOGMOD">
+						    	<field id="id_homologacion">
+							    <condicion operador="=">PEDCOTIZ.homologacion_id</condicion>
+					        	</field>
+							
+						</tabla>
+					</join>						   
+    <join tipo="left">
+       <table id="CARROCERIA">
+          <field id="nrocar">
+                 <condicion operador="=">HOMOLOGMOD.nrocar</condicion>
+          </field>
+        </table>
+    </join>
+
+    </form>
+</histrix>

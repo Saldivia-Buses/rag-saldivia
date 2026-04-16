@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+    <title>Atributos</title>
+    <obs/>
+    <form>
+        <table id="STK_ATRIBUTO_OPCIONES">
+                
+                <field autoinc="true" id="id_atribopciones" noshow="true"/>
+                <field id="valor_opcion">
+                </field>
+                <field id="stkatributo_id" oculto="true"/>
+
+        </table>
+    </form>
+</histrix>

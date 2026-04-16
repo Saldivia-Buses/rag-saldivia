@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="liveGrid" subtipo="vertical" tooltip="false" inserta="false" preloadData="false" deleteRow="false" procesa="true" imprime="false" log="false">
+    <title>Detalle de Listas de Precios de Productos</title>
+    <obs></obs>
+    <form>
+        <table id="STK_LISTADETALLE" label="Maestro de Precios de Productos">
+
+            <!--<movimientos>
+                <relacion id="stklistadetalle_rentabilidad_upd.xml" />
+            </movimientos>-->
+
+            <filters> 
+                <field id="con_stock" deshabilitado="false">
+                    <label>Solo con stock</label>
+                </field>
+                <field id="stklista_id">
+                    <label>Lista Base</label>
+                </field>
+                <!--
+                <field id="con_stock" deshabilitado="false">
+                	<label>Solo con stock</label>
+            	</field>
+               
+                <field id="stklista_id">
+                    <label>Lista Base</label>
+                </field>
+
+                <field id="stklista_aumento">
+                    <label modpos="nobr">Lista a Actualizar</label>
+                </field>
+               
+                <field id="stkfamilia_id" grupo="avanzado">
+                    <label modpos="nobr">Familia</label>
+                </field>
+                
+                <field id="stkrubro_id" grupo="avanzado">
+                    <label>Rubro</label>
+                </field>
+                
+                <field id="stksubrubro_id" grupo="avanzado">
+                    <label modpos="nobr">SubRubro</label>
+                </field>
+                
+                <field id="stkarticulo_id" deshabilitado="false" grupo="avanzado">
+                    <label modpos="nobr">Cod.Artic</label>
+                </field>
+
+                <field id="nombre_articulo" deshabilitado="false" grupo="avanzado">
+                    <label>Descripción</label>
+                    <operador>like</operador>
+                </field>
+                
+                <field id="stkmarca_id" grupo="avanzado">
+                  <label modpos="nobr">Marca</label>
+                </field>
+
+                <field id="wmetodo" local="true">
+                    <label>Incremento</label>
+                </field>       
+               
+                <field id="wxrentabilidad" local="true" noshow="true" _deshabilitado="false" modpos="nobr">                                    
+                    <valor default="true">0</valor> 
+                </field>
+
+                <field id="wtipincre" local="true" >
+                    <label modpos="nobr">Base</label>
+                </field>       
+
+                <field id="wredondeo" local="true">
+                    <label modpos="nobr">Redondea</label>
+                </field>
+                -->
+            </filters>    
+             
+    	        
+            <field id="con_stock" noshow="true" local="true">
+                <tipo>check</tipo>
+	        </field>
+            
+            <field id="id_stklistadetalle" autoinc="true" noshow="true" />
+                    
+            <field id="stkarticulo_id" _oculto="true">
+              <label>Cod.Artic</label>
+              <expression having="false">STK_ARTICULOS.id_stkarticulo</expression>
+            </field>
+                     
+            <field id="nombre_articulo" tabla="STK_ARTICULOS">
+                <label>Descripcion</label>
+                <size>30</size>
+            </field>                
+
+            <field id="stklistadetalle_rentabilidad" editable="true" >
+                <label>Rentabilidad</label>
+            </field>
+            
+            <field id="stklistadetalle_costo" deshabilitado="false">
+                <label style="color: green;">Precio Costo</label>
+                <expression >round(costo_articulo(id_stkarticulo) , 2)</expression>
+            </field>
+                        
+            <field id="wmetodo" local="true">          
+                <label>Tipo</label>
+                <helper type="combo">
+                  <option value="01">Porcentual</option>
+                  <option value="00">Fijo</option>
+                </helper>
+            </field>    
+        
+            <fieldGroup id="filtros" colstyle="display: none;" noshow="true">
+            
+                <field id="stklista_id" noshow="true" required="true">
+                    <helper type="combo" xml="stklista_qry.xml" dir="/ayudas" empty="true" />
+                </field>
+
+                <!--
+                <field id="stkfamilia_id" noshow="true" tabla="STK_ARTICULOS">
+                    <helper type="combo" xml="stkfamilia_qry.xml" dir="/ayudas" empty="true" />
+                </field>
+                
+                <field id="stkrubro_id" noshow="true" tabla="STK_ARTICULOS">
+                    <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true" />
+                </field>
+                <field id="stksubrubro_id" noshow="true" tabla="STK_ARTICULOS">
+                    <helper type="combo" xml="stksubrubro_qry.xml" dir="/ayudas" empty="true" />
+                </field>
+
+                <field id="stkmarca_id" noshow="true" tabla="STK_ARTICULOS">
+                    <helper type="combo" xml="stkmarca_qry.xml" dir="/ayudas" empty="true" />
+                </field>
+
+                <field id="wtipincre" local="true">
+                    <helper type="combo">
+                      <option value="01">Precio de Costo</option>
+                      <option value="00">Precio de Venta</option>
+                    </helper>
+                </field>    
+
+                <field id="wredondeo" local="true">
+                    <helper type="combo">
+                        <option value="02">No</option>
+                        <option value="00">Si</option>
+                    </helper>
+                </field>
+                -->
+            </fieldGroup>
+        
+            <order>
+                <field id="nombre_articulo" table="STK_ARTICULOS" />
+            </order>
+
+        </table>
+
+        <join tipo="left">
+            <table id="STK_LISTADETALLE" as="LISTA_AUMENTO">
+                <field id="stklista_id">
+                    <condicion operador="=">'[__stklista_aumento__]'</condicion>
+                </field>
+                <field id="stkarticulo_id">
+                    <condicion operador="=">STK_LISTADETALLE.stkarticulo_id</condicion>
+                </field>
+            </table>
+        </join>
+      
+        <join>
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">STK_LISTADETALLE.stkarticulo_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="STK_LISTAS">
+                <field id="id_stklista" >
+                    <condicion operador="=">STK_LISTADETALLE.stklista_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini">
+        <title>Impacto por proceso</title>
+        <obs/>
+        <form >                       
+                <table id="CAL_PROCESO_IMPACTO">
+                        <title>Impactos</title>
+                        <field id="id_procesoimpacto" esClave="true" autoinc="true" noshow="true">
+                        </field>
+                        <field id="proceso_id" noshow="true" valauto="true">
+                        </field>
+
+                        <field id="impacto_id">
+	            	    <helper type="combo"  xml="cal_impacto_ambiental_crud.xml" >
+        		    </helper>
+
+                        </field>
+                </table>
+        </form>
+</histrix>
+

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+        <title>Cargos de Usuarios</title>
+        <obs></obs>
+        <form >
+                <table id="CARGOS" >
+                    <title>Cargos de Usuarios</title>
+                                        
+                        <field id="cargo">
+                                <label>Codigo de Cargo</label>
+                                <help>Codigo de Cargo</help>
+                        </field>
+                        
+                        <field id="nombre">
+                                <label>Nombre</label>
+                                <help>Nombre de Cargo</help>
+                        </field>
+			
+                </table>
+        </form>           
+</histrix>

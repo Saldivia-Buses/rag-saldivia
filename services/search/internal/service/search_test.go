@@ -68,6 +68,83 @@ func TestBuildTreeView_NestedNodes(t *testing.T) {
 	}
 }
 
+func TestBuildTreeView_EmptyNodes(t *testing.T) {
+	var sb strings.Builder
+	index := make(map[string]selectedNode)
+
+	buildTreeView(&sb, index, []TreeNode{}, "doc-1", "empty.pdf", "")
+
+	if len(index) != 0 {
+		t.Fatalf("expected empty index, got %d entries", len(index))
+	}
+	if sb.Len() != 0 {
+		t.Errorf("expected empty output, got: %q", sb.String())
+	}
+}
+
+func TestBuildTreeView_DeeplyNested(t *testing.T) {
+	// 3 levels deep — verify indentation grows correctly
+	var sb strings.Builder
+	index := make(map[string]selectedNode)
+
+	nodes := []TreeNode{
+		{
+			NodeID: "root", Title: "Root", Summary: "root", StartIndex: 0, EndIndex: 100,
+			Nodes: []TreeNode{
+				{
+					NodeID: "child", Title: "Child", Summary: "child", StartIndex: 0, EndIndex: 50,
+					Nodes: []TreeNode{
+						{NodeID: "leaf", Title: "Leaf", Summary: "leaf", StartIndex: 0, EndIndex: 10},
+					},
+				},
+			},
+		},
+	}
+
+	buildTreeView(&sb, index, nodes, "doc-1", "deep.pdf", "")
+
+	if len(index) != 3 {
+		t.Fatalf("expected 3 nodes, got %d", len(index))
+	}
+
+	output := sb.String()
+	// Root has no indent, child has 2 spaces, leaf has 4 spaces
+	if !strings.Contains(output, "[root]") {
+		t.Error("expected [root] in output")
+	}
+	if !strings.Contains(output, "  [child]") {
+		t.Error("expected '  [child]' (2 spaces) in output")
+	}
+	if !strings.Contains(output, "    [leaf]") {
+		t.Error("expected '    [leaf]' (4 spaces) in output")
+	}
+}
+
+func TestBuildTreeView_NodeIDPreservedInIndex(t *testing.T) {
+	var sb strings.Builder
+	index := make(map[string]selectedNode)
+
+	nodes := []TreeNode{
+		{NodeID: "xyz-123", Title: "Test Node", Summary: "Test", StartIndex: 5, EndIndex: 10},
+	}
+
+	buildTreeView(&sb, index, nodes, "doc-42", "myfile.pdf", "")
+
+	node, ok := index["xyz-123"]
+	if !ok {
+		t.Fatal("expected node 'xyz-123' in index")
+	}
+	if node.NodeID != "xyz-123" {
+		t.Errorf("expected NodeID 'xyz-123', got %q", node.NodeID)
+	}
+	if node.StartIndex != 5 || node.EndIndex != 10 {
+		t.Errorf("expected StartIndex=5, EndIndex=10, got %d, %d", node.StartIndex, node.EndIndex)
+	}
+	if node.DocumentID != "doc-42" {
+		t.Errorf("expected DocumentID 'doc-42', got %q", node.DocumentID)
+	}
+}
+
 func TestParseNodeIDs_CommaSeparated(t *testing.T) {
 	// Simulate what navigateTrees does with LLM response
 	tests := []struct {
@@ -142,5 +219,44 @@ func TestContainsInt(t *testing.T) {
 		if got != tt.want {
 			t.Errorf("containsInt(%v, %d) = %v, want %v", tt.slice, tt.val, got, tt.want)
 		}
+	}
+}
+
+// TestContainsInt_SingleElement ensures both found and not-found cases
+// with a single-element slice are correct.
+func TestContainsInt_SingleElement(t *testing.T) {
+	if !containsInt([]int{42}, 42) {
+		t.Error("expected true for single-element match")
+	}
+	if containsInt([]int{42}, 0) {
+		t.Error("expected false for single-element non-match")
+	}
+}
+
+// TestBuildTreeView_MultipleDocuments verifies that the same function
+// can be called for multiple documents and all entries go into the shared index.
+func TestBuildTreeView_MultipleDocuments(t *testing.T) {
+	var sb strings.Builder
+	index := make(map[string]selectedNode)
+
+	doc1Nodes := []TreeNode{
+		{NodeID: "d1-n1", Title: "Doc1 Chapter", Summary: "First doc", StartIndex: 0, EndIndex: 5},
+	}
+	doc2Nodes := []TreeNode{
+		{NodeID: "d2-n1", Title: "Doc2 Chapter", Summary: "Second doc", StartIndex: 0, EndIndex: 3},
+	}
+
+	buildTreeView(&sb, index, doc1Nodes, "doc-1", "file1.pdf", "")
+	buildTreeView(&sb, index, doc2Nodes, "doc-2", "file2.pdf", "")
+
+	if len(index) != 2 {
+		t.Fatalf("expected 2 nodes across two docs, got %d", len(index))
+	}
+
+	if index["d1-n1"].DocumentID != "doc-1" {
+		t.Errorf("expected d1-n1 to belong to doc-1")
+	}
+	if index["d2-n1"].DocumentID != "doc-2" {
+		t.Errorf("expected d2-n1 to belong to doc-2")
 	}
 }

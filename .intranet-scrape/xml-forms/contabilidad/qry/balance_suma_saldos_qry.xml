@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" preloadData="false" serverSide="true">
+    <title>Sumas y Saldos</title>
+    <obs/>
+    <form>
+        <table id="CTB_CUENTAS" label="Sumas y Saldos">
+
+            <filters>
+                <field id="ejercicio_id">
+                    <label>Ejercicio</label>
+                    <operador>=</operador>
+                </field>
+                <field id="ctbcentro_id">
+                    <label modpos="nobr">Centro de Costo</label>
+                    <operador>=</operador>
+                </field>
+                <field id="fecha_mov1" deshabilitado="false">
+                    <label>Desde Fecha</label>
+                    <operador>&gt;=</operador>
+                    <valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m") , 1, date("Y")))</valor>
+                </field>
+                <field id="fecha_mov2" deshabilitado="false">
+                    <label modpos="nobr">Hasta Fecha</label>
+                    <operador>&lt;=</operador>
+                    <valor>today</valor>
+                </field>
+                <field id="id_cuenta" deshabilitado="false">
+                    <label>Desde cuenta</label>
+                    <operador>&gt;=</operador>
+                </field>
+                <field id="id_cuenta" deshabilitado="false">
+                    <label modpos="nobr">Hasta cuenta</label>
+                    <operador>&lt;=</operador>
+                </field>
+            </filters>
+
+            <field id="id_cuenta" noshow="false">
+                <label>Cuenta Contable</label>
+                <helper type="external" xml="ctbcuenta_qry.xml" dir="/ayudas">
+                    <field id="ejercicio_id" />
+                </helper>
+            </field>
+
+            <field id="ctbcentro_id" tabla="CTB_DETALLES" noshow="true">
+                <label>Centro</label>
+                <helper type="combo" id="CTB_CENTROS" empty="true">
+                    <field id="id_ctbcentro" />
+                    <field id="nombre_centro" />
+                    <order>
+                        <field id="nombre_centro" />
+                    </order>
+                </helper>
+            </field>
+
+
+            <field id="habilitada" noshow="true">
+                <condicion operador="=">1</condicion>
+            </field>
+
+            <field id="fecha_mov1" noshow="true" local="true">
+                <tipo>date</tipo>
+            </field>
+
+            <field id="fecha_mov2" noshow="true" local="true">
+                <tipo>date</tipo>
+            </field>
+
+            <field id="fecha_movimiento" noshow="true" tabla="CTB_MOVIMIENTOS">
+                <condicion operador="&gt;=">STR_TO_DATE('[__fecha_mov1__]', '%d/%m/%Y') and fecha_movimiento &lt;= STR_TO_DATE('[__fecha_mov2__]', '%d/%m/%Y')</condicion>
+                <tipo>date</tipo>
+            </field>
+
+		<field id="ejercicio_id" noshow="true" required="true">
+			<label>Ejercicio</label>
+			<helper type="combo" xml="ctbejercicios_crud.xml" dir="/contabilidad/man"  empty="true">
+				<field id="activo" tipoOrden="DESC" />
+				<field id="fecha_mov1">
+					<expresion>DATE_FORMAT(comienza, '%d/%m/%Y')</expresion>
+					<tipo>date</tipo>
+					<detalle>fecha_mov1</detalle>
+				</field>
+				<field id="fecha_mov2">
+					<expresion>DATE_FORMAT(finaliza, '%d/%m/%Y')</expresion>
+					<tipo>date</tipo>
+					<detalle>fecha_mov2</detalle>
+				</field>
+				<field id="finaliza" />
+			</helper>
+		</field>
+
+		<field id="nombre_cuenta">
+			<label>Nombre de la Cuenta</label>
+		</field>
+
+		<field id="saldo_apertura" suma="true" noZero="true" local="true">
+			<label>Saldo de Apertura</label>
+			<valor>0</valor>
+			<tipo>custom_numeric</tipo>
+		</field>
+
+		<field id="debe" suma="true" noZero="true">
+			<label>Débito</label>
+			<expresion>sum(case when doh = 0 then importe else 0 end)</expresion>
+			<tipo>custom_numeric</tipo>
+		</field>
+
+		<field id="haber" suma="true" noZero="true">
+			<label>Crédito</label>
+			<expresion>sum(case when doh = 1 then importe else 0 end)</expresion>
+			<tipo>custom_numeric</tipo>
+		</field>
+
+		<field id="saldo" suma="true" noZero="true">
+			<label>Saldo</label>
+			<expression>sum(case when doh = 0 then importe else (importe * -1) end)</expression>
+			<tipo>custom_numeric</tipo>
+		</field>
+
+		<field id="saldo_cierre" suma="true" noZero="true" local="true">
+			<label>Saldo de Cierre</label>
+			<valor>0</valor>
+			<tipo>custom_numeric</tipo>
+		</field>
+
+		<group>
+			<field id="id_cuenta" />
+		</group>
+
+	</table>
+
+	<join>
+		<table id="CTB_EJERCICIOS">
+			<field id="id_ejercicio">
+				<condicion operador="=">CTB_CUENTAS.ejercicio_id</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join tipo="left">
+		<table id="CTB_MOVIMIENTOS">
+			<field id="ejercicio_id">
+				<condicion operador="=">CTB_CUENTAS.ejercicio_id</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join tipo="inner">
+		<table id="CTB_CONCEPTOS">
+			<field id="id_concepto">
+				<condicion operador="=">CTB_MOVIMIENTOS.concepto_id</condicion>
+			</field>
+			<field id="integrado">
+				<condicion operador="=">1</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join _tipo="left">
+		<table id="CTB_DETALLES">
+			<field id="movimiento_id">
+				<condicion operador="=">CTB_MOVIMIENTOS.id_movimiento</condicion>
+			</field>
+			<field id="cuenta_id">
+				<condicion operador="=">CTB_CUENTAS.id_cuenta</condicion>
+			</field>
+		</table>
+	</join>
+
+    </form>
+</histrix>

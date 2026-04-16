@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="cabecera">
+    <title>Egreso de Valores</title>
+    <obs></obs>
+    <consulta>
+        <table id="CAR_VALORES">
+
+           <field id="fecha_valor" local="true">
+                <label>Fecha de Egreso</label>
+                <valor>today</valor>
+           </field>
+
+           <field id="referencia_movimiento" local="true" modpos="nobr" >
+                <label>Referencia</label>
+                <valor>EGRESO MANUAL DE CARTERA</valor>
+        				<size>160</size>
+           </field>
+		   
+        </table>
+
+    </consulta>
+</histrix>

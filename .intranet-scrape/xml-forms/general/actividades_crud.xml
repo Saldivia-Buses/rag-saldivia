@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm">
+  <title>Actividades</title>
+  <obs></obs>
+  <consulta>
+    <table id="GEN_ACTIVIDADES" label="Actividades">
+      <filters>
+        <field id="nombre_actividad">
+          <operador>like</operador>
+          <label>Actividad</label>
+        </field>
+      </filters>
+      <field id="id_actividad" autoinc="true" noshow="true">
+        <label>Codigo</label>
+      </field>
+      <field id="nombre_actividad">
+        <label>Nombre</label>
+      </field>
+    </table>
+  </consulta>
+</histrix>  

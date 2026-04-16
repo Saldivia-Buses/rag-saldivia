@@ -1,228 +1,85 @@
 # SDA Framework
 
-## LEER PRIMERO
+Multi-tenant SaaS of Go microservices with AI services, per-industry modules.
+Backend: inhouse workstation (RTX PRO 6000, 96GB VRAM). Frontend: Next.js on CDN.
 
-1. `docs/plans/2.0.x-plan01-sda-framework.md` — spec completo del sistema (la biblia)
-2. `docs/bible.md` — reglas permanentes de trabajo
-
-No empezar a trabajar sin leer estos documentos.
+**Remote:** https://github.com/Camionerou/rag-saldivia · **Branch:** `2.0.5`
 
 ---
 
-## Qué es este proyecto
+## Read first
 
-Plataforma SaaS multi-tenant de microservicios Go con servicios de IA y
-módulos de negocio por industria. Backend inhouse (RTX PRO 6000, 96GB VRAM),
-frontends en la nube.
+1. [`docs/README.md`](docs/README.md) — documentation index. Start there.
+2. [`docs/architecture/overview.md`](docs/architecture/overview.md) — system map.
+3. For the file you are about to edit: read the matching `docs/services/X.md` or `docs/packages/Y.md`.
 
-- **Repo:** `~/rag-saldivia/` — branch activa: `2.0.x`
-- **Remoto:** https://github.com/Camionerou/rag-saldivia
-
----
-
-## Arquitectura
-
-```
-CLOUD                                    INHOUSE (workstation)
-┌──────────────┐                         ┌────────────────────────────────┐
-│  Next.js     │                         │  Traefik (gateway)             │
-│  Frontend    │──── REST/WS ──────────►│    ├─► Auth Service (Go)       │
-│  (CDN)       │   Cloudflare Tunnel    │    ├─► WebSocket Hub (Go)     │
-└──────────────┘                         │    ├─► Chat Service (Go)      │
-                                         │    ├─► Agent Runtime (Go)     │
-                                         │    ├─► Search Service (Go)    │
-                                         │    ├─► Astro Service (Go+CGO) │
-                                         │    ├─► Traces Service (Go)    │
-                                         │    ├─► Notification (Go)      │
-                                         │    ├─► Platform (Go)          │
-                                         │    ├─► Ingest (Go)            │
-                                         │    ├─► Extractor (Python)     │
-                                         │    └─► [N modular services]   │
-                                         │                                │
-                                         │  SGLang (model server, GPU)   │
-                                         │  PostgreSQL per-tenant        │
-                                         │  Redis per-tenant             │
-                                         │  NATS + JetStream             │
-                                         │  MinIO (S3 storage)           │
-                                         └────────────────────────────────┘
-```
+Documentation is modular (≤200 lines per doc, AI-audience, English). Never edit `docs/plans/*` — they are historical records, not live docs.
 
 ---
 
-## Stack
-
-| Componente | Tecnologia |
-|---|---|
-| Backend | Go (chi + sqlc + slog) |
-| Database | PostgreSQL per-tenant |
-| Cache | Redis per-tenant + platform |
-| Message broker | NATS + JetStream |
-| Frontend | Next.js + React + shadcn/ui + Tailwind + TanStack Query |
-| Gateway | Traefik |
-| RAG | Tree reasoning (PageIndex-inspired, no vectors) |
-| LLM | Model-agnostic via SGLang (slot-per-pipeline-step) |
-| OCR | PaddleOCR-VL 1.5 via SGLang |
-| Vision | Qwen3.5-9B via SGLang |
-| Model server | SGLang (1 instance per model, OpenAI-compatible API) |
-| Object storage | MinIO (S3-compatible) |
-| Observability | OpenTelemetry + Grafana (Tempo + Prometheus + Loki) |
-| CI/CD | GitHub Actions |
-| CLI | Go (Cobra) |
-
----
-
-## Estructura del repo
-
-```
-services/                    ← Go microservicios
-  auth/                      ← Auth Gateway + RBAC + MFA
-  ws/                        ← WebSocket Hub
-  chat/                      ← Sesiones + mensajes
-  agent/                     ← Agent Runtime (LLM + tools, reemplaza rag/)
-  search/                    ← Tree search (PageIndex-inspired)
-  astro/                     ← Astro Super Agent (55+ techniques, intelligence layer, CGO)
-  traces/                    ← Execution traces + cost tracking
-  extractor/                 ← Document extraction (Python, OCR + vision)
-  notification/              ← In-app + email
-  platform/                  ← Control de tenants (platform admins)
-  ingest/                    ← Pipeline de documentos + tree generation
-  bigbrother/                ← Network intelligence (ARP scan, PLC, SSH/WinRM, EXCEPTION: Alpine)
-  rag/                       ← [DEPRECATED — replaced by agent/]
-  .scaffold/                 ← Template para make new-service
-
-modules/                     ← Tool manifests por modulo (YAML)
-  fleet/                     ← Transporte/Logistica tools
-  astro/                     ← Astrologia tools (54 tools)
-  bigbrother/                ← Red & Dispositivos (5 tools)
-
-pkg/                         ← Go packages compartidos
-  jwt/                       ← JWT validation local
-  tenant/                    ← Tenant context, DB resolver
-  middleware/                ← Auth, logging, tracing
-  nats/                      ← NATS helpers
-  traces/                    ← Shared trace publisher (agent + astro)
-  cache/                     ← Shared Redis JSON cache
-  guardrails/                ← Input/output validation, loop detection
-  storage/                   ← S3-compatible file storage (MinIO/AWS)
-  security/                  ← Rate limiting, brute force
-  config/                    ← Config loading
-  llm/                       ← LLM client (OpenAI-compatible)
-  audit/                     ← Immutable audit log writer (+ StrictLogger for fail-closed)
-  health/                    ← Health check helpers
-  otel/                      ← OpenTelemetry setup
-  grpc/                      ← gRPC server helpers
-  crypto/                    ← AES-256-GCM encryption + envelope encryption (KEK/DEK + AAD)
-  plc/                       ← Modbus TCP + OPC-UA clients + safety tier types
-  approval/                  ← Generic two-person approval pattern
-  remote/                    ← SSH + WinRM clients + command allowlist
-
-proto/                       ← Protobuf (gRPC contracts)
-
-apps/
-  web/                       ← Next.js frontend
-  login/                     ← Login page aislada
-
-ai/
-  agents/                    ← NeMo Agent Toolkit configs
-  guardrails/                ← NeMo Guardrails policies
-  models/                    ← Model configs, VRAM profiles
-
-modules/                     ← Modulos verticales por industria
-
-tools/
-  cli/                       ← CLI binario (sda)
-  mcp/                       ← MCP Server para IA
-  pkg/                       ← Logica compartida CLI + MCP
-
-deploy/                      ← Docker Compose, Traefik, scripts
-config/                      ← NVIDIA Blueprint configs
-vendor/                      ← Blueprint submodule
-docs/                        ← Documentacion
-```
-
----
-
-## Comandos clave
+## Key commands
 
 ```bash
-make dev                     # Levantar stack de desarrollo
-make stop                    # Bajar servicios
-make test                    # Tests Go
-make test-auth               # Tests de un servicio especifico
-make test-astro              # Astro tests (requires EPHE_PATH, CGO_ENABLED=1)
-make lint                    # Lint Go
-make build                   # Build todos los servicios
-make build-auth              # Build un servicio
-make build-astro             # Build astro (requires CGO_ENABLED=1, libswe.a)
-make new-service NAME=x      # Scaffold servicio nuevo
-make proto                   # Generar codigo gRPC
-make sqlc                    # Generar codigo sqlc
-make migrate                 # Correr migraciones
-make deploy                  # Deploy a produccion
-make versions                # Ver versiones running vs available
-make status                  # Estado de servicios + GPU
+make dev          # local dev stack
+make test         # Go tests
+make lint         # Go lint
+make build        # build all services
+make sqlc         # regenerate sqlc code after query change
+make migrate      # run tenant + platform migrations
+make deploy       # production deploy (GitHub Actions path)
+make versions     # running vs available service versions
+make status       # health of services + GPU
 ```
 
----
-
-## Convenciones
-
-### Go
-
-| Tipo | Convencion | Ejemplo |
-|---|---|---|
-| Packages | lowercase, single word | `handler`, `service` |
-| Files | snake_case | `user_handler.go` |
-| Structs | PascalCase | `UserService` |
-| Interfaces | PascalCase, -er suffix | `UserRepository` |
-| Functions | PascalCase/camelCase | `CreateUser()`, `hashPassword()` |
-| Errors | Wrap con contexto | `fmt.Errorf("get user: %w", err)` |
-| Context | Primer parametro siempre | `func (s *Svc) Get(ctx context.Context, id string)` |
-
-### Git
-
-- Branch: `main` protegida, feature branches con PR
-- Commits: `tipo(servicio): descripcion` (lowercase)
-- Tipos: `feat`, `fix`, `refactor`, `test`, `docs`, `ci`, `chore`
-- Squash merge a main
-- Docs actualizadas en el mismo PR que el codigo
-
-### Frontend
-
-- Componentes: PascalCase (`VehicleTable.tsx`)
-- Hooks: camelCase con `use` (`useEnabledModules.ts`)
-- Lib/utils: kebab-case (`module-guard.ts`)
+Service-specific: `make test-<svc>`, `make build-<svc>`.
+New service: `make new-service NAME=<svc>`.
 
 ---
 
-## Archivos criticos
+## Critical invariants (7 hard rules)
 
-| Archivo | Por que |
-|---|---|
-| `docs/plans/2.0.x-plan01-sda-framework.md` | Spec completo — la biblia del sistema |
-| `docs/bible.md` | Reglas permanentes de trabajo |
-| `services/{name}/README.md` | Que hace cada servicio |
-| `services/astro/README.md` | Astro service: 55+ tecnicas, 64 endpoints, intelligence layer |
-| `modules/astro/tools.yaml` | 54 tools para Agent Runtime |
-| `pkg/traces/publisher.go` | Shared trace publisher (agent + astro) |
-| `pkg/cache/redis.go` | Shared Redis JSON cache |
-| `go.work` | Go workspace — modulos registrados |
-| `Makefile` | Todos los comandos |
-| `deploy/` | Docker Compose configs |
+1. **Tenant isolation at every layer.** Every tenant query has `WHERE tenant_id = $1`. Never share a pool across tenants. See `docs/architecture/multi-tenancy.md`.
+2. **JWT is the only source of identity.** Verify locally with ed25519. Never trust client headers. See `docs/architecture/auth-jwt.md`.
+3. **NATS subjects are tenant-namespaced.** `tenant.{slug}.{service}.{entity}[.{action}]` always. See `docs/architecture/nats-events.md`.
+4. **Every write publishes a NATS event.** No polling in frontend. See `docs/conventions/error-handling.md`.
+5. **Migration pairs complete.** Every `.up.sql` has a matching `.down.sql`; numbering is sequential. See `docs/conventions/migrations.md`.
+6. **Service structure is uniform.** Every Go service: `cmd/main.go` + `VERSION` + `Dockerfile` + `README.md`, registered in `go.work`.
+7. **Error responses are JSON.** Never plain text from API handlers. See `docs/conventions/error-handling.md`.
+
+Full list + checks: `bash .claude/hooks/check-invariants.sh` (42 checks).
 
 ---
 
-## Agents disponibles (`.claude/agents/`)
+## Agents, skills, hooks, MCP
 
-| Agent | Cuando | Scope |
-|---|---|---|
-| `gateway-reviewer` | Cambios en `services/*/internal/`, `pkg/` | Handlers chi, middleware, JWT, RBAC, sqlc, NATS events, tenant isolation |
-| `frontend-reviewer` | Cambios en `apps/web/`, `apps/login/` | Componentes, hooks, auth, comunicacion con backend Go |
-| `security-auditor` | Antes de releases, sospecha de vulnerabilidad | Audit completo: JWT, tenant isolation, SQL injection, NATS, Docker |
-| `test-writer` | Tests nuevos o faltantes | Go tests (testify, testcontainers), frontend tests (bun, Playwright) |
-| `debugger` | Algo no funciona | Failure modes, logs Docker/Go, config, trazado de codigo |
-| `deploy` | Deployar a produccion | Preflight checks, Docker Compose, health verification |
-| `status` | Estado de servicios | Health checks Go services + infra Docker + GPU + recursos |
-| `doc-writer` | Actualizar docs | CLAUDE.md, bible, README por servicio, ADRs |
-| `plan-writer` | Planear feature nueva | Planes con phases, migrations, NATS events, scope control |
-| `ingest` | Ingestar documentos | Pipeline ingesta, tree generation, PostgreSQL |
+- [`docs/ai/agents.md`](docs/ai/agents.md) — specialized agents (`gateway-reviewer`, `frontend-reviewer`, `security-auditor`, `test-writer`, `debugger`, `deploy`, `status`, `doc-writer`, `doc-sync`, `plan-writer`, `ingest`).
+- [`docs/ai/skills.md`](docs/ai/skills.md) — superpower skills.
+- [`docs/ai/hooks.md`](docs/ai/hooks.md) — pre-commit invariants, session briefing, doc-sync.
+- [`docs/ai/mcp-servers.md`](docs/ai/mcp-servers.md) — Context7, Repowise, CodeGraphContext, etc.
+- [`docs/ai/memory-system.md`](docs/ai/memory-system.md) — durable memory; no version-specific entries.
+
+---
+
+## Conventions
+
+- Go style, errors, ctx: [`docs/conventions/go.md`](docs/conventions/go.md)
+- Frontend components, tokens, tests: [`docs/conventions/frontend.md`](docs/conventions/frontend.md)
+- Git flow, commits, squash merge: [`docs/conventions/git.md`](docs/conventions/git.md)
+- Migrations, sqlc, testing, logging, security: each in `docs/conventions/*.md`.
+
+---
+
+## Operations
+
+- Deploy: [`docs/operations/deploy.md`](docs/operations/deploy.md)
+- Runbook + incidents: [`docs/operations/runbook.md`](docs/operations/runbook.md), [`docs/operations/incidents.md`](docs/operations/incidents.md)
+- Monitoring: [`docs/operations/monitoring.md`](docs/operations/monitoring.md)
+- Backup & restore: [`docs/operations/backup-restore.md`](docs/operations/backup-restore.md)
+
+---
+
+## When in doubt
+
+- Search: `docs/README.md` → relevant subfolder.
+- Unfamiliar term: [`docs/glossary.md`](docs/glossary.md).
+- Before editing shared code in `pkg/`: grep all importers first (`docs/conventions/go.md` blast-radius rule).

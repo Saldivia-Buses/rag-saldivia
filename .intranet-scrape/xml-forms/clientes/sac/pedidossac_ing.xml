@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud" subtipo="vertical" path="/archivos/sac" paginar="100">
+  <title>Servicio de atencion al cliente</title>
+  <form>
+    <table id="REG_SAC">
+      <title>Servicio de atencion al cliente</title>
+      <filters>
+        <field id="CUMP" deshabilitado="false">
+          <label>Cumplido</label>
+          <operador>=</operador>
+        </field>
+      </filters>
+
+      <field id="id_regsac" deshabilitado="true" autoinc="true"  tipoOrden="DESC">
+        <label>Nro Pedido</label>
+        <help>Numero de Pedido</help>
+      </field>
+
+      <field id="yo" local="true" noshow="true">
+        <valor eval="true">"'".$_SESSION['usuario']."'"</valor>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="editable" local="true" bloqueafila="true" noshow="true" >
+        <label>Editable</label>
+        <if exp="'yo'=='login'">
+          <true>"1"</true>
+          <false>"0"</false>
+        </if>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="login_sac" deshabilitado="true">
+        <label modpos="nobr">Usuario</label>
+        <help>Usuario que hace el pedido</help>
+        <valor eval="true">$_SESSION['usuario']</valor>
+      </field>
+
+
+      <field id="fecha_sac" deshabilitado="true" valauto="true">
+        <label modpos="nobr">Fecha</label>
+        <help>Fecha</help>
+        <valor>today</valor>
+      </field>
+
+      <field id="prioridad">
+        <label>Prioridad</label>
+        <helper type="combo">
+           <option value="1">Baja</option>
+           <option value="2">Media</option>
+           <option value="3">Alta</option>
+           <option value="4">Urgente</option>
+         </helper>
+      </field>
+
+      <field id="regcuenta_id" noshow="true">
+        <label>Cuenta</label>
+        <help>Persona que hace el pedido</help>
+        <helper type="external" id="REG_CUENTA">
+          <field id="id_regcuenta" />
+          <field id="nombre_cuenta">
+            <detalle>nbre_cuenta</detalle>
+          </field>
+          <order>
+            <field id="nombre_cuenta" />
+          </order>
+        </helper>
+      </field>
+
+      <field id="nbre_cuenta" local="true" deshabilitado="true" noshow="true" />
+   
+      <field id="pedido_sac" >
+        <label colspan="6" style="color:green">Pedido</label>
+        <help>Encabezado del Pedido</help>
+        <size>400</size>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="observaciones_sac">
+        <label colspan="6" style="color:green" _modpos="nobr">Observaciones</label>
+        <help>Descripcion y Observaciones del Pedido</help>
+        <size>100</size>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="fotopath" local="true" noshow="true">
+        <if exp="true">
+          <true>'id_regsac'</true>
+          <false>'id_regsac'</false>
+        </if>
+      
+        <tipo>varchar</tipo>
+      </field>
+
+
+      <field id="foto" _path="id_regsac" path="fotopath">
+        
+     <!--    <expresion>CONCAT('/archivos/sac/',id_regsac,'/') </expresion>  -->
+        <label posX="5" posY="+2" _formStyle="display:none;">Adj</label>
+   <!--     <tipo>dir</tipo>   -->
+        
+        <tipo>file</tipo>
+        <size>70</size>
+       
+      </field>
+    
+
+      <field id="derivado_a">
+        <label>Derivado a </label>
+        <help>Usuario al que se deriva el pedido</help>
+        <helper type="combo" id="HTXUSERS" empty="true">
+          <field id="Id_usuario" />
+          <field id="login" />
+        </helper>  
+        
+      </field>
+
+      <field id="cumplido">
+        <label modpos="nobr">Cumplido</label>
+        <help>Cumplido</help>
+      </field>
+
+      <field id="CUMP" noshow="true">
+        <expresion>case when cumplido ='0000-00-00' then 1 else 0 end</expresion>
+        <options>
+          <option valor="">Todos</option>
+          <option valor="0">Cumplidos</option>
+          <option valor="1">Pendientes</option>
+        </options>
+      </field>
+
+      <field id="pend" local="true" clasefila="true" noshow="true" >
+        <expresion>case when cumplido ='0000-00-00' then 'resaltado' else '' end</expresion>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="mail_msg" noshow="true">
+          <expression><![CDATA[CONCAT(
+                'Sr/a ', (select concat (Nombre, ' ', apellido) from HTXUSERS where Id_usuario = derivado_a),
+                '</br>Debe realizar el seguimiento al cliente, para el pedido nro ', id_regsac, 
+                ' que indica: ', pedido_sac, '  ', observaciones_sac,
+                '\n</br></br>Atte</br>'
+                )]]>
+          </expression>
+      </field>
+
+      <field id="mail_to"  noshow="true">
+          <expression>select HTXUSERS.email from HTXUSERS where Id_usuario = derivado_a</expression>
+      </field>
+
+      <field id="mail_subj" noshow="true">
+        <expresion>CONCAT('Servicio atencion al cliente ', '' )</expresion>
+      </field>
+
+      <field id="mail_attach"   noshow="true" path="fotopath">
+        <label>Adjuntoo</label>
+        <expression>concat('../xml/archivos/sac/',id_regsac,'/', foto)</expression> 
+        <tipo>file</tipo>
+        <size>70</size>
+      </field>
+
+      <field id="enviomail" local="true" >
+          <label modpos="nobr">Mail</label>
+          
+          <helper type="link" xml="mails_send.xml" dir="/histrix/mensajeria">
+            <parameter source="mail_msg"  target="mensaje" />
+            <parameter source="mail_to"   target="para" />
+            <parameter source="mail_subj" target="subject" />
+            <parameter source="mail_attach" target="adjunto" />
+          </helper>
+      
+          <expression><![CDATA[IFNULL(('<img src="../img/mail_generic.png"/>'), '')]]></expression>
+      </field>
+
+
+      <order>
+        <field id="id_regsac" ></field>
+        <field id="fecha_sac" ></field>
+        <field id="cumplido" ></field>
+      </order>
+
+    </table>
+
+  </form>
+
+</histrix>

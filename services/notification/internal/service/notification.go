@@ -51,6 +51,7 @@ type NotificationService struct {
 	db      *pgxpool.Pool
 	repo    *repository.Queries
 	auditor *audit.Writer
+	mailer  Mailer
 }
 
 // New creates a notification service.
@@ -59,6 +60,35 @@ func New(db *pgxpool.Pool) *NotificationService {
 		db:      db,
 		repo:    repository.New(db),
 		auditor: audit.NewWriter(db),
+	}
+}
+
+// SetMailer configures the mailer for sending emails.
+func (s *NotificationService) SetMailer(m Mailer) {
+	s.mailer = m
+}
+
+// SendRequest is the input for the Send method.
+type SendRequest struct {
+	Type    string `json:"type"`    // "email", "in_app"
+	To      string `json:"to"`      // email address or user ID
+	Subject string `json:"subject"`
+	Body    string `json:"body"`
+}
+
+// Send sends a notification via the specified channel.
+func (s *NotificationService) Send(ctx context.Context, req SendRequest) error {
+	switch req.Type {
+	case "email":
+		if s.mailer == nil {
+			return fmt.Errorf("email sending not configured")
+		}
+		return s.mailer.Send(ctx, req.To, req.Subject, req.Body)
+	case "in_app":
+		_, err := s.Create(ctx, req.To, "system", req.Subject, req.Body, nil, "in_app")
+		return err
+	default:
+		return fmt.Errorf("unsupported notification type: %s", req.Type)
 	}
 }
 

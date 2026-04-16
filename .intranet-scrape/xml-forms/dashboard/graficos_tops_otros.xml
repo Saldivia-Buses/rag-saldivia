@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="dashboard">
+        <titulo>Medidores de Calidad</titulo>
+
+        <widget id="observaciones_top10"  width="98%" height="400px">
+           <title>Top 10 Ultimo Mes</title>
+           <url><![CDATA[histrixLoader.php?xml=observaciones_top10.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="observaciones_evolutivo_top10"  width="98%" height="400px">
+           <title>Top 10 Evolutivo</title>
+           <url><![CDATA[histrixLoader.php?xml=observaciones_evolutivo_top10.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="Coches"  width="48%" height="400px">
+           <title>Cantidad Mensual de Coches</title>
+	       <url><![CDATA[histrixLoader.php?xml=evolutivo_coches.xml&dir=/estadisticas/calidad]]></url>
+        </widget> 
+
+</histrix>

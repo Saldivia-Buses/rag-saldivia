@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="crud">
+		<title>Monedas</title>
+		<obs></obs>
+		<form >
+		    <table id="GEN_MONEDAS" label="Monedas">
+				<field id="id_moneda" autoinc="true" noshow="true">
+					<label>Código de moneda</label>
+					<help>Código de moneda</help>
+				</field>
+
+		        <field id="descripcion_moneda">
+					<label>Descripcion</label>
+					<help>Descripcion de la moneda</help>
+				</field>
+
+		        <field id="abreviatura_moneda">
+					<label>Simbolo</label>
+					<help>Símbolo usado para el nombre de la divisa</help>
+				</field>
+			<field id="titulo" noshow="true">
+			    <expression>concat('Cotización ', descripcion_moneda)</expression>
+			</field>
+			<field id="cotizacion" local="true"   Formstyle="display:none;">
+				<attribute id="linkdes">titulo</attribute>
+				<helper xml="monedashist_crud.xml" type="link" title="Cotización">
+				    <parameter source="id_moneda" target="moneda_id" />
+				</helper>
+				<valor>'Cotización'</valor>
+			</field>
+
+
+			<field id="valor" local="true" _obj="monedasval_crud.xml" Formstyle="display:none;">
+				<helper xml="monedasval_crud.xml" type="link" title="Denominaciones">
+				    <parameter source="id_moneda" target="moneda_id" />
+				</helper>
+				<valor>'Denominaciones'</valor>
+			</field>
+			<field id="futuro" local="true"  >
+				<helper xml="monedas_futuro.xml" type="link" title="Futuro" width="80%">
+				    <parameter source="id_moneda" target="moneda_id" />
+				</helper>
+				<valor>'Futuros'</valor>
+			</field>
+
+		    </table>
+		</form>
+    </histrix>

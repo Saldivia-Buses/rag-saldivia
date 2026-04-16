@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" subtipo="vertical" >
+  <title>Contactos por grupo</title>
+  <obs></obs>
+  <consulta>
+    <table id="REG_CONTACTOS_GR" label="Contactos por grupos">
+	
+	<field id="id_regcontactogr" esClave="true" noshow="true" autoinc="true"/>
+	<field id="reggrupocon_id"   noshow="true" valauto="true"/>
+	<field id="regcontacto_id" Formstyle="display:none;" >
+		<helper id="CCTCONTA" type="combo">
+			<field id="idconta" noshow="true">
+			</field>
+			<field id="nombre" />
+		</helper>
+		<label>Nombre</label>
+	</field>
+
+	<field id="mail" tabla="CCTCONTA" Formstyle="display:none;">
+		<label>Email</label>
+	</field>
+
+	<field id="contacto" autocompletar="true" required="true" colstyle="display:none;" local="true">
+		<label>Contacto</label>
+		<helper id="CCTCONTA" type="external">
+			<field id="idconta" colstyle="display:none;">
+				<detalle>regcontacto_id</detalle>
+			</field>
+			<field id="nombre">
+				<expresion>concat(nombre, ' ', mail)</expresion>
+			</field>
+			<field id="mail" noshow="true" >
+				<condicion operador="!=">''</condicion>
+			</field>
+		</helper>
+		<size>55</size>
+		<tipo>varchar</tipo>
+	</field>
+    </table>
+	<join tipo="left">
+		<table id="CCTCONTA">
+			<field id="idconta">
+				<condicion operador="=">REG_CONTACTOS_GR.regcontacto_id</condicion>
+			</field>
+		</table>
+	</join>
+				
+  </consulta>
+</histrix>  

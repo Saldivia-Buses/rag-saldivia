@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="consulta" ancho="40">
+       <title>Movimientos de Chequera</title>
+        <obs></obs>
+				<form  detalle="chequeras_det.xml">
+					<table id="CHEQUERAS" label="Chequeras" styleTbody="height:500px;">
+
+						<field id="ccbcod">
+							<help>Codigo de Cuenta </help>
+			<!-- 				<detalle>ccbcod</detalle>-->
+							<!-- <ayuda_ex id="BCSCUENT">
+								<field id="ccbcod">
+									<detalle>ccbcod</detalle>
+								</field>
+								<field id="ccbnom">
+									<detalle>ccbnom</detalle>
+								</field>
+								<field id="siscod" oculto="true"></field>
+
+								<order>
+									<field id="ccbnom"></field>
+								</order>
+
+								<filtra>ccbcod</filtra>
+							</ayuda_ex>
+							<detalle>ccbcod</detalle>-->
+						</field>
+						<field id="ccbnom" tabla="BCSCUENT" noshow="true">
+							<label>Nombre</label>
+
+						</field>
+						<field id="nroChequera">
+							<label>Numero Chequera</label>
+						</field>
+						<field id="nroInicio">
+							<label>Desde Numero</label>
+							<detalle>c1</detalle>
+						</field>
+						<field id="nroFin">
+							<label>Hasta Numero</label>
+							<detalle>c2</detalle>
+						</field>
+<!-- 					<field id="concod" noshow="true">
+							<label>concod</label>
+							<detalle>concod</detalle>
+						</field>
+						<field id="movnpv">
+							<label>P.V.</label>
+							<help> Punto Venta</help>
+							<formato>%04d</formato>
+							<detalle>movnpv</detalle>
+						</field>
+						<field id="movnro" >
+							<label>Numero</label>
+							<help> Numero Comprobante</help>
+							<formato>%12d</formato>
+							<detalle>movnro</detalle>
+						</field>
+
+						<field id="concepto">
+							<expresion>condes</expresion>
+							<label>Cod.Concepto</label>
+							<help>
+							</help>
+							<tipo>string</tipo>
+						</field>
+
+						<field id="movfec">
+							<label>Fecha </label>
+							<help>
+							</help>
+						</field>
+
+						<field id="Debe" suma="true">
+							<expresion>movimp * (case when conimp = 1 then 1 else 0 end)</expresion>
+							<label>Debe</label>
+							<help>
+							</help>
+						</field>
+
+						<field id="Haber" suma="true" link_int="cctmovim_comp.xml" linkdes="Ver Recibo">
+							<expresion>movimp * (case when conimp = 2 then 1 else 0 end)</expresion>
+							<label>Haber</label>
+							<help>
+							</help>
+							<paring destino="movnro">movnro</paring>
+							<paring destino="carrec">movnro</paring>
+							<paring destino="cajnro">movnro</paring>
+							<paring destino="movinc">movnro</paring>
+							<paring destino="movnpv">movnpv</paring>
+							<paring destino="ctacod">ctacod</paring>
+							<paring destino="movfec">movfec</paring>
+							<paring destino="cajfec">movfec</paring>
+						</field>
+
+						<field id="movsal" suma="true">
+							<label>Saldo</label>
+							<help></help>
+							<tipo>numeric</tipo>
+						</field>
+						<field id="resaltado" clasefila="true" local="true" noshow="true">
+							<expresion>case when movsal != 0 then 'resaltado' end</expresion>
+							<tipo>varchar</tipo>
+						</field> -->
+
+		<filtro_ex>
+			<label>CUENTA</label>
+		    <tabla_ex id="BCSCUENT">
+			<field id="ccbcod"></field>
+			<field id="ccbnom"></field>
+-			<field id="siscod" oculto="true"></field>
+
+			<filtra>ccbcod</filtra>
+		    </tabla_ex>
+		</filtro_ex>
+
+		<!-- 				<filters>
+						<field id="ccbcod">
+							<label>Cod.</label>
+							<help>Codigo de Cuenta </help>
+							<ayuda_ex id="BCSCUENT">
+								<field id="ccbcod"></field>
+								<field id="ccbnom"></field>
+								<field id="siscod" oculto="true"></field>
+
+								<order>
+									<field id="ccbnom"></field>
+								</order>
+
+								<filtra>ccbcod</filtra>
+							</ayuda_ex>
+							<detalle>ccbcod</detalle>
+								<operador>=</operador>
+							</field>
+							<field id="ccbnom" tabla="BCSCUENT">
+								<label>Nombre</label>
+								<operador>like</operador>
+							</field>
+ 						<field id="movfec">
+								<operador>>=</operador>
+								<label>Desde Fecha</label>
+								<valor>today</valor>
+
+							</field>
+							<field id="movfec">
+								<operador>&lt;=</operador>
+								<label>Hasta Fecha</label>
+								<valor>today</valor>
+
+							</field>
+						</filters>-->
+						<!-- <order>
+							<field id="movfec"></field>
+						</order>-->
+					</table>
+					<join tipo="left">
+						<table id="BCSCUENT">
+							<field id="siscod" >
+								<condicion operador="=">04</condicion>
+							</field>
+							<field id="ccbcod" >
+								<condicion operador="=">CHEQUERAS.ccbcod</condicion>
+							</field>
+						</table>
+					</join>
+<!-- 				<join tipo="left">
+						<table id="CCTCONCE">
+							<field id="siscod" oculto="true">
+								<label>cctcuent.siscod</label>
+								<condicion operador="=">CCTMOVIM.siscod</condicion>
+							</field>
+
+							<field id="concod" oculto="true">
+								<condicion operador="=">CCTMOVIM.concod</condicion>
+							</field>
+
+							<field id="condes" oculto="true">
+							</field>
+
+						</table>
+					</join>-->
+				</form>
+        </histrix>

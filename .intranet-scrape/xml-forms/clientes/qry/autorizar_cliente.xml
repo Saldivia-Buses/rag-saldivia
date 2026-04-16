@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="fichaing" preFetch="true" inserta="false" modifica="false" confirma="Autorizar Cliente">
+  <title>VIAJANTES</title>
+  <obs></obs>
+    <eventos>
+        <event id="procesar">close</event>
+        <event id="procesar">refresh</event>
+    </eventos>  
+  <form >
+    <table id="REG_CUENTA" label="VIAJANTES">
+      <movimientos>
+          <relacion id="autorizar_cliente_upd.xml" />
+      </movimientos>
+
+    <fieldGroup>
+      <field id="id_regcuenta" noshow="true">
+      <detalle>id_regcuenta</detalle>
+      </field>
+
+      <field id="nro_cuenta" esClave="true" deshabilitado="false">
+        <label colspan="8">Número a Asignar</label>
+        <help>Numero de la Cuenta</help>
+        <expression>select max(nro_cuenta) + 1 from REG_CUENTA where subsistema_id = '02' or subsistema_id = '05' limit 1</expression>
+      </field>
+          
+      <field id="alta_cuenta" _noshow="true">
+        <label>Fecha Alta</label>
+      </field>  
+      <field id="nombre_cuenta" deshabilitado="true">
+           <label>Nombre o Razon Social</label>
+      </field>
+      <field id="subsistema_id" noshow="true" esClave="true" valauto="true">
+          <operador>=</operador>
+      </field>
+    </fieldGroup>
+  
+  </table>
+  </form>
+</histrix>  

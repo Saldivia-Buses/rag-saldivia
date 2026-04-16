@@ -1,0 +1,174 @@
+<histrix tipo="consulta">
+    <title>Controles de calidad pendientes por seccion</title>
+    <obs/>
+    <form  detalle="controles_linea_pend_seccion_det.xml">
+        <table id="PROD_CONTROL_MOVIM" label="Retrabajos">
+<!--
+        <filters auto="true">
+			<field id="linea_id">
+                <label>Línea</label>
+                <operador>=</operador>
+                <valor>1</valor>
+	        </field>
+
+			<field id="seccion_id">
+				<label modpos="nobr">Sección</label>
+				<operador>=</operador>
+			</field>
+
+			<field id="controlcausal_id">
+				<label modpos="nobr">Causa</label>
+				<operador>=</operador>
+			</field>
+
+		</filters>
+-->	    
+    	<field id="nrofab_id">
+			<label>Coches</label>
+			<expression>count(*)</expression>
+	    </field>
+
+	    <field id="linea_id" local="true" noshow="true">
+                <helper type="combo" xml="lineas.xml" dir="/produccion" empty="true"/>
+	        <label >Linea</label>
+<!--		<detalle>linea_id</detalle> -->
+<!--
+			<actualiza>
+				<field id="seccion_id" destino="linea_id" /> 
+			</actualiza>
+-->
+	    </field>
+                <field id="descripcion" tabla="MOMENTO">
+		    <label>Sección</label>
+		    <detalle>titulo</detalle>
+		</field>
+
+		<field id="seccion_id" tabla="PROD_CONTROLES" noshow="true">
+			<detalle>seccion_id</detalle>
+			<label>Sección</label>
+			<helper id="MOMENTO" type="combo" empty="true">
+                <field id="idMomento" />
+                <field id="descripcion" />
+<!--                <field id="linea_id" oculto="true">
+                	<condicion operador="=">1</condicion>
+                </field> -->
+		    </helper>
+		</field>
+<!--
+		<field id="nombre_obs" PDFsize="18px">
+			    <label>Control</label>
+			    <expression>CASE WHEN PROD_CONTROL_MOVIM.observacion_control != '' THEN CONCAT(nombre_control, ' - Obs: ',observacion_control) ELSE nombre_control END</expression>
+		</field>
+
+		<field id="nombre_controlcausal" tabla="PROD_CONTROL_CAUSAL">
+			<label>Causa</label>
+	    </field>
+
+	    <field id="controlcausal_id" colstyle="display:none;" export="false">
+			<label>Causa</label>
+			<helper id="PROD_CONTROL_CAUSAL" type="combo" empty="true">
+                <field id="id_controlcausal" />
+                <field id="nombre_controlcausal" />
+                <field id="habilitado_controlcausal" oculto="true">
+                	<condicion operador="=">1</condicion>
+                </field>
+		    </helper>
+	    </field>
+
+
+
+		<field id="userid" >
+			    <label>Controló</label>
+			    <expression>CONCAT(Nombre, ' - ', date_format(date(hora_control), '%d/%m'))</expression>
+		</field> 
+-->
+		<field id="no_conforme"  noshow="true">
+			    <condicion operador="=">1</condicion>
+				<checklabel> </checklabel>
+				<tipo>check</tipo>
+		</field>
+
+    	<field id="controlado"  noshow="true">
+		    <condicion operador="=">0</condicion>
+	    </field>
+
+		<group>
+			<field id="seccion_id" />
+		</group>
+<!--
+		<order>
+			<field id="nrofab_id" />
+		</order>
+-->
+
+	</table>
+		<join tipo="left">
+		    <table id="PROD_CONTROLES">
+			<field id="id_prodcontrol">
+			    <condicion operador="=">prodcontrol_id</condicion>
+			</field>
+		    </table>
+		</join>
+		<join tipo="left">
+		    <table id="MOMENTO">
+			<field id="idMomento">
+			    <condicion operador="=">PROD_CONTROLES.seccion_id</condicion>
+			</field>
+<!--			<field id="linea_id">
+			    <condicion operador="=">PROD_CONTROL_MOVIM.linea_id</condicion>
+			</field> -->
+		    </table>
+		</join>
+<!--
+		<join tipo="left">
+		    <table id="PROD_CONTROL_CAUSAL">
+			<field id="id_controlcausal">
+			    <condicion operador="=">PROD_CONTROL_MOVIM.controlcausal_id</condicion>
+			</field>
+		    </table>
+		</join>
+-->
+		<join tipo="left">
+		    <table id="PEDCOTIZ">
+			<field id="nrocha">
+			    <condicion operador="=">PROD_CONTROL_MOVIM.nrofab_id</condicion>
+			</field>
+		    </table>
+		</join>
+<!--		<join tipo="left">
+            <table id="CCTCUENT">
+                <field id="ctacod">
+                    <condicion operador="=">PEDCOTIZ.ctacod</condicion>
+                </field>
+                <field id="siscod">
+                    <condicion operador="=">'02'</condicion>
+                </field>   
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="CHASIS">
+                <field id="nrocha">
+                    <condicion operador="=">PEDCOTIZ.nrocha</condicion>
+                </field>
+            </table>
+        </join> -->
+<!--        <join tipo="left">
+            <table id="MODCHASIS">
+                <field id="modcha">
+                    <condicion operador="=">CHASIS.modcod</condicion>
+                </field>
+                <field id="marcod">
+                    <condicion operador="=">CHASIS.marcod</condicion>
+                </field>
+            </table>
+        </join>
+		<join tipo="left">
+		    <table id="HTXUSERS">
+			<field id="login">
+			    <condicion operador="=">user_id</condicion>
+			</field>
+		    </table>
+		</join>
+-->
+    </form>
+</histrix>

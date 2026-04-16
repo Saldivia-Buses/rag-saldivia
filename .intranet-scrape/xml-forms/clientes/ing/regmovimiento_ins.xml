@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="insert" grabafinal="true">
+	<title>Ingreso de Movimientos</title>
+	 <obs></obs>
+		<form >
+		     <table id="REG_MOVIMIENTOS">
+			<field id="id_regmovim"      		id_temp="id_regmovim" />
+			<field id="subsistema_id"      		id_temp="subsistema_id" />
+			<field id="regcuenta_id"     		id_temp="regcuenta_id" />
+			<field id="referencia_movimiento"  	id_temp="referencia_movimiento" />
+
+			<field id="concepto_id"      		id_temp="concepto_id"/>
+			<field id="puesto_movimiento"     	id_temp="puesto_movimiento"/>			
+			<field id="letra_movimiento"      	id_temp="letra_movimiento" />			
+			<field id="nro_movimiento" 	    	id_temp="nro_movimiento"/>
+			<field id="cuota_movimiento"      	id_temp="cuota_movimiento"/>	
+			<field id="fecha_movimiento" 	    id_temp="fecha_movimiento">
+			    <tipo>date</tipo>
+			</field>
+			<field id="vencimiento_movimiento" 	id_temp="vencimiento_movimiento"/>	
+			<field id="reg_fecha" 	     		id_temp="reg_fecha"/>
+			<field id="iva_id" 	     		id_temp="regcuenta_ivaid"/>
+
+			<field id="saldo_movimiento"     	id_temp="saldo_movimiento"/>
+
+			<field id="importe_movimiento"     	id_temp="importe_movimiento"/>
+			<field id="neto_movimiento"      	id_temp="neto_movimiento" />
+
+			<field id="importe_iva"           	id_temp="importe_iva" />
+			<field id="importe_exento"          id_temp="importe_exento" />
+			<field id="importe_percepcion"      id_temp="importe_percepcion" />
+			
+			<field id="fecha_cae" 	     	    id_temp="fecha_cae"/>
+			<field id="numero_cae" 	    	    id_temp="numero_cae"/>
+			<field id="nombre_movimiento" 		id_temp="nombre_movimiento"/>
+			
+		    </table>
+		</form>
+    </histrix>	
+
+
+

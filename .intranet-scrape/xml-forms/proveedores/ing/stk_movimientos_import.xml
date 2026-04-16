@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" preloadData="false" subtipo="vertical" imprime="false" llenoreferente="true" llenoTemporal="true" importTempTable="TEMPTABLENAME">
+  <title>Movimientos</title>
+  <obs/>
+  <form>
+    <table id="STK_MOVIMIENTOS" label="Ingreso de artículos" idCampoCond="acepta">
+      
+      <movimientos>
+        <relacion id="stk_movimientos_ingreso.xml" />
+      </movimientos>
+
+
+
+  <fieldGroup Formstyle="vertical-align:middle;" 
+        colstyle="text-align:center;">
+
+      <field id="id_stkmovimiento" deshabilitado="true" noshow="true">
+        <label>Codigo</label>
+        <help>Codigo de movimiento</help>
+      </field>
+      
+      <field id="_ORDEN" local="true" _noshow="true" colstyle="display:none;"  Formstyle="display:none;">
+        <label>#</label>
+      </field>
+      
+      <field id="stkarticulo_id">
+        <label>Cod.Articulo</label>
+        <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+          <field id="wstklista_id" local="true">
+            <valor>1</valor>
+          </field>
+          <field id="unidad_compra_id" noshow="true">
+            <detalle>stkunidad_compra_id</detalle>
+          </field>
+          <field id="cuentadebe_id" noshow="true">
+            <detalle>cuenta_debe_art_id</detalle>
+          </field>
+          <field id="mi_cotizacion" noshow="true">
+            <expression>GEN_FN_COTIZACION(genmoneda_origen_id, CURDATE())</expression>
+            <detalle>mi_cotizacion</detalle>
+          </field>
+          <field id="alicuota" noshow="true">
+            <expression>
+              SELECT alicuota FROM GEN_IVA_ALICUOTAS WHERE iva_regimen_id = STK_ARTICULOS.ivaregimen_id and iva_id = 1 LIMIT 1
+            </expression>
+            <detalle>alicuota</detalle>
+          </field>
+          <field id="cuenta_percepcion_iva_id" noshow="true">
+            <expression>
+              IFNULL((SELECT cuenta_percepcion_iva_id FROM GEN_IVA_ALICUOTAS WHERE iva_regimen_id = STK_ARTICULOS.ivaregimen_id and iva_id = 1 LIMIT 1),'')
+            </expression>
+            <detalle>cuenta_percepcion_iva_id</detalle>
+          </field>
+          <field id="precio_unitario" noshow="true">
+            <expression>
+              round(precio_costo * GEN_FN_COTIZACION(genmoneda_origen_id, CURDATE()), 2)
+            </expression>
+            <detalle>precio_unitario</detalle>
+            <tipo>decimal</tipo>
+          </field>
+          <field id="iva_detalle" noshow="true">
+            <expression>
+              round(precio_costo * GEN_FN_COTIZACION(genmoneda_origen_id, CURDATE()) * (SELECT alicuota FROM GEN_IVA_ALICUOTAS WHERE iva_regimen_id = STK_ARTICULOS.ivaregimen_id and iva_id = 1 LIMIT 1) / 100, 2)
+            </expression>
+            <detalle>iva_detalle</detalle>
+            <tipo>decimal</tipo>
+          </field>
+          <field id="total_detalle" noshow="true">
+            <expression>
+              round(precio_costo * GEN_FN_COTIZACION(genmoneda_origen_id, CURDATE()) * ( 1 + (SELECT alicuota FROM GEN_IVA_ALICUOTAS WHERE iva_regimen_id = STK_ARTICULOS.ivaregimen_id and iva_id = 1 LIMIT 1)), 2)
+            </expression>
+            <detalle>total_detalle</detalle>
+            <tipo>decimal</tipo>
+          </field>
+        </helper>
+        <!-- <size>15</size> -->
+      </field>
+      
+      <field id="nombre_articulo" local="true" deshabilitado="true">
+        <label modpos="nobr" colspan="4">Nombre</label>
+        <!-- <size>40</size> -->
+      </field>
+
+      <field id="separador1" local="true" deshabilitado="true" colstyle="display:none;"/>
+      
+      <field id="cantidad">
+        <label>Cantidad</label>
+        <tipo>numeric</tipo>
+        <valor>1</valor>
+        <jseval fielddestino="neto_detalle">(precio_unitario + 0) * (cantidad + 0) * (1 - (porcentaje_desc0 + 0 ) / 100 )</jseval>
+      </field>
+      
+      <field id="precio_unitario" local="true">
+        <label modpos="nobr">P.U.</label>
+        <tipo>decimal</tipo>
+        <jseval fielddestino="neto_detalle">(precio_unitario + 0) * (cantidad + 0) * (1 - (porcentaje_desc0 + 0 ) / 100 )</jseval>
+        <jseval fielddestino="precio_costo">(precio_unitario + 0) / (mi_cotizacion + 0)</jseval>
+      </field>
+
+      <field id="porcentaje_desc0" deshabilitado="false" modpos="nobr">
+        <label>% D</label>
+        <valor default="true">0.00</valor>
+        <tipo>decimal</tipo>
+        <jseval fielddestino="neto_detalle">(precio_unitario + 0) * (cantidad + 0) * (1 - (porcentaje_desc0 + 0 ) / 100 )</jseval>
+        <jseval fielddestino="precio_costo">(precio_unitario + 0) / (mi_cotizacion + 0)</jseval>
+      </field>
+
+      <field id="neto_detalle" local="true" deshabilitado="true" suma="true">
+        <label modpos="nobr">Neto</label>
+        <detalle>neto_detalle</detalle>
+        <jseval fielddestino="iva_detalle">(neto_detalle + 0) * (alicuota + 0)/ 100</jseval>
+        <tipo>decimal</tipo>
+      </field>
+
+      <field id="separador2" local="true" deshabilitado="true" colstyle="display:none;"/>
+
+      <field id="alicuota" local="true" _deshabilitado="true">
+        <label _modpos="nobr">Alícuota</label>
+        <help>Alícuota registrada</help>
+        <!-- <size>10</size> -->
+        <helper type="combo" _empty="true" id="GEN_IVA_ALICUOTAS">
+          <field id="alicuota"/>
+          <field id="alicuota2">
+            <expression>alicuota</expression>
+          </field>
+          <field id="iva_regimen_id"></field>
+          <field id="iva_id">
+            <condicion operador="=">1</condicion>
+          </field>
+          <field id="cuenta_haber_id">
+            <detalle>cuenta_haber_id</detalle>
+          </field>
+        </helper>
+        <detalle>alicuota</detalle>
+      </field>
+      
+      <field id="iva_detalle" local="true" _deshabilitado="true" suma="true">
+        <label modpos="nobr">IVA</label>
+        <detalle>iva_detalle</detalle>
+        <tipo>decimal</tipo>
+        <jseval fielddestino="total">(neto_detalle + 0) + (iva_detalle + 0)</jseval>
+      </field>
+
+     
+      <field id="total" local="true" deshabilitado="true" suma="true">
+        <label modpos="nobr">Total</label>
+        <detalle>total_detalle</detalle>
+        <tipo>decimal</tipo>
+      </field>
+
+        <field id="separador3" local="true" deshabilitado="true" colstyle="display:none;"/>
+      
+      <field id="mi_cotizacion" local="true" colstyle="display:none;" >
+        <label>Cotizacion u$s</label>
+        <jseval fielddestino="precio_costo">(precio_unitario + 0) / (mi_cotizacion + 0)</jseval>
+      </field>
+      
+      <field id="precio_costo" local="true">
+        <label modpos="nobr">Costo</label>
+        <tipo>decimal</tipo>
+      </field>
+      
+      <field id="stkunidad_compra_id" _local="true" deshabilitado="true">
+        <label modpos="nobr" >U.Compra</label>
+        <help>Unidad de Compra</help>
+        <helper type="combo" id="GEN_UNIDADES" empty="true">
+          <field id="id_unidad"></field>
+          <field id="abreviacion_unidad"></field>
+        </helper>
+        <tipo>integer</tipo>
+      </field>
+      
+      <field id="stkdeposito_id" local="true">
+        <label modpos="nobr">Deposito</label>
+        <help>Lugar de Entrega/Descarga</help>
+        <helper type="combo"  xml="stkdepositos_crud.xml" dir="/stock/man/" ></helper>
+      </field>
+      
+      <field id="stkconcepto_id" local="true" required="true">
+        <label modpos="nobr">Concepto</label>
+        <helper type="combo" id="STK_CONCEPTOS" empty="true">
+            <field id="id_stkconcepto" />
+            <field id="nombre_concepto" />
+            <field id="tipo_concepto">
+                <valor>-1</valor>
+            </field>
+        </helper>
+      </field>
+      
+      <field id="ivaregimen_id" local="true" noshow="true">
+        <actualiza>
+          <field id="alicuota" destino="iva_regimen_id" />
+        </actualiza>
+      </field>
+   
+      <field id="separador2" local="true" deshabilitado="true" colstyle="display:none;"/>
+
+      <field id="acepta" local="true" noshow="true">
+        <valor>1</valor>
+      </field>
+   
+  </fieldGroup>
+   
+   <fieldGroup noshow="true" local="true">
+      <if>return (strpos($_SESSION['properties']['modulos'],'contabilidad') !== false);</if>
+
+        <field id="cuenta_haber_id" local="true" noshow="true">
+          <detalle>cuenta_haber_id</detalle>
+        </field>
+ 
+        <field id="cuenta_percepcion_iva_id" local="true" noshow="true">
+          <detalle>cuenta_percepcion_iva_id</detalle>
+        </field>
+
+        <field id="cuenta_debe_art_id" local="true" noshow="true"></field>
+       
+        <field id="cuenta_prov_debe" local="true" noshow="true">
+            <parametro id="cuentas_habilitadas_qry.xml"  retorna="id_cuenta">
+            <field id="id_cuenta">
+              <condicion operador="=">
+                (SELECT GEN_SUBSISTEMAS.cuenta_debe_id from GEN_SUBSISTEMAS where id_subsistema = '01')
+              </condicion>
+            </field>
+          </parametro>
+        </field>
+      
+        <field id="cuenta_debe_id" local="true" noshow="true">
+          <if exp="'cuenta_debe_art_id' != ''">
+            <true>'cuenta_debe_art_id'</true>
+            <false>'cuenta_prov_debe'</false>
+          </if>
+          <detalle>cuenta_debe_id</detalle>
+        </field>
+      
+        <field id="cuenta_debe_doh" local="true" noshow="true">
+          <if exp="true">
+            <true>'0'</true>
+            <false>'0'</false>
+          </if>
+        </field>
+      
+        <field id="cuenta_haber_doh" local="true" noshow="true">
+          <if exp="true">
+            <true>'1'</true>
+            <false>'1'</false>
+          </if>
+        </field>
+
+    </fieldGroup>
+  
+  </table>
+</form>
+</histrix>

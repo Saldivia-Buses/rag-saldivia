@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!-- Autor: Lmm
+Mod: Fede Molinero
+Fecha: 12/09/16 -->
+
+<histrix tipo="abm" imprime="false">
+    <title>Mantenimiento</title>
+    <obs></obs>
+    <form>
+        <table id="MANT_PLAN" label="Plan de mantenimiento" >
+
+        <validation>
+            <condition><![CDATA[fecha_accion == 0]]></condition>
+            <message>La fecha no es correcta. Intente recargando el programa</message>
+        </validation>
+
+
+        <validation>
+            <condition><![CDATA[accion_id == 0]]></condition>
+            <message>Debe seleccionar una accion para el evento</message>
+        </validation>
+
+        <validation>
+            <condition><![CDATA[observaciones == '']]></condition>
+            <message>Ingrese una descripcion del plan</message>
+        </validation>
+
+
+            <field id="id_plan" autoinc="true" noshow="true" />
+
+            <field id="equipo_id" noshow="true" valauto="true"></field>
+            
+            <field id="login" noshow="true" valauto="true">
+                <label>Usuario </label>
+                <valor eval="true">$_SESSION['usuario']</valor>
+            </field>
+
+        
+    <fieldGroup colstyle="padding:2px 2px 2px 2px;text-align:center;" style="padding:2px 2px 2px 2px;" >
+
+            <field id="fecha_accion" deshabilitado="true" valauto="true">
+                <label>Fecha</label>
+                <tipo>date</tipo>
+                <valor>today</valor>
+            </field>
+
+            <field id="accion_id" >
+                <helper type="combo" id="MANT_ACCIONES" empty="true">
+                    <field id="id_accion" noshow="true" />
+                    <field id="nombre_accion" />
+                    <order>
+                        <field id="nombre_accion"/>
+                    </order>
+                </helper>
+                <label>Accion</label>
+                <size>50</size>
+            </field>
+
+            <field id="observaciones" colstyle="padding:2px 2px 2px 2px;text-align:left;" >
+                <label>Descripcion</label>
+                <size>200</size>
+            </field>
+            
+            <field id="rrule" noshow="true">
+                <label>Repetir</label>
+                <tipo>rrule</tipo>
+                <valor>''</valor>
+                <!-- <valor default="true">RRULE:FREQ=WEEKLY;BYDAY=TH</valor> -->
+            </field>
+
+         <field id="estado"  >
+                <label>Estado</label>
+                <valor>3</valor>
+                    <helper type="combo" id="MANTENIMIENTO_ESTADOS" empty="true">
+                        <field id="id_estado" />
+                        <field id="estado"/>
+                        <field id="tipo_estado" >
+                            <condicion operador="=">1</condicion>
+                        </field>
+                    </helper>
+                    <!-- <options>
+                       <option valor=""></option>
+                        <option valor="1">Vigente</option>
+                        <option valor="2">Cumplido</option>
+                    </options> -->
+            </field>
+
+    </fieldGroup>
+
+   
+
+
+        </table>
+      
+        <join tipo="left">
+			<table id="MANT_ACCIONES">
+			    <field id="id_accion" >
+					<condicion operador="=">accion_id</condicion>
+			    </field>
+        	</table>
+        </join>
+    </form>
+</histrix>	

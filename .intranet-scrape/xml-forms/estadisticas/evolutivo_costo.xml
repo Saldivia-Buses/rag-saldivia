@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>                                                                      
+<histrix tipo="chart" >
+    <title>COSTO</title>
+    <obs></obs>
+    <form >
+
+        <table id="GEN_CALENDAR" >
+            <title>GASTOS</title>
+		   <grafico id="Costos" >
+			   <ancho>400</ancho>
+			   <tipo>L</tipo>
+
+			   <etiquetas>mes</etiquetas>
+			   <serie>costo</serie>
+			   <title>Evolución de Costos</title>
+			   <subtitulo></subtitulo>
+		   </grafico>
+		    <filters>
+			    <field id="fecha">
+				    <label>Desde</label>
+				    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-6 month')) , 1, date("Y") -  1 ))</valor>
+				    <operador>&gt;=</operador>
+			    </field>
+			    <field id="fecha">
+                                    <label>Hasta</label>
+				    <valor eval="true">date('d/m/Y', strtotime('-1 second', strtotime(date('Y-m-01'))))</valor>
+				    <operador>&lt;=</operador>
+			    </field>
+			    <field id="nro" local="true">
+				    <operador>&lt;=</operador>
+				    <valor>3</valor>
+			    </field>
+
+		    </filters>
+            <field id="mes">
+                <expression>lpad(month(fecha), 2,'0')</expression>
+                <label>Mes</label>
+                <options>
+                    <option valor="01">Ene</option>
+                    <option valor="02">Feb</option>
+                    <option valor="03">Mar</option>
+                    <option valor="04">Abr</option>
+                    <option valor="05">May</option>
+                    <option valor="06">Jun</option>
+                    <option valor="07">Jul</option>
+                    <option valor="08">Ago</option>
+                    <option valor="09">Sep</option>
+                    <option valor="10">Oct</option>
+                    <option valor="11">Nov</option>
+                    <option valor="12">Dic</option>
+                </options>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="fecha" oculto="true">
+<!--               <condicion operador="&gt;="> DATE_FORMAT(date_sub(date(now()) , interval 1 year) ,'%Y-%m-01') and GEN_CALENDAR.fecha &lt;= now()</condicion> -->
+            </field>
+            <field id="year" _oculto="true">
+                <expression>year(fecha)</expression>
+            </field>
+<!--            
+            <field id="mindate" >
+                <expression>min(fecha)</expression>
+            </field>
+            
+            <field id="maxdate" >
+                <expression>LAST_DAY(fecha)</expression>
+            </field>
+    -->            
+
+	    <field id="nro" local="true" style="width:200px">
+		<helper id="NOTAENCA" type="combo">
+		    <field id="movnro" />
+		    <field id="movref__1" >
+			<expression>concat(movnro,' ', movref__1)</expression>
+		    </field>
+		    <field id="siscod" >
+			<condicion operador="=">'PR'</condicion>
+		    </field>
+		</helper>
+	    </field>
+            <field id="costo"  suma="true">
+                <label>Costo</label>
+         
+                <expression sql="true">select 
+ round(sum(ifnull( 
+( case when (select sum( round( (costo_automatico * cantidad) * (1 + recargo / 100) , 2)) from STKPIEZA where idPadre  = STKINSUM.artcod limit 1) != 0 then
+                   (select sum(round( (costo_automatico  * cantidad) * (1 + recargo / 100) , 2)) from STKPIEZA where idPadre  = STKINSUM.artcod limit 1)
+            else  ((select STK_COSTO_HIST.costo_hist from STK_COSTO_HIST where periodo_hist &lt;= '[__year__][__mes__]' and articulo_id = STKINSUM.artcod order by periodo_hist DESC limit 1) * STKINSUM.valcps / STKINSUM.valuso)   end) * movpes ,0)) , 2)
+		from VISTA_STK_COSTOS left join STKINSUM on STKINSUM.siscod = '01' and STKINSUM.artcod = VISTA_STK_COSTOS.artcod 
+			where VISTA_STK_COSTOS.siscod = 'PR' and VISTA_STK_COSTOS.movcod = 1 and VISTA_STK_COSTOS.movnro = [__nro__]
+    
+                </expression><!--
+	        <expresionNO sql="true" ><![CDATA[
+
+	    select round(
+	    (case when (select sum(round( (costo_automatico * cantidad) * (1 + recargo / 100) , 2)) from STKPIEZA where idPadre  = STKINSUM.artcod limit 1) != 0 
+	          then (select sum(round( (costo_automatico * cantidad) * (1 + recargo / 100) , 2)) from STKPIEZA where idPadre  = STKINSUM.artcod limit 1)
+    	 	  else (select ROUND(INSPR.artcos * valcps / valuso, 2) from STKINSPR as INSPR where INSPR.fecult= max(STKINSPR.fecult) and INSPR.artcod = STKINSPR.artcod and INSPR.siscod = STKINSPR.siscod limit 1) 
+    		  end)
+	    , 2)
+                from VISTA_STK_COSTOS 
+                left join STKINSUM on STKINSUM.siscod = '01' and STKINSUM.artcod = VISTA_STK_COSTOS.artcod 
+                left join STKINSPR on STKINSPR.siscod = '01' and STKINSPR.artcod = STKINSUM.artcod and STKINSPR.fecult <= '[__maxdate__]'
+                where VISTA_STK_COSTOS.siscod = 'PR' and VISTA_STK_COSTOS.movcod = 1 and VISTA_STK_COSTOS.movnro = 3 and VISTA_STK_COSTOS.ctacod != 51  group by STKINSUM.artcod
+    		]]></expresionNO>-->
+
+
+                <tipo>numeric</tipo>
+            </field>
+
+            <group>
+                <field id="year"></field> 
+                <field id="mes"></field>
+            </group>
+
+        </table>
+    </form>
+</histrix>

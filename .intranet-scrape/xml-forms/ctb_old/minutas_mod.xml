@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+	<title>Minutas</title>
+	<obs></obs>
+	<form  detalle="ctbregis_ingmod.xml">
+		<table id="CTBREGIS" label="Minutas">
+
+			<filters>
+
+				<field id="regfec">
+					<operador>&gt;=</operador>
+					<label>Desde</label>
+					<valor>today</valor>
+				</field>
+
+				<field id="desbalance" deshabilitado="false">
+					<label modpos="nobr">Desbalance</label>
+				</field>
+
+				<field id="regfec">
+					<operador>&lt;=</operador>
+					<label>Hasta</label>
+					<valor>today</valor>
+				</field>
+
+				<field id="idcos">
+					<label modpos="nobr">Centro de costos</label>
+				</field>
+
+			</filters>
+			
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+				<help> Cod sistema</help>
+				<detalle>siscod</detalle>
+			</field>
+
+			<field id="idcos" _tabla="CTB_DETALLES">
+				<!-- <expression having="false">CTB_DETALLES.ctbcentro_id</expression> -->
+				<label>Centro de costos</label>
+				<helper id="CTB_CENTROS"  type="combo" empty="true" >
+					<field id="id_ctbcentro" />
+					<field id="centro">
+						<expression>concat(referencia_centro,' ', nombre_centro)</expression>
+					</field> 
+				</helper><!-- 
+				<detalle>idcos</detalle> -->
+			</field>
+
+			<field id="regmin">
+				<label>Minuta </label>
+				<help>Numero de Asiento </help>
+				<detalle>regmin</detalle>
+			</field>
+
+			<field id="regfec" noshow="true">
+				<label>Fecha</label>
+				<help>Fecha del Asiento (Movimiento Contable) </help>
+				<detalle>regfec</detalle>
+			</field>
+
+			<field id="regref">
+				<label>Referencia</label>
+				<help>Referencia</help>
+			</field>
+			<!--  <field id="regnpv">
+			<label>Nro Puesto </label>
+			<help> </help>
+			</field>
+			<field id="regord">
+			<label>Orden en el Asiento  . </label>
+			<help> </help>
+			</field>
+			<field id="regsub">
+			<label>Subdiario </label>
+			<help> </help>
+			</field>
+			<field id="reguni">
+			<label>Unidades Fisicas     . </label>
+			<help>Unidades Fisicas. </help>
+			</field>
+			-->
+
+	      <field id="debe" suma="true" noZero="true">
+	        <expression>SUM(regimp * (case when regdoh = 1 then 1 else 0 end))</expression>
+	        <label>Debe</label>
+	        <help>Importe del Movimiento en el Debe</help>
+	      </field>
+	      
+	      <field id="haber" suma="true" noZero="true">
+	        <expression>SUM(regimp * (case when regdoh = 2 then 1 else 0 end))</expression>
+	        <label>Haber</label>
+	        <help>Importe del Movimiento en el Haber</help>
+	      </field>
+
+	      <field id="desbalance" noshow="true">
+	      	<expression>CASE WHEN SUM(regimp * (case when regdoh = 1 then 1 else 0 end)) != SUM(regimp * (case when regdoh = 2 then 1 else 0 end)) THEN 1 ELSE 2 END</expression>
+	      	<helper type="combo">
+	      		<option value="">Todas</option>
+	      		<option value="1">Con Desbalance</option>
+	      		<option value="2">Sin Desbalance</option>
+	      	</helper>
+	      </field>
+
+	      <field id="color" clasefila="true" local="true" noshow="true">
+	      	<if exp="'desbalance'=='1'">
+	      		<true>'resaltado'</true>
+	      		<false>''</false>
+	      	</if>
+	      </field>
+
+			<order>
+				<field id="regmin"></field>
+			</order>
+			<group>
+				<field id="regmin"></field>
+				<field id="regfec"></field>
+				<field id="regref"></field>
+			</group>
+			
+		</table>
+
+		<!-- <join tipo="left">
+            <table id="CTB_DETALLES">
+                <field id="ctbregis_id">
+                    <condicion operador="=">CTBREGIS.id_ctbregis</condicion>
+                </field>
+            </table>
+        </join> -->
+	</form>
+</histrix>

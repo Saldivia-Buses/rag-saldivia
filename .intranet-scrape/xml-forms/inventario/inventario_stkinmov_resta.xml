@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+    <title>MOVIMIENTOS</title>
+    <obs></obs>
+    <form >
+        <table id="STKINMOV" label="MOVS">
+            <field id="siscod"  >
+                <valor>'01'</valor>
+            </field>
+            <field id="artcod" id_temp="artcod"></field>
+            <field id="movfec" id_temp="fecha"></field>
+            <field id="movcod" id_temp="concepto"></field>
+            <field id="movnro" id_temp="nroInventario"></field>
+            <field id="movcant" id_temp="cero"></field>
+            <field id="movuso" id_temp="cero"></field>
+            <field id="movref" id_temp="ref"></field>
+            <field id="movalt" id_temp="fecha"></field>
+            <field id="tipuni" id_temp="unidad"></field>
+            <field id="artrub" id_temp="artrub"></field>
+<!--            <field id="movpen" id_temp=""></field> -->
+            <field id="movimp" id_temp="movimp"></field>
+            <field id="movcps" id_temp="movcps"></field>
+        </table>
+    </form>
+</histrix>

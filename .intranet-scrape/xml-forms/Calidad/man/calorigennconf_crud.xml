@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="abm-mini" borra="false">
+<title>Origenes de No Conformidad</title>
+<obs></obs>
+<eventos>
+    <event id="update">close</event>
+    <event id="delete">close</event>
+    <event id="insert">close</event>
+    <event id="update">reload</event>
+    <event id="delete">reload</event>
+    <event id="insert">reload</event>
+</eventos>
+<form>
+    <table id="CAL_ORIGEN_NCONF" >
+    <title>Estados</title>
+        <field id="id_origennconf" autoinc="true" _noshow="true" deshabilitado="true">
+            <label>Cod</label>
+            <help>Codigo</help>
+        </field>
+        
+        <field id="origen_nconf">
+            <label>Origen</label>
+            <help>Origen de la No conformidad</help>
+        </field>
+
+        <field id="activo">
+            <label>Activo</label>
+            <help>Activo Origen</help>
+            <options>
+                <option valor="1">Si</option>
+                <option valor="0">No</option>
+            </options>
+        </field>
+
+        <order>
+            <field id="origen_nconf"/>
+        </order>
+</table>
+</form>           
+</histrix>

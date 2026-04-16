@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" >
+    <title>fechas</title>
+    <obs />
+    <form>
+        <table id="REG_MOVIMIENTOS">
+            <field id="fecha_ultima">
+                <expresion>date_format( ifnull(max(fecha_movimiento),CURDATE()), '%d/%m/%Y')</expresion>
+            </field>
+            <field id="concepto_id"       oculto="true" />
+            <field id="letra_movimiento"  oculto="true" />
+            <field id="puesto_movimiento" oculto="true" />
+            <field id="subsistema_id"     oculto="true" />
+        </table>
+    </form>
+</histrix>

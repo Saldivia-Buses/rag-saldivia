@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="abm">
+       <title>GRUPOS DE DEMERITOS</title>
+        <obs></obs>
+               <form >
+                  <table id="GRUPODEM" label="GRUPOS DEMERITOS">
+                  <field id="grudem">
+                      <label>Codigo </label>
+                      <help>Codigo de grupo de Demerito</help>
+                  </field>
+                  <field id="grudes">
+                      <label>Grupo </label>
+                      <help>Descripcion del Grupo</help>
+                  </field>
+                  </table>
+               </form>
+        </histrix>

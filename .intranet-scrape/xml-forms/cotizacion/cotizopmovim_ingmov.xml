@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<histrix tipo="ing" dirxml="cotizacion">
+		<title>OPCIONES</title>
+		<obs></obs>
+		<form >
+			<table id="COTIZOPMOVIM"	>
+
+				<field id="idCotiz" id_cab="idCotiz"></field>
+				<field id="idSeccion" id_temp="idSeccion"></field>
+				<field id="descripcion" id_temp="descripcion"></field>				
+				
+			</table>
+		</form>
+	</histrix>

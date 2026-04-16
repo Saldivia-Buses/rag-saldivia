@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update">
+    <title>Modifica Fecha Registracion</title>
+    <obs></obs>
+    <form>
+        <table id="REG_MOVIMIENTOS">
+
+            <field id="id_regmovim"	id_temp="id_regmovim" esClave="true" />
+            <field id="reg_fecha"	id_temp="reg_fecha" />
+
+        </table>
+    </form>
+</histrix>

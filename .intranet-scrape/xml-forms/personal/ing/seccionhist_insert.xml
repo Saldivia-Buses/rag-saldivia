@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="update" evento="insert">
+       <title>UPDATE SECCION PERSONAL</title>
+        <obs></obs>
+               <form >
+					<table id="PERSONAL" label="PERSONAL">
+						<field id="IdPersona" id_temp="IdPersona" esclave="true">
+						</field>
+						<field id="id_seccion" id_temp="id_seccion">
+						</field>
+					</table>
+               </form>
+        </histrix>

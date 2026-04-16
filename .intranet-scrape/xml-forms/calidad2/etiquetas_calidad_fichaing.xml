@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="fichaing" borra="false" inserta="false" modifica="false">
+    <title>Etiquetas Calidad</title>
+    <obs></obs>
+    <form >
+        <table id="HTXMENU" >
+            <title>Etiquetas de Calidad</title>
+	    <movimientos>
+        	 <relacion id="etiquetas_calidad_imp.xml" /> 
+        	 <relacion id="etiquetas_calidad_imp_close.xml" /> 
+            </movimientos>
+	    <field id="cantidad" style="font-size:20px;">
+		<label>Cantidad a Imprimir</label>
+		<valor>1</valor>
+	    </field>
+        </table>
+    </form>
+</histrix>

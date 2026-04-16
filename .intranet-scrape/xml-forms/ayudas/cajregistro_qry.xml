@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+
+	Ayuda Registros de caja
+
+-->
+<histrix tipo="consulta">
+  <title>Registros</title>
+  <obs></obs>
+  <form>
+    <table id="CAJ_REGISTROS" label="Registros de Caja">
+
+		<field id="fecha_registro" esClave="true" tipoOrden="DESC" />
+
+		<field id="nombre_registro">
+			<expresion>date_format(CAJ_REGISTROS.fecha_registro,'%d/%m/%Y')</expresion>
+		</field>
+
+		<field id="cierre_caja" noshow="true">
+			<expresion>ifnull(cierre_caja,'0')</expresion>
+			<condicion operador="!=">'1'</condicion>
+		</field>
+
+		<field id="cajpuesto_id" noshow="true">
+			<condicion operador="=">-1</condicion>
+		</field>
+
+		<field id="cajregistro_id">
+			<expresion>id_cajregistro</expresion>
+			<detalle>cajregistro_id</detalle>
+		</field>
+
+		<order>
+			<field id="fecha_registro" />
+		</order>
+          
+    </table>
+    
+  </form>
+</histrix>

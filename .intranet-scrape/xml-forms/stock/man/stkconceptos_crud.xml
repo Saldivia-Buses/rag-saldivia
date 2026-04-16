@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CRUD
+Tarea: Tabla de Conceptos de Stock
+Autor: d!ego2k
+Fecha: 13/10/10
+*******************************************************************************
+-->
+    <histrix tipo="crud">
+	<title>Conceptos</title>
+	 <obs></obs>
+		<form>
+		    <table id="STK_CONCEPTOS" label="Conceptos">
+
+				<field id="id_stkconcepto" esClave="true" noshow="true" />
+
+      <fieldGroup>
+				
+				<field id="nombre_concepto" required="true">
+					<label>Nombre</label>
+				</field>
+
+				<field id="tipo_concepto" style="text-align:center;" required="true">
+					<helper type="combo">
+						<option value="0">Suma</option>
+						<option value="1">Resta</option>
+					</helper>
+					<label>Suma/Resta</label>
+				</field>
+
+				<field id="produccion_concepto" style="text-align:center;">
+					<label>Producción</label>
+					<tipo>check</tipo>
+				</field>
+				<field id="transferencia_concepto" style="text-align:center;">
+					<label>Transferencia</label>
+					<tipo>check</tipo>
+				</field>
+
+      </fieldGroup>
+      
+      <fieldGroup>
+        
+        <if> if (strpos($_SESSION['properties']['modulos'],'contabilidad') != false) return true; </if>
+				<field id="ctbcuenta_id">
+					<label>Cta.Ctble.</label>
+					<helper type="combo" xml="cuentas_habilitadas_qry.xml" dir="/ayudas" empty="true" />
+				</field>        
+
+      </fieldGroup>    
+		
+		    </table>
+		</form>
+    </histrix>	

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" inserta="false" modifica="false" imprime="false" limit="1">
+	<title>Elementos de seguridad</title>
+	<form>
+		<table id="PERSONAL" label="Secciones">
+
+			<field id="legajo" noshow="true" />
+
+			<field id="nombre" local="true" autocompletar="true">
+<!--
+				<helper type="external" id="PERSONAL">
+					<field id="IdPersona" noshow="true">
+						<detalle>IdPersona</detalle>
+					</field>
+					<field id="nombres">
+						<expression having="false">CONCAT(apellido,', ', PERSONAL.Nombre)</expression>
+					</field>
+					<field id="idPuesto" noshow="true">
+						<detalle>idPuesto</detalle>
+					</field>
+					<field id="fechaEgreso" noshow="true">
+						<condicion operador="=">'0000-00-00'</condicion>
+					</field>
+					<field id="opecod" noshow="true">
+						<detalle>opecod</detalle>
+					</field>
+				</helper>
+-->
+				<label>Nombre</label>
+				<tipo>varchar</tipo>
+				<size>60</size>
+			</field>
+
+			<field id="IdPersona" noshow="true">
+			</field>
+
+			<field id="idPuesto" noshow="true" />
+
+			<field id="opecod" noshow="true" />
+
+			<field id="movfec" local="true" noshow="true">
+				<valor>today</valor>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="movcod" noshow="true" local="true">
+				<helper type="parameter" id="SIS::01:stock_codigo_concepto_utilizacion">
+					<label>Codigo de Concepto Stock para Utilizacion de materiales</label>
+					<defaultValue>31</defaultValue>
+				</helper>
+			</field>
+
+			<field id="movref" local="true">
+				<label>Observaciones</label>
+				<size>70</size>
+			</field>
+
+			<field id="articulos" local="true" showObjTabla="true">
+				<label colspan="8">Artículos</label>
+				<helper type="object" xml="seguridad_articulos.xml" 
+				    
+				</helper>
+			</field>
+
+		</table>
+	</form>
+</histrix>

@@ -336,7 +336,7 @@ const CalendarYearDay = React.forwardRef<HTMLButtonElement, CalendarYearDayProps
 
     if (!isDisabled && !isBlocked && tooltip) {
       return (
-        <TooltipProvider delayDuration={200}>
+        <TooltipProvider delay={200}>
           <Tooltip>
             <TooltipTrigger>{buttonContent}</TooltipTrigger>
             <TooltipContent>

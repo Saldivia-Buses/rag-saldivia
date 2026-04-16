@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" borra="no" inserta="no" _imprime="false" preloadData="false">
+  <title>Stock Valorizado</title>
+  <obs/>
+  <form>
+    <table id="STK_MOVIMIENTOS" label="Stock Valorizado">
+
+      <field id="id_stkarticulo" tabla="STK_ARTICULOS" noshow="true">
+        <label>Codigo de Articulo</label>
+      </field>
+      
+      <field id="fecha_movimiento" noshow="true">
+        <label>Fecha</label>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="id_stkarticulo" tabla="STK_ARTICULOS" _noshow="true">
+        <label>Codigo de Articulo</label>
+        <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+          <field id="wstklista_id" local="true">
+            <valor>1</valor>
+          </field>
+        </helper>
+      </field>
+
+      <field id="codigo_barra" tabla="STK_ARTICULOS">
+        <label>Codigo de Barra</label>
+        <helper type="external" xml="stkarticulo_pos.xml" dir="/ayudas">
+          <field id="wstklista_id" local="true">
+            <valor>1</valor>
+          </field>
+        </helper>
+      </field>
+      
+      <field id="id_stkdeposito" tabla="STK_DEPOSITOS">
+        <label>Deposito</label>
+        <helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas/" empty="true" />
+      </field>
+  
+      <field id="stkfamilia_id" noshow="true" tabla="STK_ARTICULOS">
+        <label>Familia</label>
+        <helper type="combo" xml="stkfamilia_qry.xml" dir="/ayudas" empty="true"/>
+      </field>
+
+
+      <field id="stkrubro_id" tabla="STK_ARTICULOS" break="true" noshow="true" multiple="true">
+        
+        <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true"/> 
+      </field>
+    
+      <field id="nombre_rubro"    tabla="STK_RUBROS" >
+        <label>Rubro</label>
+      </field>
+
+
+      <field id="nombre_articulo" tabla="STK_ARTICULOS">
+        <label>Articulo</label>
+      </field>
+  
+      <field id="genmoneda_origen_id" empty="true" tabla="STK_ARTICULOS" noshow="true">
+        <label>MonedaOrigen</label>
+        <helper type="combo" xml="monedas_qry.xml" dir="/ayudas"/>
+      </field>
+      
+      <field id="moneda_id" local="true" noshow="true">
+        <helper type="combo" xml="monedas_qry.xml" dir="/ayudas"/>
+        <label>MonedaFiltro</label>
+      </field>
+      
+      <field id="x_costo" suma="true">
+        <label>Costo</label>
+        <expression>
+        (CASE 
+          WHEN STK_ARTICULOS.genmoneda_origen_id = [__moneda_id__] THEN ifnull(STK_ARTICULOS.precio_costo,0)
+        ELSE 
+          (CASE WHEN STK_ARTICULOS.genmoneda_origen_id = 1 THEN
+           ifnull(STK_ARTICULOS.precio_costo,0) / GEN_FN_COTIZACION([__moneda_id__],current_date())
+          ELSE
+            GEN_FN_COTIZACION(STK_ARTICULOS.genmoneda_origen_id,current_date()) * ifnull(STK_ARTICULOS.precio_costo,0)
+          END)
+        END)
+        </expression>
+        <tipo>numeric</tipo>
+      </field>
+
+    <field id="cantidad" suma="true">
+        <label>Cantidad</label>
+        <expression>sum(case when STK_CONCEPTOS.tipo_concepto = 0 then 1 else -1 end * STK_MOVIMIENTOS.cantidad)</expression>
+        <tipo>integer</tipo>
+        <format>%d</format>
+       <condicion operador="&gt;">0</condicion>
+    </field>
+
+    <field id="valorizado" suma="true" local="true">
+        <label>Stock Valorizado</label>
+        <if exp="true">
+            <true>x_costo * cantidad</true>
+            <false>0</false>
+        </if>
+        <tipo>numeric</tipo>
+    </field>
+
+      <filters>
+        <field id="fecha_movimiento">
+          <label>A Fecha</label>
+          <valor>today</valor>
+          <tipo>date</tipo>
+          <operador>&lt;=</operador>
+        </field>
+        <field id="stkfamilia_id">
+          <operador>=</operador>
+          <label modpos="nobr">Familia</label>
+        </field>
+        <field id="stkrubro_id">
+          <operador>=</operador>
+          <label modpos="nobr">Rubro</label>
+        </field>
+        <field id="id_stkarticulo" tabla="STK_ARTICULOS" >
+          <label>Codigo de Articulo</label>
+          <operador>=</operador>
+        </field>
+        <field id="codigo_barra" tabla="STK_ARTICULOS">
+          <operador>=</operador>
+          <label modpos="nobr">Codigo de barra</label>
+        </field>
+        <field id="moneda_id">
+          <operador>=</operador>
+          <label>Moneda</label>
+        </field>
+        <field id="id_stkdeposito">
+          <operador>=</operador>
+          <label modpos="nobr">Deposito</label>
+        </field>
+      </filters>
+
+      <group>
+        <field id="stkarticulo_id" tabla="STK_MOVIMIENTOS" />
+      </group>
+      <order>
+        <field id="nombre_rubro"    tabla="STK_RUBROS" />
+        <field id="nombre_articulo" tabla="STK_ARTICULOS" /> 
+      </order>
+    </table>
+
+    <join>
+      <table id="STK_CONCEPTOS">
+        <field id="id_stkconcepto">
+          <condicion operador="=">STK_MOVIMIENTOS.stkconcepto_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join>
+      <table id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">STK_MOVIMIENTOS.stkarticulo_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join>
+      <table id="STK_RUBROS">
+        <field id="id_stkrubro">
+          <condicion operador="=">STK_ARTICULOS.stkrubro_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join>
+      <table id="STK_DEPOSITOS">
+        <field id="id_stkdeposito">
+          <condicion operador="=">STK_MOVIMIENTOS.stkdeposito_id</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

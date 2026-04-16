@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" paginar="100">
+    <title>Cuentas Contables</title>
+    <obs/>
+    <form>
+        <table id="REG_CUENTA_IMPUTACION" label="Cuentas Contables">
+
+            <field id="id_regcuentaimputacion" noshow="true" />
+
+            <field id="regcuenta_id" noshow="true" valauto="true" />
+
+            <field id="cuenta_id" required="true">
+                <label modpos="nobr">Cuenta</label>
+                <helper type="external" xml="cuentas_habilitadas_qry.xml" dir="/ayudas/" empty="true">
+                    <field id="nombre_ctbcuenta" oculto="true">
+                        <expression>nombre_cuenta</expression>
+                        <detalle>nombre_ctbcuenta</detalle>
+                    </field>
+                </helper>
+            </field>
+
+            <field id="nombre_ctbcuenta" local="true" sincelda="true" deshabilitado="true">
+                <label modpos="nobr">Nombre</label>
+                <expression>CTB_CUENTAS.nombre_cuenta</expression>
+                <size>30</size>
+            </field>
+
+            <field id="ctbcentro_id">
+                <label>Centro</label>
+                <helper type="combo" id="CTB_CENTROS" empty="true">
+                    <field id="id_ctbcentro" />
+                    <field id="nombre_centro" />
+                </helper>
+            </field>
+
+            <field id="porcentaje" required="true">
+                <label>Porcentaje</label>
+                <tipo>numeric</tipo>
+                <valor>100</valor>
+            </field>
+
+            <field id="doh" required="true">
+                <label>Imputa</label>
+                <helper type="combo">
+                    <option value="0">Debe</option>
+                    <option value="1">Haber</option>
+                </helper>
+                <tipo>radio</tipo>
+            </field>
+
+        </table>
+
+        <join>
+            <table id="CTB_CUENTAS">
+                <field id="id_cuenta">
+                    <condicion operador="=">REG_CUENTA_IMPUTACION.cuenta_id</condicion>
+                </field>
+                <field id="ejercicio_id">
+                    <condicion operador="=">(select id_ejercicio from CTB_EJERCICIOS where activo = 1 ORDER BY id_ejercicio DESC LIMIT 1)</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="REG_CUENTA">
+                <field id="id_regcuenta">
+                    <condicion operador="=">REG_CUENTA_IMPUTACION.regcuenta_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

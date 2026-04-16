@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <abm tipo="abm">
+       <titulo>Pedidos Internos</titulo>
+        <obs></obs>
+               <consulta>
+                  <tabla id="PEDIDOINT" label="Pedidos Internos">
+
+<!--                  <campo id="operador" id_cab="user_id">
+                  </campo>
+		  -->
+	  
+                  <campo id="usuario" id_cab="userid">
+                  </campo>
+                  <campo id="tipocomp" id_temp="tipocomp">
+		      <valor>1</valor>
+                  </campo>
+                  <campo id="fechaemi" id_cab="fecha">
+		      <valor>today</valor>
+                  </campo>
+                  <campo id="puesto" id_cab="puesto">
+		      <valor>0</valor>
+                  </campo>
+                  <campo id="nrocom" id_cab="movnro">
+                  </campo>		  
+                  <campo id="renglon" id_temp="_ORDEN">
+                  </campo>
+	  
+                  <campo id="artcod" id_temp="artcod">
+                  </campo>
+                  <campo id="cant" id_temp="cant">
+                  </campo>
+                  <campo id="unimed" id_temp="unimed">
+                  </campo>
+                  <campo id="fecreq" id_temp="fecreq">
+                  </campo>
+                  <campo id="nrofab" id_temp="nrofab">
+		  </campo>
+                  <campo id="estado">
+		      <valor>0</valor>
+                  </campo>
+                  <campo id="movref" id_temp="movref">
+                  </campo>
+                  <campo id="codprv" id_temp="codprv">
+                  </campo>
+                  <campo id="movuso" id_temp="cant">
+                  </campo>
+                  <campo id="penuso" id_temp="cant">
+                  </campo>
+
+<!--          PEDIDOINT.movcps   = WINSUMOS.cancps
+              PEDIDOINT.pencps   = WINSUMOS.cancps
+              PEDIDOINT.unicps   = WINSUMOS.codcps
+              PEDIDOINT.artuni   = WINSUMOS.coduso.
+-->											 
+											 		  
+
+                  </tabla>
+               </consulta>
+        </abm>

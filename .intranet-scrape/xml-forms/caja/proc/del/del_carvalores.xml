@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="delete" >
+	<title>Eliminacion de Valores de Tereceros</title>
+	<obs></obs>
+	<form>
+		<table id="CAR_VALORES" idCampoCond="debeborrar">
+			<field id="id_carvalor"  id_temp="carvalor_id"   esClave="true"  />
+		</table>
+	</form>
+</histrix>  
+
+

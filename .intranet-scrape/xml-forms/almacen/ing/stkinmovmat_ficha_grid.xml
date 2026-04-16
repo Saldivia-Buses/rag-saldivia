@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" subtipo="vertical" llenoTemporal="false" imprime="false" path="fotos/articulos" autoing="false" log="true" inserta="true" modifica="true" procesa="false">
+    <title>ENTRADA SALIDA STOCK POR CODIGO</title>
+    <obs></obs>
+    <form >
+        <table id="STKINMOV" label="SALIDA DE MATERIALES">
+
+            <importar xml="piezas_select_cons.xml"  label="Importar Piezas" titulo="Seleccionar Piezas"></importar>
+            <importar xml="prod_proc_art_cons.xml" label="Importar Proc Art" titulo="Seleccionar Procesos Art" dir="/produccion/linea/" >
+                <field id="homologacion_id">homologacion_id</field>
+            </importar>
+
+            <movimientos>
+                <relacion id="stkinmovmat_ingmov_grabar_grilla.xml"></relacion>
+            </movimientos>
+
+            <field id="siscod" oculto="true">
+                <label>siscod</label>
+                <parametro id="fsmparam_paralf.xml" retorna="paralf">
+                    <field id="parcla">
+                        <condicion operador="=">'sisstk'</condicion>
+                    </field>
+                </parametro>
+            </field>
+
+            <field id="id_herramienta" local="true">
+                <label>Código de Barras</label>
+                <tipo>varchar</tipo>
+                <ayuda_ex id="HERRAMIENTAS" xml="HLPherramientas_bar.xml" dir="/help_local">
+                    <field id="id_herramienta">
+                        <label>Cod.</label>
+                    </field>
+                    <field id="artcod">
+                        <label>insumo</label>
+                        <detalle>artcod</detalle>
+                    </field>
+                    <clave>id_herramienta</clave>
+                    <descripcion>nomherr</descripcion>
+                </ayuda_ex>
+                <help>Ingrese el código de barras para materiales trazables</help>
+            </field>
+
+            <field id="nrocha_recibir" local="true" noshow="true">
+    		    <if exp="true">
+        			<true>nrocha</true>
+        			<false></false>
+    		    </if>
+    		</field>
+            
+            <field id="artcod">
+                <label>Código Artículo</label>
+                <help>Código de Artículo</help>
+                <ayuda_ex id="STKINSUM" xml="HLPstkinsum_old.xml" dir="/help_local">
+                    <field id="artcod">
+                        <label>Cod.</label>
+                        <detalle>artcod</detalle>
+                    </field>
+                    <field id="artdes">
+                        <label>Insumo</label>
+                        <detalle>artdes</detalle>
+                    </field>
+                    <field id="unicps" oculto="true">
+                        <detalle>unicps</detalle>
+                    </field>
+                    <field id="artuni" oculto="true">
+                        <detalle>artuni</detalle>
+                    </field>
+                    <field id="artcos" oculto="true">
+                        <detalle>artcos</detalle>
+                    </field>
+                    <field id="artrub" oculto="true">
+                        <detalle>artrub</detalle>
+                    </field>
+                    <field id="unidef" oculto="true">
+                        <detalle>unidef</detalle>
+                    </field>
+                    <field id="valcps" oculto="true">
+                        <detalle>valcps</detalle>
+                    </field>
+                    <field id="valuso" oculto="true">
+                        <detalle>valuso</detalle>
+                    </field>
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">'01'</condicion>
+                    </field>
+                    <field id="trazable" oculto="true">
+                        <detalle>trazable</detalle>
+                    </field>
+                    <clave>artcod</clave>
+                    <descripcion>artdes</descripcion>
+                </ayuda_ex>
+                <actualiza>
+                    <field id="depcod" destino="stkarticulo_id" />
+                </actualiza>
+                <size>10</size>
+            </field>
+
+            <field id="artdes" deshabilitado="true" _autoing="true" modpos="nobr">
+                <label>Descripción</label>
+                <tipo>varchar</tipo>
+                <size>60</size>
+            </field>
+
+            <field id="depcod" _local="true"  required="true" colspan="4" colstyle="display:none;">
+                <label>Depósito Origen</label>
+                <helper xml="deposito_articulo_qry.xml" dir="/stock_local/qry" type="combo" _empty="true">
+                    <field id="nombre_depositos">
+
+                        <!-- <expression><![CDATA[case when stklocacion_fija_id = id_stklocacion then
+                            concat( ifnull(nombre_deposito, ''),' ' ,ifnull(codigo_locacion,' '), ' (Fija) ','  (',round(sum((case when tipo_concepto = 0  then  1 else -1 end) * ifnull(cantidad,0)), 2),')') end]]></expression> -->
+
+                            <expression>case when stklocacion_fija_id = id_stklocacion then
+                            concat( ifnull(nombre_deposito, ''),' ' ,ifnull(codigo_locacion,' '), ' (Fija) ','  (',round(sum((case when tipo_concepto = 0  then  1 else -1 end) * ifnull(cantidad,0)), 2),')') end</expression>
+
+                            <condicion operador="is not">NULL</condicion>
+                    </field>
+                    <field id="cantidad_stock" >
+                        <expression _having="false" >sum((case when tipo_concepto = 0  then  1 else -1 end) * ifnull(cantidad,0))</expression>
+                        <condicion operador="!=">0</condicion>
+                        <detalle>cantidad_stock</detalle>
+                    </field>
+        		    <field id="recepcion" tabla="STK_DEPOSITOS">
+        			<expression>ifnull(recepcion, 0)</expression>
+                                <condicion operador="!=">1</condicion>
+        		    </field>
+                </helper>
+            </field>
+
+    	    <field id="cantidad_stock" deshabilitado="true" modpos="nobr">
+    		  <label>Máximo disponible</label>
+    	    </field>
+
+            <field id="stkdeposito_id"  Formstyle="display:none;">
+                <label>Depósito</label><!-- 
+                <detalle>stkdeposito_id</detalle> -->
+                <helper xml="stkdepositos_qry.xml" dir="/stock/man/" type="combo" empty="true" />
+    	    </field>
+
+            <field id="stklocacion_id"  Formstyle="display:none;">
+        		<label>Locación</label>
+                <helper id="STK_LOCACION"  type="combo" empty="true" >
+        		    <field id="id_stklocacion" />
+        		    <field id="codigo_locacion" />
+        		</helper><!-- 
+                <detalle>stklocacion_id</detalle> -->
+    	    </field>
+
+            <field id="trazable" deshabilitado="true" noshow="true">
+                <label>trazable</label>
+            </field>
+
+            <field id="resaltatrazable" local="true" clasefila="true" noshow="true">
+                <if exp="trazable == 1">
+                    <true>'resaltadoVioleta'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="movtemp" local="true">
+                <label>Cantidad</label>
+                <help>Cantidad</help>
+                <valor>1</valor>
+                <jseval actxml="false">movtemp > 0</jseval>
+                <jseval campodestino="movcps">(valuso == 1)?(movtemp * valcps):(movtemp / valuso)</jseval>
+                <jseval campodestino="valida_cantidad">( cantidad_stock + 0 ) &lt; movtemp ? 1 : 0</jseval>
+            </field>
+
+            <field id="movcant" local="true" noshow="true">
+                <if exp="true">
+                    <true>movtemp</true>
+                    <false>0</false>
+                </if>
+                <size>3</size>
+                <tipo>decimal</tipo>
+            </field>
+
+            <field id="artuni" deshabilitado="true" local="true" modpos="nobr">
+                <label>Unidad uso</label>
+                <tabla_ex id="FSMUNIDS">
+                    <field id="unicod" clave="true"></field>
+                    <field id="uninom"></field>
+                </tabla_ex>
+                <tipo>integer</tipo>
+            </field>
+
+            <field id="movcps" local="true" modpos="nobr" deshabilitado="true">
+                <label>Compra</label>
+                <if exp="(unidef + 0) == 1 ">
+                    <true>movcant / valuso * valcps</true>
+                    <false>movcant * valcps / valuso</false>
+                </if>
+<!--
+                <jseval campodestino="movtemp">(valcps == 1)?(movcps * valuso):(movcps / valcps)</jseval>
+-->
+            </field>
+
+            <field id="unicps" local="true" deshabilitado="true" modpos="nobr">
+                <label>Unidad Compra</label>
+                <help>Unidad de compra</help>
+                <tabla_ex id="FSMUNIDS">
+                    <field id="unicod" clave="true"></field>
+                    <field id="uninom"></field>
+                </tabla_ex>
+                <tipo>integer</tipo>
+            </field>
+
+            <field id="unidef" deshabilitado="true" local="true" noshow="true"/>
+
+            <field id="valcps" deshabilitado="true" local="true" noshow="true" >
+                <tipo>numeric</tipo>
+                <valor>1</valor>
+            </field>
+
+            <field id="valuso" deshabilitado="true" local="true" noshow="true">
+                <tipo>numeric</tipo>
+                <valor>1</valor>
+            </field>
+
+            <field id="_coche" noshow="true">
+                <expression sql="true">
+                    select nrocha from STKINMOV as STK left join STKCONCE on STKCONCE.movcod = STK.movcod where STKCONCE.contip = 2 and STK.artcod = '[__artcod__]' and STK.nrocha = ('[__nrocha_recibir__]' + 0) and STK.siscod='01' limit 1
+                </expression>
+                <tipo>integer</tipo>
+                <label>coche</label>
+            </field>
+
+            <field id="previos" noshow="true">
+                <label>P</label>
+                <expression sql="true">
+                    select round(sum(movcant), 2) from STKINMOV as STK  left join STKCONCE on STKCONCE.movcod = STK.movcod where STKCONCE.contip = 2 and STK.artcod = '[__artcod__]' and STK.nrocha = ('[__nrocha_recibir__]' + 0) and STK.siscod='01'
+                </expression>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="leyenda" local="true" linkint="insumos_x_coche_cons.xml" deshabilitado="true" Formstyle="display:none;">
+                <if exp="previos + 0 > 0">
+                    <true>'Se Retiraron: previos'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+                <paring destino="nrocha">_coche</paring>
+                <paring destino="artcod">artcod</paring>
+            </field>
+
+            <field id="fotopath" local="true" noshow="true">
+                <if exp="true">
+                    <true>'artcod/'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="foto" path="fotopath" download="true" deshabilitado="true" Formstyle="display:none;">
+                <expression sql="true">select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = '[__artcod__]' order by revision desc limit 1</expression>
+                <label>Imagen</label>
+                <tipo >file</tipo>
+                <size>10</size>
+            </field>
+
+            <field id="alerta" local="true" clasefila="true" noshow="true">
+                <if exp="previos + 0 > 0">
+                    <true>'resaltado'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="artcos" deshabilitado="true" local="true" noshow="true"/>
+
+            <field id="artrub" deshabilitado="true" local="true" noshow="true"/>
+
+            <field id="movref" deshabilitado="true" local="true" noshow="true">
+                <valor eval="true">date('H:i:s').' Salida por almacén'</valor>
+            </field>
+
+            <field id="observ" local="true" style="color:red;" deshabilitado="true" Formstyle="display:none;">
+                <label>Observ</label>
+                <if exp="cantidad_stock &lt; movtemp">
+                    <true>'NO HAY STOCK DISPONIBLE'</true>
+                    <false>''</false>
+                </if>
+            </field>
+
+            <field id="control" local="true" suma="true" _noshow="true" style="display:none;">
+                <if exp="cantidad_stock &lt; movtemp">
+                    <true>1</true>
+                    <false>0</false>
+                </if>
+                <jseval campodestino="valida_cantidad" total="true">control</jseval>
+            </field>
+
+            <field id="grabar" local="true" noshow="true">
+                <label>Grabar</label>
+                <if exp="cantidad_stock &gt;= movtemp">
+                    <true>'1'</true>
+                    <false>'0'</false>
+                </if>
+            </field>
+
+        </table>
+    </form>
+</histrix>

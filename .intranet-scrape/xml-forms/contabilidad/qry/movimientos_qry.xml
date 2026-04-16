@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+  <title>Movimientos</title>
+  <obs></obs>
+  <form detalle="detalles_grid.xml" inline="true">
+    <table id="CTB_MOVIMIENTOS" label="movimientos">
+
+ <filters>
+        <field id="ejercicio_id">
+          <label>Ejercicio</label>
+          <help>Ejercicio contable</help>
+          <operador>=</operador>
+        </field>
+
+        <field id="concepto_id">
+          <operador>=</operador>
+          <label modpos="nobr">Tipo de concepto</label>
+          <help>Concepto elegido</help>
+        </field>
+
+        <field id="fecha_mov1" deshabilitado="false">
+          <valor>today</valor>
+          <operador>&gt;=</operador>
+          <label>Desde Fecha</label>
+          <help>Fecha movimiento</help>
+        </field>
+
+        <field id="fecha_mov2" deshabilitado="false">
+          <valor>today</valor>
+          <operador>&lt;=</operador>
+          <label modpos="nobr">hasta Fecha</label>
+          <help>Fecha movimiento</help>
+        </field>
+
+        <field id="base" >
+          <label>Base</label>
+          <help>Base de origen</help>
+          <operador>=</operador>
+        </field>
+
+ <field id="descripcion_centro">
+        <label>Centro de costos</label>
+        <help>Nombre del centro</help>
+        <size>30</size>
+        <operador>like</operador>
+      </field>........
+        <field id="nro_referencia" deshabilitado="false">
+          <valor></valor>
+          <operador>=</operador>
+          <label>Nro minuta</label>
+          <help>Ingrese desde que minuta buscar</help>
+        </field>
+</filters>
+    
+      <field id="base" >
+        <label>Base</label>
+    <helper id="PRY_SOCIEDADES" type="combo" empty="true">
+    
+    <field id="base" />
+    
+    <field id="nom" >
+        <expression>base</expression>
+    </field>
+        </helper>
+        <help>Base de origen</help>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="nro_minuta" noshow="true">
+        <label>Numero minuta</label>
+        <help>Numero de la minuta</help>
+        <size>4</size>
+      </field>
+
+      <field id="descripcion_centro" tabla="CTB_CENTROS_COSTOS" noshow="true">
+        <label>Centro de costos</label>
+        <help>Nombre del centro</help>
+        <size>30</size>
+      </field>
+
+     <field id="id_movimiento" noshow="true" >
+        <label>Codigo</label>
+        <help>Código de movimiento</help>
+        <detalle>movimiento_id</detalle>
+      </field>
+
+      <field id="concepto_id" noshow="true" >
+        <tabla_ex xml="ctbconceptos_crud.xml" vacio="true" dir="/contabilidad/man/">
+        </tabla_ex>
+        <label>Concepto</label>
+        <help>Código de concepto</help>
+        <detalle>concepto_id</detalle>
+      </field>
+
+      <field id="fecha_movimiento">
+        <label>Fecha</label>
+        <help>Fecha movimiento</help>
+      </field>
+
+      <field id="referencia">
+        <label>referencia</label>
+        <help>Referencia del movimiento</help>
+      </field>
+
+
+      <field id="debe_ori" suma="true" noZero="true">
+            <expression>sum(case when doh = 0 then importe_original end)</expression>
+            <label>Debe</label>
+            <tipo>custom_numeric</tipo>
+      </field>
+
+        <field id="haber_ori" suma="true" noZero="true">
+              <expression>sum(case when doh = 1 then importe_original end)</expression>
+              <label>Haber</label>
+              <tipo>custom_numeric</tipo>
+        </field>
+
+        <field id="tipo_cotizacion" local="true" noshow="true"></field>
+
+        <field id="genmoneda_id" >
+            <label>Mon</label>
+            <expression>(case when importe_original = importe_base then PRY_SOCIEDADES.moneda_id else 
+             CTB_DETALLES.genmoneda_id end)</expression>
+            <helper id="GEN_MONEDAS" type="combo">
+              <field id="id_moneda"/>
+              <field id="abreviatura_moneda"/>
+            </helper>
+        </field>
+
+
+<!--
+      <field id="diferencia" noZero="true">.
+        <expression>sum( round(importe, 2) * (case when doh = 1 then 1 else -1 end))</expression>
+        <label>Diferencia</label>
+        <tipo>numeric</tipo>.
+      </field>
+      <field id="resaltado" clasefila="true" noshow="true">.
+        <label>res</label>
+        <expression>case when abs(sum( round(importe, 2) * (case when doh = 1 then 1 else -1 end))) != 0 then 'resaltado' else '' end</expression>
+      </field>
+      -->
+
+    <field id="cotiz"  _noZero="true" style="color:blue;" noshow="true">
+      <expression>(select concat('Cotización ' ,round(cotizacion_genmonedahis,2)) from GEN_MONEDA_HIS where moneda_id =  CTB_DETALLES.genmoneda_id and tipo_cotizacion = (case when integrado = 0 then 2 else 1 end)
+       and fecha_genmonedahis &gt;= fecha_movimiento order by fecha_genmonedahis ASC limit 1)</expression>
+    </field>
+ 
+    <field id="convertido" suma="true" noZero="true" style="color:green;">
+    <attribute id="tooltip">cotiz</attribute>
+    <expression>sum(case when doh = 0 then importeDolares(importe_original, importe_base, importe, fecha_movimiento, CTB_DETALLES.genmoneda_id,
+     PRY_SOCIEDADES.moneda_id, integrado) else 0 end)</expression>
+    <label>Debe U$S</label>
+    <tipo>enclosed_numeric</tipo>
+    </field>
+
+    <field id="conv2" suma="true" noZero="true" style="color:green;">
+        <attribute id="tooltip">cotiz</attribute>
+        <expression>sum(case when doh = 1 then importeDolares(importe_original, importe_base, importe, fecha_movimiento, CTB_DETALLES.genmoneda_id,
+         PRY_SOCIEDADES.moneda_id, integrado) else 0 end)</expression>
+        <label>Haber U$S</label>
+        <tipo>enclosed_numeric</tipo>
+    </field>
+
+
+
+      <field id="ejercicio_id" noshow="true">
+        <tabla_ex xml="ctbejercicios_crud.xml"  dir="/contabilidad/man/">
+          <field id="activo" tipoOrden="DESC"/>
+      <field id="fecha_mov1">
+      <expression>DATE_FORMAT(comienza, '%d/%m/%Y')</expression>
+
+      <tipo>date</tipo>
+      <detalle>ejercicio_id</detalle>
+      </field>
+      <field id="fecha_mov2">
+      <expression>DATE_FORMAT(finaliza, '%d/%m/%Y')</expression>
+
+      <tipo>date</tipo>
+
+            </field>
+            <field id="finaliza">
+            </field>
+        </tabla_ex>
+        <label>Ejercicio</label>
+        <help>Ejercicio contable</help>
+        <detalle>ejercicio_id</detalle>
+      </field>
+
+      <field id="nombre_concepto" tabla="CTB_CONCEPTOS" colstyle="Display:none;" print="false">
+        <label>Concepto</label>
+        <help>Codigo de concepto</help>
+      </field>
+        
+            <field id="nro_referencia" >
+              <attribute id="linkdes">nro_referencia</attribute>
+              <helper xml="detalles_qry.xml" dir="/pry/reportes/" type="link">
+                <parameter source="id_movimiento" target="movimiento_id"/>
+                <parameter source="ejercicio_id" target="ejercicio_id"/>
+                <parameter source="base" target="base"/>
+                
+              </helper>
+              <label>Nro minuta</label>
+              <help>Numero de la minuta</help>
+            </field>
+
+
+            <field id="fecha_mov1" noshow="true">
+    <expression having="false">fecha_movimiento</expression>
+    <help>Fecha movimiento</help>
+    <tipo>date</tipo>
+
+  </field>
+  <field id="fecha_mov2" noshow="true">
+    <expression having="false">fecha_movimiento</expression>
+    <help>Fecha movimiento</help>
+    <tipo>date</tipo>
+  </field>
+    
+      <order>
+        <field id="fecha_movimiento"></field>
+      </order>
+    
+      <group>
+        <field id="id_movimiento"></field>
+      </group>
+    </table>
+    <join tipo="inner">
+      <table id="CTB_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">concepto_id</condicion>
+        </field>
+        <field id="integrado">
+          <condicion operador="=">1</condicion>
+        </field>
+
+      
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="CTB_DETALLES">
+        <field id="movimiento_id">
+          <condicion operador="=">id_movimiento</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="CTB_CENTROS_COSTOS">
+        <field id="id_centrocosto">
+          <condicion operador="=">centrocosto_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="PRY_SOCIEDADES">
+
+        <field id="base">
+          <condicion operador="=">CTB_MOVIMIENTOS.base</condicion>
+        </field>
+      </table>
+    </join>
+     
+    <join tipo="left">
+      <table id="GEN_MONEDAS">
+          <field id="id_moneda">
+            <condicion operador="=">(case when importe_original = importe_base then PRY_SOCIEDADES.moneda_id else genmoneda_id end)</condicion>
+          </field>
+      </table>
+    </join>
+
+
+  </form>
+</histrix>

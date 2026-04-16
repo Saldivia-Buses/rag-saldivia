@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" limit="400">
+  <title>GPS PACKAGES</title>
+  <obs></obs>
+  <form>
+    <table id="GPS_TACOEXTEND" label="Paquetes">
+      <field id="id_package" >
+        <label>id</label>
+      </field> 
+       
+      <field id="gps_date" >
+        <label>----Fecha----</label>
+        <tipo>date</tipo>
+       <condicion operador="=">date(now())</condicion> 
+      </field> 
+      <field id="gps_time" suma="false">
+
+        <label>---Hora---</label>
+        <tipo>time</tipo>
+      </field> 
+      
+      <field id="gps_in1">
+        <label>Contacto</label>
+        <help>Ignicion</help>
+      </field>
+
+      
+      <!-- <field id="gps_latitude">
+        <label>Latitud</label>
+        <help>Latitud del gps</help>
+      </field>
+      <field id="gps_longitude">
+        <label>Longitud</label>
+        <help>Longitud del gps</help>
+        <condicion operador="!=">0</condicion>
+      </field>
+      -->
+      <field id="gps_direction" noshow="true">
+        <help>Direccion</help>
+      </field>
+     
+      <field id="gps_directionhumans">
+        <label>Direccion</label>
+        <help>Direccion para humanos.</help>
+      </field>
+      
+    <!--  <field id="gps_odometert">
+        <label>Odometro total</label>
+        <help>Odometro total</help>
+      </field>
+    -->  
+      <field id="gps_odometerp">
+        <label>Odometro parcial</label>
+        <help>Odometro parcial</help>
+      </field>
+      
+      <field id="gps_speed">
+        <label>Velocidad</label>
+        <help>Velocidad</help>
+      </field>
+      
+      
+      <field id="gps_in0">
+        <label>voltaje - ANALOGO</label>
+        <help>Voltaje de Combusitble....</help>
+      </field>
+     <!--  <field id="gps_volt_serial">
+        <label>Sensor Combustible - SERIAL</label>
+        <help>Voltaje de Combusitble....</help>
+      </field>
+     -->  
+      
+       <field id="gpsalt_analogo">
+        <label>Altura Combust - Analogo</label>
+        <help>Altura de Combusitble....</help>
+      </field>  
+      
+      
+      <field id="gps_volt_serial_dec">
+        <label>voltaje - SERIAL</label>
+        <condicion>ROUND (gps_volt_serial_dec,2)</condicion>
+        <help>Voltaje de Combusitble....</help>
+      </field>
+      
+      <!-- 
+      <field id="gps_alt_serial">
+        <label>Altura Sensor Combustible - SERIAL</label>
+        <help>Voltaje de Combusitble....</help>
+      </field>
+      -->
+      
+      <field id="gps_alt_serial_dec">
+        <label>Altura Combust - SERIAL</label>
+        <expression>ROUND (gps_alt_serial_dec,1)</expression>
+        <help>Voltaje de Combusitble....</help>
+      </field>
+      
+      <field id="gps_baterybus">
+        <label>Bateria Bus</label>
+        <help>Bateria</help>
+      </field>
+      <!--
+        <field id="gps_valores_validos">
+        <label>Valores Validos</label>
+        
+          <help>Valores Validos</help>
+      </field>
+      -->
+      <!--
+      <field id="gps_baterygps">
+        <label>Bateria Gps</label>
+        <help>Bateria.</help>
+      </field>
+      -->
+      
+      
+      <field id="gps_point">
+        <label>point</label>
+        <expression>concat( replace(gps_latitude,',','.'),',', replace(gps_longitude,',','.'))</expression>
+        <tipo>geoPoint</tipo>
+      </field>
+      <order>
+        <field id="id_package"></field>
+      </order>
+    </table>
+  </form>
+</histrix>  

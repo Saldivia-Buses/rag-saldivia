@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+    <title>Condiciones de venta</title>
+     <obs></obs>
+	<form >
+	    <table id="REG_FORMAS" label="Condiciones de venta">
+
+			<field id="id_regforma" autoinc="true" noshow="true" />
+
+	        <field id="subsistema_id" oculto="true" valauto="true" />
+
+			<field id="nombre_forma" required="true">
+				<label>Nombre</label>
+			</field>
+			
+			<field id="plazo" required="true">
+				<label>Plazo</label>
+			</field>
+	    </table>
+	</form>
+</histrix>

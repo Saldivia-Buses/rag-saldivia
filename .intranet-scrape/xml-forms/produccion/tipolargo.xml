@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+        <title>INTERVALOS DE LARGO</title>
+        <obs></obs>
+        <form >
+                <table id="TIPOLARGO" >
+                    <title>Intervalos de largo</title>
+                                        
+                        <field id="idLargo" autoinc="true" noshow="true">
+                        </field>
+                        
+                        <field id="desde">
+                            <label>Desde</label>
+			    <tipo>numeric</tipo>
+                        </field>
+
+			<field id="hasta">
+			    <label>Hasta</label>
+			    <tipo>numeric</tipo>
+			</field>
+                        
+                        <order>
+                        	<field id="idLargo" />
+                        </order> 
+                </table>
+        </form>           
+</histrix>

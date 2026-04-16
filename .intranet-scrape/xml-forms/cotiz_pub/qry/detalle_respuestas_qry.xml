@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="grid" _tableHeight="400" deleteRow="false" imprime="false">
+	<title>detalle cotización</title>
+	<obs/>
+<!--
+	<customScript>
+
+		$('[instance="[__instance__]"] [name="comprar"]').change(function(){
+			var $check = $(this);
+			var $row 	 = $check.closest('[o]');
+			var rownum = $row.attr('o');
+			var id_cpsdetalle = $('[campo="id_cpsdetalle"]', $row).attr('valor');
+		
+			if ($check.prop('checked')){
+				
+				$('[instance="[__instance__]"] [name="comprar"]').each(function(){
+					var currentrow =  $(this).closest('[o]').attr('o');
+
+					var id_cpsdetalleactual = $('[campo="id_cpsdetalle"]', $(this).closest('[o]')).attr('valor');
+
+
+					if (rownum != currentrow &amp;&amp; id_cpsdetalle == id_cpsdetalleactual) {
+						$(this).prop('checked', false);
+					}
+					
+				});
+			}
+		});
+	</customScript>
+-->
+	<form>
+		<table id="CPS_DETALLE" label="MOVIMIENTOS"  >
+<!--
+			<movimientos>
+				<relacion id="cerrar_detalle_cotizacion_ins.xml" />
+			</movimientos>
+-->
+			<fieldGroup>
+				<field id="id_cpsdetalle" noshow="true"/>
+				<field id="cpsmovimiento_id" noshow="true"/>
+				<field id="fecha_cpsdetalle" noshow="true"/>
+				<field id="regcuenta_id" noshow="true">
+					<expression>CPS_COTIZACION_DETALLE.regcuenta_id</expression>
+				</field>
+				<field id="id_cotiz_detalle" tabla="CPS_COTIZACION_DETALLE" noshow="true" esClave="true"/>
+				<field id="stkarticulo_id" _break="true" noshow="true">
+					<label>Codigo</label>
+				</field>
+				<field id="cpsdetalle" _repeat="false">
+					<label>Descripción</label>
+				</field>
+				<field id="nombre">
+					<label>Prov</label>
+					<expression>nombre_cuenta</expression>
+				</field>
+
+				<field id="fecha_entrega"    tabla="CPS_COTIZACION_DETALLE" _noshow="true">
+					<label>Entrega</label>
+					<tipo>date</tipo>
+				</field>
+				<field id="recomendado_fecha" local="true" style="color:green;font-weight:bold;text-shadow:1px 1px 2px #666;">
+
+					<if exp="menor_fecha == id_cotiz_detalle">
+							<true>'&lt;&lt;'</true>
+							<false>''</false>
+					</if>
+					
+				</field>				
+				
+				<field id="observaciones" tabla="CPS_COTIZACION_DETALLE">
+					<label>Obs</label>
+				</field>
+			-
+				<field id="cantidad_compra" suma="true">
+					<label>Cant</label>
+				</field>
+				<field id="precio_unitario" style="color:blue;">
+					<label>P.Unitario</label>
+					<expression>precio_unitario</expression>
+					<tipo>numeric</tipo>
+				</field>
+
+				<field id="bonificacion_1"    tabla="CPS_COTIZACION_DETALLE" noZero="true">
+					<label>Bonif %1</label>
+				
+					<tipo>custom_numeric</tipo>
+					<size>5</size>
+				</field>
+
+				<field id="bonificacion_2" tabla="CPS_COTIZACION_DETALLE"  noZero="true">
+					<label>Bonif %2</label>
+					<tipo>custom_numeric</tipo>
+					<size>5</size>
+				</field>
+
+				<field id="total_cotizacion" style="color:red;" >
+					<label>Total</label>
+					<expression>total_cotizacion</expression>
+					<tipo>numeric</tipo>
+				</field>
+				<field id="menor_fecha" noshow="true">
+					<expression>select CD.id_cotiz_detalle from CPS_COTIZACION_DETALLE CD  where CD.cpsdetalle_id = CPS_DETALLE.id_cpsdetalle order by fecha_entrega ASC limit 1</expression>
+				</field>				
+				<field id="menor_precio" noshow="true">
+					<expression>select CD.id_cotiz_detalle from CPS_COTIZACION_DETALLE CD  where CD.cpsdetalle_id = CPS_DETALLE.id_cpsdetalle order by total_cotizacion ASC limit 1</expression>
+				</field>
+				<field id="recomendado_precio" local="true" style="color:green;font-weight:bold;text-shadow:1px 1px 2px #666;">
+
+					<if exp="menor_precio == id_cotiz_detalle">
+							<true>'&lt;&lt;'</true>
+							<false>''</false>
+					</if>
+					
+				</field>
+				<field id="comprar" deshabilitado="true" _editable="true"   style="text-align:center;" tabla="CPS_COTIZACION_DETALLE">
+					<label>Comprar</label>
+					<tipo>check</tipo>
+				</field>
+				<field id="ordencompra_id" noZero="true" tabla="CPS_COTIZACION_DETALLE">
+				    <label>O.Compra</label>
+				</field>
+
+			</fieldGroup>
+
+			<group>
+				<field id="stkarticulo_id" />
+				<field id="regcuenta_id" tabla="CPS_COTIZACION_DETALLE" />
+
+			</group>
+
+		</table>
+		<join>
+			<table id="CPS_COTIZACION_DETALLE">
+				<field id="cpsdetalle_id">
+					<condicion operador="=">CPS_DETALLE.id_cpsdetalle</condicion>
+				</field>
+			</table>
+		</join>
+		<join >
+			<table id="REG_CUENTA">
+				<field id="id_regcuenta">
+					<condicion operador="=">CPS_COTIZACION_DETALLE.regcuenta_id</condicion>
+				</field>
+			</table>
+		</join>
+
+	</form>
+</histrix>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="ayuda">
+	<title>Movimientos</title>
+	 <obs></obs>
+           <form >	    
+		<table id="REG_MOVIMIENTOS" label="Movimientos">
+		        <field id="nro_movimiento">
+		        <label>Nro</label>
+		    </field>
+		     
+		       <field id="referencia_movimiento">
+			  <label>Referencia</label>
+			  <detalle>referencia_movimiento</detalle>
+		      </field>
+		      <field id="importe_movimiento">
+			  <label>Importe</label>
+			  <detalle>total_imputado</detalle>
+		      </field>
+		      <field id="reg_fecha">
+			  <label>Fecha</label>
+			
+			  <detalle>reg_fecha</detalle>
+			  <tipo>date</tipo>
+		      </field>
+		      <field id="subsistema_id" noshow="true">
+			     <condicion operador="=">'21'</condicion>
+		       </field>
+	              <field id="concepto_id" noshow="true">
+			<condicion operador="=">6</condicion>
+			<detalle>concepto_id</detalle>
+		     </field>
+		     <field id="id_regmovim"  noshow="true">
+			<detalle>id_regmovim</detalle>
+		     </field>
+		     <field id="regcuenta_id"  noshow="true">
+			<detalle>id_regcuenta</detalle>
+		     </field>
+		    <field id="puesto_movimiento" noshow="true">
+			  <expresion>CONCAT(LPAD(puesto_movimiento,4,0),'-',LPAD(nro_movimiento,8,0))</expresion>
+			  <detalle>puesto_movimiento</detalle>
+		    </field>
+		     <field id="nombre_cuenta" tabla="REG_CUENTA" deshabilitado="true">
+		     <label modpos="nobr">Nombre</label>
+			<size>25</size>
+			<detalle>nombre</detalle>
+		      </field>
+		       <field id="iva_id" tabla="REG_CUENTA" deshabilitado="true">
+		     <label modpos="nobr">Cat Iva</label>
+			<tabla_ex xml="/general/iva_crud.xml" deshabilitado="true">
+		       </tabla_ex>
+			<detalle>iva</detalle>
+		      </field>
+			 <field id="cuit_cuenta" tabla="REG_CUENTA" deshabilitado="true">
+              			  <label modpos="nobr" colspan="5"  _style="font-size:14px;" >CUIT</label>
+				  <detalle>cuit</detalle>
+           		 </field>
+	  		<field id="debe" local="true" noshow="true">
+               				 <expresion>(CASE WHEN (SELECT count(cuenta_id) from REG_CUENTA_IMPUTACION where regcuenta_id = REG_MOVIMIENTOS.regcuenta_id and doh = '[__doh__]') != 0 THEN (SELECT cuenta_id from REG_CUENTA_IMPUTACION where regcuenta_id = REG_MOVIMIENTOS.regcuenta_id and doh = '[__doh__]') ELSE (select cuenta_debe_id from GEN_SUBSISTEMAS where id_subsistema= REG_MOVIMIENTOS.subsistema_id )END)</expresion>
+               				 <label>Debe</label>
+					<detalle>debe</detalle>
+           			     </field>
+		    
+			    </table>
+			    <join tipo="left">
+					<table id="REG_CUENTA">
+						<field id="id_regcuenta">
+						    <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+						</field>
+						<field id="subsistema_id">
+						    <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+						</field>			
+					</table>
+				</join>
+	</form>
+     </histrix>	

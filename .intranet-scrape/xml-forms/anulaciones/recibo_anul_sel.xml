@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="consulta"   >
+	<title>Anulación Recibo</title>
+	<obs/>
+	<form  detalle="recibo_anul_ing.xml">
+		<table id="CCTMOVIM" label="ORDEN DE PAGO" idCampoCond="anular">
+
+			<filters>
+				<field id="ctacod">
+					<label>Cliente</label>
+					<operador>=</operador>
+				</field>
+				<field id="ctanom" deshabilitado="true" local="true">
+					<label modpos="nobr"></label>
+				</field>
+				<field id="movfec" >
+					<label >Desde</label>
+					<operador>&gt;=</operador>
+				<valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m") ,
+						date("d")-30, date("Y")))</valor>
+				</field>					
+				<field id="movfec" >
+					<label _modpos="nobr">Hasta</label>
+					<operador>&lt;=</operador>
+					<valor>today</valor>
+					
+				</field>					
+				
+			</filters>
+			<field id="siscod" oculto="true" >
+				<label>Cod.</label>
+				<help/>
+				<valor>'02'</valor>
+				<condicion operador="=">02</condicion>
+				<detalle>siscod</detalle>
+			</field>			
+			<field id="sisprv" local="true" noshow="true" >
+				<label>sis</label>
+				<help></help>
+				<tipo>varchar</tipo>
+				<valor>02</valor>
+			</field>
+			
+			<field id="ctacod" deshabilitado="true" _noshow="true">
+				<label>Cta</label>
+				<ayuda_ex id="CCTCUENT" xml="HLPcctcuent.xml" dir="/help_local">
+					<field id="siscod" oculto="true">
+						<label>siscod</label>
+						<condicion operador="=">'02'</condicion>
+					</field>
+					<field id="ctacod">
+						<label>Nro</label>
+					</field>
+					<field id="ctanom">
+						<label>Nombre</label>
+						<detalle>ctanom</detalle>
+
+					</field>
+						
+					<clave>ctacod</clave>
+					<descripcion>ctanom</descripcion>
+				</ayuda_ex>				
+				<detalle>ctacod</detalle>
+				
+			</field>
+			<field id="ctanom" noshow="true" local="true" >
+					<label modpos="nobr">nombre</label>
+				
+					<size>20</size>
+			</field>
+			
+			<field id="concod"  deshabilitado="true" tabla="CCTCONCE" noshow="true">
+				<label>conc</label>
+				<help>Tipo de Comprobante</help>
+				<condicion operador="=">4</condicion>
+                <detalle>movicc</detalle>
+			</field>
+			<field id="condes" oculto="true" tabla="CCTCONCE">
+				<label>Tipo</label>
+				<help>Tipo de Comprobante</help>
+			</field>
+			<field id="movfec" deshabilitado="true">
+				<label >Fecha</label>
+				<help></help>
+		                <detalle>movife</detalle>
+			</field>
+
+			<field id="movnpv" deshabilitado="true" _noshow="true">
+				<label modpos="nobr">npv</label>
+				<help>Comprobante</help>
+				<format>%04d</format>
+                <detalle>movipv</detalle>
+			</field>
+			<field id="movnro" deshabilitado="true">
+				<label modpos="nobr"/>
+				<help>Numero</help>
+                <detalle>movinc</detalle>
+			</field>
+
+			<field id="movimp" deshabilitado="true">
+				<label PDFsize="12" posx="130" posy="+1">Total Pago</label>
+				<help></help>
+				<format>%01.2f</format>
+				
+			</field>
+
+			<field id="movsal" suma="true"  ctbimporte="1" calcsuma="true" deshabilitado="true">
+				<label>saldo</label>
+				<help></help>
+			</field>
+			<field id="impgra"  local="true" suma="true" deshabilitado="true">
+				<label>Neto</label>
+			</field>			
+			<field id="regmin"  deshabilitado="true" noshow="true">
+				<label>Minuta</label>
+				<detalle>minuta</detalle> 
+			</field>				
+			
+		</table>
+		<join tipo="left">
+			<table id="CCTCONCE">
+				<field id="siscod" oculto="true">
+					<label>cctcuent.siscod</label>
+					<condicion operador="=">CCTMOVIM.siscod</condicion>
+				</field>
+				<field id="concod" oculto="true">
+					<condicion operador="=">CCTMOVIM.concod</condicion>
+				</field>
+				<field id="condes" oculto="true"></field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CCTCUENT">
+				<field id="siscod" oculto="true">
+					<label>cctcuent.siscod</label>
+					<condicion operador="=">CCTMOVIM.siscod</condicion>
+				</field>
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">CCTMOVIM.ctacod</condicion>
+				</field>
+			</table>
+		</join>
+		
+
+	</form>
+</histrix>

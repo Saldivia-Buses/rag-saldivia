@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="consulta" log="true" paginar="50" path="fotos/coches/test/" logreference="ctafan" marginTabs="false" _width="35" _preloadData="false" inserta="false"  borra="false">
+  <title>ABM Fotos Patentamiento</title>
+  <obs/>
+  <form  _formTbody="height:450px; overflow:auto;">
+    
+    <table id="PEDCOTIZ" label="Fotos Patentamiento">
+
+      <filters>
+        
+        <field id="nrocha">
+          <label>Nro Fab</label>
+          <operador>LIKE</operador>
+        </field>  
+        
+      </filters>   
+      
+      <field id="nrocha" tipoOrden="DESC" deshabilitado="true" _valauto="true">
+        <label>Nro.Fab.</label>
+	<actualiza>
+	    <field id="fichafotospat2" destino="nrofab" />
+	</actualiza>
+      </field>
+     
+      <field id="ctanom" >
+         <expression>REG_CUENTA.nombre_cuenta</expression>
+         <label>Nombre Cliente</label>
+        <size>50</size>
+      </field>
+      
+      <field id="test" linkint="fichaventas_fotos.xml" linkdes="Ver Ficha de Ventas" local="true" print="false">
+        <label modpos="nobr" style="color:#444;font-weight:bold;">Fotos patent</label>
+        <paring destino="nrocha">nrocha</paring>
+          <expression>case when (select count(*) from FICHAFOTOS where FICHAFOTOS.nrofab = TURNOSPRODUCCION.nrofab) + (select count(*) from HOMOLFOTOS where HOMOLFOTOS.homologacion_id = PEDCOTIZ.homologacion_id and HOMOLFOTOS.nrocar = 0 ) >= 1 then 'Imprimir Fotos' else '' end</expression> 
+        <valor>'Imprimir Fotos'</valor>
+        <tipo>varchar</tipo>
+      </field>
+
+<!--
+   <field id="test" linkint="fichaftospatjp.xml" linkdes="Ver Ficha de Ventas" local="true" print="false">
+        <label modpos="nobr" style="color:#444;font-weight:bold;">Fotos patent</label>
+        <paring destino="nrocha">nrofab</paring>
+                  <expression>case when (select count(*) from FICHAFOTOS where FICHAFOTOS.nrofab = TURNOSPRODUCCION.nrofab) + (select count(*) from HOMOLFOTOS where HOMOLFOTOS.homologacion_id = PEDCOTIZ.homologacion_id  ) >= 1 then 'Fotos' else '' end</expression> 
+        <valor>'Fotos'</valor>
+        <tipo>varchar</tipo>
+      </field>    
+      -->
+ <!--<field id="nrocha" local="true" tipoOrden="DESC" deshabilitado="true">
+  <label>pase de path</label>
+   <tipo>file</tipo>
+</field>     
+-->   
+      <!--
+       <field id="fichafotospat" obj="fichafotospat.xml" local="true" noshow="true">
+        <label colspan="2" colstyle="display:none;">Fotos Patentamiento</label>
+        <paring destino="nrofab" >nrocha</paring>
+        <paring destino="pathpat" >pathpat</paring>
+    </field>
+ -->
+
+      <order>
+        <field id="nrocha" />
+      </order>
+      
+      <field id="pathpat" noshow="true">
+        <expression>CONCAT(PEDCOTIZ.nrocha, '/patentamiento/')</expression>
+      </field>
+<!--
+      <field id="fichafotospat" obj="fichafotospatjp.xml" local="true" noshow="true">
+        <label colspan="2" colstyle="display:none;">Fotos Patentamiento</label>
+        <paring destino="nrofab" >nrocha</paring>
+        <paring destino="pathpat" >pathpat</paring>
+      </field>
+-->
+      <field id="fichafotospat2"  local="true" _noshow="true" >
+	<expression>'Cargar fotos'</expression>
+	<helper type="link" xml="fichafotospatjp.xml"  >
+	    <parameter source="nrocha" target="nrofab" />
+	    <parameter source="pathpat" target="pathpat" />
+	    
+	</helper>
+        <label colspan="2" _colstyle="display:none;">Cargar</label>
+      </field>
+
+      <field id="fichafotospat3"  local="true" _noshow="true" showObjTabla="true">
+	<helper type="object" xml="fichafotospatjp_cons.xml"  >
+	    <parameter source="nrocha" target="nrofab" />
+	    <parameter source="pathpat" target="pathpat" />
+	    
+	</helper>
+        <label colspan="2" Formstyle="display:none;">Fotos</label>
+      </field>
+
+    </table>
+    <join tipo="left">
+      <table id="REG_CUENTA">
+        <campo id="subsistema_id" oculto="true">
+          <condicion operador="=">'02'</condicion>
+        </campo>
+        <campo id="nro_cuenta">
+          <condicion operador="=">PEDCOTIZ.ctacod</condicion>
+        </campo>      
+      </table>
+    </join>      
+
+    <join tipo="left">
+      <table id="TURNOSPRODUCCION">
+        <field id="nrofab">
+          <condicion operador="=">PEDCOTIZ.nrocha</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

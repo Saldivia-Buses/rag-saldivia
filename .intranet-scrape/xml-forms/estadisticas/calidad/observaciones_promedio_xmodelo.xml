@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="chart">
+    <title>(Observaciones por Modelo / Cant. Coches)</title>
+    <obs />
+    <form>
+        <table id="PROD_CONTROL_MOVIM">
+
+            <grafico id="calidad">
+                <ancho>500</ancho>
+                <tipo>L</tipo>
+                <title>(Observaciones por Modelo / Cant. Coches)</title>
+                <etiquetas>periodo</etiquetas>
+                <serie>cantidad_A305_co</serie>
+                <serie>cantidad_A325_co</serie>
+                <serie>cantidad_A345_co</serie>
+                <serie>cantidad_A345GT_co</serie>
+                <serie>cantidad_A365GT_co</serie>
+                <serie>cantidad_A405_co</serie>
+            </grafico>
+
+            <filters>
+                <field id="fecha_control">
+                    <label>Desde</label>
+                    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-12 month')) , 1, date("Y") -  1 ))</valor>
+                    <operador>&gt;=</operador>
+                </field>
+
+                <field id="fecha_control">
+                    <label>Hasta</label>
+                    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-0 month')) , 1, date("Y") ) - 1)</valor>
+                    <operador>&lt;=</operador>
+                </field>
+            </filters>
+
+            <field id="fecha_control" noshow="true" />
+
+            <field id="year" oculto="true" noshow="true">
+                <label>Año</label>
+                <expression>YEAR(PROD_CONTROL_MOVIM.fecha_control)</expression>
+            </field>
+
+            <field id="mes" noshow="true">
+                <label>Mes</label>
+                <expression>MONTH(PROD_CONTROL_MOVIM.fecha_control)</expression>
+            </field>
+
+            <field id="periodo">
+                <label>Periodo</label>
+                <expression>UPPER(CONCAT((CASE MONTH(PROD_CONTROL_MOVIM.fecha_control) 
+                    WHEN 1 THEN 'Ene'                                                        WHEN 2 THEN 'Feb'
+                    WHEN 3 THEN 'Mar'
+                    WHEN 4 THEN 'Abr'
+                    WHEN 5 THEN 'May'
+                    WHEN 6 THEN 'Jun'
+                    WHEN 7 THEN 'Jul'
+                    WHEN 8 THEN 'Ago'
+                    WHEN 9 THEN 'Sep'
+                    WHEN 10 THEN 'Oct'
+                    WHEN 11 THEN 'Nov'
+                    WHEN 12 THEN 'Dic' END), "'", RIGHT(YEAR(PROD_CONTROL_MOVIM.fecha_control), 2)))</expression>
+            </field>
+
+            <field id="coches">
+                <expression><![CDATA[(select count(*) from PEDCOTIZ where
+                            month(PEDCOTIZ.terminacion) = month(fecha_control) and
+                            year(PEDCOTIZ.terminacion) = year(fecha_control))]]></expression>
+                <label>Coches</label>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="cantidad_A305">
+                <label>A305</label>
+                <expression>SUM(CASE WHEN HOMOLOGMOD.nrocar = '6' THEN 1 ELSE 0 END)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="cantidad_A305_co" local="true">
+                <if exp="true">
+                    <true>round((cantidad_A305/coches),2)</true>
+                    <false>round((cantidad_A305/coches),2)</false>
+                </if>
+                <label>A305</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="cantidad_A345">
+                <label>A345</label>
+                <expression>SUM(CASE WHEN HOMOLOGMOD.nrocar = '2' THEN 1 ELSE 0 END)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="cantidad_A345_co" local="true">
+                <if exp="true">
+                    <true>round((cantidad_A345/coches),2)</true>
+                    <false>round((cantidad_A345/coches),2)</false>
+                </if>
+                <label>A345</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="cantidad_A325">
+                <label>A325</label>
+                <expression>SUM(CASE WHEN HOMOLOGMOD.nrocar = '1' THEN 1 ELSE 0 END)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="cantidad_A325_co" local="true">
+                <if exp="true">
+                    <true>round((cantidad_A325/coches),2)</true>
+                    <false>round((cantidad_A325/coches),2)</false>
+                </if>
+                <label>A325</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="cantidad_A345GT">
+                <label>A345GT</label>
+                <expression>SUM(CASE WHEN HOMOLOGMOD.nrocar = '8' THEN 1 ELSE 0 END)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="cantidad_A345GT_co" local="true">
+                <if exp="true">
+                    <true>round((cantidad_A345GT/coches),2)</true>
+                    <false>round((cantidad_A345GT/coches),2)</false>
+                </if>
+                <label>A345GT</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="cantidad_A365GT">
+                <label>A365GT</label>
+                <expression>SUM(CASE WHEN HOMOLOGMOD.nrocar = '7' THEN 1 ELSE 0 END)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="cantidad_A365GT_co" local="true">
+                <if exp="true">
+                    <true>round((cantidad_A365GT/coches),2)</true>
+                    <false>round((cantidad_A365GT/coches),2)</false>
+                </if>
+                <label>A365GT</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="cantidad_A405">
+                <label>A405</label>
+                <expression>SUM(CASE WHEN HOMOLOGMOD.nrocar = '9' THEN 1 ELSE 0 END)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="cantidad_A405_co" local="true">
+                <if exp="true">
+                    <true>round((cantidad_A405/coches),2)</true>
+                    <false>round((cantidad_A405/coches),2)</false>
+                </if>
+                <label>A405</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="no_conforme" noshow="true">
+                <condicion operador="=">1</condicion>
+            </field>
+
+            <field id="seccion_id" tabla="PROD_CONTROLES" noshow="true">
+                <condicion operador="!=">0</condicion>
+            </field>
+
+            <group>
+                <field id="year" />
+                <field id="mes" />
+            </group>
+
+            <order>
+                <field id="fecha_control" />
+            </order>
+
+        </table>
+
+        <join tipo="left">
+            <table id="PROD_CONTROLES">
+                <field id="id_prodcontrol">
+                    <condicion operador="=">PROD_CONTROL_MOVIM.prodcontrol_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="PEDCOTIZ">
+                <field id="nrocha">
+                    <condicion operador="=">PROD_CONTROL_MOVIM.nrofab_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="HOMOLOGMOD">
+                <field id="id_homologacion">
+                    <condicion operador="=">PEDCOTIZ.homologacion_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="CARROCERIA">
+                <field id="nrocar">
+                    <condicion operador="=">HOMOLOGMOD.nrocar</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

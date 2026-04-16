@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" replaceInto="true" >
+	<title>Pedido interno</title>
+	<obs></obs>
+	<form >
+		<table id="STK_ARTICULO_PEDIDOINT" idCampoCond="pide">
+			<field id="stkarticulo_id"   esClave="true" 	id_temp="id_stkarticulo"></field>
+			<field id="stkdeposito_id"   esClave="true"	id_temp="stkdeposito_id"></field>
+			<field id="fecha_pedido"			id_temp="fecha_pedido"></field>
+			<field id="cantidad" 				id_temp="cantidad">
+			    <tipo>varchar</tipo>
+			</field>
+		</table>
+	</form>
+
+</histrix>
+

@@ -1,0 +1,947 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" log="true" paginar="100" path="fotos/coches" _width="50" borra="false" inserta="false">
+    <title>ENTRADA Y SALIDA</title>
+    <obs></obs>
+
+    <form  _formTbody="height:450px; overflow:auto;">
+        <table id="TURNOSPRODUCCION" label="Ficha de Ventas">
+	    <filters>
+		<field id="linea_id">
+		    <label>Linea</label>
+		    <operador>=</operador>
+		</field>
+		<field id="nrofab">
+		    <label modpos="nobr">unidad</label>
+		    <operador>=</operador>
+		</field>
+		<field id="ingresoLinea" deshabilitado="false">
+		    <label  modpos="nobr">Fec. Inicio Desde</label>
+		    <operador>&gt;=</operador>
+		    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m") - 3, 1, date("Y")))</valor>
+		    <!--<valor eval="true">date('d/m/Y', mktime(0, 0, 0, 1, 1, date("Y") -  1 ))</valor>-->
+		</field>
+		<field id="ingresoLinea" deshabilitado="false">
+		    <label  modpos="nobr">Fec. Inicio Hasta</label>
+		    <operador>&lt;=</operador>
+		    <!--<valor eval="true">date('d/m/Y', mktime(0, 0, 0, 1, 1, date("Y") -  1 ))</valor>-->
+		    <valor>today</valor>
+		</field>
+	    </filters>
+            <field id="id" noshow="true" deshabilitado="true" tabla="PEDCOTIZ">
+            </field>
+           
+            <field id="linea_id" tabla="TURNOSPRODUCCION" noshow="true">
+                <helper type="combo" xml="lineas.xml" dir="/produccion"/>
+            </field>
+
+<!--         <field id="controlcalidadsuper" local="true" linkWidth="90%" linkHeight="90%">    
+            <helper xml="controles_linea_supervisor.xml" dir="controlcalidad/" type="link" modal="true">
+                <parameter source="nrocha" target="nrofab_id"/>
+                <parameter source="linea_id" target="linea_id"/>
+                <paring destino="homologacion_id" operador="=">homologacion_id</paring>
+            </helper>
+            <expression>'Ing. y Contr.'</expression>
+            <attribute id="linkdes">nrocha</attribute>
+        </field> -->
+            <field _esClave="true" id="fechaing2" _PDFanchofijo="true" tipoOrden="DESC" noshow="true">
+                <expression>ifnull(TURNOSPRODUCCION.fechaing, (case when PEDCOTIZ.ingresoLinea != '0000-00-00' then PEDCOTIZ.ingresoLinea  end))</expression>
+	    </field>
+
+            <field _esClave="true" id="fechaing3" _PDFanchofijo="true" tipoOrden="DESC" noshow="true">
+                <expression>case when PEDCOTIZ.ingresoLinea != '0000-00-00' then PEDCOTIZ.ingresoLinea else fechaing end</expression>
+                <label >Entra</label>
+                <tipo>date</tipo>
+                <help>Fecha de Ingreso a Linea</help>
+                <!--  <format>d/m</format> -->              
+            </field>
+          
+ 	    <field id="coloringr" noshow="true">
+	<expression>concat('background-color:', (case  when  month(ingresoLinea) = 1  then  '#FFF79A' 
+								       when  month(ingresoLinea) = 2  then  '#82CA9D' 
+								       when  month(ingresoLinea) = 3  then  '#8493CA'
+								       when  month(ingresoLinea) = 4  then  '#FBAF5C'
+								       when  month(ingresoLinea) = 5  then  '#1ABBB4'
+								       when  month(ingresoLinea) = 6  then  '#BC8DBF'
+								       when  month(ingresoLinea) = 7  then  '#cccccc'
+								       when  month(ingresoLinea) = 8  then  '#FBAF5C'
+								       when  month(ingresoLinea) = 9  then  '#8493CA'
+								       when  month(ingresoLinea) = 10  then '#FDC68A'
+								       when  month(ingresoLinea) = 11  then '#7CC576'
+								       when  month(ingresoLinea) = 12  then '#F7977A'
+									 end))</expression>		
+	    </field>        
+<!--
+	    <field id="fecingr">
+		<expression>@fecingr:=(select str_to_date(concat(fecha_control, ' ', time(hora_control)), '%Y-%m-%d %H:%i:%s')
+from PROD_CONTROLES PC join PROD_CONTROL_MOVIM PM on PC.id_prodcontrol = PM.prodcontrol_id where PM.nrofab_id = PEDCOTIZ.nrocha and PC.id_prodcontrol = 529)
+		</expression>
+	    </field>-->
+            <field id="cant" >
+		<expression>select count(*) + 1 from PEDCOTIZ PED LEFT JOIN TURNOSPRODUCCION TP ON PED.nrocha = TP.nrofab where month(PED.ingresoLinea) = month(PEDCOTIZ.ingresoLinea) 
+		and year(PED.ingresoLinea) = year(PEDCOTIZ.ingresoLinea) 
+		and PED.ingresoLinea &lt;= PEDCOTIZ.ingresoLinea
+		and str_to_date(concat(PED.ingresoLinea, ' ', time(PED.ingresoHora)), '%Y-%m-%d %H:%i:%s')
+		 &lt;= str_to_date(concat(PEDCOTIZ.ingresoLinea, ' ', time(PEDCOTIZ.ingresoHora)), '%Y-%m-%d %H:%i:%s')
+		 and PED.nrocha != PEDCOTIZ.nrocha
+		and TP.linea_id = TURNOSPRODUCCION.linea_id</expression>
+<!--		<expression>select count(*)  from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id 
+		where str_to_date(concat(fecha_control, ' ', time(hora_control)), '%Y-%m-%d %H:%i:%s') &lt;= @fecingr
+		and month(fecha_control) = month(@fecingr)
+		and year(fecha_control)  =year(@fecingr) 
+		and id_prodcontrol = 529</expression>-->
+	    </field>          
+
+        <field id="ingresoLinea" tipoOrden="DESC" _tabla="PEDCOTIZ">
+		<expression having="false">(case when PEDCOTIZ.ingresoLinea != '0000-00-00' then PEDCOTIZ.ingresoLinea else fechaing end)</expression>
+<!--                <expression having="false">ifnull(ingresoLinea, TURNOSPRODUCCION.fechaing)</expression> -->
+
+              <attribute id="style">coloringr</attribute>
+ 		      <label>SETUP</label>
+                <tipo>date</tipo>
+            </field>
+
+              <field id="fecacc" noshow="true">
+		<expression>@acc:=(select str_to_date(concat(fecha_control, ' ', time(hora_control)), '%Y-%m-%d %H:%i:%s') from PROD_CONTROLES PC join PROD_CONTROL_MOVIM PM on PC.id_prodcontrol = PM.prodcontrol_id where PM.nrofab_id = PEDCOTIZ.nrocha and PC.orden_control = 999 and PC.seccion_id = 33)</expression>
+	      </field>
+            <field id="cantacc" noZero="true">
+				<expression>select count(*)  from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id 
+				LEFT JOIN TURNOSPRODUCCION TP ON PROD_CONTROL_MOVIM.nrofab_id = TP.nrofab
+				where orden_control = 999
+				and str_to_date(concat(fecha_control, ' ', time(hora_control)), '%Y-%m-%d %H:%i:%s') &lt;= @acc
+				and month(fecha_control) = month(@acc)
+				and year(fecha_control)  =year(@acc) 
+				and seccion_id = 33
+				and linea_id = 1
+				and linea_id = TURNOSPRODUCCION.linea_id
+				</expression>
+	    </field>          
+
+ 		<field id="coloracc" noshow="true" local="true">
+			<if exp="true">
+				<true>(substr('liberacion_acc', 3, 2) == '01')?'background-color:#FFF79A':(
+				        (substr('liberacion_acc', 3, 2) == '02')?'background-color:#82CA9D':(
+				        (substr('liberacion_acc', 3, 2) == '03')?'background-color:#8493CA':(
+				        (substr('liberacion_acc', 3, 2) == '04')?'background-color:#FBAF5C':(
+				        (substr('liberacion_acc', 3, 2) == '05')?'background-color:#1ABBB4':(
+				        (substr('liberacion_acc', 3, 2) == '06')?'background-color:#BC8DBF':(
+				        (substr('liberacion_acc', 3, 2) == '07')?'background-color:#cccccc':(
+				        (substr('liberacion_acc', 3, 2) == '08')?'background-color:#FBAF5C':(
+				        (substr('liberacion_acc', 3, 2) == '09')?'background-color:#8493CA':(
+				        (substr('liberacion_acc', 3, 2) == '10')?'background-color:#FDC68A':(
+				        (substr('liberacion_acc', 3, 2) == '12')?'background-color:#F7977A':(
+				        (substr('liberacion_acc', 3, 2) == '11')?'background-color:#7CC576':'')))))))))))
+					</true>
+				<false></false>
+			</if>
+	    </field>
+
+              <field id="liberacion_acc">
+		<attribute id="style">coloracc</attribute>
+		<label _colstyle="color:blue;">Lib.Acc.H.</label> 
+		<expression>
+		select concat(date_format(fecha_control, '%d/%m') ,' ' ,TIME_FORMAT(hora_control,'%H:%i'))
+		from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id where nrofab_id = PEDCOTIZ.nrocha and orden_control = 999
+		and seccion_id = 33
+		</expression>
+	    </field>
+
+          
+	    <field id="colorherr" noshow="true" local="true">
+		
+<if exp="true">
+				<true>(substr('liberacion_herr', 3, 2) == '01')?'background-color:#FFF79A':(
+				        (substr('liberacion_herr', 3, 2) == '02')?'background-color:#82CA9D':(
+				        (substr('liberacion_herr', 3, 2) == '03')?'background-color:#8493CA':(
+				        (substr('liberacion_herr', 3, 2) == '04')?'background-color:#FBAF5C':(
+				        (substr('liberacion_herr', 3, 2) == '05')?'background-color:#1ABBB4':(
+				        (substr('liberacion_herr', 3, 2) == '06')?'background-color:#BC8DBF':(
+				        (substr('liberacion_herr', 3, 2) == '07')?'background-color:#cccccc':(
+				        (substr('liberacion_herr', 3, 2) == '08')?'background-color:#FBAF5C':(
+				        (substr('liberacion_herr', 3, 2) == '09')?'background-color:#8493CA':(
+				        (substr('liberacion_herr', 3, 2) == '10')?'background-color:#FDC68A':(
+				        (substr('liberacion_herr', 3, 2) == '12')?'background-color:#F7977A':(
+				        (substr('liberacion_herr', 3, 2) == '11')?'background-color:#7CC576':'')))))))))))
+					</true>
+				<false></false>
+			</if>
+	    </field>
+              <field id="fecherr" noshow="true">
+		<expression>@herr:=(select str_to_date(concat(fecha_control, ' ', time(hora_control)), '%Y-%m-%d %H:%i:%s')
+from PROD_CONTROLES PC join PROD_CONTROL_MOVIM PM on PC.id_prodcontrol = PM.prodcontrol_id where PM.nrofab_id = PEDCOTIZ.nrocha 
+and PC.orden_control = 999
+and PC.seccion_id = 2)</expression>
+	      </field>
+            <field id="cantherr" noZero="true"><!--
+		<expression>select count(nrofab_id)  from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id  and orden_control = 999 and seccion_id = 2
+		where fecha_control &lt;= (select fecha_control from PROD_CONTROLES PC join PROD_CONTROL_MOVIM PM on PC.id_prodcontrol = PM.prodcontrol_id where PM.nrofab_id = PEDCOTIZ.nrocha and PC.orden_control = 999 and PC.seccion_id = 2)
+		and  month(fecha_control) = month((select fecha_control from PROD_CONTROLES PC join PROD_CONTROL_MOVIM PM on PC.id_prodcontrol = PM.prodcontrol_id where PM.nrofab_id = PEDCOTIZ.nrocha and PC.orden_control = 999 and PC.seccion_id = 2))
+		and year(fecha_control)  =year((select fecha_control from PROD_CONTROLES PC join PROD_CONTROL_MOVIM PM on PC.id_prodcontrol = PM.prodcontrol_id where PM.nrofab_id = PEDCOTIZ.nrocha and PC.orden_control = 999 and PC.seccion_id = 2)) 
+		</expression>-->
+		<expression>select count(*)  from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id 
+		LEFT JOIN TURNOSPRODUCCION TP ON PROD_CONTROL_MOVIM.nrofab_id = TP.nrofab
+		where orden_control = 999
+		and str_to_date(concat(fecha_control, ' ', time(hora_control)), '%Y-%m-%d %H:%i:%s') &lt;= @herr
+		and month(fecha_control) = month(@herr)
+		and year(fecha_control)  =year(@herr) 
+		and seccion_id = 2
+		and linea_id = 1
+		and linea_id = TURNOSPRODUCCION.linea_id
+		</expression>
+	    </field>          
+
+
+              <field id="liberacion_herr">
+		<attribute id="style">colorherr</attribute>
+		<label _colstyle="color:blue;">Lib.Herr.</label> 
+		<expression>
+		select concat(date_format(fecha_control, '%d/%m') ,' ' ,TIME_FORMAT(hora_control,'%H:%i'))
+		from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id where nrofab_id = PEDCOTIZ.nrocha and orden_control = 999
+		and seccion_id = 2
+		</expression>
+	    </field>
+                 
+
+          
+          
+ <field id="coloraccch" noshow="true" local="true">
+		
+	<if exp="true">
+				<true>(substr('liberacion_accch', 3, 2) == '01')?'background-color:#FFF79A':(
+				        (substr('liberacion_accch', 3, 2) == '02')?'background-color:#82CA9D':(
+				        (substr('liberacion_accch', 3, 2) == '03')?'background-color:#8493CA':(
+				        (substr('liberacion_accch', 3, 2) == '04')?'background-color:#FBAF5C':(
+				        (substr('liberacion_accch', 3, 2) == '05')?'background-color:#1ABBB4':(
+				        (substr('liberacion_accch', 3, 2) == '06')?'background-color:#BC8DBF':(
+				        (substr('liberacion_accch', 3, 2) == '07')?'background-color:#cccccc':(
+				        (substr('liberacion_accch', 3, 2) == '08')?'background-color:#FBAF5C':(
+				        (substr('liberacion_accch', 3, 2) == '09')?'background-color:#8493CA':(
+				        (substr('liberacion_accch', 3, 2) == '10')?'background-color:#FDC68A':(
+				        (substr('liberacion_accch', 3, 2) == '12')?'background-color:#F7977A':(
+				        (substr('liberacion_accch', 3, 2) == '11')?'background-color:#7CC576':'')))))))))))
+					</true>
+				<false></false>
+			</if>
+	    </field>
+              <field id="fecacc2" noshow="true">
+		<expression>@accch:=(select str_to_date(concat(fecha_control, ' ', time(hora_control)), '%Y-%m-%d %H:%i:%s')
+from PROD_CONTROLES PC join PROD_CONTROL_MOVIM PM on PC.id_prodcontrol = PM.prodcontrol_id where PM.nrofab_id = PEDCOTIZ.nrocha 
+and PC.orden_control = 998
+and PC.seccion_id = 33)</expression>
+	      </field>
+            <field id="cantaccch" noZero="true">
+
+		<expression>select count(*)  from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id 
+		LEFT JOIN TURNOSPRODUCCION TP ON PROD_CONTROL_MOVIM.nrofab_id = TP.nrofab
+		where orden_control = 998
+		and str_to_date(concat(fecha_control, ' ', time(hora_control)), '%Y-%m-%d %H:%i:%s') &lt;= @accch
+		and month(fecha_control) = month(@accch)
+		and year(fecha_control)  =year(@accch) 
+		and seccion_id = 33
+		and linea_id = 1
+		and linea_id = TURNOSPRODUCCION.linea_id
+		</expression>
+	    </field>          
+
+
+              <field id="liberacion_accch">
+		<attribute id="style">coloraccch</attribute>
+		<label _colstyle="color:blue;">Lib.Acc.Ch.</label> 
+		<expression>
+		select concat(date_format(fecha_control, '%d/%m') ,' ' ,TIME_FORMAT(hora_control,'%H:%i'))
+		from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id where nrofab_id = PEDCOTIZ.nrocha and orden_control = 998
+		and seccion_id = 33
+		</expression>
+	    </field>
+
+
+	    <field id="colorchap" noshow="true" local="true">
+			<if exp="true">
+				<true>(substr('liberacion_chap', 3, 2) == '01')?'background-color:#FFF79A':(
+				        (substr('liberacion_chap', 3, 2) == '02')?'background-color:#82CA9D':(
+				        (substr('liberacion_chap', 3, 2) == '03')?'background-color:#8493CA':(
+				        (substr('liberacion_chap', 3, 2) == '04')?'background-color:#FBAF5C':(
+				        (substr('liberacion_chap', 3, 2) == '05')?'background-color:#1ABBB4':(
+				        (substr('liberacion_chap', 3, 2) == '06')?'background-color:#BC8DBF':(
+				        (substr('liberacion_chap', 3, 2) == '07')?'background-color:#cccccc':(
+				        (substr('liberacion_chap', 3, 2) == '08')?'background-color:#FBAF5C':(
+				        (substr('liberacion_chap', 3, 2) == '09')?'background-color:#8493CA':(
+				        (substr('liberacion_chap', 3, 2) == '10')?'background-color:#FDC68A':(
+				        (substr('liberacion_chap', 3, 2) == '12')?'background-color:#F7977A':(
+				        (substr('liberacion_chap', 3, 2) == '11')?'background-color:#7CC576':'')))))))))))
+					</true>
+				<false></false>
+			</if>
+
+	    </field>
+
+              <field id="fechchap" noshow="true">
+		<expression>@chap:=(select str_to_date(concat(fecha_control, ' ', time(hora_control)), '%Y-%m-%d %H:%i:%s') 
+from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id where nrofab_id = PEDCOTIZ.nrocha and orden_control = 999
+		and seccion_id = 3)</expression>
+	      </field>
+            <field id="cantchap" noZero="true">
+		<expression>select count(*)  from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id 
+		LEFT JOIN TURNOSPRODUCCION TP ON PROD_CONTROL_MOVIM.nrofab_id = TP.nrofab
+		where orden_control = 999
+		and str_to_date(concat(fecha_control, ' ', time(hora_control)), '%Y-%m-%d %H:%i:%s') &lt;= @chap
+		and month(fecha_control) = month(@chap)
+		and year(fecha_control)  =year(@chap) 
+		and linea_id = 1
+		and linea_id = TURNOSPRODUCCION.linea_id
+		and seccion_id = 3</expression>
+	    </field>          
+          
+              <field id="liberacion_chap">
+		<attribute id="style">colorchap</attribute>
+
+		<label _colstyle="color:purple;">Lib.Chap.</label> 
+		<expression>
+		select concat(date_format(fecha_control, '%d/%m') ,' ' ,TIME_FORMAT(hora_control,'%H:%i'))
+		from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id where nrofab_id = PEDCOTIZ.nrocha and orden_control = 999
+		and seccion_id = 3
+		</expression>
+	    </field>       
+
+
+     
+	    <field id="colorpint" noshow="true" local="true">
+			<if exp="true">
+				<true>(substr('liberacion_pint', 3, 2) == '01')?'background-color:#FFF79A':(
+				        (substr('liberacion_pint', 3, 2) == '02')?'background-color:#82CA9D':(
+				        (substr('liberacion_pint', 3, 2) == '03')?'background-color:#8493CA':(
+				        (substr('liberacion_pint', 3, 2) == '04')?'background-color:#FBAF5C':(
+				        (substr('liberacion_pint', 3, 2) == '05')?'background-color:#1ABBB4':(
+				        (substr('liberacion_pint', 3, 2) == '06')?'background-color:#BC8DBF':(
+				        (substr('liberacion_pint', 3, 2) == '07')?'background-color:#cccccc':(
+				        (substr('liberacion_pint', 3, 2) == '08')?'background-color:#FBAF5C':(
+				        (substr('liberacion_pint', 3, 2) == '09')?'background-color:#8493CA':(
+				        (substr('liberacion_pint', 3, 2) == '10')?'background-color:#FDC68A':(
+				        (substr('liberacion_pint', 3, 2) == '12')?'background-color:#F7977A':(
+				        (substr('liberacion_pint', 3, 2) == '11')?'background-color:#7CC576':'')))))))))))
+					</true>
+				<false></false>
+			</if>
+
+	    </field>
+
+              <field id="fechpint" noshow="true">
+		<expression>@pint:=(select str_to_date(concat(fecha_control, ' ', time(hora_control)), '%Y-%m-%d %H:%i:%s')
+from PROD_CONTROLES PC join PROD_CONTROL_MOVIM PM on PC.id_prodcontrol = PM.prodcontrol_id where PM.nrofab_id = PEDCOTIZ.nrocha 
+and PC.orden_control = 999
+and PC.seccion_id = 4)</expression>
+	      </field>
+            <field id="cantpint" noZero="true">
+		<expression>select count(*)  from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id 
+		LEFT JOIN TURNOSPRODUCCION TP ON PROD_CONTROL_MOVIM.nrofab_id = TP.nrofab
+		where orden_control = 999
+		and str_to_date(concat(fecha_control, ' ', time(hora_control)), '%Y-%m-%d %H:%i:%s') &lt;= @pint
+		and month(fecha_control) = month(@pint)
+		and year(fecha_control)  =year(@pint) 
+		and seccion_id = 4
+		and linea_id = 1
+		and linea_id = TURNOSPRODUCCION.linea_id
+		</expression>
+	    </field>          
+          
+              <field id="liberacion_pint">
+		<attribute id="style">colorpint</attribute>
+		<label _colstyle="color:purple;">Lib.Pint.</label> 
+		<expression>
+		select concat(date_format(fecha_control, '%d/%m') ,' ' ,TIME_FORMAT(hora_control,'%H:%i'))
+		from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id where nrofab_id = PEDCOTIZ.nrocha and orden_control = 999
+		and seccion_id = 4
+		</expression>
+	    </field>       
+
+          
+  
+
+	    <field id="colorprfv" noshow="true" local="true">
+			<if exp="true">
+				<true>(substr('liberacion_prfv', 3, 2) == '01')?'background-color:#FFF79A':(
+				        (substr('liberacion_prfv', 3, 2) == '02')?'background-color:#82CA9D':(
+				        (substr('liberacion_prfv', 3, 2) == '03')?'background-color:#8493CA':(
+				        (substr('liberacion_prfv', 3, 2) == '04')?'background-color:#FBAF5C':(
+				        (substr('liberacion_prfv', 3, 2) == '05')?'background-color:#1ABBB4':(
+				        (substr('liberacion_prfv', 3, 2) == '06')?'background-color:#BC8DBF':(
+				        (substr('liberacion_prfv', 3, 2) == '07')?'background-color:#cccccc':(
+				        (substr('liberacion_prfv', 3, 2) == '08')?'background-color:#FBAF5C':(
+				        (substr('liberacion_prfv', 3, 2) == '09')?'background-color:#8493CA':(
+				        (substr('liberacion_prfv', 3, 2) == '10')?'background-color:#FDC68A':(
+				        (substr('liberacion_prfv', 3, 2) == '12')?'background-color:#F7977A':(
+				        (substr('liberacion_prfv', 3, 2) == '11')?'background-color:#7CC576':'')))))))))))
+					</true>
+				<false></false>
+			</if>
+
+	    </field>
+
+              <field id="fechprfv" noshow="true">
+		<expression>@prfv:=(select str_to_date(concat(fecha_control, ' ', time(hora_control)), '%Y-%m-%d %H:%i:%s')
+from PROD_CONTROLES PC join PROD_CONTROL_MOVIM PM on PC.id_prodcontrol = PM.prodcontrol_id where PM.nrofab_id = PEDCOTIZ.nrocha 
+and PC.orden_control = 999
+and PC.seccion_id = 23)</expression>
+	      </field>
+            <field id="cantprfv" noZero="true">
+		<expression>select count(*)  from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id 
+		LEFT JOIN TURNOSPRODUCCION TP ON PROD_CONTROL_MOVIM.nrofab_id = TP.nrofab
+		where orden_control = 999
+		and str_to_date(concat(fecha_control, ' ', time(hora_control)), '%Y-%m-%d %H:%i:%s') &lt;= @prfv
+		and month(fecha_control) = month(@prfv)
+		and year(fecha_control)  =year(@prfv) 
+		and seccion_id = 23
+		and linea_id = 1
+		and linea_id = TURNOSPRODUCCION.linea_id
+		</expression>
+	    </field>          
+   
+               <field id="liberacion_prfv">
+		<attribute id="style">colorprfv</attribute>
+		<label _colstyle="color:purple;">Lib.PRFV</label> 
+		<expression>
+		select concat(date_format(fecha_control, '%d/%m') ,' ' ,TIME_FORMAT(hora_control,'%H:%i'))
+		from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id where nrofab_id = PEDCOTIZ.nrocha and orden_control = 999
+		and seccion_id = 23
+		</expression>
+	    </field>       
+         
+                         
+          
+          
+          
+	    <field id="colorasi" noshow="true" local="true">
+			<if exp="true">
+				<true>(substr('liberacion_asi', 3, 2) == '01')?'background-color:#FFF79A':(
+				        (substr('liberacion_asi', 3, 2) == '02')?'background-color:#82CA9D':(
+				        (substr('liberacion_asi', 3, 2) == '03')?'background-color:#8493CA':(
+				        (substr('liberacion_asi', 3, 2) == '04')?'background-color:#FBAF5C':(
+				        (substr('liberacion_asi', 3, 2) == '05')?'background-color:#1ABBB4':(
+				        (substr('liberacion_asi', 3, 2) == '06')?'background-color:#BC8DBF':(
+				        (substr('liberacion_asi', 3, 2) == '07')?'background-color:#cccccc':(
+				        (substr('liberacion_asi', 3, 2) == '08')?'background-color:#FBAF5C':(
+				        (substr('liberacion_asi', 3, 2) == '09')?'background-color:#8493CA':(
+				        (substr('liberacion_asi', 3, 2) == '10')?'background-color:#FDC68A':(
+				        (substr('liberacion_asi', 3, 2) == '12')?'background-color:#F7977A':(
+				        (substr('liberacion_asi', 3, 2) == '11')?'background-color:#7CC576':'')))))))))))
+					</true>
+				<false></false>
+			</if>
+
+	    </field>
+
+              <field id="fecasi" noshow="true">
+		<expression>@asi:=(select str_to_date(concat(fecha_control, ' ', time(hora_control)), '%Y-%m-%d %H:%i:%s') from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id where nrofab_id = PEDCOTIZ.nrocha and orden_control = 999
+		and seccion_id = 24)</expression>	
+	      </field>
+
+            <field id="cantasientos" noZero="true">
+		<expression>select count(*) from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id 
+		LEFT JOIN TURNOSPRODUCCION TP ON PROD_CONTROL_MOVIM.nrofab_id = TP.nrofab
+		where 
+		 orden_control = 999
+		and str_to_date(concat(fecha_control, ' ', time(hora_control)), '%Y-%m-%d %H:%i:%s') &lt;= @asi
+		and month(fecha_control) = month(@asi)
+		and year(fecha_control)  =year(@asi) 
+		and linea_id = 1
+		and linea_id = TURNOSPRODUCCION.linea_id
+		and seccion_id = 24</expression>
+	    </field>          
+          
+            <field id="liberacion_asi">
+		<attribute id="style">colorasi</attribute>
+
+		<label _colstyle="color:green;">Lib.Asi.</label>
+		<expression>
+		select concat(date_format(fecha_control, '%d/%m') ,' ' ,TIME_FORMAT(hora_control,'%H:%i'))
+		from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id where nrofab_id = PEDCOTIZ.nrocha and orden_control = 999
+		and seccion_id = 24
+		</expression>
+	    </field>
+
+ 
+	    <field id="colorterm" noshow="true" local="true">
+
+			<if exp="true">
+				<true>(substr('liberacion_term', 3, 2) == '01')?'background-color:#FFF79A':(
+				        (substr('liberacion_term', 3, 2) == '02')?'background-color:#82CA9D':(
+				        (substr('liberacion_term', 3, 2) == '03')?'background-color:#8493CA':(
+				        (substr('liberacion_term', 3, 2) == '04')?'background-color:#FBAF5C':(
+				        (substr('liberacion_term', 3, 2) == '05')?'background-color:#1ABBB4':(
+				        (substr('liberacion_term', 3, 2) == '06')?'background-color:#BC8DBF':(
+				        (substr('liberacion_term', 3, 2) == '07')?'background-color:#cccccc':(
+				        (substr('liberacion_term', 3, 2) == '08')?'background-color:#FBAF5C':(
+				        (substr('liberacion_term', 3, 2) == '09')?'background-color:#8493CA':(
+				        (substr('liberacion_term', 3, 2) == '10')?'background-color:#FDC68A':(
+				        (substr('liberacion_term', 3, 2) == '12')?'background-color:#F7977A':(
+				        (substr('liberacion_term', 3, 2) == '11')?'background-color:#7CC576':'')))))))))))
+					</true>
+				<false></false>
+			</if>
+
+	    </field>
+
+          <field id="marasi" deshabilitado="true">
+          	    <expression> atributoUnidad(id, 'marasi')</expression>
+                <label size="23" posx="60" posy="0" modpos="nobr" xml="marcaasi.xml" PDFsize="10" _colstyle="display:none;" colspan="2">Marca</label>
+                <help></help>
+                <tabla_ex xml="marcaasi.xml">
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">03</condicion>
+                    </field>
+                </tabla_ex>
+            </field>
+            <field id="tipasi" deshabilitado="true">
+            	<expression> atributoUnidad(id, 'tipasi')</expression>
+                <tabla_ex xml="tipoasiento.xml" dir="/produccion">
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">03</condicion>
+                    </field>
+                </tabla_ex>
+                <label size="23" posx="6" posy="+1"  PDFsize="10" colstyle="display:none;">Tipo As.</label>
+                <help></help>
+            </field>
+          
+          
+          
+              <field id="fecter" noshow="true">
+<!--		<expression>@ter:=(select str_to_date(concat(fecha_control, ' ', time(hora_control)), '%Y-%m-%d %H:%i:%s') from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id where nrofab_id = PEDCOTIZ.nrocha and orden_control = 999
+		and seccion_id = 5)</expression>
+	-->
+		<expression>@ter:=(select str_to_date(concat(fecha_control, ' ', time(hora_control)), '%Y-%m-%d %H:%i:%s') from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id where nrofab_id = PEDCOTIZ.nrocha and orden_control = 999
+		and seccion_id = 5)</expression>	
+	      </field>
+
+            <field id="cantter" noZero="true">
+		<expression>select count(*) from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id 
+		LEFT JOIN TURNOSPRODUCCION TP ON PROD_CONTROL_MOVIM.nrofab_id = TP.nrofab
+		where 
+		 orden_control = 999
+		and str_to_date(concat(fecha_control, ' ', time(hora_control)), '%Y-%m-%d %H:%i:%s') &lt;= @ter
+		and month(fecha_control) = month(@ter)
+		and year(fecha_control)  =year(@ter) 
+		and linea_id = 1
+		and linea_id = TURNOSPRODUCCION.linea_id
+		and seccion_id = 5</expression>
+	    </field>          
+          
+            <field id="liberacion_term">
+		<attribute id="style">colorterm</attribute>
+
+		<label _colstyle="color:green;">Lib.Term.</label>
+		<expression>
+		select concat(date_format(fecha_control, '%d/%m') ,' ' ,TIME_FORMAT(hora_control,'%H:%i'))
+		from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id where nrofab_id = PEDCOTIZ.nrocha and orden_control = 999
+		and seccion_id = 5
+		</expression>
+	    </field>
+          
+        <field id="muestra" local="true" noshow="true">
+            <valor>1</valor>
+        </field>
+
+        <field id="terminacion" tipoOrden="DESC" noshow="true"  tabla="PEDCOTIZ">
+                <label>Fecha de Terminación</label>
+                <tipo>date</tipo>
+	    </field>
+	    <field id="controles_pend" noshow="true">
+	    <expression>@controles_pend:=( SELECT  count(*) from PROD_CONTROLES   
+ JOIN PROD_CONTROL_HOMOLOG on   PROD_CONTROL_HOMOLOG.prodcontrol_id = id_prodcontrol   
+left join  PEDCOTIZ PC on PC.nrocha != 0
+ left JOIN PROD_CONTROL_MOVIM on   PROD_CONTROL_MOVIM.nrofab_id = PC.nrocha   and  
+	   PROD_CONTROL_MOVIM.prodcontrol_id = id_prodcontrol   
+ where ( ( ( ifnull(no_conforme , 0) + ifnull(conforme, 0) + ifnull(no_aplica, 0)) = 0  or (ifnull(no_conforme, 0 ) = 1 and ifnull(conforme, 0 ) = 0 and ifnull(controlado, 0 ) = 0) ) ) and ( ( PROD_CONTROLES.habilitado = 0 ) ) 
+
+
+ and  ( PROD_CONTROL_HOMOLOG.homologacion_id = id_homologacion )  and PC.nrocha = PEDCOTIZ.nrocha)</expression>
+	    </field>
+<!--
+	    <field id="controles_pend" noshow="true">
+		<label>pendientes</label>
+		<expression>@controles_pend:=(select sum(CASE WHEN conforme = 1 OR controlado = 1 or no_aplica = 1  THEN 1 ELSE 0 END ) = count(*)  from PROD_CONTROL_MOVIM join PROD_CONTROLES ON id_prodcontrol = prodcontrol_id where 
+nrofab_id = TURNOSPRODUCCION.nrofab)</expression> 
+		</field>
+-->
+	    <field id="homologacion_id" tabla="PEDCOTIZ" noshow="true" />
+	    <field id="pendientes" linkWidth="90%" linkHeight="90%" _style="background:#ffff00">    
+            <helper xml="prod_control_pendientes.xml" dir="controlcalidad/" type="link" modal="true">
+                <parameter source="nrocha" target="nrofab_id"/>
+                <parameter source="homologacion_id" target="homologacion_id"/>
+            </helper>
+        	<label>Pend.</label>
+			<expression>case when @controles_pend = 0 then '' else CONCAT(@controles_pend,' Pend') end
+			</expression>
+			<attribute id="linkdes">nrocha</attribute>
+        </field>
+      
+        <field id="tiene_trabajos_cnrt" noshow="true">
+            <expression>case when 
+                (SELECT COUNT(*) FROM PROD_TRABAJOS_CNRT where nrofab_id = nrofab) != 0 and HOMOLOGMOD.dispos = '' then 'background-color: #F5A9A9;' else 
+                (case when (SELECT COUNT(*) FROM PROD_TRABAJOS_CNRT where nrofab_id = nrofab) != 0 and HOMOLOGMOD.dispos != '' then 'background-color: #00ff00;' else '' end) 
+                end</expression>
+        </field>            
+
+        <field id="cnrt" print="false" noshow="true">
+            <label Formstyle="display:none;" colstyle="color:red;font-weight:bold; text-align:center">CNRT</label>
+            <expression>CASE WHEN (PEDCOTIZ.nrocha = '' or PEDCOTIZ.nrocha IS NULL) THEN ''
+                ELSE (case when (HOMOLOGMOD.expte = '' or HOMOLOGMOD.dispos = '' or HOMOLOGMOD.plano = '' or PEDCOTIZ.homologacion_id = '' or PEDCOTIZ.homologacion_id IS NULL) then 'NO' ELSE '' end) END</expression>
+        </field>
+
+        <field id="trabajos_cnrt" local="true" colstyle="color:red;font-weight:bold; text-align:center;">    
+            <label>Proto</label>    
+            <helper xml="prod_trabajos_cnrt.xml" dir="fabricacion/" type="link" modal="true">
+                <parameter source="nrocha" target="nrofab_id"/>
+            </helper>
+            <expression>case when (SELECT COUNT(*) FROM PROD_TRABAJOS_CNRT where nrofab_id = PEDCOTIZ.nrocha) != 0 then 'CNRT' else '' end</expression>
+            <attribute id="linkdes">nrocha</attribute>
+            <attribute id="style">tiene_trabajos_cnrt</attribute>
+            <if exp="'trabajos_cnrt' != '' and nrocha != 0">
+                <true>'trabajos_cnrt'</true>
+                <false>'cnrt'</false>
+            </if>
+        </field>
+
+<!--               <field id="fecentrega" noshow="true">
+		<expression>@fecentrega:=IFNULL((select terminacionFinal from PEDCOTIZ as P where P.nrocha = PEDCOTIZ.nrocha),0)</expression>	
+	      </field>
+
+            <field id="cantentrega" noZero="true">
+		<expression>select count(*) from PEDCOTIZ as PE
+		where PE.terminacionFinal &lt;= @fecentrega
+		and month(PE.terminacionFinal) = month(@fecentrega)
+		and year(PE.terminacionFinal) = year(@fecentrega) 
+		</expression>
+	    </field>  
+ -->
+            <field id="Entrega" noshow="true" print="false">
+                <label>Retiró</label>
+                <expression>select DATE_FORMAT(entrega, '%d/%m/%Y') from ENTREGASCOCHES where ENTREGASCOCHES.nrofab = TURNOSPRODUCCION.nrofab  and ENTREGASCOCHES.entrega IS NOT NULL  limit 1</expression>
+                <tipo>date</tipo>
+            </field>   
+
+            <field id="colorEnt" noshow="true" local="true">
+                <if exp="'Entrega' != ''">
+                    <true>'color:green;'</true>
+                    <false>''</false>
+                </if>
+            </field>       
+<!--
+            <field id="ctrllcm" _noshow="true">
+		<label>ctr</label>
+            	<expression>@ctrl_lcm:=(select sum(CASE WHEN conforme = 1  or no_aplica = 1  THEN 1 ELSE 0 END ) - count(*)  from PROD_CONTROL_MOVIM join PROD_CONTROLES ON id_prodcontrol = prodcontrol_id where nrofab_id = TURNOSPRODUCCION.nrofab )</expression>
+            </field>
+-->	    
+<!-- (select sum(CASE WHEN conforme = 1 OR  no_aplica = 1  THEN 1 ELSE 0 END ) != count(*)  from PROD_CONTROL_MOVIM join PROD_CONTROLES ON id_prodcontrol = prodcontrol_id where nrofab_id = TURNOSPRODUCCION.nrofab ) -->
+            <field id="terminacionFinal" _print="false" noshow="true" export="true">
+                <label>Aviso Entrega</label>
+			<expression>case when PEDCOTIZ.terminacionFinal = '0000-00-00' and (@controles_pend != 0 )  then '' 
+else (case when PEDCOTIZ.terminacionFinal = '0000-00-00' then 'Aviso' else 
+			DATE_FORMAT(PEDCOTIZ.terminacionFinal, '%d/%m/%Y') end) end</expression> 
+                <tipo>date</tipo>
+            </field>
+	    <field id="fecha_terminacion" export="true" colstyle="display:none;" _noshow="true">
+
+		    <label>Aviso Entrega</label>
+			<expression>case when @controles_pend != 0 then '' else (case when PEDCOTIZ.terminacionFinal = '0000-00-00' then '' else terminacionFinal end) end</expression> 
+		    <tipo>date</tipo>
+	    </field>
+                <field id="contador_avisos_entrega">
+                    <expression><![CDATA[CASE WHEN PEDCOTIZ.terminacionFinal = '0000-00-00' THEN ''
+                                            ELSE (SELECT COUNT(*)
+                                                    FROM PEDCOTIZ PC
+                                                    WHERE MONTH(PC.terminacionFinal) = MONTH(PEDCOTIZ.terminacionFinal)
+                                                      AND YEAR(PC.terminacionFinal) = YEAR(PEDCOTIZ.terminacionFinal)
+                                                      AND DAY(PC.terminacionFinal) <= DAY(PEDCOTIZ.terminacionFinal)) END]]></expression>
+                    <attribute id="tooltip">tooltip_contador_avisos_entrega</attribute>
+                </field>
+
+                <field id="tooltip_contador_avisos_entrega" noshow="true">
+                    <expression><![CDATA[CASE WHEN PEDCOTIZ.terminacionFinal = '0000-00-00' THEN ''
+                                            ELSE (SELECT GROUP_CONCAT(PC.nrocha, ' - ', DATE_FORMAT(PC.terminacionFinal, '%d/%m/%Y') ORDER BY PC.terminacionFinal ASC SEPARATOR 'n')
+                                                    FROM PEDCOTIZ PC
+                                                    WHERE MONTH(PC.terminacionFinal) = MONTH(PEDCOTIZ.terminacionFinal)
+                                                      AND YEAR(PC.terminacionFinal) = YEAR(PEDCOTIZ.terminacionFinal)
+                                                      AND DAY(PC.terminacionFinal) <= DAY(PEDCOTIZ.terminacionFinal)) END]]></expression>
+                </field>
+
+                <field id="aviso_entrega" local="true" getStyle="colorEnt" export="false">
+                    <label>Aviso</label>
+                    <helper type="link" xml="produccion/prd_aviso_entrega_cli.xml">
+                        <parameter source="nrocha" target="nrocha" />
+                    </helper>
+                    <if exp="'Entrega' != '' and nrofab != 0">
+                        <true>'terminacionFinal'</true>
+                        <false>'terminacionFinal'</false>
+                    </if>
+                </field>
+
+	    <field id="id_logistica" local="true" noshow="true" />
+	    
+        <field id="mailto"  deshabilitado="true" noshow="true">
+<!--              <expression>select group_concat(mail separator ';') from CCTCONTA where siscod = '02' and CCTCONTA.ctacod = CONCESIONARIO.ctacod
+		order by (CASE WHEN cargo = [__id_logistica__] THEN 1 ELSE (CASE WHEN principal = 1 THEN 2 ELSE 3 END) END) limit 1</expression> -->
+              <expression>select group_concat(mail separator ';') from CCTCONTA where siscod = '02' and CCTCONTA.ctacod = CONCESIONARIO.ctacod
+		and cargo = [__id_logistica__]</expression>
+            </field>
+
+            <field id="mailsubj" noshow="true" >
+              <expression>CONCAT('Entrega Unidad ', PEDCOTIZ.nrocha)</expression>
+            </field>
+
+            <field id="mailbody" noshow="true">
+              <expression><![CDATA[CONCAT(
+
+                'Att Sres.</br>El día ', DATE_FORMAT(PEDCOTIZ.terminacionFinal, '%d/%m/%Y'), ', por la tarde, tendremos terminada la unidad ', PEDCOTIZ.nrocha, ' de ', REG_CUENTA.nombre_cuenta,
+                ', chasis nro. ', RIGHT(CHASIS.chasis, 6), ' concesionario ', (select CONCESIONARIO.nombre from CONCESIONARIO WHERE CHASIS.conces = CONCESIONARIO.idconces), '.</br>Nuestro horario es de Lunes a Jueves de 6:00hs a 15:00hs y Viernes de 6:00hs a 13:30hs.',
+		'</br></br>IMPORTANTE:</br>Si la unidad no es retirada dentro de las 48hs de enviado este mail, por favor de enviar las pólizas de seguro:</br>',
+		'*(B1) Robo total más incendio total (sin parciales).</br>',
+		'*(B) Robo total + incendio total + destrucción total por accidente (sin parciales).</br>',
+		'*(C) Robo total y parcial + incendio total y parcial + destrucción total por accidente.</br>',
+		'*(C1) Robo total y parcial + incendio total y parcial.</br>',
+		'Ya que la empresa CARROCERIAS SALDIVIA S.A. no se responsabiliza de cualquier daño que pueda sufrir la unidad a partir de la notificación de este correo.'
+		'</br></br>Saludos</br></br>', HTXUSERS.apellido, ', ', HTXUSERS.Nombre, '</br>0341-4921135</br>Ruta 21 KM 7 PIA LOTE 0004 7 - Alvear (2126) - Santa Fe - Argentina</br><a href="www.saldiviabuses.com.ar" >www.saldiviabuses.com.ar</a>'
+
+		
+
+                )]]>
+              </expression>
+            </field>
+
+              <field id="filtmail" noshow="true">
+                <expression>CONCAT('+"Entrega Unidad" +', PEDCOTIZ.nrocha)</expression>
+              </field>
+<!--
+            <field id="ctrl_gral" _noshow="true">
+		<expression>(select (case when sum(CASE WHEN conforme = 1 OR controlado = 1 or no_aplica = 1  THEN 1 ELSE 0 END ) = count(*) then 'envio' else '' end) from PROD_CONTROL_MOVIM join PROD_CONTROLES ON id_prodcontrol = prodcontrol_id where 
+nrofab_id = TURNOSPRODUCCION.nrofab)</expression>
+            </field>
+
+            <field id="ctrl_lcm" noshow="true">
+            	<expression>@ctrl_lcm := (SELECT date(hora_control) FROM PROD_CONTROL_MOVIM WHERE prodcontrol_id = 504 and nrofab_id = TURNOSPRODUCCION.nrofab LIMIT 1)</expression>
+            	<tipo>date</tipo>
+				<format>d/m</format>
+            </field>
+-->
+            <field id="email" colstyle="width:auto;" deshabilitado="false" local="true" Formstyle="display:none;">
+                <helper type="link" xml="mails_send.xml" dir="/histrix/mensajeria/" title="Entrega Unidad" width="700" height="600">
+                    <parameter source="mailto"  target="para" />
+                    <parameter source="mailsubj" target="subject" />
+                    <parameter source="mailbody" target="mensaje" />
+                </helper>
+                <!--<expression sql="true"><![CDATA[
+                SELECT CONCAT(
+                (SELECT COUNT(*) FROM HTXMAIL WHERE MATCH(subject, body) AGAINST ('[__filtmail__]' IN BOOLEAN MODE) )
+                , ' <img src="../img/mail_generic.png"/>') 
+                ]]></expression>-->
+                <!--<expression><![CDATA[case when  terminacionFinal != '0000-00-00' and  (select sum(CASE WHEN conforme = 1  OR controlado = 1  or no_aplica = 1  THEN 1 ELSE 0 END ) = count(*)  from PROD_CONTROL_MOVIM join PROD_CONTROLES ON id_prodcontrol = prodcontrol_id where 
+nrofab_id = TURNOSPRODUCCION.nrofab) then '<img src="../img/mail_generic.png"/>' else '' end]]></expression> -->
+<expression><![CDATA[case when  terminacionFinal != '0000-00-00' and   @controles_pend = 0  then '<img src="../img/mail_generic.png"/>' else '' end]]></expression>
+                <!--<attribute id="colstyle">terminacionFinal_mail</attribute>-->
+            </field>
+
+            <!-- <field id="fechaing" tabla="TURNOSPRODUCCION" tipoOrden="DESC">
+                <label>FEcha Ingreso</label>
+                <tipo>date</tipo>
+            </field>-->
+            
+            <field id="filtmail_param" noshow="true">
+                <expression>CONCAT('Entrega Unidad ', PEDCOTIZ.nrocha)</expression>
+            </field>
+            
+            <field id="Emails" _showTablaObj="true" local="true">
+                <helper type="link" xml="email_subj_qry.xml" dir="/email">
+                    <parameter target="subject" source="filtmail_param" operator="like"/>
+                </helper>
+                <label>Correos</label>
+                <help></help>
+               <expression sql="true"><![CDATA[
+                SELECT CONCAT(
+                (SELECT COUNT(*)  FROM HTXMAIL WHERE MATCH(subject) AGAINST ('[__filtmail__]' IN BOOLEAN MODE)),' Env.')]]></expression>
+            </field>    
+          <field id="nrofab"  noshow="true"/>
+
+          <field id="nrocha"  tabla="PEDCOTIZ">
+                <label size="25" _modpos="nobr" posx="110" posy="0" PDFsize="11" style="text-align:center;color:#444;font-size:14px;">N.Fab.</label>
+                <help>Numero de Fabricacion</help>
+<!--                 <helper type="link" xml="ficha_producto1_qry.xml" dir="/producto/" title="Ficha Técnica">
+                    <parameter source="id" target="producto_id"/>
+                    <parameter source="nrocha" target="nrofab"/>
+                </helper>
+ -->            </field>
+          
+          
+          
+                   <field id="desabv" tabla="MODCHASIS">
+        <label>Mod. Chasis</label>
+        <!--
+        <expression> SELECT MODCHASIS.desabv FROM MODCHASIS where CHASIS.marcod=MODCHASIS.marcod AND modcod=MODCHASIS.modcha </expression>
+    -->
+      <help></help>
+      </field>
+      
+           
+
+          
+          <field id="nrocar" deshabilitado="true">
+                <expression>HOMOLOGMOD.nrocar</expression>
+                <tabla_ex id="CARROCERIA">
+                    <field id="nrocar">
+                    </field>
+                    <field id="desabv">
+                    </field>
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">03</condicion>
+                    </field>
+                </tabla_ex>
+                <label size="23" posx="110" posy="0" PDFsize="10">Carroceria</label>
+            </field>
+          
+
+          
+           <field id="nomconces">
+            <label>Concesionario</label>
+            <expression>CONCESIONARIO.nombre</expression>
+          </field> 
+          
+          
+           <field id="ctacod" deshabilitado="true">
+                <label size="23" posx="6" posy="+1" PDFsize="12" colspan="6">Cliente</label>
+                <help>Codigo de Cuenta</help>
+                <tabla_ex condes="true" id="CCTCUENT">
+                    <field id="ctacod"/>
+                    <field id="ctafan2">
+                        <expression>CCTCUENT.ctafan</expression>
+                    </field>
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">'02'</condicion>
+                    </field>
+                    <field id="baja" oculto="true">
+                        <condicion operador="=">0</condicion>
+                    </field>
+                    <order>
+                        <field id="ctafan" />
+                    </order>
+                </tabla_ex>
+
+            </field>
+          
+         
+          <field noshow="true" deshabilitado="true" id="chasis" tabla="CHASIS" linkint="chasis_cons.xml" linkdes="Ver Datos del Chasis">
+                <expression><![CDATA[CONCAT( SUBSTRING(CHASIS.chasis, -8, 2),'<b>', RIGHT(CHASIS.chasis, 6), '</b>')]]></expression>
+                <label>Chasis</label>
+                <tipo>editor</tipo>
+                <help>Numero de Serie del chasis</help>
+                <paring destino="nrocha">nrofab</paring>
+                <attribute id="tooltip">chasis_entrada</attribute>        
+            </field>
+       
+    
+          
+            <field id="nro2" noshow="true">
+                <expression>LPAD(PEDCOTIZ.nrocha,3,'0')</expression>
+            </field>
+
+            <field deshabilitado="true" id="asientos" noZero="true" style="text-align:center;">
+                <label>Asi</label>
+                <tipo>integer</tipo>
+                <expression>case when PEDCOTIZ.homologacion_id != '' then 
+                (case when CARROCERIA.doble_piso = 1 then (CONCAT(HOMOLOGMOD.asientos, '+', HOMOLOGMOD.asientos_plantabaja)) else (HOMOLOGMOD.asientos + HOMOLOGMOD.acompañante) end)
+                else TURNOSPRODUCCION.cantasi end</expression>
+            </field>                                 
+
+            <field id="bagno" deshabilitado="true" noZero="true">
+                <label>B</label>
+                <expression>atributoUnidad(id, 'bagno')</expression>
+                <options>
+                    <option valor="0">''</option>
+                    <option valor="1">BB</option>
+                </options>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="cucheta">
+                <expression>case when PEDCOTIZ.homologacion_id != '' then (atributoUnidad(id, 'cucheta')) else TURNOSPRODUCCION.cucheta end</expression>
+                <label modpos="nobr">Cuch</label>
+                <options>
+                    <option valor="0"> </option>
+                    <option valor="1">Cuch</option>
+                </options>
+            </field>
+
+            <field id="usuarionow" local="true" colstyle="display:none;" export="false" Formstyle="display:none;">
+                <valor eval="true">$_SESSION['idUser']</valor>
+            </field>            
+
+            <order>
+                <field id="fechaing3" orderType="DESC"/>
+            </order>
+        </table>
+        
+        <join tipo="left">
+            <table id="PEDCOTIZ">
+                <field id="nrocha">
+                  <condicion operador="=">nrofab</condicion>
+                </field>
+            </table>
+      </join>
+      <join tipo="left">
+	    	<table id="CHASIS">
+			    <field id="nrocha">
+		    		<condicion operador="=">PEDCOTIZ.nrocha</condicion>
+			    </field>
+	         </table>
+      </join>
+      <join tipo="left">
+      	<table id="MODCHASIS">
+			<field id="marcod">
+	    		<condicion operador="=">CHASIS.marcod</condicion>
+		    </field>
+			<field id="modcha">
+	    		<condicion operador="=">modcod</condicion>
+		    </field>
+      	</table>
+      </join>
+        <join tipo="left">
+            <table id="REG_CUENTA">
+                <field id="nro_cuenta">
+                  <condicion operador="=">PEDCOTIZ.ctacod</condicion>
+                </field>
+                <field id="subsistema_id">
+                  <condicion operador="=">'02'</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+          <table id="HTXUSERS">
+            <field id="id_usuario">
+              <condicion operador="=">[__usuarionow__]</condicion>
+            </field>
+          </table>
+        </join>  
+        <join tipo="left">
+          <table id="CONCESIONARIO">
+            <field id="idconces">
+              <condicion operador="=">CHASIS.conces</condicion>
+            </field>
+          </table>
+        </join>  
+      
+            <join tipo="left">
+            <table id="HOMOLOGMOD">
+                <field id="id_homologacion">
+                    <condicion operador="=">PEDCOTIZ.homologacion_id</condicion>
+                </field>
+
+            </table>
+        </join>
+    <join tipo="left">
+       <table id="CARROCERIA">
+          <field id="nrocar">
+                 <condicion operador="=">HOMOLOGMOD.nrocar</condicion>
+          </field>
+        </table>
+    </join>
+
+      
+      
+    </form>
+</histrix>

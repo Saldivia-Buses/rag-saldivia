@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="nosql" 
+    xmlImpresion="/clientes/qry/imp_facturainsumas_qry.xml" 
+    _directprint="factura" _printer="factura" _sqlhardcoded="true">
+	<title>Movimientos en Cuentas Corrientes</title>
+	 <obs></obs>
+		<form>
+		    <table id="REG_MOVIMIENTOS">
+		    
+                <field id="impresion" local="true" id_temp="impresion">
+            	    <setvar>xmlImpresion</setvar>
+                </field>
+				<field id="id_regmovim"      		lastId="pos_regmovimientos_ins.xml">
+					<detalle>id_regmovim</detalle>
+                </field>
+		    </table>
+		</form>
+    </histrix>	

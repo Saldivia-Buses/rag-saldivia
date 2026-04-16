@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta">
+	<title>EMISION DE REMITOS</title>
+	<obs></obs>
+	<form  detalle="remitos_impresion.xml">
+		<table id="REMITOINT" label="DETALLE DE LA ORDEN COMPRA">
+			<field id="idRemito" >
+				<label>Numero</label>
+				<detalle>idRemito</detalle>
+			</field>			
+		
+			<field id="fecha" deshabilitado="true">
+				<label modpos="nobr" >Fecha</label>
+				<valor>today</valor>				
+			</field>
+			<field id="idDepositoOrig">
+				<label>Origen</label>
+				<tabla_ex id="DEPOSITO">
+					<field id="idDeposito">
+					</field>
+					<field id="direccion">
+					</field>
+				</tabla_ex>							
+			</field>
+			<field id="idDepositoDest">
+				<label>Destino</label>
+				<tabla_ex id="DEPOSITO">
+					<field id="idDeposito">
+					</field>
+					<field id="direccion">
+					</field>
+				</tabla_ex>							
+			</field>
+
+		</table>
+	</form>
+</histrix>

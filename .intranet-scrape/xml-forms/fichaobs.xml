@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" >
+	<title>Observaciones por Coche</title>
+	<obs/>
+	<consulta>
+         <table id="FICHAOBS" label="Observaciones" style__Tbody="height:100px;overflow-x:hidden;">		
+			 <field id="idObs" autoinc="true" noshow="true" esClave="true">
+				 
+			 </field>
+			 <field id="idFicha" oculto="true" esClave="true">
+				 <label>id</label>
+				 <condicion operador="=">0</condicion>
+				 <valor>0</valor>
+			 </field>
+			 <field id="fecha" deshabilitado="true">
+				 <label>Fecha</label>
+				 <valor>today</valor>
+			 </field>
+			 <field id="observaciones">
+				 <label>Observaciones</label>
+				 <tipo>varchar</tipo>
+				 <size>60</size>
+			 </field>
+			<field id="nrofab" deshabilitado="true" _oculto="true" esClave="true" noshow="true">
+                            <label>nrofab</label>
+			 </field>
+
+			 <order>
+				 <field id="fecha"></field>
+			 </order>
+	      </table>
+<!--	      <join tipo="left">
+	      	<table id="PEDCOTIZ">
+	      		<field id="id">
+	      			<condicion operador="=">idFicha</condicion>
+	      		</field>
+	      		
+	      		
+	      	</table>
+	      </join> -->
+	</consulta>
+</histrix>

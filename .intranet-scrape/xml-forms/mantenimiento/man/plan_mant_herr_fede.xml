@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+Tarea: PLAN DE MANTENIMIENTO
+Autor: Fmm
+Fecha: 29/03/12
+-->
+
+<histrix tipo="crud" >
+    <title>Mantenimiento</title>
+    <obs></obs>
+    <form>
+      <table id="MANT_PLAN_EVENTOS" label="Tareas Correctivas">
+
+       <validation>
+            <condition><![CDATA[fecha_accion == '' ]]></condition>
+            <message>Seleccione una fecha</message>
+        </validation>
+
+       <validation>
+            <condition><![CDATA[accion_id == '' ]]></condition>
+            <message>Seleccione una accion</message>
+        </validation>
+
+        <validation>
+            <condition><![CDATA[estado == '' ]]></condition>
+            <message>Indique un estado</message>
+        </validation>
+
+            <field id="id_planevento" deshabilitado="true" noshow="true">
+                <label>IDPLANEVENTO</label>
+            </field>
+            
+            <field id="plan_id" deshabilitado="true" noshow="true" valauto="true">
+                <label>IDPLAN</label>
+                <valor>0</valor>
+                <condicion operador="=">0</condicion>
+            </field>
+
+            <field id="login" valauto="true" noshow="true">
+                <label>usuario</label>
+                <valor eval="true">$_SESSION['usuario']</valor>
+            </field>
+
+    <fieldGroup style="padding:2px 2px 2px 5px;" colstyle="text-align:center;" >
+
+    	    <field id="equipo_id" valauto="true" deshabilitado="true">
+              <label>Equipo</label>
+             <helper type="combo" id="MANT_EQUIPOS">
+                  <field id="id_equipo"/>
+                  <field id="nombre_equipo"/>
+              </helper>
+          </field>
+    
+          <field id="fecha_accion">
+              <label>Fecha</label>
+              <tipo>date</tipo>
+              <valor>today</valor>    
+          </field>
+ 
+          <field id="accion_id" style="padding:2px 2px 2px 2px;width:400px;" colstyle="width:auto;text-align:center;">
+              <helper type="combo" id="MANT_ACCIONES" empty="true">
+                  <field id="id_accion"/>
+                  <field id="nombre_accion"/>
+              </helper>
+              <label>Acción</label>
+          </field>
+
+          <field id="estado">
+              <label>Estado</label>
+              <helper type="combo" id="MANTENIMIENTO_ESTADOS" empty="true">
+                  <field id="id_estado" />
+                  <field id="estado" />
+                  <field id="tipo_estado" >
+                      <condicion operador="=">0</condicion>
+                  </field>
+              </helper>
+          </field>
+      
+          <field id="observaciones" colstyle="text-align:left;">
+              <label>Observaciones</label>
+              <size>100</size>
+          </field>
+
+          <!-- <field id="articulos_usados" local="true" Formstyle="display:none">
+              <label>Cargar</label>
+              <helper xml="man_articulos_stk.xml" type="link" >
+                   <parameter source="equipo_id" target="equipo_id" />
+                    <parameter source="id_planevento" target="movnro" /> 
+              </helper>
+              <valor>+</valor>
+          </field> -->
+
+        </fieldGroup>
+                
+     	</table>
+          	
+              <join tipo="left">
+                  <table id="MANT_PLAN">
+                        <field id="id_plan">
+                            <condicion operador="=">MANT_PLAN_EVENTOS.plan_id</condicion>
+                        </field>
+                  </table>
+          </join>
+    
+            <!--   <join tipo="left">
+                  <table id="MANT_EQUIPOS">
+                        <field id="id_equipo">
+                          <condicion operador="=">MANT_PLAN_EVENTOS.equipo_id</condicion>
+              </field>
+                  </table>
+                </join>
+        
+              <join tipo="left">
+                    <table id="MANT_ACCIONES">
+                        <field id="id_accion">
+                          <condicion operador="=">MANT_PLAN_EVENTOS.accion_id</condicion>
+                        </field>
+                    </table>
+              </join>  -->
+      </form>
+
+
+</histrix>	

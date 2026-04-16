@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="delete" limit="0" >
+	<title>Eliminacion de Movimientos</title>
+	<obs></obs>
+	<form>
+		<table id="STK_MOVIMIENTOS">
+		    
+		    <field id="regmovimiento_id" _esClave="true" id_temp="id_regmovim" />
+
+		    <!-- <field id="base"			 esClave="true">
+		    	<valor eval="true">$_SESSION['db']</valor>
+		    </field> -->
+
+		</table>
+	</form>
+</histrix>

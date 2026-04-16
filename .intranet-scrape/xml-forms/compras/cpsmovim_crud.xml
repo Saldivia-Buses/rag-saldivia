@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="abm-mini" subtipo="vertical">
+    <title>DETALLE</title>
+    <obs></obs>
+    <form  >
+        <table id="CPSMOVIM" label="DETALLE">
+	    <field id="id_cpsmovim" noshow="true"/>
+
+            <field id="ocpnro" Formstyle="display:none;" colstyle="display:none;" esClave="true" oculto="true">
+		<label>Numero O.C.</label>
+            </field>
+
+            <field id="movfec" _Formstyle="display:none;" _colstyle="display:none;" esClave="true" oculto="true">
+		<label>Fecha</label>
+		<tipo>date</tipo>
+            </field>
+
+
+            <field id="artcod">
+                <label>Articulo</label>
+                <help>Codigo de Articulo</help>
+                <ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/help_local">
+                    <field id="artcod" >
+                        <label>Cod.</label>
+                    </field>
+                    <field id="artdes">
+                        <label>Insumo</label>
+                        <detalle>detalle</detalle>
+                    </field>
+
+
+                    <field id="unicps" oculto="true">
+                        <detalle>unicps</detalle>
+                    </field>
+
+                    <field id="valcps" >
+                        <detalle>valcps</detalle>
+                    </field>
+                    <field id="valuso" >
+                        <detalle>valuso</detalle>
+                    </field>
+                    <field id="artuni" oculto="true">
+                        <detalle>artuni</detalle>
+                    </field>
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">'01'</condicion>
+                    </field>
+
+
+                                        <clave>artcod</clave>
+                    <descripcion>artdes</descripcion>
+                </ayuda_ex>
+		<size>10</size>
+            </field>
+            <field id="detalle">
+                <label modpos="nobr">Descripcion</label>
+                <help>Detalle de linea de la Orden de Compra para Art S.C. </help>
+		<size>40</size>
+            </field>
+            <field id="observaciones">
+                <label>Obs</label>
+		<size>40</size>
+            </field>
+            <field id="movcps" incdec="true" preventLoop="true"><!-- Este campo está provocando error en algunas grabaciones -->
+                <label>Pedido</label>
+                <help>Pedido (expresado en la unidad de compra)</help>
+                <jseval campodestino="movuso">(valcps == 1)?(movcps * valuso):(movcps / valcps)</jseval>
+                <jseval campodestino="importe_iva">artcos * movcps / 100 * alicuota</jseval>
+                <jseval campodestino="importe_total">artcos * movcps + importe_iva</jseval>
+                <tipo>decimal</tipo>
+            </field>
+            <field id="unicps" deshabilitado="true" tabla="STKINSUM">
+                <label modpos="nobr">U.Compra</label>
+                <help>Unidad de Compra</help>
+                <tabla_ex id="FSMUNIDS">
+                    <field id="unicod" clave="true"></field>
+                    <field id="uninom"></field>
+                </tabla_ex>
+                <tipo>integer</tipo>
+            </field>
+            <field id="valcps" noshow="true" tabla="STKINSUM">
+                <label modpos="nobr">conversion1</label>
+                <valor>1</valor>
+		<tipo>numeric</tipo>
+            </field>
+
+            <field id="valuso" noshow="true" tabla="STKINSUM">
+                <label modpos="nobr">conversion2</label>
+                <valor>1</valor>
+		<tipo>numeric</tipo>
+            </field>
+            <field id="movuso" preventLoop="true">
+                <label>uso</label><!--
+                <if exp="true" operador="=">
+                    <true> (movcps / valcps) * valuso</true>
+                    <false>0</false>
+                </if>-->
+                <jseval campodestino="movcps">(valuso == 1)?(movuso * valcps):(movuso / valuso)</jseval>
+                <jseval campodestino="importe_iva">artcos * movcps / 100 * alicuota</jseval>
+                <jseval campodestino="importe_total">artcos * movcps + importe_iva</jseval>
+                <tipo>decimal</tipo>
+            </field>
+            <field id="artuni" deshabilitado="true" tabla="STKINSUM">
+                <label modpos="nobr" >U.uso</label>
+                <help>Unidad de Uso</help>
+                <tabla_ex id="FSMUNIDS">
+                    <field id="unicod" clave="true"></field>
+                    <field id="uninom"></field>
+                </tabla_ex>
+                <tipo>integer</tipo>
+            </field>
+            <field id="artcos" _deshabilitado="true">
+                <tipo>decimal</tipo>
+                <label _modpos="nobr" _colspan="3">Precio</label>
+                <jseval campodestino="importe_iva">artcos * movcps / 100 * alicuota</jseval>
+                <jseval campodestino="importe_total">artcos * movcps + importe_iva</jseval>
+            </field>
+            <field id="alicuota" deshabilitado="true">
+                <label modpos="nobr">Alic</label>
+                <expression>select IVAIMPUESTOS.impali from IVAIMPUESTOS where impcod = STKINSUM.artiva limit 1</expression>
+		<jseval campodestino="importe_iva">artcos * movcps / 100 * alicuota</jseval>
+                <jseval campodestino="importe_total">artcos * movcps + importe_iva</jseval>
+
+            </field>
+
+            <field id="importe_iva" deshabilitado="true" suma="true">
+                <label modpos="nobr">Iva</label><!--
+                <if exp="alicuota + 0 &gt; 0">
+                    <true>round((artcos * movcps ) * alicuota / 100, 2)</true>
+                    <false>0</false>
+                </if>-->
+
+            </field>
+            <field id="importe_total" suma="true" deshabilitado="true">
+                <label colspan="3" modpos="nobr">Total</label><!--
+                <if exp="true">
+                    <true> round(( artcos + 0) * ( movcps + 0) + importe_iva, 2)</true>
+                    <false>0</false>
+                </if>-->
+            </field>
+
+            <field id="fecreq" >
+                <label>F.Entrega</label>
+                <tipo>date</tipo>
+            </field>
+            <field id="nrocha">
+                <label>N.Fab</label>
+                <tipo>varchar</tipo>
+                <size>5</size>
+            </field>
+            <order>
+                <field id="fecreq"></field>
+            </order>
+        </table>
+        <join tipo="left">
+            <table id="STKINSUM">
+                <field id="siscod" >
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="artcod">
+                    <condicion operador="=">CPSMOVIM.artcod</condicion>
+                </field>
+                <field id="artuni">
+                </field>
+                <field id="unicps">
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

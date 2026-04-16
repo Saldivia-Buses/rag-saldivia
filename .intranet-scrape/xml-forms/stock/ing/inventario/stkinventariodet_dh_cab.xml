@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" subtipo="vertical" tooltip="false" inserta="false" preloadData="false" deleteRow="false" procesa="true" log="false" transaccional="true" modifica="false"
+imprime="false" >
+  <title>Ingreso de Inventario</title>
+  <obs/>
+  <form>
+    <table id="STK_INVENTARIOS" label="Ingreso de Inventario" _idCampoCond="grabar">
+
+      <movimientos >
+        <relacion id="stkinventario_dh_ins.xml" />
+        <relacion id="stkinventarionum_dh_upd.xml" />
+
+
+      </movimientos>
+
+
+<!--
+      <field id="numero_movimiento" local="true" deshabilitado="true" sincelda="true" _noshow="true">
+        <label modpos="nobr" style="font-size: large;" >Control de Inventario Nº</label>
+        <parametro id="numerador_param.xml" retorna="numero">
+        <field id="numero">
+          <complete>numero + 1</complete>
+        </field>
+      </parametro>
+      <formato>%08d</formato>
+      <size>8</size>
+    </field>-->
+    
+      <field id="numero_movimiento" print="false">
+        <expression sql="true">(SELECT option_value FROM HTXOPTIONS where option_name = 'ID_CTRL_INVENTARIO')</expression>
+        <label>Control de Inventario Nº</label>
+      </field>
+
+      <field id="fecha_inventario" deshabilitado="true" print="false">
+        <label modpos="nobr">fecha</label>
+        <valor>today</valor>
+        <tipo>date</tipo>
+      </field>
+      
+      <field id="nextnro" noshow="true" print="false">
+        <expression sql="true">(SELECT option_value + 1 FROM HTXOPTIONS where option_name = 'ID_CTRL_INVENTARIO')</expression>
+      </field>
+      
+      <field id="opname" local="true" noshow="true" print="false">
+        <valor>ID_CTRL_INVENTARIO</valor>
+      </field>
+      
+
+      <field id="usuario_id" noshow="true" print="false">
+        <valor eval="true">$_SESSION['idUser']</valor>
+      </field>
+
+      <field id="id_stkinventario" autoInc="true" noshow="true" print="false">
+        <expression sql="true">(SELECT MAX(S.id_stkinventario) + 1 FROM STK_INVENTARIOS S)</expression>
+        <detalle>id_stkinventario</detalle>
+      </field>      
+
+      <field id="articulos" local="true" colspan="4">
+        <helper xml="stkinventariodet_dh_grid.xml" type="object">
+        </helper>
+      </field>
+
+</table>
+</form>
+</histrix>

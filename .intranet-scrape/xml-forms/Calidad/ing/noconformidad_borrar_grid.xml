@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="grid" inserta="false" modifica="false" deleteRow="false" borra="false" paginar="100" procesa="true" confirmar="BORRAR">
+<title>Análisis de No Conformidad</title>
+<obs></obs>
+    <form>
+        <table id="CAL_NOCONFORMIDADES" >
+
+            <movimientos>
+                <relacion id="noconformidad_del.xml"/>
+                <relacion id="noconformidad_acciones_del.xml"/>
+            </movimientos>
+
+            <filters>
+                <field id="estadonconf_id">
+                    <label>Estado</label>
+                    <operador>=</operador>
+                </field>
+                <field id="origennconf_id" modpos="nobr">
+                    <label>Origen</label>
+                    <operador>=</operador>
+                </field>
+                <field id="rhseccion_id" modpos="nobr">
+                    <label>Sección</label>
+                    <operador>=</operador>
+                </field>
+                <field id="fecha_nconf" modpos="nobr">
+                    <label>Desde Fecha</label>
+                    <operador>&gt;=</operador>
+                </field>
+                <field id="fecha_nconf" modpos="nobr">
+                    <label>Hasta Fecha</label>
+                    <operador>&lt;=</operador>
+                </field>
+            </filters>
+
+            <fieldGroup >
+                <field id="id_noconformidad" >
+                    <label modpos="nobr">Número</label>
+                </field>
+                <field id="estadonconf_id">
+                    <helper xml="calestadosnconf_crud.xml" dir="/calidad/man" type="combo" empty="true"/>
+                    <label>Estado</label>
+                </field>
+				<field id="regcuenta_id" _noshow="true" deshabilitado="false">
+					<label>Cuenta</label>
+					<helper type="external" xml="regcuenta_autocomplete_qry.xml" dir="/ayudas"/>
+				</field>
+				<field id="origennconf_id">
+                    <helper xml="calorigennconf_qry.xml" type="combo" dir="/ayudas" empty="true"/>
+                    <label>Origen</label>
+                </field>
+                <field id="rhseccion_id">
+                    <helper xml="rhseccion_qry.xml" type="combo" dir="/ayudas" empty="true" />
+                    <label modpos="nobr">Sección</label>
+                </field>
+				<field id="stkarticulo_id" deshabilitado="true">
+			        <label >Artículo</label>
+				</field>
+				<field id="stkarticulo_nombre" local="true" _autocompletar="true" valid="true" deshabilitado="false">
+					<label>Nombre Artículo</label>
+                    <expression>select nombre_articulo from STK_ARTICULOS where id_stkarticulo = stkarticulo_id limit 1</expression>
+			        <size>60</size>
+				</field>
+                <field id="fecha_nconf" >
+                    <label>Fecha</label>
+                </field>
+                <field id="descripcion_nconf" cellMaxLength="30">
+                    <label >Descripción</label>
+                    <size>200</size>
+                </field>
+                <field id="contencion_nconf" cellMaxLength="30">
+                    <label>Acción de contención</label>
+                    <size>200</size>
+                </field>
+			</fieldGroup>
+
+            <fieldGroup>
+                <field id="borra_nc" local="true">
+                    <label>Borrar</label>
+                    <tipo>check</tipo>
+                </field>
+            </fieldGroup>
+
+        </table>
+    </form>
+</histrix>

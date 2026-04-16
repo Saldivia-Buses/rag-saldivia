@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix borra="no" imprime="false" inserta="no" llenoreferente="true" tipo="ing" >
+  <title>Pedidos Internos</title>
+  <obs/>
+  <form >
+    <table id="PEDIDOINT"  label="Pedidos Internos" idCampoCond="imputar">
+<!--      <movimientos>
+        <relacion id="remito_pedidoint_update.xml"/>
+      </movimientos> -->
+      <field id="idPed" _noshow="true" deshabilitado="true">
+        <label>pedido</label>
+        <detalle>idPed</detalle>
+      </field>    
+
+      <field deshabilitado="true" id="codprv" noshow="true">
+        <label>Cod.Proveedor</label>
+        <help>Codigo de Proveedor</help>
+        <valor>0</valor>
+      </field>
+      <field id="usuario" deshabilitado="true">
+        <label Formstyle="display:none;">Usuario </label>
+        <help>Usuario que hace el pedido</help>
+        <tabla_ex id="HTXUSERS">
+          <field id="login"></field>
+          <field id="nombre">
+            <expression>concat(nombre,' ', apellido)</expression>
+          </field>
+          <order>
+            <field id="nombre"></field>
+          </order>
+        </tabla_ex>
+      </field>    
+      <field id="idDeposito" deshabilitado="true">
+        <label modpos="nobr" colspan="6" Formstyle="display:none;">Lugar Entrega </label>
+        <help>Lugar de Entrega/Descarga</help>
+        <tabla_ex id="DEPOSITO">
+          <field id="idDeposito">
+          </field>
+          <field id="direccion">
+          </field>
+        </tabla_ex>      
+        <tipo>integer</tipo>  
+      </field>          
+      <field deshabilitado="true" id="nrofab">
+        <label>Nro Fab.</label>
+        <help>Numero de Fabricacion</help>
+        <tabla_ex id="CHASIS">
+          <field id="nrocha" muestra="true"/>
+          <field id="chades"/>
+          <order>
+            <field id="nrocha"/>
+          </order>
+        </tabla_ex>
+      </field>
+      <field deshabilitado="true" id="nrofab">
+        <label>NroFab</label>
+        <detalle>nrofab</detalle>
+      </field>
+      <field deshabilitado="true" id="artcod">
+        <label>Codigo Articulo .</label>
+        <help>Codigo de Articulo.</help>
+        <detalle>artcod</detalle>
+      </field>
+      <field deshabilitado="true" id="artdes" tabla="STKINSUM">
+        <label>Descripcion</label>
+        <tipo>varchar</tipo>
+        <detalle>artdes</detalle>
+      </field>
+      <field id="movref" deshabilitado="true">
+        <label Formstyle="display:none;">Ref.</label>
+        <help>Referencia </help>
+        <size>5</size>
+        <detalle>movref</detalle>
+      </field>       
+      <field deshabilitado="true" id="pencps">
+        <label>Pendiente Compras</label>
+        <help>Cantidad</help>
+        <detalle>movuso</detalle>
+        <detalle>pedidoCompra</detalle>        
+      </field>
+      <field deshabilitado="true" id="artuni">
+        <label Formstyle="display:none;">Unidad de Medida</label>
+        <help>Unidad de Medida</help>
+        <tabla_ex id="FSMUNIDS">
+          <field id="unicod"/>
+          <field id="uninom"/>
+          <order>
+            <field id="uninom"/>
+          </order>
+        </tabla_ex>
+        <detalle>artuni</detalle>
+      </field>
+      <field deshabilitado="true" id="penuso">
+        <label>Pendiente Uso</label>
+        <help>Cantidad</help>
+        <detalle>cant</detalle>
+        <detalle>pedidoUso</detalle>
+      </field>
+      <field deshabilitado="true" id="unicps">
+        <label Formstyle="display:none;">Unidad de Uso</label>
+        <help>Unidad de Medida</help>
+        <tabla_ex id="FSMUNIDS">
+          <field id="unicod"/>
+          <field id="uninom"/>
+          <order>
+            <field id="uninom"/>
+          </order>
+        </tabla_ex>
+        <detalle>unicps</detalle>
+      </field>      
+<!--      <field deshabilitado="true" id="codprv">
+        <label>Cod.Proveedor</label>
+        <help>Codigo de Proveedor</help>
+      </field> -->
+      <field deshabilitado="true" id="estado" noshow="true">
+        <label>Estado</label>
+        <help>Estado</help>
+        <condicion operador="!=">1</condicion>
+      </field>
+      <field deshabilitado="true" id="fecreq">
+        <label>Fec.Req.</label>
+        <help>Fecha deRequerimiento</help>
+        <detalle>fecreq</detalle>
+      </field>
+
+
+      <field id="imputar" local="true" refresh="true" >
+        <label>imputar</label>
+        <help>Seleccion</help>
+        <tipo>check</tipo>  
+        <if exp="codprov == 0">
+          <true>(imputar == 1)?1:0</true>
+          <false>(imputar == 0)?0:1</false>
+        </if> 
+        
+      </field>      
+      <field id="valcps" noshow="true" tabla="STKINSUM">
+        <label>valcps</label>
+        <detalle>valcps</detalle>
+      </field>
+      <field id="valuso" noshow="true" tabla="STKINSUM">
+        <label>valuso</label>
+        <detalle>valuso</detalle>
+      </field>          
+      <field id="imput2" local="true"  noshow="true">
+        <tipo>varchar</tipo>  
+        <if exp="imputar == 1" operador="=">
+          <true>false</true>
+          <false>true</false>
+        </if>      
+      </field>      
+      <field deshabilitado="true" id="tipocomp" noshow="true">
+        <label>Tipo Comp</label>
+        <help>Tipo Comprobante</help>
+      </field>
+      <field deshabilitado="true" id="fechaemi" noshow="true">
+        <label>Emision</label>
+        <help>Fecha de Emision</help>
+      </field>
+      <field deshabilitado="true" id="puesto" noshow="true">
+        <label>Puesto</label>
+        <help>Puesto de Venta</help>
+      </field>
+      <field deshabilitado="true" id="nrocom" noshow="true">
+        <label>Nro.Comp.</label>
+        <help>Numero de Comprobante.</help>
+      </field>
+      <field id="renglon" noshow="true">
+        <label>Renglon</label>
+      </field>
+      <field id="uno" local="true" noshow="true">
+        <valor>1</valor>
+      </field>
+      <field id="confirmado" oculto="true">
+        <condicion operador="=">2</condicion>
+      </field>
+
+    </table>
+    <join tipo="left">
+      <table id="STKINSUM">
+        <field id="siscod" oculto="true">
+          <label>STKINSUM.siscod</label>
+          <condicion operador="=">'01'</condicion>
+        </field>
+        <field id="artcod" oculto="true">
+          <condicion operador="=">PEDIDOINT.artcod</condicion>
+        </field>
+        <field id="artuni" oculto="true"></field>
+        <field id="unicps" oculto="true"></field>
+      </table>
+    </join>
+  </form>
+</histrix>

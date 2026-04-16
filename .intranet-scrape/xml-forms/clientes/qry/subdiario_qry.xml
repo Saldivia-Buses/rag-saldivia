@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" inserta="false" modifica="false" deleteRow="false" confirma="IMPRIMIR" imprime="false">
+  <title>Subdiario de Facturación</title>
+  <obs/>
+  <form>
+    <table id="REG_MOVIMIENTOS">
+
+	  <movimientos>
+	    <relacion id="subdiario_prn.xml" /> 
+      <relacion id="subdiario_prn_rem.xml" />
+	  </movimientos>
+
+      <filters>
+        <field id="letra_movimiento">
+          <label modpos="nobr">Letra</label>
+          <operador>=</operador>
+        </field>
+
+        <field id="nro_movimiento">
+          <label>D/H Nro movimiento</label>
+          <operador>&gt;=</operador>
+        </field>
+
+        <field id="nro_movimiento" sincelda="true">
+          <label modpos="nobr"> a </label>
+          <operador>&lt;=</operador>
+        </field>
+
+        <field id="concepto_id">
+          <label nobr="true">Concepto</label>
+          <operador>=</operador>
+        </field>
+
+        <field id="fecha_movimiento">
+          <label>Emisión</label>
+          <tipo>date</tipo>
+          <valor>today</valor>
+          <operador>&gt;=</operador>
+        </field>
+
+        <field id="nro_cuenta">
+          <label>Cliente</label>
+          <operador>=</operador>
+        </field>
+      </filters>
+
+
+
+	  <!-- ORDEN -->
+	  <field id="puesto_movimiento" noshow="true" />
+      <field id="letra_movimiento" noshow="true">
+        <label>L</label>
+        <helper type="combo">
+          <option value=""></option>
+          <option value="A">A</option>
+          <option value="B">B</option>
+          <option value="C">C</option>
+          <option value="M">M</option>
+        </helper>
+      </field>
+      <field id="nro_movimiento" noshow="true" />
+      <field id="concepto_id">
+          <label>Concepto</label>
+          <helper type="combo" xml="regconcepto_qry.xml" dir="/ayudas" empty="true"> 	
+        	<field id="informa_calculo">
+        	  <condicion operador="=">0</condicion>
+        	</field>
+          </helper>
+      </field>
+    
+	  <!-- FIN ORDEN -->
+
+      <field id="id_regmovim" noshow="true" />
+
+      <field id="id_remito" noshow="true">
+        <expression>remito.id_regmovim</expression>
+        <label>idrem</label>
+      </field>
+ 
+      <field id="subsistema_id" valauto="true" oculto="true" esClave="true" />
+
+      <field id="nro_cuenta" tabla="REG_CUENTA">
+          <label>Cliente</label>
+          <help>Nº/Nombre</help>
+          <helper type="external" xml="regcuenta_solamente_nro_qry.xml" dir="/ayudas" />
+      </field>
+
+
+      <field id="regcuenta_id" noshow="true">
+        <label>Cuenta</label>
+      </field>
+
+      <field id="nombre_cuenta" tabla="REG_CUENTA">
+        <label>Nombre</label>
+      </field>
+
+      <field id="abreviacion_iva" tabla="GEN_IVA">
+        <label>Cat.</label>
+      </field>
+
+      <field id="cuit_cuenta" tabla="REG_CUENTA">
+        <label>CUIT</label>
+      </field>
+
+      <field id="fecha_movimiento">
+        <label>Emisión</label>
+        <tipo>date</tipo>
+        <help>dd/mm/yyyy</help>
+      </field>
+
+      <field id="movimiento">
+        <expresion>CONCAT(REG_MOVIMIENTOS.letra_movimiento,' ',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,'0'),'-',LPAD(REG_MOVIMIENTOS.nro_movimiento,8,'0'))</expresion>
+        <label>Numero</label>
+        <helper type="link" dir="/clientes/qry" title="Detalle del comprobante">
+          <parameter source="id_regmovim" target="id_regmovim"/>
+        </helper>
+        <attribute id="linkint">imprime_concepto</attribute>
+      </field>
+
+      <field id="movimiento2">
+        <expresion>CONCAT(remito.letra_movimiento,' ',LPAD(remito.puesto_movimiento,4,'0'),'-',LPAD(remito.nro_movimiento,8,'0'))</expresion>
+        <label>Remito</label>
+        <helper type="link" dir="/clientes/qry" title="Detalle del comprobante">
+          <parameter source="id_remito" target="id_regmovim"/>
+        </helper>
+        <attribute id="linkint">imprime_concepto2</attribute>
+      </field>
+
+      <field id="importe_movimiento" suma="true" style="font-size: medium;">
+        <label>Total</label>
+      </field>
+      
+      <field id="imprime_concepto" noshow="true">
+        <expresion>ifnull(REG_NUMERADORES.ejecuta,'')</expresion>
+      </field>
+      <field id="imprime_concepto2" noshow="true">
+        <expresion>ifnull(numerador_remito.ejecuta,'')</expresion>
+      </field>      
+      <field id="printer" noshow="true">
+    	<expresion>REG_NUMERADORES.printer</expresion>
+      </field>
+      <group>
+        <field id="id_regmovim" />    
+      </group>
+      <order>
+        <field id="id_regmovim" />    
+      </order>
+    </table>
+
+    <join>
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="GEN_IVA">
+        <field id="id_iva">
+          <condicion operador="=">REG_CUENTA.iva_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join>
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+        <field id="informa_calculo">
+          <condicion operador="=">0</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join>
+      <table id="REG_NUMERADORES">
+        <field id="subsistema_id">
+          <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+        </field>
+        <field id="regconcepto_id">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+        <field id="puesto">
+          <condicion operador="=">REG_MOVIMIENTOS.puesto_movimiento</condicion>
+        </field>
+        <field id="letra">
+          <condicion operador="=">REG_MOVIMIENTOS.letra_movimiento</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_DETALLES">
+        <field id="regmovim_id">
+          <condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_IMPUTACIONESDETALLES" as="fac_ped">
+        <field id="regdetallefac_id">
+          <condicion operador="=">REG_DETALLES.id_regdetalle</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_IMPUTACIONESDETALLES" as="rem_ped">
+        <field id="regdetalleped_id">
+          <condicion operador="=">fac_ped.regdetalleped_id</condicion>
+        </field>
+        <field id="regdetallefac_id">
+          <condicion operador="!=">fac_ped.regdetallefac_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_DETALLES" as="det_remito">
+        <field id="id_regdetalle">
+          <condicion operador="=">rem_ped.regdetallefac_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_MOVIMIENTOS" as="remito">
+        <field id="id_regmovim">
+          <condicion operador="=">det_remito.regmovim_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_NUMERADORES" as="numerador_remito">
+        <field id="subsistema_id">
+          <condicion operador="=">remito.subsistema_id</condicion>
+        </field>
+        <field id="regconcepto_id">
+          <condicion operador="=">remito.concepto_id</condicion>
+        </field>
+        <field id="puesto">
+          <condicion operador="=">remito.puesto_movimiento</condicion>
+        </field>
+        <field id="letra">
+          <condicion operador="=">remito.letra_movimiento</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

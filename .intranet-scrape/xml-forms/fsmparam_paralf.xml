@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+	<title>PARAMETRO</title>
+	<obs></obs>
+	<form >
+		<table id="FSMPARAM" label="PARAMETRO">
+			<field id="paralf">
+				<label>Alfanumerico</label>
+			</field>
+		</table>
+	</form>	   
+</histrix> 

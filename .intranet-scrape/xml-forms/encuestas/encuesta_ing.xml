@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" _conBusqueda="true" _noform="true" _modifica="false"  inserta="false" tooltip="false"
+	imprime="false" confirma="ENVIAR MAILS" _maxshowresult="1000" _detallado="false" _limit="10" paginar="50" log="false">
+	<confirmacion>
+		<![CDATA[ ¿ Desea Enviar la Encuesta a las personas seleccionadas ? ]]>
+	</confirmacion>
+	<txtresultados>
+		<prefijo><![CDATA[ ¡Atención! Se enviarán ]]>
+		</prefijo>
+		<sufijo><![CDATA[ correos electrónicos al confirmar.]]>
+		</sufijo>
+	</txtresultados>
+	<title>Contactos</title>
+	<obs/>
+	<form >
+		<table id="CCTCONTA" label="Seleccione Destinatarios">
+			<movimientos>
+<!--				<relacion id="encuesta_evento_ingmov.xml"/> -->
+				<relacion id="encuesta_mail.xml"/>
+				<!--<relacion id="sendmails.xml"/> -->
+				
+			</movimientos>
+			<field id="siscod" oculto="true">
+				<condicion operador="=">'02'</condicion>
+					
+			</field>
+			
+			<field id="ctacod" tabla="CCTCUENT" deshabilitado="true">
+				<label>Cuenta</label>
+<!--				  <condicion operador="=">230</condicion>  -->
+			</field>
+			<field id="cliente" >
+				<expression>CCTCUENT.ctanom</expression>
+				<label>Cliente</label>		
+				<tipo>varchar</tipo>
+
+			</field>
+			
+			<field id="contacto">
+				<expression>nombre</expression>
+				<label>contacto</label>				
+			</field>
+			<field id="destino" deshabilitado="true">
+				<expression>mail</expression>
+				<label>email</label>
+				<help></help>
+				<tipo>email</tipo>
+				<condicion operador="!=">''</condicion>
+			</field>
+			<field id="url" noshow="true">
+				<expression><![CDATA[ concat('<a href="http://www.saldiviabuses.com.ar/index.php?modulo=encuesta&idEncuesta=2&ctacod=', md5(CCTCUENT.ctacod), '" target="_blank">AQUI</a>')]]></expression>				
+				
+			</field>
+<!--  			<field id="cargo" oculto="true">
+				<label>cargo</label>				
+				<condicion operador="=">7</condicion>
+				
+			</field> -->			
+			<field id="principal" deshabilitado="true" noshow="true">
+				<label>principal</label>				
+				<tipo>check</tipo>
+				<condicion operador="=">1</condicion>
+			</field>
+			
+			<field id="sendmail" deshabilitado="true" noshow="true" local="true">
+				<label modpos="nobr">Envia Mail</label>
+				
+				
+				<condicion operador="=">1</condicion>
+				<tipo>check</tipo>
+				<valor>1</valor>
+			</field>
+			
+		</table>
+		<join  tipo="inner">
+			<table id="CCTCUENT">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">CCTCONTA.siscod</condicion>
+				</field>
+			
+			<field id="ctacod">
+					<condicion operador="=">CCTCONTA.ctacod</condicion>
+
+			</field>
+			<field id="catcod">
+					<condicion operador="=">1</condicion>
+
+			</field>
+				
+			</table>
+		</join>
+
+	</form>
+</histrix>

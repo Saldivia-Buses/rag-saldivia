@@ -1,9 +1,10 @@
 ---
 name: ingest
 description: "Ingestar documentos en SDA Framework. Usar cuando se menciona 'ingestar', 'agregar documentos', 'nueva colección', 'indexar docs', 'subir PDFs al RAG', o cuando se necesita poblar una colección con documentos. Conoce el pipeline de ingesta, el RAG Blueprint, y la integración con Milvus."
-model: opus
+model: sonnet
 tools: Bash, Read, Glob, Write, Edit
 permissionMode: default
+effort: high
 maxTurns: 20
 memory: project
 ---
@@ -12,7 +13,7 @@ Sos el agente de ingesta de SDA Framework.
 
 ## Antes de empezar
 
-1. Lee `docs/bible.md`
+1. Lee `docs/README.md`
 2. Verificá el estado real de `services/ingest/` — puede ser solo scaffold
 3. Verificá qué servicios están UP antes de intentar ingestar
 

@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" style="height:100%;" paginar="50">
+  <title>MEnsajes</title>
+  <obs/>
+  <form >
+    <table id="HTXMESSAGES" label="Mensajes recibidos" >
+      <filters>
+	<field id="mensaje" deshabilitado="false">
+	   <label>Mensaje</label>
+	   <operador>like</operador>
+	</field>
+	<field id="title">
+	   <label>Asunto</label>
+	   <operador>like</operador>
+	</field>
+	<field id="leido">
+	   <label>Leido</label>
+	   <operador>=</operador>
+	</field>
+	<field id="de">
+	   <label>de</label>
+	   <operador>=</operador>
+	</field>
+	<field id="_para" noshow="true">
+	   <operador>=</operador>
+	      <valor eval="true">$_SESSION['usuario']</valor>
+	</field>
+	<field id="fecha" deshabilitado="false">
+                <label>Fecha</label>
+                <operador>&gt;=</operador>
+                <valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m") ,
+
+                   date("d")-30, date("Y")))</valor>          
+                </field> 
+     </filters>
+      <field id="de" deshabilitado="false" _local="true">
+        <label>De</label>
+        <help>Usuario que hace el pedido</help>
+       <tabla_ex id="HTXUSERS" vacio="true">
+          <field id="login"></field>
+          <field id="nombre"></field>
+          <order>
+            <field id="nombre"></field>
+          </order>
+        </tabla_ex>
+      </field>
+      
+      <field id="_para" local="true"  noshow="true">
+          <valor eval="true">"'".$_SESSION['usuario']."'"</valor>
+	<label Formstyle="display:none;">Para</label>
+  
+      </field>
+     
+     <!--<field id="de" deshabilitado="true" noshow="true" >
+	<condicion operador="=">'[___de__]'</condicion>
+      </field>-->
+      <field id="para" deshabilitado="true" noshow="true" >
+	<condicion operador="=">'[___para__]'</condicion>
+      </field>
+      
+      <field id="idMensaje" noshow="true" tipoOrden="DESC">
+        <label>id</label>
+
+      </field>
+      
+      <field  id="fecha">
+        <label _Formstyle="display:none;">Desde</label>
+      </field>
+      <field deshabilitado="true" id="hora" >
+        <label Formstyle="display:none;">Hora</label>
+      </field>
+      <!--<field deshabilitado="true" id="DE" >
+        <expresion>de</expresion>
+        <label>de</label>
+        <tipo>varchar</tipo>
+      </field>-->
+      <!--
+       <field id="de" deshabilitado="true" noshow="true" >
+	<condicion operador="=">'[___de__]'</condicion>
+      </field>
+      <field id="para" deshabilitado="true" noshow="true" >
+	<condicion operador="=">'[___para__]'</condicion>
+      </field>
+      
+     
+     <field id="depara" deshabilitado="true" noshow="true">
+          <expresion having="false">CONCAT(de,para)</expresion>
+          <condicion operador="=">'[___de__][___para__]' or CONCAT(de,para) = '[___para__][___de__]'</condicion>
+          
+      </field>
+      -->
+      
+      <field id="title" deshabilitado="true" >
+      <label>asunto</label>
+      </field>
+      
+       <field id="mensaje" _deshabilitado="true">
+<!--        <expresion>case when isnull((select obs from HTXLOG where HTXLOG.idEvento = HTXMESSAGES.idEvento and HTXMESSAGES.idEvento != '' and (tipo = 'UPDATE' or tipo = 'DELETE') limit 1)) then mensaje else CONCAT(mensaje, ' (',(select obs from HTXLOG where HTXLOG.idEvento = HTXMESSAGES.idEvento and (tipo = 'UPDATE' or tipo = 'DELETE') limit 1),')') end </expresion>
+-->
+        <size>45</size>
+        <label _Formstyle="display:none;"
+          colstyle="color:#444;font-size:15px;">mensaje</label>
+        <help>Texto del mensaje</help>
+      </field>
+     <!--<field id="msg2" deshabilitado="true"  local="true" noshow="true">
+        <if exp="true">
+          <true>'%0A%0A'.str_replace('%0A', '%0A>>', mensaje)</true>
+          <false>''</false>
+        </if>
+        <tipo>varchar</tipo>
+      </field> 
+      -->
+    
+      <field id="idEvento" noshow="true">
+                            <condicion operador="=">''</condicion>
+                        </field>
+    <!--   <field id="det" print="false" local="true" linkint="log_msg_cons.xml" linkdes="Detalle">
+                    <label Formstyle="display:none;">Detalles</label>        
+        <paring destino="idEvento" operador="=">idEvento</paring>
+        <tipo>varchar</tipo>
+        <if exp="strlen('idEvento') != 0">
+          <true>'Detalle'</true>
+          <false>''</false>
+        </if>
+      </field>        
+      
+	
+     <field id="responder" local="true" print="false"  linkint="mensajes_reply.xml" linkdes="Responder este Mensaje">
+        <label Formstyle="display:none;">Responder</label>
+        <tipo>varchar</tipo>
+        <valor><![CDATA['<img alt="../img/mail_generic.png" src="../img/mail_generic.png"/>']]></valor>
+        <paring destino="para" operador="=">DE</paring>
+        <paring destino="idHilo" >idMensaje</paring>
+        <paring destino="mensaje" operador="=">msg2</paring>          
+      </field>      
+        -->   
+      <field id="leido" deshabilitado="true">
+        <label _Formstyle="display:none;">leido</label>
+        <options>
+	  <option valor=""></option>
+          <option valor="0">No</option>
+          <option valor="1">Si</option>
+        </options>
+        <tipo>check</tipo>
+        
+      </field>
+<!--
+      <field id="hi" deshabilitado="true" clasefila="true" noshow="true" _local="true">
+          <expresion>case when de = [___de__] then 'grisado' end</expresion>
+
+        <tipo>varchar</tipo>
+      </field>
+-->      
+      <order _ordenaTemporal="true">
+        <field id="idMensaje"/>
+      </order>
+    </table>
+<!--    <join tipo="inner">
+      <table id="HTXUSERS">
+        <field id="nom" local="true" noselect="true" noshow="true">
+          <valor eval="true">$_SESSION['usuario']</valor>
+          <tipo>varchar</tipo>
+        </field>
+        <field id="login">
+          <condicion operador="=" valorde="nom"></condicion>
+        </field>
+        <field id="login2">
+          <expresion>login</expresion>
+          <condicion operador="!=">'' and (HTXUSERS.login = HTXMESSAGES.para or
+            HTXUSERS.login = HTXMESSAGES.de)</condicion>
+        </field>
+        
+      </table>
+    </join> -->
+  </form>
+</histrix>

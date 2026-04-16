@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta" >
+	<title>Insumos</title>
+	<obs></obs>
+	<form >
+		<table id="STKINSUM">
+			<title>Insumos</title>
+			<field id="movfec" tabla="STKINMOV" >
+				<label>Fecha</label>
+				<tipo>date</tipo>
+			</field>
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+			</field>
+			<field id="artcod" >
+				<ayuda_ex id="STKINSUM">
+					<clave>artcod</clave>
+					<descripcion>artdes</descripcion>
+				</ayuda_ex>
+				
+				<label>Cod.</label>
+				
+			</field>
+			<field id="artdes" >
+				<label>Articulo</label>
+				<help>Descripcion de Articulo</help>
+			</field>
+			<field id="cantidad" >
+				<label>Cantidad</label>
+				<expression>sum(STKINMOV.movpes * (case when STKCONCE.contip = '1' then 1 else -1 end))</expression>
+				<condicion operador="&lt;=">0</condicion>
+				<tipo>numeric</tipo>
+				<help></help>
+			</field>
+			<filters>
+				<field id="movfec" >
+					<operador>&lt;=</operador>
+					<label>Hasta Fecha</label>
+					<help>Hasta fecha</help>
+				</field>
+
+			</filters>		
+
+			<group>
+				<field id="artcod" tabla="STKINSUM"></field>
+			</group>			
+			<!--<order>
+				<field id="artcod" tabla="STKINSUM"></field>
+			</order>			-->
+
+			
+		</table>
+		<join tipo="left">
+			<table id="STKINMOV">
+				<field id="siscod" oculto="true">
+					<label>STKINMOV.siscod</label>
+					<condicion operador="=">STKINSUM.siscod</condicion>
+				</field>
+				<field id="artcod" oculto="true">
+					<condicion operador="=">STKINSUM.artcod</condicion>
+				</field>
+			</table>
+		</join>		
+		<join tipo="left">
+			<table id="STKCONCE">
+				<field id="siscod" oculto="true">
+					<label>STKCONCE.siscod</label>
+					<condicion operador="=">'06'</condicion>
+				</field>
+				<field id="movcod" oculto="true">
+					<condicion operador="=">STKINMOV.movcod</condicion>
+				</field>
+			</table>
+		</join>				
+	</form>
+</histrix>

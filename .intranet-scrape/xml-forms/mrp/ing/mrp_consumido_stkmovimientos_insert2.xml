@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" limit="0">
+    <title>DETALLE ORDEN PRODUCCION</title>
+    <obs></obs>
+    <form >
+        <table id="STK_MOVIMIENTOS" label="MOVIMIENTOS" >
+            <select> select stkarticulohijo_id, [__stkdeposito_id__], [__stkconcepto_consumido_id__], '[__fecha_cierre__]', '[__fecha_cierre__]', [__unidad_id__], ([__producido_ordendetalle__] * cantidad), [__id_mrpordendetalle__] , '[__mrporden_id__]', 0 , 0, '[__user_id__]'
+                 from STK_BOM where stkarticulopadre_id = '[__stkarticulo_id__]'</select>
+            
+            <field id="stkarticulo_id" 	   id_temp="stkarticulo_id" />
+            
+            <field id="stkdeposito_id" 	   id_padre="stkdeposito_id" />
+            
+            <field id="stkconcepto_id" 	   id_padre="stkconcepto_consumido_id" />
+            
+            <field id="fecha_movimiento"   id_padre="fecha_cierre" >
+                <tipo>date</tipo>
+            </field>
+            
+            <field id="alta_movimiento"    id_padre="fecha_cierre" >
+                <tipo>date</tipo>
+            </field>
+
+            <field id="unidad_id" 	   id_temp="unidad_id"/>
+
+            <field id="cantidad" 	   id_temp="producido_ordendetalle"/>
+            
+            <field id="ordendetalle_id"    id_temp="id_mrpordendetalle" />
+            
+            <field id="numero_movimiento" 	   id_temp="mrporden_id"/>
+
+            <field id="puesto_movimiento" >
+        	   <valor>0</valor>
+            </field>
+
+            <field id="letra_movimiento" >
+               <valor>''</valor>
+            </field>
+
+            <field id="user_id"      id_temp="user_id"/>
+
+        </table>
+    </form>
+</histrix>

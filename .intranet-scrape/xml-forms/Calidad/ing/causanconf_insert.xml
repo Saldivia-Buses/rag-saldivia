@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="insert"   >
+        <title>Ingreso de No Acciones de Conformidad</title>
+        <obs></obs>
+        <form >
+                <table id="CAL_ACCIONES_NCONF" >
+                    <title>Estados</title>
+                        <field id="noconformidad_id" id_temp="id_noconformidad"/>
+                        <field id="descripcion_accionnconf" id_temp="causa_nconf"/>
+                        <field id="fecha_accionnconf"   id_temp="fecha_nconf"	     />
+<!--                        <field id="resp_rhpersonal_id"    id_temp="login"  />	-->
+<!--                        <field id="control_accionnconf"    id_temp=""  />      -->                  
+                        <field id="tipo_accionnconf">   
+							<valor>0</valor>
+						</field>                     
+                           
+                </table>
+        </form>           
+</histrix>

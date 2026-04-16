@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" _dataSource="HtxMailgunSuppressions" filter="true">
+  <title>Bloqueos</title>
+  <obs/>
+  <form >
+    <table id="HtxMailgunSuppressions">
+
+<!--
+      <filters _auto="true">
+          <field id="type">
+            <label>Tipo</label>
+          </field>
+      </filters>
+-->
+      <field id="timestamp">
+        <label>Fecha</label>
+        <tipo>date</tipo>
+      </field>
+      <field id="address">
+        <label>Email</label>
+      </field>
+      <field id="error">
+        <label>Descripcion</label>
+      </field>
+
+
+      <field id="type" _noshow="true">
+        <label>evento</label>
+        <helper type="combo" empty="true">
+          <option value="bounces">Rebote</option>
+          <option value="unsubscribes">Desuscripcion</option>
+          <option value="complaints">Reporto como SPAM</option>
+        </helper>
+	<tipo>varchar</tipo>
+      </field>
+      <field id="domain" noshow="true">
+            <label>Domain</label>
+            <!-- valor eval="true">$_SESSION['properties']['domain']</valor> -->
+	    <valor>saldiviabuses.com.ar</valor>
+      </field>
+
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="update">
+       <title>IVACOMPRAS</title>
+        <obs></obs>
+               <form >	
+					<table id="IVACOMPRAS" label="IVACOMPRAS" idCampoCond="grabaiva">
+						<field id="fecreg" id_temp="reg_fecha" />
+						<field id="feciva" id_temp="fecha_movimiento" esClave="true" />
+						<field id="codcom" id_temp="concod" esClave="true" />
+						<field id="codlet" id_temp="letra_movimiento" esClave="true" />
+						<field id="nronpv" id_temp="puesto_movimiento" esClave="true" />
+						<field id="nrocom" id_temp="nro_movimiento" esClave="true" />
+						<field id="ctacod" id_temp="nro_cuenta" esClave="true" />
+						<field id="ctanom" id_temp="nombre_cuenta" />
+						<field id="nrodoc" id_temp="cuit_cuenta" />
+						<field id="totcom" id_temp="importe_movimiento" />
+						
+					</table>
+               </form>
+        </histrix>

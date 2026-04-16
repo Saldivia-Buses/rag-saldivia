@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" >
+	<title>RETENCIONES</title>
+	<obs/>
+	<form >
+		<table id="RET1598" label="retenciones" idCampoCond="pagarRI">
+            <field id="printer" id_padre="printer_orden" local="true" >
+                <detalle>printer</detalle>
+                <detalle>directprint</detalle>
+                <setvar>directprint</setvar>
+            </field> 			
+			<field id="compnro"  >
+				<valor>(select parent from CAJPARAM where parcla = 'nropag' limit 1)</valor>
+				<detalle>compnro</detalle>
+			</field>
+			<field id="codcomp"  id_padre="concod" ></field>
+			<field id="codnpv"   id_padre="movnpv"  ></field>
+			<field id="compfec"  id_padre="movfec"  ></field>
+			<field id="ctacod"   id_temp="ctacod"  >
+				<detalle>ctacod</detalle>
+			</field>
+			<field id="ctadir"   id_temp="ctadir"  ></field>
+			<field id="ctaloc"   id_temp="ctaloc"  ></field>
+			<field id="ctanib"   id_temp="ctanib"  ></field>
+			<field id="ctanom"   id_temp="ctanom"  ></field>
+			<field id="ctanro"   id_temp="ctanro"  ></field>
+
+			<field id="fecret"   id_padre="movfec"  ></field>
+			<field id="nroret"   id_temp="nroret"  >
+				<valor>(select max(rt.nroret) + 1 from RET1598 AS rt)</valor>
+			</field>
+			<field id="totcomp"  id_temp="saldo" ></field>
+			<field id="totimpon" id_temp="impgra"></field>
+			<field id="alicuota" id_temp="por1598" ></field>
+			<field id="totret"   id_temp="RI"  ></field>
+		</table>
+	</form>
+</histrix>

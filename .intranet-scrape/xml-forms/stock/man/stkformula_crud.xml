@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CRUD
+Tarea: Tabla de Conceptos de Stock
+Autor: d!ego2k
+Fecha: 13/10/10
+*******************************************************************************
+-->
+<histrix tipo="abm-mini" subtipo="vertical">
+    <title>Formulas</title>
+    <obs></obs>
+    <form>
+        <table id="STK_FORMULAS" label="Conceptos">
+            <field id="id_stkformula" esClave="true" noshow="true" />
+
+            <field id="stkarticulopadre_id">
+                <label>Id Producto al que pertenece</label>
+            </field>
+            <field id="stkarticulo_id">
+                <label>Producto</label>
+            </field>
+            <field id="stkformula_cantidad">
+                <label>Cantidad</label>
+                <tipo>decimal</tipo>
+            </field>
+        </table>
+        <join>
+            <table id="STK_ARTICULOS" label="Articulos">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">STK_FORMULAS.stkarticulo_id</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>	

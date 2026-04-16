@@ -62,12 +62,16 @@ func UserEmailFromContext(ctx context.Context) string {
 // has the given permission. Permissions are loaded from the JWT claims by the
 // Auth middleware and stored in context.
 //
+// Supports wildcard permissions: a user with "erp.accounting.*" satisfies
+// RequirePermission("erp.accounting.read"). The wildcard must be the last
+// segment (e.g., "erp.*" matches "erp.anything.read").
+//
 // Admin role bypasses all permission checks.
 //
 // Usage:
 //
 //	r.With(middleware.RequirePermission("chat.read")).Get("/sessions", h.ListSessions)
-//	r.With(middleware.RequirePermission("ingest.write")).Post("/upload", h.Upload)
+//	r.With(middleware.RequirePermission("erp.accounting.write")).Post("/entries", h.Create)
 func RequirePermission(permission string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -81,7 +85,7 @@ func RequirePermission(permission string) func(http.Handler) http.Handler {
 
 			perms := PermissionsFromContext(r.Context())
 			for _, p := range perms {
-				if p == permission {
+				if matchPermission(p, permission) {
 					next.ServeHTTP(w, r)
 					return
 				}
@@ -90,4 +94,52 @@ func RequirePermission(permission string) func(http.Handler) http.Handler {
 			writeJSONError(w, http.StatusForbidden, "insufficient permissions")
 		})
 	}
+}
+
+// RequireModule returns middleware that checks if the request's tenant has
+// the given module enabled. Reads enabled modules from context (set by auth
+// middleware or a preceding middleware that queries tenant_modules).
+func RequireModule(moduleID string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			modules := EnabledModulesFromContext(r.Context())
+			for _, m := range modules {
+				if m == moduleID {
+					next.ServeHTTP(w, r)
+					return
+				}
+			}
+			writeJSONError(w, http.StatusForbidden, "module not enabled")
+		})
+	}
+}
+
+// matchPermission checks if a user's permission p satisfies the required
+// permission. Supports exact match and wildcard: "erp.*" matches "erp.stock.read".
+func matchPermission(userPerm, required string) bool {
+	if userPerm == required {
+		return true
+	}
+	// Wildcard: "erp.accounting.*" → prefix "erp.accounting."
+	// Also handles bare "*" (superuser wildcard)
+	if len(userPerm) >= 1 && userPerm[len(userPerm)-1] == '*' {
+		prefix := userPerm[:len(userPerm)-1] // "erp.accounting." or "" for bare "*"
+		if len(required) >= len(prefix) && (prefix == "" || required[:len(prefix)] == prefix) {
+			return true
+		}
+	}
+	return false
+}
+
+const enabledModulesKey contextKey = "enabled_modules"
+
+// WithEnabledModules stores the tenant's enabled module IDs in context.
+func WithEnabledModules(ctx context.Context, modules []string) context.Context {
+	return context.WithValue(ctx, enabledModulesKey, modules)
+}
+
+// EnabledModulesFromContext returns the tenant's enabled module IDs.
+func EnabledModulesFromContext(ctx context.Context) []string {
+	modules, _ := ctx.Value(enabledModulesKey).([]string)
+	return modules
 }

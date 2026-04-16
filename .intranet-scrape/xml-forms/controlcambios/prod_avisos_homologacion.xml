@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid"   path="fotos/homologaciones/" deleteRow="false" process="true" inserta="false" imprime="false">
+  <title>HOMOLOGACION POR MODELO</title>
+  <obs/>
+  <form >
+    <table id="HOMOLOGMOD">
+      <title>Homologaciones por modelo</title>
+
+	<movimientos>
+	    <relacion id="prod_avisos_homologacion_del.xml" />
+	    <relacion id="prod_avisos_homologacion_ins.xml" />
+	</movimientos>
+
+      <field id="id_homologacion" _noshow="true" autoinc="true">
+<detalle>homologacion_id</detalle>
+      </field>
+      <field id="prodaviso_id" local="true" />
+      <field id="Descripcion">
+        <label>Descripcion</label>
+        <!--<expression>CONCAT(IFNULL(CARROCERIA.desabv, ' '),' ',IFNULL(MARCHASIS.mardes, ' '), ' ',IFNULL(MODCHASIS.moddes, ' '),' ', (case when MODCHASIS.euro_id = 1 then 'E3' else (case when MODCHASIS.euro_id = 2 then 'E5' else '' end) end), ' ', IFNULL(HOMOLOGMOD.asientos + acompañante, ' '),' Asientos ',(CASE WHEN banbar = 1 THEN 'BB' ELSE ' ' END) ,'- Largo: ', largo, trim(referencia), ' ', (case when baja = 1 then '- Baja' else '' end))</expression>-->
+        <expression><![CDATA[IFNULL(
+(SELECT 
+    CONCAT(   ifnull(CARROCERIA.desabv,''),' ',
+              ifnull(MARCHASIS.desabv,''),' ',
+              ifnull(MODCHASIS.desabv,''), ' ' ,
+
+              IFNULL(EURO_TIPO.abrev_euro,''), ' ',
+              (case when CARROCERIA.doble_piso = 1 then (CONCAT(ifnull(asientos, ''), '+', ifnull(asientos_plantabaja, ''))) else (ifnull(asientos,0) + ifnull(acompañante, 0)) end),
+              ' Asientos ',
+              (case when ifnull(auxiliar,0) = 1 then '+ Camarera ' else '' end) ,              
+              (CASE WHEN ifnull(banbar,0) = 1 THEN 'BB' ELSE ' ' END) ,
+              '- Largo: ', 
+              ifnull(largo,''), ' ', 
+	      ifnull(concat('(',id_homologacion,')'),''),' ',
+              trim(ifnull(referencia,'')), ' ', 
+              (case when ifnull(baja,0) = 1 then '- Baja' else '' end)
+
+)
+
+FROM HOMOLOGMOD H
+
+INNER JOIN PROD_MODELO_LCM ON id_modelo_lcm = modelo_lcm_id
+LEFT JOIN MODCHASIS ON id_modelo = PROD_MODELO_LCM.modelo_id
+LEFT JOIN MARCHASIS ON MARCHASIS.marcod = MODCHASIS.marcod
+LEFT JOIN EURO_TIPO ON EURO_TIPO.id_euro = MODCHASIS.euro_id 
+LEFT JOIN CARROCERIA ON PROD_MODELO_LCM.nrocar_id = CARROCERIA.nrocar
+LEFT JOIN PROD_LCM ON id_lcm = PROD_MODELO_LCM.lcm_id
+
+WHERE H.id_homologacion = HOMOLOGMOD.id_homologacion
+
+                ),'')]]>
+                </expression>
+      </field>
+      
+      <field id="baja" noshow="true">
+        <condicion operador="=">0</condicion>
+      </field>
+
+	<field id="grabar">
+	    <expression>case when homologacion_id then 1 else 0 end</expression>
+	    <tipo>check</tipo> 
+	</field> 
+      <order>
+        <field id="baja"></field>
+        <field id="Descripcion"></field>
+        <field id="nrocar" tabla="HOMOLOGMOD"></field>
+        <field id="moddes" tabla="MODCHASIS"></field>
+        <field id="asientos" ></field>
+      </order>
+    </table>
+    <join tipo="left">
+       <table id="PROD_AVISOS_HOMOLOGACION">
+          <field id="homologacion_id">
+                 <condicion operador="=">id_homologacion</condicion>
+          </field>
+          <field id="prodaviso_id">
+                 <condicion operador="=">[__prodaviso_id__]</condicion>
+          </field>        
+	</table>
+    </join>
+    <join tipo="left">
+               <table id="CARROCERIA">
+          <field id="nrocar">
+                 <condicion operador="=">HOMOLOGMOD.nrocar</condicion>
+          </field>
+        </table>
+    </join>
+    <join tipo="left">
+      <table id="MARCHASIS">
+        <field id="marcod">
+          <condicion operador="=">HOMOLOGMOD.marcod</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="MODCHASIS">
+        <field id="modcha">
+          <condicion operador="=">HOMOLOGMOD.modcha</condicion>
+        </field>
+        <field id="marcod">
+          <condicion operador="=">HOMOLOGMOD.marcod</condicion>
+        </field>
+      </table>
+    </join>        
+  </form>
+</histrix>

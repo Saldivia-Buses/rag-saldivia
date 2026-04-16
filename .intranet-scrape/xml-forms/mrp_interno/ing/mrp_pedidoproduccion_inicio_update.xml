@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update">
+    <title>Actualiza seccion</title>
+    <form>
+        <table id="MRP_PEDIDO_PRODUCCION" idCampoCond="inicio">
+
+            <field id="id_mrp_pedido_prod"	id_temp="id_mrp_pedido_prod" esClave="true"/>
+            <field id="inicio_usuario_id"	id_temp="usuario_id" />
+            <field id="inicio_hora">
+                <valor>NOW()</valor>
+                <tipo>integer</tipo>
+            </field>
+
+        </table>
+    </form>
+</histrix>

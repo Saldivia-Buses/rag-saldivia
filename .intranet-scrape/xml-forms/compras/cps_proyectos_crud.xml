@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" borra="no">
+  <title>Proyectos</title>
+  <obs></obs>
+  <form>
+    <table id="CPS_PROYECTO" label="Proyectos">
+      <field id="id_cpsproyecto" noshow="true">
+        <label>Codigo</label>
+        <help>Código del proyecto</help>
+      </field>
+      <field id="nombre_cpsproyecto" required="true">
+        <label>Nombre </label>
+        <help>Nombre proyecto</help>
+        <size>30</size>
+      </field>
+      <field id="abrev_cpsproyecto">
+        <label>Abreviación </label>
+        <help>Abreviación proyecto</help>
+        <size>30</size>
+      </field>
+      <field id="activo_cpsproyecto">
+        <label>Activo </label>
+        <help>Activo proyecto</help>
+        <options>
+        <option valor="1">Si</option>
+        <option valor="0">No</option>
+      </options>
+      </field>
+    </table>
+  </form>
+</histrix>  

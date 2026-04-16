@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" paginar="200">
+    <title>CONSULTA DE FICHA DE VENTAS</title>
+    <form  detalle="noconformidad_file.xml">
+        <table id="INFCONFORMIDAD" label="Ficha de Ventas">
+    
+            <field id="fecha_conformidad">
+                <label>Fecha</label>
+                <help>Numero de Fabricacion</help>
+		<valor>today</valor>
+            </field>
+            <field id="id_conformidad" _noshow="true" deshabilitado="false">
+		  <label modpos="nobr">Numero</label>
+		  <detalle>id_conformidad</detalle>
+            </field>
+	    <field id="informado" _noshow="true">
+		  <label>Informado por</label>
+            </field>
+	     <field id="Recepcion" local="true" colstyle="display:none;">
+		  <label posx="5"  posy="+0.3"  PDFsize="11" size="25"  >Recepcion</label>
+		   <expresion>CASE WHEN origen_conformidad = 1 THEN 1 else 0 END</expresion>
+		   <detalle>prueba6</detalle>
+		  <tipo>check</tipo>
+            </field>
+	     <field id="Fabricacion" local="true" colstyle="display:none;">
+		<label posx="65" _posy="+0.5"  PDFsize="11" size="25" >Fabricacion</label>
+		   <expresion>CASE WHEN origen_conformidad = 2 THEN 1 else 0 END</expresion>
+		    <detalle>prueba5</detalle>
+		   <tipo>check</tipo>
+	     </field>
+
+	     <field id="Final" local="true" colstyle="display:none;">
+		<label posx="135" _posy="+0.5"  PDFsize="11" size="25" >Final</label>
+		   <expresion>CASE WHEN origen_conformidad = 3 THEN 1 else 0 END</expresion>
+		    <detalle>prueba4</detalle>
+		   <tipo>check</tipo>
+	     </field>
+             <field id="Direccion" local="true" colstyle="display:none;">
+		<label posx="5" posy="+0.5"  PDFsize="11" size="25" >Direccion</label>
+		   <expresion>CASE WHEN origen_conformidad = 4 THEN 1 else 0 END</expresion>
+		    <detalle>prueba3</detalle>
+		   <tipo>check</tipo>
+	     </field>
+             <field id="Auditoria" local="true" colstyle="display:none;">
+		<label posx="65" _posy="+0.1"  PDFsize="11" size="25"  >Auditoria</label>
+		   <expresion>CASE WHEN origen_conformidad = 5 THEN 1 else 0 END</expresion>
+		   <detalle>prueba2</detalle>
+		   <tipo>check</tipo>
+	     </field>
+             <field id="Cliente" local="true" colstyle="display:none;">
+		<label posx="135" _posy="+0.1"  PDFsize="11" size="25"  >Cliente</label>
+		   <expresion>CASE WHEN origen_conformidad = 6 THEN  1 ELSE 0 END</expresion>
+		  <detalle>prueba</detalle>
+		  <tipo>check</tipo>
+	     </field>
+	      <field id="tipo_real" local="true" colstyle="display:none;">
+		<label posx="135" _posy="+0.1"  PDFsize="11" size="25"  >Real</label>
+		   <expresion>CASE WHEN INFCONFORMIDAD.real  = 0  THEN  0 ELSE 1 END</expresion>
+		   <tipo>check</tipo>
+		   <detalle>real1</detalle>
+	     </field>
+	       <field id="tipo_potencial" local="true" colstyle="display:none;">
+		<label posx="135" _posy="+0.1"  PDFsize="11" size="25"  >Potencial</label>
+		   <expresion>CASE WHEN INFCONFORMIDAD.potencial  = 0  THEN  0 ELSE 1 END</expresion>
+		   <tipo>check</tipo>
+		   <detalle>potencial1</detalle>
+	     </field>
+	        <field id="retroceso" local="true" colstyle="display:none;">
+		<label posx="5" posy="+0.5"  PDFsize="11" size="25" >Direccion</label>
+		   <expresion>CASE WHEN INFCONFORMIDAD.real = 1 THEN 1 else 0 END</expresion>
+		    <detalle>real2</detalle>
+		   <tipo>check</tipo>
+	     </field>
+             <field id="reclasificacion" local="true" colstyle="display:none;">
+		<label posx="65" _posy="+0.1"  PDFsize="11" size="25"  >Auditoria</label>
+		   <expresion>CASE WHEN INFCONFORMIDAD.real = 2 THEN 1 else 0 END</expresion>
+		   <detalle>real3</detalle>
+		   <tipo>check</tipo>
+	     </field>
+             <field id="desecho" local="true" colstyle="display:none;">
+		<label posx="135" _posy="+0.1"  PDFsize="11" size="25"  >Cliente</label>
+		   <expresion>CASE WHEN INFCONFORMIDAD.real = 3 THEN  1 ELSE 0 END</expresion>
+		  <detalle>real4</detalle>
+		  <tipo>check</tipo>
+	     </field>
+	    <field id="reciclado" local="true" colstyle="display:none;">
+		<label posx="5" posy="+0.5"  PDFsize="11" size="25" >reciclado</label>
+		   <expresion>CASE WHEN potencial = 1 THEN 1 else 0 END</expresion>
+		    <detalle>potencial2</detalle>
+		   <tipo>check</tipo>
+	     </field>
+             <field id="devolucion" local="true" colstyle="display:none;">
+		<label posx="65" _posy="+0.1"  PDFsize="11" size="25"  >devolucion</label>
+		   <expresion>CASE WHEN potencial = 2 THEN 1 else 0 END</expresion>
+		   <detalle>potencial3</detalle>
+		   <tipo>check</tipo>
+	     </field>
+             <field id="desviacion" local="true" colstyle="display:none;">
+		<label posx="135" _posy="+0.1"  PDFsize="11" size="25"  >desviacion</label>
+		   <expresion>CASE WHEN INFCONFORMIDAD.potencial = 3 THEN  1 ELSE 0 END</expresion>
+		  <detalle>potencial4</detalle>
+		  <tipo>check</tipo>
+	     </field>
+	     
+        </table>
+
+    </form>
+</histrix>

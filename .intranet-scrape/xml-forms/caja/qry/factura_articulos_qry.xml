@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" >
+    <title>Detalle de Comprobante</title>
+    <obs></obs>
+    <form>
+	<table id="STK_MOVIMIENTOS" >
+
+		<field id="regmovimiento_id" noshow="true">
+	              <condicion operador="=">-1</condicion>
+	        </field>
+
+		<field id="id_stkmovimiento" oculto="true" />
+		
+        <fieldGroup>
+		  <field id="stkarticulo_id">
+			<label>Cod Art</label>
+		  </field>
+
+		<field id="nombre_articulo" tabla="STK_ARTICULOS">
+			<label>Articulo</label>
+		</field>
+
+                <field id="nombre_deposito" tabla="STK_DEPOSITOS">
+                    <label>Deposito</label>
+                </field>
+
+                <field id="cantidad">
+                    <label>Cantidad</label>
+                </field>
+
+		<field id="precio_venta">
+			<label>P. Unit</label>
+		</field>
+
+		<field id="precio_total" suma="true">
+			<label>P. Total</label>
+		</field>
+
+                <field id="referencia">
+                    <label>Referencia</label>
+                </field>
+
+        </fieldGroup>
+                
+       </table>
+
+	<join tipo="left">
+		<table id="STK_ARTICULOS">
+			<field id="id_stkarticulo">
+				<condicion operador="=">STK_MOVIMIENTOS.stkarticulo_id</condicion>
+			</field>
+		</table>
+	</join>
+	<join tipo="left">
+		<table id="STK_DEPOSITOS">
+			<field id="id_stkdeposito">
+				<condicion operador="=">STK_MOVIMIENTOS.stkdeposito_id</condicion>
+			</field>
+		</table>
+	</join>
+
+    </form>
+</histrix>

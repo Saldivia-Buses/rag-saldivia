@@ -1,11 +1,9 @@
 # Alertmanager configuration for SDA Framework.
-# Routes alerts from Prometheus to Slack/email/webhook.
+# Routes alerts from Prometheus to the notification service webhook.
 #
-# Configure via environment variables:
-#   SDA_ALERT_WEBHOOK — Slack/Discord/Telegram incoming webhook URL
-#   SDA_ALERT_EMAIL   — email address for critical alerts
-#
-# If neither is set, alerts are logged but not sent externally.
+# Auth: Bearer token from Docker secret (DS3).
+# The webhook URL is Docker-internal (no Traefik routing).
+# See: docs/plans/2.0.x-plan23-dev-stack-v2.md, Fase 2.
 
 global:
   resolve_timeout: 5m
@@ -33,23 +31,23 @@ route:
       repeat_interval: 4h
 
 receivers:
-  # Default: null receiver (no configs = silently drops alerts).
-  # To enable notifications, uncomment webhook_configs below.
+  # Default: webhook to notification service (warning/info alerts)
   - name: 'default'
-    # webhook_configs:
-    #   - url: '${SDA_ALERT_WEBHOOK}'
-    #     send_resolved: true
+    webhook_configs:
+      - url: 'http://notification:8005/internal/webhook/alert'
+        http_config:
+          authorization:
+            credentials_file: /run/secrets/alertmanager_webhook_token
+        send_resolved: true
 
-  # Critical: uncomment for production notifications.
+  # Critical: same webhook (handler sends email for critical severity)
   - name: 'critical'
-    # webhook_configs:
-    #   - url: '${SDA_ALERT_WEBHOOK}'
-    #     send_resolved: true
-    # email_configs:
-    #   - to: '${SDA_ALERT_EMAIL}'
-    #     from: 'alerts@${SDA_DOMAIN}'
-    #     smarthost: '${SMTP_HOST}:${SMTP_PORT}'
-    #     require_tls: true
+    webhook_configs:
+      - url: 'http://notification:8005/internal/webhook/alert'
+        http_config:
+          authorization:
+            credentials_file: /run/secrets/alertmanager_webhook_token
+        send_resolved: true
 
 # Inhibition: if a critical alert fires, suppress warnings for same service
 inhibit_rules:

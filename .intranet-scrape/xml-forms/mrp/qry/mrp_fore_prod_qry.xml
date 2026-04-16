@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" >
+    <title>Forecast Articulos</title>
+    <obs></obs>
+    <form >
+        <table id="MRP_FORECAST" label="Forecast">
+            <filters>
+                <field id="year_forecast">
+                    <label>año</label>
+                    <operador>=</operador>
+                    <valor eval="true">date("Y")</valor>
+                </field>
+                <field id="nombre" deshabilitado="false">
+                    <expresion>nombre_articulo</expresion>
+                    <label modpos="nobr">Articulo</label>
+                    <help>Codigo de Articulo</help>
+                    <operador>like</operador>
+                </field>
+    
+            </filters>
+			
+            <fieldGroup>
+                <field id="stkarticulo_id" esClave="true">
+                    <label>Código</label>
+                    <help>Codigo de Articulo</help>
+                </field>
+               <field id="stock_minimo" noshow="true" tabla="STK_ARTICULOS">
+
+                </field>
+                <field id="nombre" >
+                    <expresion>nombre_articulo</expresion>
+                    <label>Articulo</label>
+                    <help>Codigo de Articulo</help>
+                </field>
+                <field id="total" noZero="false" tipoOrden="DESC" local="true" >
+                    <label>Total</label>
+                    <if exp="true">
+                        <true>Enero + Febrero + Marzo +  Abril + Mayo + Junio + Julio + Agosto + Septiembre + Octubre + Noviembre + Diciembre</true>
+                        <false>0</false>
+                    </if>
+                    <tipo>grafico</tipo>
+                </field>
+				
+                <field id="year_forecast" noshow="true" incdec="true">
+                    <label>año</label>
+                </field>
+	   
+            </fieldGroup>
+            <fieldGroup local="true" noshow="true">
+                <field id="uno" ><valor>1</valor></field>
+                <field id="dos" ><valor>2</valor></field>
+                <field id="tres" ><valor>3</valor></field>
+                <field id="cuatro" ><valor>4</valor></field>
+                <field id="cinco" ><valor>5</valor></field>
+                <field id="seis" ><valor>6</valor></field>
+                <field id="siete" ><valor>7</valor></field>
+                <field id="ocho" ><valor>8</valor></field>
+                <field id="nueve" ><valor>9</valor></field>
+                <field id="diez" ><valor>10</valor></field>
+                <field id="once" ><valor>11</valor></field>
+                <field id="doce" ><valor>12</valor></field>
+
+            </fieldGroup>
+            <fieldGroup noZero="true"   _showValor="true" >
+                <field id="Enero"  local="true" showObjTabla="true"   _showValor="true">
+                    <label>Enero</label>
+                    <helper type="object" xml="mrp_prod_fore_x_art_qry.xml">
+                        <parameter source="stkarticulo_id" target="stkarticulo_id" />
+                        <parameter source="uno" target="mes" />
+                        <parameter source="year_forecast" target="year" />
+                        <parameter source="Enero" target="forecast" />
+                    </helper>
+                    <expresion>
+				    round(   sum(ifnull((case when mes_forecast = 3 then cantidad_forecast end),0)) + stock_minimo
+                                       - ifnull(( SELECT sum((CASE WHEN STK_CONCEPTOS.tipo_concepto = 0 THEN STK_MOVIMIENTOS.cantidad ELSE -(STK_MOVIMIENTOS.cantidad) END)) as "Stock" from STK_MOVIMIENTOS
+                             inner JOIN STK_CONCEPTOS on STK_CONCEPTOS.id_stkconcepto = STK_MOVIMIENTOS.stkconcepto_id
+                             where  STK_MOVIMIENTOS.stkarticulo_id = MRP_FORECAST.stkarticulo_id  and
+                                    STK_MOVIMIENTOS.fecha_movimiento &lt; '[__year_forecast__]-01-01'),0  ))
+                    </expresion>
+                    <tipo>integer</tipo>
+                </field>
+			
+                <field id="Febrero" showObjTabla="true"    _showValor="true">
+                    <label>Febrero</label>
+                    <helper type="object" xml="mrp_prod_fore_x_art_qry.xml">
+                        <parameter source="stkarticulo_id" target="stkarticulo_id" />
+                        <parameter source="dos" target="mes" />
+                        <parameter source="year_forecast" target="year" />
+                        <parameter source="Febrero" target="forecast" />
+                    </helper>
+                    <expresion>
+				        round( sum(ifnull((case when mes_forecast = 4 then cantidad_forecast end),0)) + stock_minimo
+                                       - ifnull(( SELECT sum((CASE WHEN STK_CONCEPTOS.tipo_concepto = 0 THEN STK_MOVIMIENTOS.cantidad ELSE -(STK_MOVIMIENTOS.cantidad) END)) as "Stock" from STK_MOVIMIENTOS  
+                             inner JOIN STK_CONCEPTOS on STK_CONCEPTOS.id_stkconcepto = STK_MOVIMIENTOS.stkconcepto_id 
+                             where  STK_MOVIMIENTOS.stkarticulo_id = MRP_FORECAST.stkarticulo_id  and 
+                                    STK_MOVIMIENTOS.fecha_movimiento &lt; '[__year_forecast__]-02-01'),0  ))
+                    </expresion>
+
+                    <tipo>integer</tipo>
+
+                </field>
+                <field id="Marzo" showObjTabla="true"    _showValor="true">
+                    <label>Marzo</label>
+                    <helper type="object" xml="mrp_prod_fore_x_art_qry.xml">
+                        <parameter source="stkarticulo_id" target="stkarticulo_id" />
+                        <parameter source="tres" target="mes" />
+                        <parameter source="year_forecast" target="year" />
+                        <parameter source="Marzo" target="forecast" />
+                    </helper>
+                    <expresion>
+				        round( sum(ifnull((case when mes_forecast = 5 then cantidad_forecast end),0)) + stock_minimo
+                                       - ifnull(( SELECT sum((CASE WHEN STK_CONCEPTOS.tipo_concepto = 0 THEN STK_MOVIMIENTOS.cantidad ELSE -(STK_MOVIMIENTOS.cantidad) END)) as "Stock" from STK_MOVIMIENTOS  
+                             inner JOIN STK_CONCEPTOS on STK_CONCEPTOS.id_stkconcepto = STK_MOVIMIENTOS.stkconcepto_id 
+                             where  STK_MOVIMIENTOS.stkarticulo_id = MRP_FORECAST.stkarticulo_id  and 
+                                    STK_MOVIMIENTOS.fecha_movimiento &lt; '[__year_forecast__]-03-01'),0  ))
+                    </expresion>
+
+                    <tipo>integer</tipo>
+
+                </field>
+                <field id="Abril" showObjTabla="true"    _showValor="true">
+                    <helper type="object" xml="mrp_prod_fore_x_art_qry.xml">
+                        <parameter source="stkarticulo_id" target="stkarticulo_id" />
+                        <parameter source="cuatro" target="mes" />
+                        <parameter source="year_forecast" target="year" />
+                        <parameter source="Abril" target="forecast" />
+                    </helper>
+                    <label>Abril</label>
+                    <expresion>       round(  sum(ifnull((case when mes_forecast = 6 then cantidad_forecast end),0)) + stock_minimo
+                                       - ifnull(( SELECT sum((CASE WHEN STK_CONCEPTOS.tipo_concepto = 0 THEN STK_MOVIMIENTOS.cantidad ELSE -(STK_MOVIMIENTOS.cantidad) END)) as "Stock" from STK_MOVIMIENTOS  
+                             inner JOIN STK_CONCEPTOS on STK_CONCEPTOS.id_stkconcepto = STK_MOVIMIENTOS.stkconcepto_id 
+                             where  STK_MOVIMIENTOS.stkarticulo_id = MRP_FORECAST.stkarticulo_id  and 
+                                    STK_MOVIMIENTOS.fecha_movimiento &lt; '[__year_forecast__]-04-01'),0  ))
+                    </expresion>
+
+                    <tipo>integer</tipo>
+                </field>
+
+                <field id="Mayo" showObjTabla="true"    _showValor="true">
+                    <label>Mayo</label>
+                    <helper type="object" xml="mrp_prod_fore_x_art_qry.xml">
+                        <parameter source="stkarticulo_id" target="stkarticulo_id" />
+                        <parameter source="cinco" target="mes" />
+                        <parameter source="year_forecast" target="year" />
+                        <parameter source="Mayo" target="forecast" />
+                    </helper>
+                    <expresion>
+				       round(  sum(ifnull((case when mes_forecast = 7 then cantidad_forecast end),0)) + stock_minimo
+                                       - ifnull(( SELECT sum((CASE WHEN STK_CONCEPTOS.tipo_concepto = 0 THEN STK_MOVIMIENTOS.cantidad ELSE -(STK_MOVIMIENTOS.cantidad) END)) as "Stock" from STK_MOVIMIENTOS  
+                             inner JOIN STK_CONCEPTOS on STK_CONCEPTOS.id_stkconcepto = STK_MOVIMIENTOS.stkconcepto_id 
+                             where  STK_MOVIMIENTOS.stkarticulo_id = MRP_FORECAST.stkarticulo_id  and 
+                                    STK_MOVIMIENTOS.fecha_movimiento &lt; '[__year_forecast__]-05-01'),0  )  )
+                    </expresion>
+
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Junio" showObjTabla="true"    _showValor="true">
+                    <label>Junio</label>
+                    <helper type="object" xml="mrp_prod_fore_x_art_qry.xml">
+                        <parameter source="stkarticulo_id" target="stkarticulo_id" />
+                        <parameter source="seis" target="mes" />
+                        <parameter source="year_forecast" target="year" />
+                        <parameter source="Junio" target="forecast" />
+                    </helper>
+                    <expresion>
+				      round( sum(ifnull((case when mes_forecast = 8 then cantidad_forecast end),0)) + stock_minimo
+                                       - ifnull(( SELECT sum((CASE WHEN STK_CONCEPTOS.tipo_concepto = 0 THEN STK_MOVIMIENTOS.cantidad ELSE -(STK_MOVIMIENTOS.cantidad) END)) as "Stock" from STK_MOVIMIENTOS  
+                             inner JOIN STK_CONCEPTOS on STK_CONCEPTOS.id_stkconcepto = STK_MOVIMIENTOS.stkconcepto_id 
+                             where  STK_MOVIMIENTOS.stkarticulo_id = MRP_FORECAST.stkarticulo_id  and 
+                                    STK_MOVIMIENTOS.fecha_movimiento &lt; '[__year_forecast__]-06-01'),0  ))
+                    </expresion>
+
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Julio" showObjTabla="true"    _showValor="true">
+                    <label>Julio</label>
+                    <helper type="object" xml="mrp_prod_fore_x_art_qry.xml">
+                        <parameter source="stkarticulo_id" target="stkarticulo_id" />
+                        <parameter source="siete" target="mes" />
+                        <parameter source="year_forecast" target="year" />
+                        <parameter source="Julio" target="forecast" />
+                    </helper>
+                    <expresion>round(sum(ifnull((case when mes_forecast = 9 then cantidad_forecast end),0)) + stock_minimo
+                                       - ifnull(( SELECT sum((CASE WHEN STK_CONCEPTOS.tipo_concepto = 0 THEN STK_MOVIMIENTOS.cantidad ELSE -(STK_MOVIMIENTOS.cantidad) END)) as "Stock" from STK_MOVIMIENTOS  
+                             inner JOIN STK_CONCEPTOS on STK_CONCEPTOS.id_stkconcepto = STK_MOVIMIENTOS.stkconcepto_id 
+                             where  STK_MOVIMIENTOS.stkarticulo_id = MRP_FORECAST.stkarticulo_id  and 
+                                    STK_MOVIMIENTOS.fecha_movimiento &lt; '[__year_forecast__]-07-01'),0  ))
+                    </expresion>
+
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Agosto" showObjTabla="true"    _showValor="true">
+                    <label>Agosto</label>
+                    <helper type="object" xml="mrp_prod_fore_x_art_qry.xml">
+                        <parameter source="stkarticulo_id" target="stkarticulo_id" />
+                        <parameter source="ocho" target="mes" />
+                        <parameter source="year_forecast" target="year" />
+                        <parameter source="Agosto" target="forecast" />
+                    </helper>
+                    <expresion>round(sum(ifnull((case when mes_forecast = 10 then cantidad_forecast end),0)) + stock_minimo
+                                       - ifnull(( SELECT sum((CASE WHEN STK_CONCEPTOS.tipo_concepto = 0 THEN STK_MOVIMIENTOS.cantidad ELSE -(STK_MOVIMIENTOS.cantidad) END)) as "Stock" from STK_MOVIMIENTOS  
+                             inner JOIN STK_CONCEPTOS on STK_CONCEPTOS.id_stkconcepto = STK_MOVIMIENTOS.stkconcepto_id 
+                             where  STK_MOVIMIENTOS.stkarticulo_id = MRP_FORECAST.stkarticulo_id  and 
+                                    STK_MOVIMIENTOS.fecha_movimiento &lt; '[__year_forecast__]-08-01'),0  ))
+                    </expresion>
+
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Septiembre" showObjTabla="true"    _showValor="true">
+                    <label>Septiembre</label>
+                    <tipo>integer</tipo>
+                    <helper type="object" xml="mrp_prod_fore_x_art_qry.xml">
+                        <parameter source="stkarticulo_id" target="stkarticulo_id" />
+                        <parameter source="nueve" target="mes" />
+                        <parameter source="year_forecast" target="year" />
+                        <parameter source="Septiembre" target="forecast" />
+                    </helper>
+                    <expresion>round(sum(ifnull((case when mes_forecast = 11 then cantidad_forecast end),0)) + stock_minimo
+                                       - ifnull(( SELECT sum((CASE WHEN STK_CONCEPTOS.tipo_concepto = 0 THEN STK_MOVIMIENTOS.cantidad ELSE -(STK_MOVIMIENTOS.cantidad) END)) as "Stock" from STK_MOVIMIENTOS  
+                             inner JOIN STK_CONCEPTOS on STK_CONCEPTOS.id_stkconcepto = STK_MOVIMIENTOS.stkconcepto_id 
+                             where  STK_MOVIMIENTOS.stkarticulo_id = MRP_FORECAST.stkarticulo_id  and 
+                                    STK_MOVIMIENTOS.fecha_movimiento &lt; '[__year_forecast__]-09-01'),0  ))
+                    </expresion>
+
+                </field>
+                <field id="Octubre" showObjTabla="true"    _showValor="true">
+                    <label>Octubre</label>
+                    <helper type="object" xml="mrp_prod_fore_x_art_qry.xml">
+                        <parameter source="stkarticulo_id" target="stkarticulo_id" />
+                        <parameter source="diez" target="mes" />
+                        <parameter source="year_forecast" target="year" />
+                        <parameter source="Octubre" target="forecast" />
+                    </helper>
+                    <expresion>round(sum(ifnull((case when mes_forecast = 12 then cantidad_forecast end),0)) + stock_minimo
+                                       - ifnull(( SELECT sum((CASE WHEN STK_CONCEPTOS.tipo_concepto = 0 THEN STK_MOVIMIENTOS.cantidad ELSE -(STK_MOVIMIENTOS.cantidad) END)) as "Stock" from STK_MOVIMIENTOS  
+                             inner JOIN STK_CONCEPTOS on STK_CONCEPTOS.id_stkconcepto = STK_MOVIMIENTOS.stkconcepto_id 
+                             where  STK_MOVIMIENTOS.stkarticulo_id = MRP_FORECAST.stkarticulo_id  and 
+                                    STK_MOVIMIENTOS.fecha_movimiento &lt; '[__year_forecast__]-10-01'),0  ))
+                    </expresion>
+
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Noviembre" showObjTabla="true"    _showValor="true">
+                    <label>Noviembre</label>
+                    <helper type="object" xml="mrp_prod_fore_x_art_qry.xml">
+                        <parameter source="stkarticulo_id" target="stkarticulo_id" />
+                        <parameter source="once" target="mes" />
+                        <parameter source="year_forecast" target="year" />
+                        <parameter source="Noviembre" target="forecast" />
+                    </helper>
+                    <expresion > round(( select sum(MRPF.cantidad_forecast) from MRP_FORECAST as MRPF where MRPF.year_forecast = ([__year_forecast__] + 1) and MRPF.mes_forecast = 1 and MRPF.stkarticulo_id = MRP_FORECAST.stkarticulo_id)
+                                + stock_minimo
+                                       - ifnull(( SELECT sum((CASE WHEN STK_CONCEPTOS.tipo_concepto = 0 THEN STK_MOVIMIENTOS.cantidad ELSE -(STK_MOVIMIENTOS.cantidad) END)) as "Stock" from STK_MOVIMIENTOS
+                             inner JOIN STK_CONCEPTOS on STK_CONCEPTOS.id_stkconcepto = STK_MOVIMIENTOS.stkconcepto_id
+                             where  STK_MOVIMIENTOS.stkarticulo_id = MRP_FORECAST.stkarticulo_id  and
+                                    STK_MOVIMIENTOS.fecha_movimiento &lt; '[__year_forecast__]-11-01'),0  ))
+                    </expresion>
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Diciembre" showObjTabla="true"    _showValor="true">
+                    <label>Diciembre</label>
+                    <helper type="object" xml="mrp_prod_fore_x_art_qry.xml">
+                        <parameter source="stkarticulo_id" target="stkarticulo_id" />
+                        <parameter source="doce" target="mes" />
+                        <parameter source="year_forecast" target="year" />
+                        <parameter source="Diciembre" target="forecast" />
+                    </helper>
+                    <expresion>round(( select sum(MRPF.cantidad_forecast) from MRP_FORECAST as MRPF where MRPF.year_forecast = ([__year_forecast__] + 1) and MRPF.mes_forecast = 2 and MRPF.stkarticulo_id = MRP_FORECAST.stkarticulo_id)
+                                + stock_minimo
+                                       - ifnull(( SELECT sum((CASE WHEN STK_CONCEPTOS.tipo_concepto = 0 THEN STK_MOVIMIENTOS.cantidad ELSE -(STK_MOVIMIENTOS.cantidad) END)) as "Stock" from STK_MOVIMIENTOS
+                             inner JOIN STK_CONCEPTOS on STK_CONCEPTOS.id_stkconcepto = STK_MOVIMIENTOS.stkconcepto_id
+                             where  STK_MOVIMIENTOS.stkarticulo_id = MRP_FORECAST.stkarticulo_id  and
+                                    STK_MOVIMIENTOS.fecha_movimiento &lt; '[__year_forecast__]-11-01'),0  ))
+                    </expresion>
+                    <tipo>integer</tipo>
+                </field>
+
+            </fieldGroup>
+
+            <group>
+                <field id="stkarticulo_id"></field>
+            </group>
+			
+
+        </table>
+        <join tipo="left">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">stkarticulo_id</condicion>
+                </field>
+            </table>
+        </join>
+			
+    </form>
+</histrix>

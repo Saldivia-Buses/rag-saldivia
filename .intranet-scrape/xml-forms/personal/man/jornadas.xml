@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>TABLA DE JORNADAS</title>
+	<obs></obs>
+	<form >
+		<table id="JORNADAS" label="Jornadas">
+			<field id="idJornada">
+				<label>Cod. Jornada</label>
+			</field>
+			
+			<field id="nombre">
+				<label>Nombre</label>
+				<help>Nombre de Jornada</help>
+			</field>
+			<field id="leyenda">
+				<label>Leyenda</label>
+				<help>Leyenda a Imprimir</help>
+				<size>100</size>
+			</field>
+			
+    		<order>
+				<field id="idJornada"></field>
+			</order>
+			
+		</table>
+	</form>	   
+</histrix>

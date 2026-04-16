@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" borra="no" inserta="no" _paginar="250" preloadData="false">
+  <title>Stock Actualizado</title>
+  <obs/>
+  <form>
+    <table id="STK_STOCKACTUAL" label="Stock Actualizado">
+
+  <filters>        
+      
+      
+      	<field id="id_stkarticulo" tabla="STK_ARTICULOS" noshow="true">
+	        <operador>=</operador>
+        	<label>Codigo de Articulo</label>     
+      	</field>
+<!--
+        <field id="codigo_barra" tabla="STK_ARTICULOS">
+	        <operador>=</operador>
+        	<label modpos="nobr">Codigo de barra</label>
+        </field>
+-->
+        <field id="stkrubro_id">
+          	<operador>=</operador>
+	          <label modpos="nobr" rowspan="4">Rubro</label>
+        </field>
+
+
+	      <field id="stkdeposito_id">
+        		<helper type="combo" id="STK_DEPOSITOS" empty="true">
+        			<field id="id_stkdeposito" />
+        			<field id="nombre_deposito" />
+    		    </helper>
+    	    	<label modpos="nobr">Depósito</label>
+          	<operador>=</operador>
+      	</field>
+
+    </filters>      
+      
+
+      <field id="id_stkarticulo" tabla="STK_ARTICULOS" _noshow="true" esClave="true" _break="true">
+        <label>Codigo de Articulo</label>
+        <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+          <field id="wstklista_id" local="true">
+            <valor>1</valor>
+          </field>
+        </helper>
+      </field>
+
+<!--
+      <field id="codigo_barra" tabla="STK_ARTICULOS" noshow="true">
+        <label>Codigo de Barra</label>
+        <helper type="external" xml="stkarticulo_pos.xml" dir="/ayudas">
+          <field id="wstklista_id" local="true">
+            <valor>1</valor>
+          </field>
+        </helper>
+      </field>
+-->
+
+      <field id="stkrubro_id" tabla="STK_ARTICULOS" multiple="true" _colstyle="display:none;" noshow="true">
+        <label>Rubro</label>
+        <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true"/>
+      </field>
+
+      <field id="nombre_rubro" tabla="STK_RUBROS" />
+      <field id="tipoconteo_id" tabla="STK_ARTICULOS">
+          <label>Tipo conteo</label>
+          <helper empty="true" id="STK_TIPO_CONTEO" type="combo" >
+            <field id="id_tipoconteo"/>
+            <field id="tipo_conteo" />
+          </helper>
+      </field>
+
+
+      <field id="stkdeposito_id" _colstyle="text-align:center;">
+        <label>Depósito</label>
+    	<helper type="combo" id="STK_DEPOSITOS" empty="true">
+    	  <field id="id_stkdeposito" />
+    	  <field id="nombre_deposito" />
+        <field id="suma_total">
+          <condicion operador="=">1</condicion>
+        </field>    	</helper>
+    	<label modpos="nobr">Depósito</label>
+      </field>
+
+
+
+
+      
+      <field id="nombre_articulo" tabla="STK_ARTICULOS">
+        <label>Articulo</label>
+      </field>
+      <field id="nombre_cuenta" tabla="REG_CUENTA">
+        <label>Proveedor Habitual</label>
+      </field>
+        <field id="codigo_locacion" tabla="STK_LOCACION" >
+	    <label>Locación</label>
+	</field>
+
+            <field id="cantidades" _noshow="true" suma="true">
+		<label>Cantidad</label>
+                <expresion _having="false">round(sum( case when tipo_concepto = 0 then 1 else -1 end * cantidad), 2)</expresion>        
+		<attribute id="tooltip">nombre_deposito</attribute>		                
+                <tipo>numeric</tipo>  
+                <condicion operador="!=">0</condicion>
+            </field>
+
+	<!--      <field id="permiso" local="true" noshow="true">
+        <valor eval="true">$_SESSION['administrator']</valor>
+      </field> -->
+<!--
+      <field id="cantidad_stock2" _noshow="true" >
+	    <expression having="false">cantidad_stock</expression>
+	</field>
+    -->  
+        <field id="stklocacion_id" tabla="STK_MOVIMIENTOS" noshow="true"/>
+
+
+        <field id="cotizacion" sincelda="true" modpos="nobr" noshow="true">
+            <label>Cotización</label>
+            <expression>@cotiz:=(select cotizacion_genmonedahis from GEN_MONEDA_HIS where GEN_MONEDA_HIS.moneda_id = STK_COSTO_REPOSICION.moneda_id order by fecha_genmonedahis DESC limit 1)</expression>
+        </field>
+
+
+      <field id="valor_compra" tabla="STK_ARTICULOS">
+        <label>Val.Compra</label>
+        <help>Valor de Compra </help>
+      </field>
+      
+      <field id="unidad_compra_id"  tabla="STK_ARTICULOS">
+        <label modpos="nobr">Unidad</label>
+        <help>Unidad de Compra </help>
+        <tabla_ex id="FSMUNIDS">
+          <field id="unicod"></field>
+          <field id="uniabv"></field>
+        </tabla_ex>
+      </field>
+      
+      <field id="valor_uso"  tabla="STK_ARTICULOS">
+        <label>Val.Uso</label>
+        <help>Valor de Uso </help>
+      </field>
+      
+      <field id="unidad_uso_id"  tabla="STK_ARTICULOS">
+        <label modpos="nobr">U.Uso</label>
+        
+        <help>Unidad de Uso </help>
+        <tabla_ex id="FSMUNIDS">
+          <field id="unicod"></field>
+          <field id="uniabv"></field>
+        </tabla_ex>
+      </field>
+
+
+        <field id="costo_final_moneda_local_desc2" style="font-weigth:bold;color:green;" modpos="nobr">
+            <label>Costo AR$ Desc Unit</label>
+
+            <expression>@costofinal_local_desc:=(round(@cotiz * (
+                ((costo_proveedor + (costo_proveedor / 100 * gasto_importacion)) 
+                - (costo_proveedor / 100 * descuento_1)) - (((costo_proveedor + (costo_proveedor / 100 * gasto_importacion)) 
+                - (costo_proveedor / 100 * descuento_1)) / 100 * descuento_2))  + (flete_local_ars / @cotiz), 2))</expression>
+            <tipo>custom_numeric</tipo>
+        </field>
+        <field id="total" suma="true" local="true">
+          <label>Total</label>
+          <if exp="true">
+            <true>(costo_final_moneda_local_desc2 * valor_compra / valor_uso) * cantidades</true>
+            <false>0</false>
+          </if>
+          <tipo>custom_numeric</tipo>
+        </field>
+
+      <order>
+	<field id="nombre_articulo" tabla="STK_ARTICULOS" />
+      </order>
+
+      <group>
+        <field id="id_stkarticulo" tabla="STK_ARTICULOS"/>
+        <field id="stkdeposito_id" />
+        <field id="stklocacion_id" tabla="STK_MOVIMIENTOS"/>
+      </group>
+
+    </table>
+
+    <join>
+      <table id="STK_DEPOSITOS">
+        <field id="id_stkdeposito">
+          <condicion operador="=">stkdeposito_id</condicion>
+        </field>
+        <field id="suma_total">
+          <condicion operador="=">1</condicion>
+        </field>
+      </table>
+    </join>
+    <join>
+      <table id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">STK_STOCKACTUAL.stkarticulo_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="LEFT">
+      <table id="STK_RUBROS">
+        <field id="id_stkrubro">
+          <condicion operador="=">STK_ARTICULOS.stkrubro_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join>
+	<table id="STK_MOVIMIENTOS">
+	    <field id="stkarticulo_id">
+		<condicion operador="=">id_stkarticulo</condicion>
+	    </field>
+	    <field id="stkdeposito_id">
+		<condicion operador="=">STK_STOCKACTUAL.stkdeposito_id</condicion>
+	    </field>
+	</table>
+    </join>
+    <join>
+      <table id="STK_LOCACION">
+        <field id="id_stklocacion">
+          <condicion operador="=">STK_MOVIMIENTOS.stklocacion_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join >
+      <table id="STK_CONCEPTOS">
+        <field id="id_stkconcepto">
+          <condicion operador="=">STK_MOVIMIENTOS.stkconcepto_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="STK_COSTO_REPOSICION">
+        <field id="stkarticulo_id">
+          <condicion operador="=">id_stkarticulo</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">STK_COSTO_REPOSICION.regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

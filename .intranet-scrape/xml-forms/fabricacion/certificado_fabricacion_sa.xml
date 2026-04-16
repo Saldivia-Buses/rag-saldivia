@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="ficha" sololectura="true"  autoprint="true" PDFsincabecera="true" PDFconpie="true" bottomMargin="-30" path="/fotos/firmas/">
+       <title></title>
+        <obs></obs>
+		<pie>* - URBANO: común o diferencial. Media distancia: clase A, B o C. LARGA DISTANCIA: común con aire acondicionado, diferencial A o B. TURISMO: receptivo, excursión, exclusivo o gran turismo.</pie>
+	   
+               <form>
+				   <pdf>
+					  <code><![CDATA[
+					  $pdf->DashedRect(23,264,($pdf->anchoPagina ),264, 0.1, 70);					  
+/*					  
+					  $pdf->DashedRect(5,260,$pdf->anchoPagina,260, 0.1, 70);
+					  */
+					  
+					 // $pdf->RoundedRect(20,35,47,5, 2);
+					  
+					  
+//					  $pdf->DashedRect(40,222,100,222, 0.1, 40);
+/*					  $pdf->DashedRect(120,222,180,222, 0.1, 40);*/
+					  
+					                                            
+				//	  $pdf->DashedRect(40,232,100,232, 0.1, 40);
+
+// 					  $pdf->DashedRect(40,242,100,242, 0.1, 40);
+                                                                                      
+
+					  
+					  ]]></code>
+				  </pdf>
+
+                <table id="CERTFABRICACION" label="CERTIFICADO">
+
+			    <field id="lca" >
+					<label size="60" posx="18" posy="35" PDFnoborder="true" PDFsize="10"></label>
+					<expression>case when lca != '' then concat('L.C.A. Nro: ',lca) end</expression>
+				</field>					  
+
+			    <field id="lcm">
+					<label size="25" posx="18" posy="30" PDFnoborder="true" PDFsize="10">L.C.M. Nro:</label>
+				</field>					  
+
+				<field id="nrofab" >
+		                     <label size="10" posx="162" posy="0" PDFsize="10" PDFnoborder="true">Nro:</label>
+				</field> 
+				<field id="year1" >
+                     <label size="2" posx="180" posy="0" PDFsize="10" PDFnoborder="true">-</label>
+					 <expression>DATE_FORMAT(fechaCert, '%y')</expression>
+				</field> 
+				<field id="fechaCert" >
+                     <label size="13" posx="162	" posy="35" PDFsize="10" PDFnoborder="true">Fecha:</label>
+					<tipo>date</tipo>
+				</field> 					  
+				<field id="cabe2" local="true">
+					<label size="117" posx="45" posy="+6" PDFsize="14" >CERTIFICADO FABRICACION DE CARROCERIA</label>
+				</field>
+
+			    <field id="leyenda">
+				    <label size="180" posx="18" posy="+5" PDFnolabel="true" PDFsize="12" PDFalign="J" ></label>
+				<expression>concat('CERTIFICO QUE LA CARROCERIA DEL VEHICULO IDENTIFICADO EN EL PRESENTE HA SIDO FABRICADA POR CARROCERÍAS SALDIVIA SA. MARCA Saldivia ',
+						   'INSCRIPTO EN EL REGISTRO NACIONAL DE FABRICANTES DE CARROCERIAS Y TALLERES POR RESOLUCION S.S.T. 932-99 DE ACUERDO CON LO EXIGIDO POR EL MANUAL DE ESPECIFICACIONES S.E.T.O.P. Nº 606/75 INSCRIPTO EN EL LISTADO DE FABRICAS TERMINALES DE CARROCERIAS BAJO NOTA DTR Nro 32170 Y EL PLANO ', 
+						    CERTFABRICACION.plano, ' DEL EXPEDIENTE ', CERTFABRICACION.expte, ' APROBADO POR DISPOSICION ', (case when disposicion != '' then disposicion else dispos end))</expression>
+
+			    </field>
+<!--
+			    <field id="certif" local="true">
+					<label size="180" posx="18" posy="+5" PDFnolabel="true" PDFsize="12"></label>
+					<valor>'CERTIFICO QUE LA CARROCERIA DEL VEHICULO IDENTIFICADO EN EL PRESENTE HA SIDO FABRICADA POR'</valor>
+					<tipo>varchar</tipo>
+				</field>
+			    <field id="mcm" local="true">
+					<label size="300" posx="70" posy="+0" PDFnolabel="true" PDFsize="13"></label>
+					<valor>'MARIA CARMEN MURABITO. marca Saldivia'</valor>
+					<tipo>varchar</tipo>
+				</field> 					  
+			    <field id="insc" local="true">
+					<label size="180" posx="18" posy="+1" PDFnolabel="true" PDFsize="11"></label>
+					<valor>'INSCRIPTO EN EL REGISTRO NACIONAL DE FABRICANTES DE CARROCERIAS Y TALLERES POR RESOLUCION S.S.T. 932-99 DE ACUERDO CON LO EXIGIDO POR EL MANUAL DE ESPECIFICACIONES S.E.T.O.P. Nº 606/75 INSCRIPTO EN EL LISTADO DE FABRICAS TERMINALES DE CARROCERIAS BAJO NOTA DTR Nro 32170 Y EL PLANO '</valor>
+					<tipo>varchar</tipo>
+				</field>					  
+			    <field id="plano" _tabla="HOMOLOGMOD">
+					<label size="40" posx="155" posy="79" PDFnolabel="true" PDFsize="11"></label>
+					<tipo>varchar</tipo>
+				</field>					  
+			    <field id="del" _tabla="HOMOLOGMOD" local="true">
+					<label size="40" posx="176" posy="79" PDFnolabel="true" PDFsize="11"></label>
+					<valor>DEL</valor>
+					<tipo>varchar</tipo>
+				</field>					  
+			    <field id="expte" _tabla="HOMOLOGMOD">
+					<label posx="18" posy="+1" PDFnoborder="true" PDFsize="11" size="36">DEL EXPEDIENTE</label>
+					<tipo>varchar</tipo>
+				</field>					  
+			    <field id="dispos" tabla="HOMOLOGMOD">
+					<label posx="72" posy="0" PDFnoborder="true" PDFsize="11" size="55">APROBADO POR DISPOSICION</label>
+					<tipo>varchar</tipo>
+					<expression>(case when disposicion != '' then disposicion else dispos end)</expression>
+				</field>					  
+				-->	  
+				<field id="ident" local="true">
+					<label size="67" posx="65" posy="+10" PDFsize="12" >IDENTIFICACION DE VEHICULO</label>
+				</field>					  
+
+
+                <field id="mardes">
+					<label size="40" posx="18" posy="+5" PDFsize="12" PDFnoborder="true">CHASIS MARCA:</label>
+				<expression>CHASIS.marcod</expression>
+				<label modpos="nobr" Formstyle="display:none;">Ch.</label>
+				<help/>
+				<tabla_ex id="MARCHASIS">
+					<field id="marcod">
+					</field>
+					<field id="mardes">
+					</field>
+
+					<field id="siscod" oculto="true">
+						<condicion operador="=">03</condicion>
+					</field>
+				</tabla_ex>
+				<tipo>integer</tipo>					
+				</field>
+				<field id="chasis" tabla="CHASIS">
+					<label size="10" posx="120" posy="0" PDFsize="12" PDFnoborder="true">Nº:</label>
+				</field>					  
+				<field id="nombre" tabla="MARCAMOTOR">
+					<label size="40" posx="18" posy="+2" PDFsize="11" PDFnoborder="true" >MOTOR MARCA:</label>
+				</field>
+				<field id="nromotor" tabla="CHASIS">
+					<label size="10" posx="120" posy="0" PDFsize="12" PDFnoborder="true" >Nº: </label>
+				</field>
+
+                <field id="moddes">
+					<label size="40" posx="18" posy="+2" PDFsize="11" PDFnoborder="true">CHASIS MODELO:</label>
+					<expression>MODCHASIS.moddes</expression>
+				</field>
+
+				<field id="marcha" local="true">
+					<label size="70" posx="18" posy="+10" PDFsize="11" PDFnoborder="true" >CARROCERÍA MARCA: </label>
+					<valor>'SALDIVIA'</valor>
+				</field>
+				<field id="nrovin" local="true" noselect="true" print="false">
+					<label size="10" posx="120" posy="0" PDFsize="12" PDFnoborder="true" >Nº:  </label>
+					<tipo>varchar</tipo>
+				</field>
+				<field id="tipserv" tabla="HOMOLOGMOD">
+					<label size="70" posx="18" posy="+2" PDFsize="11" PDFnoborder="true" >CARROCERÍA PARA SERVICIO *: </label>
+					
+					<help>Tipo de Servicio</help>
+					<tabla_ex id="TIPOSERVICIO">
+							<field id="tipserv">
+							</field>
+							<field id="servdes">
+							</field>					
+					</tabla_ex>
+				</field>					
+				<field id="yearModelo" >
+                     <label size="12" posx="160" posy="0" PDFsize="11" PDFnoborder="true">AÑO:</label>
+					 <expression>DATE_FORMAT(fechaCert, '%Y')</expression>
+				</field> 					    
+				<field id="asientos" tabla="HOMOLOGMOD">
+					<expression>concat('Conductor + ',
+					(case when CARROCERIA.doble_piso = 1 then (CONCAT(asientos, '+', asientos_plantabaja)) else (asientos) end),
+					' pasajeros',
+					(case when acompañante = 1 then ' + acompañante' else '' end),
+					(case when auxiliar = 1 then ' + auxiliar' else '' end))</expression>
+					<label size="88" posx="18" posy="+2" PDFsize="11" PDFnoborder="true" >CANTIDAD DE ASIENTOS PARA PASAJEROS: </label>
+				</field>					  
+					  
+				<field id="tara" tabla="HOMOLOGMOD">
+					<expression>concat(HOMOLOGMOD.tara, ' Kgs')</expression>
+					
+					<label size="70" posx="18" posy="+2" PDFsize="11" PDFnoborder="true" >PESO DEL VEHÍCULO VACIO:</label>
+				</field>
+				<field id="bruto" tabla="HOMOLOGMOD">
+					<expression>concat(HOMOLOGMOD.bruto, ' Kgs')</expression>
+					
+					<label size="150" posx="18" posy="+2" PDFsize="10" PDFnoborder="true" >PESO DEL VEHÍCULO EN FUNCION DEL CÁLCULO DE DISTRIBUCION DE CARGAS:</label>
+				</field>					  
+
+
+            <field id="bagno">
+				<label size="35" posx="18" posy="+2" PDFsize="11" PDFnoborder="true" >POSEE BAÑO:</label>
+                <expression>banbar</expression>
+                <options>
+                  <option valor="0">NO</option>
+                  <option valor="1">SI</option>
+                </options>
+                <tipo>varchar</tipo>
+            </field> 	
+
+				<field id="banbar" tabla="HOMOLOGMOD" >
+					<label size="30" posx="80" posy="0" PDFsize="11" PDFnoborder="true" >POSEE BAR:</label>
+					<options>
+						<option valor="0">NO</option>
+						<option valor="1">SI</option>
+					</options>	
+				</field>
+
+				<field id="firma1" _local="true" >
+					<expression>'firma_foyth_sello.png'</expression>
+					<label posx="120" posy="+20" PDFnoborder="true" PDFsize="15"></label>
+				<tipo>file</tipo>
+					<size>50</size>
+				</field>
+
+		<field id="observacion_impresion">
+			<label size="180" posx="18" PDFnolabel="true" posy="250" PDFsize="11" PDFnoborder="true" >Observaciones:</label>
+		</field>
+				<!--<field id="beto1" local="true">
+					<label size="60" posx="130" posy="+57" PDFsize="12" PDFnoborder="true" >Hugo Leibovich</label>
+				</field> 				
+				<field id="beto2" local="true">
+					<label size="60" posx="130" posy="+3" PDFsize="12" PDFnoborder="true" >ICIE: 2-0371-8</label>
+				</field> 				
+				
+				<field id="dni" local="true">
+					<label size="60" posx="18" posy="+2" PDFsize="12" PDFnoborder="true" >Nro.Doc:</label>
+				</field>-->
+				
+  				<field id="ctafan" tabla="CCTCUENT">
+					<label  posx="180" posy="256" PDFsize="3" ></label>
+				</field>
+
+
+
+				
+<!--              <field id="adjuntos"  imageWidth="171" >
+		          <expression>CONCAT('/fotos/homologaciones/', HOMOLOGMOD.id_homologacion, '/')</expression>
+		         <label modpos="nobr" posX="18" posY="+1"></label>
+		         <tipo>dir</tipo> 
+              </field>-->				                                                                                                                                                                                                     
+                  </table>
+					<join tipo="left">
+						<table id="PEDCOTIZ">
+							<field id="nrocha">
+								<condicion operador="=">CERTFABRICACION.nrofab</condicion>
+							</field>
+						</table>
+					</join>				   
+					<join tipo="left">
+						<table id="CCTCUENT">
+							<field id="ctacod">
+								<condicion operador="=">PEDCOTIZ.ctacod</condicion>
+							</field>
+							<field id="siscod">
+								<condicion operador="=">'02'</condicion>
+							</field>
+						</table>
+					</join>				   
+				   
+			       	<join tipo="left">
+						<table id="CHASIS">
+							<field id="nrocha">
+								<condicion operador="=">CERTFABRICACION.nrofab</condicion>
+							</field>
+						</table>
+					</join>
+		
+				<join tipo="left">
+					<table id="MODCHASIS">
+						<field id="modcha">
+							<condicion operador="=">CHASIS.modcod</condicion>
+						</field>
+						<field id="marcod">
+							<condicion operador="=">CHASIS.marcod</condicion>
+						</field>
+					</table>
+				</join>
+					<join tipo="left">
+						<table id="HOMOLOGMOD">
+						    	<field id="id_homologacion">
+							    <condicion operador="=">PEDCOTIZ.homologacion_id</condicion>
+					        	</field>
+							
+						</table>
+					</join>						   
+    <join tipo="left">
+       <table id="CARROCERIA">
+          <field id="nrocar">
+                 <condicion operador="=">HOMOLOGMOD.nrocar</condicion>
+          </field>
+        </table>
+    </join>
+
+					<join tipo="left">
+						<table id="MARCAMOTOR">
+							<field id="idMarca">
+								<condicion operador="=">CHASIS.idMarcaMotor</condicion>
+							</field>
+						</table>
+					</join>				   
+				</form>
+        </histrix>

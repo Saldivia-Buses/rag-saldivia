@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" imprime="false">
+	<title>Usuarios</title>
+	<obs/>
+	<form >
+		<table id="HTXUSERS" label="Usuarios" >
+			<field id="login" noshow="true">
+			</field>
+
+                        <field id="send" local="true">
+                            <helper type="link" xml="mensajes_reply.xml" dir="histrix/mensajeria">
+                                <parameter source="login" target="para"></parameter>
+                            </helper>
+                            <label >Enviar</label>
+                            <tipo>varchar</tipo>
+                            <valor><![CDATA['<img src="../img/mail_generic.png"/>']]></valor>
+                        </field>
+
+			<field id="Nombre">
+				<label>Nombre</label>
+				<help></help>
+			</field>
+			<field id="apellido">
+				<label>Apellido</label>
+				<help></help>
+			</field>
+			<field id="ultimolog">
+				<label>Ultimo uso</label>
+				<help></help>
+                                <formato>d/m/Y</formato>
+                                <tipo>date</tipo>
+			</field>
+			<field id="conectado" style="text-align:center">
+				<label>conectado</label>
+                                <expresion><![CDATA[case when time_to_sec(timediff( now(), ultimolog)) < 120 then '<img alt="ok" src="../img/ok.png"/>' end]]></expresion>
+				<help></help>
+			</field>
+
+			<field id="baja" oculto="true">
+				<label>Estado</label>
+
+				<condicion operador="=">0</condicion>
+				
+				<help></help>
+			</field>
+			
+		</table>
+	</form>
+</histrix>

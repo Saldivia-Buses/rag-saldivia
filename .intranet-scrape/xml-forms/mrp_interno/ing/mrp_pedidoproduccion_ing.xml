@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" inserta="false" procesa="true" modifica="false" borra="false" _confirma="CONFIRMAR" deleteRow="false" path="fotos/articulos">
+    <title>Ingreso de unidades por seccion</title>
+    <obs/>
+    <form>
+        <table id="MRP_PEDIDO_PRODUCCION">
+
+            <filters auto="true">
+                <field id="seccion_id">
+                    <label>Seccion</label>
+                    <operador>=</operador>
+                </field>
+            </filters>
+
+            <movimientos>
+                <relacion id="mrp_pedidoproduccion_update.xml" />
+                <relacion id="mrp_pedidoproduccion_inicio_update.xml" />
+            </movimientos>
+
+            <field id="id_mrp_pedido_prod" esClave="true" noshow="true"/>
+
+            <field id="ficha_id" noshow="true">
+                <expression>PEDCOTIZ.id</expression>
+            </field>
+
+            <field id="nrofab_id" style="font-weight: bold; font-size: 17px; text-align: center;">
+                <label>Nro.Fab</label>
+                <helper type="link" xml="ficha_producto1_qry.xml" dir="/producto" title="Ficha Técnica">
+                    <parameter source="ficha_id" target="id" />
+                    <parameter source="ficha_id" target="producto_id" />
+                    <parameter source="nrofab_id" target="nrofab" />
+                </helper>
+            </field>
+
+            <field id="stkarticulo_id" noshow="true">
+                <label>Articulo</label>
+            </field>
+
+            <field id="artdes" style="font-weight: bold; font-size: 17px; text-align: center;">
+                <expression>artdes</expression>
+                <label>Descripcion</label>
+            </field>
+
+            <field id="cantidad_pieza_unidad" style="font-weight: bold; font-size: 17px; text-align: center;">
+                <label>Cant.Unidad</label>
+                <tipo>decimal</tipo>
+            </field>
+
+<!--             <field id="fotopath" local="true" noshow="true">
+            <if exp="stkarticulo_id != '558007'">
+              <true>'stkarticulo_id'</true>
+              <false>'/'</false>
+            </if>
+            <tipo>varchar</tipo>
+            </field> -->
+
+            <field id="homologacion" noshow="true">
+                <label>Homol</label>
+                <expression>@homologacion:=(PEDCOTIZ.homologacion_id)</expression>
+            </field>
+            
+            <field id="foto" _path="fotopath" _open="true" print="false" download="false" _viewer="true" watermark="artcod" tabla="STKINSUM">
+              <expression>case when (stkarticulo_id = '558007' or stkarticulo_id = '558008') then (
+                select concat('/',ARTICULO_FOTO.idArticulo,'/',ARTICULO_FOTO.foto) from ARTICULO_FOTO 
+                join PRD_CARPETA_PLANOS CP on CP.homologacion_id = @homologacion
+                join STKINSUM S on S.artcod = CP.stkarticulo_id
+                where S.artdes like '%PORTAPAQUET%' and
+                ARTICULO_FOTO.idArticulo = CP.stkarticulo_id and 
+                ARTICULO_FOTO.foto != '' order by ARTICULO_FOTO.revision desc limit 1
+                )
+                else (select concat('/',ARTICULO_FOTO.idArticulo,'/',ARTICULO_FOTO.foto) from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = STKINSUM.artcod and ARTICULO_FOTO.foto != '' order by revision desc limit 1) end</expression> 
+                <label>Imagen</label>
+                <tipo>file</tipo>
+              <size>60</size> 
+            </field>
+
+            <field id="seccion_id" tabla="MRP_PEDIDO_PRODUCCION" noshow="true">
+                <label>Salida de</label>
+                <helper type="combo" id="MOMENTO" empty="true">
+                    <field id="idMomento" />
+                    <field id="descripcion" />
+                    <field id="pedidoproduccion" local="true">
+                        <expression>select count(*) from MRP_PEDIDO_PRODUCCION MP where MP.seccion_id = seccion_id</expression>
+                        <condicion operador="!=">0</condicion>
+                    </field>
+                    <field id="linea_id">
+                        <condicion operador="=">1</condicion>
+                    </field>
+                    <order>
+                        <field id="orden" tipoOrden="ASC"/>
+                    </order>
+                </helper>
+            </field>
+
+            <field id="usuario_id" local="true" noshow="true">
+                <valor eval="true">$_SESSION['idUser']</valor>
+            </field>
+
+             <field id="homologacion_id" tabla="PEDCOTIZ" noshow="true">
+                <label>Homol</label>
+<!--                 <helper type="combo" xml="combo_homologacion_modelo.xml" dir="/fabricacion" empty="true">
+                </helper>
+ -->            </field>
+
+             <field id="creacion_hora" noshow="true">
+                <label>Hora</label>
+            </field>
+
+             <field id="inicio_hora" noshow="true">
+                <label>Hora</label>
+            </field>
+
+             <field id="terminado_hora" noshow="true">
+                <label>Hora</label>
+                <condicion operador="=">'0000-00-00 00:00:00'</condicion>
+            </field>
+
+            <field id="inicio_deshabilitado" local="true" noshow="true" style="font-weight: bold; font-size: 17px; text-align: center;">
+                <label>Inicio</label>
+                <expression>case when inicio_hora = '0000-00-00 00:00:00' then 'false' else 'true' end</expression>
+            </field>
+
+            <field id="terminado_deshabilitado" local="true" noshow="true" style="font-weight: bold; font-size: 17px; text-align: center;">
+                <label>Inicio</label>
+                <expression>case when inicio_hora = '0000-00-00 00:00:00' then 'true' else 'false' end</expression>
+            </field>
+
+            <field id="inicio_color" local="true" noshow="true" style="font-weight: bold; font-size: 17px; text-align: center;">
+                <label>Inicio</label>
+                <expression>case when inicio_hora = '0000-00-00 00:00:00' then '' else 'background-color: green;' end</expression>
+            </field>
+
+            <field id="inicio" local="true" _refresh="true" style="font-weight: bold; font-size: 17px; text-align: center;">
+                <label>Inicio</label>
+                <tipo>check</tipo>
+                <attribute id="deshabilitado">inicio_deshabilitado</attribute>
+                <attribute id="style">inicio_color</attribute>
+            </field>
+
+            <field id="terminado" local="true" _refresh="true" style="font-weight: bold; font-size: 17px; text-align: center;">
+                <label>Term.</label>
+                <tipo>check</tipo>
+                <attribute id="deshabilitado">terminado_deshabilitado</attribute>
+            </field>
+
+            <field id="modelo_lcm_id" tabla="HOMOLOGMOD" noshow="true"/>
+            <field id="nrocar" tabla="HOMOLOGMOD" noshow="true"/>
+
+            <field id="clase" clasefila="true" noshow="true">
+                <expression>case when DATE(creacion_hora) = DATE(NOW()) then '' else (case when DATE(creacion_hora) = DATE_SUB(CURDATE(), INTERVAL 1 DAY) then 'resaltado' else 'resaltadoRojo' end) end</expression>
+            </field>
+
+            <order>
+                <field id="creacion_hora" tipoOrden="ASC" />
+            </order>
+
+        </table>
+
+        <join>
+            <table id="POSICIONESFAB">
+                <field id="id_posicionfab">
+                    <condicion operador="=">MRP_PEDIDO_PRODUCCION.posicionfab_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="PEDCOTIZ">
+                <field id="nrocha">
+                    <condicion operador="=">MRP_PEDIDO_PRODUCCION.nrofab_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="MOMENTO">
+                <field id="idMomento">
+                    <condicion operador="=">MRP_PEDIDO_PRODUCCION.seccion_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="HOMOLOGMOD">
+                <field id="id_homologacion">
+                    <condicion operador="=">PEDCOTIZ.homologacion_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="STKINSUM">
+                <field id="artcod">
+                    <condicion operador="=">MRP_PEDIDO_PRODUCCION.stkarticulo_id</condicion>
+                </field>
+                <field id="siscod">
+                    <condicion operador="=">'01'</condicion>
+                </field>
+            </table>
+        </join> 
+
+    </form>
+</histrix>

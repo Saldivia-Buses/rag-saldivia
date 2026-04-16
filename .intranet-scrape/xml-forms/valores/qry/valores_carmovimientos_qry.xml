@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" >
+	<title>Consulta Cartera de Valores</title>
+	<obs/>
+	<form>
+		<table id="CAR_MOVIMIENTOS">
+
+			<field id="id_carmovimiento" noshow="true" />
+			
+			<field id="carvalor_id" noshow="true"/>
+			
+			<field id="tipo_movimiento" noshow="true" />
+			
+			<field id="cajmovimiento_id" noshow="true" />
+			
+			<field id="nro_valor" style="font-size:14px;width:100%;text-align:center;">
+				<expression>
+					CASE WHEN ISNULL(CAJ_MOVIMIENTOS.id_cajmovimiento) THEN 
+						CAR_MOVIMIENTOS.referencia_movimiento
+					ELSE
+						CONCAT( CAJ_CONCEPTOS.abreviatura_concepto,' 0000-',lpad(CAJ_MOVIMIENTOS.nro_movimiento,8,'0') )
+					END
+				</expression>
+				<helper type="link" dir="/caja/proc/del">
+					<parameter source="cajmovimiento_id" target="id_cajmovimiento" />
+				</helper>
+				<attribute id="linkint">ejecuta_concepto</attribute>
+			</field>
+			
+			<field id="ejecuta_concepto" noshow="true">
+				<expression>IF( ISNULL(CAJ_MOVIMIENTOS.id_cajmovimiento), '', 'cajmovimiento_ficha.xml')</expression>
+			</field>
+			
+			
+			
+			<order>
+				<field id="tipo_movimiento" />
+			</order>
+		</table>
+		<!-- JOINS -->
+		<join tipo="left">
+			<table id="CAJ_MOVIMIENTOS">
+				<field id="id_cajmovimiento">
+					<condicion operador="=">CAR_MOVIMIENTOS.cajmovimiento_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CAJ_CONCEPTOS">
+				<field id="id_cajconcepto">
+					<condicion operador="=">CAJ_MOVIMIENTOS.cajconcepto_id</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

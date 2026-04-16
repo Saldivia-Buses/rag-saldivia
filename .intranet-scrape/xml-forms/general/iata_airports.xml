@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+  <title>Unidades</title>
+  <obs></obs>
+  <consulta>
+    <table id="GEN_IATA_AIRPORT" label="Unidades">
+      <field id="id_airport" esClave="true">
+        <label>Codigo</label>
+        <help>Código de unidad</help>
+      </field>
+      <field id="airport_name">
+        <label>Nombre Aeropuerto</label>
+      </field>
+    </table>
+  </consulta>
+</histrix>  

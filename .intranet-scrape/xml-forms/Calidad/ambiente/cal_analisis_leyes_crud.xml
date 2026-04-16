@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud" _deleteRow="false" imprime="false" path="/archivos/analisisambiental/">
+        <title>ASPECTO AMBIENTAL</title>
+        <obs/>
+        <form >
+            	    <table id="CAL_ANALISIS_AMBIENTAL">
+
+                    <validation optional="true">
+                            <condition><![CDATA[leyes_aplicadas + 0 == 1 && descripcion_leyes == '']]>
+                            </condition>
+                            <message>Ingrese descripcion de ley</message>
+                    </validation>
+
+            		<field id="id_analisisambiental" _noshow="true" />
+
+                    <field id="leyes_aplicadas" refresh="true" _oculto="true">
+                            <label>Leyes Aplicadas</label>
+                            
+                    </field>
+            		    
+            		<field id="descripcion_leyes" refresh="true">
+                            <label _modpos="nobr">Desc.ley</label>
+                            <size>80</size>
+                    </field>
+                        
+                    <field id="leyes" local="true" _imageWidth="165" path="id_analisisambiental">
+                            <expresion>CONCAT('/archivos/analisisambiental/',id_analisisambiental,'/')
+                            </expresion>
+                            <label>Ley</label>
+                            <tipo>dir</tipo>
+                    </field>
+
+                        <!--
+                        <field id="SQL" local="true" noshow="true">
+                    	    <if exp="true">
+                   		<true>'replace into CAL_ANALISIS_VALORES set aspectoambiental_id = id_aspectoambiental, impactovalores_id = ( id_impactovalor + 0), analisisambiental_id = \'id_analisisambiental\''</true>
+                   		<false></false>
+                    	    </if>
+                        </field>
+                                      
+                        <field id="EJECUTA" noshow="true">
+                    	    <expression sql="true">[__SQL__]</expression>
+                        </field>
+                    -->
+                    <!--
+                	<group>
+                	    <field id="id_aspectoambiental"/>
+                	</group>     
+                    -->      
+            	    </table>
+                    <!--
+                    <join tipo="left">
+                	<table id="CAL_ASPECTO_AMBIENTAL">
+                	    <field id="id_aspectoambiental">
+                		<expresion>1</expresion>
+    			        <condicion operador="=">1</condicion> 
+
+                	    </field>
+                	</table>
+                    </join>
+                -->
+        </form>
+</histrix>
+
+
+
+

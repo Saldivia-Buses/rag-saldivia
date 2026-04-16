@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  Ayuda
+Tarea: Ayuda para la Tabla de Tarifas
+Autor: d!ego2k
+Fecha: 27/08/10
+Modificado: 27/09/10 diego2k
+*******************************************************************************
+-->
+<histrix tipo="consulta">
+	<title>Servicios</title>
+	<obs></obs>
+	<form >	    
+		<table id="FAC_TARIFAS" label="Servicios">
+
+		  <field id="id_factarifa" autoinc="true" noshow="true">
+			<label>Código</label>
+		  </field>
+
+		  <field id="nombre_tarifa">
+			<label>Nombre</label>
+			<help>Nombre de Tarifa</help>
+		  </field>
+
+		  <field id="facservicio_id">
+			<label>Servicio</label>
+		  </field>
+
+		  <field id="facgrupo_id">
+			<label>Grupo</label>
+		  </field>
+   
+		</table>
+
+		<join>
+			<table id="FAC_SERVICIOS">
+				<field id="id_facservicio">
+					<condicion operador="=">FAC_TARIFAS.facservicio_id</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join>
+			<table id="FAC_TARIFAS_GRP">
+				<field id="id_factarifagrupo">
+					<condicion operador="=">FAC_TARIFAS.factarifagrupo_id</condicion>
+				</field>
+			</table>
+		</join>
+
+	</form>
+
+</histrix>	

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" >
+    <title/>
+    <obs/>
+    <form>
+        <table id="CAJ_DETALLES" idCampoCond="caja_cerrada">
+            <sql>
+        
+                
+                DROP TABLE IF EXISTS TMP_CAJ_DETALLES;
+                create TEMPORARY TABLE TMP_CAJ_DETALLES
+                    select * from CAJ_DETALLES where cajmovimiento_id = '[__id_cajmovimiento__]';
+
+                UPDATE TMP_CAJ_DETALLES
+                SET id_cajdetalle = 0, importe_detalle = (importe_detalle * (-1)), cajmovimiento_id = [__ins_cajmovimientos_oprec.xml__];
+
+                INSERT INTO CAJ_DETALLES SELECT * FROM TMP_CAJ_DETALLES;
+
+                DROP TABLE TMP_CAJ_DETALLES;
+
+
+                DROP TABLE IF EXISTS TMP_CAJ_VALORES;
+                create TEMPORARY TABLE TMP_CAJ_VALORES
+                    select * from CAJ_VALORES where cajmovimiento_id = '[__id_cajmovimiento__]';
+
+                UPDATE TMP_CAJ_VALORES
+                SET id_cajvalor = 0, pago_valor = (pago_valor * (-1)), cajmovimiento_id = [__ins_cajmovimientos_oprec.xml__];
+
+                INSERT INTO CAJ_VALORES SELECT * FROM TMP_CAJ_VALORES;
+
+                DROP TABLE TMP_CAJ_VALORES;
+
+
+                    
+            </sql>      
+            <field id="id_cajmovimiento" local="true"  id_temp="id_cajmovimiento" />
+            <field id="cajmovimiento_id" lastId="ins_cajmovimientos_oprec.xml" />
+        </table>
+    </form>
+</histrix>

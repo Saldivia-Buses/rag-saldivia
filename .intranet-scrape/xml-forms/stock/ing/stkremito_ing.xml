@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ing" _subtipo="vertical" imprime="false"  insertar="true" 
+	preloadData="false"  	_transaccional="true"  	tooltip="false" 	confirma="EMITIR REMITO" 	impresion="/cuentas/qry/imp_factura_center.xml"	>
+    <title>Detalle</title>
+    <obs></obs>    
+    <consulta>
+        <table id="REG_DETALLES" label="movimientos" >
+
+
+
+            <movimientos cabecera="emision_remito_ing.xml">
+                <!-- REMITO NUEVO -->
+		<relacion id="remito_ins.xml"/>
+                <relacion id="remito_detalle_ins.xml"/> 
+
+		<!--MOVIMIENTOS DE STOCK -->
+		   <relacion id="stkmovimientos_ins.xml"/>
+
+		<!-- IMPUTACIONES -->
+		 <relacion id="numerador_remito_upd.xml"/>
+		 <relacion id="actualizar_numerador_cab_upd.xml"/>
+
+            </movimientos>
+		
+<!--
+		<field id="cajconcepto_id"  noshow="true" local="true" valauto="true">
+			<label>cajconcepto</label>
+			 <condicion operador="=">'[__cajconcepto_id__]'</condicion>
+			<valor>180</valor>
+		</field>
+		<field id="cajpuesto_id"  noshow="true" local="true" valauto="true">
+			<label>recaudador</label>
+			 <condicion operador="=">'[__cajpuesto_id__]'</condicion>
+		</field>
+		<field id="id_regdetalle" autoinc="true"   noshow="true" local="true">
+			<label>id_regmovim</label>
+		</field>
+		<field id="regcuenta_id"  noshow="true" local="true">
+			<label>regcuenta</label>
+		</field>
+		<field id="regmovim_id" noshow="true" local="true">
+			<label>regmovim</label>
+		</field>
+		<field id="remito_anterior" local="true" noshow="true">
+			<label>remito anterior</label>
+		</field>
+		<field id="remito" local="true" noshow="true">
+			<valor>'97'</valor>
+		</field>
+		<field id="_ORDEN" _esClave="true" local="true" _noshow="true" deshabilitado="true">
+			<size>2</size>
+		</field>
+		<field id="cantidad_detalle"  _suma="true">
+			<label>Cantidad</label>
+			<size>3</size>
+			<valor dafault="true">1</valor>
+		</field>
+-->
+<!-- ARTICULOS -->
+
+
+		<field id="wstklista_id" local="true" _deshabilitado="true" >
+			<label>Lista</label>
+			<helper type="combo"  xml="stklista_qry.xml" dir="/ayudas" empty="true">
+			</helper>
+			<actualiza>
+				<field id="stkarticulo_id" destino="wstklista_id" />
+			</actualiza>
+		</field>
+		<field id="stkarticulo_id" esClave="true" local="true" >
+			<label>Productos</label>
+			<helper type="external"  xml="stkarticulo1_qry.xml" dir="/ayudas" >
+			</helper>			
+		</field>
+
+		<field id="nombre_articulo" local="true" deshabilitado="true">
+			<label>Articulo</label>
+			<size>35</size>
+		</field>
+<!-- LISTA DE PRECIOS 
+		<field id="wfaclista_id1" local="true">
+			<label  modpos="nobr">Lista de Precios</label>
+			<field id="wfaclista_id2" local="true"/>
+		</field> -->
+<!-- PRECIOS -->
+		<field id="precio_venta" local="true" _deshabilitado="true">
+			<label>Precio</label>
+			<jseval fielddestino="neto_movimiento" actxml="false" suma="true">( (precio_venta * cantidad_detalle)  * (alicuota / 100))</jseval>
+		</field>
+
+		<field id="neto_movimiento"  local="true" suma="true" _deshabilitado="true">
+			<label modpos="nobr">Neto</label>              
+			<jseval fielddestino="importe_iva" actxml="false">( (precio_venta * cantidad_detalle)  * (alicuota / 100))</jseval>
+			<jseval fielddestino="suma"  actxml="false"> ( importe_iva +  neto_movimiento )</jseval>
+		</field>
+<!--  -->
+
+
+		<field id="alicuota" local="true">
+			<label  modpos="nobr">Alicuota</label>
+			<tabla_ex id="GEN_IVA_ALICUOTAS" _vacio="true">
+				<field id="id_iva_alicuota" esClave="true">
+				</field>
+				<field id="alicuota">
+				</field>
+				<field id="alicuota2">
+					<expresion>alicuota</expresion>
+					<label>Alicuota</label>
+				</field>
+				<field id="iva_id" oculto="true">
+				</field>
+			</tabla_ex>
+		</field>
+		   
+		<field id="importe_iva" local="true"   suma="true" deshabilitado="true">
+			<label>importe iva</label>
+			<help>Porcentaje de Iva Calculado por El neto</help>
+			<jseval fielddestino="suma"      actxml="false"> ( importe_iva + neto_movimiento )</jseval>
+			<jseval fielddestino="iva_movimiento"  total="true">importe_iva</jseval>
+			<jseval fielddestino="importe_iva"    actxml="false"> 
+				((neto_movimiento)  * ( alicuota / 100))
+			</jseval>
+		</field>
+                 
+		<field id="suma" local="true"  suma="true"  _acumula="true" deshabilitado="true">
+			<label>Total</label>
+			<help>Total</help>
+<!--			<jseval fielddestino="neto_movimiento"    actxml="false"> 
+				(( suma  )  / ( 1 + ( alicuota / 100)) )  
+			</jseval>
+			<jseval fielddestino="importe_iva"        actxml="false"> 
+				(neto_movimiento  * (alicuota / 100)) 
+			</jseval> -->
+		</field>
+
+
+	     <!-- CAJDETALLES-->
+	     <field id="cuenta_id" local="true" noshow="true">
+                <label modpos="nobr">haber</label>
+            </field>
+           <field id="doh" local="true" noshow="true">
+		  <if exp="'debe' != 1">
+			<true>'1'</true>
+			<false>'0'</false>
+		 </if>
+			</field>
+	     <!-- MOVIMIENTOS DE STOCK -->
+<!--             <field id="stkarticulo_id" local="true" noshow="true">
+	     </field>
+-->
+	     <field id="unidad_id" local="true" noshow="true">
+                <label>unidad</label>
+            </field>
+	    <field id="stksector_id" local="true" noshow="true">
+                <label>sector</label>
+            </field>
+	    <field id="stkfamilia_id" local="true" noshow="true">
+                <label>familia</label>
+            </field>
+	    <field id="stkrubro_id" local="true" noshow="true">
+                <label>rubro</label>
+            </field>
+	    <field id="precio_costo" local="true" noshow="true">
+                <label>rubro</label>
+            </field>
+	    <field id="fecha" local="true" noshow="true"/>
+	    <field id="stkconcepto_id" local="true" noshow="true" valauto="true">
+                <label>stkconcepto</label>
+		 <condicion operador="=">'[__stkconcepto_id__]'</condicion>
+            </field>
+	     <field id="referencia" local="true" noshow="true">
+                <valor>'SALIDA POR VENTA'</valor>
+            </field>
+	     <field id="graba" noshow="true">
+		<if exp="'remito_anterior' != ''">
+          		<verdadero>1</verdadero>
+          		<falso>0</falso>
+        	</if>   
+	    </field>
+            <field id="grabar" local="true" _noshow="true" deshabilitado="true">
+                <if exp="forma_pago == 0">
+                      <true>1</true>
+                      <false>0</false>
+                </if>
+            </field>  
+        </table>
+        <!--
+		<join tipo="LEFT">
+			<table id="REG_CUENTA">
+				<field id="regcuenta_id">	
+					<condicion operador="=">[__REGcuenta_id__]</condicion>
+				</field>
+			</table>
+		</join>     -->
+</consulta>
+</histrix>  

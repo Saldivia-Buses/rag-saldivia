@@ -34,7 +34,6 @@ echo ""
 # 1. .env exists
 if [ -f "$DEPLOY_DIR/.env" ]; then
     check ".env file exists" "ok"
-    source "$DEPLOY_DIR/.env"
 else
     check ".env file exists" "fail" "run: cp deploy/.env.example deploy/.env"
     # Can't continue without .env
@@ -42,6 +41,25 @@ else
     echo "RESULT: FAIL (1 critical missing)"
     exit 1
 fi
+
+# Safe .env parser (DS2: never source untrusted files).
+# Whitelist: only extract known preflight variables via regex.
+while IFS='=' read -r key value || [ -n "$key" ]; do
+    # Skip comments and empty lines
+    [[ -z "$key" || "$key" =~ ^[[:space:]]*# ]] && continue
+    key=$(echo "$key" | tr -d '[:space:]')
+    value=$(echo "$value" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | sed 's/^["'"'"']//;s/["'"'"']$//')
+    case "$key" in
+        SDA_DOMAIN|SDA_ENV|SDA_ACME_EMAIL|SDA_GPU_DEVICES)
+            # Reject values containing command substitution patterns
+            if [[ "$value" =~ [\$\`] ]]; then
+                check ".env safety" "fail" "$key contains suspicious characters"
+                exit 1
+            fi
+            declare "$key=$value"
+            ;;
+    esac
+done < "$DEPLOY_DIR/.env"
 
 # 2. SDA_DOMAIN set and not localhost in production
 if [ "${SDA_ENV:-development}" = "production" ] && [ "${SDA_DOMAIN:-localhost}" = "localhost" ]; then

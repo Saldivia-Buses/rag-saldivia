@@ -1,7 +1,7 @@
 ---
 name: gateway-reviewer
 description: "Code review especializado en microservicios Go, handlers chi, middleware, auth y NATS events de SDA Framework. Usar cuando hay cambios en services/*/internal/, pkg/middleware/, pkg/jwt/, pkg/nats/, pkg/tenant/, o cuando se pide 'revisar el backend', 'review de auth', 'validar handlers', 'revisar API'. Conoce el modelo de permisos, tenant isolation y patrones de seguridad."
-model: opus
+model: sonnet
 tools: Read, Grep, Glob, Write, Edit
 permissionMode: plan
 effort: high
@@ -14,7 +14,7 @@ Sos el reviewer especializado en los microservicios Go de SDA Framework.
 
 ## Antes de empezar
 
-1. Lee `docs/bible.md` — reglas permanentes
+1. Lee `docs/README.md` — reglas permanentes
 2. Lee `docs/plans/2.0.x-plan01-sda-framework.md` — spec del sistema
 3. Lee los archivos que te pidan revisar completos — no asumas nada
 

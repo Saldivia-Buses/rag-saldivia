@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" >
+  <title>Inventario</title>
+  <obs></obs>
+  <form>
+    <table id="STK_INVENTARIOS" label="Inventario">
+      <filters>
+        <field id="fecha_inventario">
+          <label>Desde</label>
+          <operador>&gt;=</operador>
+          <valor>today</valor>
+        </field>
+        <field id="fecha_inventario">
+          <label>Hasta</label>
+          <operador>&lt;=</operador>
+          <valor>today</valor>
+        </field>
+        <field id="stkdeposito_id">
+          <label>Depósito</label>
+          <operador>=</operador>
+        </field>
+        <field id="id_stkarticulo">
+          <operador>=</operador>
+          <label>Código</label>
+          <help>Articulo a buscar</help>
+        </field>
+        <field id="nombre_articulo" deshabilitado="true">
+          <label colspan="5" modpos="nobr">Nombre Articulo</label>
+          <help>Nombre de Articulo a buscar</help>
+        </field>
+      </filters>
+      <field id="id_stkinventario" noshow="true"></field>
+      <field id="nro_inventario" colstyle="font-size:16px;" tdWidth="50px">
+        <label>Nº</label>
+        <helper type="link" xml="imp_stkinventario_insumas_qry.xml">
+          <parameter source="id_stkinventario" target="id_stkinventario" />
+        </helper>
+      </field>
+      <field id="fecha_inventario">
+        <label>Fecha</label>
+        <tipo>date</tipo>
+      </field>
+      <field id="stkdeposito_id">
+        <label>Depósito</label>
+        <helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" empty="true"/>
+      </field>
+      <field id="id_stkarticulo" tabla="STK_ARTICULOS">
+        <label>Codigo</label>
+        <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+          <field id="wstklista_id" local="true">
+            <valor>1</valor>
+          </field>
+        </helper>
+      </field>
+      <field id="nombre_articulo" tabla="STK_ARTICULOS">
+        <label>Articulo</label>
+      </field>
+      <field id="stock_real1" tabla="STK_INVENTARIO_DETALLES">
+        <label>Recuento 1</label>
+      </field>
+      <field id="stock_real2" tabla="STK_INVENTARIO_DETALLES">
+        <label>Recuento 2</label>
+      </field>
+      <field id="stock_real3" tabla="STK_INVENTARIO_DETALLES">
+        <label>Recuento 3</label>
+      </field>
+      <field id="stock" tabla="STK_INVENTARIO_DETALLES">
+        <label>Teorico</label>
+      </field>
+      <field id="diferencia_menos" noZero="true">
+        <label>Diferencia -</label>
+        <expression>
+          CASE WHEN STK_INVENTARIO_DETALLES.diferencia &lt; 0 THEN ABS(STK_INVENTARIO_DETALLES.diferencia) ELSE 0 END
+        </expression>
+      </field>
+      <field id="diferencia_mas" noZero="true">
+        <label>Diferencia +</label>
+        <expression>
+          CASE WHEN STK_INVENTARIO_DETALLES.diferencia &gt; 0 THEN ABS(STK_INVENTARIO_DETALLES.diferencia) ELSE 0 END
+        </expression>
+      </field>
+      <field id="ajuste" tabla="STK_INVENTARIO_DETALLES">
+        <label>Ajuste</label>
+        <helper type="combo">
+          <option value="0">NO</option>
+          <option value="1">SI</option>
+        </helper>
+      </field>
+      <field id="perdida" noZero="true" suma="true">
+        <label>Perdida</label>
+        <expression>
+          CASE WHEN STK_INVENTARIO_DETALLES.monto &lt; 0 THEN ABS(STK_INVENTARIO_DETALLES.monto) ELSE 0 END
+        </expression>
+      </field>
+      <field id="compensacion" noZero="true" suma="true">
+        <label>Compensación</label>
+        <expression>
+          CASE WHEN STK_INVENTARIO_DETALLES.monto &gt; 0 THEN ABS(STK_INVENTARIO_DETALLES.monto) ELSE 0 END
+        </expression>
+      </field>
+      <field id="observaciones" tabla="STK_INVENTARIO_DETALLES">
+        <label>Obs.</label>
+      </field>
+      <field id="noconformidades" local="true">
+        <label>No Conf.</label>
+        <helper type="link" xml="noconformidad_ing.xml" dir="calidad/ing" >
+          <parameter source="id_stkarticulo" target="stkarticulo_id" />
+          <parameter source="observaciones" target="descripcion_nconf" />
+        </helper>
+        <valor>&gt;&gt;</valor>
+      </field>
+      <field id="usuario">
+        <label>Usuario</label>
+        <expression>CONCAT(HTXUSERS.apellido, ', ', HTXUSERS.Nombre)</expression>
+      </field>
+      <field id="cerrado" tdWidth="50px" linkint="stkinventario_estado_crud.xml" linkWidth="500px" linkHeight="200px">
+        <label>Estado</label>
+        <attribute id="linkint">att_link</attribute>
+        <helper type="combo">
+          <option value="0">Abierto</option>
+          <option value="1">Cerrado</option>
+        </helper>
+        <paring destino="id_stkinventario">id_stkinventario</paring>
+      </field>
+      <field id="esadmin" local="true" noshow="true">
+        <valor eval="true">$_SESSION['administrator']</valor>
+      </field>
+      <field id="att_link" local="true" noshow="true">
+        <if exp="'esadmin' == '1'">
+          <true>'stkinventario_estado_crud.xml'</true>
+          <false>''</false>
+        </if>
+      </field>
+      <order>
+        <field id="nro_inventario" />
+        <field id="nombre_articulo" tabla="STK_ARTICULOS" />
+      </order>
+    </table>
+    <join tipo="left">
+      <table id="STK_INVENTARIO_DETALLES">
+        <field id="stkinventario_id">
+          <condicion operador="=">STK_INVENTARIOS.id_stkinventario</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">STK_INVENTARIO_DETALLES.stkarticulo_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="HTXUSERS">
+        <field id="id_usuario">
+          <condicion operador="=">STK_INVENTARIOS.usuario_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

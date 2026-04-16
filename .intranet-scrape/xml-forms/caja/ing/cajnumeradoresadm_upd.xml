@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" >
+  <title>numerador</title>
+  <obs />
+  <form>
+    <table id="CAJ_NUMERADORES" idCampoCond="graba_adm">
+		<field id="subsistema_id" esClave="true" oculto="true">
+		    <valor>'03'</valor>
+		</field>
+		<field id="cajpuesto_id" esClave="true">
+		    <valor>0</valor>
+		</field>
+		<field id="cajconcepto_id" id_temp="cajconcepto_id" esClave="true"/>
+		<field id="numero">
+		    <valor>numero + 1</valor>
+		</field>
+		
+    </table>
+  </form>
+</histrix>

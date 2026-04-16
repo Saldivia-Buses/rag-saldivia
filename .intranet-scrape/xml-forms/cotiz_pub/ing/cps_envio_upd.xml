@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="update" >
+    <title>MAILS</title>
+    <obs/>
+    <form >
+        <table id="CPS_ENVIO" label="envia el Correo" >
+            <sql>
+                update CPS_ENVIOS set cpsmovimiento_id = '[__cps_movimientos_insert.xml__]' WHERE cpsmovimiento_id = 0;
+            </sql>
+
+            <field id="cpsmovimiento_id"       lastId="cps_movimientos_insert.xml" >
+               
+            </field>
+
+        </table>
+    </form>
+</histrix>

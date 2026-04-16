@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" inserta="no" _noform="true" modifica="false" llenoTemporal="false" barradrag="false" _imprime="false" confirma="ACTUALIZAR COSTOS" maxshowresult="1000" path="fotos/articulos">
+	<title>Insumos</title>
+	<obs></obs>
+	<form  >
+		<table id="STKINSUM">
+			<title>Insumos</title>
+			<movimientos cabecera="actualiza_costos_cab.xml">
+				<relacion id="actualiza_costos_ingmov.xml"></relacion>  						
+			</movimientos> 						
+			
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+			</field>
+			
+			<field id="artcod" _deshabilitado="true">
+				<ayuda_ex id="STKINSUM">
+					<clave>artcod</clave>
+					<descripcion>artdes</descripcion>
+					<field id="artcod" >
+						<label>Cod</label>
+					</field>
+					<field id="artdes" >
+						<label>Nombre</label>
+						<detalle>artdes</detalle>
+					</field>
+				</ayuda_ex>
+				
+				<label>Cod.</label>
+				<detalle>artcod</detalle>
+			</field>
+			<field id="artdes" _deshabilitado="true">
+				<label modpos="nobr">Articulo</label>
+				<help>Descripcion de Articulo</help>
+			</field>
+			<field id="baja" oculto="true">
+				<condicion operador="!=">1</condicion>
+			</field>
+<!--			<field id="fecult" local="true">
+				<expression>max(STKINSPR.movfec)</expression>
+				<label>Ult</label>
+			</field>  -->
+			<field id="fecult1" noshow="true">
+				<label>Ultima Compra</label>
+				<expression having="false">DATEDIFF(now(), STKINSUM.ultima_compra)</expression>
+				<condicion operador="&lt;">1000</condicion>
+			</field>
+
+			<field id="fecult" >
+				<label>Ultima Compra</label>
+				<expression>case when ((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) ) > 0  then 
+					((select STKINSPR.fecult from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and STKINSPR.siscod='01' order by fecult 
+DESC limit 1) ) else STKINSUM.fecult end</expression>				
+			</field>
+<!--
+      <field id="prov" >
+        <label>prov</label>
+        <expression >(select CCTCUENT.ctafan from STKINSPR as INSPR join CCTCUENT on CCTCUENT.ctacod = INSPR.ctacod and CCTCUENT.siscod = '01' where INSPR.artcod = STKINSUM.artcod and INSPR.siscod = STKINSUM.siscod order by fecult DESC limit 1)</expression>
+        <tipo>varchar</tipo>
+    </field>	-->
+<!-- Si el último costo es a el proveedor elegido actualizo el costo,
+sino 
+    si la fecha de última compra del proveedor elegido fue hace menos de un año actualizo el costo
+    sino no actualizo costo
+
+-->
+    <field id="test" noshow="true">
+	<label>Test</label>
+	<expression having="false">(CASE WHEN (select ctacod FROM STKINSPR where artcod = STKINSUM.artcod and siscod = STKINSUM.siscod order by fecult DESC limit 1) = STKINSPR.ctacod
+		    THEN 1 ELSE
+			CASE WHEN (select fecult from STKINSPR INSPR where INSPR.artcod = STKINSPR.artcod and INSPR.siscod='01' and INSPR.movnro != 0 and ctacod = STKINSPR.ctacod order by fecult DESC limit 1) >= date_sub(CURDATE(), interval 6 month)
+			     THEN 1
+			     ELSE 0
+		        END
+		    END )
+	</expression>
+	<condicion operador="=">1</condicion>
+    </field>
+
+
+			<field id="costo" >
+				<label>Costo</label>
+<!--				<expression>case when ((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) * STKINSUM.valcps / STKINSUM.valuso) > 0  then 
+					((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) * STKINSUM.valcps / STKINSUM.valuso) else STKINSUM.artcos end</expression>
+	-->
+				<expression>case when ((select sp.artcos from STKINSPR sp where sp.artcod = STKINSUM.artcod and sp.siscod='01' and sp.ctacod = STKINSPR.ctacod order by fecult DESC limit 1) ) > 0  then 
+					((select sp.artcos from STKINSPR sp where sp.artcod = STKINSUM.artcod and sp.siscod='01' and sp.ctacod = STKINSPR.ctacod order by fecult DESC limit 1) ) else STKINSUM.artcos end</expression>				
+			</field>
+			<field id="nuevocosto" >
+				<label>Nuevo Costo</label>
+				<if exp="porcentaje != 0" operador="=">
+				<true>((costo + (costo * (porcentaje + 0)  / 100)) * (1 + (artpor__1 +0) / 100)) * (1 + (artpor__2 +0) / 100) + sumafija </true>
+    				<false>costo + sumafija</false>
+				</if>
+
+<!--				<expression>case when ((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) * STKINSUM.valcps / STKINSUM.valuso) > 0  then ((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) * STKINSUM.valcps / STKINSUM.valuso) else STKINSUM.artcos end</expression> -->
+<expression>case when ((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) * STKINSUM.valcps / STKINSUM.valuso) > 0  then ((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) ) else STKINSUM.artcos end</expression>				
+			</field>
+			
+			<field id="ctacod" tabla="STKINSPR" grupo="Proveedor" _noshow="true">
+			    <label>Proveedor</label>
+					<ayuda_ex id="CCTCUENT" xml="HLPcctcuent.xml" dir="/help_local">
+						
+						<field id="ctacod">
+							<label>Nro</label>
+						</field>
+						<field id="ctanom">
+							<label>Nombre</label>
+							<detalle>ctanom</detalle>
+						</field>
+						<field id="siscod" oculto="true">
+							<label>siscod</label>
+							<condicion operador="=">'01'</condicion>
+						</field>
+						<clave>ctacod</clave>
+						<descripcion>ctanom</descripcion>
+					</ayuda_ex>
+			    
+			</field>
+			<field id="fotopath" local="true" noshow="true">
+			    <if exp="true">
+				<true>'artcod/'</true>
+				<false>''</false>
+			    </if>
+			    <tipo>varchar</tipo>
+			</field>
+
+			<field id="foto" path="fotopath" download="true" watermark="artcod">
+          		<expression>select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = STKINSUM.artcod and ARTICULO_FOTO.foto != '' order by revision desc limit 1</expression> 
+			    <label>Imagen</label>
+			    <tipo >file</tipo>
+			    <size>40</size> 
+			</field>
+			<group>
+				<field id="artcod" tabla="STKINSUM">
+				</field>
+			</group>
+			<filters>
+
+				<field id="artcod" deshabilitado="false" grupo="Articulo">
+					<ayuda_ex id="STKINSUM">
+						<clave>artcod</clave>
+						<descripcion>artdes</descripcion>
+					</ayuda_ex>
+					
+					<label>Cod.</label>
+					<operador modificador="left">=</operador>					
+				</field>			
+				<field id="artdes" grupo="Articulo" >
+					<label>Articulo</label>
+					<help>Descripcion de Articulo. (ENTER = Retorna a ingreso de codigo).
+						</help>
+					<operador>like</operador>
+				</field>				
+    				<field id="ctacod" _tabla="STKINSPR" grupo="Proveedor">
+				    <label>Proveedor</label>
+				    <operador>=</operador>
+				</field>
+				
+			</filters>			
+		</table>
+		<join tipo="inner" _grupo="Proveedor">
+			<table id="STKINSPR">
+			<field id="siscod" >
+				<condicion operador="=">STKINSUM.siscod</condicion>
+			</field>
+			<field id="artcod" >
+				<condicion operador="=">STKINSUM.artcod</condicion>
+			</field>
+				
+			</table>
+		</join>		
+	</form>
+</histrix>

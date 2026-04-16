@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+	<title>CIERRE</title>
+	<obs/>
+	<form >
+		<table id="CAJ_DETALLES" idCampoCond="graba_caj">
+			<field id="cajmovimiento_id" 	lastId="cierre_cajmovimiento_ins.xml"/>
+
+			<field id="cuenta_id"       id_temp="cuenta_id"/>
+			<field id="doh"             id_temp="doh">
+				<tipo>varchar</tipo>
+			</field>     
+			<field id="importe_detalle" id_temp="importe_detalle"/>
+
+		</table>
+	</form>
+</histrix>

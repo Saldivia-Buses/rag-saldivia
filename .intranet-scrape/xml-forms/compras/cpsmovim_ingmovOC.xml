@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+    <title>MOVIMIENTOS DE orden compras</title>
+    <obs></obs>
+    <form >
+        <table id="CPSMOVIM" label="MOVIMIENTOS" >
+        
+        <field id="cpsmovimiento_id" lastId="cpsencab_insert.xml"></field>
+
+            <field id="ocpnro" id_cab="ocpnro"></field>
+            <field id="movfec" id_cab="ocpfec"></field>
+            <field id="ocpren" id_temp="_ORDEN"></field>
+            <field id="movest" id_cab="ocpest"></field>
+            <field id="artcod" id_temp="artcod"></field>
+            <field id="artpor" id_temp="artpor"></field>
+            <field id="detalle" id_temp="artdes">
+	    <tipo>varchar</tipo>
+</field>
+            <!--	<field id="unicps" id_temp="unicps"></field> -->
+
+
+            <field id="nrocha" id_temp="nrofab"></field>
+            <field id="movcan" id_temp="movcps"></field>
+            <field id="movcps" id_temp="movcps"></field>
+            <field id="pencps" id_temp="movcps"></field>
+            <field id="movpen" id_temp="movcps"></field>
+            <field id="movuso" id_temp="convertido"></field>
+            <field id="penuso" id_temp="movcps"></field>
+            <field id="fecreq" id_temp="fecreq"></field>
+            <field id="observaciones" id_temp="observaciones"></field>
+
+            <field id="moneda_id" id_temp="moneda_id"></field>
+            <field id="artcos" id_temp="artcos"></field>
+            <field id="importe_iva"   id_temp="impiva"></field>
+            <field id="importe_total" id_temp="Total"></field>
+
+            <field id="bonificacion_1"   id_temp="bonificacion_1"></field>
+            <field id="bonificacion_2"   id_temp="bonificacion_2"></field>
+
+            <field id="idPed" id_temp="idPed"></field>
+          <!--  <field id="empresa_id" id_cab="empresa_id"></field> -->
+
+
+        </table>
+    </form>
+</histrix>

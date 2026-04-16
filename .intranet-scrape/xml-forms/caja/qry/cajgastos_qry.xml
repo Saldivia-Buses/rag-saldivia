@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+    <title>Gastos</title>
+    <obs/>
+    <form>
+        <table id="CAJ_DETALLES">
+
+			<filters>
+				<field id="fecha_movimiento">
+					<label>Desde</label>
+					<operador>&gt;=</operador>
+					<tipo>date</tipo>
+					<valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m"), 1, date("Y")))</valor>
+				</field>
+
+				<field id="fecha_movimiento">
+					<label modpos="nobr">Hasta</label>
+					<operador>&lt;=</operador>
+					<tipo>date</tipo>
+					<valor>today</valor>
+				</field>
+			</filters>
+
+		<field id="id_cajdetalle" noshow="true" />
+
+		<field id="cajconcepto_id" tabla="CAJ_MOVIMIENTOS" noshow="true" />
+
+		<field id="fecha_movimiento" tabla="CAJ_MOVIMIENTOS" noshow="true">
+			<tipo>date</tipo>
+		</field>
+
+		<field id="cuenta_id">
+			<label>Cod. Cuenta</label>
+		</field>
+
+		<field id="referencia_detalle">
+			<label>Cuenta</label>
+		</field>
+
+		<field id="importe" suma="true">
+			<label>Importe</label>
+			<expression>sum(case when doh = 0 then importe_detalle else (importe_detalle * -1) end)</expression>
+		</field>
+
+	<group>
+		<field id="cuenta_id" />
+		<field id="referencia_detalle" />
+	</group>
+
+    </table>
+
+	<join>
+		<table id="CAJ_MOVIMIENTOS">
+			<field id="id_cajmovimiento">
+				<condicion operador="=">CAJ_DETALLES.cajmovimiento_id</condicion>
+			</field>
+		</table>
+	</join>
+
+    </form>
+</histrix>
+
+

@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <abm tipo="ficha" sololectura="true" PDFsincabecera="true"  _PDFpageSizeX='210' _PDFpageSizeY='210'  limit="1" autoprint="true">
+	   <!-- PDForientacion="P" -->
+       <titulo>Consulta de Recibos</titulo>
+        <obs></obs>
+               <consulta >
+                  <tabla id="REMITO" label="Movimientos">
+
+                  <field id="ctacod" oculto="true" >
+                      <label PDFnolabel="true">Cuenta</label>
+                      <help>Codigo de Cuenta </help>
+                  </field>
+
+                  <field id="fecha">
+                      <label posx="142" posy="48" PDFnolabel="true" PDFsize="20">Fecha </label>
+                      <help> </help>
+					  <formato>d  m  y</formato>
+                  </field>
+
+                  <field id="ctanom" tabla="CCTCUENT">
+                      <label modpos ="nobr" posx="40" posy="60" PDFnolabel="true" PDFsize="12">Nombre</label>
+                      <help>Nombre</help>
+					  <tipo>character</tipo>
+                  </field>
+                  <field id="ctadir" tabla="CCTCUENT">
+                      <label  posx="40" posy="+2" PDFnolabel="true" PDFsize="12">Domicilio</label>
+                      <help>Domicilio</help>
+                  </field>
+                  <field id="ctaloc" tabla="CCTCUENT">
+                      <label  modpos="nobr" posx="40" posy="+2" PDFnolabel="true" PDFsize="12">Localidad</label>
+                      <help>Localidad</help>
+                  </field>
+
+                    <field id="prvnom" tabla="FSMPROVS">
+                      <label  posx="40" posy="+2" PDFnolabel="true" PDFsize="12">Provincia</label>
+                  </field>
+                  <field id="ctanro" tabla="CCTCUENT">
+                      <label  posx="150" posy="0" PDFnolabel="true" PDFsize="12">Cuit</label>
+                      <help>Cuit</help>
+                  </field>
+				  <field id="nrofab" >
+                      <label posx="1" posy="16" PDFnolabel="true">fab</label>
+                  </field>
+
+                  <field id="puesto" print="false" noshow="false">
+                  </field>
+
+
+                  <field id="numero" >
+                      <label posx="5" posy="20" PDFnolabel="true"></label>
+                      <help> Numero Comprobante</help>
+				<!--      <formato>%012d</formato> -->
+                  </field>
+					  
+<!-- DATOS DE LA UNIDAD FACTURADA (si existe) -->
+
+<!--			    <field id="codigo_comercial" >
+
+                   <label size="19" posx="5" posy="+12" PDFsize="8" PDFnoborder="true" PDFnolabel="true">cod</label>										
+					<expression>(case when fecha &gt;= '2022-05-10' then codigo_comercial end)</expression>
+					<tipo>varchar</tipo>
+				</field> 
+-->
+			    <field id="codigo" >
+                   <label size="19" posx="5" posy="+12" PDFsize="8" PDFnoborder="true" PDFnolabel="true">cod</label>										
+					<expression>(case when fecha &lt;= '2022-05-09' then (case when CARROCERIA.doble_piso = 1 then CARROCERIA.modcar else concat('A',HOMOLOGMOD.asientos) end) else codigo_comercial end)</expression>
+					<tipo>varchar</tipo>
+				</field> 
+
+
+			    <field id="carro" >
+                   <label size="70" posx="40" posy="0" PDFsize="11" PDFnoborder="true" >Carroceria marca SALDIVIA, modelo:</label>					
+					<expresion>HOMOLOGMOD.nrocar</expresion>
+					<tipo>varchar</tipo>
+					<tabla_ex id="CARROCERIA" vacio="true">
+				          <field id="nrocar">
+				            <label>Codigo</label>
+				          </field>
+				          <field id="modcar">
+				            <label>Modelo</label>
+				          </field>       
+        			</tabla_ex>
+				</field>
+					  
+				<field id="asientos" tabla="HOMOLOGMOD">
+<!--
+					<expression>concat('Conductor + ',
+
+					(case when HOMOLOGMOD.nrocar = 9 then (CONCAT(asientos, '+', asientos_plantabaja)) else (asientos) end),
+					' pasajeros',
+					(case when acompañante = 1 then ' + acompañante' else '' end),
+
+					(case when auxiliar = 1 then ' + auxiliar' else '' end))</expression>
+-->
+					<expression>concat('Conductor + ',
+					(case when CARROCERIA.doble_piso = 1 then (CONCAT(asientos, '+', asientos_plantabaja)) else (asientos) end),
+					' pasajeros',
+					(case when acompañante = 1 then ' + acompañante' else '' end),
+					(case when auxiliar = 1 then ' + auxiliar' else '' end))</expression>
+
+					<label size="95" posx="40" posy="+2" PDFsize="11" PDFnoborder="true" ></label>
+				</field>					  
+
+				<field id="tipserv" tabla="HOMOLOGMOD">
+					<label size="40" posx="40" posy="+2" PDFsize="11" PDFnoborder="true" >Preparada para : </label>
+					
+					<help>Tipo de Servicio</help>
+					<tabla_ex id="TIPOSERVICIO">
+							<field id="tipserv">
+							</field>
+							<field id="servdes">
+							</field>					
+					</tabla_ex>
+				</field>	
+
+					  
+                  <field id="mardes">
+					<label size="40" posx="40" posy="+2" PDFsize="12" PDFnoborder="true">Chasis Marca:</label>
+				 <expresion>CHASIS.marcod</expresion>
+				 <help/>
+				 <tabla_ex id="MARCHASIS">
+					<field id="marcod">
+					</field>
+					<field id="mardes">
+					</field>
+
+					<field id="siscod" oculto="true">
+						<condicion operador="=">03</condicion>
+					</field>
+				 </tabla_ex>
+				 <tipo>integer</tipo>					
+				</field>
+                <field id="moddes">
+					<label size="40" posx="40" posy="+2" PDFsize="12" PDFnoborder="true">Chasis Modelo:</label>
+				     <expresion>MODCHASIS.moddes</expresion>
+				 <help/>
+				 <tipo>integer</tipo>					
+				</field>
+					  
+				<field id="chasis" tabla="CHASIS">
+					<label size="40" posx="40" posy="+2" PDFsize="12" PDFnoborder="true">Chasis Nº:</label>
+				</field>					  
+				<field id="nombre" tabla="MARCAMOTOR">
+					<label size="40" posx="40" posy="+2" PDFsize="11" PDFnoborder="true" >Motor Marca:</label>
+				</field>
+				<field id="nromotor" tabla="CHASIS">
+					<label size="40" posx="40" posy="+2" PDFsize="12" PDFnoborder="true" >Motor Nº:</label>
+				</field>
+
+			    <field id="prohibicion1" local="true" pdfancho="50">
+					<label size="130" posx="40" posy="+8" PDFsize="12" PDFnoborder="true" ></label>
+					<valor>'Asumo la prohibición de la venta del bien al exterior'</valor>
+				</field>
+			    <field id="prohibicion2" local="true" pdfancho="50">
+					<label size="130" posx="40" posy="+1" PDFsize="12" PDFnoborder="true" ></label>
+					<valor>'a los efectos del artículo 8vo de la Res. S.I. Nro 23/2001 '</valor>
+				</field>
+			    <field id="prohibicion3" local="true" pdfancho="50">
+					<label size="130" posx="40" posy="+1" PDFsize="12" PDFnoborder="true" ></label>
+					<valor>'asumiendo la responsabilidad sobre la eventual exportación '</valor>
+				</field>
+			    <field id="prohibicion4" local="true" pdfancho="50">
+					<label size="130" posx="40" posy="+1" PDFsize="12" PDFnoborder="true" ></label>
+					<valor>'del bien sujeto al beneficio fiscal, que regirá durante el '</valor>
+				</field>
+			    <field id="prohibicion5" local="true" pdfancho="50">
+					<label size="130" posx="40" posy="+1" PDFsize="12" PDFnoborder="true" ></label>
+					<valor>'plazo de tres (3) años contados a partir de su adquisición.'</valor>
+				</field>
+
+
+                  </tabla>
+
+
+				  <join tipo="left">
+				 	<tabla id="CCTCUENT">
+						<field id="siscod" oculto="true">
+						    <label>cctcuent.siscod</label>
+						    <condicion operador="=">'02'</condicion>
+						</field>
+
+						<field id="ctacod" oculto="true">
+				    		<condicion operador="=">REMITO.ctacod</condicion>
+						</field>
+				    </tabla>
+				  </join>
+				  <join tipo="left">
+				  	  <tabla id="FSMPROVS">
+						  <field id="prvcod">
+							  <condicion operador="=">CCTCUENT.prvcod</condicion>
+						  </field>
+
+					  </tabla>
+				  </join>
+					<join tipo="left">
+						<tabla id="PEDCOTIZ">
+							<field id="nrocha">
+								<condicion operador="=">REMITO.nrofab</condicion>
+							</field>
+						</tabla>
+					</join>		
+			       	<join tipo="left">
+		   
+						<tabla id="CHASIS">
+							<field id="nrocha">
+								<condicion operador="=">REMITO.nrofab</condicion>
+							</field>
+						</tabla>
+					</join>
+				   
+		
+				<join tipo="left">
+					<tabla id="MODCHASIS">
+						<field id="modcha">
+							<condicion operador="=">CHASIS.modcod</condicion>
+						</field>
+						<field id="marcod">
+							<condicion operador="=">CHASIS.marcod</condicion>
+						</field>
+					</tabla>
+				</join>			
+					<join tipo="left">
+						<tabla id="HOMOLOGMOD">
+			                <field id="id_homologacion">
+			                    <condicion operador="=">PEDCOTIZ.homologacion_id</condicion>
+			                </field>	
+						</tabla>
+					</join>						   
+
+			       	<join tipo="left">
+						<tabla id="CARROCERIA">
+							<field id="nrocar">
+								<condicion operador="=">HOMOLOGMOD.nrocar</condicion>
+							</field>
+						</tabla>
+					</join>
+						   
+
+					<join tipo="left">
+						<tabla id="MARCAMOTOR">
+							<field id="idMarca">
+								<condicion operador="=">CHASIS.idMarcaMotor</condicion>
+							</field>
+						</tabla>
+					</join>						   	   
+               </consulta>
+        </abm>

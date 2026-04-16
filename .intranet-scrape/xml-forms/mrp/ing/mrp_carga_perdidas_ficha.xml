@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" inserta="false" modifica="false"    >
+    
+    <title>PERDIDA ORDEN DE PRODUCCION</title>
+
+
+<customScript>
+
+    if( $('input[name=mrpestado_id]').val() == '1' ){ $('input[name=estado_nuevo]').val('4')  }else{ $('input[name=estado_nuevo]').val($('input[name=mrpestado_id]').val()) };         
+
+
+    $('#TablaInternamrp_carga_perdidas_articulos_xml td').on('keyup', function(){
+
+        var fila = parseInt( $(this).parent().index() );    
+        var resultado = parseFloat(0);
+
+            for (var i = 0; i &lt; $('input[name=perdida]').length; i++) {
+                    
+                    if( !isNaN($('input[name=perdida]').eq(i).val())) {
+
+                            if( $('input[name=perdida]').eq(i).val() &lt; 0 ){
+                                    $('input[name=perdida]').eq(i).val(0);
+                                    alert('No se admiten valores negativos');
+                            }
+
+                            if ( parseFloat(  $('input[name=W1Cantidad1]').eq(i).val() ) &lt; parseFloat( $('input[name=perdida]').eq(i).val() )  ){
+                                $('input[name=perdida]').eq(i).val(0);
+                                alert('La perdida no puede ser superior al total utilizado');
+                            }
+
+                        resultado += $('input[name=perdida]').eq(i).val();
+
+                        $('input[name=guardar_perdidas]').eq(i).val($('input[name=perdida]').eq(i).val());
+                    }
+            }
+
+        if (resultado != 0 ){ $('input[name=estado_nuevo]').val(3);  }else{     $('input[name=estado_nuevo]').val(4);  }
+
+    });
+
+
+  </customScript> 
+
+    <form>
+
+        <table id="MRP_ORDEN_PRODUCCION" label="FICHA ORDEN DE PRODUCCION">
+
+        <validation optional="true">
+                <condition><![CDATA[ estado_nuevo == '4' ]]></condition>
+                <message>La orden no tiene perdidas. ¿Desea continuar?</message>
+        </validation>
+
+        <movimientos>
+                <relacion id="mrp_cerrar_estado_perdida.xml" />
+        </movimientos>
+
+
+            <field id="mrpestado_id" editable="true" noshow="true">
+                <label>ORIG ESTADO</label>
+            </field>
+            
+            <field id="estado_nuevo" local="true" editable="true" noshow="true">
+                <label>NEW ESTADO</label>
+            </field>
+
+
+        <fieldGroup style="padding:2px 2px 2px 2px;" deshabilitado="true">
+
+            <field id="id_mrporden" deshabilitado="true">
+                <label>Nro</label>
+            </field>
+
+            <field id="id_mrpordendetalle"  tabla="MRP_ORDEN_DETALLE" noshow="true"/>
+
+            <field id="fecha_orden" modpos="nobr">
+                <label>Fecha Orden</label>
+                <tipo>date</tipo>
+            </field>
+
+           <field id="fecha_cierre"  >
+                <label modpos="nobr">Fecha Cierre</label>
+            </field>   
+            
+            <field id="rhpersonal_nombre"  tabla="RH_PERSONAL"  colspan="3" modpos="nobr">
+                <label>Empleado</label>
+                <expresion>concat(nombre_personal," ",apellido_personal)</expresion>
+                <size>25</size>
+            </field>
+
+            <field id="stkarticulo_id" tabla="MRP_ORDEN_DETALLE" >
+                <label>Articulo</label>
+            </field>
+
+            <field id="minimo_ordendetalle" tabla="MRP_ORDEN_DETALLE" modpos="nobr">
+                <label> Min. </label>
+            </field>
+            
+            <field id="objetivo_ordendetalle" tabla="MRP_ORDEN_DETALLE" modpos="nobr">
+                <label> Obj. </label>
+                <detalle>WCantidad1</detalle>
+            </field>
+
+            <field id="demora_justificada" tabla="MRP_ORDEN_DETALLE"  modpos="nobr">
+                <label> Demora </label>
+            </field>
+
+            <field id="unidad_id" noshow="true">
+                <expresion>case when STK_ARTICULOS.unidad_uso_id = 0 then 1 else STK_ARTICULOS.unidad_uso_id end</expresion>
+            </field>
+
+            <field id="orden_comentarios" colspan="9">
+                <label>Comentarios</label>
+                <size>255</size>
+            </field>
+
+        </fieldGroup>
+
+            <field id="deshabilitado" local="true" noshow="true">
+                <expression> if(mrpestado_id = 3 or mrpestado_id = 4 ,'true','false') </expression>
+            </field>
+
+          <field id="bomart" local="true" colspan="9">
+                <helper xml="mrp_carga_perdidas_articulos.xml" type="object" dir="/mrp/ing">
+                    <parameter source="stkarticulo_id" target="stkarticulopadre_id" />
+                    <parameter source="objetivo_ordendetalle" target="WCantidad1" />
+                    <parameter source="deshabilitado" target="deshabilitado" />
+                    <parameter source="id_mrpordendetalle" target="id_mrpordendetalle" />
+                    <parameter source="id_mrporden" target="id_mrporden" />
+                </helper>
+            </field> 
+
+
+        </table>
+  
+            <join>
+                <table id="RH_PERSONAL">
+                <field id="id_rhpersonal">
+                    <condicion operador="=">rhpersonal_id</condicion>
+                </field>
+                </table>
+            </join>
+                    
+            <join _tipo="left">
+                <table id="MRP_ORDEN_DETALLE">
+                    <field id="mrporden_id" >
+                        <condicion operador="=">id_mrporden</condicion>
+                    </field>
+                </table>
+            </join>
+
+            <join tipo="left">
+                <table id="STK_ARTICULOS">
+                    <field id="id_stkarticulo" >
+                        <condicion operador="=">MRP_ORDEN_DETALLE.stkarticulo_id</condicion>
+                    </field>
+                </table>
+            </join>
+
+    </form>
+</histrix>

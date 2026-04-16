@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="chart">
+	<title>Cantidad</title>
+	<obs></obs>
+	<form >
+		<table id="CPSMOVIM" >
+			<title>Cantidad</title>
+	 
+		   <grafico id="Demora" >
+			   <ancho>400</ancho>
+			   <tipo>P</tipo>
+			   
+			   <serie>p1</serie>
+			   <serie>p7</serie>
+			   <serie>p15</serie>
+			   <serie>p16</serie>
+			   
+			   <title>Pedidos a Fecha</title>
+			   <subtitulo></subtitulo>
+		   </grafico>		
+		   
+		    <filters>
+			    <field id="movfec">
+				    <label>Desde</label>
+				    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-12 month')) , 1, date("Y") -  1 ))</valor>
+				    <operador>&gt;=</operador>
+			    </field>
+			    <field id="movfec">
+                                    <label>Hasta</label>
+				    <valor eval="true">date('d/m/Y', strtotime('-1 second', strtotime(date('Y-m-01'))))</valor>
+				    <operador>&lt;=</operador>
+			    </field>
+		    </filters> 
+		    <field id="movfec" noselect="true"> 
+		    </field>
+
+			
+			<field id="p1">
+                             <expression><![CDATA[sum(case when  DATEDIFF(CPSMOVIM.fecreq, CPSMOVIM.movfec) < 2 then 1 else 0 end)]]></expression>
+
+				<label>1 Dia</label>
+                                <tipo>numeric</tipo>
+			</field>
+			<field id="p7">
+                             <expression><![CDATA[sum(case when  DATEDIFF(CPSMOVIM.fecreq, CPSMOVIM.movfec) > 1 and DATEDIFF(CPSMOVIM.fecreq, CPSMOVIM.movfec) < 8 then 1 else 0 end)]]></expression>
+
+				<label>7 Dias</label>
+                                <tipo>numeric</tipo>
+			</field>
+			<field id="p15">
+                             <expression><![CDATA[sum(case when  DATEDIFF(CPSMOVIM.fecreq, CPSMOVIM.movfec) > 7 and DATEDIFF(CPSMOVIM.fecreq, CPSMOVIM.movfec) < 16 then 1 else 0 end)]]></expression>
+
+				<label>15 Dias</label>
+                                <tipo>numeric</tipo>
+			</field>
+			<field id="p16">
+                             <expression><![CDATA[sum(case when  DATEDIFF(CPSMOVIM.fecreq, CPSMOVIM.movfec) > 16 then 1 else 0 end)]]></expression>
+
+				<label>+15 Dias</label>
+                                <tipo>numeric</tipo>
+			</field>
+	
+		</table>
+		
+	</form>	   
+</histrix> 
+				

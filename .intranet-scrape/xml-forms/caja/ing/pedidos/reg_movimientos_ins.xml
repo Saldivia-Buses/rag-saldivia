@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" _sqlhardcoded="true" 
+
+>
+    <title/>
+    <obs/>
+    <form>
+        <table id="REG_MOVIMIENTOS" idCampoCond="grabar">
+<!--
+            <field id="xmlImpresion" local="true" id_temp="xmlImpresion">
+	       	    <setvar>xmlImpresion</setvar>
+	        </field>
+			<field id="printerName"      		id_temp="printer" local="true">
+			    <setvar>printer</setvar>
+            </field>
+    -->    
+            <field id="subsistema_id"      	id_cab="subsistema_id"/>
+            <field id="regcuenta_id"     	id_temp="regcuenta_id" />
+            <field id="regcuentavendedor_id"        id_temp="regcuentavendedor_id" />
+            <field id="regcuentatransporte_id"        id_temp="regcuentatransporte_id" />
+            <field id="concepto_id"      	id_cab="regconcepto_id"/>
+            <field id="regforma_id"         id_temp="regforma_id"/>
+            <field id="stklista_id"         id_temp="stklista_id"/>
+            <field id="fecha_movimiento"     	id_cab="fecha_movimiento"/>
+
+            <field id="letra_movimiento"       id_temp="letra_movimiento" />
+
+            <field id="puesto_movimiento"     	id_cab="puesto_movimiento"/>
+
+            <field id="nro_movimiento" >
+            	<valor>ifnull(( select numero from REG_NUMERADORES RN 
+            	                             where RN.subsistema_id = '[__subsistema_id__]'
+            	                               and RN.letra = '[__letra_movimiento__]' 
+            	                               and RN.puesto = [__puesto_movimiento__] 
+            	                               and RN.regconcepto_id=[__regconcepto_id__] limit 1 ), 0)</valor>
+                </field>
+            <field id="reg_fecha" 	            id_cab="fecha_movimiento"/>
+            <field id="vencimiento_movimiento" 	id_cab="vencimiento_movimiento"/>
+
+            <field id="neto_movimiento"         id_temp="neto_movimiento"/>
+            <field id="importe_iva"           	id_temp="importe_iva"/>
+            <field id="importe_exento" 	     	id_temp="importe_exento"/>
+            <field id="alicuota_iva" 	     	id_temp="alicuota_iva"/>
+
+            <!-- Fecha entrega -->
+            <field id="fpv_movimiento"            id_temp="vencimiento_movimiento"/>
+
+            <field id="importe_movimiento"     	id_temp="importe_movimiento"/>
+            <field id="importe_bon"             id_temp="importe_bon"/>
+            <field id="saldo_movimiento"        id_temp="importe_movimiento"/>            
+            <field id="mar_movimiento"          id_temp="mar_movimiento"/>
+            <field id="bonificaciones_movimiento"      id_temp="bonificaciones_movimiento"/>
+
+            <field id="referencia_movimiento"   id_temp="referencia_movimiento">
+          	  <tipo>varchar</tipo>
+          	</field>
+<!--            <field id="cajmovimiento_id" 	lastId="cajmovimientos_ins.xml"/> -->
+            <field id="cuit_movimiento"         id_temp="cuit_movimiento" />
+            <field id="tiposervicio_afip"         id_temp="tiposervicio_afip" />
+            <field id="nombre_movimiento"         id_temp="nombre_movimiento" />
+        </table>
+    </form>
+</histrix>	

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix graboasiento="false" transaccional="true" imprime="false" llenoTemporal="false" tipo="ing">
+	<title>MOVIMIENTOS DE INTERNOS DE COMPROBANTES</title>
+	<obs/>
+	<form >
+		<table id="CCTMOVIM" label="Ingreso de Facturas">
+
+			<importar label="Seleccionar Facturas" titulo="Seleccione Facturas" xml="movinterno2_cctmovim_select.xml">
+				<field id="ctacod">ctacod</field>
+			</importar>
+
+			<movimientos cabecera="movinternos2_cab.xml">
+				<relacion id="movinterno2_cctmovim_update_ingmov.xml" />	
+				<relacion id="movinterno2_cctimput_ingmov.xml">	</relacion>  
+				<relacion id="movinterno2_dest_cctmovim_ingmov.xml"/> 				
+				<relacion id="movinterno2_orig_cctmovim_ingmov.xml"/> 	
+			</movimientos>
+
+			<field id="siscod" oculto="true">
+				<label>Cod.</label>
+			</field>
+
+			<field id="ctacod" oculto="true">
+				<label>Cuenta</label>
+				<help>Código de Cuenta</help>
+			</field>
+
+			<field deshabilitado="true" id="movfec">
+				<label modpos="nobr">Fecha</label>
+			</field>
+
+			<field id="concod" oculto="true" tabla="CCTMOVIM">
+				<label>concod</label>
+				<help>Tipo</help>
+			</field>
+
+			<field deshabilitado="true" id="condes" tabla="CCTCONCE">
+				<label>Tipo</label>
+				<help>Tipo de Comprobante</help>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field deshabilitado="true" id="movnpv">
+				<label modpos="nobr">Número</label>
+				<help>Comprobante</help>
+				<format>%04d</format>
+			</field>
+
+			<field deshabilitado="true" id="movnro">
+				<label modpos="nobr"/>
+				<help>Número Comprobante</help>
+				<format>%012d</format>
+			</field>
+
+			<field deshabilitado="true" id="movimp">
+				<label PDFsize="12" posx="130" posy="+1">Importe</label>
+				<format>%01.2f</format>
+			</field>
+
+			<field deshabilitado="true" id="movsal">
+				<label>Saldo</label>
+				<condicion operador="!=">0</condicion>
+			</field>
+
+			<field deshabilitado="true" id="movcta" noshow="true">
+				<label modpos="nobr">movcta</label>
+			</field>
+
+			<field id="movlet" noshow="true"></field>
+			<field id="movipv" noshow="true"></field>
+			<field id="movinc" noshow="true"></field>
+			<field id="zoncod" noshow="true"></field>
+			<field id="ctanom" noshow="true"></field>
+			<field id="movicc" noshow="true"></field>
+			<field id="movnet" noshow="true"></field>
+<!--			<field id="movpro" noshow="true"></field>
+ -->
+			<field id="movref__1" noshow="true"></field>
+			<field id="movref__2" noshow="true"></field>
+			<field id="movref__3" noshow="true"></field>
+			<field id="movvto" noshow="true"></field>
+			<field id="opecla" noshow="true"></field>
+			<field id="regmin" noshow="true"></field>
+		</table>
+	</form>
+</histrix>

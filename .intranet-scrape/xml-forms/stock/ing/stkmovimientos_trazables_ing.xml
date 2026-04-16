@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud" log="false" procesa="false">
+  <title>Ingreso Movimientos Stock</title>
+  <obs/>
+  <customScript><![CDATA[
+    $(document).on('clean', '[instance="[__instance__]"] [name="fecha_movimiento"]', 
+    function(){
+    
+      $(this).htxval( moment().format('DD/MM/YYYY') );
+    });
+  ]]></customScript>
+
+  <form>
+    <table id="STK_MOVIMIENTOS" label="Ingreso de movimientos">
+
+      <movimientos>
+         <relacion id="stkmovimiento_traz_insert.xml" />
+         <relacion id="stkmovimiento_traz_update.xml" /> 
+      </movimientos>
+
+      <filters>
+        <field id="estado" deshabilitado="false">
+          <label>Estado</label>
+          <operador>=</operador>
+          <valor>0</valor>
+        </field>
+      </filters>
+
+      <field id="id_stkmovimiento" deshabilitado="true" noshow="true" autoInc="true">
+        <label>Codigo</label>
+        <help>Codigo de movimiento</help>
+      </field>
+      <field id="fecha_movimiento" >
+        <label>Fecha</label>
+        <help>Fecha Ingreso</help>
+        <valor>today</valor>
+        <tipo>date</tipo>
+      </field>      
+
+      <field id="stkarticulo_id" colspan="4" >
+        <label>Codigo de Articulo</label>
+        <helper type="combo" xml="stkarticulo_qry.xml" dir="/ayudas">
+          <field id="wstklista_id" local="true">
+            <valor>1</valor>
+          </field>
+          <field id="stkrubro_id">
+            <condicion operador="=">3</condicion>
+          </field>
+        </helper>
+      </field>                    
+
+
+      <field id="stkrubro_id" tabla="STK_ARTICULOS" noshow="true">
+        <condicion operador="=">3</condicion>
+      </field>
+      <field id="stkconcepto_id" valauto="true" noshow="true">
+        <label>Concepto</label>
+        <help>Código de concepto</help>
+        <condicion operador="=">1</condicion>
+        <valor>1</valor>
+      </field>
+
+      <field id="regcuenta_id" _noshow="true">
+        <label>Proveedor</label>
+        <helper type="combo" xml="regcuenta_solamente_qry.xml" dir="/ayudas" empty="true">
+            <field id="subsistema_id" noshow="true">
+                <condicion operador="=">'01'</condicion>
+            </field>
+            <order>
+              <field id="nombre_cuenta" />
+            </order>
+        </helper>
+        
+      </field>
+<!--
+      <field id="nombre_cuenta" >
+        <label>Proveedor</label>
+      </field>
+-->
+      <field id="puesto_movimiento" colspan="4" style="width:4em;">
+        <label modpos="nobr">Remito</label>
+          <size>4</size>
+        	<format>%04d</format>
+        	<tipo>integer</tipo>
+      </field>
+
+      <field id="numero_movimiento" sincelda="true">
+        <label modpos="nobr">-</label>
+          <format>%08d</format>
+          <!--<tipo>integer</tipo>-->
+      </field>
+        
+      <field id="stkdeposito_id"  oculto="true">
+        <label>Deposito</label>
+        <helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" />
+      </field>
+        
+      <field id="serial" tabla="STK_MOVIMIENTO_TRAZ" colspan="4">
+        <label>Número de Serie</label>
+        <size>35</size>
+      </field>
+
+      <field id="id_movimiento_traz" tabla="STK_MOVIMIENTO_TRAZ" noshow="true">
+        <label>trz</label>
+      </field>
+
+      <field id="fecha_desde" tabla="STK_MOVIMIENTO_TRAZ">
+        <label>Fecha Apertura</label>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="fecha_hasta"  tabla="STK_MOVIMIENTO_TRAZ" modpos="nobr">
+        <label>Fecha Final</label>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="estado" noshow="true">
+        <label>Estado</label>
+          <expression>case when fecha_hasta != '0000-00-00' then 1 else 0 end</expression>
+          <options>
+            <option value="0">Abierto</option>
+            <option value="1">Cerrado</option>
+          </options>
+      </field>
+
+      <field id="observaciones" tabla="STK_MOVIMIENTO_TRAZ" colspan="4">
+        <label>Observaciones</label>
+        <size>80</size>
+      </field>
+
+      <field id="cantidad" valauto="true" deshabilitado="true" suma="true">
+        <label>Cantidad</label>
+        <tipo>integer</tipo>
+        <valor>1</valor>
+      </field>
+
+    </table>
+    <join tipo="inner">
+      <table id="STK_CONCEPTOS">
+        <field id="id_stkconcepto">
+          <condicion operador="=">stkconcepto_id</condicion>
+        </field>
+      </table>
+    </join>    
+    <join tipo="left">
+      <table id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">stkarticulo_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="STK_MOVIMIENTO_TRAZ">
+        <field id="stkmovimiento_id">
+          <condicion operador="=">id_stkmovimiento</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

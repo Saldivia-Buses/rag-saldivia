@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm-mini">
+	<title>GRUPOS DE CUENTAS</title>
+	<obs></obs>
+	<form >
+		<table id="CTB_CUENTA_GRUPO" >
+		    <title>Cuentas que conforman el grupo</title>
+			<field id="ctbgrupo_id" oculto="true">
+				<label>id</label>
+			</field>
+
+			
+			<field id="ctbcuenta_id" >
+				<label>Cuenta Ctb</label>
+				<ayuda_ex id="CTBCUENT">
+					<field id="ctbcod"></field>
+					<field id="ctbnom">
+					<detalle>ctanom</detalle>
+					
+					</field>	
+				
+					<field id="ctbhab">
+						<condicion operador="=">1</condicion>
+					</field>					
+
+				</ayuda_ex>
+
+			</field>		
+			<field id="ctbnom" deshabilitado="true" >
+				<expression>CTBCUENT.ctbnom</expression>
+				<label>Nombre Cuenta</label>
+				<tipo>varchar</tipo>
+
+			</field>				
+			
+		</table>
+		<join tipo="left">
+			<table id="CTBCUENT">
+				<field id="ctbcod">
+					<condicion operador="=">CTB_CUENTA_GRUPO.ctbcuenta_id</condicion>
+				</field>
+			</table>
+		</join>
+	</form>	   
+</histrix>

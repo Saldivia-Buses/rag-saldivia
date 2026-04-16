@@ -1,0 +1,1 @@
+"Histrix.i18n = {\n    'create':'Crear',\n    'save':'Grabar',\n    'sessionStart':'SESSION INICIADA',\n    'sessionClose':'SESSION CERRADA',\n    'deleteQuestion': 'Â¿Desea borrar el registro seleccionado?'\n   \n}"

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" _tipoInsert="IGNORE" grabafinal="true">
+    <title>Operaciones</title>
+    <obs></obs>
+    <form >
+		<table id="REG_MOVIMIENTO_OPERACION" idCampoCond="id_operacion">
+			<field id="regmovim_id" lastId="factura_cctmovim_ingmov.xml" />
+		  	<field id="operacion_imp_id"   id_cab="id_operacion_imp" />
+		</table>
+	</form>
+</histrix>

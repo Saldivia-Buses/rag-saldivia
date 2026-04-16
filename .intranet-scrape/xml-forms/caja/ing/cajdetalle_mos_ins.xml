@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Esta grabación tiene como objetivo grabar la partida referida 
+	a la cuenta contables de facturacion mostrador
+-->
+<histrix tipo="insert">
+    <title/>
+    <obs/>
+    <form>
+        <table id="CAJ_DETALLES">
+            <field id="cajmovimiento_id" lastId="cajmovimientos_ins.xml"/>
+            <field id="cuenta_id"       id_temp="ctbcuenta_stk_id"/>
+            <field id="doh"             id_temp="ctbcuenta_stk_doh">
+                <tipo>varchar</tipo>
+            </field>
+            <field id="importe_detalle" id_temp="neto_detalle"/>
+        </table>
+    </form>
+</histrix>

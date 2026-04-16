@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix modifica="true"  tabindex="1000" tipo="abm-mini" borra="true" subtipo="vertical" imprime="false">
+	<title>Entregas</title>
+	<obs/>
+	<form>
+		<table id="REG_MOVIMIENTO_OBS" _label="OBSERVACIONES">
+			<field id="id_regmovimientoobs" esClave="true" noshow="true" autoinc="true"/>
+			<field id="obsmov" local="true" deshabilitado="true" noshow="true">
+				<label colstyle="display:none">Referencia</label>
+				<size>120</size>
+			</field>
+			<field id="fec_observacion" _valauto="true">
+				<label>Fecha</label>
+				<help>Fecha de la observación</help>
+				<tipo>date</tipo>
+				<valor>today</valor>
+			</field>
+			<field id="hora_observacion" Formstyle="display;none;" deshabilitado="true" valauto="true">
+				<label modpos="nobr">Hora</label>
+				<tipo>hora</tipo>
+				<valor eval="true">date("H:i:s")</valor>
+			</field>
+			
+			<field id="gencontacto_id" required="true">
+				<helper type="combo" id="GEN_TIPO_CONTACTOS" empty="true">
+					<field id="id_contacto"/>
+					<field id="tipo_contacto"/>
+				</helper>
+				<label>Tipo Contacto</label>
+			</field>
+			<field id="observacion" required="true">
+				<label>Observación</label>
+				<help>Observación</help>
+				<size>300</size>
+			</field>
+                        <field id="to_email" Formstyle="display:none;" local="true">
+			    <label>Destinatario</label>
+			    <expression sql="true">select to_email from HTXMAIL where idMail = '[__origen_id__]'</expression>
+			</field>
+			<field id="regmovim_id"  oculto="true" valauto="true" />
+			<field id="origen_id" noshow="true" local="true" />
+			<field id="tabla_origen" oculto="true" valauto="true" />
+			<field id="login" _local="true" noshow="true">
+				<valor eval="true">$_SESSION['usuario']</valor>
+				<label Formstyle="display:none;">Usuario</label>
+				<tipo>varchar</tipo>
+			</field>
+
+
+		</table>
+	</form>
+</histrix>

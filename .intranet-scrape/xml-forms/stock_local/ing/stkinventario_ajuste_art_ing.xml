@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" _subtipo="vertical" tooltip="false" modifica="false" inserta="false" preloadData="false" deleteRow="false" procesa="true" log="false"
+imprime="false" >
+  <title>Ajuste de Stock</title>
+  <obs/>
+  <form>
+    <table id="STK_ARTICULOS" label="Ajuste de Stock" idCampoCond="grabar">
+
+	<field id="id_stkarticulo" _esClave="true">
+		<label>Código de Artículo</label>
+		<helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas" >
+		    <field id="stock_actual">
+			<expression>(select sum(SA.cantidad_stock) from STK_STOCKACTUAL SA where SA.stkarticulo_id = STK_ARTICULOS.id_stkarticulo)</expression>
+			<detalle>stock_actual</detalle>
+		    </field>
+		</helper>
+		<actualiza>
+		    <field id="depositos" destino="id_stkarticulo" />
+		    <field id="depositos2" destino="id_stkarticulo" />
+		</actualiza>
+	</field>
+
+  	<field id="nombre_articulo" deshabilitado="true" >
+        <label>Descripción</label>
+        <detalle>nombre_articulo</detalle>
+		<size>90</size>
+	</field>
+	      
+	<field id="fecha_movimiento" noshow="true" local="true">
+        <label>fecha</label>
+        <valor>today</valor>
+        <tipo>date</tipo>
+	</field>
+
+	<field id="tipo_ajuste" tabla="STK_STOCKACTUAL" editable="true">
+        <label>Tipo_Ajuste</label>
+            <options>
+              <option valor="0">Diferencia Conteo Cíclico</option>
+              <option valor="1">Inventario General</option>
+              <option valor="2">Despacho Almacén</option>
+            </options>
+		<detalle></detalle>
+	</field>
+    
+	<field id="stock_cero" local="true" noshow="true">
+		<valor>0</valor>
+	</field>
+
+	<field id="depositos" local="true" colspan="2">
+		<helper xml="stkinventario_ajuste_art_grid.xml" type="object" >
+		    <parameter source="id_stkarticulo" target="id_stkarticulo" />
+	    <parameter source="stock_cero" target="stock" operator="!="/> 
+		</helper>
+	</field>
+
+	<field id="stock_actual" deshabilitado="true" style="background-color:#444;color:white;font-size:x-large">
+        <label>stock Actual</label>
+
+	    <tipo>numeric</tipo>
+	</field>
+
+	<order>
+		<field id="nombre_articulo" />
+		<field id="stkdeposito_id" />
+	</order>
+
+    </table>
+  </form>
+</histrix>

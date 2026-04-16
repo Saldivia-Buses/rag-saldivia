@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" imprime="false" paginar="100">
+  <title>Reclamos a clientes</title>
+  <obs/>
+  <form>
+    <table id="REG_MOVIMIENTOS">
+      <field id="id_regmovim" noshow="true"/>
+      <field id="regcuenta_id" noshow="true" />
+      <field id="concepto_id" noshow="true">
+        <condicion operador="IN">(SELECT id_concepto FROM REG_CONCEPTOS WHERE subsistema_id = REG_MOVIMIENTOS.subsistema_id and informa_calculo = 0 )</condicion>
+      </field>
+      <field id="abreviacion_concepto" tabla="REG_CONCEPTOS">
+        <label>Tipo</label>
+      </field>
+      <field id="comprobante">
+        <expression>CONCAT(LPAD(REG_MOVIMIENTOS.puesto_movimiento, 4, 0), '-', LPAD(REG_MOVIMIENTOS.nro_movimiento, 8, 0))</expression>
+        <label>Comprobante</label>
+      </field>
+      <field id="vencimiento_movimiento">
+        <label>Vencimiento</label>
+        <condicion operador="!=">'0000-00-00' and vencimiento_movimiento is not null and vencimiento_movimiento &lt;= '[__fecha_hasta__]'</condicion>
+      </field>
+      <field id="importe_movimiento">
+        <label>Importe</label>
+      </field>
+      <field id="saldo_movimiento" suma="true">
+        <label>Saldo</label>
+        <condicion operador="!=">0</condicion>
+      </field>
+
+      <field id="fecha_hasta" local="true" print="false" noshow="true"/>
+    </table>
+    <join tipo="left">
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+        <field id="informa_calculo">
+          <condicion operador="=">0</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

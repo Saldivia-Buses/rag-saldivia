@@ -34,8 +34,7 @@ var tertiaryPlanetOrder = []struct {
 // prog_jd = natal_jd + (age_in_days / 27.321661)
 func CalcTertiaryProgressions(chart *natal.Chart, targetYear int) (*TertiaryResult, error) {
 	jdMid := ephemeris.JulDay(targetYear, 7, 1, 12.0)
-	ageDays := (jdMid - chart.JD) * 365.25 / 365.25 // age in days = jdMid - jdNatal (JD is already in days)
-	ageDays = jdMid - chart.JD
+	ageDays := jdMid - chart.JD // age in days (JD is already in days)
 
 	progressedDays := ageDays / LunarMonthDays
 	progressedJD := chart.JD + progressedDays

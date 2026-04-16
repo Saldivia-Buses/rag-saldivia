@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>TIPOS DE PUERTAS</title>
+	<obs></obs>
+	<form >
+		<table id="TIPOPUER" label="Puertas">
+
+			<field id="tippta">
+				<label>Codigo</label>
+				<help>Codigo de Puerta</help>
+			</field>
+			<field id="ptades">
+				<label>Puerta</label>
+				<help>Tipo de Puerta</help>
+			</field>
+			<field id="ptaabv">
+				<label>Abrev.</label>
+				<help>Abreviatura a Utilizar</help>
+			</field>
+			<field id="siscod" oculto="true">
+				<label>Cod</label>
+			</field>			
+    			<order>
+				<field id="tippta"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

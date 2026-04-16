@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<histrix tipo="fichaing"  _sololectura="true" procesa="false" preloadData="true" preFetch="true" inserta="false" modifica="false" imprime="false" transaccional="true" confirma="ELIMINAR" limit="1" marginTabs="false" log="false">
+  <title>Consulta de Comprobantes de Caja</title>
+  <obs></obs>
+  <eventos>
+    <event id="procesar">close</event>
+    <event id="procesar">refresh</event>
+  </eventos>
+
+  <confirmacion><![CDATA[.Esta Seguro desea Eliminar el Comprobante? ]]></confirmacion>
+  
+  <form>
+
+		<table id="CAJ_MOVIMIENTOS" label="Comprobantes de Caja">
+
+			<validation>
+				<condition><![CDATA[puedeborrar1 !='1']]></condition>
+				<message>Tiene valores de terceros egresados por otros comprobantes, Verifique</message>
+			</validation>
+
+			<validation>
+				<condition><![CDATA[puedeborrar2 !='1']]></condition>
+				<message>El movimiento pertenece a una caja cerrada, Verifique</message>
+			</validation>
+			<movimientos>     
+				<relacion id="del_cajdetalles.xml" />
+				<relacion id="del_cajvalores.xml" />
+				<relacion id="del_carmovimientos.xml" />
+				<relacion id="del_regimputacionesdetalles.xml" />
+				<relacion id="del_regimputacionesheader.xml" />
+				<relacion id="del_regdetallesheader.xml" />
+				<relacion id="del_regmovimientosheader.xml" />
+				
+				<!--
+				comentado, falta resolver las anulaciones de tz con id iguales a los de bl-->
+				<relacion id="del_stkmovimientos.xml" />
+				<!---->
+				<relacion id="del_cajmovimientos.xml" />
+			</movimientos>
+
+
+			<field id="id_regmovimheader" esClave="true" oculto="true">
+				<expression having="false">REG_MOVIMIENTOS.id_regmovim</expression>
+				<tipo>numeric</tipo>
+				<valor>-1</valor>
+			</field>
+
+			<field id="id_regmovimTEMP" noshow="true">
+				<expression having="false">ifnull(REG_MOVIMIENTOS.id_regmovim,-1)</expression>   
+			</field>
+
+
+			<field id="id_cajmovimiento" esClave="true" oculto="true" />
+			
+			<!-- ENCABEZADO -->
+
+			<field id="fecha_movimiento" deshabilitado="true">
+				<label>Fecha</label>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="descripcion_concepto" tabla="REG_CONCEPTOS" deshabilitado="true">
+				<label modpos="nobr">Comprobante</label>
+				<size>50</size>
+			</field>
+
+			<!-- DATOS DEL MOVIMIENTO -->
+			<field id="nombre_cuenta" tabla="REG_CUENTA" deshabilitado="true">
+				<label>Cuenta</label>
+				<size>50</size>
+			</field>
+
+			<field id="nrocomp" >
+				<label modpos="nobr">Nro</label>
+				<expression>concat(ifnull(letra_movimiento,' '), ' ' , LPAD(ifnull(puesto_movimiento,0),4,'0'),'-', LPAD(CAJ_MOVIMIENTOS.nro_movimiento,8,'0'))</expression>
+			</field>
+
+			<field id="cod_direccion" tabla="REG_CUENTA" deshabilitado="true">
+				<label>Direccion</label>
+				<size>50</size>
+			</field>
+                        
+			<field id="localidad" deshabilitado="true">
+				<label>Localidad</label>
+				<expression>CONCAT(GEN_LOCALIDADES.nombre_localidad,' (', GEN_LOCALIDADES.cp, ') ')</expression>
+			</field>
+
+			<field id="nombre_provincia" tabla="GEN_PROVINCIAS" deshabilitado="true">
+				<label modpos="nobr">Provincia</label>
+			</field>
+
+			<field id="abreviacion_iva" tabla="GEN_IVA" deshabilitado="true">
+				<label>Cat.IVA</label>
+			</field>
+
+			<field id="regcuenta_cuit" deshabilitado="true">
+				<label modpos="nobr">CUIT</label>
+				<expression>REG_CUENTA.cuit_cuenta</expression>
+			</field>
+
+			<field id="referencia_movimiento" deshabilitado="true">
+			    <label colspan="4">Ref</label>
+			    <size>120</size>
+			</field>
+
+			<!-- Detalle -->
+
+			<field id="facturasdet" local="true">
+				<label>Detalle</label> 
+				<helper type="object" xml="factura_detalle_qry.xml" dir="/caja/qry/" >
+					<parameter source="id_regmovimTEMP" target="regmovim_id" operator="=" />
+				</helper>
+			</field>
+
+			<!-- VALORES RECIBIDOS -->
+
+			<field id="misvalores" local="true">
+				<label>Resumen</label> 
+				<helper type="object" xml="recibo_cajvalores_imp.xml" dir="/caja/qry/" >
+					<parameter source="id_cajmovimiento" target="cajmovimiento_id" operator="=" />
+				</helper>
+			</field>
+
+			<!-- CHEQUES DE TERCEROS -->
+
+			<field id="cheques" local="true">
+				<label>Cheques 3ros</label>
+				<helper type="object" xml="recibo_carvalores_imp.xml" dir="/caja/qry/" >
+					<parameter source="id_cajmovimiento" target="cajmovimiento_id" operator="=" />
+				</helper>
+			</field>
+
+			<!-- MOVIMIENTOS BANCARIOS Y CHEQUES PROPIOS -->
+
+			<field id="bancos" local="true">
+				<label>Bancos</label>
+				<helper type="object" xml="recibo_regmovim_imp.xml" dir="/caja/qry/" >
+					<parameter source="id_cajmovimiento" target="cajmovimiento_id" operator="=" />
+				</helper>
+			</field>
+
+			<!-- IMPUTACIONES -->
+
+			<field id="imputaciones" local="true">
+				<label>Imputaciones</label> 
+				<helper type="object" xml="recibo_regimputaciones_imp.xml" dir="/caja/qry/" >
+					<parameter source="id_regmovimTEMP" target="regmovim_id" operator="=" /> 
+				</helper>
+			</field>
+
+			<!-- ASIENTO -->
+
+			<field id="asiento" local="true">
+				<label>Asientos</label> 
+				<helper type="object" xml="recibo_cajdetalles_imp.xml" dir="/caja/qry/" >
+					<parameter source="id_cajmovimiento" target="cajmovimiento_id" operator="=" />
+				</helper>
+			</field>
+
+			<!-- MOVIMIENTOS DE STOCK -->
+			<field id="movimientos_stock" local="true">
+				<label>Stock</label> 
+				<helper type="object" xml="cajmovimientos_stk_qry.xml" dir="/caja/qry/" >
+					<parameter source="id_cajmovimiento" target="cajmovimiento_id" operator="=" />
+				</helper>
+			</field>
+			<!-- Auxiliares para Borrar -->
+
+			<field id="cheques_one" local="true" noshow="true">
+				<helper type="object" xml="aux_carvalores_del.xml">
+					<parameter source="id_cajmovimiento" target="cajmovimiento_id" operator="=" />
+				</helper>
+			</field>
+
+			<field id="bancos_aux" local="true" noshow="true">
+				<helper type="object" xml="aux_regmovim_del.xml">
+					<parameter source="id_cajmovimiento" target="cajmovimiento_id" operator="=" />
+				</helper>
+			</field>
+
+			<field id="puedeborrar1" noshow="true">
+				<expression>case when (select count(*) from CAR_MOVIMIENTOS  CM1 JOIN CAR_VALORES CV1 on  ( CV1.id_carvalor = CM1.carvalor_id )
+						where  CM1.cajmovimiento_id = CAJ_MOVIMIENTOS.id_cajmovimiento ) > 0 
+						then (SELECT case when  CAJ_CONCEPTOS.imputacion_concepto = 1 or 
+							(CAJ_CONCEPTOS.imputacion_concepto = 0 and sum(case when CV.egreso_valor != '0000-00-00'  then 1 else 0 end) = 0) 
+							then 1 else 0 end from CAR_MOVIMIENTOS  CM JOIN CAR_VALORES CV on  ( CV.id_carvalor = CM.carvalor_id )  
+						where ( ( CM.cajmovimiento_id = CAJ_MOVIMIENTOS.id_cajmovimiento ) ) 
+					 ) else 1 end
+				</expression>
+			</field>
+			<field id="puedeborrar2" noshow="true">
+				<expression>CASE WHEN IFNULL(CAJ_REGISTROS.cierre_caja,0) > 1 THEN 0 ELSE 1 END</expression>
+			</field>
+
+            <field id="esadmin" local="true" noshow="true">
+                <if exp="$_SESSION['administrator'] != 1">
+                    <true>'false'</true>
+                    <false>'true'</false>
+                </if>
+                <setvar>procesa</setvar>
+            </field>
+
+		</table>
+
+		<join tipo="left">
+			<table id="CAJ_CONCEPTOS">
+			    <field id="id_cajconcepto">
+				<condicion operador="=">cajconcepto_id</condicion>
+			    </field>
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="REG_MOVIMIENTOS">
+			    <field id="subsistema_id">
+				<condicion operador="=">CAJ_CONCEPTOS.subsistema_id</condicion>
+			    </field>
+			    <field id="concepto_id">
+				<condicion operador="=">CAJ_CONCEPTOS.regconcepto_id</condicion>
+			    </field>
+			    <field id="cajmovimiento_id">
+				<condicion operador="=">id_cajmovimiento and cajmovimiento_id != 0</condicion>
+			    </field>
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="REG_CONCEPTOS">
+			    <field id="id_concepto">
+				<condicion operador="=">concepto_id</condicion>
+			    </field>
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="REG_CUENTA">
+			    <field id="id_regcuenta">
+				<condicion operador="=">regcuenta_id</condicion>
+			    </field>
+			</table>
+		</join>
+
+		<join tipo="left">
+		  <table id="GEN_LOCALIDADES">
+		    <field id="id_localidad">
+		      <condicion operador="=">REG_CUENTA.localidad_id</condicion>
+		    </field>
+		  </table>
+		</join>
+
+		<join tipo="left">
+		  <table id="GEN_PROVINCIAS">
+		    <field id="id_provincia">
+		      <condicion operador="=">REG_CUENTA.provincia_id</condicion>
+		    </field>
+		  </table>
+		</join>
+		
+		<join tipo="left">
+		  <table id="GEN_IVA">
+		    <field id="id_iva">
+		      <condicion operador="=">REG_CUENTA.iva_id</condicion>
+		    </field>
+		  </table>
+		</join>
+
+		<join tipo="left">
+		  <table id="CAJ_REGISTROS">
+		    <field id="id_cajregistro">
+		      <condicion operador="=">CAJ_MOVIMIENTOS.cajregistro_id</condicion>
+		    </field>
+		  </table>
+		</join>
+  </form>
+</histrix>  

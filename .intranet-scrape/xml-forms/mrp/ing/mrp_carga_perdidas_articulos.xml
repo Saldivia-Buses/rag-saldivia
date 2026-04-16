@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="grid"  deleteRow="false" >
+    <title>Forecast Articulos</title>
+    <obs></obs>
+
+    <form >
+        <table id="STK_BOM" label="Forecast">
+
+            <movimientos >
+                <relacion id="mrp_cerrar_perdida_ins.xml" />
+            </movimientos>
+
+                <field id="deshabilitado" local="true" noshow="true" />
+
+                <field id="id_mrporden" local="true" noshow="true"/>
+
+                <field id="id_mrpordendetalle" local="true" noshow="true"/>
+
+                <field id="guardar_perdidas" local="true" editable="true" noshow="true">
+                    <label>GUARDAR</label>
+                </field>
+
+            <fieldGroup style="padding:2px 2px 2px 2px;">
+
+				<field id="stkarticulopadre_id" deshabilitado="false"  esClave="true" noshow="true">
+				    <label modpos="nobr">Articulo</label>
+				</field>
+
+                <field id="id_stkarticulo" esClave="true" tabla="STK_ARTICULOS" style="text-align:center;" >
+                    <label>Codigo</label>
+                </field>
+
+                <field id="nombre_articulo" tabla="STK_ARTICULOS" style="text-align:left;">
+                    <label>Nombre</label>
+                    <detalle>nombre_articulo</detalle>
+                </field>
+
+                <field id="cantidad" style="text-align:center;" >
+                    <label>x unidad</label>
+					<tipo>numeric</tipo>
+                </field>
+
+                <field id="WCantidad1" local="true" noshow="true"  > <!-- parametro -->
+	                    <label>Cantidad</label>
+						<tipo>decimal</tipo>
+                </field>
+
+                <field id="W1Cantidad1" local="true" _noshow="true" style="text-align:center;" editable="true" deshabilitado="true"> <!-- total necesario -->
+					<label>Total</label>
+					<if exp="true">
+						<true>round( WCantidad1 * cantidad ,2)</true>
+						<false>0</false>
+					</if>
+					<tipo>numeric</tipo>
+				</field>
+
+                <field id="perdida" local="true" editable="true" style="text-align:center;width:40px;padding:2px 2px 2px 2px;font-weight:bold;" >
+                    <label>Perdida</label>
+                    <tipo>numeric</tipo>
+                    <attribute id="deshabilitado">deshabilitado</attribute>
+                    <expression>
+                        SELECT ifnull(round(STK_MOVIMIENTOS.cantidad,2),'0') from STK_MOVIMIENTOS
+		              	where ordendetalle_id= '[__id_mrpordendetalle__]' and stkconcepto_id= '9'
+                        and STK_MOVIMIENTOS.stkarticulo_id = STK_ARTICULOS.id_stkarticulo
+                        group by STK_MOVIMIENTOS.stkarticulo_id 
+                    </expression>
+                </field>
+
+                <field id="referencia" local="true" editable="true" deshabilitado="false" style="text-align:center;width:20em;">
+                    <label>Observaciones</label>
+                    <attribute id="deshabilitado">deshabilitado</attribute>
+                    <expression>
+                        SELECT referencia from STK_MOVIMIENTOS
+                        where ordendetalle_id= '[__id_mrpordendetalle__]' and stkconcepto_id='9'
+                        and STK_MOVIMIENTOS.stkarticulo_id = STK_ARTICULOS.id_stkarticulo
+                        group by STK_MOVIMIENTOS.stkarticulo_id 
+                    </expression>
+                </field>
+          
+                <field id="user_id" local="true" noshow="true">
+                        <valor eval="true">$_SESSION['idUser']</valor>
+                </field>
+
+            </fieldGroup>
+            
+
+            <group>
+                <field id="id_stkarticulo" ></field>
+            </group>
+
+
+        </table>
+
+            <join tipo="left">
+                <table id="STK_ARTICULOS">
+                    <field id="id_stkarticulo">
+                        <condicion operador="=">stkarticulohijo_id</condicion>
+                    </field>
+                </table>
+            </join>
+
+
+            <join tipo="left">
+                <table id="STK_MOVIMIENTOS">
+                    <field id="stkarticulo_id">
+                        <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+                    </field>
+                </table>
+            </join>
+
+
+
+
+
+
+
+
+            <!-- <join tipo="left">
+                <table id="STK_STOCKACTUAL">
+                    <field id="stkarticulo_id">
+                        <condicion operador="=">id_stkarticulo</condicion>
+                    </field>
+                    <field id="stkdeposito_id">
+                        <condicion operador="=">1</condicion>
+                    </field>
+                </table>
+            </join> -->
+
+    </form>
+</histrix>

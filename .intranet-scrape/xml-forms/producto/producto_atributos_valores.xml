@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8" ?>                     
+<histrix tipo="grid" _editable="true" showProcessButton="true" deleteRow="false" path="fotos/coches" 
+ procesa="true" inserta="false" imprime="false">
+<title>Atributos</title>
+<obs></obs>
+<form >
+    <table id="PRODUCTO_ATRIBUTOS">
+    
+     <filters auto="true">
+        <field id="prdseccion_id">
+            <label modpos="nobr">Sección</label>
+            <operador>=</operador>
+        </field>
+    </filters>    
+    
+    <movimientos>
+        <relacion id="producto_atributos_valores_ins.xml" />
+        <relacion id="producto_atributos_valores_adicionales_ins.xml" />
+        <relacion id="producto_atributos_valores_htxlog_ins.xml" />
+    </movimientos>
+    
+    <title>Seccion</title>
+
+    <field id="producto_id" local="true" noshow="true">
+    </field>
+
+    <field id="nrofab" noshow="true" local="true">
+        <label>N.Fab.</label>
+    </field>
+    <field id="pathcorte" local="true" noshow="true">
+        <if exp="true">
+        <true>'nrofab/corte/'</true>
+        <false>''</false>
+        </if>
+    </field>
+    
+    <field id="activo" oculto="true">
+        <condicion operador="=">1</condicion>
+    </field>
+
+    <field id="homologacion_id" tabla="PRODUCTO_ATRIBUTO_HOMOLOGACION" oculto="true">
+        <label>homolog</label>
+    </field>
+        
+    <field id="id_prdatributo" autoinc="true" noshow="true" _deshabilitado="true">
+        <detalle>prdatributo_id</detalle>
+<!--            <valor>0</valor>  -->
+    </field>
+    
+    <field id="orden_seccion" tabla="PRODUCTO_SECCION" deshabilitado="true" noshow="true"/>
+
+    <field id="orden_atributo" deshabilitado="true" noshow="true">
+        <label>orden</label>
+    </field>
+    
+    <field id="tipo_atributo" noshow="true">
+        <label >Tipo</label>
+        <help>tipo del atributo</help>
+    </field>
+
+    <field id="prdseccion_id">
+        <helper id="PRODUCTO_SECCION" type="combo" empty="true">
+            <field id="id_prdseccion" />
+            <field id="nombre_seccion" />
+        </helper>
+        <label>Sección</label>
+    </field>
+
+    <field id="helper_xml" noshow="true">
+        <expression>case when helper_xml != '' then helper_xml else 'producto_atrib_opciones_qry.xml' end</expression>
+        <label>xml</label>
+        <size>10</size>
+    </field>
+
+    <field id="helper_dir" noshow="true">
+        <expression>case when helper_dir != '' then helper_xml else '/producto' end</expression>
+        <label>dir</label>
+        <size>10</size>
+    </field>
+    
+    <field id="parametros" noshow="true" />
+
+<!--          <field id="zebra" clasefila="true" noshow="true" local="true">
+        <if exp="_ORDEN % 2 == 0">
+        <true>'grisado'</true>
+        <false>''</false>
+        </if>
+     </field> -->
+
+    <field id="coloreado" clasefila="true" noshow="true" local="true">
+        <if exp="activo_cotizacion == 1">
+        <true>'resaltado'</true>
+        <false>''</false>
+        </if>
+     </field>
+
+    <field id="desha_campo_cotiz" clasefila="true" noshow="true" local="true">
+        <if exp="activo_cotizacion == 1">
+        <true>'true'</true>
+        <false>''</false>
+        </if>
+     </field>
+
+    <field id="activo_cotizacion" noshow="true">
+    </field> 
+
+    <field id="estandar_adicional" noshow="true">
+        <label>Tipo</label>
+        <options>
+            <option valor="0">Estandar</option>
+            <option valor="1">Adicional</option>
+        </options>
+        <valor>1</valor>
+    </field>
+
+    <field id="clase_adicional" clasefila="true" local="true" noshow="true">
+        <expression>case when estandar_adicional = 1 then 'resaltadoRojo' else '' end</expression>
+        <label>calse adicional</label>
+    </field>
+
+    <field id="nombre_atributo">
+        <label _modpos="nobr" class="ui-widget-content">Atributo</label>
+        <help>Nombre del atributo</help>
+    </field>        
+
+    <field id="descrip_cotizacion">
+        <label _modpos="nobr" class="ui-widget-content">Descripción</label>
+        <help>Descripción</help>
+    </field>
+
+    <field id="stkarticulo_id">
+        <label>Adicional</label>
+        <help>Adicional</help>
+    </field>
+
+    <field id="precio_adicional">
+        <label>Precio</label>
+        <help>Precio</help>
+        <expression>SELECT precio1 FROM LISTAPRECIOSDET WHERE LISTAPRECIOSDET.idArticulo = PRODUCTO_ATRIBUTOS.stkarticulo_id ORDER BY vigencia DESC LIMIT 1</expression>
+    </field>
+
+    <field id="nombre_adicional" noshow="true">
+        <label>Precio</label>
+        <help>Precio</help>
+        <expression>SELECT artdes FROM STKINSUM WHERE STKINSUM.artcod = PRODUCTO_ATRIBUTOS.stkarticulo_id limit 1</expression>
+    </field>
+
+    <field id="fecha_adicional" noshow="true" local="true">
+        <label modpos="nobr">Fecha</label>
+        <help>Fecha de Cotización</help>
+        <tipo>date</tipo>
+        <valor>today</valor>
+    </field>
+
+    <field id="cantidad" noshow="true" local="true">
+        <label modpos="nobr">Cantidad Adicional</label>
+        <help>Cantidad Adicional</help>
+        <valor>1</valor>
+    </field>
+
+
+    <field id="valor_viejo" noshow="true">
+        <expression>IFNULL(PRODUCTO_ATRIB_VALORES.valor_atributo,0)</expression>
+    </field>
+
+    <field id="valor_atributo" tabla="PRODUCTO_ATRIB_VALORES" _local="true" editable="true" refresh="true">
+
+        <attribute id="TipoDato">tipo_atributo</attribute>
+        <attribute id="attributes">parametros</attribute>
+
+        <attribute id="helperXml">helper_xml</attribute>
+        <attribute id="helperDir">helper_dir</attribute>
+
+        <helper xml="producto_atrib_opciones_qry.xml" type="combo" empty="false">
+        <parameter source="id_prdatributo" target="prdatributo_id"/> 
+        
+        </helper>
+        <!--<condicion operador="NOT LIKE">'Corte%'</condicion>-->
+        <!--<attribute id="deshabilitado">desha_campo_cotiz</attribute>--> <!-- NO DEJA DESTILDAR EL CHECK -->
+    </field>
+
+    <field id="graba_log" local="true" refresh="true" noshow="true">
+        <if exp="valor_viejo != valor_atributo">
+            <true>'1'</true>
+            <false>'0'</false>
+        </if>
+    </field>
+
+    <field id="atributo_default" noshow="true">
+        <expression>IFNULL(PRODUCTO_ATRIB_VALORES.valor_atributo, 0)</expression>
+    </field>
+
+    <field id="graba_adicional" local="true" refresh="true" noshow="true">
+        <if exp="valor_atributo == 1 &amp;&amp; estandar_adicional == 1 &amp;&amp; atributo_default == 0">
+            <true>'1'</true>
+            <false>'0'</false>
+        </if>
+    </field>
+
+
+    <order> 
+        <field id="orden_seccion" tabla="PRODUCTO_SECCION"/>
+        <field id="estandar_adicional"/>
+        <field id="orden_atributo" />
+    </order>
+
+    </table>
+
+    <join tipo="left">
+    <table id="PRODUCTO_SECCION">
+        <field id="id_prdseccion">
+        <condicion operador="=">prdseccion_id</condicion>
+        </field>
+    </table>
+    </join>    
+
+    <join tipo="inner">
+    <table id="PRODUCTO_ATRIBUTO_HOMOLOGACION">
+        <field id="prdatributo_id">
+            <condicion operador="=">id_prdatributo</condicion>
+        </field>
+    </table>
+    </join>
+
+    <join tipo="left">
+    <table id="PRODUCTO_ATRIB_VALORES">
+        <field id="prdatributo_id">
+        <condicion operador="=">id_prdatributo</condicion>
+        </field>
+        <field id="producto_id">
+        <condicion operador="=">'[__producto_id__]'</condicion>
+        </field>
+    </table>
+    </join>
+
+</form>    
+</histrix>

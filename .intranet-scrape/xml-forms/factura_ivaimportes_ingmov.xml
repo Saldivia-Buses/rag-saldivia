@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="abm" >
+       <title>IVAIMPORTES</title>
+        <obs></obs>
+               <form >
+					<table id="IVAIMPORTES" label="IVACOMPRAS" idCampoCond="grabo_iva">
+						<field id="tipoiva" id_cab="movcta">
+						</field>
+						<field id="feciva" id_cab="ivcreg">
+						</field>
+						<field id="codcom" id_cab="concod">
+						</field>
+						<field id="codlet" id_cab="movlet">
+						</field>
+						<field id="nronpv" id_cab="movnpv">
+						</field>
+						<field id="nrocom" id_cab="movnro">
+						</field>
+						<field id="ctacod" id_cab="ctacod">
+						</field>
+						
+
+						<field id="impgra" id_temp="net2">
+						</field>
+						<field id="impcod" id_temp="impcod">
+						</field>
+						<field id="impali" id_temp="alicuota">
+						</field>
+						<field id="impimp" id_temp="iva">
+						</field>
+						
+					</table>
+               </form>
+        </histrix>

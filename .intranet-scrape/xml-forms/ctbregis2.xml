@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<abm tipo="consulta">
+	<titulo>Minutas</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="CTBREGIS" label="Minutas">
+			
+			<campo id="siscod" oculto="true">
+				<label>siscod</label>
+				<help> Cod sistema</help>
+<!--				<condicion operador="=">'10'</condicion> -->
+			</campo>
+			<campo id="ctanom" tabla="CCTMOVIM">
+				<label>Nom</label>
+				<tipo>varchar</tipo>
+			</campo>
+			
+			<campo id="regnro" >
+				<label>Numero Comp.</label>
+			</campo>
+			
+			<campo id="regmin" >
+				<label>Minuta </label>
+				<help>Numero de Asiento </help>
+			</campo>
+			<campo id="ctbcod" esclave="true">
+				<label>Cta</label>
+			</campo>			
+			<campo id="cuenta">
+				<expresion>ctbnom</expresion>
+				<label>Cuenta</label>
+				
+				<help>Codigo de Cuenta Contable</help>
+				<!--		      <tabla_ex id="CTBCUENT">
+				<campo id="ctbcod"></campo>
+				<campo id="ctbnom"></campo>
+				
+				</tabla_ex>
+				-->
+				<tipo>string</tipo>
+			</campo>
+			
+			<campo id="regdoh" oculto="true">
+				<label>Tipo Mov.</label>
+				<help>Tipo Movimiento</help>
+				<opciones>
+					<opcion valor="1">Debe </opcion>
+					<opcion valor="2">Haber</opcion>
+				</opciones>
+				
+			</campo>
+			<!--
+			<campo id="regtip">
+			<label>Cod.Comp.</labe
+			<help>Codigo de Comprobante </help>
+			</campo>
+			-->
+			<campo id="regref">
+				<label>Referencia</label>
+				<help>Referencia</help>
+			</campo>
+			<campo id="debe" suma="true">
+				<expresion>regimp * (case when regdoh = 1 then 1 else 0 end)</expresion>
+				
+				<label>Debe</label>
+				<help>Importe del Movimiento en el Debe</help>
+			</campo>
+			
+			<campo id="haber" suma="true">
+				<expresion>regimp * (case when regdoh = 2 then 1 else 0 end)</expresion>
+				<label>Haber</label>
+				<help>Importe del Movimiento en el Haber</help>
+			</campo>
+			
+			<!--
+			<campo id="regpoa">
+			<label>Estado</label>
+			<help>Estado del Movimiento.Aprobado  o  Provisorio </help>
+			<opciones>
+			<opcion valor="A">Aprobado</opcion>
+			<opcion valor="P">Provisorio</opcion>
+			</opciones>
+			
+			</campo>
+			
+			
+			<campo id="coscod">
+			<label>Centro Costo</label>
+			<help>Codigo de Centro de Costo </help>
+			</campo>
+			<campo id="impcod">
+			<label>Cod.Imput.</label>
+			<help>Codigo de Centro de Imputacion</help>
+			</campo>
+			
+			
+			<campo id="idcos">
+			<label>? </label>
+			<help> </help>
+			</campo>
+			<campo id="idimpu">
+			<label>? </label>
+			<help> </help>
+			</campo>
+			<campo id="regcta">
+			<label>? </label>
+			<help> </help>
+			</campo>
+			<campo id="regfco">
+			<label>Fecha Comprobante </label>
+			<help> </help>
+			</campo>
+			<campo id="regnro">
+			<label>Nro.</label>
+			<help>Numero de Comprobante Correspondiente. </help>
+			</campo>
+			
+			-->
+			<campo id="regfec" oculto="true">
+				<label>Fecha</label>
+				<help>Fecha del Asiento (Movimiento Contable) </help>
+			</campo>
+			<!--
+			<campo id="regnpv">
+			<label>Nro Puesto </label>
+			<help> </help>
+			</campo>
+			<campo id="regord">
+			<label>Orden en el Asiento  . </label>
+			<help> </help>
+			</campo>
+			<campo id="regsub">
+			<label>Subdiario </label>
+			<help> </help>
+			</campo>
+			<campo id="reguni">
+			<label>Unidades Fisicas     . </label>
+			<help>Unidades Fisicas. </help>
+			</campo>
+			-->
+			
+			<orden>
+				<campo id="regmin" tabla="CTBREGIS"></campo>
+				<campo id="regord"></campo>
+				
+			</orden>
+			
+		</tabla>
+		<join tipo="left">
+			<tabla id="CTBCUENT">
+<!--
+				<campo id="siscod" oculto="true">
+					<condicion operador="=">'10'</condicion>
+					
+				</campo>
+-->				
+				<campo id="ctbcod" oculto="true">
+					<condicion operador="=">CTBREGIS.ctbcod</condicion>
+				</campo>
+				
+			</tabla>
+		</join>
+		<join tipo="left">
+			<tabla id="CCTMOVIM">
+				
+				<campo id="movnro" oculto="true">
+					<condicion operador="=">CTBREGIS.regnro</condicion>
+				</campo>
+				
+				<campo id="regmin" oculto="true">
+					<condicion operador="=">CTBREGIS.regmin</condicion>
+				</campo>
+<!--				<campo id="regfec" oculto="true">
+					<condicion operador="=">CTBREGIS.regfec</condicion>
+				</campo> -->
+				
+			</tabla>
+		</join>		
+		
+	</consulta>
+</abm>

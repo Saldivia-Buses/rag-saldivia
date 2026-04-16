@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm" imprime="false" _borra="false" _inserta="false">
+  <title>Reclamos a clientes</title>
+  <obs/>
+  <form>
+    <table id="HTXOPTIONS">
+      <field id="id_option" noshow="true" autoinc="true" />
+      <field id="option_name" noshow="true" valauto="true">
+        <valor>'SIS::02::MOD_RECLAMO'</valor>
+        <condicion operador="=">'SIS::02::MOD_RECLAMO'</condicion>
+      </field>
+      <field id="option_description">
+        <label>Titulo</label>
+      </field>
+      <field id="option_value" colstyle="display:none;">
+        <label>Cuerpo</label>
+        <tipo>editor</tipo>
+      </field>
+
+      <field id="referencia" local="true" deshabilitado="true" valauto="true" colstyle="display:none;" style="padding: 1em;" colspan="2">
+        <valor><![CDATA[ 
+          </br>Utilice las siguientes palabras claves para cambiarlas por su valor real:
+          </br>%CODIGO% = Código del cliente
+          </br>%CLIENTE% = Nombre del cliente
+          </br>%DOMICILIO% = Domicilio
+          </br>%CP% = Código Postal
+          </br>%LOCALIDAD% = Localidad
+          </br>%CATIVA% = Categoría de IVA
+          </br>%CUIT% = CUIT
+          </br>%CVENTA% = Condición de Venta
+          </br>%LIMCREDITO% = Límite de Crédito
+          </br>%LIMCARTERA% = Límite de Cartera
+          </br>%SALDO% = Saldo Total
+          </br>
+          </br>Utilice la etiqueta [cabecera] para encerrar el texto que formará parte de la cabecera del comprobante.
+          </br>Ej.: 
+          </br>[cabecera]
+          </br>Este texto formará parte de la cabecera
+          </br>[cabecera]
+          </br>
+          </br>Utilice la etiqueta [pie] para encerrar el texto que formará parte de la pie del comprobante.
+          </br>Ej.: 
+          </br>[pie]
+          </br>Este texto formará parte del pie
+          </br>[pie]
+          </br>
+        ]]></valor>
+
+        <size>500</size>
+        <tipo>editor</tipo>
+      </field>
+    </table>
+  </form>
+</histrix>

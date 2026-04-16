@@ -14,7 +14,7 @@ Gracias por contribuir. Este documento describe cómo preparar el entorno, ejecu
    ```bash
    git clone https://github.com/Camionerou/rag-saldivia
    cd rag-saldivia
-   git checkout experimental/ultra-optimize
+   git checkout 2.0.5
    ```
 
 3. **Redis** (obligatorio)  
@@ -83,9 +83,9 @@ El hook **commitlint** (en `husky` / `commit-msg`) rechaza mensajes que no sigan
 
 ## 4. Flujo de PR
 
-1. Crear branch desde `experimental/ultra-optimize`.
+1. Crear branch desde `2.0.5`.
 2. Nombre sugerido: `feat/descripcion-corta` o `fix/descripcion-corta`.
-3. Abrir PR **hacia** `experimental/ultra-optimize`.
+3. Abrir PR **hacia** `2.0.5`.
 4. El **CI** debe pasar (tests, lint, type-check según workflow).
 5. Completar el **PR template** (`.github/pull_request_template.md`).
 
@@ -101,7 +101,7 @@ El hook **commitlint** (en `husky` / `commit-msg`) rechaza mensajes que no sigan
 
 1. Crear `apps/web/src/app/api/tu-ruta/route.ts` (o segmentos dinámicos `[id]`).
 2. En handlers, usar `extractClaims()` de `@/lib/auth/jwt` o helpers `requireUser` / `requireAdmin` si existen en el código.
-3. Documentar el endpoint en `docs/api.md`.
+3. Document the endpoint in the service README (`services/{name}/README.md`) and the corresponding `docs/services/{name}.md`.
 4. Para flujos críticos, considerar cobertura E2E en `apps/web/tests/e2e-playwright/`.
 
 ## 7. Cómo agregar una tabla a la base de datos

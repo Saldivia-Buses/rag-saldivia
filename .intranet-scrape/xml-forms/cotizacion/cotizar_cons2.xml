@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta"   >
+	<title>PRECIOS POR MODELO</title>
+	<obs/>
+	<form >
+		<table id="GRUPOPRECIOS" >
+			<title>Precios por modelo</title>
+
+
+
+	
+			<field id="nrocar" noshow="true">
+			    <tipo>integer</tipo>
+			</field>		
+			<field id="idGrupo" noshow="true">
+			</field>			
+			<field id="idLista" local="true" noshow="true">
+			    <tipo>integer</tipo>
+			</field>			
+<!--			<field id="desabv">
+				<expression>concat(MARCHASIS.desabv,' ', MODCHASIS.moddes)</expression>
+				<label colstyle="width:100px;"></label>
+				<tipo>varchar</tipo>
+			</field>		-->	
+			<field id="cons3" >
+	                    <expression>GRUPOPRECIONOM.descripcion</expression>
+			</field>
+<!--			
+			<field id="cons3" obj="cotizar_cons3.xml" showObjTabla="true"   local="true" PDFlineas="false">
+				<paring destino="idLista" operador="=">idLista</paring>				
+				<paring destino="idGrupo" operador="=">idGrupo</paring>
+				<paring destino="nrocar" operador="=">nrocar</paring>
+			</field>
+-->
+			<field id="cons4" obj="cotizar_cons4.xml" showObjTabla="true"   local="true"  PDFlineas="false">
+				<paring destino="idLista" operador="=">idLista</paring>				
+				
+				<paring destino="idGrupo" operador="=">idGrupo</paring>
+				<paring destino="nrocar" operador="=">nrocar</paring>
+			</field>								
+			<group>
+				<field id="idGrupo"></field>
+			</group>
+		</table>
+		<join>
+			<table id="GRUPOPRECIONOM">
+				<field id="IdGrupo">
+					<condicion operador="=">GRUPOPRECIOS.idGrupo</condicion>
+				</field>
+				<field id="nrocar">
+					<condicion operador="=">GRUPOPRECIOS.nrocar</condicion>
+				</field>
+				
+			</table>
+		</join>
+		
+	</form>
+</histrix>

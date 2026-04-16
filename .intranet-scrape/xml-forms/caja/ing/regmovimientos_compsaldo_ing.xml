@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" subtipo="vertical" inserta="false" procesa="true" borra="false" modifica="false" imprime="false" _exportasuma="true" deleteRow="false" llenoreferente="true" confirma="CONFIRMAR" resume="true" limit="1">
+  <title>Cuenta Corriente</title>
+  <obs/>
+  <confirmacion><![CDATA[¿Confirma la operación?]]></confirmacion>
+  <form>  
+    <table id="REG_MOVIMIENTOS" label="Movimientos">
+   
+      <validation>
+        <condition><![CDATA[test_imputaciones + 0 != 0 ]]></condition>
+        <message>Error en las imputaciones</message>
+      </validation>
+      
+      <fieldGroup noshow="true" valauto="true">
+        <field id="cajformapago_id" local="true" esClave="true">
+          <detalle>cajformapago_id</detalle>
+        </field>
+        <field id="subsistema_forma_id" local="true" />
+        <field id="regconcepto_forma_id" local="true" />
+        <field id="regcuentapadre_id" local="true" />
+        <field id="moneda_id" local="true" />
+        <field id="fecha_movimiento" local="true">
+          <tipo>date</tipo>
+        </field>
+        <field id="imputacion_concepto" local="true">
+          <label>IC</label>
+        </field>
+      </fieldGroup>      
+
+      <field id="imputaciones" local="true">
+        <helper type="object" xml="detalle_compsaldo_grid.xml">
+          <paremeter source="regcuentapadre_id" target="regcuentapadre_id" />
+          <paremeter source="subsistema_forma_id" target="subsistema_forma_id" />
+          <paremeter source="imputacion_concepto" target="imputacion_concepto" />
+          <paremeter source="fecha_movimiento" target="fecha_movimiento" />
+          <paremeter source="moneda_id" target="moneda_id" />
+          <paremeter source="regconcepto_forma_id" target="regconcepto_forma_id" />
+          <paremeter source="cajformapago_id" target="cajformapago_id" />
+        </helper>
+        <label colspan="6"/>
+      </field>
+      
+      <field id="importe_movimiento" local="true" deshabilitado="true">
+        <label style="color:blue; font-size:16px;">Total Imputado</label>
+        <jseval campodestino="saldoFinal">(saldoOP  + totalImputado).toFixed(2)</jseval>
+        <detalle>pago_valor</detalle>
+        <tipo>numeric</tipo>
+      </field>
+      
+      <field id="test_imputaciones" local="true" noshow="true">
+        <label>Test Imputaciones</label>
+      </field>
+
+    </table>
+  </form>
+</histrix>

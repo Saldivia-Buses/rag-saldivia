@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CRUD
+Tarea: Tabla de Tipo de Novedad del Vehiculo
+Autor: 
+Fecha: 15/11/13
+*******************************************************************************
+-->
+    <histrix tipo="abm">
+	<title>Tipo de Ajustes</title>
+	 <obs></obs>
+		<form>
+		    <table id="MANT_TIPO_NOVEDAD" label="Tipo Novedad">
+				<field id="id_mantiponovedad" esClave="true" autoinc="true" noshow="true" />
+
+				<field id="descripcion">
+					<label>Tipo de Novedad</label>
+					<help>descripcion del tipo de novedad</help>
+					<size>100</size>  
+				</field> 
+				
+		    </table>
+		</form>
+    </histrix>	

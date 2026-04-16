@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="fichaing" logReference="nombre_articulo" path="fotos/articulos" paginar="250" _conBusqueda="true" inserta="false" modifica="false">
+    <title>Artículos</title>
+    <obs></obs>
+    <form >
+        <table id="STK_ARTICULOS" label="Artículos" >
+	    <movimientos>
+		<relacion id="stkarticulo_comercial_ins.xml" /> 
+		<relacion id="stkarticulo_comercial_asignar.xml" />
+	    </movimientos>
+            <fieldGroup>
+		    <field id="id_homologacion" local="true" deshabilitado="true" noshow="true" />
+	            <field id="id_stkarticulo" esClave="true" >
+	                <label>Codigo</label>
+                    <detalle>stkarticulopadre_id</detalle>
+	            </field>
+
+                <field id="nombre_articulo">
+                    <label>Nombre</label>
+                    <size>45</size>
+                </field>
+
+                <field id="unidad_uso_id"  modpos="nobr">
+                    <label>Unidad de Medida </label>
+                    <help>Unidad de Medida</help>
+                    <helper type="combo" xml="unidad_qry.xml" dir="/ayudas" _empty="true"></helper>
+		    <valor>2</valor>
+                </field>
+                <field id="unidad_id"  modpos="nobr" noshow="true">
+		    <valor>2</valor>
+                </field>
+                <field id="unidad_compra_id"  modpos="nobr" noshow="true">
+		    <valor>2</valor>
+                </field>
+                
+                <field id="stkrubro_id" >
+                    <label>Rubro</label>
+                    <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true" />
+                    <actualiza>
+                        <field destino="stkrubro_id" id="stksubrubro_id"/>
+                    </actualiza>
+		    <valor>9</valor>
+                </field>
+
+
+                <field id="stksubrubro_id" colstyle="display:none;" >
+                    <label modpos="nobr">SubRubro</label>
+                    <helper type="combo" xml="stksubrubro_qry.xml" dir="/ayudas" empty="true" />
+		    <valor>0</valor>
+                </field>
+
+                <field id="fabricacion_propia" >
+                    <label>Fabriación propia</label>
+                    <help>Indica si es de Fabricación Propia</help>
+                    <tipo>check</tipo>
+		    <valor>1</valor>
+                </field>
+                <field id="ncm" required="true">
+                    <label>N.C.M.</label>
+                    <help>Numero comercial mercosur</help>
+                    <tipo>varchar</tipo>
+		    <valor>87.07.90.90</valor>
+                </field>
+
+                <field id="unidad_uso_id" required="true" noshow="true">
+                    <label>Unidad Uso</label>
+                    <help>Unidad Uso</help>
+                    <tipo>varchar</tipo>
+		    <valor>2</valor>
+                </field>                
+            </fieldGroup>
+
+
+
+            <fieldGroup style="padding:2px 2px 2px 2px;">
+
+                <field id="separator_fiscal" local="true" Formstyle="background-color: #c9c9c9;height:1px;font-size:1px;" colspan="9" deshabilitado="true" colstyle="display: none;" />
+
+                <field id="gravado" activa="true">
+                    <label>Gravado</label>
+                    <help>Indica si el Articulo es gravado den IVA</help>
+                    <tipo>check</tipo>
+		    <valor>1</valor>
+                </field>
+
+                <field id="ivaregimen_id" requiered="true" sincelda="true" activador="gravado">
+                    <label modpos="nobr" />
+                    <help>Seleccione el regimen de iva del producto</help>
+                    <helper type="combo" xml="ivaregimen_qry.xml" dir="/ayudas" _empty="true" />
+                    <valor>2</valor>
+                </field>
+
+                <field id="genmoneda_venta_id" >
+                    <label modpos="nobr">Moneda Venta</label>
+                    <helper type="combo" xml="moneda_qry.xml" dir="/ayudas" _empty="true" />
+                    <valor>1</valor>
+                </field>
+
+            </fieldGroup>
+
+
+
+
+
+
+
+            <!-- Contable -->
+
+            <fieldGroup style="padding:2px 2px 2px 2px;" colstyle="display:none;">
+
+                <field id="separator_contable" local="true" Formstyle="background-color: #c9c9c9;height:1px;font-size:1px;" colspan="9" deshabilitado="true" colstyle="display: none;" />
+
+                <field id="cuentadebe_id" colstyle="display:none;" >
+                    <label>Cta.Ctb.Venta</label>
+                    <helper type="external" xml="cuentas_habilitadas_qry.xml" dir="/ayudas" empty="true" />
+                    <help>Cuenta Ventas</help>
+                    <size>15</size>
+                    <helper type="parameter" id="SIS::02::cuenta_contable_venta">
+            			<label>Cuenta Contable Venta por defecto</label>
+            			<defaultValue>611101</defaultValue>
+          			</helper>
+                </field>
+<!--
+                <field id="ctbcuentacps_id" colstyle="display:none;" >
+                    <label modpos="nobr">Cta.Ctb.Compra</label>
+                    <helper type="external" xml="cuentas_habilitadas_qry.xml" dir="/ayudas" empty="true" />
+                    <help>Cuenta Compras</help>
+                    <size>15</size>
+                </field>
+            -->
+            </fieldGroup>
+                  
+
+
+
+
+        </table>
+
+        
+
+    </form>
+</histrix>

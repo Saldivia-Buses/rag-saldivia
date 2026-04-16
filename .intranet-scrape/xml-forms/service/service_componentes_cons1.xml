@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="consulta">
+       <title>Tareas</title>
+        <obs></obs>
+               <form >
+                  <table id="SERVICE_COMPONENTES" label="COMPONENTES">
+                  <field id="idComponente"  noshow="true">
+                      <label>id</label>
+                      <help> </help>
+                      <condicion operador="% 2 !=">0</condicion>
+                  </field>
+                  <field id="idGrupo"  noshow="true">
+                      <label>gr</label>
+                      <help> </help>
+                      <condicion operador="=">1</condicion>
+                  </field>
+
+                  <field id="nombre" _resize="false">
+                      <label>Componentes</label>
+                      <help>Componente a Verificar</help>
+                  </field>
+                  <field id="obs" local="true">
+                      <label>Observaciones</label>
+                  </field>
+                  <field id="Si" local="true" resize="false">
+                      <label>SI</label>
+                      <tipo>check</tipo>
+                      
+                  </field>
+                  <field id="No" local="true" resize="false">
+                      <label>No</label>
+                      <tipo>check</tipo>
+                  </field>
+		  <field id="cant" local="true" resize="false">
+		      <label>Cant</label>
+		  </field>
+                  <field id="nombre2" _resize="false">
+                      <expression>(select SC.nombre from SERVICE_COMPONENTES as SC where SC.idComponente = SERVICE_COMPONENTES.idComponente + 1  and SC.idGrupo = SERVICE_COMPONENTES.idGrupo)</expression>
+                      <label>Componente</label>
+                  </field>
+                  <field id="obs2" local="true">
+                      <label>Observación</label>
+                  </field>
+                  <field id="SI2" local="true" resize="false">
+                      <label>Si </label>
+                      <tipo>check</tipo>
+                  </field>
+                  <field id="NO2" local="true" resize="false">
+                      <label>No </label>
+                      <tipo>check</tipo>
+                  </field>
+		  <field id="CANT2" local="true" resize="false">
+		      <label>Cant </label>
+		  </field>
+                  </table>
+               </form>
+        </histrix>

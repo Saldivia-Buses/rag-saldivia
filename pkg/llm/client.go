@@ -140,7 +140,7 @@ func (c *Client) Chat(ctx context.Context, messages []Message, tools []ToolSchem
 	if err != nil {
 		return nil, fmt.Errorf("llm request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		errBody, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
@@ -162,7 +162,7 @@ func (c *Client) Chat(ctx context.Context, messages []Message, tools []ToolSchem
 	if err := json.NewDecoder(resp.Body).Decode(&raw); err != nil {
 		return nil, fmt.Errorf("decode: %w", err)
 	}
-	io.Copy(io.Discard, resp.Body) // drain for connection reuse
+	_, _ = io.Copy(io.Discard, resp.Body) // drain for connection reuse
 	if len(raw.Choices) == 0 {
 		return nil, fmt.Errorf("empty choices")
 	}
@@ -231,14 +231,14 @@ func (c *Client) StreamChat(ctx context.Context, messages []Message, temperature
 
 	if resp.StatusCode != http.StatusOK {
 		errBody, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
-		resp.Body.Close()
+		_ = resp.Body.Close()
 		return nil, fmt.Errorf("llm returned %d: %s", resp.StatusCode, string(errBody))
 	}
 
 	ch := make(chan StreamDelta, 64)
 	go func() {
 		defer close(ch)
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 		parseSSEStream(resp.Body, ch)
 	}()
 

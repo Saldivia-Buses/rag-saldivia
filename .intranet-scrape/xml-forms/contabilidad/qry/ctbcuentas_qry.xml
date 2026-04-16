@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+    <title>Cuentas</title>
+    <obs></obs>
+    <form>
+        <table id="CTB_CUENTAS" label="cuentas">
+
+            <filters>
+                <field id="ejercicio_id" deshabilitado="false">
+                    <label>Ejercicio</label>
+                    <operador>=</operador>
+                </field>
+            </filters>
+
+            <field id="id_cuenta" esClave="true">
+                <label>Codigo</label>
+            </field>
+
+            <field id="nombre_cuenta">
+                <label>Nombre</label>
+            </field>
+
+            <field id="ejercicio_id" noshow="true">
+                <helper type="combo" xml="ctbejercicios_crud.xml" dir="/contabilidad/man/" />
+            </field>
+
+            <field id="habilitada" noshow="true">
+                <tipo>check</tipo>
+                <label>Habilitada</label>
+            </field>
+
+            <field id="zebra" clasefila="true" local="true" noshow="true">
+                <if exp="_ORDEN % 2 == 0">
+                    <true>'grisado2'</true>
+                    <false>''</false>
+                </if>
+            </field>
+
+            <field id="hictasup" local="true" clasefila="true" noshow="true">
+                <expression>CASE WHEN cuenta_superior_id = 0 THEN 'resaltado' ELSE '' END</expression>
+            </field>
+
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" _limit="100">
+	<title>Consulta de Proveedores</title>
+	 <obs></obs>
+		<form detalle="cuenta_contactos_qry.xml" inline="true">
+
+		    <table id="REG_CUENTA" label="Consulta de Proveedores">
+
+
+
+			<filters>					
+		
+				<field id="nombre_cuenta" deshabilitado="false">
+					<operador>like</operador>
+					<label>Titular</label>
+				</field> 
+
+				<field id="separador" modpos="nobr" deshabilitado="true" editable="false" />
+
+				<field id="cod_direccion" modpos="nobr">
+				   <label>Direccion</label>
+				   <operador>like</operador>
+		        </field>
+
+		        <field id="separador" modpos="nobr" deshabilitado="true" editable="false" />
+			
+				<field id="nombre_localidad" deshabilitado="false" modpos="nobr">
+					<operador>like</operador>
+					<label>Ciudad</label>
+				</field>
+
+				<field id="separador" modpos="nobr" deshabilitado="true" editable="false" />
+
+				<field id="nombre_provincia" deshabilitado="false" modpos="nobr">
+					<operador>like</operador>
+					<label>provincia</label>
+				</field>
+
+			</filters>
+
+		    <fieldGroup noshow="true">
+
+					<field id="separador" local="true" deshabilitado="true" >
+						<size>1</size>
+					</field>
+
+					<field id="id_regcuenta" noshow="true">
+					    <detalle>regcuenta_id</detalle>
+					</field>
+						
+					<field id="subsistema_id" noshow="true">
+						<detalle>subsistema_id</detalle>
+					</field> 
+		    
+			</fieldGroup>
+
+
+		    <fieldGroup style="text-align:center;vertical-align:middle;padding:2px 2px 2px 2px;">
+				
+				<field id="nro_cuenta" >
+					<label>Número</label>
+				</field>
+
+				<field id="nombre_cuenta" style="text-align:left;padding:2px 2px 2px 2px;">
+					<label>Nombre</label>
+					<size>25</size>
+				</field>
+
+				<field id="deuda" linkdes="Cuenta Corriente" local="true">
+	                <label>Deuda</label>                
+	                <helper type="link" xml="regdetalles_all_qry.xml" modal="true">
+	                    <parameter source="id_regcuenta" target="regcuenta_id" operator="="/>
+	                    <parameter source="subsistema_id" target="subsistema_id" operator="="/>
+	                </helper>
+	                <valor>'Cta. Cte.'</valor>
+	            </field>
+
+				<field id="cod_direccion">
+					<label>Direccion</label>
+					<size>25</size>
+				</field>
+
+                <field id="codigo_postal">
+            	    <label>cp</label>
+                </field>
+
+				<field id="nombre_localidad" tabla="GEN_LOCALIDADES">
+					<label>Localidad</label>
+				</field>
+
+				<field id="nombre_provincia" tabla="GEN_PROVINCIAS">
+					<label>Provincia</label>
+				</field>
+
+				<field id="nombre_zona" tabla="REG_ZONAS">
+					<label>Zona</label>
+				</field>
+                
+				<field id="alta_cuenta">
+					<label>Fecha Alta</label>
+					<tipo>date</tipo>
+				</field>
+
+				<field id="nombre_iva" tabla="GEN_IVA">
+					<label>IVA</label>
+				</field>
+
+				<field id="cuit_cuenta">
+					<label>CUIT/CUIL</label>
+				</field>
+
+				<field id="estcod" noZero="true">
+					<label>Conceptos</label>
+					<helper type="combo">
+						<option value="1">Bienes</option>
+						<option value="2">Servicios</option>
+					</helper>
+				</field>
+
+	    	</fieldGroup>
+
+		    <fieldGroup>
+						<if> if (strpos($_SESSION['properties']['modulos'],'contabilidad') != false) return true; </if>
+						<field id="cuenta_debe">
+						    <expression>IFNULL((SELECT GROUP_CONCAT(ccta.id_cuenta, ' - ', ccta.nombre_cuenta) FROM REG_CUENTA_IMPUTACION rci LEFT JOIN CTB_CUENTAS ccta 
+						ON rci.cuenta_id = ccta.id_cuenta and ccta.ejercicio_id = (select id_ejercicio from CTB_EJERCICIOS where activo = 1 ORDER BY id_ejercicio DESC LIMIT 1)
+						WHERE rci.regcuenta_id = REG_CUENTA.id_regcuenta and rci.doh = 0), '&lt;b&gt; + &lt;/b&gt;')</expression>
+							<helper type="link" xml="cuenta_imputaciones_crud.xml" dir="/proveedores/man" title="Editar cuentas contables" width="700" height="300">
+								<parameter source="id_regcuenta" target="regcuenta_id" />
+							</helper>
+							<label>Ctb.Debe</label>
+						</field>
+						<field id="hicolor" clasefila="true" noshow="true">
+						    <expression>IFNULL((SELECT ccta.id_cuenta FROM REG_CUENTA_IMPUTACION rci LEFT JOIN CTB_CUENTAS ccta 
+						ON rci.cuenta_id = ccta.id_cuenta and ccta.ejercicio_id = (select id_ejercicio from CTB_EJERCICIOS where activo = 1 ORDER BY id_ejercicio DESC LIMIT 1)
+						WHERE rci.regcuenta_id = REG_CUENTA.id_regcuenta and rci.doh = 0 LIMIT 1), 'resaltado')</expression>
+						</field>
+
+		    </fieldGroup>
+
+
+		    </table>
+
+			<join tipo="left">
+				<table id="GEN_PROVINCIAS">
+					<field id="id_provincia">
+						<condicion operador="=">provincia_id</condicion>
+					</field>
+				</table>
+			</join>
+
+
+			<join tipo="left">
+				<table id="GEN_LOCALIDADES">
+					<field id="id_localidad">
+						<condicion operador="=">localidad_id</condicion>
+					</field>
+				</table>
+			</join>
+
+			<join tipo="left">
+				<table id="GEN_IVA">
+					<field id="id_iva">
+						<condicion operador="=">iva_id</condicion>
+					</field>
+				</table>
+			</join>
+
+			<join tipo="left">
+				<tabla id="REG_ZONAS">
+					<field id="id_regzona">
+						<condicion operador="=">regzona_id</condicion>
+					</field>
+					<field id="subsistema_id">
+						<condicion operador="=">REG_CUENTA.subsistema_id</condicion>
+					</field>
+				</tabla>
+			</join>
+		</form>
+    </histrix>	

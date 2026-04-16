@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CRUD
+Tarea: Tabla de Tipo de Ajustes del Vehiculo
+Autor: 
+Fecha: 18/02/13
+*******************************************************************************
+-->
+    <histrix tipo="abm">
+	<title>Tipo de Ajustes</title>
+	 <obs></obs>
+		<form>
+		    <table id="MANT_TIPO_AJUSTE" label="Tipo Ajuste">
+				<field id="id_manttipoajuste" esClave="true" autoinc="true" noshow="true" />
+
+				<field id="descripcion">
+					<label>Tipo de ajuste</label>
+					<help>descripcion del tipo de ajuste</help>
+					<size>100</size>  
+				</field> 
+				<field id="cantidad_km">
+					<label>Cantidad km</label>
+					<help>Cantidad de kmtros a realizar ajuste</help>
+				</field> 
+		    </table>
+		</form>
+    </histrix>	

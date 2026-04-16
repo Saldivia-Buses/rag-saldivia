@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta"   preloadData="false"    deleteRow="false" imprime="false" >
+	<title>Descuentos por Artículo</title>
+	<obs/>
+	<form detalle="stk_descartcli_crud.xml">
+	<table id="REG_CUENTA" label="Descuentos por Artículo">
+		<filters>
+			<field id="id_regcuenta"  local="true">
+				<label>Clientes</label>
+			</field>
+		</filters>
+
+		<field id="subsistema_id" local="true" noshow="true" />
+		<field id="id_regcuenta"  _noshow="true" >
+			<helper type="combo" xml="regcuenta_cmb.xml" dir="/ayudas" empty="true"/>
+			<label>Clientes</label>
+			<detalle>regcuenta_id</detalle>
+		</field>
+
+
+<!--	<order>
+		<field id="nombre_articulo" >
+			<label>Articulos</label>
+		</field>
+	</order> -->
+	</table>
+  </form>
+</histrix>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="update" >
+	<titulo>Control Calidad</titulo>
+	<obs/>
+	<form>
+		<table id="PROD_CONTROL_MOVIM" idCampoCond="update">
+			<field id="id_controlmovim" id_temp="id_controlmovim" esClave="true"/>
+		
+			<field id="nrofab_id"   	id_temp="nrofab_id" />
+			<field id="prodcontrol_id"  id_temp="id_prodcontrol"/>
+			<field id="conforme"    	id_temp="conforme" />
+			<field id="no_conforme"    	id_temp="no_conforme" />
+<!--			<field id="homologacion_id"    	id_temp="homologacion_id" /> -->
+			<field id="no_aplica"      id_temp="no_aplica"/>
+			<field id="controlado"      id_temp="controlado"/>
+			<field id="observacion_control"    id_temp="observacion_control"/>
+			<field id="user_id"      id_temp="user_id"/>
+			<field id="hora_control"    >	
+				<valor>now()</valor>		
+					<tipo>integer</tipo>
+			</field>
+			<field id="horas_retrabajo" id_temp="horas_retrabajo" />
+			<field id="controlcausal_id" id_temp="controlcausal_id" />
+			<field id="legajo_personal"  id_temp="legajo_personal" />
+			<field id="legajo_realizo"  id_temp="legajo_realizo" />
+			<field id="seccion_origen_id"  id_temp="seccion_origen_id" />
+			<field id="acciones_control"  id_temp="acciones_control" />
+			<field id="seccion_calidad_id" id_temp="seccion_calidad_id">
+				<tipo>integer</tipo>
+			</field>
+			<field id="fecha_control">			
+				<valor>today</valor>		
+					<tipo>date</tipo>
+			</field>
+
+		</table>
+
+	</form>
+</histrix>

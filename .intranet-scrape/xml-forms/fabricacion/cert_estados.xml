@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm" >
+	<title>Estados del Certificado</title>
+	<obs/>
+	<form >
+         <table id="CERT_ESTADOS" >
+			 <field id="id_certestado" >
+				 <label>id</label>
+			 </field>
+			<field  id="certestado">
+				<label>Estado</label>
+				<help>Estado del certtificado</help>
+			</field>
+		 </table>
+	</form>
+</histrix>

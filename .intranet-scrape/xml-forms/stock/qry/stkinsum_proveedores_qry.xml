@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" width="45%">
+    <title>Proveedores</title>
+    <obs></obs>
+    <form detalle="stkinsum_proveedor_detalle_qry.xml">
+        <table id="REG_CUENTA">
+
+            <filters>
+                <field id="nro_cuenta">
+                    <label>Cod.</label>
+                    <operador>=</operador>
+                </field>
+                <field id="nombre_cuenta">
+                    <label>Nombre</label>
+                    <operador>like</operador>
+                </field>
+            </filters>
+
+            <field id="id_regcuenta" noshow="true">
+                <detalle>regcuenta_id</detalle>
+            </field>
+
+            <field id="nro_cuenta">
+                <label>Cod.</label>
+            </field>
+
+            <field id="nombre_cuenta">
+                <label>Nombre</label>
+                <size>50</size>
+            </field>
+            
+            <field id="color" clasefila="true" noshow="true">
+                <expression>IFNULL(STK_ARTICULO_PROVEEDOR.id_stkarticuloproveedor, 'resaltado')</expression>
+            </field>
+
+            <group>
+                <field id="nro_cuenta"/>
+            </group>
+
+            <order>
+                <field id="color" />
+                <field id="nombre_cuenta" />
+            </order>
+
+        </table>
+
+        <join>
+            <table id="STK_ARTICULO_PROVEEDOR">
+                <field id="regcuenta_id">
+                    <condicion operador="=">REG_CUENTA.id_regcuenta</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

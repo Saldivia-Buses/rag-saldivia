@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" subtipo="vertical" limit="20">
+	<title>FAMILIAR</title>
+	<obs></obs>
+	<form >
+		<table id="FAMILIA" styleTbody="height:10em;">
+		    <title>Grupo Familiar</title>
+			<!--<filtro_ex>
+				<label>Personal</label>
+				<tabla_ex id="PERSONAL">
+					<field id="Id_usuario"></field>
+					<field id="apellido"></field>
+					<field id="Nombre"></field>
+					<filtra>Id_usuario</filtra>
+				</tabla_ex>
+			</filtro_ex>
+		-->
+			<field id="IdPersona" deshabilitado="true" oculto="true">
+				<condicion operador="=">-1</condicion>
+
+			</field>
+			<field id="Id_pariente" autoinc="true" deshabilitado="true" noshow="true">
+				<label>Codigo</label>
+				<help>Codigo de Usuario</help>
+			</field>
+			<field id="pariente">
+				<label modpos="nobr">Pariente</label>
+				<help>Pariente</help>
+				<tabla_ex id="PARIENTE">
+					<field id="pariente"></field>
+					<field id="descripcion"></field>
+				</tabla_ex>
+			</field>
+			<field id="apellido">
+				<label modpos="nobr">Apellido.</label>
+				<help>Apellido</help>
+				<size>20</size>
+			</field>
+			<field id="Nombre">
+				<label modpos="nobr">Nombres</label>
+				<help>Nombre</help>
+				<size>15</size>
+			</field>
+			<field id="nacimiento">
+				<label modpos="nobr">Nacimiento</label>
+				<help>Fecha de nacimiento</help>
+			</field>
+			<field id="edad" tipoOrden="DESC">
+				<expression>DATE_FORMAT(FROM_DAYS(TO_DAYS(NOW())-TO_DAYS(nacimiento)) , '%Y')+0</expression>
+				<label modpos="nobr" Formstyle="display:none;">Edad</label>
+				<help>Edad</help>
+				<tipo>integer</tipo>
+			</field>
+			<field id="tipoestudio">
+				<label>Estudios</label>
+				<help>Estudios</help>
+				<tabla_ex id="ESTUDIOS">
+					<field id="tipoestudio"></field>
+					<field id="descripcion"></field>
+				</tabla_ex>
+			</field>
+			<field id="ingdoc" oculto="true">
+				<label modpos="nobr">Fecha Ingreso</label>
+				<help>Fecha de Ingreso</help>
+			</field>
+			<field id="discapacitado">
+				<label modpos="nobr">Discapacitado</label>
+				<options>
+					<option valor="0">No</option>
+					<option valor="1">Si</option>
+				</options>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="asignacion" deshabilitado="true">
+				<label  modpos="nobr" Formstyle="display:none;">Asig.xHijo</label>
+				<help>Corresponde Asignacion por Hijo?</help>
+				<if exp=" 18 > edad || discapacitado == 1">
+					<true>'1'</true>
+					<false>'0'</false>
+				</if>
+				<options>
+					<option valor="0">No</option>
+					<option valor="1">Si</option>
+				</options>
+			</field>
+			<field id="ayudaescolar">
+				<label modpos="nobr">Ayuda Escolar</label>
+				<help>Corresponde Ayuda Escolar?</help>
+				<options>
+					<option valor="0">No</option>
+					<option valor="1">Si</option>
+				</options>
+			</field>
+
+			<order>
+				<field id="edad"/>
+			</order>
+		</table>
+	</form>
+</histrix>

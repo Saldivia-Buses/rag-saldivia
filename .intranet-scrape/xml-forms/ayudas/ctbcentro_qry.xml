@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Centros</title>
+  <obs></obs>
+  <form>
+    <table id="CTB_CENTROS" label="Centros">
+	
+		<field id="id_ctbcentro" autoinc="true" noshow="true">
+			<label>Código</label>
+		</field>
+
+		<field id="nombre_centro">
+			<label>Nombre</label>
+		</field>
+
+
+    </table>
+  </form>
+</histrix>  

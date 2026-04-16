@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" dataSource="HtxMailgunDomains" filter="true" >
+  <title>Eventos</title>
+  <obs/>
+  <form >
+    <table id="domains">
+      <field id="name">
+        <label>Nombre</label>
+        <size>30</size>
+      </field>
+
+      <field id="smtp_login" required="true">
+        <label>Login</label>
+        <size>80</size>
+      </field>
+
+      <field id="smtp_password" deshabilitado="true" noshow="true">
+        <label>Password</label>
+      </field>
+
+    </table>
+  </form>
+</histrix>

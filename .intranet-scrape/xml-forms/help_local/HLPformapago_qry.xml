@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+    <title>Formas de pago</title>
+    <obs></obs>
+    <form>
+        <table id="FORMAPAGO" label="Forma pago">
+            <field id="formaPago" />
+
+            <field id="nombrePago">
+                                <detalle>nombrePago</detalle>
+            </field>
+
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>REPARACION DE HERRAMIENTAS</title>
+	<obs></obs>
+	<form >
+		<table id="REPCODIGO" >
+		    <title>Codigo de Reparacion</title>
+			<field id="repcod">
+				<label>Cod</label>
+			</field>
+			<field id="repnom">
+				<label>Nombre</label>
+				<help>Nombre de Reparacion</help>
+			</field>
+			<order>
+				<field id="repcod"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

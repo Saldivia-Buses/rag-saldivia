@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="ficha" sololectura="true" PDFsincabecera="true" autoprint="true" PDForientation="L" path="/fotos/firmas/">
+       <title></title>
+        <obs></obs>
+               <form >
+
+				   <pdf>
+					  <code><![CDATA[
+					  $pdf->SetDrawColor(255,0,0);
+					  $pdf->Rect(25,5,250,138);
+					  $pdf->Rect(25,5,250,10);
+
+					  ]]></code>
+				  </pdf>
+
+
+                  <table id="PATENTE" label="PATENTE">
+				<field id="firma1" _local="true" >
+					<expression>'firma_mancino_sello.png'</expression>
+					<label posx="200" posy="110" PDFnoborder="true" PDFsize="15"></label>
+					<tipo>file</tipo>
+					<size>40</size>
+				</field>
+
+				<field id="cabe1" local="true" >
+					<label size="200" posx="25" posy="1" PDFsize="18" PDFcolor="#ff0000" PDFnoborder="true">MINISTERIO DE JUSTICIA</label>
+				</field>
+				<field id="cabe2" local="true" >
+					<label size="145" posx="135" posy="0" PDFsize="14" PDFcolor="#ff0000" PDFnoborder="true">REGISTRO NACIONAL DE LA PROPIEDAD AUTOMOTOR</label>
+				</field>
+                <field id="letras" esClave="true" PDFscaleX="65">
+                	<expression>concat(letras,"-", numero)</expression>
+                      <label size="800" posx="30" posy="60" PDFsize="350"   PDFnolabel="true" PDFfont="Swiss911XC" PDFcolor="#ff0000" PDFnoborder="true"></label>
+                </field>
+                <field id="numero" esClave="true" PDFscaleX="70" oculto="true">
+                      <label size="400" posx="-5" posy="0" PDFsize="350" PDFnolabel="true" PDFfont="Swiss911XC" PDFcolor="#ff0000" PDFnoborder="true"></label>
+                      <format>%04d</format>
+                </field> 
+                <field id="certif" local="true">
+					<label size="100" posx="25" posy="+40" PDFsize="12" PDFnoborder="true" PDFcolor="#ff0000">CERTIFICASE, que el automotor </label>
+				</field>
+				<field id="mardes" tabla="MARCHASIS">
+					<label size="30" posx="+90" posy="0" PDFsize="12" PDFnoborder="true">SALDIVIA - </label>
+				</field>
+				<field id="motorn" local="true"  >
+					<label size="40" posx="+165" posy="0" PDFsize="12" PDFnoborder="true" PDFcolor="#ff0000">Motor Nº:</label>
+				</field>
+				<field id="nromotor" tabla="CHASIS">
+					<label size="60" posx="+190" posy="0" PDFsize="12" PDFnoborder="true"></label>
+				</field>
+				<field id="labelchasis" local="true">
+					<label size="50" posx="+230" posy="0" PDFsize="12" PDFnoborder="true" PDFcolor="#ff0000">Chasis/bastidor</label>
+				</field>					  
+				<field id="labelchas2" local="true">
+					<label size="50" posx="25" posy="+2" PDFsize="12" PDFnoborder="true" PDFcolor="#ff0000">Nº:</label>
+				</field>
+				<field id="chasis" tabla="CHASIS">
+					<label size="60" posx="+33" posy="0" PDFsize="12" PDFnoborder="true"></label>
+				</field>
+				<field id="vallabel" local="true" >
+                	<label size="110" posx="+77" posy="0" PDFsize="12" PDFnoborder="true" PDFcolor="#ff0000">está habilitado a circular por el término de </label>
+                </field>
+                <field id="validez">
+                	<label size="10" posx="+155" posy="0" PDFsize="12" PDFnoborder="true"></label>
+                </field>
+				<field id="corridos" local="true">
+                	<label size="200" posx="+165" posy="0" PDFsize="12" PDFnoborder="true" PDFcolor="#ff0000">días corridos a partir de la fecha de la presente, tal</label>
+                </field>
+				<field id="follabel" local="true">
+                	<label size="158" posx="25" posy="+2" PDFsize="12" PDFnoborder="true" PDFcolor="#ff0000">como ha quedado registrado al folio </label>
+                </field>
+                <field id="folio">
+                	<label size="10" posx="+93" posy="0" PDFsize="12" PDFnoborder="true"></label>
+                </field>
+                <field id="libro" local="true">
+                	<label size="117" posx="+100" posy="0" PDFsize="12" PDFnoborder="true" PDFcolor="#ff0000">del libro respectivo (art. 32 Decr.-Ley 6.582/58) </label>
+                </field>
+                <field id="galvez" local="true">
+                	<label size="120" posx="25" posy="+10" PDFsize="12" PDFcolor="#ff0000" PDFnoborder="true">Alvear,</label>
+                </field>
+                <field id="desdeFecha">
+                	<label size="50" posx="+75" posy="0" PDFsize="12" PDFnoborder="true"></label>
+                </field>
+				
+                <field id="firma" local="true">
+                	<label size="120" posx="+150" posy="0" PDFsize="12" PDFcolor="#ff0000" PDFnoborder="true">Firma y sello del autorizante....................</label>
+                </field>
+				
+
+-->
+
+
+				  <field id="rnpa" local="true">
+       	              <label posx="25" posy="+1" PDFsize="8" PDFnoborder="true">RNPA - Form.200-B-5</label>
+                  </field>					  
+				  <field id="nrofab" >
+       	              <label posx="240" posy="0" PDFsize="8" PDFnolabel="true"></label>
+           	          <help>Numero Fabricación</help>
+                  </field>
+
+                  </table>
+                  	<join tipo="left">
+						<table id="CHASIS">
+							<field id="nrocha">
+								<condicion operador="=">PATENTE.nrofab</condicion>
+							</field>
+						</table>
+					</join>
+					<join tipo="left">
+						<table id="MARCHASIS">
+							<field id="marcod">
+								<condicion operador="=">CHASIS.marcod</condicion>
+							</field>
+						</table>
+					</join>
+
+				</form>
+        </histrix>

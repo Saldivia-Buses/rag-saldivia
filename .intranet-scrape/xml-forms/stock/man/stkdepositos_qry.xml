@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF8"?>
+<histrix tipo="consulta">
+  <titulo>Depositos</titulo>
+  <obs/>
+  <form detalle="stkdepositousers_crud.xml">
+    <table id="STK_DEPOSITOS">
+
+        <field id="id_stkdeposito" noshow="true">
+            <detalle>stkdeposito_id</detalle>
+        </field>
+
+        <field id="nombre_deposito">
+            <label>Nombre</label>
+        </field>
+
+    </table>
+  </form>
+</histrix>

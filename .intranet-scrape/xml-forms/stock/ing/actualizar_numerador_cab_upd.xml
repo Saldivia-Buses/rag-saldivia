@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="update" grabafinal="true">
+	<title>Numerador</title>
+	 <obs></obs>
+		<consulta>
+		     <table id="REG_NUMERADORES">
+			<field id="subsistema_id"      		id_cab="subsistema_id"  esClave="true"/>
+			<field id="regconcepto_id"      	id_cab="concepto_id"  esClave="true"/>
+			<field id="numero"                      id_cab="movimiento"/>
+		    </table>
+		</consulta>
+    </histrix>	

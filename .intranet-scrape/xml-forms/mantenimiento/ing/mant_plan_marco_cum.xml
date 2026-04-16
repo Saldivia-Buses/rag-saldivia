@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" borra="false" inserta="false" >
+	<title>MARCAR PLANES MANTENIMIENTO</title>
+	<obs></obs>
+	<form>
+		<table id="MANT_PLAN_EVENTOS" label="PLAN DE MANTENIMIENTO">
+
+		<validation>
+            <condition><![CDATA[estado == '' ]]></condition>
+            <message>Seleccione un estado</message>
+        </validation>
+
+        <validation>
+            <condition><![CDATA[fecha_accion == '' ]]></condition>
+            <message>Seleccione una fecha</message>
+        </validation>
+
+			<filters>
+
+                <field id="equipo_id">
+					<label>Equipo</label>
+					<operador>=</operador>
+				</field>
+
+				<field id="separador" modpos="nobr" deshabilitado="true" />
+
+				<field id="tipoequipo_id" modpos="nobr">
+                    <label>Tipo</label>
+                    <help>Tipo</help>
+                    <operador>=</operador>
+                </field>
+				
+				<field id="separador" modpos="nobr" deshabilitado="true" />
+
+				<field id="estado_filtro" modpos="nobr" deshabilitado="false">
+					<label>Estado</label>
+					<operador>=</operador>
+				</field>
+
+
+		    </filters>
+
+		<fieldGroup noshow="true">	            
+
+	            <field id="separador" local="true" deshabilitado="true" editable="false">
+					<size>1</size>
+	            </field>
+
+	            <field id="plan_id" />
+	            
+	            <field id="id_planevento" />
+
+<!--                 <field id="rrule" calendarRecurringRule="true">
+                	<label>Repetir</label>
+                	<tipo>rrule</tipo>
+                </field> -->
+
+	            <field id="tipoequipo_id" tabla="MANT_EQUIPOS" deshabilitado="true">
+	                <helper type="combo" xml="mant_tipo_equipo_crud.xml" dir="/mantenimiento/man/" empty="true"/>
+	                <label>Tipo</label>
+	            </field>
+
+		</fieldGroup>
+
+
+		
+		<fieldGroup style="padding:2px 2px 2px 2px;" colstyle="text-align:center;">
+
+	            <field id="fecha_accion"  >
+					<label>Fecha</label>
+					<tipo>date</tipo>
+	            </field>
+
+	            <field id="equipo_id" deshabilitado="true" >
+					<label>Equipo</label>
+					<helper type="combo" id="MANT_EQUIPOS" empty="true">
+						<field id="id_equipo" noshow="true" />
+						<field id="nombre_equipo">
+							<expresion>concat(nombre_equipo, ' - ', articulo_id)</expresion>
+						</field>
+						<order>
+	                        <field id="nombre_equipo" />
+	                    </order>
+					</helper>
+					<size>40</size>
+	            </field>
+
+	      		<field id="accion_id" deshabilitado="true" style="padding:2px 2px 2px 2px;width:400px;" colstyle="text-align:center;width:auto;">
+	                <helper type="combo" id="MANT_ACCIONES" empty="true">
+	                    <field id="id_accion"/>
+	                    <field id="nombre_accion"/>
+	                </helper>
+	                <label>Acción</label>
+	            </field>
+
+		       <field id="estado" >
+		            <label>Estado</label>
+		                <helper type="combo" id="MANTENIMIENTO_ESTADOS" empty="true">
+		                    <field id="id_estado" />
+		                    <field id="estado"/>
+		                </helper>
+		        </field>
+
+		       <field id="estado_filtro" noshow="true">
+		            <label>Estado FILTRO</label>
+		                <expression>MANTENIMIENTO_ESTADOS.id_estado</expression>
+		                <helper type="combo" id="MANTENIMIENTO_ESTADOS" empty="true">
+		                    <field id="id_estado" />
+		                    <field id="estado"/>
+		                </helper>
+    	        </field>
+
+				<field id="observaciones">
+	           			<label>Observaciones</label>
+	           			<size>150</size>
+	    		</field>
+
+	    	<!-- 	<field id="articulos_usados" local="true" Formstyle="display:none">
+                    <label>Repuestos</label>
+                    <helper xml="man_articulos_stk.xml" type="link" dir="/mantenimiento/man/">
+                         <parameter source="equipo_id" target="equipo_id" />
+                          <parameter source="id_planevento" target="movnro" /> 
+                    </helper>
+                    <valor>+</valor>
+                </field> -->
+
+    	</fieldGroup>
+
+			<order>
+				<field id="equipo_id" />
+			</order>
+
+        </table>
+
+		<join tipo="left">
+			<table id="MANT_EQUIPOS">
+				<field id="id_equipo" >
+					<condicion operador="=">equipo_id</condicion>
+				</field>
+			</table>
+        </join>
+
+        <join tipo="left">
+			<table id="MANTENIMIENTO_ESTADOS">
+				<field id="id_estado" >
+					<condicion operador="=">MANT_PLAN_EVENTOS.estado</condicion>
+				</field>
+			</table>
+        </join>
+
+	</form>
+
+</histrix>	

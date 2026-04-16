@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" conBusqueda="true" _borra="true">
+	<title>ABM CUENTA Mini</title>
+	<obs></obs>
+	<form >
+		<table id="REG_CUENTA" label="ABM CUENTA">
+
+			<field id="subsistema_id" esClave="true" oculto="true">
+				<label>Codigo Sistema</label>
+			</field>
+
+			<field id="baja" deshabilitado="false">
+				<label style="background-color:#7ff67f; color:white; font-size:15px" modpos="nobr">Estado</label>
+				<help>Cuenta Activa - De Baja</help>
+				<options>
+					<option valor="1">Baja</option>
+					<option valor="0">Activo</option>
+				</options> 
+			</field>	
+
+			<field id="nro_cuenta" clave="true" esClave="true">
+				<!--
+				<ayuda_ex id="CCTCUENT" xml="HLPcctcuent.xml" dir="/help_local">
+					
+					<field id="ctacod">
+						<label>Nro</label>
+					</field>
+					<field id="ctanom">
+						<label>Nombre</label>						
+					</field>
+						
+					<clave>ctacod</clave>
+					<descripcion>ctanom</descripcion>
+				</ayuda_ex>
+				-->
+				<label>Cuenta</label>
+				<help>Código de Cuenta </help>
+			</field>
+
+        <field id="empresa_id" modpos="nobr" required="true">
+          <label >Empresa Asignada</label>
+          <helper type="combo" id="HTX_EMPRESAS" empty="true">
+              <field id="id_empresa"></field>
+              <field id="razon_social"></field>
+          </helper>
+        </field>		
+			<field id="nombre_cuenta" deshabilitado="false" _autocompletar="true" validar="false">
+                                                                  <!--
+				<ayuda_ex id="CCTCUENT">
+					<field id="ctacod" noshow="true">
+						<detalle>ctacod</detalle>
+					</field>
+
+					<field id="nombre" >
+						<expresion having="false">CONCAT(CCTCUENT.ctanom, ' (',CCTCUENT.ctafan, ')')</expresion>
+		                            <detalle>ctanom</detalle>
+					</field>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'01'</condicion>
+					</field> 
+					<field id="baja" oculto="true">
+						<condicion operador="!=">1</condicion>
+					</field>
+					<size>100</size>					
+				</ayuda_ex>
+				-->
+			<!--	<clave>ctacod</clave>
+				<descripcion>ctanom</descripcion>
+				<expresion>CONCAT(ctanom, ' (',ctafan, ')')</expresion>
+                -->
+				<label  colspan="1">Nombre</label>
+<!--				 <jsfunction event="onchange">ayudaFicha('cctcuent_abmmini.xml')</jsfunction> -->
+				<size>80</size>
+			</field>
+	
+			<field id="nombre_fantasia" required="true" _deshabilitado="true">
+				<label modpos="nobr"> Nom.Fantasía </label>
+				<help>Nombre de fantasía</help>
+				<size>12</size>
+				<maxsize>12</maxsize>	
+			</field>
+			<field id="cod_direccion">
+				<label colspan="5">Domicilio Fiscal </label>
+			</field>
+
+	      <field id="logregion_id">
+		        <label _modpos="nobr">Región</label>
+		        <help>Región de Logística</help>
+			<helper xml="log_region_crud.xml" dir="/logistica" type="combo" empty="true">
+			</helper>        
+	      </field>
+
+			<field id="codigo_postal">
+				<label>Código Postal</label>
+			</field>
+
+			<field id="nacionalidad_id" style="padding:2px 2px 2px 2px;width:250px;vertical-align:middle;">
+			    <label >País</label>
+			    <helper id="GEN_NACIONALIDADES" type="combo" empty="true">
+			        <field id="id_nacionalidad" >
+			        	<condicion operador="=">14 OR id_nacionalidad = 16</condicion>
+			        </field>
+			        <field id="pais" />
+						<order>
+		           			<field id="pais" />
+						</order>
+		    	</helper>
+		    	<actualiza>
+            		<field id="provincia_id" destino="nacionalidad_id"/>
+         		</actualiza>
+		    </field>    
+
+		    <field id="provincia_id" sincelda="true" style="padding:2px 2px 2px 2px;width:250px;vertical-align:middle;">
+          		<label modpos="nobr">Provincia</label>
+          		<helper id="GEN_PROVINCIAS" type="combo" empty="true">
+			        <field id="id_provincia" />
+			        <field id="nombre_provincia" />
+			        <field id="nacionalidad_id" oculto="true"/>
+						<order>
+		           			<field id="nombre_provincia" />
+						</order>
+		    	</helper>
+          		<actualiza>
+            		<field id="localidad_id" destino="provincia_id"/>
+          		</actualiza>
+        	</field>
+
+	        <field id="localidad_id" style="padding:2px 2px 2px 2px;width:300px;vertical-align:middle;" >
+	          <label modpos="nobr"> Localidad </label>
+	          <helper type="combo" xml="localidad_qry.xml" dir="/ayudas" empty="true">
+	            <field id="provincia_id" oculto="true">
+	              <condicion operador="=">-1</condicion>
+	            </field>
+	          </helper>
+	        </field>
+
+			<!-- <field id="ctaloc">
+				<label modpos="nobr">Localidad</label>
+			</field>
+			
+			<field id="prvcod">
+				<label modpos="nobr">Provincia</label>
+				<help modpos="nobr">
+				</help>
+				<tabla_ex id="FSMPROVS">
+					<field id="prvcod"></field>
+					<field id="prvnom"></field>
+				</tabla_ex>
+			</field> -->
+			
+			<field id="tel_cuenta">
+				<label>Teléfono</label>
+			</field>
+
+			<field id="fax_cuenta">
+				<label modpos="nobr">Tel/Fax</label>
+			</field>
+
+			<field id="horario">
+				<label colspan="2" >Horario de Atención</label>
+				<size>50</size>
+			</field>
+
+			<field id="entrega_direccion">
+				<label colspan="5" style="color:blue;">Domicilio Real</label>
+			</field>
+
+			<field id="entrega_codigopostal">
+				<label style="color:blue;">Código Postal Envío</label>
+			</field>
+
+			<field id="entrega_nacionalidad_id" style="padding:2px 2px 2px 2px;width:300px;vertical-align:middle;">
+			    <label style="color:blue;">País de envío</label>
+			    <helper id="GEN_NACIONALIDADES" type="combo" empty="true">
+			        <field id="id_nacionalidad" >
+			        	<condicion operador="=">14 OR id_nacionalidad = 16</condicion>
+			        </field>
+			        <field id="pais" />
+						<order>
+		           			<field id="pais" />
+						</order>
+		    	</helper>
+		    	<actualiza>
+            		<field id="entrega_provincia_id" destino="nacionalidad_id"/>
+         		</actualiza>
+		    </field>   
+
+			<field id="entrega_provincia_id" sincelda="true" style="padding:2px 2px 2px 2px;width:250px;vertical-align:middle;">
+				<label modpos="nobr" style="color:blue;">Prov. Env.</label>
+				<helper id="GEN_PROVINCIAS" type="combo" empty="true">
+			        <field id="id_provincia"/>
+			        <field id="nombre_provincia"/>
+					<field id="nacionalidad_id" oculto="true"/>
+						<order>
+		           			<field id="nombre_provincia" />
+						</order>
+		    	</helper>
+		    	<actualiza>
+            		<field id="entrega_localidad_id" destino="provincia_id"/>
+          		</actualiza>
+			</field>
+
+			<field id="entrega_localidad_id" style="padding:2px 2px 2px 2px;width:300px;vertical-align:middle;" >
+	          <label modpos="nobr" style="color:blue;"> Localidad de Envío </label>
+	          <helper type="combo" xml="localidad_qry.xml" dir="/ayudas" empty="true">
+	            <field id="provincia_id" oculto="true">
+	              <condicion operador="=">-1</condicion>
+	            </field>
+	          </helper>
+	        </field>
+			
+			<!-- <field id="entrega_localidad">
+				<label modpos="nobr" style="color:blue;">Localidad de Env�o</label>
+			</field>
+
+			<field id="entrega_provincia_id">
+				<label modpos="nobr" style="color:blue;">Prov. Env.</label>
+				<help modpos="nobr">
+				</help>
+				<tabla_ex id="FSMPROVS">
+					<field id="prvcod"></field>
+					<field id="prvnom"></field>
+				</tabla_ex>
+			</field> -->
+
+			<field id="certificado_iso">
+			    <label >Certificado ISO9000</label>
+			    <helper type="combo">
+				<option value="0"></option>
+				<option value="1">No</option>
+				<option value="2">Si</option>
+			    </helper>
+			    <tipo>radio</tipo>
+			</field>
+<!--			<filters>
+				<field id="ctanom" local="true" deshabilitado="false">
+				 <expresion>CONCAT(ctanom, ' (',ctafan, ')')</expresion>
+					<label>Nombre</label>
+					<help>Nombre</help>
+					<operador>like</operador>
+				</field>		
+			</filters>
+-->			
+			<field id="emails" showTablaObj="true" local="true">
+				<helper type="object" xml="contaemail_list_qry.xml" dir="/email">
+				    <parameter target="ctacod" source="nro_cuenta" />
+				    <parameter target="siscod" source="subsistema_id" />
+				</helper>
+				<label >Correos</label>
+			</field>			
+			
+		</table>
+	</form>
+</histrix>

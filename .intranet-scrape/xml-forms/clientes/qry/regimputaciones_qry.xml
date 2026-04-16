@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" showCantidad="false" tooltip="false">
+  <title/>
+  <obs/>
+  <form >
+    <table id="REG_IMPUTACIONES">
+
+    <fieldGroup colstyle="text-align:center; vertical-align:middle; padding:2px 2px 2px 2px;">
+
+        <field id="regmovim_id" noshow="true"/>
+
+        <field id="regmovim0_id" noshow="true"/>
+
+        <field id="id_regimput" noshow="true"/>
+
+        <field id="fecha_movimiento" tabla="REG_MOVIMIENTOS">
+          <label>Fecha</label>
+          <tipo>date</tipo>
+        </field>
+
+        <field id="abreviacion_concepto" tabla="REG_CONCEPTOS">
+          <label>Comp</label>
+        </field>
+
+        <field id="nro_movimiento" tdWith="150" style="text-align: center">
+          <label>Numero</label>
+          <expresion>CONCAT(letra_movimiento,' ',LPAD(puesto_movimiento,4,'0'),'-',LPAD(nro_movimiento,8,'0'))</expresion>
+        </field>
+
+        <field id="importe_movimiento" tabla="REG_MOVIMIENTOS">
+          <label>Importe</label>
+          <tipo>numeric</tipo>
+        </field>
+
+        <field id="movimiento_imputacion" suma="true">
+          <label>Imputado</label>
+          <tipo>numeric</tipo>
+        </field>
+        
+        <field id="separador" local="true" tdWidth="200px" style="width: 200px" noshow="true" />
+        
+      </fieldGroup>
+
+      <fieldGroup>
+      	<if> if ($_SESSION['administrator'] == 1) return true; </if>
+        <field id="desaplicar" tdWidth="20" local="true" >
+            <helper type="link" xml="regimputaciones_anul_ing.xml" dir="/clientes/ing" title="Desaplicar imputacion" width="600px" height="150px" >
+             <parameter source="id_regimput" target="id_regimput" />
+            </helper>
+            <label>Desaplicar</label>
+            <valor>X</valor>
+        </field>
+      
+      </fieldGroup>          
+      
+    </table>
+    
+    
+
+    <join>
+      <table id="REG_MOVIMIENTOS">
+        <field id="id_regmovim">
+          <condicion operador="=">REG_IMPUTACIONES.regmovim0_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join>
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log/slog"
 	"mime/multipart"
 	"net/http"
 	"path/filepath"
@@ -13,8 +12,8 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 
+	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/services/ingest/internal/repository"
 	"github.com/Camionerou/rag-saldivia/services/ingest/internal/service"
@@ -74,47 +73,45 @@ func (h *Ingest) Upload(w http.ResponseWriter, r *http.Request) {
 
 	userID, tenantSlug, ok := requireIdentity(r)
 	if !ok {
-		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "missing identity headers"})
+		httperr.WriteError(w, r, httperr.Unauthorized("missing identity headers"))
 		return
 	}
 
 	if err := r.ParseMultipartForm(10 << 20); err != nil { // 10MB in memory, rest to disk
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid multipart form"})
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid multipart form"))
 		return
 	}
 
 	file, header, err := r.FormFile("file")
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "file is required"})
+		httperr.WriteError(w, r, httperr.InvalidInput("file is required"))
 		return
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	// S6: validate file extension
 	ext := strings.ToLower(filepath.Ext(header.Filename))
 	if !allowedExts[ext] {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "unsupported file type: " + ext})
+		httperr.WriteError(w, r, httperr.InvalidInput("unsupported file type: "+ext))
 		return
 	}
 	// P1: sanitize filename — strip path components, reject dangerous patterns
 	safeName := filepath.Base(header.Filename)
 	if safeName == "." || safeName == ".." || strings.ContainsAny(safeName, "/\\") {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid file name"})
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid file name"))
 		return
 	}
 	header.Filename = safeName
 
 	collection := r.FormValue("collection")
 	if collection == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "collection is required"})
+		httperr.WriteError(w, r, httperr.InvalidInput("collection is required"))
 		return
 	}
 
 	job, err := h.svc.Submit(r.Context(), tenantSlug, userID, collection, header.Filename, header.Size, file)
 	if err != nil {
-		reqID := middleware.GetReqID(r.Context())
-		slog.Error("ingest submit failed", "error", err, "request_id", reqID, "file", header.Filename)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to queue document"})
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 
@@ -125,7 +122,7 @@ func (h *Ingest) Upload(w http.ResponseWriter, r *http.Request) {
 func (h *Ingest) ListJobs(w http.ResponseWriter, r *http.Request) {
 	userID, _, ok := requireIdentity(r)
 	if !ok {
-		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "missing identity headers"})
+		httperr.WriteError(w, r, httperr.Unauthorized("missing identity headers"))
 		return
 	}
 
@@ -138,9 +135,7 @@ func (h *Ingest) ListJobs(w http.ResponseWriter, r *http.Request) {
 
 	jobs, err := h.svc.ListJobs(r.Context(), userID, limit)
 	if err != nil {
-		reqID := middleware.GetReqID(r.Context())
-		slog.Error("list ingest jobs failed", "error", err, "request_id", reqID)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"jobs": jobs})
@@ -150,7 +145,7 @@ func (h *Ingest) ListJobs(w http.ResponseWriter, r *http.Request) {
 func (h *Ingest) GetJob(w http.ResponseWriter, r *http.Request) {
 	userID, _, ok := requireIdentity(r)
 	if !ok {
-		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "missing identity headers"})
+		httperr.WriteError(w, r, httperr.Unauthorized("missing identity headers"))
 		return
 	}
 
@@ -158,12 +153,10 @@ func (h *Ingest) GetJob(w http.ResponseWriter, r *http.Request) {
 	job, err := h.svc.GetJob(r.Context(), jobID, userID)
 	if err != nil {
 		if errors.Is(err, service.ErrJobNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": "job not found"})
+			httperr.WriteError(w, r, httperr.NotFound("job"))
 			return
 		}
-		reqID := middleware.GetReqID(r.Context())
-		slog.Error("get ingest job failed", "error", err, "request_id", reqID)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusOK, job)
@@ -173,19 +166,17 @@ func (h *Ingest) GetJob(w http.ResponseWriter, r *http.Request) {
 func (h *Ingest) DeleteJob(w http.ResponseWriter, r *http.Request) {
 	userID, _, ok := requireIdentity(r)
 	if !ok {
-		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "missing identity headers"})
+		httperr.WriteError(w, r, httperr.Unauthorized("missing identity headers"))
 		return
 	}
 
 	jobID := chi.URLParam(r, "jobID")
 	if err := h.svc.DeleteJob(r.Context(), jobID, userID); err != nil {
 		if errors.Is(err, service.ErrJobNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": "job not found"})
+			httperr.WriteError(w, r, httperr.NotFound("job"))
 			return
 		}
-		reqID := middleware.GetReqID(r.Context())
-		slog.Error("delete ingest job failed", "error", err, "request_id", reqID)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -194,15 +185,14 @@ func (h *Ingest) DeleteJob(w http.ResponseWriter, r *http.Request) {
 func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(v)
+	_ = json.NewEncoder(w).Encode(v)
 }
 
 // ListCollections handles GET /v1/ingest/collections.
 func (h *Ingest) ListCollections(w http.ResponseWriter, r *http.Request) {
 	collections, err := h.svc.ListCollections(r.Context())
 	if err != nil {
-		slog.Error("list collections failed", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to list collections"})
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusOK, collections)
@@ -215,21 +205,20 @@ func (h *Ingest) CreateCollection(w http.ResponseWriter, r *http.Request) {
 		Description string `json:"description"`
 	}
 	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20)).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request"})
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid request"))
 		return
 	}
 	if strings.TrimSpace(req.Name) == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "name is required"})
+		httperr.WriteError(w, r, httperr.InvalidInput("name is required"))
 		return
 	}
 	col, err := h.svc.CreateCollection(r.Context(), strings.TrimSpace(req.Name), strings.TrimSpace(req.Description))
 	if err != nil {
 		if strings.Contains(err.Error(), "duplicate") || strings.Contains(err.Error(), "unique") {
-			writeJSON(w, http.StatusConflict, map[string]string{"error": "collection already exists"})
+			httperr.WriteError(w, r, httperr.Conflict("collection already exists"))
 			return
 		}
-		slog.Error("create collection failed", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to create collection"})
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusCreated, col)

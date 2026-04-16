@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="delete">
+       <title>CARTERA DE CHEQUES</title>
+        <obs></obs>
+               <form >
+					<table id="CARCHEQU" label="ANULACION ORDEN DE PAGO" >
+						<field id="carint" id_temp="carint" esClave="true">
+						</field>
+						
+						<field id="siscod" id="siscod_ch" esClave="true">
+						</field>
+						
+						<field id="succod" id="succod_ch" esClave="true">
+						</field>
+
+					</table>
+               </form>
+        </histrix>

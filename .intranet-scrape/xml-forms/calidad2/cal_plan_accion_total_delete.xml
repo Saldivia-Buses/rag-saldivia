@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="delete">
+	<title>Eliminacion de Plan de Accion Total</title>
+	<obs></obs>
+	<form>
+		<table id="CAL_PLAN_ACCION_TOTAL" idCampoCond="delete_plan">
+		    <field id="id_plan_accion" esClave="true" id_temp="id_plan_accion"/>
+		</table>
+	</form>
+</histrix>

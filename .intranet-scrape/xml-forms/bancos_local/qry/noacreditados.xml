@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+	<title>Movimientos Bancarios</title>
+	<obs/>
+	<form>
+		<table id="REG_MOVIMIENTOS" label="Movimientos Bancarios">
+			<filters>
+				<field id="nro_cuenta">
+					<tabla_ex id="REG_CUENTA">
+						<field id="nro_cuenta"/>
+						<field id="nombre_cuenta"/>-
+										
+						<field id="subsistema_id" oculto="true">
+							<condicion operador="=">'04'</condicion></field>
+					</tabla_ex>
+					<label>Codigo Cuenta</label>
+					<help>Codigo de Cuenta Bancaria </help>
+					<operador>=</operador>
+				</field>
+				<field id="concod">
+					<label>Tipo Mov</label>
+					<operador>=</operador>
+					<valor>2</valor>
+				</field>
+				<field copia="vencimiento_movimiento" deshabilitado="false" id="fecha_movimiento">
+					<operador>&lt;=</operador>
+					<label>Emitidos hasta</label>
+					<valor>today</valor>
+					<tipo>date</tipo>
+				</field>
+				<field copia="acre" deshabilitado="false" id="vencimiento_movimiento">
+					<operador>&gt;=</operador>
+					<label modpos="nobr">Vto</label>
+					<valor>today</valor>
+					<tipo>date</tipo>
+				</field>
+				<field deshabilitado="true" id="acre">
+					<operador>=</operador>
+					<tipo>date</tipo>
+					<valor>today</valor>
+					<tipo>date</tipo>
+				</field>
+				<!--
+				<field id="conciliado"  deshabilitado="false"><operador>>=</operador><label modpos="nobr">Conciliado</label><valor>today</valor></field>-->
+			</filters>
+			<field id="nro_cuenta" noshow="true">
+				<tabla_ex _vacio="true" id="BCSCUENT">
+					<field id="ccbcod"/>
+					<field id="ccbnom"/>-
+					
+					<field id="siscod" oculto="true"/></tabla_ex>
+				<label>Codigo Cuenta</label>
+				<help>Codigo de Cuenta Bancaria </help>
+				<preparam operador="=">true</preparam>
+			</field>
+			<field id="concod" noshow="true">
+				<label>Tipo Mov</label>
+				<tabla_ex id="BCSCONCE" vacio="true">
+					<field id="cnbcod"/>
+					<field id="cnbdes"/>
+					<field id="siscod" oculto="true"/>
+				</tabla_ex>
+			</field>
+			<field id="subsistema_id" oculto="true">
+				<label>Codigo Sistema.</label>
+				<help/>
+				<condicion operador="=">04</condicion>
+			</field>
+			<field _noshow="true" id="fecha_movimiento">
+				<label>Emisión</label>
+				<help>Fecha de Movimiento</help>
+			</field>
+			<field _noshow="true" id="vencimiento_movimiento">
+				<label>Vto</label>
+				<help>Fecha de Vto</help>
+			</field>
+			<field deshabilitado="false" id="acre" local="true" noshow="true"/>
+			<field id="freal" noshow="true">
+				<expression>case when vencimiento_movimiento != fpv_movimiento then 'color:red;' end</expression>
+				<tipo>date</tipo>
+			</field>
+			<field id="link" noshow="true">
+				<expression>'bcsmovim_crud.xml'</expression>
+			</field>
+			<field id="conciliado">
+				<label>conciliado</label>
+			</field>
+			<field id="fpv_movimiento">
+				<attribute id="style">freal</attribute>
+				<attribute id="linkint">link</attribute>
+				<helper _xml="bcsmovim_crud.xml" dir="/bancos_local" height="250" reposition="true" type="link" width="400">
+					<parameter source="id_regmovim" target="id_regmovim"/>
+				</helper>
+				<condicion operador="=">'0000-00-00' or fpv_movimiento &gt;= str_to_date('[__acre__]','%d/%m/%Y')</condicion>
+				<label>Acreditacion</label>
+				<help>Fecha de Acreditacion</help>
+				<tipo>date</tipo>
+			</field>
+			<field id="cnbabvE">
+				<expression>cnbdes</expression>
+				<label>Tipo</label>
+				<help>Codigo de tipo de Movimiento </help>
+				<!--                      <tabla_ex id="BCSCONCE"><field id="cnbcod"></field><field id="cnbabv"></field></tabla_ex>-->
+				<tipo>string</tipo>
+			</field>
+			<field id="nro_movimiento">
+				<label>Número</label>
+				<help>Numero de Movimiento </help>
+				<helper dir="/ctb_old/" title="Asiento Contable" type="link" xml="ctbregis2.xml">
+					<parameter source="regmin" target="regmin"/>
+					<parameter source="fecha_movimiento" target="regfec"/>
+				</helper>
+				<!--	<format>%010d</format>-->
+			</field>
+			<field id="reimp">
+				<expression>case when concod = 2 and REG_MOVIMIENTOS.nro_cuenta = 1 then 'Reimp' end</expression>
+				<helper type="link" xml="cheque.xml">
+					<parameter source="nro_movimiento" target="nro_movimiento"/>
+					<parameter source="concod" target="concod"/>
+					<parameter source="nro_cuenta" target="nro_cuenta"/>
+					<parameter source="fecha_movimiento" target="fecha_movimiento"/>
+				</helper>
+			</field>
+			<field id="regmin">
+				<label>Min</label>
+				<help/>
+				<helper dir="/ctb_old" title="Asiento Contable" type="link" xml="ctbregis2.xml">
+					<parameter source="nro_movimiento" target="regnro"/>
+					<!--					<parameter source="fecha_movimiento" target="regfec" />-->
+					<parameter source="10" target="siscod"/>
+					<parameter source="regmin" target="regmin"/>
+				</helper>
+			</field>
+			<field id="referencia_movimiento">
+				<expression>referencia_movimiento</expression>
+				<tipo>char</tipo>
+				<label>Referencia</label>
+				<help>Referencia Adicional. </help>
+			</field>
+			<field id="importe_movimiento" noshow="true">
+				<label>Importe</label>
+			</field>
+			<field id="debe" noZero="true" suma="true">
+				<expression>round(importe_movimiento * (case when cnbtip = '1' then 1 else 0 end), 2)</expression>
+				<label>Creditos</label>
+				<help>Importe del Movimiento en el Debe</help>
+				<tipo>numeric</tipo>
+			</field>
+			<field id="haber" noZero="true" style="padding-left:5px" suma="true">
+				<expression>round(importe_movimiento * (case when cnbtip = '2' then 1 else 0 end), 2)</expression>
+				<label>Débitos</label>
+				<help>Importe del Movimiento en el Haber</help>
+				<tipo>numeric</tipo>
+			</field>
+			<field _retroalimenta="true" acumula="true" id="saldo" local="true" style="color:green;padding-left:5px;" suma="true">
+				<label>Saldo</label>
+				<help>saldo  movimiento </help>
+				<if exp="true">
+					<true>round(debe - haber, 2)</true>
+					<false>0</false>
+				</if>
+				<tipo>numeric</tipo>
+				<!--
+				<expression>round(importe_movimiento * (case when cnbtip = '2' then -1 else 1 end), 2)</expression>-->
+			</field>
+			<field acumula="true" id="S2" local="true" noshow="true" retroalimenta="true" suma="true">
+				<help>saldo  movimiento </help>
+				<if exp="true">
+					<true>round(debe - haber,2)</true>
+					<false>0</false>
+				</if>
+				<tipo>numeric</tipo>
+				<!--
+				<expression>round(importe_movimiento * (case when cnbtip = '2' then -1 else 1 end), 2)</expression>-->
+			</field>
+			<!--
+			<field id="colorsaldo" noshow="true" local="true"><label>Dif s/Banco</label><if exp="'Sbanco' == 'S2'"><true>'color:blue;font-weight:bold;'</true><false>0</false></if><tipo>numeric</tipo></field><field id="Sbanco" noZero="true"><attribute id="style">colorsaldo</attribute><label>Saldo s/Banco</label><expression>BCS_IMPORTACION.saldo</expression><tipo>numeric</tipo></field><field id="dif" noZero="true" local="true" style="color:red;"><label>Dif s/Banco</label><if exp="'Sbanco' != '0'"><true>S2 - Sbanco</true><false>0</false></if><tipo>numeric</tipo></field>-->
+			<!--
+			<field id="fecha_movimiento"><expression>fecha_movimiento</expression><label>Fecha Real</label><help>Fecha del Movimiento</help><tipo>date</tipo></field>-->
+			<field deshabilitado="true" id="presentado">
+				<label>Conc</label>
+				<tipo>check</tipo>
+			</field>
+			<field id="debecon" noZero="true" noshow="true">
+				<expression>round(importe_movimiento * presentado *(case when cnbtip = '1' then 1 else 0 end), 2)</expression>
+				<label>Cred Con</label>
+				<help>Importe del Movimiento en el Debe</help>
+				<tipo>numeric</tipo>
+			</field>
+			<field id="habercon" noZero="true" noshow="true" style="padding-left:5px">
+				<expression>round(importe_movimiento * presentado * (case when cnbtip = '2' then 1 else 0 end), 2)</expression>
+				<label>Déb Con</label>
+				<help>Importe del Movimiento en el Haber</help>
+				<tipo>numeric</tipo>
+			</field>
+			<!--
+			<field id="saldocon" suma="true" acumula="true" local="true" _retroalimenta="true" style="color:green;padding-left:5px;"><label>Saldo Conciliado</label><help>saldo  movimiento </help><if exp="true"><true>round(debecon - habercon, 2)</true><false>0</false></if><tipo>numeric</tipo></field>-->
+			<field id="id_regmovim" noshow="true">
+				<label>id</label>
+			</field>
+			<!--
+			<field id="acreditado"><label>Fecha Vencimiento    . </label><help>Fecha de vencimiento del Movimiento </help></field><field id="bcsmar"><label>Marca </label><help></help></field><field id="bcspre"><label>F.Presentado </label><help>Fecha de Presentacion. </help></field><field id="bcstil"><label>Presentado </label><help>[ ] = Sin Presentar  |  [1] = Presentado. </help></field><field id="opecla"><label>Firma Electronica </label><help>Firma Electronica </help></field><field id="presentado"><label>Presentado </label><help>Indica si el Valor ya fue Presentado </help></field><field id="succod"><label>Cod. Sucursal </label><help>Codigo de Sucursal </help></field>-->
+			<field id="id_importacion" noshow="true" tabla="BCS_IMPORTACION">
+				<expression>ifnull(id_importacion, 9999999999999)</expression>
+			</field>
+			<!--
+			<field id="cf" clasefila="true" noshow="true" local="true"><if exp="presentado != '0'"><true>('Sbanco' != '0' &amp;&amp; 'dif' == 0)?'error':'resaltado'</true><false>('Sbanco' != '0' &amp;&amp; 'dif' == 0)?'error':''</false></if></field>-->
+			<group>
+				<field id="id_regmovim"/>
+			</group>
+			<order>
+				<field id="fecha_movimiento"/>
+				<field id="vencimiento_movimiento"/>
+			</order>
+		</table>
+		<join tipo="left">
+			<table id="BCS_IMPORTACION">
+				<field id="regmovim_id">
+					<condicion operador="=">REG_MOVIMIENTOS.id_regmovim and regmovim_id != 0</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="BCSCONCE">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+				</field>
+				<field id="cnbcod" oculto="true">
+					<condicion operador="=">REG_MOVIMIENTOS.concod</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

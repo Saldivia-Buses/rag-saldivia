@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="delete" limit="0">
+       <title>CAJA</title>
+        <obs></obs>
+               <form >
+					<table id="CAJMOVIM" label="ANULACION ORDEN DE PAGO" >
+						<field id="siscod"  esClave="true">
+							<valor>05</valor>
+						</field>
+						<field id="cajcta" id_temp="ctacod" esClave="true">
+						</field>
+						<field id="cajfec" id_temp="movife" esClave="true">
+						</field>
+						
+						<field id="cajnro" id_temp="movinc" esClave="true">
+						</field>
+						
+						
+					</table>
+               </form>
+        </histrix>

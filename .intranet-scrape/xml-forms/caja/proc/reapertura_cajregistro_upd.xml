@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" grabaFinal="true">
+    <title/>
+    <obs/>
+    <consulta>
+        <table id="CAJ_REGISTROS">
+            <field id="id_cajregistro" id_temp="cajregistro_id" esClave="true"/>
+            <!-- <field id="cierre_caja" id_temp="dos" /> -->
+            <field id="cierre_caja" id_temp="cero" />
+        </table>
+    </consulta>
+</histrix>

@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="fichaing" inserta="false" borra="false" modifica="false" imprime="false" tooltip="false" confirma="CONFIRMAR" transaccional="true" processFirst="true" log="false" xmlImpresion="/stock/qry/imp_stkmovimientos_qry.xml">
+	<title />
+	<obs></obs>
+	<confirmacion><![CDATA[¿Confirma el Ingreso?]]></confirmacion>
+	<form>
+		<table id="STK_MOVIMIENTOS" label="Ingreso Movimientos Stock">
+
+				<validation>
+					<condition><![CDATA[ stkconcepto_id + 0 == 0]]></condition>
+					<message>Debe ingresar un concepto</message>
+				</validation>
+
+				<validation>
+					<condition><![CDATA[ stkdeposito_id + 0 == 0]]></condition>
+					<message>Debe ingresar un depòsito</message>
+				</validation>
+
+				<validation>
+					<condition><![CDATA[ regcuenta_id + 0 == 0]]></condition>
+					<message>Debe ingresar una cuenta</message>
+				</validation>
+
+				<validation>
+					<condition><![CDATA[ ctbcuenta_id == 0]]></condition>
+					<message>El concepto no tiene cuenta contable asignada</message>
+				</validation>
+
+				<cierraproceso id="asiento_contable_header.xml" condition="modulocontable">
+					<paring destino="fecha_movimiento">fecha_movimiento</paring>
+					<paring destino="referencia">referencia</paring>
+				</cierraproceso>
+
+			<fieldGroup>
+
+				<field id="id_stkmovimiento" oculto="true">
+					<condicion operador="=">-1</condicion>
+				</field>
+
+			</fieldGroup>
+
+
+			<fieldGroup style="vertical-align:middle; padding:2px 2px 2px 2px;">	
+
+				<field id="fecha_movimiento">
+					<label>Fecha</label>
+				    	<valor>today</valor>
+				    	<tipo>date</tipo>
+					<detalle>fecha_movimiento</detalle>
+				</field>
+
+				<field id="cotizacion_moneda" style="font-weight:bold; font-size:15px;" modpos="nobr">
+					<label >Cotizacion:</label>
+					<expression sql="true">select ROUND((GEN_FN_COTIZACION('[__moneda_cotizacion__]',current_date())),2)</expression>
+					<size>10</size>
+				</field>
+
+				<field id="moneda_cotizacion" noshow="true" local="true">
+					<helper type="parameter" id="SIS::idmoneda_cotizacion">
+						<label>Id de moneda a cotizar</label>
+						<defaultValue>2</defaultValue>
+					</helper>
+				</field>
+
+				<field id="stkdeposito_id" required="true">
+						<label>Deposito</label>
+				        <helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" empty="true" />
+	      				<actualiza>
+		                    <field id="puesto_movimiento" />
+		                    <field id="numero_movimiento" destino="puesto" />
+		                </actualiza>
+				</field>
+
+				<field id="puesto_movimiento"  deshabilitado="true" modpos="nobr">
+					<label>Puesto</label>
+	            </field>
+
+				<field id="stkconcepto_id" local="true">
+					<label >Concepto</label>
+					<helper type="combo" xml="stkconcepto_qry.xml" dir="/ayudas" empty="true">
+						<field id="doh_concepto">
+							<expression>case when tipo_concepto = 0 then 1 else 0 end</expression>
+							<detalle>doh_concepto</detalle>
+						</field>
+					</helper>
+					<detalle>stkconcepto_id</detalle>
+				</field>
+
+	 			<field id="numero_movimiento" deshabilitado="true" modpos="nobr">
+	                <label>Numero</label>
+	                <parametro id="numerador_param.xml" retorna="numero">
+	                    <field id="stkconcepto_id" oculto="true" >
+	                        <condicion operador="=">99</condicion>
+	                    </field>
+	                    <field id="subsistema_id" oculto="true">
+	                        <condicion operador="=">40</condicion>
+	                    </field>
+	                    <field id="puesto" oculto="true">
+	                        <condicion operador="=" valorde="stkdeposito_id"></condicion>
+	                    </field>
+	                    <field id="numero" />
+	                </parametro>
+	            </field>
+
+
+				<field id="nro_cuenta" local="true" required="true">
+				    <label>Cuenta</label>
+			    	<helper type="external" xml="regcuenta_solamente_qry.xml" dir="/ayudas" empty="true">
+						<field id="subsistema_id" noshow="true">
+					        <condicion operador="=">'01'</condicion>
+						</field>
+					</helper>
+					<size>10</size>
+				</field>
+
+				<field id="nombre" local="true" deshabilitado="true" sincelda="true">
+					<label modpos="nobr" />
+			        <size>35</size>
+				</field>
+
+				<field id="referencia" maxlength="60">
+					<label modpos="nobr" colspan="3">Referencia</label>
+			        <size>40</size>
+				</field>
+
+				<field id="regcuenta_id" noshow="true" > 
+				        <label>Cuenta</label>
+				</field>
+
+				<field id="separador1" style="height:5px;" deshabilitado="true" local="true" />
+
+			</fieldGroup>
+
+
+	        <fieldGroup local="true" noshow="true">			
+
+				<field id="modulocontable">
+					<label>Contabilidad</label>
+					<valor eval="true">(strpos($_SESSION['properties']['modulos'],'contabilidad') != false ? 1 : 0  )</valor>
+				</field>
+
+				<field id="ctbcuenta_id" local="true" />
+
+				<field id="importe" local="true">
+					<tipo>numeric</tipo>
+				</field>
+
+				<field id="doh_concepto" local="true">
+					<actualiza>
+						<field id="detalle" destino="habilita"  />
+					</actualiza>
+					<valor default="true">0</valor>
+				</field>
+
+				<field id="tipo_concepto" local="true">
+					<actualiza>
+						<field id="detalle" destino="doh_detalle"  />
+					</actualiza>
+					<valor default="true">0</valor>
+				</field>
+
+	        </fieldGroup>
+
+			<fieldGroup>		
+
+				<field id="detalle" local="true" colspan="6">
+					<label modpos="force" />
+					<helper type="object" xml="stkmovimientos_grid.xml" />
+				</field>
+
+			</fieldGroup>
+        	
+		</table>
+	
+		<tempTable id="TEMPTABLENAME">
+			<row>
+				<field id="cuenta_id">ctbcuenta_id</field>
+				<field id="doh">doh_concepto</field>
+				<field id="importe">importe</field>
+			</row>
+		</tempTable>
+	
+	</form>
+</histrix>

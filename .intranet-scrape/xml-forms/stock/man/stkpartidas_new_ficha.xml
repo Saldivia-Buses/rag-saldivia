@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha" imprime="false" conBusqueda="false" log="false" borra="false" cancel="false">
+	<title>Partidas</title>
+	<obs></obs>
+	<eventos>
+		<event id="insert">close</event>
+		<event id="insert">reload</event>
+	</eventos>
+	<form>
+		<table id="STK_PARTIDAS" label="Partidas">
+			<field id="id_stkpartida" noshow="true" />
+			<field id="nro_partida" >
+				<label>Nro. Partida</label>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="origen_partida">
+				<label>Origen</label>
+			</field>
+			<field id="aduana_partida">
+				<label>Aduana</label>
+			</field>
+			<field id="activa" valauto="true" noshow="true">
+				<label>Activa</label>
+				<valor>1</valor>
+			</field>
+		</table>
+	</form>
+</histrix>

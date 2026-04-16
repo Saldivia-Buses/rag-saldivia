@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" _logReference="apellido"  borra="true">
+    <title>FICHA PERSONAL</title>
+    <obs/>
+    <form >
+        <table id="PERSONAL" label="Ficha Personal">
+	<filters>
+	      <field id="legajo" deshabilitado="false">
+                    <label>Legajo</label>
+                    <operador>=</operador>
+                </field>                   
+        </filters>    
+            <field autoinc="true" deshabilitado="true" id="IdPersona" noshow="true">
+                <label>Cuenta</label>
+                <help>Codigo de Cuenta</help>
+               <!-- <valor>0</valor>-->
+            </field>
+           <field id="legajo" deshabilitado="true" esClave="true">
+        <label>legajo</label>
+	<size>8</size>
+        <ayuda_ex id="PERSONAL">
+            <field id="legajo">
+           <label>Legajo</label>
+            </field>
+            <field id="nomapp">
+          <label>Nombre y Apellido</label>
+          <expression having="false">CONCAT(apellido, ' ', Nombre)</expression>
+          <detalle>nomapp</detalle>
+            </field>
+
+            <field id="IdPersona" noshow="true">
+                <label>Nro persona</label>
+                <detalle>IdPersona</detalle>
+            </field>
+            <field id="fechaEgreso" noshow="true">
+          <condicion operador="=">'0000-00-00'</condicion>
+            </field>
+                                    
+        </ayuda_ex>
+<!--        <condicion operador="=">''</condicion>   -->
+      </field>
+	
+            <field id="nomapp" local="true" _noshow="true">
+          <label>Nombre y Apellido</label>
+	  <expression having="false">CONCAT(PERSONAL.apellido, ' ', PERSONAL.Nombre)</expression>
+          <size>80</size>
+            </field>                
+  
+            <field id="Nombre" noshow="true">
+                <label>Nombre</label>
+                <help>Nombre</help>
+                <size>25</size>
+            </field>
+            <field id="apellido" noshow="true">
+                <label modpos="nobr">Apellido</label>
+                <help>Apellido</help>
+                <size>30</size>
+            </field>
+            
+            <field id="fechaEgreso" noshow="true">
+		<label>fecha egreso</label>
+          <condicion operador="=">'0000-00-00'</condicion>
+            </field>
+	   
+            <field id="cpremio" >
+                <label modpos="nobr">Cobra Premio</label>
+                <options>
+                    <option valor="0">No</option>
+                    <option valor="1">Si</option>
+                </options> 
+                <help>Corresponde Premio si/no</help>
+            </field>
+
+	  <field id="premio" local="true" clasefila="true" noshow="true">
+		<expression>(CASE WHEN cpremio !=0 THEN 'resaltado' else '' END)</expression>
+	      
+	   </field>
+         
+            <field id="fecing" deshabilitado="true" _oculto="true">
+                <label>Fecha de Ingreso</label>
+		<condicion operador="!=">'0000-00-00'</condicion>
+                <help/>
+            </field>
+            <field id="idJornada" deshabilitado="true">
+		<helper xml="jornadas.xml" dir="/personal/man/" type="combo" />
+                <label modpos="nobr">Horario</label>
+                <help>Horario</help>
+            </field>
+           
+           
+      -
+        </table>
+        <join tipo="left">
+            <table id="SINDICATO">
+                <field id="IdSindicato">
+                    <condicion operador="=">PERSONAL.IdSindicato</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="SECCION">
+                <field id="id_seccion">
+                    <condicion operador="=">PERSONAL.id_seccion</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

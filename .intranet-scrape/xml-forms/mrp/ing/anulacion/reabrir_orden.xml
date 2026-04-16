@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" inserta="false" modifica="false" imprime="false" preFetch="true">
+  <title>Reabrir Orden de Producción</title>
+  <form>
+    <table id="MRP_ORDEN_PRODUCCION" label="Reabrir Orden de Producción">
+
+        <movimientos>
+            <relacion id="reabrir_orden_update.xml"></relacion>
+        </movimientos>
+
+        <field id="id_mrporden" deshabilitado="true">
+            <label>Numero</label>
+        </field>
+
+        <field id="login_id" local="true" deshabilitado="true" noshow="true">
+            <valor eval="true">$_SESSION['usuario']</valor>
+        </field>
+
+        <field id="fecha_orden" deshabilitado="true">
+            <label modpos="nobr">Fecha</label>
+            <help >Fecha de Orden de Producción</help>
+            <tipo>date</tipo>
+        </field>
+
+        <field id="fecha_cierre" deshabilitado="true">
+            <label modpos="nobr">Fecha Cierre</label>
+            <tipo>date</tipo>
+        </field>
+
+        <field id="orden_comentarios">
+            <label colspan="6">Comentarios</label>
+            <help>Comentarios</help>
+            <size>60</size>
+        </field>
+
+        <field id="mrpestado" local="true" oculto="true">
+            <valor>1</valor>
+            <label>Estado</label>
+            <condicion operador="=">1</condicion>
+        </field>
+
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert">
+	<title>COMPROBANTES</title>
+	<obs/>
+	<form >
+		<table id="CAJCOMPR"  idCampoCond="pagar">
+
+    	    <sql>
+
+    	    	insert ignore into CAJCOMPR (siscod, ctacod, ctanom, movfec, movvto, concod, movlet, movnpv, movnro, movimp, movsal, movicc, movipv,movinc, nrocom, movord) 
+    	       select CCT.siscod, CCT.ctacod, '[__ctanom__]', CCT.movfec, CCT.movvto, CCT.concod, CCT.movlet, CCT.movnpv, CCT.movnro, CCT.movimp, CCT.movsal, [__concod__], '[__movnpv__]', (select parent from CAJPARAM where parcla = 'nropag' limit 1), (select parent from CAJPARAM where parcla = 'nropag' limit 1) , CCT.id_regmovim from CCTMOVIM CCT where CCT.id_regmovim in ([__numfac__]);
+
+
+            </sql>
+
+
+
+						
+
+
+			<field id="siscod" id_padre="sisprv" />
+			<field id="ctacod" id_temp="ctacod"  />
+			<field id="ctanom" id_temp="ctanom"  />
+			<field id="numfac" id_temp="numfac"  local="true"/>
+
+			<field id="movicc" id_padre="concod"></field>
+			<field id="movife" id_padre="movfec"></field>
+			<field id="movnpv" id_padre="movnpv"></field>
+			
+<!--			<field id="regmin">
+				<valor>_NRO_MIN</valor>
+			</field> -->
+		</table>
+	</form>
+</histrix>

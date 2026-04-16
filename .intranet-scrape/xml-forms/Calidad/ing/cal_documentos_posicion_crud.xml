@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" preloadData="false">
+  <title>Posiciones</title>
+  <obs/>
+  <form>
+    <table id="CAL_DOCUMENTOS_POSICION" label="Posiciones">
+
+      <field id="id_documento_posicion" noshow="true" />
+
+      <field id="documento_id" noshow="true" valauto="true">
+        <valor>-1</valor>
+      </field>
+
+    <field id="posicionfab_id" noZero="true">
+      <label>Posicion Fabricacion</label>
+      <helper xml="posicionesfab_qry.xml" type="combo" dir="/produccion" empty="true">
+        <field id="linea_id" tabla="MOMENTO">
+          <condicion operador="=">1</condicion>
+        </field>
+      </helper>
+    </field>
+
+    </table>
+  </form>
+</histrix>

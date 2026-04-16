@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="consulta">
+	<titulo>Fichadas</titulo>
+	<obs/>
+	<consulta>
+			<tabla id="FICHADAS" label="Fichadas del Reloj" >
+			<campo id="tarjeta">
+				<label>tarjeta</label>
+			</campo>
+			
+			<campo id="apellido" tabla="PERSONAL">
+			<expresion>apellido</expresion>
+				<label>Apellido</label>
+				<tipo>varchar</tipo>
+			</campo>						
+			<campo id="nombre" tabla="PERSONAL">
+			<expresion>nombre</expresion>			
+				<label>Nombre</label>
+				<tipo>varchar</tipo>
+			</campo>
+			<campo id="fecha"  >
+				<label>Fecha</label>
+				<jseval campodestino="fechaChar">\'fecha\'.substring(0,6) + \'fecha\'.substring(8,10)</jseval> 
+				<help>Fecha</help>
+			</campo>
+
+			<campo id="fechaChar"  deshabilitado="true">
+				<label>FechaChar</label>
+				<tipo>varchar</tipo>
+			</campo>				
+			
+<!--			<campo id="Hora" >
+				<label>Hora</label>
+				<tipo>varchar</tipo>
+			</campo> -->
+			<campo id="crc" copia="hora" _deshabilitado="true">
+				<label>crc</label>
+				<tipo>varchar</tipo>
+				<jseval campodestino="fechaChar">\'fecha\'.substring(0,6) + \'fecha\'.substring(8,10)</jseval>
+
+			</campo>	
+			<campo id="hora">
+				<label>Hora</label>
+				<tipo>varchar</tipo>
+				<jseval campodestino="fechaChar">\'fecha\'.substring(0,6) + \'fecha\'.substring(8,10)</jseval>
+				<help>Hora</help>
+				<jsfunction event="onchange">if ($('crc').value == ''){$('crc').value= this.value};</jsfunction>
+			</campo>			
+			<campo id="borrado" >
+				<label>Borrado</label>
+				<opciones>
+					<opcion valor="0">NO</opcion>
+					<opcion valor="1">SI</opcion>
+					
+				</opciones>
+				<tipo>radio</tipo>
+
+			</campo>
+
+<!--			<campo id="reloj" oculto="true">
+			    <label>Reloj</label>
+			</campo> -->
+
+<!--
+			<campo id="Hora1">
+				<expresion>min(hora)</expresion>
+				<label>Hora Ent</label>
+				<tipo>varchar</tipo>
+			</campo>
+
+			<campo id="Hora2">
+				<expresion>max(hora)</expresion>
+				<label>Hora Sal</label>
+				<tipo>varchar</tipo>
+			</campo>
+			<campo id="Horas" suma="true">
+				<expresion>TIMEDIFF(max(hora), min(hora))</expresion>
+				<label>Horas Trabajadas</label>
+				<tipo>varchar</tipo>
+				
+			</campo> -->
+			<!--
+			<campo id="reloj">
+				<label>Reloj</label>
+			</campo>
+			<campo id="reloj">
+				<label>Reloj</label>
+			</campo>
+			<campo id="codigo">
+				<label>Codigo</label>
+			</campo> -->
+<!--			<group>
+				<campo id="FICHADAS.tarjeta" />
+				<campo id="fecha" />
+				
+			</group> -->
+<!--			<campo id="legajo" tabla="PERSONAL" noshow="true">
+			    <expresion>PERSONAL.legajo</expresion>
+			    <label>Legajo</label>
+			</campo>
+			<campo id="desdefecha" noshow="true">
+			    <expresion>min(fecha)</expresion>
+			    <label>desde</label>
+			    <tipo>date</tipo>
+			</campo>
+
+			<campo id="hastafecha" noshow="true">
+			    <expresion>max(fecha)</expresion>
+			    <label>Hasta</label>
+			    <tipo>date</tipo>
+			</campo>
+
+			<campo id="impr" linkint="personal_fichadas.xml" local="true">
+			    <label>Imprimir</label>
+			    <valor>'Imprimir'</valor>
+			    <tipo>varchar</tipo>
+			    <paring destino="legajo">legajo</paring>
+			    <paring destino="tarjeta">tarjeta</paring>
+			    <paring destino="desdefecha">desdefecha</paring>
+			    <paring destino="hastafecha">hastafecha</paring>
+
+			</campo>
+			<group>
+    			<campo id="tarjeta" />
+			<campo id="fecha" />
+			<campo id="hora" />
+			<campo id="crc" />
+			
+			</group> -->
+			<orden>
+				<campo id="fecha" />
+
+				<campo id="hora" />
+			</orden>
+		</tabla>
+		<join tipo="left">
+			<tabla id="PERSONAL">
+				<campo id="tarjeta">
+					<condicion operador="=">FICHADAS.tarjeta</condicion>
+				</campo>
+				
+			</tabla>
+		</join>
+	</consulta>
+</abm>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="cabecera" graba="false">
+	<title>EGRESO CHEQUES DE CARTERA</title>
+	<obs></obs>
+	<form >
+		
+		<table id="BCSMOVIM" label="Egreso de cheques de cartera" graba="false">
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'sisbcs'</condicion>
+					</field>
+				</parametro>
+			</field>
+			<field id="siscar" oculto="true">
+				<label>siscar</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'siscar'</condicion>
+					</field>
+				</parametro>
+			</field>
+			<field id="ctbval" oculto="true" ctbcuenta="2">
+				<label>ctbval</label>
+				<parametro id="cajparam_paralf.xml" retorna="paralf">
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'05'</condicion>
+					</field>
+					
+					<field id="parcla">
+						<condicion operador="=">'ctbval'</condicion>
+					</field>
+				</parametro>
+			</field>			
+
+			<field id="bcscta">
+				<label>Cuenta</label>
+				<help>Cuenta Bancaria</help>
+				<ayuda_ex id="BCSCUENT" _xml="HLPbcscuent.xml" dir="/help_local">
+					<field id="ccbcod"></field>
+					<field id="ccbnom">
+						<detalle>ccbnom</detalle>
+					</field>
+				</ayuda_ex>
+				<tipo>integer</tipo>
+			</field>
+			
+			<field id="ccbnom" deshabilitado="true">
+				<label modpos="nobr">Nombre</label>
+			</field>
+
+			<field id="ctacod">
+				<label>Cliente</label>
+				<help>Cliente</help>
+				<ayuda_ex id="CCTCUENT" xml="HLPcctcuent.xml" dir="/help_local">
+					<field id="ctacod"></field>
+					<field id="ctanom">
+						<detalle>ctanom</detalle>
+					</field>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'02'</condicion>
+					</field>
+					
+				</ayuda_ex>
+				<tipo>integer</tipo>
+			</field>
+			
+			<field id="ctanom" deshabilitado="true">
+				<label modpos="nobr">Nombre</label>
+			</field>
+						
+			<field id="fecha" deshabilitado="true">
+				<label>Fecha</label>
+				<help>Fecha del Movimiento</help>
+				<tipo>date</tipo>
+				<valor>today</valor>
+			</field>
+
+		</table>
+	</form>
+</histrix>

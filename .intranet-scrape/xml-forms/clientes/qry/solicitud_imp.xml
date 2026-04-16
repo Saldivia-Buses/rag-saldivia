@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha" autoprint="true" PDFfontSize="12" sololectura="true" limit="1">
+  <title>SOLICITUD DE CREDITO</title>
+  <obs></obs>
+  <form>
+    <table id="REG_CUENTA" label="SOLICITUD DE CREDITO">
+    
+    <field id="id_regcuenta" noshow="true" print="false">
+    </field>
+    <field id="datos_soli" local="true">
+        <label posx="5" posy="20" size="190" pdffill="192" PDFsize="12">Datos del Solicitante</label>
+      </field>
+    <field id="nombre_cuenta" sincelda="true">
+         <label posx="5" posy="+5">Nombre o Razon Social</label>
+    </field>
+    <field id="nro_documento">
+        <label modpos="true" posx="120" posy="0">Nro Documento</label>
+    </field>
+    <field id="domicilio">
+         <label posx="5" posy="+2">Domicilio de facturacion</label>
+         <expresion>CONCAT(cod_direccion, ' ', (case when nro_direccion = 0 then ' ' else nro_direccion end), ' ', (case when bis_direccion = 1 then 'Bis' else ' ' end), ' ', (case when abreviacion_direccion = ' ' then ' ' else abreviacion_direccion end))
+        </expresion>
+    </field>
+    <field id="dom_entrega">
+         <label posx="5" posy="+2">Domicilio de Entrega</label>
+         <expression>select valor from REG_CUENTAS_CONTACTOS rcc where rcc.regcuenta_id = REG_CUENTA.id_regcuenta and rcc.contacto_id = 10 limit 1</expression>
+    </field>
+    <field id="nombre_localidad" tabla="GEN_LOCALIDADES">
+        <label posx="5" posy="+2">localidad</label>          
+    </field>
+    <field id="cp" tabla="GEN_LOCALIDADES">
+        <label modpos="true" posx="150" posy="0">Codigo Postal</label>
+    </field>      
+    <field id="nombre_provincia" tabla="GEN_PROVINCIAS">
+        <label modpos="true" posx="5" posy="+2">provincia</label>
+    </field>      
+    <field id="telefono">
+         <label posx="5" posy="+2">Telefono Particular</label>
+         <expression>select valor from REG_CUENTAS_CONTACTOS rcc where rcc.regcuenta_id = REG_CUENTA.id_regcuenta and rcc.contacto_id = 2 limit 1
+         </expression>
+    </field>
+    <field id="celular">
+         <label modpos="true" posx="80" posy="0">Movil trabajo</label>
+         <expression>select valor from REG_CUENTAS_CONTACTOS rcc
+         left join GEN_TIPO_CONTACTOS gtc on gtc.id_contacto = rcc.contacto_id where rcc.regcuenta_id=REG_CUENTA.id_regcuenta and gtc.vcard_type = 'TEL;CELL;WORK'  limit 1
+         </expression>
+    </field>
+    <field id="resp_firma" local="true">
+        <label posx="5" posy="+2">Responsable de la Firma</label>
+          <expression>select valor from REG_CUENTAS_CONTACTOS rcc
+         left join GEN_TIPO_CONTACTOS gtc on gtc.id_contacto=rcc.contacto_id where rcc.regcuenta_id=REG_CUENTA.id_regcuenta and gtc.vcard_type='AGENT'  limit 1
+         </expression>
+    </field>
+    
+    <field id="enc_Compras" local="true">
+        <label posx="5" posy="+2">Encargado de Compras</label>
+         <expression>select valor from REG_CUENTAS_CONTACTOS rcc
+         left join GEN_TIPO_CONTACTOS gtc on gtc.id_contacto=rcc.contacto_id where rcc.regcuenta_id=REG_CUENTA.id_regcuenta and gtc.vcard_type='TEL;WORK;VOICE;COMPRAS'  limit 1
+         </expression>
+    </field>
+    <field id="resp_pago" local="true">
+        <label posx="120" posy="0">Responsable de Pagos</label>
+          <expression>select valor from REG_CUENTAS_CONTACTOS rcc
+         left join GEN_TIPO_CONTACTOS gtc on gtc.id_contacto = rcc.contacto_id where rcc.regcuenta_id=REG_CUENTA.id_regcuenta and gtc.vcard_type = 'TEL;WORK;VOICE;PAGOS'  limit 1
+          </expression>
+    </field>
+     <field id="regforma_id">
+        <label posx="5" posy="+2">Condicion de venta</label>
+        <tabla_ex id="REG_FORMAS" vacio="true">
+            <field id="id_regforma" />
+            <field id="nombre_forma" />
+        </tabla_ex>
+    </field>
+    <field id="transporte" noshow="true" print="false">
+        <label posx="5" posy="+2">Transp</label>
+        <expresion>@ctatransporte := (select regcuentarelacionada_id from REG_CUENTA_RELACIONES where REG_CUENTA_RELACIONES.subsistemarelacionada_id = "TR" and REG_CUENTA_RELACIONES.regcuenta_id = REG_CUENTA.id_regcuenta)
+        </expresion>
+    </field>
+    
+    <field id="nomtransporte">
+        <label posx="5" posy="+2">Transporte</label>
+        <expresion>select nombre_cuenta from REG_CUENTA as RC where @ctatransporte = RC.id_regcuenta
+        </expresion>
+    </field>
+
+    <field id="vendedor" noshow="true" print="false">
+        <label posx="5" posy="+2">Vend</label>
+        <expresion>@ctavendedor := (select regcuentarelacionada_id from REG_CUENTA_RELACIONES where REG_CUENTA_RELACIONES.subsistemarelacionada_id = "22" and REG_CUENTA_RELACIONES.regcuenta_id = REG_CUENTA.id_regcuenta)
+        </expresion>
+    </field>
+
+    <field id="nomvendedor">
+        <label posx="5" posy="+2">Vendedor</label>
+        <expresion>select nombre_cuenta from REG_CUENTA as RC where @ctavendedor = RC.id_regcuenta
+        </expresion>
+    </field>
+
+    <field id="afipcategoria_id" tabla="GEN_AFIP_ACTIVIDADES">
+        <label posx="5" posy="+2">Actividad</label>
+        <expression>concat(nombre_afipactividad, ' (' ,id_afipactividad, ')')</expression>
+    </field>
+    <field id="dato_impo" local="true">
+        <label posx="5" posy="+5" size="190" pdffill="192" PDFsize="12">Datos del Impositivos</label>
+    </field>
+    <field id="cuit_cuenta">
+        <label posx="5" posy="+2">Nº Cuit</label>
+    </field>
+    <field id="nro_ingbrutos">
+        <label modpos="true" posx="100" posy="0">Nº de Ingreso Brutos</label>
+    </field>
+    <field id="ref_comer" local="true">
+        <label posx="5" posy="+5" size="190" pdffill="192" PDFsize="12">Referencias Comerciales</label>
+    </field>
+    <field id="ref_comercial" _obj="ref_comercial.xml">
+        <label colspan="4" posx="10" posy="+12" PDFsize="10"></label>
+        <!--
+        <paring destino="regcuenta_id">id_regcuenta</paring>
+        -->
+    </field>
+    <field id="ref_banc" local="true">
+        <label posx="5" posy="+5" size="190" pdffill="192" PDFsize="12">Referencias Bancarias</label>
+    </field>
+    <field id="ref_bancaria">
+        <label colspan="4" posx="10" posy="+12" PDFsize="10"></label>
+    </field>
+
+    <!--
+    <field id="banc_nombre" local="true">
+        <label posx="5" posy="+2">Nombre</label>
+        <expression>concat('........................................................................................................................................') </expression>
+    </field>
+    <field id="banc_suc" local="true">
+        <label posx="5" posy="+2">Sucursal</label>
+        <expression>concat('......................................................................................................................................') </expression>
+    </field>
+    <field id="banc_dir" local="true">
+        <label posx="5" posy="+2">Direccion</label>
+        <expression>concat('......................................................................................................................................') </expression>
+    </field>
+    <field id="banc_cta" local="true">
+        <label posx="5" posy="+2">Nº de Cuenta</label>
+        <expression>concat('..................................................................................................................................') </expression>
+    </field>
+
+    <field id="firma" local="true">
+        <label posx="5" posy="+20">Firma</label>
+        <expression>concat('........................................................................................') </expression>
+    </field>
+    <field id="fir_cli" local="true">
+        <label posx="50" posy="0">Firma y sello del Cliente</label>
+        <expression>concat('..........................................................') </expression>
+    </field>
+    <field id="Aclaracion" local="true">
+        <label posx="130" posy="0">Aclaracion de Firma</label>
+        <expression>concat('.................................................................') </expression>
+    </field>
+-->
+    <field id="uso_vendedor" local="true">
+        <label posx="5" posy="+10" size="190" pdffill="192" PDFsize="12">Para uso exclusivo del vendedor</label>
+    </field>
+    <field id="ref_cuenta">
+        <label posx="5" posy="+5" pdfancho="190">Opinión</label>
+        <!--
+        <label>Ventas mensuales Promedio del cliente:....................................................................................................
+        Proyeccion de ventas mensuales promedio del cliente:................................................................................
+        Credito Solicitado......................................................................................................................................
+        </label>
+        -->
+        
+   </field>
+   <field id="fir_vendedor" local="true">
+        <label posx="5" posy="+20">Fecha y Lugar:.........................................................                   Firma del Vendedor:........................
+        </label>      
+    </field>
+     <field id="uso_credito" local="true">
+        <label posx="5" posy="+5" size="190" pdffill="192" PDFsize="12">Para uso exclusivo de Creditos y Cobranzas</label>
+    </field>
+    <!--
+    <field id="texto2" local="true">
+        <label posx="5" posy="+5">Opinión u Observaciones: ........................................................................................................................
+        ...............................................................................................................................................................
+        ...............................................................................................................................................................
+        ...............................................................................................................................................................
+        ...............................................................................................................................................................
+        ...............................................................................................................................................................
+        ...............................................................................................................................................................
+        ...............................................................................................................................................................
+        Fecha de recepción ...................................................           Credito otorgado...................................................
+        </label>
+   </field >
+   -->
+   <field id="fir_Credito" local="true">
+        <label posx="5" posy="+20">Fecha.........................Firma del Responsable.......................... Pasado a Sistema:......................................
+        </label>      
+    </field>
+    
+    
+      </table>
+    
+    <join tipo="left">
+        <table id="GEN_LOCALIDADES">
+        <field id="id_localidad">
+        <condicion operador="=">REG_CUENTA.localidad_id</condicion>
+        </field>
+        </table>
+    </join>
+     <join tipo="left">
+        <table id="GEN_PROVINCIAS">
+        <field id="id_provincia">
+        <condicion operador="=">GEN_LOCALIDADES.provincia_id</condicion>
+        </field>
+        </table>
+    </join>    
+     <join tipo="left">
+        <table id="GEN_AFIP_ACTIVIDADES">
+        <field id="id_afipactividad">
+        <condicion operador="=">REG_CUENTA.afipcategoria_id</condicion>
+        </field>
+        </table>
+    </join>    
+  </form>
+</histrix>  

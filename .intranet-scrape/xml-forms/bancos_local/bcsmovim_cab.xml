@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="cabecera" graba="false">
+	<title>CABECERA MOVIMIENTOS BANCARIOS</title>
+	<obs></obs>
+	<form >
+
+		<table id="BCSMOVIM" label="Cabecera de BANCOS" graba="false">
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'sisbcs'</condicion>
+					</field>
+				</parametro>
+			</field>
+			<field id="ingefe" oculto="true">
+				<label>ingefe</label>
+				<parametro id="cajparam_parent.xml" retorna="parent">
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'05'</condicion>
+					</field>
+					<field id="parcla">
+						<condicion operador="=">'ingefe'</condicion>
+					</field>
+				</parametro>
+			</field>
+			<field id="bcscta">
+				<label>Cuenta</label>
+				<help>Cuenta Bancaria</help>
+				<ayuda_ex id="BCSCUENT" xml="HLPbcscuent.xml" dir="/help_local">
+					<field id="ccbcod"></field>
+					<field id="ccbnom">
+						<detalle>ccbnom</detalle>
+					</field>
+					<field id="ctbcod">
+						<detalle>ctbcod</detalle>
+					</field>
+
+					<field id="moneda_id">
+						<detalle>moneda_id</detalle>
+					</field>
+				<field id="cotizacion">
+				    <expression><![CDATA[(select cotizacion_genmonedahis from GEN_MONEDA_HIS where GEN_MONEDA_HIS.moneda_id = BCSCUENT.moneda_id and fecha_genmonedahis <= date(now()) order by fecha_genmonedahis DESC limit 1)]]></expression>
+
+				    <detalle>cotizacion</detalle>
+				</field>
+
+				</ayuda_ex>
+				<tipo>integer</tipo>
+
+			</field>
+			<field id="ccbnom" deshabilitado="true">
+				<label modpos="nobr">Nombre</label>
+				<size>50</size>
+			</field>
+
+			<field id="moneda_id" deshabilitado="true" >
+			    <label>moneda</label>
+			    <helper id="GEN_MONEDAS" type="combo">
+				<field id="id_moneda" />
+				<field id="descripcion_moneda" />
+			    </helper>
+			</field>
+			<field id="cotizacion" local="true" modpos="nobr">
+				<label>Cotización</label>
+				<valor>1</valor>
+			</field>
+
+			<field id="ctbcod" _deshabilitado="true" ctbcuenta="1">
+				<label>Ctb</label>
+			</field>
+
+ 		<field id="bcsfec" >
+				<label>Fecha</label>
+				<help>Fecha del Movimiento</help>
+				<tipo>date</tipo>
+				<valor>today</valor>
+
+			</field>
+			<field id="bcsfev">
+				<label>Vencimiento</label>
+				<help>Fecha de Vencimiento</help>
+				<tipo>date</tipo>
+				<valor>today</valor>
+
+			</field>
+
+			<field id="bcsref__1">
+				<label colspan="4">Referencia</label>
+				<help>Referencia del Movimiento</help>
+				<tipo>varchar</tipo>
+
+			</field>
+		</table>
+	</form>
+</histrix>

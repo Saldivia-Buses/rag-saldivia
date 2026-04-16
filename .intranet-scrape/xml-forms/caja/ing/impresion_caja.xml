@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="nosql" _grabaFinal="true" autoprint="true"  _postGrabacion="true">
+  <title>Recibo</title>
+  <obs/>
+  <form>
+	<tabla id="HTXMENU">
+		<field id="impresion" id_temp="impresion">
+			<setvar>xmlImpresion</setvar>
+		</field>
+	
+		<field id="cajmovimiento_id"  lastId="cajmovimientos_ins.xml" >
+			<detalle>id_cajmovimiento</detalle>  
+			<detalle>cajmovimiento_id</detalle>
+		</field>
+		
+
+	</tabla>	 
+  </form>
+</histrix>
+

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<abm tipo="consulta" conBusqueda="true" imprimetanda="true">
+	<titulo>FICHA PERSONAL</titulo>
+	<obs></obs>
+	<consulta detalle="personal_fichadas_extras.xml" >
+		<tabla id="PERSONAL" label="Ficha Personal">
+			<filtros>
+				<campo id="desdefecha">
+					<operador>&gt;=</operador>
+					<label>Desde Fecha</label>
+					<valor>today</valor>
+				</campo>
+				<campo id="hastafecha">
+					<operador>&lt;=</operador>
+					<label>Hasta Fecha</label>
+					<valor>today</valor>					
+				</campo>
+			</filtros>
+			<campo id="legajo">
+				<detalle>legajo</detalle>
+				<label modpos="nobr">Legajo</label>
+			</campo>
+			<campo id="apellido">
+				<label modpos="nobr" colspan="6">Apellido</label>
+				<help>Apellido</help>
+			</campo>
+			<campo id="Nombre">
+				<label modpos="nobr">Nombre</label>
+				<help>Nombre</help>
+			</campo>
+			<campo id="tarjeta">
+				<label >Tarjeta</label>
+				<help>Tarjeta</help>
+				<detalle>tarjeta</detalle>
+			</campo>
+			<campo id="idJornada">
+				<label >Jornada</label>
+				<help>Jornada</help>
+				<detalle>idJornada</detalle>
+			</campo>			
+			<campo id="fechaEgreso" noshow="true">
+				<label >Baja</label>
+				<help>Baja</help>
+				<condicion operador="=">"0000-00-00"</condicion>
+			</campo>
+
+			<campo id="desdefecha" local="true">
+				<tipo>date</tipo>
+				<detalle>desdefecha</detalle>
+				<label>Desde Fecha</label>
+			</campo>
+			<campo id="hastafecha" local="true">
+				<tipo>date</tipo>
+				<detalle>hastafecha</detalle>
+				<label>Hasta Fecha</label>
+			</campo>
+			<orden>
+				<campo id="apellido"></campo>
+			</orden>
+		</tabla>
+	</consulta>
+</abm>

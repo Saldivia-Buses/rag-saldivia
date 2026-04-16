@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" imprime="false" cancel="false" _borra="false" preFetch="true" modifica="false">
+	<title>Asignar Planos</title>
+	<obs/>
+	<eventos>
+        <event id="update">close</event>
+        <event id="update">refresh</event>
+        <event id="insert">close</event>
+        <event id="insert">refresh</event>
+        <event id="delete">close</event>
+        <event id="delete">refresh</event>
+    </eventos>
+   	<form >
+		<table id="PRD_PLANOS">
+			<title>Asignar Planos</title>
+		
+			<field id="carpetaplanos_id" esClave="true" noshow="true"/>
+
+			<field id="seccion_id" esClave="true" noshow="true"/>
+
+			<field id="nrofab" esClave="true" deshabilitado="true">
+				<label>Undiad</label>
+			</field>
+
+			<field id="usuario" noshow="true" deshabilitado="true">
+            <label>Usuario</label>
+            <valor eval="true">$_SESSION['usuario']</valor>
+            </field>
+
+		<field id="stkarticulo_id" local="true" deshabilitado="true">
+			<label>Art.</label>
+			<help>Codigo de Articulo</help>
+		</field>
+
+		<field id="muestra_plano" deshabilitado="true">
+			<label>Muestra</label>
+			<options>
+				<option valor="0">No</option>
+				<option valor="1">Si</option>
+			</options>
+		</field>
+
+ 		<field id="artdes" local="true" deshabilitado="true">
+			<label>Descripcion</label>
+			<size>80</size>
+		</field>
+
+</table>
+
+	</form>
+</histrix>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" dataSource="HtxMailgunSuppressions" procesar="true">
+  <title>Bloqueos</title>
+  <obs/>
+  <form >
+    <table id="HtxMailgunSuppressions">
+
+	<movimientos>
+	    <relacion id="suppressions_ins.xml" />
+	</movimientos>
+
+      <field id="timestamp">
+        <label>Fecha</label>
+        <tipo>date</tipo>
+      </field>
+      <field id="address">
+        <label>Email</label>
+      </field>
+      <field id="error">
+        <label>Descripcion</label>
+      </field>
+
+
+      <field id="type" noshow="true">
+        <label>event</label>
+        <helper type="combo" >
+          <option value="bounces">Rebotes</option>
+          <option value="unsubscribes">Desuscripciones</option>
+          <option value="complaints">Reporto como SPAM</option>
+        </helper>
+      </field>
+      <field id="domain" noshow="true">
+            <label>Domain</label>
+            <valor eval="true">$_SESSION['properties']['domain']</valor>
+      </field>
+      <field id="item">
+        <label>Item</label>
+      </field>
+      <field id="id" noshow="true">
+      </field>
+
+    </table>
+  </form>
+</histrix>

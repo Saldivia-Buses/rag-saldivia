@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" grabaFinal="true">
+    <title>ORDEN DE COMPRA</title>
+    <obs></obs>
+    <form>
+        <table id="CPSENCAB" label="ORDEN DE COMPRA" >
+
+            
+            <field id="ocpfec" id_cab="ocpfec" />
+
+            <field id="ocpnro" id_cab="ocpnro" />
+
+            <field id="ctacod" id_cab="ctacod" />
+
+            <field id="ocpent" id_cab="ocpent" />
+
+            <field id="ocpobs" id_cab="ocpobs" />
+            
+            <field id="fpago"  id_cab="fpago" />
+	        
+            <field id="descflete" id_cab="descflete" />
+
+            <field id="cpsproyecto_id" id_cab="proyecto_compra" />
+
+            <field id="cpsformaenvio_id" id_cab="cpsformaenvio_id" />
+
+            <field id="ocpest" id_temp="grabaauditoria" />
+
+            <field id="calificacion_calidad"  >
+                <valor>(select (case when (select califica from REG_CATEGORIAS where cal_regcategoria_id = REG_CATEGORIAS.id_regcategoria and REG_CATEGORIAS.subsistema_id = 'CA' limit 1) = 1 then calculoCalificacion(id_regcuenta, now(), 12) end) from REG_CUENTA where subsistema_id='01' and nro_cuenta = [__ctacod__])</valor>
+                <tipo>integer</tipo>
+            </field>
+            
+            <field id="empresa_id" id_cab="empresa_id"></field>
+        </table>
+    </form>
+</histrix>

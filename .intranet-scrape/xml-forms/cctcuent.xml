@@ -1,0 +1,383 @@
+<?xml version="1.0" encoding="utf-8"?>
+<histrix tipo="ficha" conBusqueda="true" borra="false">
+	<title>ABM CUENTA</title>
+	<obs></obs>
+	
+	<customScript>
+    $(document).on('change', '[instance="[__instance__]"] [name="cuit_cuenta"]', function(){
+      var cuit_cuenta = $(this).val();
+      var cuit_sin_puntos = cuit_cuenta.replace(/[-.]/g, '');
+	  $('[instance="[__instance__]"] [name="check_cuit"]').val(cuit_sin_puntos).change();
+
+    });
+	</customScript>
+	
+	<form >
+		<table id="REG_CUENTA" label="ABM CUENTA">
+      
+	  <validation>
+        <condition><![CDATA[existe + 0 != 0 && id_regcuenta == 0]]></condition>
+        <message>EL CUIT YA EXISTE</message>
+      </validation>
+
+			<field id="id_regcuenta" noshow="true" />
+
+			<field id="subsistema_id" oculto="true" valauto="true">
+				<label>Codigo Sistema</label>
+				<help></help>
+			</field>
+
+			<field id="proxnro" local="true" deshabilitado="true" valauto="true">
+				<label style="color:red;">Próximo Número Disponible</label>
+				<helper type="combo" id="REG_CUENTA" >
+					<field id="subsistema_id" noselect="true">
+						<tipo>varchar</tipo>
+					</field>
+					<field id="nro_cuenta1">
+						<expression>max(nro_cuenta) + 1</expression>
+					</field>					
+					<field id="nro_cuenta2">
+						<expression>max(nro_cuenta) + 1</expression>
+					</field>				
+					<field id="nro_cuenta" noselect="true">
+						<condicion operador="&lt;">10000</condicion>
+					</field>							
+				</helper>
+			</field>
+
+					<field id="baja">
+				<label style="background-color:#7ff67f; color:white; font-size:15px" modpos="nobr">Estado</label>
+				<help>Cuenta Activa - De Baja</help>
+				<options>
+					<option valor="1">Baja</option>
+					<option valor="0">Activo</option>
+
+				</options> 
+			</field>	
+
+			<field id="nro_cuenta" clave="true" esClave="true">
+				<valor>0</valor>
+				
+				<label>Cuenta</label>
+				<help>Código de Cuenta </help>
+			</field>
+
+			<field id="nombre_cuenta">
+				<label modpos="nobr">Nombre</label>
+				<help>Nombre de la Cuenta </help>
+				<size>34</size>
+			</field>
+	
+			<field id="nombre_fantasia" required="true">
+				<label modpos="nobr">Nom.Fantasía</label>
+				<help>Nombre de fantasía</help>
+				<size>16</size> 
+				<maxsize>15</maxsize>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="cod_direccion">
+				<label colspan="5">Domicilio Fiscal </label>
+			</field>
+
+			<field id="codigo_postal">
+				<label>Código Postal</label>
+			</field>
+
+			<field id="nacionalidad_id" style="padding:2px 2px 2px 2px;width:250px;vertical-align:middle;">
+			    <label colspan="9">País</label>
+			    <helper id="GEN_NACIONALIDADES" type="combo" empty="true">
+			        <field id="id_nacionalidad" >
+			        	<condicion operador="=">14 OR id_nacionalidad = 16</condicion>
+			        </field>
+			        <field id="pais" />
+						<order>
+		           			<field id="pais" />
+						</order>
+		    	</helper>
+		    	<actualiza>
+            		<field id="provincia_id" destino="nacionalidad_id"/>
+         		</actualiza>
+		    </field>    
+
+		    <field id="provincia_id" sincelda="true" style="padding:2px 2px 2px 2px;width:250px;vertical-align:middle;">
+          		<label modpos="nobr">Provincia</label>
+          		<helper id="GEN_PROVINCIAS" type="combo" empty="true">
+			        <field id="id_provincia" />
+			        <field id="nombre_provincia" />
+			        <field id="nacionalidad_id" oculto="true"/>
+						<order>
+		           			<field id="nombre_provincia" />
+						</order>
+		    	</helper>
+          		<actualiza>
+            		<field id="localidad_id" destino="provincia_id"/>
+          		</actualiza>
+        	</field>
+
+	        <field id="localidad_id" style="padding:2px 2px 2px 2px;width:300px;vertical-align:middle;" >
+	          <label> Localidad </label>
+	          <helper type="combo" xml="localidad_qry.xml" dir="/ayudas" empty="true">
+	            <field id="provincia_id" oculto="true">
+	              <condicion operador="=">-1</condicion>
+	            </field>
+	          </helper>
+	        </field>
+
+			<!-- <field id="localidad_nombre">
+				<label modpos="nobr">Localidad </label>
+				<help>
+				</help>
+			</field> -->
+			
+			
+			<!-- <field id="provincia_id">
+				<label modpos="nobr">Provincia </label>
+				<help modpos="nobr">
+				</help>
+				<helper type="combo" xml="provincia_qry.xml" dir="/ayudas" />
+			</field> -->
+
+			<field id="tel_cuenta">
+				<label>Teléfono</label>
+			</field>
+
+			<field id="fax_cuenta">
+				<label modpos="nobr">Tel/Fax</label>
+			</field>
+			
+			<field id="entrega_direccion">
+				<label colspan="5" style="color:blue;">Domi.Envío</label>
+			</field>
+
+          	<field id="entrega_codigopostal">
+				<label style="color:blue;">Expreso Envío</label>
+            	<size>30</size> 
+			</field>	
+
+			<field id="entrega_nacionalidad_id" style="padding:2px 2px 2px 2px;width:300px;vertical-align:middle;">
+			    <label colspan="9">País de envío</label>
+			    <helper id="GEN_NACIONALIDADES" type="combo" empty="true">
+			        <field id="id_nacionalidad" >
+			        	<condicion operador="=">14 OR id_nacionalidad = 16</condicion>
+			        </field>
+			        <field id="pais" />
+						<order>
+		           			<field id="pais" />
+						</order>
+		    	</helper>
+		    	<actualiza>
+            		<field id="entrega_provincia_id" destino="nacionalidad_id"/>
+         		</actualiza>
+		    </field>   
+
+			<field id="entrega_provincia_id" sincelda="true" style="padding:2px 2px 2px 2px;width:250px;vertical-align:middle;">
+				<label modpos="nobr" _style="color:blue;">Prov. Env.</label>
+				<helper id="GEN_PROVINCIAS" type="combo" empty="true">
+			        <field id="id_provincia"/>
+			        <field id="nombre_provincia"/>
+					<field id="nacionalidad_id" oculto="true"/>
+						<order>
+		           			<field id="nombre_provincia" />
+						</order>
+		    	</helper>
+		    	<actualiza>
+            		<field id="entrega_localidad_id" destino="provincia_id"/>
+          		</actualiza>
+			</field>
+
+			<field id="entrega_localidad_id" style="padding:2px 2px 2px 2px;width:300px;vertical-align:middle;" >
+	          <label> Localidad de Envío </label>
+	          <helper type="combo" xml="localidad_qry.xml" dir="/ayudas" empty="true">
+	            <field id="provincia_id" oculto="true">
+	              <condicion operador="=">-1</condicion>
+	            </field>
+	          </helper>
+	        </field>
+			
+			<field id="iva_id">
+				<label>Categoría I.V.A. </label>
+				<help>
+				</help>
+				<helper type="combo" id="GEN_IVA">
+					<field id="id_iva"></field>
+					<field id="nombre_iva"></field>
+				</helper>
+			</field>
+
+			<field id="cuit_cuenta" _cuit="true">
+				<label>Número CUIT</label>
+			</field>
+
+			<field id="check_cuit" local="true" _cuit="true" noshow="true" deshabilitado="true">
+				<label>Número CUIT</label>
+				<helper type="external" id="REG_CUENTA" >
+					<field id="cuit_cuenta2" >
+						<expression having="false">REPLACE(REPLACE(REPLACE(cuit_cuenta, '-', ''), ' ', ''), '.', '')</expression>
+						<condicion operador="=">'00000000000'</condicion>
+					</field>
+
+					<field id="cuit_cuenta">
+						<expression having="false">REPLACE(REPLACE(REPLACE(cuit_cuenta, '-', ''), ' ', ''), '.', '')</expression>
+					
+					</field>
+					<field id="subsistema_id" oculto="true">
+						<tipo>varchar</tipo>
+					</field>
+					<field id="baja" oculto="true">
+						<condicion operador="=">0</condicion>
+					</field>					
+					<field id="exite">
+						<expression>count(*)</expression>
+						<detalle>existe</detalle>
+					</field>
+					</helper>
+			</field>
+			<field id="existe" local="true" noshow="true" deshabilitado="true">
+				<label>YA existe este CUIT</label>
+				<valor>0</valor>
+			</field>
+			
+
+
+			<field id="tipo_documento_id">
+				<label>Documento</label>
+				<helper type="combo" xml="tipos_documento_qry.xml" dir="/ayudas" />
+			</field>
+
+			<field id="regzona_id">
+				<label>Código de Zona</label>
+			</field>
+
+			<field id="horario">
+				<label colspan="2" modpos="nobr">Horario de Atención</label>
+				<size>50</size>
+			</field>	
+
+			<field id="regcategoria_id">
+				<label>Código Categoría </label>
+				<helper type="combo" id="REG_CATEGORIAS">
+					<field id="id_regcategoria"></field>
+					<field id="nombre_categoria"></field>
+					<field id="tipo_categoria">
+						<condicion operador="=">'general'</condicion>
+					</field>
+				</helper>
+			</field>
+
+			<field id="ctbcod">
+				<label modpos="nobr">Cuenta Contable</label>
+				<helper type="combo" id="CTB_CUENTAS" >
+					<field id="id_cuenta"></field>
+					<field id="nombre_cuenta"></field>
+					<field id="habilitada">
+						<condicion operador="=">1</condicion>
+					</field>				
+					<field id="ejercicio_id">
+						<condicion operador="=">10</condicion>
+					</field>				
+					<order>
+						<field id="nombre_cuenta"></field>
+					</order>	
+				</helper>
+				<valor>711106</valor>
+			</field>
+			
+			<field id="regforma_id">
+				<label>Código </label>
+				<helper type="combo" xml="regforma_qry.xml" dir="/ayudas" />
+			</field>
+			
+			<field id="formaPago">
+				<label modpos="nobr">Forma de Pago</label>
+				<helper type="combo" id="FORMAPAGO">
+				    <field id="formaPago"></field>
+				    <field id="nombrePago"></field>
+				</helper>
+			</field>
+			
+			<field id="categoria_ganancia">
+				<label>Ganancias</label>
+				<help>Categoría de Ganancias</help>
+				<helper type="combo" id="REG_CATEGORIAS">
+					<field id="id_regcategoria"></field>
+					<field id="nombre_categoria"></field>
+					<field id="tipo_categoria">
+					    <condicion operador="=">'ganancias'</condicion>
+					</field>
+				</helper>
+			</field>
+
+			<field id="categoria_ingbrutos">
+				<label modpos="nobr">Ing.Brutos</label>
+				<help>Categoría Ingresos Brutos</help>
+				<helper type="combo" id="REG_CATEGORIAS">
+					<field id="id_regcategoria"></field>
+					<field id="nombre_categoria"></field>
+					<field id="tipo_categoria">
+					    <condicion operador="=">'ingbrutos'</condicion>
+					</field>
+				</helper>
+			</field>
+
+			<field id="nro_ingbrutos">
+				<label modpos="nobr">Nro.Ing.Brutos.</label>
+				<help>Número de Ingresos Brutos</help>
+			</field>
+
+			<field id="categoria_rg1598">
+				<label>Ing.Brutos Res.1598</label>
+				<help>Tipo de Inscripción en Ing.Brutos Res. 1598</help>
+				<helper type="combo" id="REG_CATEGORIAS">
+					<field id="id_regcategoria"></field>
+					<field id="nombre_categoria"></field>
+					<field id="tipo_categoria">
+					    <condicion operador="=">'rg1598'</condicion>
+					</field>
+				</helper>
+			</field>
+
+			<field id="porcentaje_rg1598">
+				<label modpos="nobr">Porcentaje Retención</label>
+				<help>Porcentaje de Retencion</help>
+				<format>%01.2f</format>
+			</field>
+
+			<field id="numero_cai">
+				<label>Nro.CAI</label>
+				<help>Número de CAI</help>
+			</field>
+
+			<field id="vencimiento_cai">
+				<label modpos="nobr">Vto.Cai </label>
+				<help>Vencimiento de CAI</help>
+			</field>
+
+			<field id="ref_cuenta">
+				<label colspan="5">Obs. </label>
+				<help>Observaciones</help>
+			</field>
+
+			<field id="estcod">
+				<label >No influye en costo</label>
+				<help>No se tiene en cuenta en el armado de costos</help>
+				<tipo>check</tipo>
+			</field>
+
+			<field id="emails" showTablaObj="true" local="true">
+				<helper type="object" xml="contaemail_list_qry.xml" dir="/email">
+				    <parameter target="nro_cuenta" source="nro_cuenta" />
+				    <parameter target="subsistema_id" source="subsistema_id" />
+				</helper>
+				<label>Correos</label>
+			</field>		
+
+			<field id="relaciones" local="true">
+				<helper type="object" xml="cuenta_relaciones_crud.xml" dir="/clientes_local" >
+					<parameter target="regcuenta_id" source="id_regcuenta" />
+				</helper>
+			</field>
+
+		</table>
+	</form>
+</histrix>

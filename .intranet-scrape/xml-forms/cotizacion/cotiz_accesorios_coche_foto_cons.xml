@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" path="fotos/accesorios">
+    <title>Accesorios por coche</title>
+    <obs/>
+    <form >
+        <table id="ACCESORIOS_COCHE" label="Accesorios Estandar" style__Tbody="height:100px;overflow-x:hidden;">
+            <field id="id_accesorio" noshow="true" esClave="true" autoinc="true">
+            </field>
+            <field id="cotizacion_id" oculto="true" >
+            </field>
+            <field id="ficha_id" oculto="true" >
+            </field>
+
+            <field id="fecha" noshow="true">
+                <label>fecha</label>
+                <tipo>date</tipo>
+                <valor>today</valor>
+            </field>
+            <field id="artcod" deshabilitado="true" >
+                <label>Cod.</label>
+                <valor default="true">0</valor>
+            </field>
+
+            <field id="artdes" autocompletar="true" >
+
+                <label>Accesorios</label>
+                <size>70</size>
+            </field>
+            <field id="fotopath" local="true" noshow="true">
+                <if exp="true">
+                    <true>'artcod/'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+                       <!--
+            <field id="foto" path="fotopath" download="true">
+                <expression>select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = STKINSUM.artcod order by revision desc limit 1</expression>
+                <label>Imagen</label>
+                <tipo >file</tipo>
+                <size>40</size>
+            </field>
+                           -->
+            <field id="cantidad" noZero="true" noEmpty="true">
+                <label>Cant</label>
+                <tipo>integer</tipo>
+            </field>
+            <field id="precio_unitario"  >
+                <label>P.Unit</label>
+                <tipo>numeric</tipo>
+            </field>
+
+<!--
+            <field id="precio_adicional"  suma="true">
+                <label>Sub Total </label>
+
+                <tipo>numeric</tipo>
+            </field>  -->
+            <field id="total" suma="true" >
+                <label>Sub Total </label>
+
+                <expression>case when cantidad != 0 then cantidad * precio_unitario else precio_adicional end</expression>
+                <tipo>numeric</tipo>
+            </field>
+        </table>
+        <join tipo="left">
+            <table id="STKINSUM">
+                <field id="artcod">
+                    <condicion operador="=">ACCESORIOS_COCHE.artcod</condicion>
+                </field>
+                <field id="siscod">
+                    <condicion operador="=">'02'</condicion>
+                </field>
+
+            </table>
+        </join>
+    </form>
+</histrix>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+    <title>TIPOS DE VENTANAS</title>
+    <obs></obs>
+    <consulta>
+        <table id="TIPOVENT" label="Ventana">
+
+            <field id="tipvtn">
+                <label>Codigo</label>
+                <help>Codigo de Ventana</help>
+            </field>
+            <field id="desvtn">
+                <label>Ventana</label>
+                <help>Tipo de Ventana</help>
+            </field>
+            <order>
+                <field id="tipvtn"></field>
+            </order>
+        </table>
+    </consulta>
+</histrix> 

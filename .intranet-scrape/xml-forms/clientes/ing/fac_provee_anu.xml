@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" inserta="false" borra="false" modifica="false" imprime="false" tooltip="false"  confirma="ANULAR" form="false" transaccional="true" preFetch="true" preloadData="true">
+    <title>Anulación de Facturas</title>
+    <obs/>
+    <form >
+  
+        <table id="REG_MOVIMIENTOS" >
+		<validation>
+			<condition><![CDATA[puedeborrar !='1']]></condition>
+			<message>El comprobante esta imputado a otro comprobante, Verifique</message>
+		</validation>
+
+      <!-- Proceso de eliminarcion -->      
+
+		<movimientos>
+			<relacion id="regmovimientos_anul_insert.xml" />
+
+			<relacion id="del_regmovimientos.xml" />
+			<relacion id="del_ctbmovimientos.xml" />
+			<relacion id="del_cajdetalles.xml" />
+
+		</movimientos>
+      <!-- Comienzo -->
+
+		<field id="subsistema_id" noshow="true">
+			<tipo>varchar</tipo>
+		</field>
+		<field id="id_regmovim" noshow="true" deshabilitado="true" />
+		<field id="OPid_regmovim"  noshow="true"  having="false"> 
+			<expresion>id_regmovim</expresion>
+		</field>
+		<field id="regcuenta_id" noshow="true" />
+		<field id="concepto_id"  noshow="true" />
+		<field id="puedeborrar" noshow="true">
+			<expresion> case when (select count(*) from REG_IMPUTACIONES where regmovim0_id = REG_MOVIMIENTOS.id_regmovim ) > 0 then 0 else 1 end</expresion>
+		</field>
+            
+
+		<field id="fecha_movimiento" deshabilitado="true">
+			<label>Fecha</label>
+			<tipo>date</tipo>
+		</field>
+
+		<field id="cajmovimiento_id" noshow="true">
+			<label>cajmov</label>
+		</field>
+			    
+		<field id="descripcion_concepto" tabla="REG_CONCEPTOS" deshabilitado="true" >
+			<label modpos="nobr">Tipo</label>               
+		</field>
+			  
+		<field id="letra_movimiento" deshabilitado="true" noshow="true">
+			<label modpos="nobr">Letra</label>               
+		</field>            
+
+		<field id="nro_movimiento" deshabilitado="true" >
+			<label modpos="nobr" >Numero</label>
+		<size>40</size>    
+		</field>
+
+		<field id="nombre_cuenta" tabla="REG_CUENTA" deshabilitado="true">
+			<label>Cuenta</label>
+			<size>30</size>               
+		</field>
+		<field id="cuit_cuenta" tabla="REG_CUENTA" deshabilitado="true" >
+			<label>CUIT</label>
+		</field>
+
+		<field id="cod_direccion" tabla="REG_CUENTA" deshabilitado="true"  >
+			<label modpos="nobr">Dirección</label>
+		</field>
+
+		<field id="localidad_id" tabla="REG_CUENTA" deshabilitado="true"  >
+			<label _modpos="nobr">Localidad</label>
+			<expresion>SELECT CONCAT(id_localidad,' ', nombre_localidad) FROM GEN_LOCALIDADES where id_localidad = REG_CUENTA.localidad_id</expresion>
+			<size>30</size>
+		</field>
+
+		<field id="provincia_id" tabla="REG_CUENTA" deshabilitado="true"  >
+			<label _modpos="nobr">Provincia</label>
+			<expresion>SELECT nombre_provincia FROM GEN_PROVINCIAS where id_provincia = REG_CUENTA.provincia_id</expresion>
+			<size>20</size>
+		</field>
+
+        <!-- Importes -->
+		<field id="importe_exento" deshabilitado="true">
+			<label _modpos="nobr">Exento</label>
+			<size>17</size>
+			<tipo>numeric</tipo>
+		</field>           
+		<field id="importe_movimiento" deshabilitado="true">
+			<label>Total</label>
+			<size>17</size>
+			<tipo>numeric</tipo>
+		</field>
+		<field id="facturasdet" local="true">
+			<label>Detalle</label> 
+			<helper type="object" xml="factura_detalle_qry.xml" dir="/caja/qry/" >
+				<parameter source="id_regmovim" target="regmovim_id" operator="=" /> 
+			</helper>
+		</field>
+		<group>
+			<field id="subsistema_id" />
+		</group>
+            
+        </table>
+        <join tipo="left">
+            <table id="REG_CONCEPTOS">
+                <field id="id_concepto">
+                    <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+                </field>
+            </table>
+        </join>
+         <join tipo="left">
+            <table id="REG_CUENTA">
+                <field id="id_regcuenta">
+                    <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+                </field>
+            </table>
+        </join>
+   
+    </form>
+</histrix>

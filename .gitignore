@@ -10,8 +10,19 @@
 *.key
 *.pem
 deploy/secrets/dynamic/
+# All secrets EXCEPT README and .gitkeep — never commit real secret material
+deploy/secrets/*
+!deploy/secrets/README.md
+!deploy/secrets/.gitkeep
+!deploy/secrets/dynamic
 config/*.env.*
 deploy/.env
+
+# --- Claude Code harness state (per-machine, not repo-shared) ---
+.claude/projects/
+
+# --- Stray root-level Go build artifacts ---
+/cmd
 
 # --- Generated configs (from .tmpl templates via gen-config.sh) ---
 deploy/traefik/traefik.prod.yml
@@ -67,6 +78,9 @@ playwright-report/
 **/playwright-report/
 .playwright-mcp/
 
+# --- MCP config (contains API keys) ---
+.mcp.json
+
 # --- IDE ---
 .vscode/
 .idea/
@@ -96,3 +110,5 @@ _archive/
 !apps/web/public/**/*.png
 !apps/login/public/**/*.png
 apps/web/.firecrawl/
+config/.env.saldivia
+config/.env.*

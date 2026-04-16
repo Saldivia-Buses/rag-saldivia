@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing"  imprime="false" inserta="false">
+	<title>Adicionales por choche</title>
+	<obs/>
+	<form >
+         <table id="ADICIONAL_COCHE"  label="Adicionales del Coche" styleTbody="height:100px;overflow-x:hidden;">		
+			<movimientos >
+				<relacion id="adicionales_coche_aut1_ingmov.xml"></relacion>
+			</movimientos>
+			 <filters>
+			 <field id="aut1" >
+				 <label>Estado</label>
+				 <!-- <tipo>integer</tipo>
+				 <options>
+					 <option valor="0">Pendiente</option>
+					 <option valor="1">Autorizado</option>
+					 <option valor="2">NO Autorizado</option>
+				 </options> -->
+				 <operador>=</operador>
+				 <valor>0</valor>				 
+			 </field>					 
+			 </filters>
+			 
+ 			 <field id="id" autoinc="true" noshow="true" esclave="true">
+				 <label>id</label>
+				
+			 </field>
+			<field id="nrofab" linkint="fichaventas.xml" linkdes="Ver Ficha de Ventas" deshabilitado="true">
+				<label modpos="nobr" style="color:#444;font-weight:bold;">Nro.</label>
+				<help>Número de Fabricación</help>
+				<ayuda_ex id="CHASIS">
+					<field id="nrocha"/>
+					<field id="chades"/>
+				</ayuda_ex>
+				<!--<format><![CDATA[<b>%d</b>]]></format>
+-->
+				<paring destino="nrocha">nrofab</paring>
+			</field>
+			 <field id="idAdicional" noshow="true" _noshoe="true">
+				 <label>Cod.</label>
+				 <help>Codigo de Adicionales</help>
+			 </field>
+			 <field id="descripcion" deshabilitado="true">
+				 <label>Descripción</label>
+				 <help>Descripción del Adicional</help>
+				 <size>80</size>
+			 </field>
+			 <field id="alta" deshabilitado="true">
+				 <label>Alta</label>
+				 <valor>today</valor>
+				 <help>fecha de Alta</help>
+			 </field>
+			 <field id="user" local="true" noshow="true">
+				 <label>usuario</label>
+				<tipo>varchar</tipo>
+				<valor eval="true">strtolower ("'". $_SESSION['usuario']) ."'"</valor>				 
+				 <tipo>varchar</tipo>
+			 </field>
+			 <field id="autorig" noshow="true">
+				 <expression>aut1</expression>
+			 </field>				 
+			 <field id="aut1" _conLabel="true">
+				 <label>Autorizar</label>
+				 <tipo>integer</tipo> 
+				 <options>
+					 <option valor="0">Pendiente</option>
+					 <option valor="1">Autorizado</option>
+					 <option valor="2">NO Autorizado</option>
+				 </options>
+ 				 <tipo>radio</tipo>
+
+			 </field>			
+			 <field id="hoy" local="true" noshow="true">
+				 <valor>today</valor>
+				 <tipo>date</tipo>
+			 </field> 
+			 <field id="valida1" deshabilitado="true" noshow="true">
+				 <label>Autorizacion 2</label>
+				 <size>20</size>	 
+				<if exp="aut != 0" >
+					<true>'user'</true>
+					<false>''</false>
+				</if>
+				 <tipo>varchar</tipo>			 
+			 </field>
+			 <field id="grabo" deshabilitado="true" local="true" noshow="true">
+				 <label>Grabo</label>
+				<if exp="aut1 != autorig" >
+					<true>'true'</true>
+					<false>'false'</false>
+				</if>
+				 <tipo>varchar</tipo>			 
+			 </field>
+			 <field id="idMomento" _conLabel="true">
+				 <label>Momento</label>
+				 <tabla_ex id="MOMENTO">
+					 <field id="idMomento">
+					 </field>
+					 <field id="descripcion">
+					 </field>
+					 
+				 </tabla_ex>
+			 </field>
+			 
+			 <field id="observaciones">
+				 <label>Observaciones</label>
+				 
+			 </field>
+			 <order>
+				 <field id="nrofab"></field>
+		     </order>
+
+	      </table>
+	</form>
+</histrix>

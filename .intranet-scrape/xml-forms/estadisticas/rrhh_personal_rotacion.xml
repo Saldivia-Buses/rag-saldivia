@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="chart">
+	<title>Rotacion Personal</title>
+	<obs></obs>
+	<form>
+		<table id="GEN_CALENDAR" label="Rotacion Personal">
+
+			<grafico id="Personal">
+				<ancho>400</ancho>
+				<tipo>L</tipo>
+				<etiquetas>mes</etiquetas>
+				<serie>ingresos</serie>
+				<serie>egresos</serie>
+				<serie>rotacion</serie>
+				<title>Rotacion Personal</title>
+			</grafico>
+
+			<filters>
+				<field id="fecha_desde">
+					<label>Desde</label>
+					<valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-12 month')) , 1, date("Y") -  1 ))</valor>
+					<operador>&gt;=</operador>
+				</field>
+				<field id="fecha_hasta">
+					<label modpos="nobr">Hasta</label>
+					<valor eval="true">date('d/m/Y', strtotime('-1 second', strtotime(date('Y-m-01'))))</valor>
+					<operador>&lt;=</operador>
+				</field>
+			</filters>
+
+			<field id="mes">
+				<expression>MONTH(GEN_CALENDAR.fecha)</expression>
+				<label>Mes</label>
+				<options>
+					<option valor="1">Ene</option>
+					<option valor="2">Feb</option>
+					<option valor="3">Mar</option>
+					<option valor="4">Abr</option>
+					<option valor="5">May</option>
+					<option valor="6">Jun</option>
+					<option valor="7">Jul</option>
+					<option valor="8">Ago</option>
+					<option valor="9">Sep</option>
+					<option valor="10">Oct</option>
+					<option valor="11">Nov</option>
+					<option valor="12">Dic</option>
+				</options>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="fecha" oculto="true">
+				<tipo>date</tipo>
+				<condicion operador="&gt;=">STR_TO_DATE('[__fecha_desde__]', '%d/%m/%Y') AND GEN_CALENDAR.fecha &lt;= STR_TO_DATE('[__fecha_hasta__]', '%d/%m/%Y')</condicion>
+			</field>
+
+			<field id="fecha_desde" noshow="true" local="true">
+				<tipo>date</tipo>
+			</field>
+
+			<field id="fecha_hasta" noshow="true" local="true">
+				<tipo>date</tipo>
+			</field>
+
+			<field id="year" oculto="true">
+				<expression>YEAR(GEN_CALENDAR.fecha)</expression>
+			</field>
+
+			<field id="personal">
+				<expression sql="true">SELECT SUM(cant_personal) FROM (SELECT 1 AS cant_personal FROM PERSONAL P
+											JOIN GEN_CALENDAR GC ON GC.fecha &gt;= P.fecing
+													    AND GC.fecha &lt;= (CASE WHEN P.fechaEgreso = '0000-00-00' THEN CURDATE() ELSE P.fechaEgreso END)
+											WHERE MONTH(GC.fecha) = '[__mes__]'
+											  AND YEAR(GC.fecha) = '[__year__]'
+											GROUP BY P.idPersona
+											HAVING COUNT(*) &gt;= 15) cant_personas_mensual</expression>
+				<label>Personal</label>
+				<tipo>integer</tipo>
+			</field>
+
+			<field id="ingresos">
+				<expression><![CDATA[SELECT COUNT(*)
+							FROM PERSONAL P 
+							WHERE MONTH(P.fecing) = MONTH(GEN_CALENDAR.fecha) 
+							  AND YEAR(P.fecing) = YEAR(GEN_CALENDAR.fecha)]]></expression>
+				<label>Ingresos</label>
+				<tipo>integer</tipo>
+			</field>
+
+			<field id="egresos">
+				<expression><![CDATA[SELECT COUNT(*)
+							FROM PERSONAL P 
+							WHERE MONTH(P.fechaEgreso) = MONTH(GEN_CALENDAR.fecha) 
+							  AND YEAR(P.fechaEgreso) = YEAR(GEN_CALENDAR.fecha)]]></expression>
+				<label>Egresos</label>
+				<tipo>integer</tipo>
+			</field>
+
+			<field id="rotacion" local="true">
+				<if exp="true">
+					<true>ROUND((((ingresos + 0) + (egresos + 0)) / (personal + 0) * 100), 2)</true>
+					<false>0</false>
+				</if>
+				<label>Rotacion</label>
+				<tipo>integer</tipo>
+			</field>
+
+	 		<group>
+				<field id="year" />
+				<field id="mes" />
+			</group>
+
+		</table>
+
+	</form>
+</histrix>

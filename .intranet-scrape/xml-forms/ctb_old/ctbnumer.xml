@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm-mini">
+	<title>GENERACION NUMERADORES MENSUALES</title>
+	<obs></obs>
+	<form >
+		<table id="CTBNUMER" >
+
+						
+			<title>Numeradores Mensuales</title>
+			<field id="siscod"  deshabilitado="true">
+			</field>
+			<field id="nummes"  deshabilitado="true">
+				<label>Mes</label>
+				<options>
+					<option valor="1">Enero</option>
+					<option valor="2">Febrero</option>
+					<option valor="3">Marzo</option>
+					<option valor="4">Abril</option>
+					<option valor="5">Mayo</option>
+					<option valor="6">Junio</option>
+					<option valor="7">Julio</option>
+					<option valor="8">Agosto</option>
+					<option valor="9">Septiembre</option>
+					<option valor="10">Octubre</option>
+					<option valor="11">Noviembre</option>
+					<option valor="12">Diciembre</option>
+					
+				</options>
+			</field>
+			<field id="numapr"  >
+				<label>Aprobado</label>
+			</field>
+			<field id="numpro"  >
+				<label>Provisorio</label>
+			</field>
+			<field id="prox"  local="true" deshabilitado="true" noshow="true">
+				<label>Numero 1</label>
+				<valor>1</valor>
+			</field>			
+		</table>
+	</form>	   
+</histrix> 

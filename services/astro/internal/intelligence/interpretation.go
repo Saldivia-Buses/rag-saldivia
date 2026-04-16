@@ -1,6 +1,18 @@
 package intelligence
 
-import "strings"
+import "unicode"
+
+// titleFirst uppercases the first rune of s. Replacement for the deprecated
+// strings.Title (Unicode word-boundary bugs). Planetary keywords are single
+// words, so first-rune uppercase is equivalent.
+func titleFirst(s string) string {
+	if s == "" {
+		return s
+	}
+	r := []rune(s)
+	r[0] = unicode.ToUpper(r[0])
+	return string(r)
+}
 
 // Interpretation holds a pre-computed interpretation for a technique result.
 type Interpretation struct {
@@ -84,5 +96,5 @@ func InterpretHouse(planet string, house int) string {
 	if pk == "" || hk == "" {
 		return ""
 	}
-	return strings.Title(pk) + " aplicado al área de " + hk
+	return titleFirst(pk) + " aplicado al área de " + hk
 }

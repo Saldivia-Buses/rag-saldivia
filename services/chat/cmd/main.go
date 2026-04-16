@@ -5,37 +5,30 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
-	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
-	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/nats-io/nats.go"
 
 	chatv1 "github.com/Camionerou/rag-saldivia/gen/go/chat/v1"
-	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/config"
+	"github.com/Camionerou/rag-saldivia/pkg/database"
 	sdagrpc "github.com/Camionerou/rag-saldivia/pkg/grpc"
 	"github.com/Camionerou/rag-saldivia/pkg/health"
-	"github.com/Camionerou/rag-saldivia/pkg/build"
-	"github.com/Camionerou/rag-saldivia/pkg/database"
+	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
-	"github.com/Camionerou/rag-saldivia/pkg/security"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
-	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
+	"github.com/Camionerou/rag-saldivia/pkg/outbox"
+	"github.com/Camionerou/rag-saldivia/pkg/security"
+	"github.com/Camionerou/rag-saldivia/pkg/server"
 	"github.com/Camionerou/rag-saldivia/services/chat/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/chat/internal/service"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 func main() {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
-	slog.SetDefault(logger)
+	app := server.New("sda-chat", server.WithPort("CHAT_PORT", "8003"))
+	ctx := app.Context()
 
-	port := config.Env("CHAT_PORT", "8003")
 	dbURL := config.Env("POSTGRES_TENANT_URL", "")
 	tenantSlug := config.Env("TENANT_SLUG", "dev")
 	publicKey := sdajwt.MustLoadPublicKey("JWT_PUBLIC_KEY")
@@ -46,22 +39,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer cancel()
-
-	// Initialize OpenTelemetry
-	otelShutdown, err := sdaotel.Setup(ctx, sdaotel.Config{
-		ServiceName:    "sda-chat",
-		ServiceVersion: "1.0.0",
-		Endpoint:       config.Env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
-		Insecure:       true,
-	})
-	if err != nil {
-		slog.Warn("otel init failed, traces disabled", "error", err)
-	} else {
-		defer otelShutdown(context.Background())
-	}
-
 	// Token blacklist (shared Redis)
 	blacklist := security.InitBlacklist(ctx, config.Env("REDIS_URL", "localhost:6379"))
 
@@ -70,7 +47,7 @@ func main() {
 		slog.Error("failed to connect to database", "error", err)
 		os.Exit(1)
 	}
-	defer pool.Close()
+	app.OnShutdown(pool.Close)
 
 	// NATS (best-effort — retries in background, events fail gracefully)
 	nc, err := natspub.Connect(natsURL)
@@ -78,11 +55,16 @@ func main() {
 		slog.Error("failed to connect to NATS", "error", err)
 		os.Exit(1)
 	}
-	defer nc.Drain()
-	publisher := natspub.New(nc)
+	app.OnShutdown(func() { _ = nc.Drain() })
 	slog.Info("connected to NATS", "url", config.RedactURL(natsURL))
 
-	chatSvc := service.NewChat(pool, tenantSlug, publisher)
+	// Outbox drainer — publishes spine events from event_outbox to NATS.
+	drainer := outbox.NewDrainer(pool, nc, tenantSlug)
+	drainerCtx, drainerCancel := context.WithCancel(ctx)
+	go drainer.Run(drainerCtx)
+	app.OnShutdown(drainerCancel)
+
+	chatSvc := service.NewChat(pool, tenantSlug)
 	chatHandler := handler.NewChat(chatSvc)
 
 	// Health checker
@@ -98,34 +80,18 @@ func main() {
 		hc.Add("redis", func(ctx context.Context) error { return blacklist.Ping(ctx) })
 	}
 
-	r := chi.NewRouter()
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Recoverer)
-	r.Use(sdamw.SecureHeaders())
-	r.Use(middleware.Timeout(30 * time.Second))
-
+	r := app.Router()
 	r.Get("/health", hc.Handler())
-	r.Get("/v1/info", build.Handler("sda-chat"))
 
 	// All chat routes require authentication
 	r.Group(func(r chi.Router) {
-		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist, FailOpen: true}))
+		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist, FailOpen: false}))
 		r.Mount("/v1/chat/sessions", chatHandler.Routes())
 	})
 
-	srv := &http.Server{
-		Addr:         ":" + port,
-		Handler:      otelhttp.NewHandler(r, "sda-chat"),
-		ReadTimeout:  10 * time.Second,
-		ReadHeaderTimeout: 10 * time.Second,
-		WriteTimeout: 30 * time.Second,
-		IdleTimeout:  60 * time.Second,
-	}
-
 	// gRPC server (internal inter-service communication)
 	grpcPort := config.Env("CHAT_GRPC_PORT", "50052")
-	grpcSrv := sdagrpc.NewServer(sdagrpc.InterceptorConfig{PublicKey: publicKey, Blacklist: blacklist, FailOpen: true})
+	grpcSrv := sdagrpc.NewServer(sdagrpc.InterceptorConfig{PublicKey: publicKey, Blacklist: blacklist, FailOpen: false})
 	chatv1.RegisterChatServiceServer(grpcSrv, handler.NewGRPC(chatSvc))
 	sdagrpc.RegisterHealthServer(grpcSrv)
 
@@ -140,28 +106,7 @@ func main() {
 			slog.Error("grpc serve error", "error", err)
 		}
 	}()
+	app.OnShutdown(grpcSrv.GracefulStop)
 
-	// HTTP server
-	go func() {
-		slog.Info("chat service starting", "port", port)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			slog.Error("server error", "error", err)
-			os.Exit(1)
-		}
-	}()
-
-	<-ctx.Done()
-	slog.Info("chat service shutting down")
-
-	grpcSrv.GracefulStop()
-
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer shutdownCancel()
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		slog.Error("shutdown error", "error", err)
-	}
-	slog.Info("chat service stopped")
+	app.Run()
 }
-
-
-

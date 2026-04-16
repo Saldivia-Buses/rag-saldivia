@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" width="45%">
+    <title>Proveedores</title>
+    <obs></obs>
+    <form >
+        <table id="REG_CUENTA">
+
+            <field id="id_regcuenta" >
+                <detalle>regcuenta_id</detalle>
+            </field>
+
+
+            <field id="nombre_cuenta">
+                <label>Nombre</label>
+                <size>50</size>
+            </field>
+            
+            <field id="stkarticulo_id" tabla="STK_ARTICULO_PROVEEDOR" oculto="true">
+            </field>
+
+            <order>
+                <field id="nombre_cuenta" />
+            </order>
+
+        </table>
+
+        <join>
+            <table id="STK_ARTICULO_PROVEEDOR">
+                <field id="regcuenta_id">
+                    <condicion operador="=">REG_CUENTA.id_regcuenta</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

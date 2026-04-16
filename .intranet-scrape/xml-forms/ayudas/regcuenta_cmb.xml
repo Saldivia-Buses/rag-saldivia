@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ayuda">
+    <title>Cuentas</title>
+    <obs/>
+    <form>
+        <table id="REG_CUENTA" label="Cuentas">
+
+            <field id="id_regcuenta" _noshow="true">
+                <label>Nro Int</label>
+            </field>
+
+            <field id="nombre_cuenta">
+                <label>Nombre</label>
+                <expression>concat(case when isnull(apellido_cuenta) then '' else CONCAT(apellido_cuenta, ' ') end, nombre_cuenta)</expression>
+                <detalle>regcuenta_nombre</detalle>
+            </field>
+
+            <field id="abreviacion_iva" tabla="GEN_IVA">
+                <label>Cat.Iva</label>
+                <detalle>regcuenta_iva</detalle>
+            </field>
+            <field id="cuit_cuenta">
+                <label>CUIT</label>
+                <detalle>regcuenta_cuit</detalle>
+            </field>
+            <field id="cod_direccion">
+                <label>Direccion</label>
+                <detalle>regcuenta_direccion</detalle>
+            </field>
+            <field id="cp" tabla="GEN_LOCALIDADES">
+                <label>CP</label>
+                <detalle>regcuenta_cp</detalle>
+            </field>
+            <field id="nombre_localidad" tabla="GEN_LOCALIDADES">
+                <label>Localidad</label>
+                <detalle>regcuenta_localidad</detalle>
+            </field>
+            <field id="nombre_provincia" tabla="GEN_PROVINCIAS">
+                <label>Provincia</label>
+                <detalle>regcuenta_provincia</detalle>
+            </field>
+            <field id="nro_cuenta" esClave="true">
+                <detalle>regcuenta_nro</detalle>
+            </field>
+            <field id="iva_id">
+                <detalle>regcuenta_ivaid</detalle>
+            </field>
+            <field id="letra" tabla="GEN_IVA">
+                <detalle>regcuenta_ivaletra</detalle>
+            </field>
+            <field id="percepcion">
+                <detalle>regcuenta_percepcion</detalle>
+            </field>
+            <field id="tel_cuenta">
+                <detalle>regcuenta_telefono</detalle>
+            </field>
+            <field id="stklista_id">
+                <label>lista</label>
+                <detalle>wstklista_id</detalle>
+
+            </field>
+
+            <field id="subsistema_id"/>
+	  
+<!--	  <field id="imputacion_concepto" local="true" valauto="true" oculto="true" />  -->
+
+            <field id="imputacion_concepto" local="true" valauto="true">
+                <condicion operador="=" valorde="imputacion_concepto" />
+            </field>
+
+
+            <field id="ctbcuenta_id" >
+                <expression>
+                          ifnull((SELECT cuenta_id
+                             FROM REG_CUENTA_IMPUTACION
+                            WHERE REG_CUENTA_IMPUTACION.regcuenta_id = REG_CUENTA.id_regcuenta
+                              AND REG_CUENTA_IMPUTACION.doh = (CASE WHEN '[__imputacion_concepto__]' = 0 THEN 0 ELSE 1 END)
+                                  LIMIT 1), GEN_SUBSISTEMAS.cuenta_debe_id ) 
+                </expression>
+                <detalle>ctbcuenta_id</detalle>
+            </field>
+            <field id="solo_efectivo">
+                <detalle>solo_efectivo</detalle>
+            </field>
+
+            <order>
+                <field id="nombre_cuenta">
+                    <expression>concat(case when isnull(apellido_cuenta) then '' else apellido_cuenta end, nombre_cuenta)</expression>
+                </field>
+            </order>
+
+        </table>
+
+        <join tipo="left">
+            <table id="GEN_LOCALIDADES">
+                <field id="id_localidad">
+                    <condicion operador="=">REG_CUENTA.localidad_id</condicion>
+                </field>
+            </table>
+        </join>
+    
+        <join tipo="left">
+            <table id="GEN_PROVINCIAS">
+                <field id="id_provincia">
+                    <condicion operador="=">GEN_LOCALIDADES.provincia_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="GEN_IVA">
+                <field id="id_iva">
+                    <condicion operador="=">REG_CUENTA.iva_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="GEN_SUBSISTEMAS">
+                <field id="id_subsistema">
+                    <condicion operador="=">REG_CUENTA.subsistema_id</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>
+

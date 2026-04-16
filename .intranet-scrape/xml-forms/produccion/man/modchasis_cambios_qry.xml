@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta"  >
+	<title>CAMBIOS EN MODELOS DE CHASIS</title>
+	<obs></obs>
+	<form >
+		<table id="MODCHASIS_CAMBIOS" >
+			<title>Cambios en Modelos</title>
+			
+			<field id="id_cambio_chasis" noshow="true" autoinc="true" />
+			<field id="modelo_id" oculto="true" />			
+
+			<field id="fecha_cambio">
+				<label>Fecha Cambio</label>
+				<valor>today</valor>
+			</field>
+
+			<field id="descripcion_cambio">
+				<label>Descripción</label>
+				<size>400</size>
+			</field>
+
+			<field id="texto_notificacion">
+				<label>Texo a Notificar</label>
+				<size>200</size>
+			</field>
+
+			<field id="notifica">
+				<label>Notificar</label>
+				<tipo>check</tipo>
+			</field>
+
+			<order>
+				<field id="fecha_cambio" orderType="DESC"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

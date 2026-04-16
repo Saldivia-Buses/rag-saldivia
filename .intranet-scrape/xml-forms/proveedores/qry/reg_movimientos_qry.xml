@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="consulta" _preloadData="false" paginar="200" PDFfontSize="7" PDFlines="false">
+    <title>MOVIMIENTOS</title>
+    <obs></obs>
+	<form>
+		<table id="REG_MOVIMIENTOS" label="MOVIMIENTOS">
+	      <filters>
+			<field id="fecha_movimiento">
+				<label>Desde Fecha</label>
+				<valor>today</valor>
+				<operador>&gt;=</operador>
+			</field>
+			<field id="fecha_movimiento" >
+				<label modpos="nobr">Hasta Fecha</label>
+				<valor>today</valor>
+				<operador>&lt;=</operador>
+			</field>
+
+                        <field id="reg_fecha">
+                            <label>Reg Desde</label>
+                            <operador>&gt;=</operador>
+                        </field>
+                        
+                        <field id="reg_fecha">
+                            <label>Reg Hasta</label>
+                            <operador>&lt;=</operador>
+                        </field>
+                        
+			<field id="nro_cuenta" tabla="REG_CUENTA">
+			    <label>Proveedor</label>
+			</field> 
+
+			<!--
+			<field id="regcuenta_id">
+				<label modpos="nobr">Nombre de Cuenta</label>
+				<operador>=</operador>
+			</field> 
+			--> 
+			<field id="puesto_movimiento" >
+				<label modpos="nobr">Puesto</label>
+				<operador>=</operador>
+			</field>  
+			
+			<field id="nro_movimiento" >
+				<label modpos="nobr">Numero</label>
+				<operador>=</operador>
+			</field>  
+
+	      </filters>
+
+		      <field id="subsistema_id" oculto="true">
+			    <tipo>varchar</tipo>
+		      </field>
+			<field id="puesto_movimiento" noshow="true" />
+
+			<field id="nro_movimiento" noshow="true">
+				<label modpos="nobr">Nro.Comp.</label>
+			</field>  
+
+      <field id="tipo" valauto="true" local="true" />
+
+      <field id="regcuenta_id" valauto="true" noshow="true">
+      </field>
+      
+      <field id="id_regmovim" _noshow="true">
+    	<detalle>regmovim_id</detalle>
+      </field>
+      <field id="nro_cuenta" tabla="REG_CUENTA">
+        <label>cod</label>
+      </field>
+
+      <field id="nombre_cuenta" >
+      <label>Nombre</label>
+        <expression>REG_CUENTA.nombre_cuenta</expression>
+     <!--   <setvar>nombre_div</setvar> -->
+      </field>
+
+	<field id="cajmovimiento_id" noshow="true" /> 
+
+	<field id="xml_llamar"  local="true" noshow="true">
+		<if exp="cajmovimiento_id + 0 != 0">
+		  <true>'cajmovimiento_ficha.xml'</true>
+		  <false>''</false>
+		</if>
+	</field>
+    <field id="imprime_concepto1" noshow="true">
+	  <expression>case when isnull(CAJ_CONCEPTOS.imprime_concepto) then trim(REG_NUMERADORES.ejecuta) else trim(CAJ_CONCEPTOS.imprime_concepto) end</expression>
+	</field>
+	
+      <field id="fecha_movimiento">
+        <label>Fec.Mov.</label>
+        <help>Fecha movimiento</help>
+        <tipo>date</tipo>
+      </field>
+      
+      <field id="reg_fecha">
+        <label>Reg.Fecha</label>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="abreviacion_concepto" tabla="REG_CONCEPTOS">
+        <label>Comp</label>
+      </field>
+
+      <field id="numero_movimiento" tdWidth="150" linkdes="Detalle del Comprobante" linkmodal="true" style="text-align: center">
+        <label>Numero</label>
+        <expression>CONCAT(REG_MOVIMIENTOS.letra_movimiento,' ',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,'0'),'-',LPAD(REG_MOVIMIENTOS.nro_movimiento  ,8,'0'))</expression>
+	  	<helper type="link" _dir="/caja/qry" >
+<!--			<parameter source="id_cajmovimiento" target="id_cajmovimiento" /> -->
+			<parameter source="id_regmovim" target="id_regmovim" />
+	  	</helper>
+	  	<attribute id="linkint">imprime_concepto1</attribute>
+      </field>
+            
+	  <!-- Cambiar de Acuerdo a como se quiere visualizar las imputaciones de CtaCte -->
+
+      <field id="imputacion_concepto" noshow="true">
+    	<expression>CASE WHEN REG_CONCEPTOS.imputacion_concepto = 1 THEN 1 ELSE 0 END</expression>  
+      </field>
+      
+      <!-- Importes -->
+
+      <field id="debe" suma="true" noZero="true">
+        <label>debe</label>
+        <expression>(case when REG_CONCEPTOS.imputacion_concepto = 0 then REG_MOVIMIENTOS.importe_movimiento else 0  end)</expression>
+      	<tipo>numeric</tipo>
+      </field>
+
+      <field id="haber" suma="true" noZero="true">
+        <label>haber</label>
+        <expression>(case when REG_CONCEPTOS.imputacion_concepto = 1 then REG_MOVIMIENTOS.importe_movimiento else 0 end)</expression>
+        <tipo>numeric</tipo>
+      </field>
+
+	  <field id="acumulado" suma="true" acumula="true" _local="true">
+		<label>Acumulado</label> 
+		  <expression>(case when REG_CONCEPTOS.imputacion_concepto = 0 then REG_MOVIMIENTOS.importe_movimiento else 0  end) - (case when REG_CONCEPTOS.imputacion_concepto = 1 then REG_MOVIMIENTOS.importe_movimiento else 0 end)</expression>
+<!--		<if exp="true">
+		  <true>(debe + 0 ) - ( haber + 0)</true>
+		  <false>0</false>
+		</if>
+		-->
+		<tipo>numeric</tipo>
+	  </field>
+
+      <field id="saldo_movimiento" suma="true" noZero="true">
+        <label>Pendiente</label> 
+		<tipo>numeric</tipo>
+      </field>
+      
+      <!-- Funciones -->
+      
+      <field id="eliminacion" tdWidth="20" linkdir="/caja/proc/del/" local="true" print="false" linkdes="Detalle del Comprobante">
+		<attribute id="linkint">xml_llamar</attribute>
+	    <label>Detalle</label>
+	    <if exp="'xml_llamar' != ''">
+  	  	  <true>'>>'</true>
+  	  	  <false>''</false>
+	    </if>
+	    <paring destino="id_regmovimheader">id_regmovim</paring>
+	    <paring destino="id_cajmovmiento">cajmovimiento_id</paring>
+<!--	    <paring destino="id_regmovim">id_regmovim</paring> -->
+	  </field>
+<!--
+	  <field id="eliminar" tdWidth="20" local="true" print="false">
+		<label>Eliminar</label>
+		<helper type="link" dir="/caja/qry" xml="fac_provee_anu.xml"  >
+		    <parameter source="id_regmovim" target="OPid_regmovim" />
+		    <parameter source="cajmovimiento_id" target="id_cajmovimiento" />
+		</helper>
+	    <if exp="'xml_borrar' != ''">
+  	  	  <true>'X'</true>
+  	  	  <false>''</false>
+	    </if>
+	  </field>
+  -->
+	  <field id="referencia_movimiento" noshow="true" />
+                        
+
+      <field id="modificacion" local="true" tdWidth="50" print="false">
+            <helper type="link" xml="regmovimiento_crud.xml" dir="/clientes/ing" width="600px" height="350px" title="Modificar Comprobante">
+	      <parameter source="id_regmovim" target="id_regmovim" />
+    	    </helper>        
+        <label>Mod</label>
+	<valor>Modificar</valor>
+      </field>
+
+        
+          <field id="tieneObs" noshow="true">
+  	    <expression>SELECT 'color:red;font-weight:bold;' FROM REG_MOVIMIENTO_OBS WHERE REG_MOVIMIENTO_OBS.regmovim_id = REG_MOVIMIENTOS.id_regmovim limit 1</expression>
+  	  </field>
+
+  	  <!-- Fin -->
+
+	<order>
+		<field id="fecha_movimiento" table="REG_MOVIMIENTOS" />
+		<field id="imputacion_concepto"/>
+		<field id="nro_movimiento" table="REG_MOVIMIENTOS" />
+
+	</order>
+
+	<group>
+		<field id="id_regmovim" tabla="REG_MOVIMIENTOS"/>
+	</group>
+    </table>
+    
+    
+    <join tipo="left">
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join>
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+        <field id="informa_calculo">
+          <condicion operador="=">0</condicion>
+        </field>
+
+      </table>
+    </join>
+  
+   <join tipo="left">
+      <table id="CAJ_CONCEPTOS">
+        <field id="regconcepto_id">
+          <condicion operador="=">REG_CONCEPTOS.id_concepto</condicion>
+        </field>
+      </table>
+    </join>
+   <join tipo="left">
+      <table id="REG_NUMERADORES">
+        <field id="regconcepto_id">
+          <condicion operador="=">REG_CONCEPTOS.id_concepto</condicion>
+        </field>
+      </table>
+    </join> 
+
+
+  </form>
+</histrix>

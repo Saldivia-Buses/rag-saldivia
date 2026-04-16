@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+	<title>Eventos</title>
+	<obs></obs>
+	<form>
+		<table id="REG_EVENTOS" label="Eventos">
+
+			<field id="id_regevento" autoinc="true" noshow="true" />
+
+			<field id="subsistema_id" valauto="true" oculto="true" />
+
+			<field id="nombre_evento">
+				<label>Evento</label>
+				<size>50</size>
+			</field>
+
+		</table>
+	</form>
+</histrix>

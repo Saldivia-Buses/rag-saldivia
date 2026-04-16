@@ -3,27 +3,22 @@ package main
 import (
 	"context"
 	"log/slog"
-	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	chimw "github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	"github.com/Camionerou/rag-saldivia/pkg/config"
-	"github.com/Camionerou/rag-saldivia/pkg/health"
-	"github.com/Camionerou/rag-saldivia/pkg/build"
 	"github.com/Camionerou/rag-saldivia/pkg/database"
+	"github.com/Camionerou/rag-saldivia/pkg/health"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/llm"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
-	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
+	"github.com/Camionerou/rag-saldivia/pkg/server"
 	"github.com/Camionerou/rag-saldivia/pkg/traces"
 
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/business"
@@ -33,13 +28,10 @@ import (
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/intelligence"
 )
 
-const serviceVersion = "0.1.0"
-
 func main() {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
-	slog.SetDefault(logger)
+	app := server.New("sda-astro", server.WithPort("ASTRO_PORT", "8011"), server.WithTimeout(0))
+	ctx := app.Context()
 
-	port := config.Env("ASTRO_PORT", "8011")
 	ephePath := config.Env("EPHE_PATH", "/ephe")
 	dbURL := config.Env("POSTGRES_TENANT_URL", "")
 	llmEndpoint := config.Env("SGLANG_LLM_URL", "")
@@ -47,21 +39,6 @@ func main() {
 	llmAPIKey := config.Env("LLM_API_KEY", "")
 
 	publicKey := sdajwt.MustLoadPublicKey("JWT_PUBLIC_KEY")
-
-	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer cancel()
-
-	otelShutdown, err := sdaotel.Setup(ctx, sdaotel.Config{
-		ServiceName:    "sda-astro",
-		ServiceVersion: serviceVersion,
-		Endpoint:       config.Env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
-		Insecure:       true,
-	})
-	if err != nil {
-		slog.Warn("otel init failed", "error", err)
-	} else {
-		defer otelShutdown(context.Background())
-	}
 
 	blacklist := security.InitBlacklist(ctx, config.Env("REDIS_URL", "localhost:6379"))
 
@@ -71,14 +48,14 @@ func main() {
 	if err != nil {
 		slog.Warn("nats connect failed, event publishing disabled", "error", err)
 	} else {
-		defer nc.Drain()
-		slog.Info("connected to nats", "url", natsURL)
+		app.OnShutdown(func() { _ = nc.Drain() }) // best-effort drain on shutdown
+		slog.Info("connected to nats", "url", config.RedactURL(natsURL))
 	}
 	tracePublisher := traces.NewPublisher(nc)
 	tenantSlug := config.Env("TENANT_SLUG", "saldivia")
 
 	ephemeris.Init(ephePath)
-	defer ephemeris.Close()
+	app.OnShutdown(ephemeris.Close)
 
 	var pool *pgxpool.Pool
 	if dbURL != "" {
@@ -87,7 +64,7 @@ func main() {
 			slog.Error("database connection failed", "error", err)
 			os.Exit(1)
 		}
-		defer pool.Close()
+		app.OnShutdown(pool.Close)
 	}
 
 	var llmClient llm.ChatClient
@@ -96,7 +73,7 @@ func main() {
 	}
 
 	// Plan 12: Intelligence engine + chart cache
-	intel, err := intelligence.NewEngine(logger)
+	intel, err := intelligence.NewEngine(slog.Default())
 	if err != nil {
 		slog.Error("intelligence engine init failed", "error", err)
 		os.Exit(1)
@@ -106,11 +83,7 @@ func main() {
 
 	astroHandler := handler.New(pool, llmClient, intel, chartCache, bizService, tracePublisher, tenantSlug)
 
-	r := chi.NewRouter()
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Recoverer)
-	r.Use(sdamw.SecureHeaders())
+	r := app.Router()
 
 	hc := health.New("astro")
 	if pool != nil {
@@ -120,7 +93,6 @@ func main() {
 		hc.Add("redis", func(ctx context.Context) error { return blacklist.Ping(ctx) })
 	}
 	r.Get("/health", hc.Handler())
-	r.Get("/v1/info", build.Handler("sda-astro"))
 
 	// Read endpoints: FailOpen true (available during Redis outage)
 	authRead := sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{
@@ -143,7 +115,7 @@ func main() {
 		r.Use(authRead)
 		r.Use(rateMw)
 		r.Use(sdamw.RequirePermission("astro.read"))
-		r.Use(middleware.Timeout(5 * time.Minute))
+		r.Use(chimw.Timeout(5 * time.Minute))
 
 		r.Post("/v1/astro/natal", astroHandler.Natal)
 		r.Post("/v1/astro/transits", astroHandler.Transits)
@@ -205,7 +177,7 @@ func main() {
 		r.Use(authWrite)
 		r.Use(rateMw)
 		r.Use(sdamw.RequirePermission("astro.write"))
-		r.Use(middleware.Timeout(30 * time.Second))
+		r.Use(chimw.Timeout(30 * time.Second))
 
 		r.Post("/v1/astro/contacts", astroHandler.CreateContact)
 		r.Put("/v1/astro/contacts/{id}", astroHandler.UpdateContact)
@@ -233,7 +205,7 @@ func main() {
 		r.Use(authRead)
 		r.Use(sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 10, Window: time.Minute, KeyFunc: sdamw.ByUser}))
 		r.Use(sdamw.RequirePermission("astro.business"))
-		r.Use(middleware.Timeout(2 * time.Minute))
+		r.Use(chimw.Timeout(2 * time.Minute))
 		r.Get("/v1/astro/business/dashboard", astroHandler.Dashboard)
 		r.Get("/v1/astro/business/cashflow", astroHandler.CashFlow)
 		r.Get("/v1/astro/business/risk", astroHandler.RiskHeatmap)
@@ -242,23 +214,6 @@ func main() {
 		r.Get("/v1/astro/business/hiring", astroHandler.HiringCalendar)
 		r.Get("/v1/astro/business/mercury-rx", astroHandler.MercuryRx)
 	})
-
-	srv := &http.Server{
-		Addr:              ":" + port,
-		Handler:           otelhttp.NewHandler(r, "astro"),
-		ReadTimeout:       10 * time.Second,
-		ReadHeaderTimeout: 10 * time.Second,
-		WriteTimeout:      5 * time.Minute,
-		IdleTimeout:       120 * time.Second,
-	}
-
-	go func() {
-		slog.Info("astro service starting", "port", port)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			slog.Error("server error", "error", err)
-			os.Exit(1)
-		}
-	}()
 
 	// Weekly alerts cron (Plan 13 Fase 13): scan contacts for SA/DP urgency
 	// Runs every Monday at 6am Argentina (UTC-3 = 09:00 UTC).
@@ -290,12 +245,7 @@ func main() {
 		}()
 	}
 
-	<-ctx.Done()
-	slog.Info("astro service shutting down")
-
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer shutdownCancel()
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		slog.Error("shutdown error", "error", err)
-	}
+	// SSE + LLM streaming can run for minutes — no HTTP-level WriteTimeout.
+	// Per-route chi timeouts (5min read, 2min business, 30s write) still enforce limits.
+	app.RunWithWriteTimeout(0)
 }

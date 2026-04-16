@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="consulta" paginar="50">
+       <title>GRUPOS DE DEMERITOS</title>
+        <obs></obs>
+               <form >
+                  <table id="REG_CUENTA_CALIFICACION" label="CALIFICACIONES">
+                  <field id="id_regcalificacion" noshow="true">
+                      <label>Codigo </label>
+                  </field>
+                  <field id="regcuenta_id" noshow="true">
+                      <label>Calificación</label>
+                  </field>
+
+                  <field id="calificacion">
+                      <label>Calificación</label>
+                  </field>
+                  <field id="fecha_calificacion">
+                      <label>Calificación</label>
+			<tipo>date</tipo>
+                  </field>
+		    <order>
+			<field id="fecha_calificacion" orderType="DESC" />
+		    </order>
+                  </table>
+               </form>
+        </histrix>

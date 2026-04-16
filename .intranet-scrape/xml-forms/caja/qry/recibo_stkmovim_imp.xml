@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<histrix tipo="consulta" >
+    <title>Stock</title>
+    <obs></obs>
+    <consulta>
+
+        <table id="STK_MOVIMIENTOS">
+            
+            <field id="id_stkmovimiento" esClave="true" oculto="true"  />
+
+            <field id="cajmovimiento_id" esClave="true" noshow="true" print="false" />
+
+            <field id="regdetalle_id" oculto="true">
+                <condicion operador="=">0</condicion>
+            </field>
+
+            <field id="stkarticulo_id">
+                <label>Cod.Art.</label>
+            </field>
+
+            <field id="nombre_concepto" tabla="STK_CONCEPTOS">
+                <label>Concepto</label>
+            </field>
+
+            <field id="referencia">
+                <label>Descripción</label>
+            </field>
+
+            <field id="cantidad">
+                <label>Cant.</label>
+            </field>
+
+            <field id="precio_total">
+                <label>P.Venta</label>
+            </field>
+        </table>
+        <join>
+            <table id="STK_CONCEPTOS">
+                <field id="id_stkconcepto">
+                    <condicion operador="=">STK_MOVIMIENTOS.stkconcepto_id</condicion>
+                </field>
+            </table>
+        </join>
+    </consulta>
+	
+</histrix>

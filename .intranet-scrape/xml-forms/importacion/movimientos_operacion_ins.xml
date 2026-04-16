@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" tipoInsert="REPLACE" >
+    <title>Operaciones</title>
+    <obs></obs>
+    <form >
+		<table id="REG_MOVIMIENTO_OPERACION" >
+		  	<field id="operacion_imp_id" 				  id_temp="operacion_imp_id" />
+		  	<field id="id_movimiento_operacion" 		  id_temp="id_movimiento_operacion"/>
+		  	<field id="regmovim_id" 					  id_temp="regmovim_id" />
+		  	<field id="observacion_movimiento_operacion"  id_temp="observacion_movimiento_operacion" />
+		</table>
+	</form>
+</histrix>

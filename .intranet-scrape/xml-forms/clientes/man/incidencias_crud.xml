@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="abm">
+	<title>Categorías</title>
+	 <obs></obs>
+		<form >
+		    <table id="REG_INCIDENCIAS" label="Incidencias mercaderias">
+
+				<field id="id_regincidencia" esClave="true" autoinc="true" noshow="true" />
+
+				<field id="nombre_incidencia">
+					<label>nombre</label>
+					<size>50</size>
+				</field>
+			  
+				<field id="genera_cargo">
+					<label>Cargo</label>
+					<help>Genera cargo</help>
+					<tipo>check</tipo>
+				</field>
+				
+		    </table>
+		</form>
+    </histrix>	

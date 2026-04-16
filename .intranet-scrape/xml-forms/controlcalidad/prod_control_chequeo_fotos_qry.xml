@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="consulta" path="/fotos/archivo/Coches/" PDFlines="false">
+	<title>Control Calidad</title>
+	<obs/>
+	<form>
+		
+		<table id="PROD_CONTROLES">
+			<title>Control de Calidad</title>
+
+			<field id="habilitado" oculto="true">
+			    <condicion operador="=">0</condicion>
+			</field>
+
+			<field id="id_prodcontrol" noshow="true" esClave="true">
+			</field>
+			
+			<field id="nrofab_id" noshow="true" _local="true" tabla="PROD_CONTROL_MOVIM">
+			</field>
+
+			<field id="id_controlmovim" noshow="true" tabla="PROD_CONTROL_MOVIM">
+			</field>
+
+			<field id="seccion_id" noshow="true" >
+			    <condicion operador="=">15</condicion>
+			</field>
+
+			<field id="fotopath" noshow="true" >
+			    <expression>concat(nrofab_id,'/controlcalidad/',id_prodcontrol)</expression>
+			</field>
+
+	        <field id="foto" path="fotopath" tabla="PROD_CONTROL_MOVIM" imageWidth="170">
+			    <label>Foto</label>
+				<tipo>file</tipo>
+				<size>200</size>
+				<condicion operador="!=">''</condicion>
+    		</field>
+
+		<order>
+		    <field id="orden_control" tipoOrden="ASC" />
+		</order>
+
+		<group>
+		    <field id="id_prodcontrol" />
+		</group>
+
+		</table>
+
+		<join>
+		    <table id="PROD_CONTROL_MOVIM">
+<!--
+			<field id="nrofab_id">
+			    <condicion operador="=">[__nrofab_id__]</condicion>
+			</field>
+-->
+			<field id="prodcontrol_id">
+			    <condicion operador="=">id_prodcontrol</condicion>
+			</field>
+		    </table>
+		</join>
+
+	</form>
+</histrix>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" >
+  <title>numerador</title>
+  <obs />
+  <form>
+    <table id="REG_CUENTA">
+		<field id="id_regcuenta" />
+		<field id="numero">
+			<expresion>MAX(nro_cuenta) + 1</expresion>
+		</field>
+		
+    </table>
+  </form>
+</histrix>

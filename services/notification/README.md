@@ -13,6 +13,13 @@
 | POST | `/v1/notifications/read-all` | Bearer | Mark all as read |
 | GET | `/v1/notifications/preferences` | Bearer | Get user notification preferences |
 | PUT | `/v1/notifications/preferences` | Bearer | Update preferences (email, in-app, quiet hours, muted types) |
+| POST | `/v1/notifications/send` | Admin | Send notification (email or in-app) |
+
+### Internal Endpoints (Docker network only, no Traefik)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/internal/webhook/alert` | Bearer (shared secret) | Alertmanager webhook — persists infra alerts, emails if critical |
 
 All authenticated endpoints require `X-User-ID` header (injected by auth middleware).
 

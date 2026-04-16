@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" PDForientacion="L" serverSide="false" >
+	<title>Consulta Cartera de Valores</title>
+	<obs/>
+	<form>
+		<table id="CAR_VALORES" label="Cartera de Cheques">
+		
+			<filters>
+				<field id="fecha_valor">
+					<operador>&gt;=</operador>
+					<label>Desde Fecha</label>
+					<tipo>date</tipo>					
+				</field>
+
+				<field id="fecha_valor">
+					<operador>&lt;=</operador>
+					<label>Hasta Fecha</label>
+					<tipo>date</tipo>
+					<valor eval="true">date('d/m/Y', mktime(0,0,0, date("m"), date("d"), date("Y") + 1 ))</valor>
+				</field>
+
+				<field id="importe_valor" deshabilitado="false">
+					<operador>&gt;=</operador>
+					<label>Desde Importe</label>
+					<tipo>decimal</tipo>					
+				</field>		
+
+				<field id="importe_valor" deshabilitado="false">
+					<operador>&lt;=</operador>
+					<label>Hasta Importe</label>
+					<tipo>decimal</tipo>					
+				</field>
+
+				<field id="moneda_id" grupo="Avanzado">
+					<operador>=</operador>
+					<label>Moneda</label>
+				</field>
+
+				<field id="carbanco_id" grupo="Avanzado">
+					<label>Banco</label>
+					<operador>=</operador>
+				</field>
+
+				<field id="carplaza_id" grupo="Avanzado">
+					<label>Plaza</label>
+					<operador>=</operador>
+				</field>
+
+				<field id="nro_valor" grupo="Avanzado">
+					<label>Nº</label>
+					<operador>=</operador>
+				</field>
+
+				<field id="cuit_valor" grupo="Avanzado">
+					<label>Cuit</label>
+					<operador>=</operador>
+				</field>
+
+				<field id="filtroEstado">
+					<label>Estado</label>
+					<operador>=</operador>
+					<valor>1</valor>
+				</field>
+
+				<field id="forma_egreso" deshabilitado="false">
+					<label>Forma Egreso</label>
+					<operador>=</operador>
+					<valor>0</valor>
+				</field>
+			</filters>
+
+			<field id="id_carvalor" noshow="true" />
+
+			<field id="carbanco_id">
+				<label>Banco</label>
+				<helper xml="carbanco_qry.xml" dir="/ayudas" empty="true" type="combo" />
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="carplaza_id">
+				<label>Plaza</label>
+				<helper xml="carplaza_qry.xml" dir="/ayudas" empty="true"  type="combo"/>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="fecha_valor">
+				<label>Fec.Emisión</label>
+				<tipo>date</tipo>
+			</field>
+			
+			<field id="acreditacion_valor">
+				<label>Fec.Acreditación</label>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="nro_valor">
+				<label>Nro Valor</label>
+			</field>
+
+			<field id="regcuenta_id" tabla="car_ing" noZero="true">
+				<helper type="combo" xml="regcuenta_cmb.xml" dir="/ayudas" _empty="true" >
+					<field id="subsistema_id">
+ 						<condicion operador="=">'02'</condicion>
+					</field>
+				</helper>
+				<tipo>varchar</tipo>
+				<label>Cliente</label>
+			</field>
+
+			<field id="fecha_movimiento" deshabilitado="true" tabla="caj_ing">
+				<label>Fecha Ingreso</label>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="tipo_movimiento_ingreso" local="true" noshow="true">
+				<valor>0</valor>
+			</field>
+				
+			<field id="comprobante_ingreso">
+				<label>Ingreso</label>
+			    <expression>CASE WHEN ISNULL(caj_ing.id_cajmovimiento) THEN.
+				caj_ing.referencia_movimiento
+				ELSE
+				CONCAT( conceptos_ing.abreviatura_concepto,' 0000-',lpad(caj_ing.nro_movimiento,8,'0') )
+				END
+			    </expression>
+
+			    <helper type="link" dir="/caja/proc/del">
+				<parameter source="cajmovimiento_ingreso" target="id_cajmovimiento" />
+				</helper>
+				<attribute id="linkint">ejecuta_concepto</attribute>
+			</field>
+			
+			<field id="ejecuta_concepto" noshow="true">
+				<expression>IF( ISNULL(caj_ing.id_cajmovimiento), '', 'cajmovimiento_ficha.xml')</expression>
+			</field>
+
+			<field id="cajmovimiento_ingreso" noshow="true">
+				<expression>caj_ing.id_cajmovimiento</expression>
+			</field>
+
+			
+
+
+			<!--<f"iel " id="comprobante_ingreso" local="true" showObjTabla="true" showValor="true" _export="false" print="false">
+				<label>Ingreso</label>
+				<helper type="object" xml="valores_carmovimientos_qry.xml">
+					<parameter source="id_carvalor" target="carvalor_id" />
+					<parameter source="tipo_movimiento_ingreso" target="tipo_movimiento" />
+				</helper>
+				
+			</field>-->
+			
+			<field id="egreso_valor">
+				<label>Fecha Egreso</label>
+				<condicion operador="like">(CASE WHEN '[__filtroEstado__]' = 0 THEN '%' WHEN '[__filtroEstado__]' = 1 THEN '0000-00-00' WHEN '[__filtroEstado__]' = 2 THEN '2%-%-%' END)</condicion>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="tipo_movimiento_egreso" local="true" noshow="true">
+				<valor>1</valor>
+			</field>
+			
+			<field id="comprobante_egreso">
+				<label>Egreso</label>
+			    <expression>CASE WHEN ISNULL(caj_egr.id_cajmovimiento) THEN.
+				caj_egr.referencia_movimiento
+				ELSE
+				CONCAT( conceptos_egr.abreviatura_concepto,' 0000-',lpad(caj_egr.nro_movimiento,8,'0') )
+				END
+			    </expression>
+                            <helper type="link" dir="/caja/proc/del">
+                                <parameter source="cajmovimiento_egreso" target="id_cajmovimiento" />
+                                </helper>
+                                <attribute id="linkint">ejecuta_conceptoe</attribute>
+                        </field>
+
+                        <field id="ejecuta_conceptoe" noshow="true">
+                                <expression>IF( ISNULL(caj_egr.id_cajmovimiento), '', 'cajmovimiento_ficha.xml')</expression>
+                        </field>
+
+                        <field id="cajmovimiento_egreso" noshow="true">
+                                <expression>caj_egr.id_cajmovimiento</expression>
+                        </field>
+
+
+
+
+
+
+
+			<!--<field id="comprobante_egreso" local="true" showObjTabla="true" showValor="true" _export="false" print="false">
+				<label>Egreso</label>
+				<helper type="object" xml="valores_carmovimientos_qry.xml">
+					<parameter source="id_carvalor" target="carvalor_id" />
+					<parameter source="tipo_movimiento_egreso" target="tipo_movimiento" />
+				</helper>
+			</field>-->
+
+			<field id="forma_egreso" noshow="true">
+			    <options>
+				<option valor="0">Todo</option>
+				<option valor="1">Egreso Manual</option>
+			    </options>
+			    <expression>CASE WHEN car_egr.referencia_movimiento = 'EGRESO MANUAL DE CARTERA' THEN '1' ELSE '0' END</expression>
+			</field>
+
+			<field id="cuenta_valor">
+				<label>Nº Cuenta</label>
+				<help>Cuenta del cheque</help>
+			</field>
+			
+			<field id="cuit_valor">
+				<label>CUIT</label>
+			</field>
+			
+			<field id="titular_valor">
+				<label>Titular</label>
+			</field>
+			
+			<field id="importe_valor" suma="true" >
+				<label>importe</label>
+				<tipo>numeric</tipo>
+			</field>
+
+			<!-- Filtros -->
+
+			<field id="filtroEstado" noshow="true" local="true">
+				<helper type="combo" >
+					<option value="0">Todos</option>				  
+					<option value="1">En cartera</option>
+					<option value="2">Egresados</option>
+				</helper>
+			</field>
+
+			<field id="moneda_id" noshow="true">
+				<helper xml="monedas_qry.xml" dir="/ayudas" empty="true" type="combo" />
+			</field>
+
+			<field id="usuario_id" local="true" noshow="true" valauto="true">
+			    <valor eval="true">$_SESSION['idUser']</valor>
+			</field>
+
+			<field id="modificacion" print="false" export="false">
+				<expression>CASE WHEN FIND_IN_SET('[__usuario_id__]', (SELECT option_value FROM HTXOPTIONS WHERE option_name = 'SIS::04:usuarios_habilitados_mod_nro')) THEN '#' ELSE '' END</expression>
+				<helper type="link" xml="cambio_nrovalor_ficha.xml" dir="/valores/ing/" icon="ui-icon-pencil" width="400" height="150" text="false">
+				    <parameter target="id_carvalor" source="id_carvalor" />
+				</helper>
+			</field>
+
+			<group>
+				<field id="id_carvalor" />
+			</group>
+
+		</table>
+
+		<!-- JOINS -->
+
+		<join tipo="left">
+			<table id="CAR_MOVIMIENTOS" as="car_ing">
+				<field id="carvalor_id">
+					<condicion operador="=">CAR_VALORES.id_carvalor</condicion>
+				</field>
+				<field id="tipo_movimiento">
+					<condicion operador="=">0</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CAR_MOVIMIENTOS" as="car_egr">
+				<field id="carvalor_id">
+					<condicion operador="=">CAR_VALORES.id_carvalor</condicion>
+				</field>
+				<field id="tipo_movimiento">
+					<condicion operador="=">1</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CAJ_MOVIMIENTOS" as="caj_ing">
+				<field id="id_cajmovimiento">
+					<condicion operador="=">car_ing.cajmovimiento_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CAJ_MOVIMIENTOS" as="caj_egr">
+				<field id="id_cajmovimiento">
+					<condicion operador="=">car_egr.cajmovimiento_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CAJ_CONCEPTOS" as="conceptos_ing">
+				<field id="id_cajconcepto">
+					<condicion operador="=">caj_ing.cajconcepto_id</condicion>
+				</field>	
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="CAJ_CONCEPTOS" as="conceptos_egr">
+				<field id="id_cajconcepto">
+					<condicion operador="=">caj_egr.cajconcepto_id</condicion>
+				</field>	
+			</table>
+		</join>
+
+	</form>
+
+</histrix>
+

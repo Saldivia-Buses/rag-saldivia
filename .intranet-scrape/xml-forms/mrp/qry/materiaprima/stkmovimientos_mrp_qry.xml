@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" PDFsincabecera="true"  _sololectura="true" _autoprint="true" PDFfontSize="12" paginar="30" >
+  <title>FACTURA</title>
+  <obs></obs>
+  <form  _detalle="xmldet">
+   
+     <table id="STK_MOVIMIENTOS" label="Movimientos de Stock">
+      <filters>
+
+          <field id="fecha_movimiento">
+            <label>Fecha</label>
+        	<operador>=</operador>
+            <help>Fecha movimiento</help>
+            <valor>today</valor>
+          </field>
+          <!--
+          <field id="fecha_movimiento">
+            <label>Desde Fecha</label>
+        	<operador>&lt;=</operador>
+            <help>Fecha movimiento</help>
+            <valor>today</valor>
+          </field>
+          -->
+          <field id="stkconcepto_id">
+            <label>Concepto</label>
+            <operador>=</operador>
+	    <valor>90</valor>
+          </field>
+          
+  	  </filters>
+  	  
+      <field id="id_stkmovimiento"  noshow="false" esClave="true" print="false">
+        <label>Codigo</label>
+        <help>Codigo de movimiento</help>  
+      </field>
+	<field id="stkarticulo_id" break="true">
+	    <label>Art</label>
+	</field>
+	<field id="nombre_producto" tabla="STK_ARTICULOS">
+		<expression>STK_ARTICULOS.nombre_articulo</expression>
+	    <label>Producto</label>
+	</field>
+
+      <field id="regcuenta_id" noshow="true" print="false">
+        <label posx="5" posy="+1">Cuenta</label>
+      </field>
+
+
+	<field id="stkconcepto_id" noshow="true">
+
+        <label>Concepto</label>
+	    <helper type="combo" empty="true" xml="stkconcepto_qry.xml" dir="/ayudas" />
+	</field>
+
+      
+
+      <field id="numero">
+            <label modpos="nobr"  posx="110" posY="25" PDFsize="12">Comprobante</label>
+            <expression>CONCAT(LPAD(puesto_movimiento, 4, '0'), '-', LPAD(numero_movimiento, 8, '0'))</expression>
+      </field>
+    
+
+      <field id="numero_movimiento" noshow="true">
+    		<condicion operador="!=">0</condicion>
+      		<detalle>numero_movimiento</detalle>
+      </field>
+	<field id="cantidad" tabla="STK_MOVIMIENTOS" suma="true">
+		<expression>sum(STK_MOVIMIENTOS.cantidad)</expression>
+	    <label>Cantidad</label>
+	    <tipo>integer</tipo>
+	</field>
+    
+      <field id="fecha_movimiento">
+        <label  posx="110" posY="33" PDFsize="13">Fecha</label>
+        <help>Fecha movimiento</help>
+		<detalle>fecha_movimiento</detalle>
+      </field>
+	<field id="id_stkarticulo" tabla="MP">
+	    <label>Cod.MP</label>
+	</field>
+	<field id="nombre_articulo" tabla="MP">
+	    <label>Materia Prima</label>
+	</field>
+	<field id="cantidad2" tabla="STK_BOM">
+	    <expression>sum(STK_BOM.cantidad)</expression>
+	    <label>Múltiplo</label>
+	</field>
+	<field id="consumido" _suma="true">
+	    <expression>sum(STK_BOM.cantidad * STK_MOVIMIENTOS.cantidad)</expression>
+	    <label>Consumido</label>
+	    <tipo>integer</tipo>
+	</field>
+	<field id="m2">
+	    <label>m2</label>
+	    <expression>sum(round((STK_ARTICULOS.ancho / 100 * STK_ARTICULOS.alto / 100) * STK_BOM.cantidad , 2))</expression>
+	</field>	
+	<field id="totalm2">
+	    <label>Total m2</label>
+	    <expression>round((STK_ARTICULOS.ancho / 100 * STK_ARTICULOS.alto / 100) * STK_BOM.cantidad , 2)</expression>
+	</field>
+
+		<group>
+			<field id="id_stkarticulo" tabla="STK_ARTICULOS"/>
+			<field id="id_stkarticulo" tabla="MP"/>
+
+		</group>
+      
+	  </table>
+
+	    <join tipo="left">
+	        <table id="STK_ARTICULOS">
+        		<field id="id_stkarticulo">
+			    	<condicion operador="=">STK_MOVIMIENTOS.stkarticulo_id</condicion>
+		        </field>
+		</table>
+	   </join> 
+	    <join tipo="left">
+	        <table id="STK_BOM">
+        		<field id="stkarticulopadre_id">
+			    	<condicion operador="=">STK_MOVIMIENTOS.stkarticulo_id</condicion>
+		        </field>
+        		<field id="bom_variacion_id">
+			    	<condicion operador="isnull">1</condicion>
+		        </field>
+		</table>
+	   </join> 
+	    <join tipo="left">
+	        <table id="STK_ARTICULOS" as="MP">
+        		<field id="id_stkarticulo">
+			    	<condicion operador="=">STK_BOM.stkarticulohijo_id</condicion>
+		        </field>
+		</table>
+	   </join> 
+  </form>
+</histrix>  

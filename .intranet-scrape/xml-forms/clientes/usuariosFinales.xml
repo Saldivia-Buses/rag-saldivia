@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="consulta" paginar="200">
+       <title>Usuarios Finales</title>
+        <obs></obs>
+               <form>
+            
+                  <table id="REG_CUENTA" label="MOVIMIENTOS">
+                  
+                  <field id="id_regcuenta">
+                      <label>Cod</label>
+                      <help>Codigo de Cliente</help>
+                  </field>                    
+                  <field id="regzona_id" >
+                      <label>Mercado</label>
+                      <helper type="combo" id="REG_ZONAS">
+			<field id="nro_zona"/>
+			<field id="nombre_zona"/>
+                      </helper>
+                  </field>
+                  <field id="nombre_cuenta">
+			<label>Usuario</label>
+            	  </field>               
+            	  
+            	  <field id="subsistema_id" noshow="true">
+            		<condicion operador="=">'02'</condicion>
+            	  </field>
+            	                             
+                  
+           	  <field id="ventaActAn">
+            	    <label>Venta Actual Anualizada</label>
+            	    <expresion>SUM(REG_MOVIMIENTOS.neto_movimiento) / 365</expresion>
+                  </field>
+                  <field id="ventaActAnCompDir">
+            	    <label>Venta Actual Anualizada Comp. Directa </label>
+            	    <expresion>SUM(REG_MOVIMIENTOS.importe_movimiento) / 365</expresion>
+                  </field>
+                  <field id="tamCtaAn">
+            	    <label>Tamano de la cuenta anualizado</label>
+            	    <expresion>(SUM(REG_MOVIMIENTOS.neto_movimiento) / 365) + (SUM(REG_MOVIMIENTOS.importe_movimiento) / 365)</expresion>
+                  </field>
+                  <field id="potActCta" local="true">
+                    <label>Potencial anualizado de la cuenta</label>
+                  </field>
+                  <field id="gapAlPot" local="true">
+                    <label>GAP al Potencial</label>
+<!--                <expresion>porActCta - ventaActAn</expresion>-->
+                  </field>
+                  <field id="shareInsCta" local="true">
+                    <label>Share de insumos en la Cuenta</label>
+                    <expresion>(SUM(REG_MOVIMIENTOS.neto_movimiento) / 365) / ((SUM(REG_MOVIMIENTOS.neto_movimiento) / 365) + (SUM(REG_MOVIMIENTOS.importe_movimiento) / 365)) </expresion>
+                    <tipo>numeric</tipo>
+                  </field>
+                  <field id="penCta" local="true">
+                    <label>Penetracion de la Cuenta</label>        
+                  </field>
+                  <group>
+                    <field id="id_regcuenta"/>
+		  </group>-->
+                                 
+		 </table>            	  
+		 <join tipo="left">
+		    <table id="REG_MOVIMIENTOS">
+			<field id="regcuenta_id">
+			    <condicion operador="=">id_regcuenta</condicion>
+			</field>
+		    </table>
+		</join>
+             </form>
+        </histrix>

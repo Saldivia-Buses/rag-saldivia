@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert"   >
+	<title>PRECIOS de ADICIONALES</title>
+	<obs/>
+	<form >
+		<table id="LISTAPRECIOSDET" >
+			<title></title>
+			<field id="idLista" 	        id_cab="idLista"></field>
+			<field id="nombre" 		id_cab="nombre"></field>
+			<field id="idArticulo" 	id_temp="idArticulo"></field>
+			<field id="precio1" 	id_temp="prec2"></field>
+			<field id="precio2" 	id_temp="precio2"></field>
+			<field id="margen"	 	id_cab="aumento"></field>
+			<field id="vigencia" 	id_cab="fecha"></field>
+			<field id="obs" 		id_cab="obs"></field>
+		</table>
+	</form>
+</histrix>

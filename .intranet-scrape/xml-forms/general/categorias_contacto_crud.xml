@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm">
+	<title>Contacto</title>
+	<obs></obs>
+	<consulta>
+		<table id="GEN_CATEGORIA_CONTACTOS" label="Categoria Contacto">
+			<filters>
+				<field id="nombre_categoria">
+					<label>Categoria</label>
+					<operador>like</operador>
+				</field>
+			</filters>
+			<field id="id_catcontacto" autoinc="true" noshow="true">
+				<label>Código</label>
+			</field>
+			<field id="nombre_categoria">
+				<label>Categoria Contacto</label>
+				<help>Nombre de la Categoría Contacto</help>
+				<size>25</size>
+			</field>
+		</table>
+	</consulta>
+</histrix>

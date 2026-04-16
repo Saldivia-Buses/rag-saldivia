@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" grabafinal="true">
+   <title>Update Movimientos Stock</title>
+   <obs></obs>
+   <form>
+		<table id="STK_MOVIMIENTOS">
+
+			<sql>UPDATE STK_MOVIMIENTOS 
+
+				JOIN REG_MOVIMIENTOS on REG_MOVIMIENTOS.id_regmovim = STK_MOVIMIENTOS.regmovimiento_id
+				JOIN GEN_SUBSISTEMAS on GEN_SUBSISTEMAS.id_subsistema = REG_MOVIMIENTOS.subsistema_id and 
+							GEN_SUBSISTEMAS.iva_subsistema = 1 
+				JOIN STK_CONCEPTOS on STK_CONCEPTOS.id_stkconcepto = STK_MOVIMIENTOS.stkconcepto_id and 
+						      STK_CONCEPTOS.tipo_concepto = 1 
+				JOIN STK_RUBROS on STK_RUBROS.id_stkrubro = STK_MOVIMIENTOS.stkrubro_id 
+				JOIN STK_ARTICULOS on STK_ARTICULOS.id_stkarticulo = STK_MOVIMIENTOS.stkarticulo_id  
+
+			     SET marca = 1, ctbmovimiento_id = (select option_value from HTXOPTIONS where option_name = 'SIS::lastId_asiento_contable')
+
+				WHERE STK_MOVIMIENTOS.fecha_movimiento &gt;= '[__fecha_desde__]' and
+				      STK_MOVIMIENTOS.fecha_movimiento &lt;= '[__fecha_hasta__]' and
+				      (STK_MOVIMIENTOS.marca = 0 or STK_MOVIMIENTOS.marca = '' or STK_MOVIMIENTOS.marca IS NULL);
+			</sql>
+
+			<field id="fecha_desde"		id_temp="fecha_desde" local="true" />
+			<field id="fecha_hasta"		id_temp="fecha_hasta" local="true" />
+		</table>
+   </form>
+</histrix>
+

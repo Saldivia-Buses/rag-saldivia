@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" >
+    <title>DETALLE ORDEN PRODUCCION</title>
+    <obs></obs>
+    <form >
+        <table id="MRP_TRAZABILIDAD" label="TRAZABILIDAD" >
+            <field id="mrpordendetalle_id" oculto="true" >
+            </field>
+
+            <field id="id_mrptrazabilidad"   noshow="true" />
+            <field id="trzstkarticulo_id"  >
+        	<label>Codigo</label>
+            </field>
+
+            <field id="nombre_articulo"  >
+        	<label>Materia Prima</label>
+        	<expression>nombre_articulo</expression>
+            </field>
+
+            <field id="trazabilidad_codigo"  >
+        	<label>Trazabilidad</label>
+            </field>
+        </table>
+        <join tipo="inner">
+    	    <table id="STK_ARTICULOS">
+    		<field id="id_stkarticulo">
+    		    <condicion  operador="=">trzstkarticulo_id</condicion>
+    		</field>
+    	    </table>
+    	    
+        </join>
+    </form>
+</histrix>

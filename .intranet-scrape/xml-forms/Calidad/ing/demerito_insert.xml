@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="insert"   >
+        <title>Ingreso de demérito</title>
+        <obs></obs>
+        <form >
+                <table id="CPS_DEMERITOS_MOVIMIENTOS" idCampoCond="grabaDemerito">
+                    <title>Deméritos</title>
+                        <field id="stkarticulo_id" id_temp="stkarticulo_id"/>
+                        <field id="demerito_id"        id_temp="codigodem"/>
+                        <field id="fecha_demerito" id_temp="fecha_nconf"/>
+                        <field id="regcuenta_id"   id_temp="regcuenta_id"	     />
+                </table>
+        </form>           
+</histrix>

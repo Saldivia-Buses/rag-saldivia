@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="arbol">
+	<title>Secciones de Trabajo</title>
+	<obs/>
+	<form  detalle="riesgo_seccion.xml" _inline="true">
+		<table id="SECCION">
+			<title>Secciones de Trabajo</title>
+			<field id="id_seccion" arbol="hijo" autoinc="true" noshow="true">
+				<label Formstyle="display:none;">Codigo</label>
+				<help>Codigo de Seccion</help>
+				<detalle>idSeccion</detalle>
+				
+				
+			</field>
+			<field id="idSec" >
+			    <expression>id_seccion</expression>
+			</field>
+
+
+			<field id="idSeccionSup" arbol="padre" >
+                <tabla_ex id="SECCION" vacio="true">
+                    <field id="id_seccion"></field>
+                    <field id="nombre"></field>
+                </tabla_ex>
+				<label colstyle="display:none;">Secc Sup</label>
+			</field>
+			<field id="nombre" nodeTitle="true" >
+				<label>Nombre</label>
+				<help>Nombre de Sección</help>
+			</field>
+			<field id="descripcion" nodeText="true">
+				<label>Descripción</label>
+				<help>Descripción de Sección</help>
+			</field>
+			<field id="idSupervisor" _nodeText="true">
+				<label>Supervisor</label>
+
+                <tabla_ex id="PERSONAL" xml="HLPpersonal.xml" vacio="true" dir="/help_local">
+                    <field id="legajo">
+                        <condicion operador="!=">0</condicion>
+                    </field>
+                </tabla_ex>
+			</field>
+            <field id="supervisor">
+                <label>desc</label>
+				<help>Supervisor de Sección</help>
+			</field>
+		</table>
+	</form>
+</histrix>

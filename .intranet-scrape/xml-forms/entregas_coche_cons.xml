@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="consulta">
+	<title>Entregas</title>
+	<obs/>
+	<eventos>
+		<event id="insert">close</event>
+	</eventos>
+	<form >
+		<table id="ENTREGASCOCHES">
+			<title>Placas Prov. por Coche</title>
+			<field id="nrofab" oculto="true">
+				<label >Nro de Fabricación</label>
+				<help>Número de Fabricación</help>
+			</field>
+
+			<field id="entrega" >
+				<label>Fecha</label>
+				<valor>today</valor>
+			</field>
+			<field id="hora" >
+				<label>Hora</label>
+				<help>Hora</help>
+				<tipo>varchar</tipo>
+			</field>			
+
+		</table>
+
+	</form>
+</histrix>

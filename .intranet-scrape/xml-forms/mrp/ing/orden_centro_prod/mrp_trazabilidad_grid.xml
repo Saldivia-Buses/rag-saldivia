@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="liveGrid" deleteRow="false">
+    <title>DETALLE ORDEN PRODUCCION</title>
+    <obs></obs>
+    <form >
+        <table id="MRP_TRAZABILIDAD" label="TRAZABILIDAD" >
+            
+            <field id="mrpordendetalle_id" oculto="true" ></field>
+
+            <field id="id_mrptrazabilidad" noshow="true"  esClave="true"/>
+    
+            <field id="trzstkarticulo_id" noshow="true" >
+            	<label>Codigo</label>
+            </field>
+
+            <field id="nombre_articulo" style="padding:0px 0px 0px 4px;" >
+        	   <label>Materia Prima</label>
+        	   <expresion>nombre_articulo</expresion>
+            </field>
+
+            <field id="trazabilidad_codigo" editable="true">
+              	<label>Trazabilidad</label>
+                <size>10</size>
+                <attribute id="deshabilitado">deshabilitado</attribute>
+            </field>
+
+            <field id="mrpestado_id" local="true" noshow="true">
+                <label>estado</label>
+            </field>
+            
+            <field id="deshabilitado" local="true" noshow="true">
+                <expression> if([__mrpestado_id__] = 1,'true','false') </expression>
+            </field>
+
+
+        </table>
+
+        <join tipo="inner">
+    	    <table id="STK_ARTICULOS">
+        		<field id="id_stkarticulo">
+        		    <condicion  operador="=">trzstkarticulo_id</condicion>
+        		</field>
+    	    </table>
+        </join>
+
+    </form>
+</histrix>

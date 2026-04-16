@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" PDFsincabecera="true" PDFfontSize="12" paginar="30" >
+  <title>FACTURA</title>
+  <obs></obs>
+  <form  detalle="xmldet">
+   
+     <table id="STK_MOVIMIENTOS" label="Movimientos de Stock">
+
+      <filters>
+
+        	<field id="numero_movimiento">
+        	  <label>Nro. Movimiento</label>
+        	  <operador>=</operador>
+      		</field>
+
+          <field id="fecha_movimiento">
+            <label>Fecha</label>
+          	<operador>=</operador>
+            <valor>today</valor>
+          </field>
+          
+          <field id="stkconcepto_id">
+            <label>Concepto</label>
+            <operador>=</operador>
+          </field>
+          
+  	  </filters>
+  	  
+      <fieldGroup noshow="true">
+
+          <field id="id_stkmovimiento" esClave="true" >
+            <label>Codigo</label>
+          </field>
+
+          <field id="regcuenta_id" >
+            <label>Cuenta</label>
+          </field>
+
+          <field id="xmldet" >
+            <expression>
+                CASE WHEN regcuenta_id  = '' THEN 
+                  (CASE WHEN COUNT(*) >= 2 AND not stkconcepto_id in (10,12) THEN 'imp_stktransfer.xml' ELSE 'imp_inventario_qry.xml' END) 
+                    ELSE 
+                      'imp_stkmovimientos_qry.xml' 
+                    END
+            </expression>
+          </field>
+
+          <field id="stkconcepto_origen" >
+            <expression>SELECT s.stkconcepto_id FROM STK_MOVIMIENTOS s WHERE s.id_stkmovimiento = MIN(STK_MOVIMIENTOS.id_stkmovimiento)</expression>
+            <detalle>stkconcepto_origen</detalle>
+          </field>
+
+          <field id="stkconcepto_destino" >
+            <expression>SELECT s.stkconcepto_id FROM STK_MOVIMIENTOS s WHERE s.id_stkmovimiento = MAX(STK_MOVIMIENTOS.id_stkmovimiento)</expression>
+            <detalle>stkconcepto_destino</detalle>
+          </field>
+
+          <field id="stkdeposito_origen" >
+            <expression>SELECT s.stkdeposito_id FROM STK_MOVIMIENTOS s WHERE s.id_stkmovimiento = MIN(STK_MOVIMIENTOS.id_stkmovimiento)</expression>
+            <detalle>stkdeposito_origen</detalle>
+          </field>
+
+          <field id="stkdeposito_destino" >
+            <expression>SELECT s.stkdeposito_id FROM STK_MOVIMIENTOS s WHERE s.id_stkmovimiento = MAX(STK_MOVIMIENTOS.id_stkmovimiento)</expression>
+            <detalle>stkdeposito_destino</detalle>
+          </field>
+
+          <field id="stktransaccion_id">
+              <label>transID</label>
+          </field>
+          
+      </fieldGroup>
+
+
+     <fieldGroup style="vertical-align:middle; padding:2px 2px 2px 2px; text-align:center;">
+
+          <field id="fecha_movimiento">
+            <label>Fecha</label>
+            <detalle>fecha_movimiento</detalle>
+          </field>
+
+          <!-- <field id="numero">
+              <label>Comprobante</label>
+              <expression>CONCAT(LPAD(puesto_movimiento, 4, '0'), '-', LPAD(numero_movimiento, 8, '0'))</expression>
+          </field> -->
+
+          <field id="puesto_movimiento">
+              <label>Puesto</label>
+          </field>
+
+          <field id="numero_movimiento">
+              <label>Nro </label>
+              <condicion operador="!=">0</condicion>
+              <detalle>numero_movimiento</detalle>
+          </field>
+
+      		<field id="stkconcepto_id">
+            	<label>Concepto</label>
+      		    <helper type="combo" empty="true" xml="stkconcepto_qry.xml" dir="/ayudas" />
+      		</field>
+
+    </fieldGroup>
+  	
+    	  <group>
+        		<field id="numero_movimiento"/>
+        		<field id="fecha_movimiento"  />
+            <field id="stktransaccion_id" />
+        </group>
+      
+	  </table>
+
+		    <join tipo="left">
+		        <table id="REG_CUENTA">
+	        		<field id="id_regcuenta">
+    			    	<condicion operador="=">regcuenta_id</condicion>
+			        </field>
+    			</table>
+		   </join> 
+
+  </form>
+</histrix>  

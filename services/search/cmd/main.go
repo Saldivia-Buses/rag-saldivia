@@ -4,53 +4,31 @@ import (
 	"context"
 	"log/slog"
 	"net"
-	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 
 	searchv1 "github.com/Camionerou/rag-saldivia/gen/go/search/v1"
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
 	"github.com/Camionerou/rag-saldivia/pkg/config"
-	"github.com/Camionerou/rag-saldivia/pkg/health"
-	"github.com/Camionerou/rag-saldivia/pkg/build"
 	"github.com/Camionerou/rag-saldivia/pkg/database"
-	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdagrpc "github.com/Camionerou/rag-saldivia/pkg/grpc"
+	"github.com/Camionerou/rag-saldivia/pkg/health"
+	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
-	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
+	"github.com/Camionerou/rag-saldivia/pkg/server"
 	"github.com/Camionerou/rag-saldivia/services/search/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/search/internal/service"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 func main() {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
-	slog.SetDefault(logger)
+	app := server.New("sda-search", server.WithPort("SEARCH_PORT", "8010"))
+	ctx := app.Context()
 
-	port := config.Env("SEARCH_PORT", "8010")
 	publicKey := sdajwt.MustLoadPublicKey("JWT_PUBLIC_KEY")
 	tenantDBURL := config.Env("POSTGRES_TENANT_URL", "")
-
-	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer cancel()
-
-	otelShutdown, err := sdaotel.Setup(ctx, sdaotel.Config{
-		ServiceName:    "sda-search",
-		ServiceVersion: "0.1.0",
-		Endpoint:       config.Env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
-		Insecure:       true,
-	})
-	if err != nil {
-		slog.Warn("otel init failed", "error", err)
-	} else {
-		defer otelShutdown(context.Background())
-	}
 
 	// Token blacklist (shared Redis)
 	blacklist := security.InitBlacklist(ctx, config.Env("REDIS_URL", "localhost:6379"))
@@ -61,7 +39,7 @@ func main() {
 		slog.Error("failed to connect to tenant db", "error", err)
 		os.Exit(1)
 	}
-	defer pool.Close()
+	app.OnShutdown(pool.Close)
 
 	// LLM client for tree navigation
 	llmEndpoint := config.Env("SGLANG_LLM_URL", "http://localhost:8102")
@@ -71,20 +49,14 @@ func main() {
 	auditWriter := audit.NewWriter(pool)
 	searchHandler := handler.New(searchSvc, auditWriter)
 
-	r := chi.NewRouter()
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Recoverer)
-	r.Use(middleware.Timeout(55 * time.Second))
-	r.Use(sdamw.SecureHeaders())
-
 	hc := health.New("search")
 	hc.Add("postgres", func(ctx context.Context) error { return pool.Ping(ctx) })
 	if blacklist != nil {
 		hc.Add("redis", func(ctx context.Context) error { return blacklist.Ping(ctx) })
 	}
+
+	r := app.Router()
 	r.Get("/health", hc.Handler())
-	r.Get("/v1/info", build.Handler("sda-search"))
 
 	searchRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 30, Window: time.Minute, KeyFunc: sdamw.ByUser})
 
@@ -93,15 +65,6 @@ func main() {
 		r.Use(searchRL)
 		r.Mount("/v1/search", searchHandler.Routes())
 	})
-
-	srv := &http.Server{
-		Addr:         ":" + port,
-		Handler:      otelhttp.NewHandler(r, "sda-search"),
-		ReadTimeout:  10 * time.Second,
-		ReadHeaderTimeout: 10 * time.Second,
-		WriteTimeout: 60 * time.Second,
-		IdleTimeout:  120 * time.Second,
-	}
 
 	// gRPC server (internal inter-service communication)
 	grpcPort := config.Env("SEARCH_GRPC_PORT", "50051")
@@ -120,27 +83,7 @@ func main() {
 			slog.Error("grpc serve error", "error", err)
 		}
 	}()
+	app.OnShutdown(grpcSrv.GracefulStop)
 
-	// HTTP server (frontend REST + health checks)
-	go func() {
-		slog.Info("search service starting", "port", port)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			slog.Error("server error", "error", err)
-			os.Exit(1)
-		}
-	}()
-
-	<-ctx.Done()
-	slog.Info("search service shutting down")
-
-	grpcSrv.GracefulStop()
-
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer shutdownCancel()
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		slog.Error("shutdown error", "error", err)
-	}
+	app.Run()
 }
-
-
-

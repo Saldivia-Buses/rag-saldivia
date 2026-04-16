@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" subtipo="vertical" tooltip="false" _showCant="false" path="/fotos/vehiculos">
+	<title>Documentos</title>
+	<obs></obs>
+	<form>
+		<table id="MANT_DOCUMENTOS_VEHICULO">
+		    <title>Documentos del vehiculo</title>
+
+			<field id="id_mantdocvehiculo" autoinc="true" esClave="true" noshow="true">
+				<label>Id doc vehiculo</label>
+			</field>
+		
+			
+			<field id="mantvehiculo_id" noshow="true">
+				<label modpos="nobr">Vehiculo</label>
+				<help>Vehiculo</help>
+				<!--
+				<helper type="combo" xml="mant_vehiculo_crud.xml">
+					<field id="descripcion_vehiculo"></field>
+					<order>
+						<field id="descripcion_vehiculo" table="MANT_VEHICULO"></field>
+					</order>
+				</helper>
+			
+				<valor>0</valor> -->
+			</field>
+
+			<field id="mantdocumento_id" _noshow="true" _deshabilitado="true">
+				<label modpos="nobr">Documento</label>
+				<helper type="combo" xml="mant_documentos_qry.xml" dir="/mantenimiento/qry" _id="MANT_DOCUMENTOS">
+					<!--
+					<field id="id_mantdocumento" /> 
+					<field id="nombre_documento" /> -->
+				</helper>
+			</field>
+		
+			<!--
+			<field id="nombre" local="true" deshabilitado="false" _noshow="true">
+				<label>Nombre</label>
+				<expresion>nombre_documento</expresion>
+			</field>
+		
+			
+			<field id="nombre_documento" local="true">
+				<label modpos="nobr">Documento</label>
+				
+				
+			</field>	
+		-->
+			
+			<!--
+			<field id="nombre_documento" local="true">
+				<label modpos="nobr">Documento</label>
+				<helper type="combo">
+					<option value="0">Assurance</option>
+					<option value="1">Carte gris</option>
+					<option value="2">D18</option>
+					<option value="3">Taxe</option>
+					<option value="4">Contrôle technique</option>
+				</helper>
+			</field>	
+			-->
+
+
+			<field id="fecha_comienzo">
+				<label modpos="nobr">Fecha comienzo</label>
+				<help>Fecha comienzo</help>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="fecha_vencimiento">
+				<label modpos="nobr">Fecha vencimiento</label>
+				<help>Fecha vencimiento</help>
+				<tipo>date</tipo>
+			</field>
+  			<field id="KM">
+                                <label modpos="nobr">Km</label>
+                                <help>Prox Service</help>
+                                
+                        </field>
+
+			
+			<field id="fotopath" local="true" noshow="true">
+        		<tipo>varchar</tipo>
+        		<label>fotopath</label>
+        		<expresion>CONCAT('/', mantvehiculo_id, '/documentos')</expresion>
+      		</field>
+
+      		<field id="fotodoc" path="fotopath" _download="true">
+                <label>Foto</label>
+                <tipo Type="Image">file</tipo>
+                <size>30</size>
+      		</field> 
+
+
+		</table>
+
+		<join tipo="left">
+			 <table id="MANT_DOCUMENTOS">
+				<field id="id_mantdocumento">
+					<condicion operador="=">mantdocumento_id</condicion>
+				</field>
+			 </table>
+		</join>
+
+		<join tipo="left">
+			 <table id="MANT_VEHICULOS">
+				<field id="id_mantvehiculo">
+					<condicion operador="=">mantvehiculo_id</condicion>
+				</field>
+			 </table>
+		</join>
+		
+		
+	</form>
+</histrix>

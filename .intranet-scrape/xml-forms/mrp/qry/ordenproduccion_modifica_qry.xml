@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" paginar="200" filter="true" >
+    <title>ORDENES DE PRODUCCION</title>
+    <obs></obs>
+    <form detalle="ordendetalle_modifica_det_qry.xml">
+	        
+	<table id="MRP_ORDEN_PRODUCCION" label="Consulta de Ordenes de Producción">
+
+        <filters>
+            <field id="fecha_orden">
+                <label>Desde Fecha</label>
+                <help>Fecha de Orden de Carga</help>
+                <operador>&gt;=</operador>
+                <valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m"), 1, date("Y")))</valor>
+            </field>
+            <field id="fecha_orden">
+                <label modpos="nobr">Hasta Fecha</label>
+                <help>Fecha de Orden de Carga</help>
+                <operador>&lt;=</operador>
+                <valor>today</valor>
+            </field>
+
+        </filters>
+        
+        <field id="fecha_cierre" noshow="true">
+        <condicion operador="="> '0000-00-00'</condicion>
+        </field>
+
+	    
+	    <field id="fecha_cierre" noshow="true">
+		<condicion operador="="> '0000-00-00'</condicion>
+	    </field>
+
+            <field id="fecha_orden" _noshow="true">
+                <label>Fecha</label>
+                <help>Fecha de Orden de Fabricación</help>
+            </field>
+
+
+        <field id="numero_orden">
+            <label>Nro</label>
+            <help>Numero de Orden de Fabricación</help>
+                
+        </field>
+        <field id="nombre_cuenta" tabla="REG_CUENTA">
+            <label>Cliente</label>
+            <help>Nombre de la cliente</help>
+                
+        </field>
+	    <field id="path_name">
+                <label>Proceso</label>
+                <expression>path_name</expression>
+        </field>
+
+	<field id="id_mrporden" noshow="true" >
+        <condicion operador="in"> (SELECT mrporden_id FROM MRP_ORDEN_DETALLE) </condicion>
+                <detalle>mrporden_id</detalle>
+        </field>
+
+            <order>
+                <field id="fecha_orden" orderType="DESC"></field>
+            </order>
+        </table>
+
+        <join tipo="left">
+            <table id="MRP_PATH">
+                <field id="id_mrppath">
+                    <condicion operador="=">MRP_ORDEN_PRODUCCION.mrppath_id</condicion>
+                </field>
+                </table>
+        </join>
+        <join tipo="left">
+            <table id="REG_CUENTA">
+                <field id="id_regcuenta">
+                    <condicion operador="=">MRP_ORDEN_PRODUCCION.regcuenta_id</condicion>
+                </field>
+            </table>
+        </join>
+      <!--  <join tipo="inner">
+            <table id="MRP_ORDEN_DETALLE">
+                <field id="mrporden_id">
+                    <condicion operador="=">MRP_ORDEN_DETALLE.mrporden_id</condicion>
+                </field>
+            </table>
+        </join>-->
+    </form>
+</histrix>

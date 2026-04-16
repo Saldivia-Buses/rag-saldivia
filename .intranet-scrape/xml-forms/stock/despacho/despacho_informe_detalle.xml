@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="liveGrid" deleteRow="false" inserta="false" _limit="20">
+  <title>Cta Ctes</title>
+
+  <obs/>
+  <form _detalle="regpendientes_qry.xml" inline="true" >
+    <table id="REG_MOVIMIENTOS">
+
+		<field id="id_regmovim" noshow="true" esClave="true" >
+			<label>id_regmovim</label>
+		</field>
+
+		<field id="concepto_id" noshow="true" >
+			<label>concepto_id</label>
+			<condicion>47</condicion>
+		</field>
+
+		<field id="subsistema_id"  noshow="true" />
+
+		<field id="subsistematr_id" local="true" noshow="true" valauto="true"/>    
+
+		<field id="regcuenta_id" noshow="true">
+			<label>Cliente</label>
+		</field>
+
+
+	<fieldGroup colstyle="text-align:center;vertical-align:middle;padding:2px 2px 2px 2px;" >
+
+			<field id="puesto_movimiento" noshow="true">
+				<label>Puesto</label>
+			    <helper type="combo" id="REG_NUMERADORES" empty="true">
+					<field id="puesto" />
+					<field id="nombre_puesto">
+					    <expression>puesto</expression>
+					</field>
+					<field id="regconcepto_id">
+						<condicion>47</condicion>
+					</field>
+		            <order>
+		    	        <field id="puesto" />
+		            </order>
+			    </helper>   
+			    <attribute id="style">color</attribute>
+			</field>
+
+			<field id="nombre_cuenta" tabla="REG_CUENTA">
+				<label>Nombre Cuenta</label>
+				<attribute id="style">color</attribute>
+			</field>
+
+			<field id="nro_movimiento"  >
+				<label>Envio</label>
+				<expression>
+					CONCAT(REG_MOVIMIENTOS.letra_movimiento,':',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,'0'),'-',
+						LPAD(REG_MOVIMIENTOS.nro_movimiento ,8,'0'))
+				</expression>
+				<helper type="link" dir="/clientes/qry" xml="imp_npinsumas_qry.xml" >
+				    <parameter source="id_regmovim" target="id_regmovim" />  
+				</helper> 
+				<attribute id="style">color</attribute>
+			</field>
+
+			<field id="datos">
+			    <label>Comprobante</label>
+				<expression>
+					select CONCAT(RGM.letra_movimiento,':',LPAD(RGM.puesto_movimiento,4,'0'),'-',LPAD( RGM.nro_movimiento  ,8,'0')) 
+						from REG_MOVIMIENTOS RGM  where RGM.id_regmovim = (select RD.regmovim_id from  REG_DETALLES RD where 
+						RD.id_regdetalle = (select regdetallefac_id FROM REG_IMPUTACIONESDETALLES where regdetalleped_id = (select RG1.id_regdetalle 
+						from REG_DETALLES RG1 where RG1.regmovim_id = REG_MOVIMIENTOS.id_regmovim limit 1) limit 1) limit 1)
+					</expression>
+					<helper type="link" dir="/clientes/qry" xml="imp_npinsumas_qry.xml" >
+				    	<parameter source="buscofactura" target="id_regmovim" />  
+					</helper>
+					<attribute id="style">color</attribute>
+			</field>
+
+			<field id="formapago">
+			    <label>forma</label>
+				<helper type="combo" dir="/ayudas" xml="regforma_qry.xml" empty="true">
+				</helper>
+			    <expression>
+			    	select regforma_id from REG_MOVIMIENTOS RG2  
+			    	where RG2.id_regmovim = (select RD.regmovim_id from  REG_DETALLES RD 
+			    	where RD.id_regdetalle = (select regdetallefac_id FROM REG_IMPUTACIONESDETALLES 
+			    	where regdetalleped_id = (select RG1.id_regdetalle from REG_DETALLES RG1 
+			    	where RG1.regmovim_id = REG_MOVIMIENTOS.id_regmovim limit 1) limit 1) limit 1) limit 1
+				</expression>
+				<attribute id="style">color</attribute>
+			</field>
+
+
+			<field id="fecha_desde" local="true" noshow="true">
+				<label>Fecha Desde</label>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="fecha_hasta" local="true" noshow="true">
+				<label>Fecha Hasta</label>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="color" local="true" noshow="true">
+				<label>coloreame</label>
+				<expression>
+					case when fecha_movimiento &lt;= curdate() and fecha_movimiento  &gt;= DATE_SUB(curdate(), INTERVAL 3 DAY)  then 'background-color:lightgreen;'
+						 when fecha_movimiento &lt; DATE_SUB(curdate(), INTERVAL 3 DAY) and fecha_movimiento  &gt;= DATE_SUB(curdate(), INTERVAL 10 DAY)  then 'background-color:lightyellow;' 
+					 	 when fecha_movimiento &lt; DATE_SUB(curdate(), INTERVAL 10 DAY)   then 'background-color:#ef9a9a;'
+					 	 else ''
+					end 
+				</expression>
+
+			</field>
+
+			<field id="fecha_movimiento" >
+				<label>Fecha</label>
+				<condicion operador="&gt;=">STR_TO_DATE('[__fecha_desde__]', '%d/%m/%Y') and fecha_movimiento &lt;= STR_TO_DATE('[__fecha_hasta__]', '%d/%m/%Y')</condicion>
+				<attribute id="style">color</attribute>
+			</field>
+
+			<field id="regestado_id">
+				<label>Estado</label>
+				<helper type="combo" xml="regestados_qry.xml" dir="/ayudas" empty="true" />
+				<attribute id="style">color</attribute>
+			</field>
+
+			<field id="conciliado">
+				<label>Entregado</label>
+				<attribute id="style">color</attribute>
+			</field>
+
+	</fieldGroup>
+
+		<order>
+			<field id="puesto_movimiento" />
+		</order>
+
+		<group>
+			<field id="id_regmovim" tabla="REG_MOVIMIENTOS"/>
+		</group>
+
+	</table>
+	
+	    <join>
+	      <table id="REG_CUENTA">
+	        <field id="id_regcuenta">
+	          <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+	        </field>
+	      </table>
+	    </join>
+	    
+	    <join>
+	      <table id="REG_CONCEPTOS">
+	        <field id="id_concepto">
+	          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+	        </field>
+	      </table>
+	    </join>
+
+	    <join tipo="left">
+	      <table id="REG_MOVIMIENTO_OBS">
+	        <field id="regmovim_id">
+	          <condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion>
+	        </field>
+	      </table>
+	    </join>
+
+  </form>
+</histrix>

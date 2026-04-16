@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini">
+	<title>MODELOS DE AIRE ACONDICIONADO</title>
+	<obs></obs>
+	<form >
+		<table id="MODELAIR" label="Modelos Aire">
+
+        <filters auto="true">
+            <field id="marair">
+                <label modpos="nobr">Marca</label>
+                <operador>=</operador>
+            </field>
+        </filters>
+
+
+			<field id="id_modeloaire" deshabilitado="true" esClave="true">
+				<label>Codigo</label>
+				<help>Codigo de Modelo de Aire</help>
+			</field>
+
+			<field id="marair">
+				<label>Marca</label>
+				<help>Marca de Aire</help>
+			      <tabla_ex id="MARCAAIR" vacio="true">
+			        <field id="marair"></field>
+			        <field id="desair"></field>
+			      </tabla_ex>
+
+			</field>
+			<field id="modair">
+				<label>Codigo</label>
+				<help>Codigo de Modelo de Aire</help>
+			</field>
+
+			<field id="moddes">
+				<label>Modelo</label>
+				<help>Modelo de Aire Acondicionado</help>
+			</field>
+			<field id="desabv">
+				<label>Abrev.</label>
+				<help>Abreviatura a Utilizar</help>
+			</field>
+			<field id="siscod" oculto="true">
+				<label>Cod</label>
+			</field>
+    			<order>
+				<field id="marair"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

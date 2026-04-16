@@ -1,0 +1,92 @@
+<histrix tipo="consulta" path="fotos/articulos" dataSource="listado_expandido" preloadData="false" filter="true">
+  <title>COSTOS</title>
+  <obs></obs>
+  <form  >
+    <table id="STK_ARTICULO_PROCESO" label="CONSULTA DE COSTOS" _styleTbody="height:500px; overflow-x: hidden;">
+
+    <field id="homologacion_id" _noshow="true">
+        <detalle>homologacion_id</detalle>
+    </field>
+
+    <field id="id_arbol" local="true" esClave="true" export="true">
+	     <label>id</label>
+    </field>
+    <field id="artcod" linkdir="articulos" _noshow="true" export="true">
+      <label>codigo</label>
+    </field>
+
+      <field id="artdes" tabla="STKINSUM" >
+        <expression>STKINSUM.artdes</expression>
+        <label>Articulo</label>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="ctbcod" _print="false" tabla="CTBCUENT">
+        <label>Nro Cta</label>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="ctbnom" tabla="CTBCUENT" _print="false">
+        <expression>ctbnom</expression>
+        <label>CtaCtb</label>
+        <tipo>varchar</tipo>
+      </field>
+      <field id="multiplo"  >
+        <label>Mult</label>
+      </field>
+      <field id="cantidad"  >
+	       <expression>movpes</expression>
+        <label>Cantidad</label>
+        <tipo>numeric</tipo>
+      </field> 
+
+      <field id="valcps" noshow="true" tabla="STKINSUM">
+      </field>
+
+      <field id="valuso" noshow="true" tabla="STKINSUM">
+      </field>
+
+      <field id="uninom" tabla="FSMUNIDS" deshabilitado="true">
+        <expression>FSMUNIDS.uninom</expression>
+        <label>Unidad</label>
+        <tipo>char</tipo>
+      </field> 
+
+
+      <field id="costo" noZero="true">
+        <label >Costo</label>
+
+        <tipo>numeric</tipo>
+      </field>     
+
+ 
+      <field id="parcial"  suma="true" local="true" noZero="true">
+        <label>Parcial</label>
+ 
+
+				<if exp="true">
+					<true>costo * cantidad</true>
+					<false></false>
+				</if>
+        <tipo>numeric</tipo>
+      </field> 
+
+      <field id="costo_repo" noZero="true" style="color:blue;">
+        <label >Costo Repo</label>
+
+        <tipo>numeric</tipo>
+      </field>     
+
+      <field id="total_repo" noZero="true" style="color:blue;" suma="true">
+        <label >Total Repo</label>
+
+        <tipo>numeric</tipo>
+      </field>     
+    <field id="color" local="true" clasefila="true" noshow="true" >
+	    <label>COLOR</label>
+    </field>
+
+    </table>
+          
+  </form>
+</histrix>

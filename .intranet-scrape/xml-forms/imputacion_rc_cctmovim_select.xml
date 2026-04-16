@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="ing"  borra="no" inserta="no"  llenoreferente="true" imprime="false" barraDrag="false">
+	<!-- <referentes>ordenpago_cajmovim_ing.xml</referentes> -->
+	<titulo>Orden de pago</titulo>
+	<obs/>
+	<consulta>
+		<tabla id="CCTMOVIM" label="ORDEN DE PAGO" idCampoCond="imputar">
+
+			<campo id="siscod" oculto="true">
+				<label>Cod.</label>
+				<help></help>
+				<valor>'02'</valor>
+				<condicion operador="=">'02'</condicion>
+			</campo>
+
+			<campo id="ctacod" noshow="true">
+				<label>Cuenta</label>
+				<help>Codigo de Cuenta</help>
+				<detalle>ctacod</detalle>			
+			</campo>
+			<campo id="movfec" deshabilitado="true">
+				<label modpos="nobr">Fecha</label>
+				<help></help>
+				<!--  <formato>d  m  y</formato> -->
+				<detalle>movfec</detalle>				
+			</campo>
+			<campo id="concod"  tabla="CCTMOVIM" oculto="true">
+				<label>concod</label>
+				<help>Tipo</help>
+				<detalle>concod</detalle>
+				<condicion operador="!=">4</condicion>
+			</campo>
+
+			<campo id="condes"  tabla="CCTCONCE" deshabilitado="true">
+				<label>Tipo</label>
+				<help>Tipo de Comprobante</help>
+				<detalle>concepto</detalle>				
+				<tipo>varchar</tipo>
+			</campo>
+			<campo id="movnpv" deshabilitado="true">
+				<label modpos="nobr">Numero</label>
+				<help>Comprobante</help>
+				<formato>%04d</formato>
+				<detalle>movnpv</detalle>				
+			</campo>
+			<campo id="movnro" deshabilitado="true">
+				<label modpos="nobr"/>
+				<help>Numero Comprobante</help>
+				<formato>%012d</formato>
+				<detalle>movnro</detalle>				
+			</campo>
+			<campo id="movimp" deshabilitado="true">
+				<label PDFsize="12" posx="130" posy="+1">Total Pago</label>
+				<help></help>
+				<formato>%01.2f</formato>
+				<detalle>movimp</detalle>
+				
+			</campo>
+			<campo id="movsal" deshabilitado="true">
+				<label>saldo</label>
+				<help></help>
+				<condicion operador="!=">0</condicion>
+				<detalle>movsal</detalle>				
+				<detalle>salant</detalle>				
+				
+			</campo>
+			
+			<campo id="imputar" local="true" refresh="true" >
+				<label>imputar</label>
+				<help>Seleccion</help>
+				<tipo>check</tipo>  
+				<valor>0</valor>
+			</campo>			
+			<campo id="movcta" deshabilitado="true" noshow="true">
+				<label modpos="nobr">movcta</label>
+				<detalle>movcta</detalle>				
+			</campo>	
+			<campo id="movlet"  noshow="true">
+				<detalle>movlet</detalle>				
+
+			</campo>			
+			<campo id="movipv"  noshow="true">
+				<detalle>movipv</detalle>				
+			</campo>			
+			<campo id="movinc"  noshow="true">
+				<detalle>movinc</detalle>				
+			</campo>			
+			<campo id="zoncod"  noshow="true">
+				<detalle>zoncod</detalle>				
+
+			</campo>			
+			<campo id="impgra" noshow="true" suma="true">
+				<label>Neto</label>
+				<expresion>sum(IVAIMPORTES.impgra)</expresion>
+				<tipo>numeric</tipo>
+				<detalle>impgra</detalle>	
+			</campo>
+			<!--
+			<campo id="codretgan" local="true" noshow="true">
+				<valor>29</valor>
+				<detalle>cajcod</detalle>	
+			</campo>			
+			<campo id="acuret" tabla="RETACUMU" >
+				<label>Acum</label>
+				<detalle>acuret</detalle>
+			</campo>			
+			<campo id="acupag" tabla="RETACUMU" >
+				<label>Acupag</label>
+			</campo>			
+			<campo id="tabmin" tabla="RETTABLA" >
+				<label>tabmin</label>
+				<detalle>tabmin</detalle>
+
+			</campo>			
+			<campo id="tabpor" tabla="RETTABLA" >
+				<label>tabpor</label>
+				<detalle>tabpor</detalle>
+				
+			</campo>		
+			-->	
+
+			<group>
+				<campo id="ctacod" tabla="CCTMOVIM" />
+				<campo id="movnro" />
+				<campo id="movnpv" />
+				
+			</group>			
+		</tabla>
+		<join tipo="left">
+			<tabla id="CCTCONCE">
+				<campo id="siscod" oculto="true">
+					<label>cctcuent.siscod</label>
+					<condicion operador="=">CCTMOVIM.siscod</condicion>
+				</campo>
+				<campo id="concod" oculto="true">
+					<condicion operador="=">CCTMOVIM.concod</condicion>
+				</campo>
+				<campo id="condes" oculto="true"></campo>
+			</tabla>
+		</join>
+		<join tipo="left">
+			<tabla id="CCTCUENT">
+				<campo id="siscod" oculto="true">
+					<label>cctcuent.siscod</label>
+					<condicion operador="=">CCTMOVIM.siscod</condicion>
+				</campo>
+				<campo id="ctacod" oculto="true">
+					<condicion operador="=">CCTMOVIM.ctacod</condicion>
+				</campo>
+			</tabla>
+		</join>
+		<join tipo="left">
+			<tabla id="IVAIMPORTES">
+				<campo id="ctacod" oculto="true">
+					<condicion operador="=">CCTMOVIM.ctacod</condicion>
+				</campo>
+				<campo id="codcom" oculto="true">
+					<condicion operador="=">CCTMOVIM.concod</condicion>
+				</campo>
+				<campo id="nrocom" oculto="true">
+					<condicion operador="=">CCTMOVIM.movnro</condicion>
+				</campo>
+				<campo id="nronpv" oculto="true">
+					<condicion operador="=">CCTMOVIM.movnpv</condicion>
+				</campo>
+				<campo id="tipoiva" oculto="true">
+					<condicion operador="=">1</condicion>
+				</campo>
+				
+			</tabla>
+		</join>				
+	<!--	<join tipo="left">
+			<tabla id="RETACUMU">
+				<campo id="ctacod" oculto="true">
+					<condicion operador="=">CCTMOVIM.ctacod</condicion>
+				</campo>
+				<campo id="siscod" oculto="true">
+					<condicion operador="=">'10'</condicion>
+				</campo>
+				<campo id="acufecmes" oculto="true">
+					<expresion>month(acufec)</expresion>
+					<condicion operador="=">month(now())</condicion>
+				</campo>
+				<campo id="acufecyear" oculto="true">
+					<expresion>year(acufec)</expresion>
+					<condicion operador="=">year(now())</condicion>
+				</campo>
+			</tabla>
+		</join>			
+		<join tipo="left">
+			<tabla id="RETTABLA">
+				<campo id="siscod" oculto="true">
+					<condicion operador="=">'10'</condicion>
+				</campo>
+
+				<campo id="retcod" oculto="true">
+					<condicion operador="=">2</condicion>
+				</campo>
+				<campo id="tabmes" oculto="true">
+					<condicion operador="=">1</condicion>
+				</campo>				
+				<campo id="ctagan" oculto="true">
+					<condicion operador="=">CCTCUENT.ctagan</condicion>
+				</campo>
+				</tabla>
+		</join>		-->					
+	</consulta>
+</abm>

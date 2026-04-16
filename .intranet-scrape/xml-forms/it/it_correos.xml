@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+  <title>IT Correos</title>
+  <obs></obs>
+  <form>
+    <table id="HTXUSERS" label="Correos" limit="1">
+      
+ 	   <field id="apellido">
+       <label>Apellido</label>
+      
+       </field>
+
+       <field id="emailUser" >
+        <label>Usuario</label>
+        <size>24</size>
+      </field> 
+
+     <field id="emailPass">
+      <label>Password</label>
+      <size>24</size>
+     </field>
+      <!-- 
+      <field id="baja" noshow="true">
+      	<condicion tipo="=">0</condicion>
+      </field>
+	-->
+<!--
+  
+      <order>
+      <field id="itdevicetype_id">
+        <label>Tipo</label>
+        
+        <helper type="combo" id="ITDEVICETYPE">
+           
+          <field id="id_itdevicetype" />
+          <field id="nombre_devicetype" />
+        
+        </helper>
+      
+      </field>
+      </order>
+-->
+
+
+          </table>
+  </form>
+</histrix>  

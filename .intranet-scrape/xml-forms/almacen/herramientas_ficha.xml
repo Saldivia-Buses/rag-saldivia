@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<histrix tipo="ficha" preFetch="true" inserta="false" modifica="false">
+	<title>Insumos</title>
+	<obs/>
+	<form >
+		<table id="HERRAMIENTAS">
+
+			<field id="id_herramienta" deshabilitado="true">
+				<label>Herramienta</label>
+				<help>Identificacion</help>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="artcod"  deshabilitado="true">
+				<label>Articulo</label>
+				<help>Codigo de Articulo</help>
+				<tipo>character</tipo>
+				<format>%20.20s</format>
+				<detalle>artcod</detalle>
+			</field>
+
+			<field id="nomherr"  deshabilitado="true">
+				<label>Nombre</label>
+				<help>Nombre de la Herramienta.</help>
+			</field>
+			<field id="grucod" oculto="true"  deshabilitado="true">
+				<label>grupo</label>
+				<help>grupo</help>
+			</field>
+	    </table>
+	</form>
+</histrix>

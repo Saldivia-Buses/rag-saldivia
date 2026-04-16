@@ -5,13 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log/slog"
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 
+	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 	"github.com/Camionerou/rag-saldivia/services/notification/internal/service"
 )
 
@@ -23,6 +22,7 @@ type NotificationService interface {
 	MarkAllRead(ctx context.Context, userID string) (int64, error)
 	GetPreferences(ctx context.Context, userID string) (*service.Preferences, error)
 	UpdatePreferences(ctx context.Context, userID string, emailEnabled, inAppEnabled bool, quietStart, quietEnd *string, mutedTypes []string) (*service.Preferences, error)
+	Send(ctx context.Context, req service.SendRequest) error
 }
 
 // Notification handles HTTP requests for notification operations.
@@ -50,6 +50,13 @@ func (h *Notification) Routes() chi.Router {
 		r.Put("/", h.UpdatePreferences)
 	})
 
+	// /send requires admin role — prevents arbitrary email relay.
+	// Called by triage workflow with platform admin service account JWT.
+	r.Group(func(r chi.Router) {
+		r.Use(requireAdmin)
+		r.Post("/send", h.Send)
+	})
+
 	return r
 }
 
@@ -62,7 +69,7 @@ func (h *Notification) List(w http.ResponseWriter, r *http.Request) {
 
 	notifications, err := h.svc.List(r.Context(), userID, unreadOnly, limit)
 	if err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusOK, notifications)
@@ -74,7 +81,7 @@ func (h *Notification) UnreadCount(w http.ResponseWriter, r *http.Request) {
 
 	count, err := h.svc.UnreadCount(r.Context(), userID)
 	if err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]int{"count": count})
@@ -87,10 +94,10 @@ func (h *Notification) MarkRead(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.svc.MarkRead(r.Context(), notifID, userID); err != nil {
 		if errors.Is(err, service.ErrNotificationNotFound) {
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": "notification not found"})
+			httperr.WriteError(w, r, httperr.NotFound("notification"))
 			return
 		}
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -102,7 +109,7 @@ func (h *Notification) MarkAllRead(w http.ResponseWriter, r *http.Request) {
 
 	count, err := h.svc.MarkAllRead(r.Context(), userID)
 	if err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]int64{"marked": count})
@@ -114,7 +121,7 @@ func (h *Notification) GetPreferences(w http.ResponseWriter, r *http.Request) {
 
 	prefs, err := h.svc.GetPreferences(r.Context(), userID)
 	if err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusOK, prefs)
@@ -135,36 +142,81 @@ func (h *Notification) UpdatePreferences(w http.ResponseWriter, r *http.Request)
 
 	var req updatePreferencesRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid request body"))
 		return
 	}
 
 	prefs, err := h.svc.UpdatePreferences(r.Context(), userID, req.EmailEnabled, req.InAppEnabled, req.QuietStart, req.QuietEnd, req.MutedTypes)
 	if err != nil {
-		serverError(w, r, err)
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	writeJSON(w, http.StatusOK, prefs)
 }
 
+type sendRequest struct {
+	Type    string `json:"type"`
+	To      string `json:"to"`
+	Subject string `json:"subject"`
+	Body    string `json:"body"`
+}
+
+// Send handles POST /v1/notifications/send
+func (h *Notification) Send(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+
+	var req sendRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httperr.WriteError(w, r, httperr.InvalidInput("invalid request body"))
+		return
+	}
+
+	if req.Type == "" || req.To == "" || req.Subject == "" {
+		httperr.WriteError(w, r, httperr.InvalidInput("type, to, and subject are required"))
+		return
+	}
+
+	if req.Type != "email" && req.Type != "in_app" {
+		httperr.WriteError(w, r, httperr.InvalidInput("type must be email or in_app"))
+		return
+	}
+
+	if err := h.svc.Send(r.Context(), service.SendRequest{
+		Type:    req.Type,
+		To:      req.To,
+		Subject: req.Subject,
+		Body:    req.Body,
+	}); err != nil {
+		httperr.WriteError(w, r, httperr.Internal(err))
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"status": "sent"})
+}
+
 func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(v)
+	_ = json.NewEncoder(w).Encode(v)
 }
 
 func requireUserID(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("X-User-ID") == "" {
-			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "missing user identity"})
+			httperr.WriteError(w, r, httperr.Unauthorized("missing user identity"))
 			return
 		}
 		next.ServeHTTP(w, r)
 	})
 }
 
-func serverError(w http.ResponseWriter, r *http.Request, err error) {
-	reqID := middleware.GetReqID(r.Context())
-	slog.Error("internal error", "error", err, "request_id", reqID)
-	writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+// requireAdmin checks that the authenticated user has admin role.
+// Used for privileged operations like programmatic notification sending.
+func requireAdmin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("X-User-Role") != "admin" {
+			httperr.WriteError(w, r, httperr.Forbidden("admin access required"))
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }

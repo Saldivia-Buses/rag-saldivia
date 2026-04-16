@@ -94,7 +94,7 @@ func TestLogin_Success(t *testing.T) {
 	}
 
 	var tokens service.TokenPair
-	json.NewDecoder(rec.Body).Decode(&tokens)
+	_ = json.NewDecoder(rec.Body).Decode(&tokens)
 	if tokens.AccessToken != "access.jwt.token" {
 		t.Errorf("expected access token, got %q", tokens.AccessToken)
 	}
@@ -163,7 +163,7 @@ func TestLogin_InvalidCredentials_Returns401(t *testing.T) {
 	}
 
 	var resp errorResponse
-	json.NewDecoder(rec.Body).Decode(&resp)
+	_ = json.NewDecoder(rec.Body).Decode(&resp)
 	if resp.Error != "invalid email or password" {
 		t.Errorf("expected generic credential error, got %q", resp.Error)
 	}
@@ -201,7 +201,7 @@ func TestLogin_InternalError_Returns500_Generic(t *testing.T) {
 	}
 
 	var resp errorResponse
-	json.NewDecoder(rec.Body).Decode(&resp)
+	_ = json.NewDecoder(rec.Body).Decode(&resp)
 	if resp.Error != "internal error" {
 		t.Errorf("expected generic error, got %q — internals may be leaking", resp.Error)
 	}
@@ -390,7 +390,7 @@ func TestMe_Success(t *testing.T) {
 	}
 
 	var user service.UserInfo
-	json.NewDecoder(rec.Body).Decode(&user)
+	_ = json.NewDecoder(rec.Body).Decode(&user)
 	if user.Email != "enzo@saldivia.com" {
 		t.Errorf("expected email enzo@saldivia.com, got %q", user.Email)
 	}

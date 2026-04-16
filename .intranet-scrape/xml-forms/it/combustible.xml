@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="crud" procesa="false" modifica="false" log="false">
+        <title>titulo</title>
+        <obs></obs>
+        <form >
+            <table id="COMBUSTIBLE" label="etiqueta">
+
+              <movimientos>
+                <relacion id="combustible_stkmovim_ins.xml"/>
+              </movimientos>
+  
+              <filters>
+                 
+                <field id="fecha">
+                  <label>Desde</label>
+                  <operador>&gt;=</operador>
+                  <valor>today</valor> 
+                </field>
+
+                <field id="fecha">
+                  <label>Hasta</label>
+                  <operador>&lt;=</operador>
+                  <valor>today</valor>
+                </field>    
+
+                <field id="usuario">
+                  <label>Nombre</label>
+                  <size>30</size>
+                </field>	
+
+                <field id="muestra_nombre" modpos="nobr" deshabilitado="true"/>
+
+                <field id="nrofab_id_filtro" deshabilitado="false">
+               		<label>Unidad</label>
+                    <operador>=</operador>
+                </field> 
+                    
+              </filters>
+
+              <field id="usuario">
+                <label>usuario</label>
+                <helper type="external" id="PERSONAL">
+                    <field id="opecod" />
+                    <field id="nombre_completo" >
+                      <expression>CONCAT(apellido,', ', Nombre)</expression>
+                      <detalle>muestra_nombre</detalle>
+                      <detalle>nombre</detalle>
+                    </field>
+                </helper>
+                <valor default="true"></valor>
+              </field>   
+
+              <field id="muestra_nombre" local="true" noshow="true"/>
+
+              <field id="nombre" >
+                <label>Nombre</label>
+              </field>
+              
+              <field id="fecha">
+                <label>Fecha</label>
+              </field>
+            
+              <field id="hora" type="hora">
+                <label>Hora</label>
+              </field>
+
+              <field id="nrofab_id" required="true" noZero="true">
+                <label>Unidad</label>
+                <tipo>integer</tipo>
+              </field>
+
+              <field id="nrofab_id_filtro" noshow="true" noZero="true">
+                <label>Unidad</label>
+                <expression>COMBUSTIBLE.nrofab_id</expression>
+              </field>
+
+              <field id="unidad">
+                <label>Descripción</label>
+              </field>
+
+		<field id="max" local="true" deshabilitado="true">
+		    <label>Maximo</label>
+		    <helper id="STK_STOCKACTUAL" type="combo" _empty="true">
+			<field id="cantidad_stock"/>
+
+			<field id="cantidad">
+			    <expression>cantidad_stock</expression>
+			</field>
+			<field id="stkarticulo_id">
+			    <condicion operador="=">'124006'</condicion>
+			</field>
+			<field id="stkdeposito_id">
+			    <condicion operador="=">35</condicion>
+			</field>
+		    </helper>
+		</field>
+
+              <field id="egreso_litros" suma="true">
+                <label>Litros</label>
+		<jseval>egreso_litros &lt;= max</jseval>
+              </field>
+
+              <field id="suma" >
+                <label>Total x unidad</label>
+                <expression>(select sum(egreso_litros) from COMBUSTIBLE C where C.nrofab_id = COMBUSTIBLE.nrofab_id and C.nrofab_id &gt; 1)</expression>
+                <tipo>decimal</tipo>
+              </field> 
+
+              <field id="valida_color" >
+                <expression>(select IF(sum(egreso_litros) &gt; 100, 'Consumo mayor a 100 Lts', '') from COMBUSTIBLE C where C.nrofab_id  = COMBUSTIBLE.nrofab_id and C.nrofab_id &gt; 1)</expression>
+                <helper xml="combustible_det.xml" type="link">
+                  <parameter source="nrofab_id" target="nrofab_id" />
+                </helper>
+              </field> 
+
+              <field id="id" noshow="true" />
+
+              <field id="id_articulo" local="true" noshow="true">
+                <label>prueba</label>
+<!--                 <valor>124006</valor>
+ -->                <expression>select id_stkarticulo from STK_ARTICULOS where STK_ARTICULOS.id_stkarticulo = 124006</expression>
+              </field> 
+
+              <group>
+                <field id="id" />
+              </group>
+
+
+            </table>
+        </form>
+    </histrix>
+

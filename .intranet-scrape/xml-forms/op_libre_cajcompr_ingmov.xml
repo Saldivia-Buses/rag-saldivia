@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <abm tipo="insert" >
+       <titulo>COMPROBANTES</titulo>
+        <obs></obs>
+               <consulta>
+					<tabla id="CAJCOMPR" label="FACTURAS">
+						<campo id="siscod" id_cab="siscod">
+						</campo>
+						<campo id="ctacod" id_cab="ctacod">
+						</campo>
+						<campo id="ctanom" id_cab="ctanom">
+						</campo>
+						<campo id="movfec" id_temp="movfec">
+						</campo>
+						<campo id="concod" id_temp="concod">
+						</campo>
+						<campo id="movnpv" id_temp="movnpv">
+						</campo>
+						<campo id="movnro" id_temp="movnro">
+						</campo>
+						<campo id="movcta" id_temp="movcta">
+						</campo>
+						<campo id="movimp" id_temp="movimp">
+						</campo>
+						<campo id="movvto" id_temp="movfec">
+						</campo>
+						<campo id="movsal" id_temp="movsal">
+						</campo>
+						<campo id="movord" id_temp="_ORDEN">
+						</campo>
+						<!-- faltan un monton aca -->
+						<campo id="zoncod" id_temp="zoncod"></campo>
+						<campo id="movlet" id_temp="movlet"></campo> 
+						<campo id="movinc" id_temp="movinc"></campo>
+
+						<campo id="movicc" >
+							<valor>4</valor>
+						</campo>
+						<campo id="movipv" id_temp="movipv"></campo>
+						
+						<campo id="nrocom" id_cab="movnroOP"></campo>
+						
+						<!--						<campo id="regmin" esNroMinuta="true">
+						
+						</campo> -->
+						
+					</tabla>
+               </consulta>
+        </abm>

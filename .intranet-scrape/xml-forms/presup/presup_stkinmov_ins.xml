@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="insert">
+	<title>MOVIMIENTOS DE STOCK</title>
+	<obs></obs>
+	<form>
+		<table id="VISTA_STK_COSTOS" label="MOVIMIENTOS" idCampoCond="tst_grabar">
+			<field id="siscod" id_temp="siscod"></field>
+			<field id="movnro" id_temp="movnro"></field>
+			<field id="artcod" id_temp="artcod"></field>
+			<field id="movcod" id_temp="movcod"></field>
+			<field id="movpes" id_temp="movpes"></field>
+			<field id="ctacod" id_temp="ctacod"></field>
+<!--
+			<field id="movnpv" id_temp="movnpv"></field>
+			<field id="movfec" id_temp="movfec"></field>
+
+			<field id="movcli" id_temp="ctacod"></field>
+			<field id="movcant" id_temp="movcant"></field>
+			<field id="movpre" id_temp="movpre"></field>
+			<field id="movcos" id_temp="movpre"></field>
+			<field id="movimp" id_temp="movimp"></field>
+			<field id="movref" id_temp="movref"></field>
+			<field id="succod" id_temp="succod"></field>
+			<field id="depcod" id_temp="depcod"></field>-->
+
+		</table>
+	</form>
+</histrix>

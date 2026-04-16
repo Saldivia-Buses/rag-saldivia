@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud" _ancho="40" inserta="false">
+    <title>Remitos</title>
+    <obs></obs>
+    <form   >
+        <table id="REG_MOVIMIENTOS" label="Movimientos" _styleTbody="height:500px;">
+            <field id="subsistema_id" oculto="true" >
+                <condicion operador="=">'02'</condicion>
+                <valor>'02'</valor>
+            </field>
+
+            <field id="id_regmovim" esClave="true" noshow="true" >
+	    </field>
+
+            <field id="concod" noshow="true" >
+<!--                <condicion operador="&lt;=">2</condicion> -->
+            </field>
+
+            
+            <field id="nro_cuenta" colstyle="display:none;" tabla="REG_CUENTA" deshabilitado="true">
+                <help>Codigo de Cuenta </help>
+                <ayuda_ex id="REG_CUENTA">
+                    <field id="nro_cuenta">
+                        <detalle>ctacod</detalle>
+                    </field>
+                    <field id="nombre_cuenta">
+                        <detalle>ctanom</detalle>
+                    </field>
+                    <field id="subsistema_id">
+                        <condicion operador="=">'02'</condicion>
+                    </field>
+                    <field id="baja">
+                        <condicion operador="=">0</condicion>
+                    </field>
+
+                    <order>
+                        <field id="nombre_cuenta"></field>
+                    </order>
+
+                    <filtra>ctacod</filtra>
+                </ayuda_ex>
+                <label>Cliente</label>
+                <detalle>ctacod</detalle>
+            </field>
+            <field id="nombre_cuenta" local="true" deshabilitado="true">
+				<expression>nombre_cuenta</expression>
+                <label>Nombre</label>
+                <size>30</size>
+            </field>
+
+            <!--
+            <condicion operador="=">20</condicion>
+             -->
+            <field id="puesto_movimiento" deshabilitado="true">
+                <label>P.V.</label>
+                <help> Punto Venta</help>
+                <format>%04d</format>
+            </field>
+            <field id="nro_movimiento"  deshabilitado="true">
+                <label>Numero</label>
+                <help> Numero Comprobante</help>
+
+
+            </field>
+            <!--
+            <field id="link" local="true" noshow="true">
+                    <if exp="concod==1">
+                            <true>'factura_reimp.xml'</true>
+                            <false>''</false>
+
+                    </if>
+                    <tipo>varchar</tipo>
+            </field>
+            <field id="concepto" >
+                    <attribute id="linkint">link</attribute>
+                    <expression>condes</expression>
+                    <label>Cod.Concepto</label>
+                    <help>
+                    </help>
+
+
+                            <paring destino="subsistema_id">subsistema_id</paring>
+                            <paring destino="ctacod">ctacod</paring>
+
+                            <paring destino="nro_movimiento">nro_movimiento</paring>
+                            <paring destino="puesto_movimiento">puesto_movimiento</paring>
+                            <tipo>varchar</tipo>
+
+            </field>
+-->
+
+            <field id="fecha_movimiento">
+                <label>Fecha </label>
+                <help>
+                </help>
+            </field>
+
+            <!--
+            <field id="movvto">
+                <label>Venc. </label>
+                <help> </help>
+            </field>
+            -->
+
+            <field id="nrofab" >
+                <label>Unidad</label>
+            </field>
+
+            <field id="importe_movimiento" deshabilitado="true">
+                <label>Importe Del Comprobante</label>
+            </field>
+            <field id="saldo_movimiento" style="color:red;font-weight:bold;">
+                <label>Saldo</label>
+                <help>Modifica el Saldo del Comprobante</help>
+            </field>
+            <field id="bienes_capital">
+                <label>Bienes Capital</label>
+                <help> Punto Venta</help>
+            	<options >
+            	    <option valor="0">NO Presentar</option>
+            	    <option valor="1">Presentar</option>
+            	    
+            	</options>
+            </field>
+
+            <filters>
+                <field id="nro_cuenta">
+                    <label>Cod.</label>
+                    <help>Codigo de Cuenta </help>
+                    <detalle>ctacod</detalle>
+                    <operador>=</operador>
+                </field>
+                <field id="nombre_cuenta" local="true" deshabilitado="true">
+                    <label>Nombre</label>
+                </field>
+                <field id="fecha_movimiento">
+                    <operador>>=</operador>
+                    <label>Desde Fecha</label>
+                    <valor>today</valor>
+
+                </field>
+                <field id="fecha_movimiento">
+                    <operador>&lt;=</operador>
+                    <label>Hasta Fecha</label>
+                    <valor>today</valor>
+
+                </field>
+            </filters>
+            <order>
+                <field id="fecha_movimiento"></field>
+            </order>
+        </table>
+        <join tipo="inner">
+            <table id="REG_CUENTA">
+                <field id="subsistema_id" >
+                    <condicion operador="=">'02'</condicion>
+                </field>
+                <field id="id_regcuenta" >
+                    <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

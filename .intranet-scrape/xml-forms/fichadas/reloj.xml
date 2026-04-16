@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" inserta="false" modifica="false" llenoTemporal="false">
+	<title>CIERRE </title>
+	<obs/>
+	<form >
+		<table id="FICHADAS" label="IMPORTAR">
+			<movimientos > 
+				<relacion id="reloj_ingmov.xml"></relacion>
+			</movimientos>
+			<field id="tipo" local="true" deshabilitado="true">
+				<label>IMPORTAR FICHADAS Este proceso se realiza automaticamente las 07:10 08:00 09:30 10:30 14:00 15:00 16:05</label>
+				<help>Importa las fichadas del Reloj</help>
+			</field>
+		
+		</table>
+	</form>
+</histrix>

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" >
+    <title>Ingreso de No Conformidad</title>
+    <obs></obs>
+    <form detalle="noconformidad_ficha.xml">
+        <table id="CAL_NOCONFORMIDADES" >
+            <title>Estados</title>
+            <filters>
+                <field id="estadonconf_id">
+                    <label>Estado</label>
+                    <help>Estado de la No conformidad</help>
+                                        <operador>=</operador>
+                </field>
+                <field id="origennconf_id">
+                    <label>Origen</label>
+                    <help>Origen de la No conformidad</help>
+                    <operador>=</operador>
+                </field>
+
+                <field id="rhseccion_id">
+                    <label>Sección</label>
+                    <help>Sección de la No conformidad</help>
+                                        <operador>=</operador>
+                </field>
+                <field id="fecha_nconf" >
+                    <label >Desde Fecha</label>
+                    <help>Fecha de No conformidad</help>
+                    <operador>&gt;=</operador>
+                </field>
+                <field id="fecha_nconf" >
+                    <label modpos="nobr">Hasta Fecha</label>
+                    <help>Fecha de No conformidad</help>
+                    <valor>today</valor>
+                    <operador>&lt;=</operador>
+                </field>
+            </filters>
+            
+            <field id="estadonconf_id">
+                <helper xml="calestadosnconf_crud.xml" type="combo" dir="/calidad/man" empty="true"/>
+                <label>Estado</label>
+                <help>Estado de la No conformidad</help>
+            </field>
+             <field id="login_id">
+                    <label>Usuario</label>
+             </field>       
+            <field id="origennconf_id">
+                <helper xml="calorigennconf_qry.xml" type="combo" dir="/ayudas" empty="true"/>
+                <label>Origen</label>
+                <help>Origen de la No conformidad</help>
+            </field>
+            <field id="stkarticulo_id" noshow="true" />
+            <field id="regcuenta_id" noshow="true" />
+            <field id="rhseccion_id">
+                <helper xml="rhseccion_qry.xml" type="combo" dir="/ayudas" empty="true" />
+                <label>Sección</label>
+                <help>Sección de la No conformidad</help>
+            </field>
+            <field id="fecha_nconf" tipoOrden="DESC" >
+                <label >Fecha</label>
+                <help>Fecha de No conformidad</help>
+                <valor>today</valor>
+            </field>
+            <field id="id_noconformidad" tipoOrden="DESC" >
+                <label >Número</label>
+                <help>Número de No conformidad</help>
+                <detalle>id_noconformidad</detalle>
+            </field>
+            <field id="descripcion_nconf" cellMaxLength="30">
+                <label colspan="3">Descripción</label>
+                <help>Descripción de la no conformidad</help>
+                <size>300</size>
+            </field>
+            <field id="contencion_nconf" cellMaxLength="30">
+                <label colspan="3">Acción de contención</label>
+                <help>Acción de Contención ante la no conformidad</help>
+                <size>300</size>
+            </field>
+			<field id="fotos" _local="true" foto="true" >
+				<expression>CONCAT('archivos/noconformidades/', id_noconformidad,'/')  </expression>
+				<label >Fotos</label>
+				<tipo>dir</tipo>
+			</field>  
+	    <order>
+		<field id="id_noconformidad"/>
+	    </order>			
+        </table>
+    </form>
+</histrix>

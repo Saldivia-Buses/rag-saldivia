@@ -6,6 +6,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 )
 
 // PlatformFeedback handles platform-admin feedback endpoints (read-only, cross-tenant).
@@ -33,7 +35,7 @@ func (h *PlatformFeedback) Tenants(w http.ResponseWriter, r *http.Request) {
 	role := r.Header.Get("X-User-Role")
 	slug := r.Header.Get("X-Tenant-Slug")
 	if role != "admin" || (slug != "" && slug != "platform") {
-		writeJSON(w, http.StatusForbidden, map[string]string{"error": "platform admin required"})
+		httperr.WriteError(w, r, httperr.Forbidden("platform admin required"))
 		return
 	}
 
@@ -49,7 +51,7 @@ func (h *PlatformFeedback) Tenants(w http.ResponseWriter, r *http.Request) {
 		 ORDER BY hs.overall_score ASC`, // worst first
 	)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	defer rows.Close()
@@ -62,7 +64,9 @@ func (h *PlatformFeedback) Tenants(w http.ResponseWriter, r *http.Request) {
 		var period string
 		var activeAlerts int
 
-		rows.Scan(&tenantID, &name, &overall, &ai, &errors, &perf, &security, &usage, &nps, &period, &activeAlerts)
+		if err := rows.Scan(&tenantID, &name, &overall, &ai, &errors, &perf, &security, &usage, &nps, &period, &activeAlerts); err != nil {
+			continue
+		}
 		tenants = append(tenants, map[string]any{
 			"tenant_id":         tenantID,
 			"tenant_name":       name,
@@ -89,7 +93,7 @@ func (h *PlatformFeedback) Alerts(w http.ResponseWriter, r *http.Request) {
 	role := r.Header.Get("X-User-Role")
 	slug := r.Header.Get("X-Tenant-Slug")
 	if role != "admin" || (slug != "" && slug != "platform") {
-		writeJSON(w, http.StatusForbidden, map[string]string{"error": "platform admin required"})
+		httperr.WriteError(w, r, httperr.Forbidden("platform admin required"))
 		return
 	}
 
@@ -110,7 +114,7 @@ func (h *PlatformFeedback) Alerts(w http.ResponseWriter, r *http.Request) {
 		 ORDER BY a.created_at DESC LIMIT $2`, status, limit,
 	)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	defer rows.Close()
@@ -122,8 +126,10 @@ func (h *PlatformFeedback) Alerts(w http.ResponseWriter, r *http.Request) {
 		var createdAt string
 		var resolvedAt *string
 
-		rows.Scan(&id, &tenantID, &tenantName, &alertType, &severity, &module,
-			&title, &desc, &threshold, &currentVal, &st, &createdAt, &resolvedAt)
+		if err := rows.Scan(&id, &tenantID, &tenantName, &alertType, &severity, &module,
+			&title, &desc, &threshold, &currentVal, &st, &createdAt, &resolvedAt); err != nil {
+			continue
+		}
 		alerts = append(alerts, map[string]any{
 			"id": id, "tenant_id": tenantID, "tenant_name": tenantName,
 			"alert_type": alertType, "severity": severity, "module": module,
@@ -139,7 +145,7 @@ func (h *PlatformFeedback) Alerts(w http.ResponseWriter, r *http.Request) {
 
 	// Also return summary counts
 	var activeCount, warningCount, criticalCount int
-	h.platformDB.QueryRow(ctx,
+	_ = h.platformDB.QueryRow(ctx,
 		`SELECT COUNT(*),
 			COUNT(*) FILTER (WHERE severity = 'warning'),
 			COUNT(*) FILTER (WHERE severity = 'critical')
@@ -162,7 +168,7 @@ func (h *PlatformFeedback) Quality(w http.ResponseWriter, r *http.Request) {
 	role := r.Header.Get("X-User-Role")
 	slug := r.Header.Get("X-Tenant-Slug")
 	if role != "admin" || (slug != "" && slug != "platform") {
-		writeJSON(w, http.StatusForbidden, map[string]string{"error": "platform admin required"})
+		httperr.WriteError(w, r, httperr.Forbidden("platform admin required"))
 		return
 	}
 
@@ -181,7 +187,7 @@ func (h *PlatformFeedback) Quality(w http.ResponseWriter, r *http.Request) {
 		 ORDER BY SUM(fm.negative) DESC`, hours,
 	)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 	defer rows.Close()
@@ -199,7 +205,9 @@ func (h *PlatformFeedback) Quality(w http.ResponseWriter, r *http.Request) {
 	var items []qualityRow
 	for rows.Next() {
 		var qr qualityRow
-		rows.Scan(&qr.TenantID, &qr.TenantName, &qr.Module, &qr.Total, &qr.Positive, &qr.Negative, &qr.AvgScore)
+		if err := rows.Scan(&qr.TenantID, &qr.TenantName, &qr.Module, &qr.Total, &qr.Positive, &qr.Negative, &qr.AvgScore); err != nil {
+			continue
+		}
 		items = append(items, qr)
 	}
 
@@ -210,5 +218,5 @@ func (h *PlatformFeedback) Quality(w http.ResponseWriter, r *http.Request) {
 	out, _ := json.Marshal(items)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(out)
+	_, _ = w.Write(out)
 }

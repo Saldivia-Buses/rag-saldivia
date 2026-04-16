@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="delete" limit="0" >
+	<title>Eliminacion de  Movimientos de Valores</title>
+	<obs></obs>
+	<form>
+		<table id="CAR_MOVIMIENTOS">
+		    <field id="cajmovimiento_id"    esClave="true"  id_temp="id_cajmovimiento"    />
+		</table>
+	</form>
+</histrix>  
+
+

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<abm tipo="ayuda">
+	<titulo>CUENTAS</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="CCTCUENT" label="Ayuda de Cuenta">
+			<campo id="ctacod" clave="true">
+				<label>Cuenta</label>
+				<help>Codigo de Cuenta </help>
+			</campo>
+			<campo id="ctanom">
+				<label>Nombre</label>
+				<help>Nombre de Cuenta </help>
+			</campo>
+			<campo id="baja" noshow="true">
+					<label>baja</label>						
+					<condicion operador="!=">1</condicion>
+			</campo>				
+			<campo id="siscod" oculto="true">
+				<label>Codigo Sistema</label>
+			</campo>			
+			<orden>
+				<campo id="CCTCUENT.ctanom" ></campo>
+			</orden>			
+		</tabla>
+	</consulta>
+</abm>

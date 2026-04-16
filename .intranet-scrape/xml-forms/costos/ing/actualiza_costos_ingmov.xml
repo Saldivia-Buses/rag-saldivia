@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert">
+	<title>STKINSPR</title>
+	<obs/>
+	<form >
+		<table id="STKINSPR"  label="CREO COSTO" idCampoCond="grabar" >
+			<field esclave="true" id="siscod" id_temp="siscod">
+				<valor>01</valor>
+			</field>
+			<field esclave="true" id="artcod" id_temp="artcod"></field>
+			<field esclave="true" id="ctacod" id_temp="ctacod"></field>
+			<field id="artcos" id_temp="nuevocosto"></field>
+			<field id="fecult" id_cab="fecha"></field>
+			<field id="movfec" id_cab="fecha"></field>		
+			<field id="artpor__1" id_cab="artpor__1"/>
+			<field id="artpor__2" id_cab="artpor__2"/>				
+
+		</table>
+	</form>
+</histrix>
+

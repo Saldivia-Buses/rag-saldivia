@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" >
+    <title>Forecast Articulos</title>
+    <obs></obs>
+    <form >
+        <table id="STK_MOVIMIENTOS" label="Forecast">
+
+			
+            <fieldGroup noZero="true">
+                <field id="stkarticulo_id" esClave="true" noshow="true" oculto="true">
+                </field>
+
+                <field id="total" >
+                 
+                    <expresion>round(sum(STK_MOVIMIENTOS.cantidad ))</expresion>
+
+                    <helper type="link" xml="mrp_ordenes_cumplidas_qry.xml" dir="/mrp/qry">
+                        <parameter source="mes" target="mes" />
+                        <parameter source="year" target="anio" />
+                        <parameter source="id_stkarticulo" target="stkarticulo_id" />
+                    </helper>
+                </field>
+                
+                <field id="forecast" local="true" style="color:#444;" >
+                    <tipo>integer</tipo>
+                </field>
+                
+                <field id="year" noshow="true" oculto="true">
+                    <expresion having="false">year(fecha_movimiento)</expresion>
+
+                </field>
+                <field id="mes" noshow="true" oculto="true">
+                    <expresion having="false">month(fecha_movimiento)</expresion>
+
+                </field>		   
+            </fieldGroup>
+			
+        </table>
+        <join >
+            <table id="STK_CONCEPTOS">
+                <field id="id_stkconcepto">
+                    <condicion operador="=">stkconcepto_id</condicion>
+                </field>
+                <field id="tipo_concepto">
+                    <condicion operador="=">0</condicion>
+                </field>
+                <field id="produccion_concepto">
+                    <condicion operador="=">1</condicion>
+                </field>
+
+            </table>
+        </join>
+			
+    </form>
+</histrix>

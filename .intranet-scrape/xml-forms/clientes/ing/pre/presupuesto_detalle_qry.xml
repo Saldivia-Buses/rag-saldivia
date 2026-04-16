@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" path="/fotos/" showCantidad="false" _noForm="true">
+  <title>Detalle Presupuesto</title>
+  <obs/>
+  <form>
+    <table id="REG_DETALLES" label="Nota de Pedido">
+			
+			<fieldGroup colstyle="vertical-align:middle; text-align:center">
+				
+				<field id="id_regdetalle" noshow="true" />
+
+				<field id="precio_unit_final" noshow="true" local="true" />
+
+				<field id="regmovim_id" noshow="true"/>
+
+				<field id="_ORDEN" local="true" noshow="true"/>
+
+				<field id="venta_final" local="true" noshow="true" />
+
+				<field id="codigo_detalle">
+					<label>Cod.</label>
+				</field>
+
+				<field id="descripcion_detalle"  modpos="nobr">
+					<label>Descripción</label>
+				</field>
+				
+				<field id="cantidad_detalle" modpos="nobr" >
+					<label>Unidades</label>
+					<tipo>numeric</tipo>
+				</field>
+
+				<!-- Precio de Venta final por unidad que es lo que le interesa al vendedor -->
+				<field id="precio_venta"  modpos="nobr">
+					<label>P.Unitario</label>
+				</field>
+				
+				<field id="neto_detalle" suma="true"  modpos="nobr">
+					<label>Subtotal</label>
+					<tipo>decimal</tipo>
+					<if exp="true">
+						<true>round((precio_venta + 0 ) * (cantidad_detalle + 0),2)</true>
+						<false>0</false>
+					</if>					
+				</field>
+				
+				<field id="alicuota_iva"  modpos="nobr">
+					<label>Alicuota</label>
+					<tipo>decimal</tipo>
+					<expression>alicuota_iva</expression>
+				</field>
+				
+				<field id="iva_detalle" suma="true"  modpos="nobr">
+					<label>IVA</label>
+					<valor default="true">0.00</valor>
+					<tipo>decimal</tipo>
+					<if exp="true">
+						<true>round((neto_detalle + 0 ) * (alicuota_iva + 0) / 100,2)</true>
+						<false>0</false>
+					</if>
+				</field>			
+
+				<field id="total_detalle" suma="true" deshabilitado="true" modpos="nobr">
+					<label>Total + IVA</label>
+					<tipo>decimal</tipo>
+					<detalle>importe_movimiento</detalle>
+					<if exp="true">
+						<true>neto_detalle + iva_detalle</true>
+						<false>0</false>
+					</if>
+				</field>
+								
+			</fieldGroup>
+		</table>
+  </form>
+</histrix>

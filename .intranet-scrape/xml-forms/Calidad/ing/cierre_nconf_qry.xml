@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="consulta" borra="false" paginar="100">
+    <title>Análisis de No Conformidad</title>
+    <obs></obs>
+    <form  detalle="cierre_nconf_ficha.xml">
+        <table id="CAL_NOCONFORMIDADES" >
+            <title>Estados</title>
+            <filters>
+                <field id="estadonconf_id">
+                    <label>Estado</label>
+                    <help>Estado de la No conformidad</help>
+                    <operador>=</operador>
+                </field>
+                <field id="origennconf_id">
+                    <label>Origen</label>
+                    <help>Origen de la No conformidad</help>
+                    <operador>=</operador>
+                </field>
+
+                <field id="rhseccion_id">
+                    <label>Sección</label>
+                    <help>Sección de la No conformidad</help>
+                    <operador>=</operador>
+                </field>
+                <field id="fecha_nconf" >
+                    <label >Desde Fecha</label>
+                    <help>Fecha de No conformidad</help>
+                    <operador>&gt;=</operador>
+                </field>
+                <field id="fecha_nconf" >
+                    <label modpos="nobr">Hasta Fecha</label>
+                    <help>Fecha de No conformidad</help>
+                    <operador>&lt;=</operador>
+                </field>
+            </filters>
+            <fieldGroup deshabilitado="true" >
+                <field id="id_noconformidad" >
+                    <label modpos="nobr">Número</label>
+                    <help>Número de No conformidad</help>
+                    <detalle>id_noconformidad</detalle>
+                </field>
+                <field id="estadonconf_id">
+                    <helper xml="calestadosnconf_crud.xml" dir="/calidad/man" type="combo" empty="true">
+                        <field id="tipo_estadonconf">
+                            <condicion operador="=">0</condicion>
+                        </field>
+                    </helper>
+                    <label>Estado</label>
+                    <help>Estado de la No conformidad</help>
+                </field>
+
+                <field id="tipo_estadonconf" noshow="true">
+                    <expression>select tipo_estadonconf from CAL_ESTADOS_NCONF where id_estadonconf = estadonconf_id</expression>
+                    <condicion operador="=">0</condicion>
+                </field>
+
+				<field id="regcuenta_id" _noshow="true" deshabilitado="false">
+					<label>Cuenta</label>
+					<helper type="external" xml="regcuenta_autocomplete_qry.xml" dir="/ayudas"/>
+				</field>
+				<field id="origennconf_id">
+                    <helper xml="calorigennconf_qry.xml" type="combo" dir="/ayudas" empty="true"/>
+                    <label>Origen</label>
+                    <help>Origen de la No conformidad</help>
+                </field>
+
+                <field id="rhseccion_id">
+                    <helper xml="rhseccion_qry.xml" type="combo" dir="/ayudas" empty="true" />
+                    <label modpos="nobr">Sección</label>
+                    <help>Sección de la No conformidad</help>
+                </field>
+				<field id="stkarticulo_id" deshabilitado="true">
+			        <label >Artículo</label>
+				</field>
+				<field id="stkarticulo_nombre" local="true" _autocompletar="true" valid="true" deshabilitado="false">
+					<label>Nombre Artículo</label>
+                    <expression>select nombre_articulo from STK_ARTICULOS where id_stkarticulo = stkarticulo_id</expression>
+					<!-- <helper type="combo" xml="stkarticulo_autocomplete_qry.xml" dir="/ayudas"/>  -->
+			        <size>60</size>
+				</field>
+                <field id="fecha_nconf" >
+                    <label >Fecha</label>
+                    <help>Fecha de No conformidad</help>
+                    <valor>today</valor>
+                </field>
+
+                <field id="descripcion_nconf" cellMaxLength="30">
+                    <label colspan="3">Descripción</label>
+                    <help>Descripción de la no conformidad</help>
+                    <size>200</size>
+                </field>
+                <field id="contencion_nconf" cellMaxLength="30">
+                    <label colspan="3">Acción de contención</label>
+                    <help>Acción de Contencion ante la no conformidad</help>
+                    <size>200</size>
+                </field>
+			</fieldGroup>
+        </table>
+    </form>
+</histrix>

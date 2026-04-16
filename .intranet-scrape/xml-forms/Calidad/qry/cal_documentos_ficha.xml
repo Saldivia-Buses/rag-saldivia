@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="ficha" autoprint="true" preFetch="true">
+    <title>ISO-9001</title>
+    <obs>Documentación</obs>
+    <form>
+        <table id="CAL_DOCUMENTOS" label="Documentación">
+
+            <fieldGroup>
+                <field id="marcacopnocontr" local="true" PDFbold="true" PDFitalic="true" PDFrotate="-8">
+                    <expression>'COPIA NO \n\nCONTROLADA'</expression>
+                    <label posx="35" posy="260" PDFcolor="#FF2222" PDFsize="25" size="400" PDFrestorePosition="true"/>
+                    <size>150</size>
+                </field>
+            </fieldGroup>
+
+            <fieldGroup  PDFsize="10">
+                <field id="id_documento" oculto="true" />
+
+                <field id="tipodocumento_id">
+                    <helper xml="cal_tipo_documento.xml" type="combo" dir="/calidad/ing" />
+                    <label posy="17" posx="5">Tipo</label>
+                    <help>Tipoo de Documento</help>
+                </field>
+
+                <field id="vigencia_documento">
+                    <label posx="90">Vigencia</label>
+                    <help>Vigencia Documento</help>
+                </field>
+
+                <field id="codigo_documento" PDFbold="true" PDFsize="20">
+                    <label posx="150" ></label>
+                    <help>Codigo</help>
+                </field>
+
+                <field id="revision_documento" PDFbold="true" PDFsize="20">
+                    <label posx="170" ></label>
+                    <help>Revision</help>
+                </field>
+
+                <field id="nombre_documento" PDFbold="true">
+                    <label posy="+1" posx="5">Nombre</label>
+                    <help>Nombre</help>
+                </field>
+
+                <field id="emisor_documento">
+                    <label posy="+1" posx="5">Emisor</label>
+                    <help>emisor de Documento</help>
+                    <size>60</size>
+                    <helper type="combo" id="HTXUSERS" empty="true">
+                        <field id="Id_usuario" />
+                        <field id="nombre">
+                            <expression>concat(Nombre, ' ', apellido)</expression>
+                        </field>
+                        <field id="baja">
+                            <condicion operador="=">0</condicion>
+                        </field>
+                    </helper>
+                </field>
+
+                <field id="aprueba_documento">
+                    <label posx="90">Aprobado por</label>
+                    <help>Aprobación del Documento</help>
+                    <helper type="combo" id="HTXUSERS" empty="true">
+                        <field id="Id_usuario" />
+                        <field id="nombre">
+                            <expression>concat(Nombre, ' ', apellido)</expression>
+                        </field>
+                        <field id="baja">
+                            <condicion operador="=">0</condicion>
+                        </field>
+                    </helper>
+                </field>
+
+                <field id="secciones" local="true">
+                    <label posy="+1" posx="5">Secciones</label>
+                    <help>Secciones donde se publica</help>
+                    <expression>SELECT GROUP_CONCAT(" " , s.nombre)  
+                        FROM CAL_DOCUMENTOS_SECCION cds LEFT JOIN SECCION s ON cds.seccion_id = s.id_seccion 
+                        WHERE cds.documento_id = id_documento</expression>
+                </field>
+
+                <field id="posiciones" local="true">
+                    <label posy="+1" posx="5">Posiciones</label>
+                    <help>Posiciones donde se publica</help>
+                    <expression>SELECT GROUP_CONCAT(" " , s.nombre)
+                        FROM CAL_DOCUMENTOS_POSICION cds LEFT JOIN POSICIONESFAB s ON cds.posicionfab_id = s.id_posicionfab
+                        WHERE cds.documento_id = id_documento</expression>
+                </field>
+
+                <field id="epp" local="true">
+                    <label posy="+1" posx="5">E.P.Personal</label>
+                    <help>Elementos de proteccion personal</help>
+                    <expression>SELECT GROUP_CONCAT(" " , epp.nombre_elemento)
+                        FROM CAL_DOCUMENTOS_EPP cde LEFT JOIN CAL_ELEMENTO_PROT_PERSO epp ON cde.elemento_proteccion_id  = epp.id_elemento_proteccion
+                        WHERE cde.documento_id = id_documento</expression>
+                </field>
+
+
+                <field id="separador" local="true" style="height:1px;" noshow="true" colspan="8">
+                    <label posx="5" posy="+0" />
+                </field>
+
+                <field id="pasos_documento" local="true" PDFwidth="200" PDFlineas="true">
+                    <label posx="5" posy="+2" />
+                    <helper type="object" xml="cal_documentos_edicion_pasos_qry.xml" dir="/calidad/qry" >
+                        <parameter source="id_documento" target="documento_id" />
+<!--                        <parameter source="tipodocumento_id" target="tipodocumento_id" /> -->
+
+
+                    </helper>
+                    <attribute id="print">imprime_edicion_pasos</attribute>
+                </field>
+
+                <field id="pasos_alerta_documento" local="true" PDFwidth="200" PDFlineas="true">
+                    <label posx="5" posy="+2" />
+                    <helper type="object" xml="cal_documentos_pasos_alertacalidad.xml" dir="/calidad/qry" >
+                        <parameter source="id_documento" target="documento_id" />
+<!--                        <parameter source="tipodocumento_id" target="tipodocumento_id" /> -->
+                    </helper>
+                    <attribute id="print">imprime_pasos_alert</attribute>
+                </field>
+            </fieldGroup>
+
+            <field id="imprime_edicion_pasos" noshow="true" print="false">
+                <expression>case when tipodocumento_id != 11 and tipodocumento_id != 10  then 'true' else 'false' end</expression>
+            </field>
+
+            <field id="imprime_pasos_alert" noshow="true" print="false">
+                <expression>case when tipodocumento_id = 11 or tipodocumento_id = 10 then 'true' else 'false' end</expression>
+            </field>
+
+        </table>
+    </form>
+</histrix>

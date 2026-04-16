@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta">
+	<title>Imputacion de Orden de Pago</title>
+	<obs></obs>
+	<form >
+		<table id="CAJCOMPR" label="Imputacion de Orden de Pago">
+			
+			<field id="siscod" oculto="true">
+				<label>Codigo Sistema.</label>
+				<help>
+				</help>
+			</field>
+			<field id="ctacod"	 oculto="true" />
+  		    <field id="condes" tabla="CCTCONCE" >
+  	              <label>Tipo</label>
+           	      <help>Tipo de Comprobante</help>
+				  <tipo>varchar</tipo>
+            </field>			
+			<field id="nrocom" oculto="true">
+				<label>Nro.</label>
+				<help>Numero de Movimiento </help>
+				<format>%010d</format>
+				
+			</field>
+			
+			<field id="movnpvE">
+				<expression>movnpv</expression>>
+				<label>NPV</label>
+				<help>Punto de Venta</help>
+				<format>%04d</format>
+				</field>
+			<field id="movnroE">
+				<expression>movnro</expression>>
+				
+				<label>Nro. Movimiento . </label>
+				<help>Numero de Movimiento </help>
+				<tipo>integer</tipo>
+				<format>%010d</format>
+				</field>
+			<field id="movfecE">
+				<expression>movfec</expression>>
+				<label>Fecha </label>
+				<help>Fecha del Movimiento</help>
+				<tipo>date</tipo> </field>
+			<field id="movvto">
+				<label>Vto</label>
+				<help>Fecha de Vto</help>
+			</field>
+			
+			<field id="movimp">
+				<label>Importe</label>
+			</field>
+			<field id="movsal" suma="true">
+				<label>Saldo</label>
+			</field>
+			
+			<!--                  <field id="cajref">
+			<label>Referencia           . </label>
+			<help>Referencia Adicional. </help>
+			</field>
+			-->
+			<order>
+				<field id="movfec"></field>
+			</order>
+			
+		</table>
+		<join tipo="left">
+			<table id="CCTCONCE">
+				<field id="siscod" oculto="true">
+					<label>cctcuent.siscod</label>
+					<condicion operador="=">CAJCOMPR.siscod</condicion>
+				</field>
+				
+				<field id="concod" oculto="true">
+					<condicion operador="=">CAJCOMPR.concod</condicion>
+				</field>
+			
+			</table>
+		</join>
+		
+	</form>
+</histrix>

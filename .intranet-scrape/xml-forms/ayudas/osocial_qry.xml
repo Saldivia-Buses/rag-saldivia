@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Obra Social</title>
+  <obs></obs>
+  <consulta>
+    <table id="GEN_OBRASSOCIALES" label="O.Social">
+      <field id="id_osocial" autoinc="false" noshow="true">
+      </field>
+      <field id="nombre_osocial">
+        <label>O.Social</label>
+        <help>O.Social</help>
+      </field>
+    </table>
+  </consulta>
+</histrix>  
+

@@ -1,0 +1,281 @@
+name: AI Review
+
+on:
+  pull_request:
+    branches: [2.0.x, 2.0.5, main]
+    types: [opened, synchronize]
+
+concurrency:
+  group: ai-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+# ══════════════════════════════════════════════════════════════════════════
+# 3 parallel AI review passes with structured JSON output and jq scoring.
+#
+# Security decisions applied:
+#   DS1 — All jobs on ubuntu-latest (GitHub-hosted), never self-hosted
+#   DS6 — AI output never interpolated via ${{ }} in shell; written to file
+#         first, parsed with jq. Anti-injection instruction in every prompt.
+#
+# Prompts live in .claude/review-prompts/ (self-contained, no MCP deps).
+# ══════════════════════════════════════════════════════════════════════════
+
+jobs:
+  quality-review:
+    name: "AI: Code Quality"
+    if: ${{ !startsWith(github.head_ref, 'bugfix/') && !startsWith(github.head_ref, 'fix/') && !startsWith(github.head_ref, 'hotfix/') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with: { fetch-depth: 0 }
+
+      - name: Read review prompt
+        id: prompt
+        run: |
+          # Read prompt from repo file — this is checked-in content, not AI output
+          {
+            echo 'REVIEW_PROMPT<<PROMPT_DELIM_7f3a'
+            cat .claude/review-prompts/quality.md
+            echo ''
+            echo 'PROMPT_DELIM_7f3a'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Claude Quality Review
+        id: review
+        uses: anthropics/claude-code-action@1c8b699d43e9bfed42b48ef15da85d89bab70960 # v1.0.94
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: ${{ steps.prompt.outputs.REVIEW_PROMPT }}
+          claude_args: "--model claude-opus-4-6"
+          use_sticky_comment: "false"
+
+      - name: Score findings
+        if: always() && steps.review.outcome == 'success'
+        env:
+          EXEC_FILE: ${{ steps.review.outputs.execution_file }}
+        run: |
+          # DS6: Read AI output from file, never interpolate in shell
+          if [ ! -f "$EXEC_FILE" ]; then
+            echo "::warning::No execution file found — skipping scoring"
+            exit 0
+          fi
+
+          # Extract JSON: try direct parse, then strip code fences, then regex
+          if jq -e '.findings' "$EXEC_FILE" > /dev/null 2>&1; then
+            cp "$EXEC_FILE" /tmp/review-output.json
+          elif sed -n '/^```\(json\)\?$/,/^```$/{ /^```/d; p }' "$EXEC_FILE" | jq -e '.findings' > /dev/null 2>&1; then
+            sed -n '/^```\(json\)\?$/,/^```$/{ /^```/d; p }' "$EXEC_FILE" > /tmp/review-output.json
+          elif python3 -c "
+          import json, re, sys
+          text = open(sys.argv[1]).read()
+          m = re.search(r'\{.*\}', text, re.DOTALL)
+          if m:
+              obj = json.loads(m.group())
+              json.dump(obj, open('/tmp/review-output.json','w'))
+          else:
+              sys.exit(1)
+          " "$EXEC_FILE" 2>/dev/null; then
+            true
+          else
+            echo "::error::Could not parse review output as JSON — failing closed"
+            exit 1
+          fi
+
+          # Count blocking findings — fail-closed on parse error
+          if ! BLOCKERS=$(jq '[.findings[] | select(.severity == "critical" or .severity == "high")] | length' /tmp/review-output.json); then
+            echo "::error::jq scoring failed — treating as blocking"
+            exit 1
+          fi
+
+          if [ "$BLOCKERS" -gt 0 ]; then
+            echo "::error::Quality review found $BLOCKERS blocking issue(s) (critical/high)"
+            jq '.findings[] | select(.severity == "critical" or .severity == "high")' /tmp/review-output.json
+            exit 1
+          fi
+
+          echo "Quality review passed — no blocking findings"
+
+  security-review:
+    name: "AI: Security"
+    if: ${{ !startsWith(github.head_ref, 'bugfix/') && !startsWith(github.head_ref, 'fix/') && !startsWith(github.head_ref, 'hotfix/') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with: { fetch-depth: 0 }
+
+      - name: Read review prompt
+        id: prompt
+        run: |
+          {
+            echo 'REVIEW_PROMPT<<PROMPT_DELIM_9b2c'
+            cat .claude/review-prompts/security.md
+            echo ''
+            echo 'PROMPT_DELIM_9b2c'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Claude Security Review
+        id: review
+        uses: anthropics/claude-code-action@1c8b699d43e9bfed42b48ef15da85d89bab70960 # v1.0.94
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: ${{ steps.prompt.outputs.REVIEW_PROMPT }}
+          claude_args: "--model claude-opus-4-6"
+          use_sticky_comment: "false"
+
+      - name: Score findings
+        if: always() && steps.review.outcome == 'success'
+        env:
+          EXEC_FILE: ${{ steps.review.outputs.execution_file }}
+        run: |
+          if [ ! -f "$EXEC_FILE" ]; then
+            echo "::warning::No execution file found — skipping scoring"
+            exit 0
+          fi
+
+          if jq -e '.findings' "$EXEC_FILE" > /dev/null 2>&1; then
+            cp "$EXEC_FILE" /tmp/review-output.json
+          elif sed -n '/^```\(json\)\?$/,/^```$/{ /^```/d; p }' "$EXEC_FILE" | jq -e '.findings' > /dev/null 2>&1; then
+            sed -n '/^```\(json\)\?$/,/^```$/{ /^```/d; p }' "$EXEC_FILE" > /tmp/review-output.json
+          elif python3 -c "
+          import json, re, sys
+          text = open(sys.argv[1]).read()
+          m = re.search(r'\{.*\}', text, re.DOTALL)
+          if m:
+              obj = json.loads(m.group())
+              json.dump(obj, open('/tmp/review-output.json','w'))
+          else:
+              sys.exit(1)
+          " "$EXEC_FILE" 2>/dev/null; then
+            true
+          else
+            echo "::error::Could not parse review output as JSON — failing closed"
+            exit 1
+          fi
+
+          if ! BLOCKERS=$(jq '[.findings[] | select(.severity == "critical" or .severity == "high")] | length' /tmp/review-output.json); then
+            echo "::error::jq scoring failed — treating as blocking"
+            exit 1
+          fi
+
+          if [ "$BLOCKERS" -gt 0 ]; then
+            echo "::error::Security review found $BLOCKERS blocking issue(s) (critical/high)"
+            jq '.findings[] | select(.severity == "critical" or .severity == "high")' /tmp/review-output.json
+            exit 1
+          fi
+
+          echo "Security review passed — no blocking findings"
+
+  dependency-review:
+    name: "AI: Dependencies"
+    if: ${{ !startsWith(github.head_ref, 'bugfix/') && !startsWith(github.head_ref, 'fix/') && !startsWith(github.head_ref, 'hotfix/') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with: { fetch-depth: 0 }
+
+      - name: Read review prompt
+        id: prompt
+        run: |
+          {
+            echo 'REVIEW_PROMPT<<PROMPT_DELIM_4e1d'
+            cat .claude/review-prompts/dependencies.md
+            echo ''
+            echo 'PROMPT_DELIM_4e1d'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Claude Dependency Review
+        id: review
+        uses: anthropics/claude-code-action@1c8b699d43e9bfed42b48ef15da85d89bab70960 # v1.0.94
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: ${{ steps.prompt.outputs.REVIEW_PROMPT }}
+          # Sonnet is sufficient for dependency review and cheaper
+          claude_args: "--model claude-sonnet-4-6"
+          use_sticky_comment: "false"
+
+      - name: Score findings
+        if: always() && steps.review.outcome == 'success'
+        env:
+          EXEC_FILE: ${{ steps.review.outputs.execution_file }}
+        run: |
+          if [ ! -f "$EXEC_FILE" ]; then
+            echo "::warning::No execution file found — skipping scoring"
+            exit 0
+          fi
+
+          if jq -e '.findings' "$EXEC_FILE" > /dev/null 2>&1; then
+            cp "$EXEC_FILE" /tmp/review-output.json
+          elif sed -n '/^```\(json\)\?$/,/^```$/{ /^```/d; p }' "$EXEC_FILE" | jq -e '.findings' > /dev/null 2>&1; then
+            sed -n '/^```\(json\)\?$/,/^```$/{ /^```/d; p }' "$EXEC_FILE" > /tmp/review-output.json
+          elif python3 -c "
+          import json, re, sys
+          text = open(sys.argv[1]).read()
+          m = re.search(r'\{.*\}', text, re.DOTALL)
+          if m:
+              obj = json.loads(m.group())
+              json.dump(obj, open('/tmp/review-output.json','w'))
+          else:
+              sys.exit(1)
+          " "$EXEC_FILE" 2>/dev/null; then
+            true
+          else
+            echo "::error::Could not parse review output as JSON — failing closed"
+            exit 1
+          fi
+
+          if ! BLOCKERS=$(jq '[.findings[] | select(.severity == "critical" or .severity == "high")] | length' /tmp/review-output.json); then
+            echo "::error::jq scoring failed — treating as blocking"
+            exit 1
+          fi
+
+          if [ "$BLOCKERS" -gt 0 ]; then
+            echo "::error::Dependency review found $BLOCKERS blocking issue(s) (critical/high)"
+            jq '.findings[] | select(.severity == "critical" or .severity == "high")' /tmp/review-output.json
+            exit 1
+          fi
+
+          echo "Dependency review passed — no blocking findings"
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # Auto-approve: if all 3 review passes succeed, approve the PR
+  # so it satisfies branch protection "required reviewers" rule.
+  # ══════════════════════════════════════════════════════════════════════════
+  auto-approve:
+    name: "AI: Approve PR"
+    runs-on: ubuntu-latest
+    needs: [quality-review, security-review, dependency-review]
+    # Skip entirely on bugfix/fix/hotfix — Enzo merges those manually.
+    # GITHUB_TOKEN cannot approve PRs (org restriction), so we only run on
+    # feature branches where all 3 AI reviews ran and we post a comment instead.
+    if: ${{ !startsWith(github.head_ref, 'bugfix/') && !startsWith(github.head_ref, 'fix/') && !startsWith(github.head_ref, 'hotfix/') }}
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Check review results
+        run: |
+          if [ "${{ needs.quality-review.result }}" != "success" ] || \
+             [ "${{ needs.security-review.result }}" != "success" ] || \
+             [ "${{ needs.dependency-review.result }}" != "success" ]; then
+            echo "::error::AI review failed — cannot approve"
+            exit 1
+          fi
+
+      - name: Post approval comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --repo ${{ github.repository }} \
+            --body "All 3 AI review passes (quality, security, dependencies) passed. Ready to merge."

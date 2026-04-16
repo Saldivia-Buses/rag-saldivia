@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="consulta">
+	<titulo>Licencias</titulo>
+	<obs/>
+	<consulta>
+		<tabla id="FRANCOS_PER" label="Licencias">
+			<campo id="legajo" >
+				<label>Legajo</label>
+			</campo>
+			<campo id="apellido" tabla="PERSONAL">
+				<label>Apellido</label>
+				<tipo>varchar</tipo>
+			</campo>
+			<campo id="tarjeta" tabla="PERSONAL">
+				<label>tarjeta</label>
+				<tipo>varchar</tipo>
+			</campo>			
+			<campo id="nombre">
+				<expresion>PERSONAL.nombre</expresion>
+				<label>nombre</label>
+				
+				<tipo>varchar</tipo>
+			</campo>
+			<campo id="fechainicio">
+				<label>Fecha</label>
+				<help>Fecha</help>
+			</campo>
+<!--			<campo id="fechafin">
+				<label>Hasta</label>
+				<help>Hasta Fecha</help>
+			</campo> -->
+			<campo id="horaslic">
+				<expresion>horas * -1</expresion>
+				<label>No Trabajadas</label>
+				<help>Cantidad de Horas</help>
+			</campo>
+
+			<campo id="referencia">
+				<expresion>FRANCOS_CAT.nombre</expresion>
+				<tipo>varchar</tipo>
+			</campo>
+			<!--
+			<filtros>
+				<campo id="IdSindicato">
+					<label>sindicato</label>
+					<tabla_ex id="SINDICATO">
+						<campo id="IdSindicato"/>
+						<campo id="Nombre"/>
+					</tabla_ex>
+					<help>Sindicato</help>
+					<operador>=</operador>
+					<valor>1</valor>
+				<actualiza>
+
+					<campo destino="IdSindicato" id="Id_area"/>
+					<campo destino="IdSindicato" id="IdCateg"/>					
+
+				</actualiza>
+				</campo>
+				<campo id="Id_area">
+					<label>Area</label>
+					<tabla_ex id="AREASSIND">
+						<campo id="Id_area"/>
+						<campo id="descripcion"/>
+						<campo id="IdSindicato">
+						
+						</campo>
+					</tabla_ex>
+
+					<operador>=</operador>
+				<actualiza>
+					<campo destino="Id_area" id="IdCateg"/>
+				</actualiza>				
+				</campo>
+			<campo id="IdCateg" >
+				<label>Categoria</label>
+				<tabla_ex id="CATPERSONAL">
+					<campo id="IdCateg"/>
+					<campo id="descripcion"/>
+						<campo id="IdSindicato" />	
+						<campo id="Id_area"/>										
+				</tabla_ex>
+			</campo> 				
+				<campo id="IdConvenio">
+					<label>Convenio</label>
+					<tabla_ex id="CONVENIOS">
+				
+						<campo id="IdConvenio"/>
+						<campo id="Nombre"/>
+					</tabla_ex>
+					<operador>=</operador>					
+					<valor>1</valor>
+				</campo>  
+			</filtros> -->
+		</tabla>
+		<join>
+			<tabla id="FRANCOS_CAT">
+				<campo id="idfranco">
+					<condicion operador="=">FRANCOS_PER.idfranco</condicion>
+				</campo>
+			</tabla>
+		</join>
+		<join tipo="left">
+			<tabla id="PERSONAL">
+				<campo id="legajo">
+					<condicion operador="=">FRANCOS_PER.legajo</condicion>
+				</campo>
+				
+			</tabla>
+		</join>
+	</consulta>
+</abm>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="abm">
+       <title>JORNADA</title>
+        <obs></obs>
+               <form>
+                  <table id="JORNADA" label="JORNADAS">
+
+                  <filters>
+                    <field id="idJornada">
+                      <label>Jornada</label>
+                      <operador>=</operador>
+                    </field>
+                  </filters>
+
+                  <field id="idJornada">
+                      <label>Jornada Nro</label>
+                      <help>Código de Jornada</help>
+                      <helper type="combo" id="JORNADAS">
+                        <field id="idJornada"></field>
+                        <field id="nombre"></field>
+                      </helper>
+                  </field>
+
+                  <field id="dia">
+                      <label>Día</label>
+                      <help>Día</help>
+                      <options>
+            						<option valor="1">Domingo</option>
+            						<option valor="2">Lunes</option>
+            						<option valor="3">Martes</option>
+            						<option valor="4">Miércoles</option>
+            						<option valor="5">Jueves</option>
+            						<option valor="6">Viernes</option>
+            						<option valor="7">Sábado</option>
+            					</options>
+                  </field>
+<!--                  <field id="siscod" oculto="true">
+                      <label>Codigo Sistema.. </label>
+                      <help> </help>
+                  </field>
+		  -->
+                  <field id="comunes">
+                      <label>Comunes</label>
+                      <help>Comunes</help>
+                  </field>
+                  <field id="extras50">
+                      <label>Extras 50</label>
+                      <help>Extras 50</help>
+                  </field>
+                  <field id="entrada">
+                      <label>Entrada</label>
+                      <help>Entrada</help>
+                  </field>
+                  <field id="salida">
+                      <label>Salida</label>
+                      <help>Salida</help>
+                  </field>					  
+                  </table>
+               </form>
+        </histrix>

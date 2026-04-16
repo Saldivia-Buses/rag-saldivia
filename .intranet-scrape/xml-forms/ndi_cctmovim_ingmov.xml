@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="abm" grabafinal="true">
+       <title>Mov NotaDebito Interna</title>
+        <obs></obs>
+               <form >
+					<table id="CCTMOVIM" label="MOVIMIENTOS">
+						<field id="siscod" id_cab="siscod">
+						</field>
+						<field id="ctacod" id_cab="ctacod">
+						</field>
+						<field id="ctanom" id_cab="ctanom">
+						</field>
+						<field id="movfec" id_cab="fecha">
+						</field>
+						<field id="concod" id_cab="codndi">
+						</field>
+						<field id="movnro" id_cab="nrondi">
+						</field>
+						<!-- CAMBIAR CUANDO SE PASE A MYSQL
+						<field id="movref" id_cab="movref">
+						</field>
+							-->
+						<field id="movvto" id_cab="fecha">
+						</field>
+						<field id="movimp" id_temp="carimp" >
+						</field>
+						<field id="movsal" id_temp="carimp" >
+						</field>
+						<field id="succod" id_cab="succod" >
+						</field>
+						
+					</table>
+               </form>
+        </histrix>

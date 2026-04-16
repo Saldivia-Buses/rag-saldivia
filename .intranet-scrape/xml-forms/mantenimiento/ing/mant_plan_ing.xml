@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CURD
+Tarea: PLAN DE MANTENIMIENTO
+Autor: Lmm
+Fecha: 17/08/11
+*******************************************************************************
+-->
+<histrix tipo="ing" print="false">
+    <title>Mantenimiento</title>
+    <obs></obs>
+    <form>
+        <table id="GEN_CALENDAR" label="Plan de mantenimiento">
+	    <movimientos cabecera="mant_plan_cab.xml">
+		  <relacion id="mant_plan_ins.xml" />
+	    </movimientos>
+    	    <filters>
+        	    <field id="year">
+			<label>año</label>
+    			<operador>=</operador>
+    			<valor eval="true">date('Y')</valor>
+    		    </field>
+    	    
+        	    <field id="fecha">
+	                <label>Desde Fecha</label>
+    		        <help>Fecha de inicio</help>
+	                <tipo>date</tipo>
+	    		<operador>&gt;=</operador>
+                        <valor>today</valor>
+    		    </field>
+
+    	    </filters>
+    	    
+            <field id="year" noshow="true">
+			<label>año</label>
+			<expresion having="false">year(fecha)</expresion>
+    	        </field>
+            <field id="fecha" >
+                <label>Fecha</label>
+                <help>Fecha</help>
+            </field>
+            
+            <field id="id_plan"
+             noshow="true" local="true"/>
+				
+            <field id="equipo_id" noshow="true" local="true">
+            </field>
+            <!--
+	    <field id="semana">
+		<expresion>WEEK(fecha,5) - WEEK(DATE_SUB(fecha, INTERVAL DAYOFMONTH(fecha)-1 DAY),5)+1</expresion>
+		<options> 	
+		    <option valor="1">Semana 1</option>
+		    <option valor="2">Semana 2</option>
+		    <option valor="3">Semana 3</option>
+		    <option valor="4">Semana 4</option>
+		    <option valor="5">Semana 5</option>
+
+		</options>
+    	    </field>			
+    	    -->
+            <field id="dia">
+        	<expresion>weekday(fecha)</expresion>
+        	    <options>
+        		<option valor="0">Lunes</option>
+        		<option valor="1">Martes</option>
+        		<option valor="2">Miercoles</option>
+        		<option valor="3">Jueves</option>
+        		<option valor="4">Viernes</option>
+        		<option valor="5">Sabado</option>
+        		<option valor="6">Domingo</option>
+
+        	    </options>
+            </field>
+            <field id="forzar" refresh="true" local="true">
+        	<label>Marcar</label>
+        	<tipo>check</tipo>
+            </field>
+	    <field id="accion_grabar" local="true" _deshabilitado="true">
+		<if exp="dia == 0 &amp;&amp; 'lun' == '1' || dia == 1 &amp;&amp; 'mar' == '1' || dia == 2 &amp;&amp; 'mie' == '1' || dia == 3 &amp;&amp; 'jue' == '1' || dia == 4 &amp;&amp; 'vie' == '1' || dia == 5 &amp;&amp; 'sab' == '1' || dia == 6 &amp;&amp; 'dom' == '1' || forzar == 1">
+		    <true>accion_id</true>
+		    <false>0</false>
+		</if>
+                <helper type="combo" xml="mant_acciones_crud.xml" dir="/mantenimiento/man/" empty="true"/>
+
+	    </field>                     
+	    <field id="grabar_plan" local="true" noshow="true">
+		<if exp="'accion_grabar' != '0'">
+		    <true>'true'</true>
+		    <false>'false'</false>
+		</if>
+	    </field>                                                 
+	    <field id="color" local="true" clasefila="true" noshow="true">
+		<if exp="dia == 5 || dia == 6">
+		    <true>'grisado'</true>
+		    <false>''</false>
+		</if>
+	    </field>
+            
+
+        </table>
+    </form>
+</histrix>	

@@ -95,7 +95,7 @@ func (s *DocumentService) UploadDocument(ctx context.Context, userID, fileName s
 	}
 
 	// Update storage key to real path
-	s.repo.UpdateDocumentStorageKey(ctx, repository.UpdateDocumentStorageKeyParams{
+	_ = s.repo.UpdateDocumentStorageKey(ctx, repository.UpdateDocumentStorageKeyParams{
 		StorageKey: storageKey,
 		ID:         doc.ID,
 	})
@@ -112,9 +112,10 @@ func (s *DocumentService) UploadDocument(ctx context.Context, userID, fileName s
 	payload, _ := json.Marshal(job)
 	// B4: tenant already validated in constructor, safe for subject
 	subject := fmt.Sprintf("tenant.%s.extractor.job", s.tenant)
+	//nolint:forbidigo // Plan 26 Fase 3 migrates ingest publishes to outbox.PublishTx.
 	if err := s.nc.Publish(subject, payload); err != nil {
 		slog.Error("failed to publish extraction job", "error", err, "doc_id", doc.ID)
-		s.repo.UpdateDocumentStatusWithError(ctx, repository.UpdateDocumentStatusWithErrorParams{
+		_ = s.repo.UpdateDocumentStatusWithError(ctx, repository.UpdateDocumentStatusWithErrorParams{
 			Status: "error",
 			Error:  pgtype.Text{String: "failed to trigger extraction", Valid: true},
 			ID:     doc.ID,
@@ -122,7 +123,7 @@ func (s *DocumentService) UploadDocument(ctx context.Context, userID, fileName s
 		return nil, fmt.Errorf("publish extraction job: %w", err)
 	}
 
-	s.repo.UpdateDocumentStatus(ctx, repository.UpdateDocumentStatusParams{
+	_ = s.repo.UpdateDocumentStatus(ctx, repository.UpdateDocumentStatusParams{
 		Status: "extracting",
 		ID:     doc.ID,
 	})

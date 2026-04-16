@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="update">
+       <title>IVAVENTAS</title>
+        <obs></obs>
+               <form >	
+					<table id="IVAVENTAS" label="IVAVENTAS" _idCampoCond="grabaiva">
+						<field id="regmovim_id" id_temp="id_regmovim" esClave="true" />
+						<field id="fecreg" id_temp="reg_fecha" />
+						<field id="feciva" id_temp="fecha_movimiento" />
+						<field id="codcom" id_temp="concod" />
+						<field id="codlet" id_temp="letra_movimiento" />
+						<field id="nronpv" id_temp="puesto_movimiento" />
+						<field id="nrocom" id_temp="nro_movimiento" />
+						<field id="ctacod" id_temp="nro_cuenta" />
+						<field id="ctanom" id_temp="nombre_cuenta" />
+						<field id="totcom" id_temp="importe_movimiento" />
+						
+					</table>
+               </form>
+        </histrix>

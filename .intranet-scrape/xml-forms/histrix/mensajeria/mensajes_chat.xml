@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" _style="height:100%;"  _paginar="50" preloadData="false">
+	<title>Chat</title>
+	<obs/>
+	<form >
+		<table id="HTXCHAT" label="Chat" >
+		
+		    <filters>
+		    
+			<field id="from" >
+				<label>De</label>
+				<operador>=</operador>
+				<tipo>varchar</tipo>
+			</field>
+			
+			<field id="to">
+				<label>A</label>
+				<operador>=</operador>
+ 			    <tipo>varchar</tipo>
+
+			</field>
+
+
+			
+		    </filters>
+
+			<field id="id" noshow="true" _tipoOrden="DESC">
+				<label>id</label>
+			</field>
+
+			<field id="sent" noshow="true" tipoOrden="DESC">
+				<label>Fecha</label>
+			</field>
+			
+			<field id="fecha" tdWidth="100">
+				<label>Fecha</label>
+				<expresion>date(sent)</expresion>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="hora" tdWidth="100">
+				<label>Hora</label>
+				<expresion>time(sent)</expresion>
+				<tipo>time</tipo>
+			</field>
+
+			<field id="from" tdWidth="150">
+				<helper type="combo" id="HTXUSERS" empty="true">
+					<field id="login" />
+					<field id="nombreApellido">
+						<expresion>CONCAT(Nombre, ' ', apellido)</expresion>
+					</field>
+				</helper>
+				<label>De</label>
+			<!--	<condicion operador="=">'[__usuario__]' or `to` = '[__usuario__]'</condicion> -->
+			    <tipo>varchar</tipo>
+			</field>
+
+			<field id="to" tdWidth="150">
+				<helper type="combo" id="HTXUSERS" empty="true">
+					<field id="login" />
+					<field id="nombreApellido">
+						<expresion>CONCAT(Nombre, ' ', apellido)</expresion>
+					</field>
+				</helper>
+				<label>A</label>
+			    <tipo>varchar</tipo>
+
+			</field>
+
+			<field id="message">
+				<label>Mensaje</label>
+			</field>
+
+			                                                 <!--
+			<field id="usuario" local="true" noshow="true">
+				<valor eval="true">$_SESSION['usuario']</valor>
+			</field> 
+			-->
+
+			<field id="zebra" clasefila="true" local="true" noshow="true">
+				<if exp="_ORDEN % 2 == 0">
+					<true>'grisado2'</true>
+					<false>''</false>
+				</if>
+			</field>
+
+			<!--<field id="recd">
+				<label>Recd</label>
+			</field>
+		-->
+
+
+		<order>
+			<field id="sent" />
+		</order>
+
+		</table>
+	
+
+	</form>
+</histrix>

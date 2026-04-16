@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="ing" llenoTemporal="false" >
+	<title>REINGRESO CHEQUE</title>
+	<obs></obs>
+	<form >
+		
+		<table id="CARCHEHI" label="Reingreso de cheques a Cartera">
+	
+			<movimientos >
+				<relacion id="reingreso_carchequ_ingmov.xml">	</relacion>  
+				<relacion id="reingreso_carchehi_del_ingmov.xml">	</relacion>  
+			</movimientos>
+			<field id="siscar" oculto="true">
+				<label>siscar</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'siscar'</condicion>
+					</field>
+				</parametro> 
+				<valor>05</valor>
+			</field>
+						
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+				<help> Cod sistema</help>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla" >
+						<condicion operador="=">'sisbcs'</condicion>
+					</field>
+				</parametro>						
+			</field>
+			<field id="carint">
+				<label>Nro Cheque Int</label>
+				<help>Codigo de Concepto</help>
+				<ayuda_ex id="HLPcarchehi" xml="HLPcarchehi.xml" dir="/help_local">
+					<field id="carint"></field>
+					<field id="carnro" deshabilitado="true" oculto="true">
+						<detalle>carnro</detalle>
+					</field>
+					<field id="carbco" >
+						<detalle>carbco</detalle>
+					</field>
+					<field id="carimp" >
+						<detalle>carimp</detalle>
+					</field>
+				
+					<field id="carfec" >
+						<detalle>carfec</detalle>
+					</field>
+					<field id="caralt" >
+						<detalle>caralt</detalle>
+					</field>
+					<field id="ctacod" >
+						<detalle>ctacod</detalle>
+					</field>
+					<field id="carpla" >
+						<detalle>carpla</detalle>
+					</field>
+					<field id="succod" >
+						<detalle>succod</detalle>
+					</field>
+					<field id="cartip" >
+						<detalle>cartip</detalle>
+					</field>
+					<field id="carobv" >
+						<detalle>carobv</detalle>
+					</field>
+					<field id="ccbcod" >
+						<detalle>ccbcod</detalle>
+					</field>
+					<field id="carccb">
+						<detalle>carccb</detalle>
+					</field>
+					
+
+					<field id="carcui" >
+						<detalle>carcui</detalle>
+					</field>
+					<field id="cardes" >
+						<detalle>cardes</detalle>
+					</field>
+					<field id="carrec" >
+						<detalle>carrec</detalle>
+					</field>
+					<field id="carmar" >
+						<detalle>carmar</detalle>
+					</field>
+					<field id="bcsnro" >
+						<detalle>bcsnro</detalle>
+					</field>
+					<field id="regmin" >
+						<detalle>regmin</detalle>
+					</field>
+					<field id="opecla" >
+						<detalle>opecla</detalle>
+					</field>
+					<field id="caracr" >
+						<detalle>caracr</detalle>
+					</field>
+					<field id="movnro" >
+						<detalle>movnro</detalle>
+					</field>
+					<field id="concod" >
+						<detalle>concod</detalle>
+					</field>
+					<field id="movnpv" >
+						<detalle>movnpv</detalle>
+					</field>
+					
+				</ayuda_ex>
+
+			</field>				
+			<field id="carnro" deshabilitado="true">
+				<label>Numero</label>
+			</field>				
+			<field id="carfec" deshabilitado="true">
+				<label>Fecha</label>
+				<tipo>date</tipo>
+			</field>				
+			
+			<field id="caralt" deshabilitado="true">
+				<label>Acreditacion</label>
+				<tipo>date</tipo>
+				
+			</field>				
+			<field id="carbco" deshabilitado="true">
+				<label>Banco</label>
+			</field>				
+			<field id="carimp" deshabilitado="true" suma="true" >
+				<label>Importe</label>
+			</field>		
+			<field id="caracr" deshabilitado="true" noshow="true">
+				<label>caracr</label>
+			</field>				
+
+			<field id="ctacod" deshabilitado="true" noshow="true">
+				<label>ctacod</label>
+			</field>				
+			<field id="carpla" deshabilitado="true" noshow="true">
+				<label>carpla</label>
+			</field>				
+			<field id="succod" deshabilitado="true" noshow="true">
+				<label>succod</label>
+			</field>				
+			<field id="cartip" deshabilitado="true" noshow="true">
+				<label>cartip</label>
+			</field>				
+			<field id="carobv" deshabilitado="true" noshow="true">
+				<label>carobv</label>
+			</field>				
+			<field id="carccb" deshabilitado="true" noshow="true">
+				<label>carccb</label>
+			</field>				
+			
+			<field id="ccbcod" deshabilitado="true" noshow="true">
+				<label>ccbcod</label>
+			</field>				
+			<field id="carcui" deshabilitado="true" noshow="true">
+				<label>carcui</label>
+			</field>				
+			<field id="cardes" deshabilitado="true" noshow="true">
+				<label>cardes</label>
+			</field>				
+			<field id="carrec" deshabilitado="true" noshow="true">
+				<label>carrec</label>
+			</field>				
+			<field id="carmar" deshabilitado="true" noshow="true">
+				<label>carmar</label>
+			</field>				
+			<field id="bcsnro" deshabilitado="true" noshow="true">
+				<label>bcsnro</label>
+			</field>			
+			<field id="regmin" deshabilitado="true" noshow="true">
+				<label>regmin</label>
+			</field>			
+			<field id="opecla" deshabilitado="true" noshow="true">
+				<label>opecla</label>
+			</field>				
+			<field id="movnro" deshabilitado="true" noshow="true">
+				<label>movnro</label>
+			</field>				
+			<field id="concod" deshabilitado="true" noshow="true">
+				<label>concod</label>
+			</field>				
+			<field id="movnpv" deshabilitado="true" noshow="true">
+				<label>movnpv</label>
+			</field>				
+
+		<order>
+			<field id="bcsnro"></field>
+		</order>
+
+		</table>
+		
+		<join tipo="left">
+			<table id="BCSCONCE">
+				<field id="siscod" oculto="true">
+					<label>BCSCONCE.siscod</label>
+					<condicion operador="=">BCSMOVIM.siscod</condicion>
+					
+				</field>
+				
+				<field id="cnbcod" oculto="true">
+					<condicion operador="=">BCSMOVIM.bcsmov</condicion>
+				</field>
+				
+				<field id="cnbnom" oculto="true">
+				</field>
+			</table>
+		</join>
+
+	</form>
+</histrix>

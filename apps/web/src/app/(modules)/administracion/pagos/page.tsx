@@ -1,7 +1,5 @@
-export default function AdminPagosPage() {
-  return (
-    <div className="flex-1 p-8">
-      <h1 className="text-2xl font-semibold">Pagos a Proveedores</h1>
-    </div>
-  );
+import { redirect } from "next/navigation";
+
+export default function PagosPage() {
+  redirect("/administracion/tesoreria");
 }

@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" >
+    <title>Consulta de Producción</title>
+    <obs></obs>
+    <form >
+        <table id="STK_ARTICULOS" label="Consulta de Producción">
+            <filters>
+                    
+                <field id="year" deshabilitado="false">
+                    <label>año</label>
+                    <operador>=</operador>
+                    <valor eval="true">date("Y")</valor>
+                    
+                </field>
+                <field id="id_stkarticulo" esClave="true">
+                    <label>Código</label>
+                    <help>Codigo de Articulo</help>
+                    <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+                        <field id="nombre_articulo">
+                            <detalle>nombre_articulo</detalle>
+                        </field>
+                        <field id="produccion_diaria">
+                            <detalle>minimo_ordendetalle</detalle>
+                        </field>
+                    
+                    </helper>
+                </field>
+
+                <field id="nombre_articulo" deshabilitado="false" >
+                    
+                    <label modpos="nobr">Articulo</label>
+                    <help>Codigo de Articulo</help>
+                    <operador>like</operador>
+                </field>
+			    
+            </filters>
+
+            <fieldGroup>
+                <field id="id_stkarticulo" esClave="true">
+                    <label>Código</label>
+                    <help>Codigo de Articulo</help>
+                    <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas"/>
+                </field>    
+                <field id="nombre_articulo">
+                    <label modpos="nobr">Articulo</label>
+                    <detalle>nombre_articulo</detalle>
+                </field>
+                    
+                <field id="produccion_diaria" noshow="true">
+                    <detalle>minimo_ordendetalle</detalle>
+                </field>
+
+                <field id="total" noZero="false" tipoOrden="DESC">
+                    <label>Total</label>
+                    <expresion>sum(ifnull((STK_MOVIMIENTOS.cantidad),0) )</expresion>
+                    <tipo>grafico</tipo>
+                </field>
+			
+                <field id="year" noshow="true" >
+                    <expresion having="false">year(fecha_movimiento)</expresion>
+                    <label>año</label>
+                </field>
+<!--
+				<field id="tipo_forecast" noshow="true">
+				    <label>Tipo</label>     
+				    <options>
+					<option valor="1">Venta</option>
+					<option valor="2">Producción</option>
+				    </options>
+				</field>
+-->			   
+            </fieldGroup>
+			
+            <fieldGroup noZero="true" _linkTag="a">
+			
+                <field id="Enero" suma="true">
+                    <label>Enero</label>
+                    <expresion>sum(ifnull((case when month(fecha_movimiento) = 1 then  STK_MOVIMIENTOS.cantidad end),0) )</expresion>
+                    <tipo>numeric</tipo>
+                    <helper type="link" xml="mrp_ordenes_cumplidas_qry.xml" dir="/mrp/qry">
+                        <parameter source="1" target="mes" />
+                        <parameter source="year" target="anio" />
+                        <parameter source="id_stkarticulo" target="stkarticulo_id" />
+                    </helper>
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Febrero" suma="true">
+                    <label>Febrero</label>
+                    <expresion>sum(ifnull((case when month(fecha_movimiento ) = 2 then  STK_MOVIMIENTOS.cantidad end),0) )</expresion>
+                    <helper type="link" xml="mrp_ordenes_cumplidas_qry.xml" dir="/mrp/qry">
+                        <parameter source="2" target="mes" />
+                        <parameter source="year" target="anio" />
+                        <parameter source="id_stkarticulo" target="stkarticulo_id" />
+                    </helper>
+
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Marzo" suma="true">
+                    <label>Marzo</label>
+                    <expresion>sum(ifnull((case when month(fecha_movimiento ) = 3 then  STK_MOVIMIENTOS.cantidad end),0) )</expresion>
+
+                    <tipo>numeric</tipo>
+                    <helper type="link" xml="mrp_ordenes_cumplidas_qry.xml" dir="/mrp/qry">
+                        <parameter source="3" target="mes" />
+                        <parameter source="year" target="anio" />
+                        <parameter source="id_stkarticulo" target="stkarticulo_id" />
+                    </helper>
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Abril" suma="true" >
+			
+                    <helper type="link" xml="mrp_ordenes_cumplidas_qry.xml" dir="/mrp/qry">
+                        <parameter source="4" target="mes" />
+                        <parameter source="year" target="anio" />
+                        <parameter source="id_stkarticulo" target="stkarticulo_id" />
+                    </helper>
+			    
+                    <label>Abril</label>
+                    <expresion>sum(ifnull((case when month(fecha_movimiento) = 4 then  STK_MOVIMIENTOS.cantidad end) ,0) )</expresion>
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Mayo" suma="true">
+                    <label>Mayo</label>
+                    <expresion>sum(ifnull((case when month(fecha_movimiento) = 5 then  STK_MOVIMIENTOS.cantidad end),0) )</expresion>
+                    <helper  type="link" xml="mrp_ordenes_cumplidas_qry.xml" dir="/mrp/qry">
+                        <parameter source="5" target="mes" />
+                        <parameter source="year" target="anio" />
+                        <parameter source="id_stkarticulo" target="stkarticulo_id" />
+                    </helper>
+
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Junio" suma="true">
+                    <label>Junio</label>
+                    <expresion>sum(ifnull((case when month(fecha_movimiento) = 6 then  STK_MOVIMIENTOS.cantidad end),0) )</expresion>
+                    <tipo>numeric</tipo>
+                    <helper type="link" xml="mrp_ordenes_cumplidas_qry.xml" dir="/mrp/qry">
+                        <parameter source="6" target="mes" />
+                        <parameter source="year" target="anio" />
+                        <parameter source="id_stkarticulo" target="stkarticulo_id" />
+                    </helper>
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Julio" suma="true">
+                    <label>Julio</label>
+                    <expresion>sum(ifnull((case when month(fecha_movimiento)  = 7 then  STK_MOVIMIENTOS.cantidad end),0) )</expresion>
+                    <tipo>numeric</tipo>
+                    <helper type="link" xml="mrp_ordenes_cumplidas_qry.xml" dir="/mrp/qry">
+                        <parameter source="7" target="mes" />
+                        <parameter source="year" target="anio" />
+                        <parameter source="id_stkarticulo" target="stkarticulo_id" />
+                    </helper>
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Agosto" suma="true">
+                    <label>Agosto</label>
+                    <expresion>sum(ifnull((case when month(fecha_movimiento) = 8 then  STK_MOVIMIENTOS.cantidad end),0) )</expresion>
+                    <helper type="link" xml="mrp_ordenes_cumplidas_qry.xml" dir="/mrp/qry">
+                        <parameter source="8" target="mes" />
+                        <parameter source="year" target="anio" />
+                        <parameter source="id_stkarticulo" target="stkarticulo_id" />
+                    </helper>
+
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Septiembre" suma="true">
+                    <label>Septiembre</label>
+                    <tipo>numeric</tipo>
+                    <expresion>sum(ifnull((case when month(fecha_movimiento)  = 9 then  STK_MOVIMIENTOS.cantidad end),0) )</expresion>
+                    <helper type="link" xml="mrp_ordenes_cumplidas_qry.xml" dir="/mrp/qry">
+                        <parameter source="9" target="mes" />
+                        <parameter source="year" target="anio" />
+                        <parameter source="id_stkarticulo" target="stkarticulo_id" />
+                    </helper>
+
+                </field>
+                <field id="Octubre" suma="true">
+                    <label>Octubre</label>
+                    <tipo>numeric</tipo>
+                    <expresion>sum(ifnull((case when month(fecha_movimiento) = 10 then  STK_MOVIMIENTOS.cantidad end),0) )</expresion>
+                    <helper type="link" xml="mrp_ordenes_cumplidas_qry.xml" dir="/mrp/qry">
+                        <parameter source="10" target="mes" />
+                        <parameter source="year" target="anio" />
+                        <parameter source="id_stkarticulo" target="stkarticulo_id" />
+                    </helper>
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Noviembre" suma="true">
+                    <label>Noviembre</label>
+                    <expresion>sum(ifnull((case when month(fecha_movimiento) = 11 then  STK_MOVIMIENTOS.cantidad end),0) )</expresion>
+                    <helper type="link" xml="mrp_ordenes_cumplidas_qry.xml" dir="/mrp/qry">
+                        <parameter source="11" target="mes" />
+                        <parameter source="year" target="anio" />
+                        <parameter source="id_stkarticulo" target="stkarticulo_id" />
+                    </helper>
+
+                    <tipo>numeric</tipo>
+                </field>
+                <field id="Diciembre" suma="true">
+                    <label>Diciembre</label>
+                    <expresion>sum(ifnull((case when month(fecha_movimiento) = 12 then  STK_MOVIMIENTOS.cantidad end),0) )</expresion>
+                    <helper type="link" xml="mrp_ordenes_cumplidas_qry.xml" dir="/mrp/qry">
+                        <parameter source="12" target="mes" />
+                        <parameter source="year" target="anio" />
+                        <parameter source="id_stkarticulo" target="stkarticulo_id" />
+                    </helper>
+
+                    <tipo>integer</tipo>
+                </field>
+                                  
+            </fieldGroup>
+
+            <group>
+                <field id="id_stkarticulo" ></field>
+            </group>
+            <order>
+                <field id="total" orderType="DESC"></field>
+            </order>
+
+        </table>
+        <join tipo="left">
+            <table id="STK_MOVIMIENTOS">
+                <field id="stkarticulo_id">
+                    <condicion operador="=">id_stkarticulo</condicion>
+                </field>
+            </table>
+        </join>
+        <join >
+            <table id="STK_CONCEPTOS">
+                <field id="id_stkconcepto">
+                    <condicion operador="=">stkconcepto_id</condicion>
+                </field>
+                <field id="tipo_concepto">
+                    <condicion operador="=">0</condicion>
+                </field>
+                <field id="produccion_concepto">
+                    <condicion operador="=">1</condicion>
+                </field>
+
+            </table>
+        </join>
+			
+    </form>
+</histrix>

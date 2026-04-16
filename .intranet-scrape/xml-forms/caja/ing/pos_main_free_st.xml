@@ -1,0 +1,518 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" inserta="false" borra="false" modifica="false" imprime="false" tooltip="false" confirma="GRABAR" transaccional="true" preFetch="false" preloadData="false" processFirst="true">
+	<title>Punto de Venta</title>
+	<obs/>
+	<form>
+		<table id="REG_MOVIMIENTOS" label="POS">
+
+			<validation>
+				<condition>
+					<![CDATA[ importe_movimiento + 0 == 0 ]]>
+				</condition>
+				<message>Importes no Coinciden</message>
+			</validation>
+
+			<validation>
+				<condition>
+					<![CDATA['regcuenta_ivaletra' == '']]>
+				</condition>
+				<message>Debe Ingresar una Cuenta</message>
+			</validation>
+			
+			<validation>
+				<condition>
+					<![CDATA[regconcepto_id + 0 == 0]]>
+				</condition>
+				<message>Tipo de Comprobante no válido</message>
+			</validation>
+			
+			<validation>
+				<condition>
+					<![CDATA[puesto_movimiento + 0 == 0]]>
+				</condition>
+				<message>Punto de Venta no válido</message>
+			</validation>
+			
+			<validation>
+				<condition>
+					<![CDATA[nro_movimiento + 0 == 0]]>
+				</condition>
+				<message>Numero de Movimiento no válido</message>
+			</validation>
+
+			<validation>
+				<condition>
+					<![CDATA['regcuenta_ivaid' != '5' && 'regcuenta_cuit' == '0']]>
+				</condition>
+				<message>Falta Número de CUIT válido</message>
+			</validation>
+	 
+			<validation>
+				<condition>
+					<![CDATA['fiscal' == '1' && 'regcuenta_ivaid' == '5' && importe_movimiento + 0 >= 1000 && 'regcuenta_doc' == '0' ]]>
+				</condition>
+				<message>Importe mayor a 1000. Debe ingresar su DNI</message>
+			</validation>
+			
+			<validation>
+				<condition>
+					<![CDATA['fiscal' == '1' && 'cierrez' == '1' && 'evatest' != 'Preparada' ]]>
+				</condition>
+				<message>Verificar Controlador Fiscal!</message>
+			</validation>			
+			
+			
+			<!-- GRABACION DE CUENTA CORRIENTE -->
+			<movimientos>
+				<relacion id="pos_regmovimientos_ins.xml"/>
+<!--				<relacion id="pos_regmovimientos_upd.xml"/>-->
+				<relacion id="pos_regmovimientos_print.xml"/>
+				<!-- Agrego esta linea para que muestre la impresión al confirmar -->
+				<relacion id="mos_actualizo_numerador.xml"/>
+				<relacion id="pos_ctbmovimientos_ins.xml"/>
+				<relacion id="pos_ctbdetalle_ins.xml"/>
+				<relacion id="regmovimientos_rec_ins.xml"/>
+				<relacion id="regimputaciones_rec_ins.xml"/>
+			</movimientos>
+
+
+			<cierraproceso id="cajmovimientos_ing.xml" condition="graba_recibo">
+				<paring destino="imputacion_concepto">imputacion_concepto</paring>
+				<paring destino="moneda_id">moneda_id</paring>
+				<paring destino="cajpuesto_id">cajpuesto_id</paring>
+				<paring destino="cajconcepto_id">cajconceptorel_id</paring> ---
+				<paring destino="cajregistro_id">cajregistro_id</paring>
+				<!-- <paring destino="importe_movimiento">importe_movimiento</paring>   -->
+
+				<paring destino="importe_movimiento">importe_total</paring> 
+				<paring destino="fecha_movimiento">fecha_movimiento</paring>
+				<paring destino="referencia_movimiento">referencia_movimiento</paring>
+				<paring destino="puesto_movimiento">puesto_movimiento</paring>
+				<paring destino="nro_movimiento">nro_movimiento</paring>
+				<paring destino="importe_iva">importe_IVA</paring>
+
+				<paring destino="ctbcuenta_reg_id">ctbcuenta_id</paring>
+				<paring destino="ctbcuenta_reg_doh">ctbcuenta_rel_doh</paring>
+
+				<paring destino="limite_credito">cero</paring>
+				<paring destino="para_cct">par_cct</paring>
+				<paring destino="saldo_a_cct">saldo_a_cct</paring>
+				<paring destino="regcuenta_id">regcuenta_id</paring>
+				<paring destino="subsistema_id">subsistema_id</paring>
+
+			</cierraproceso>
+
+			<field id="id_regmovim" oculto="true">
+				<condicion operador="=">-1</condicion>
+			</field>
+			
+			<field id="cajconceptorel_id" local="true" noshow="true">
+				<expression sql="true">
+                    (SELECT cajconceptorel_id FROM CAJ_CONCEPTOS WHERE `id_cajconcepto` = '[__cajconcepto_id__]' LIMIT 1)
+				</expression>
+			</field>
+			
+			<fieldGroup id="DEBUG" local="true" noshow="true">
+				<field id="cajpuesto_id"/>
+				<field id="cajconcepto_id"/>
+				<field id="stkconcepto_id"/>
+				<field id="cajregistro_id"/>
+				<field id="fecha_movimiento">
+					<detalle>fecha_movimiento</detalle>
+				</field>
+				<field id="imputacion_concepto"/>
+				<field id="subsistema_id"/>
+				<field id="moneda_id">
+					<valor>1</valor>
+				</field>
+				<field id="ctbcuenta_reg_id">
+				</field>
+				<field id="ctbcuenta_rel_doh">
+					<if exp="imputacion_concepto == 0">
+						<true>1</true>
+						<false>0</false>
+					</if>
+				</field>
+				<field id="ctbcuenta_reg_doh">
+					<if exp="imputacion_concepto == 0">
+						<true>0</true>
+						<false>1</false>
+					</if>
+				</field>
+				<field id="ctbejercicio_id"/>
+				<field id="tipoimpre_concepto"/>
+				<field id="cierrez"/>
+				<field id="printer_fiscal_pos"/>
+				<field id="hidebtns">
+					<if exp="'cierrez' != '1'">
+						<true>'true'</true>
+						<false>'false'</false>
+					</if>
+				</field>
+				<field id="tiposervicio_afip">
+					<valor>1</valor>
+				</field>
+			</fieldGroup>
+
+			<fieldGroup>
+				<field id="regcuenta_id" local="true" noshow="true">
+					<label _colspan="2">Cuenta</label>
+					<size>6</size>
+				</field>
+
+				<field id="nro_cuenta" local="true">
+					<label _modpos="nobr">Cod.Cuenta</label>
+					<helper type="external" xml="regcuenta_relacionescmb_nro.xml" dir="/ayudas"/>
+					<size>6</size>
+				</field>
+
+				<field id="regcuenta_ivaletra" local="true" deshabilitado="true">
+					<label modpos="nobr" style="font-size: large;"/>
+					<actualiza>
+						<field id="puesto_movimiento" destino="letra"/>
+						<field id="nro_movimiento" destino="letra"/>
+						<field id="fecha_ultima" destino="letra_movimiento"/>
+						<field id="imprime_concepto" destino="letra"/>
+					</actualiza>
+					<size>1</size>
+					<detalle>letra_movimimento</detalle>
+					<actualiza>
+						<field id="fiscal" destino="letra"/>
+					</actualiza>
+				</field>
+
+				<field id="regconcepto_id" deshabilitado="true" local="true" style="font-size: large; -webkit-appearance: window; -moz-appearance: window; appearance: window;">
+					<label modpos="nobr" colspan="2">Comprobante</label>
+					<helper type="combo" id="REG_CONCEPTOS">
+						<field id="id_concepto"/>
+						<field id="descripcion_concepto"/>
+						<field id="subsistema_id"/>
+					</helper>
+					<actualiza>
+						<field id="nro_movimiento" destino="regconcepto_id"/>
+						<field id="fecha_ultima" destino="concepto_id"/>
+						<field id="imprime_concepto" destino="regconcepto_id"/>
+						<field id="fiscal" destino="regconcepto_id"/>
+					</actualiza>
+					<detalle>concepto_id</detalle>
+				</field>
+
+				<field id="regcuenta_ivaid" local="true" noshow="true" />
+				
+				<field id="fiscal" local="true" deshabilitado="true" modpos="nobr" sincelda="true" activa="true">
+					<tipo>check</tipo>
+				</field>
+
+				<field id="regcuenta_nombre" local="true" deshabilitado="true">
+					<label colspan="2">Razón Social</label>
+					<size>20</size>
+				</field>
+
+				<field id="puesto_movimiento" _deshabilitado="true">
+					<label modpos="nobr" style="font-size: large;">Punto de Venta</label>
+					<helper type="combo" xml="npv_x_puesto_qry.xml" _empty="true">
+						<field id="letra">
+							<condicion operador="=" valorde="regcuenta_ivaletra"/>
+						</field>
+						<field id="fiscal">
+							<expression>fiscal</expression>
+						</field>
+					</helper>
+					<actualiza>
+						<field id="nro_movimiento" destino="puesto"/>
+						<field id="fecha_ultima" destino="puesto_movimiento"/>
+						<field id="imprime_concepto" destino="puesto"/>
+						<field id="fiscal" destino="regconcepto_id"/>
+					</actualiza>
+					<size>4</size>
+					<detalle>puesto_movimiento</detalle>
+				</field>
+
+				<field id="nro_movimiento" _noshow="true" sincelda="true" deshabilitado="true" _class="error">
+					<label modpos="nobr" style="font-size: large;">-</label>
+					<format>%08d</format>
+					<size>8</size>
+					<parametro id="numerador_param.xml" retorna="numero">
+						<field id="letra" oculto="true" esClave="true">
+							<condicion operador="=" valorde="regcuenta_ivaletra"/>
+						</field>
+						<field id="puesto" oculto="true" esClave="true">
+							<condicion operador="=" valorde="puesto_movimiento"/>
+						</field>
+						<field id="numero">
+						</field>
+					</parametro>
+					<detalle>nro_movimiento</detalle>
+				</field>
+
+				<!-- Determina el xml que se va utilizar para imprimir -->
+
+				<field id="imprime_concepto" local="true" noshow="true" deshabilitado="true">
+					<parametro id="numerador_param.xml" retorna="impresion">
+						<field id="regconcepto_id" oculto="true">
+							<condicion operador="=" valorde="regconcepto_id"/>
+						</field>
+						<field id="letra" oculto="true">
+							<condicion operador="=" valorde="regcuenta_ivaletra"/>
+						</field>
+						<field id="puesto" oculto="true">
+							<condicion operador="=" valorde="puesto_movimiento"/>
+						</field>
+					</parametro>
+					<jseval fielddestino="impresion">\'imprime_concepto\'</jseval>
+				</field>
+
+				<field id="regcuenta_doc" local="true">
+					<label colspan="2">DNI</label>
+					<size>10</size>
+				</field>
+
+				<field id="regcuenta_cuit" local="true" deshabilitado="true">
+					<label modpos="nobr">CUIT</label>
+				</field>
+
+				<field id="regcuenta_direccion" local="true" deshabilitado="true">
+					<label colspan="2">Direccion</label>
+					<size>20</size>
+				</field>
+
+				<field id="vencimiento_movimiento">
+					<label modpos="nobr">Fecha Emisión</label>
+					<tipo>date</tipo>
+					<valor>today</valor>
+					<jseval actxml="false">aFecha(\'vencimiento_movimiento\') &gt;= aFecha(\'fecha_ultima\') &amp;&amp; aFecha(\'vencimiento_movimiento\') &gt;= aFecha(\'01/periodo_hab\');</jseval>
+				</field>
+
+				<!-- Obtengo la ultima fecha de comprobante emitido para validacion -->
+
+				<field id="fecha_ultima" local="true" deshabilitado="true" sincelda="true" noshow="true">
+					<label modpos="nobr">Ultima</label>
+					<parametro id="numerador_fecha.xml" retorna="fecha_ultima"/>
+				</field>
+
+				<field id="periodo_hab" deshabilitado="true" local="true" sincelda="true" noshow="true">
+					<label modpos="nobr">Periodo Hab</label>
+					<helper type="parameter" id="SIS::01::periodo_iva_cps"/>
+				</field>
+
+				<field id="regcuenta_localidad" local="true" deshabilitado="true">
+					<label colspan="2">Localidad</label>
+				</field>
+
+				<field id="regcuenta_iva" local="true" deshabilitado="true">
+					<label modpos="nobr">Iva</label>
+				</field>
+
+				<field id="regcuenta_provincia" local="true" deshabilitado="true">
+					<label colspan="2">Provincia</label>
+				</field>
+
+				<field id="regforma_id" local="true" _noshow="true">
+					<label modpos="nobr">Condición</label>
+					<helper type="combo" xml="regforma_qry.xml" dir="/ayudas">
+					    <field id="par_cct" noshow="true">
+						<expression>case when plazo > 0 then 1 else 0 end</expression>
+						<detalle>par_cct</detalle>
+					    </field>
+					    <field id="graba_recibo" noshow="true">
+						<expression>case when plazo > 0 then 0 else 1 end</expression>
+						<detalle>graba_recibo</detalle>
+					    </field>
+					</helper>
+				</field>
+
+                                <field id="par_cct" local="true" noshow="true" deshabilitado="true">
+                                    <valor>0</valor>
+                                </field>
+
+				<field id="graba_recibo" local="true" noshow="true" deshabilitado="true">
+					<valor>1</valor>
+				</field>
+
+				<field id="saldo_a_cct" local="true" noshow="true">
+					<valor>1</valor>
+				</field>
+
+			</fieldGroup>
+
+			<!-- DETALLE DEL COMPROBANTE  -->
+			<fieldGroup>
+				<field id="detalle" local="true">
+					<label colspan="5"/>
+					<helper type="object" xml="pos_regdetalles_free_st.xml" />
+				</field>
+			</fieldGroup>
+			<!-- FIN -->
+
+			<field id="muestra_iva" local="true" noshow="true">
+				<valor eval="true"><![CDATA[ strpos($_SESSION['properties']['modulos'],'iva') != false ? 'false' : 'true' ]]></valor>
+			</field>
+			
+			<field id="separator1" local="true" deshabilitado="true" colspan="3"/>
+			
+			<field id="neto_movimiento" deshabilitado="true" noshow="true">
+				<label modpos="nobr">Neto</label>
+				<attribute id="noshow">muestra_iva</attribute>
+			</field>
+			
+			<field id="separator2" local="true" deshabilitado="true" colspan="3"/>
+			
+			<field id="importe_IVA" deshabilitado="true" noshow="true">
+				<label modpos="nobr">IVA</label>
+				<attribute id="noshow">muestra_iva</attribute>
+			</field>
+			
+			<field id="separator3" local="true" deshabilitado="true" colspan="3"/>
+			
+			<field id="importe_exento" deshabilitado="true" noshow="true">
+				<label modpos="nobr">Exento</label>
+				<attribute id="noshow">muestra_iva</attribute>
+			</field>
+			
+			<field id="separator4" local="true" deshabilitado="true" colspan="3"/>
+			
+			<field id="importe_sinfacturar" deshabilitado="true" local="true">
+				<label modpos="nobr">S/Facturar</label>
+				<attribute id="noshow">muestra_sinfacturar</attribute>
+			</field>
+			
+			<field id="separator5" local="true" deshabilitado="true" colspan="3"/>
+			
+			<field id="importe_total" local="true" deshabilitado="true">
+				<label modpos="nobr" style="color:red;font-size: xx-large;padding-right:5px;">Total</label>
+				<jseval campodestino="saldo_movimiento">(importe_total - importe_movimiento) * -1</jseval>
+			</field>
+			
+			<field id="importe_movimiento" noshow="true">
+				<!-- <label modpos="nobr" style="color:red;font-size: xx-large; text-align: right;padding-right:5px;">Total</label>  -->
+				<jseval campodestino="importe_total">importe_movimiento + importe_sinfacturar</jseval>
+			</field>
+			
+			<field id="saldo_movimiento" local="true" noshow="true"/>
+			
+			<field id="muestra_sinfacturar" local="true" valauto="true" noshow="true">
+				<helper type="parameter" id="SIS::02::fin_facturar">
+					<label>Oculta importe sin facturar en factura libre</label>
+					<defaultValue>true</defaultValue>
+				</helper>
+			</field>
+			
+			<!-- Cuenta Contable -->
+			
+			<field id="graba_ctb" local="true" noshow="true">
+				<valor eval="true">
+					<![CDATA[ strpos($_SESSION['properties']['modulos'],'contabilidad') != false ? 'true' : 'false' ]]>
+				</valor>
+			</field>
+			
+			<field id="ctbcuenta_id" local="true" noshow="true"/>
+			
+			<field id="cero" local="true" noshow="true">
+				<valor>0</valor>
+			</field>
+			
+			<!-- IMPRESION -->
+			
+			<field id="muestracheck" local="true" noshow="true">
+				<if exp="tipoimpre_concepto != 2">
+					<true>'display:none;'</true>
+					<false>''</false>
+				</if>
+				<label>MuestraChk</label>
+			</field>
+			
+			<field id="CHKimprime" local="true">
+				<attribute id="style">muestracheck</attribute>
+				<label style="font-size: medium; align: right;">Imprime Comprobante</label>
+				<tipo>check</tipo>
+			</field>
+			
+			<field id="impresion" local="true" noshow="true" deshabilitado="true">
+				<label>Programa de Impresion</label>
+				<if exp="CHKimprime=='1' || tipoimpre_concepto=='1'">
+					<true>'imprime_concepto'</true>
+					<false>''</false>
+				</if>
+			</field>
+
+			<!-- CONTROLA ESTADO CONTROLADORA FISCAL -->
+			
+			<field id="acciones" local="true" deshabilitado="true">
+				<label colspan="9">Acciones:</label>
+				<size>1</size>
+				<tipo>varchar</tipo>
+				<attribute id="noshow">hidebtns</attribute>
+			</field>
+			
+			<field id="regcuenta_nuevo" local="true" sincelda="true">
+				<label modpos="nobr"/>
+				<helper type="link" xml="pos_main_clienteficha.xml" ventint="true" modal="true"/>
+				<valor>CLIENTE</valor>
+			</field>
+			
+			<field id="estado" local="true" sincelda="true">
+				<label modpos="nobr"/>
+				<helper type="link" xml="ticket_estado_imp.xml" ventint="true">
+					<parameter source="printer_fiscal_pos" target="printer_fiscal_pos"/>
+				</helper>
+				<valor>ESTADO</valor>
+			</field>
+			
+			<field id="cierrex" local="true" sincelda="true">
+				<label modpos="nobr"/>
+				<helper type="link" xml="ticket_cierrex_imp.xml" ventint="true">
+					<parameter source="printer_fiscal_pos" target="printer_fiscal_pos"/>
+				</helper>
+				<valor>CIERREX</valor>
+			</field>
+			
+			<field id="zcierre" local="true" sincelda="true">
+				<label modpos="nobr"/>
+				<helper type="link" xml="ticket_cierrez_imp.xml" ventint="true">
+					<parameter source="printer_fiscal_pos" target="printer_fiscal_pos"/>
+				</helper>
+				<valor>CIERREZ</valor>
+			</field>
+			
+			<field id="anula" local="true" sincelda="true">
+				<label modpos="nobr"/>
+				<helper type="link" xml="ticket_anula_imp.xml" ventint="true">
+					<parameter source="printer_fiscal_pos" target="printer_fiscal_pos"/>
+				</helper>
+				<valor>ANULAR</valor>
+			</field>
+			
+			<field id="evatest" local="true" sincelda="true" deshabilitado="true">
+				<label modpos="nobr"/>
+				<valor eval="true">(function(){
+                        ob_start();
+                        $printer = '[__printer_fiscal_pos__]';
+                        $calculo = new EmiteFiscal();
+                            $calculo-&gt;setPrinter($printer);
+                            if (! $calculo-&gt;status() )
+                            echo $calculo-&gt;getErrorMessage();
+                        else
+                            echo 'Preparada';
+                        $salida = ob_get_contents();
+                        ob_end_clean();
+                        return $salida;
+                    })</valor>
+				<size>90</size>
+			</field>
+
+			<!-- FIN IMPRESION -->
+
+			<field id="fiscal" local="true" noshow="true">
+				<label>Fiscal</label>
+				<parametro id="numerador_fiscal.xml" retorna="fiscal"/>
+				<actualiza>
+					<field id="grillafiscal" destino="fiscal"/>
+				</actualiza>
+			</field>
+			
+			<field id="grillafiscal" colspan="4" local="true" noshow="true">
+				<helper type="object" xml="pos_fiscal_grid.xml"/>
+			</field>
+		</table>
+	</form>
+</histrix>

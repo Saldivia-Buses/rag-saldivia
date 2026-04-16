@@ -67,10 +67,7 @@ func extractAndVerifyJWT(ctx context.Context, cfg InterceptorConfig) (context.Co
 	if len(vals) == 0 {
 		return nil, status.Error(codes.Unauthenticated, "missing authorization")
 	}
-	token := vals[0]
-	if strings.HasPrefix(token, "Bearer ") {
-		token = token[7:]
-	}
+	token := strings.TrimPrefix(vals[0], "Bearer ")
 
 	claims, err := sdajwt.Verify(cfg.PublicKey, token)
 	if err != nil {

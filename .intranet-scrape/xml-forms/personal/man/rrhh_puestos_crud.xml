@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" subtipo="vertical">
+    <title>Perfiles de Puesto</title>
+  <obs></obs>
+    <form>
+        <table id="RH_PERSONAL_PERFIL_PUESTO" label="Perfiles de Puesto">
+            <field id="id_personalperfilpuesto" noshow="true" />
+
+            <field id="persona_id" valauto="true" noshow="true"/>
+
+            <field id="perfilpuesto_id">
+                        <tabla_ex id="RH_PERFIL_PUESTO" vacio="true">
+                        <field id="id_perfilpuesto"></field>
+                        <field id="nombre_perfilpuesto"></field>
+                        <field id="activo_perfilpuesto">
+                            <condicion operador="=">1</condicion>
+                        </field>
+                        <order>
+                                <field id="nombre_perfilpuesto" />
+                        </order>
+                        </tabla_ex>
+                <label>Perfil de Puesto</label>
+            </field>
+
+            <field id="fechadesde_personalperfilpuesto">
+                <label>Desde Fecha</label>
+                <help>Fecha</help>
+                <tipo>date</tipo>
+            </field>
+        </table>
+    </form>
+    
+</histrix>

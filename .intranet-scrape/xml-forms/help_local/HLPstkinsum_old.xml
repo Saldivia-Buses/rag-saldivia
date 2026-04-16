@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="ayuda" oldSearch="true" path="fotos/articulos" limit="500">
+	<title>Insumos</title>
+	<obs></obs>
+	<form >
+		<table id="STKINSUM" >
+			<title>Insumos</title>
+			
+			<field id="artcod" deshabilitado="true">
+				<label>Cod.</label>
+			</field>
+			<field id="artdes" deshabilitado="true">
+				<label>Insumo</label>
+				<help>Descripcion</help>
+				<detalle>artdes</detalle>
+			</field>
+			<field id="artpor" oculto="true">
+				<label>Porcent</label>
+			</field>
+			<field id="artcos" oculto="true">
+				<label>costo</label>
+			</field>
+			<field id="unicps" oculto="true">
+				<label>U.Compra</label>
+			</field>
+			<field id="artuni" oculto="true">
+			</field>
+			<field id="artcos" oculto="true">
+			</field>
+			<field id="artrub" oculto="true">
+			</field>
+			<field id="unidef" oculto="true">
+			</field>
+			<field id="valcps" oculto="true">
+			</field>
+
+			<field id="herrinventario_id" oculto="true">
+			</field>
+
+			<field id="baja" oculto="true">
+				<label>baja</label>
+				<condicion operador="!=">1</condicion>
+			</field>			
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+				<condicion operador="=">'01'</condicion>
+			</field>
+			<field id="fotopath" local="true" noshow="true">
+				<if exp="true">
+					<true>'artcod/'</true>
+					<false>''</false>
+				</if>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="foto" path="fotopath" download="true">
+          		<expression>select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = STKINSUM.artcod and ARTICULO_FOTO.foto != '' order by revision desc limit 1</expression> 
+				<label>Imagen</label>
+                <tipo >file</tipo>
+                <size>20</size>
+			</field>
+			<order>
+				<field id="artdes"></field>
+			</order>
+		</table>
+	</form>
+</histrix>

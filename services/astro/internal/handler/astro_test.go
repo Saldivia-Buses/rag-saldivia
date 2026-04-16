@@ -24,7 +24,7 @@ func TestHealthEndpoint(t *testing.T) {
 	r := chi.NewRouter()
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"status":"ok","service":"astro"}`))
+		_, _ = w.Write([]byte(`{"status":"ok","service":"astro"}`))
 	})
 
 	req := httptest.NewRequest("GET", "/health", nil)
@@ -35,7 +35,9 @@ func TestHealthEndpoint(t *testing.T) {
 		t.Errorf("health status = %d, want 200", w.Code)
 	}
 	var body map[string]string
-	json.Unmarshal(w.Body.Bytes(), &body)
+	if err := json.Unmarshal(w.Body.Bytes(), &body); err != nil {
+		t.Fatalf("unmarshal health response: %v", err)
+	}
 	if body["status"] != "ok" {
 		t.Errorf("health body = %v", body)
 	}

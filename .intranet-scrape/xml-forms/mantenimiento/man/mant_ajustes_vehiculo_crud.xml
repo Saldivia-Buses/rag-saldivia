@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CRUD
+Tarea: Tabla de Ajustes del vehiculo
+Autor: 
+Fecha: 11/01/13
+*******************************************************************************
+-->
+<histrix tipo="crud" path="/fotos/vehiculos" _serverSide="true">
+  <title>Ajustes Vehiculos</title>
+  <obs></obs>
+  <form>
+    <table id="MANT_AJUSTES" label="Ajustes del vehiculo">
+
+        <filters>
+                <field id="mantvehiculo_id">
+                    <label>Vehículo</label>
+                    <operador>=</operador>
+                </field>
+
+                <field id="manttipoajuste_id">
+                   <label>Tipo Tarea</label>
+                   <operador>=</operador>
+                </field>
+
+                <field id="fecha_ajuste">
+                    <label>Desde Fecha</label>
+                    <operador>&gt;=</operador>
+                    <valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m") - 6 , date("d"), date("Y")))</valor>
+                </field>
+
+                <field id="fecha_ajuste">
+                    <label modpos="nobr">Hasta Fecha</label>
+                    <operador>&lt;=</operador>
+                    <valor>today</valor>
+                </field>
+            </filters>
+
+        <field id="id_mantajuste"  esClave="true" autoinc="true" noshow="true" />
+
+        <field id="manttipovehiculo_id" tabla="MANT_VEHICULOS" noshow="true">
+            <helper type="combo" id="MANT_TIPO_VEHICULO" empty="true">
+                <field id="id_manttipovehiculo" />
+                <field id="descripcion" />
+            </helper>
+        </field>
+
+        <field id="mantvehiculo_id" required="true">
+            <label>Vehículo</label>
+            <help>Vehículo</help>
+            <helper type="combo" id="MANT_VEHICULOS" _xml="mant_vehiculos_crud.xml" empty="true">
+                <field id="id_mantvehiculo" />
+                <field id="interno" />
+                <order>
+                    <field id="interno" table="MANT_VEHICULOS" />
+                </order>
+            </helper>
+        </field>
+
+        <field id="fecha_ajuste">
+            <label>Fecha</label>
+            <help>Fecha de ajuste</help>
+            <tipo>date</tipo>
+        </field>
+
+            <field id="manttipoajuste_id" required="true">
+               <label>Tipo Tarea</label>
+               <helper type="combo" xml="mant_tipo_ajuste_crud.xml" empty="true">
+                    <order>
+                        <field id="descripcion" />
+                    </order>
+                </helper>
+            </field>
+
+            <field id="manttaller_id">
+                <label>Taller</label>
+                <helper type="combo" id="MANT_TALLERES" empty="true">
+                    <field id="id_manttaller" />
+                    <field id="nombre_taller" />
+                </helper>
+            </field>
+
+            <field id="km_ajuste" required="true">
+                <label>Kilómetros</label>
+                <help>Kilómetros</help>
+            </field>
+
+            <field id="responsable">
+                <label>Responsable</label>
+                <help>Responsable</help>
+            </field>
+
+            <field id="precio" suma="true">
+                <label>Precio</label>
+                <help>Precio</help>
+            </field>
+
+            <field id="observaciones">
+                <label>Observaciones</label>
+            </field>
+
+            <field id="fotopath" local="true" noshow="true">
+                <tipo>varchar</tipo>
+                <expresion>CONCAT('/', id_mantvehiculo, '/ajustes')</expresion>
+            </field>
+
+            <field id="imagen_factura" path="fotopath" _download="true">
+                <label>Factura</label>
+                <tipo Type="Image">file</tipo>
+                <size>50</size>
+            </field> 
+
+            <order>
+                <field id="fecha_ajuste" />
+            </order>
+
+        </table>
+
+        <join tipo="left">
+            <table id="MANT_VEHICULOS">
+                <field id="id_mantvehiculo">
+                    <condicion operador="=">mantvehiculo_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

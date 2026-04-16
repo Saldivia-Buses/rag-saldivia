@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>VIAJANTES</title>
+  <obs></obs>
+  <consulta _detalle="solicitud_imp.xml">
+    <table id="REG_CUENTA" label="VIAJANTES">
+    <fieldGroup>
+      <field id="id_regcuenta" noshow="true">
+      <detalle>id_regcuenta</detalle>
+      </field>
+      <field id="alta_cuenta" _noshow="true">
+        <label>Alta</label>
+      </field>         
+      <field id="nro_cuenta" _noshow="true">
+        <label>Nro</label>
+      </field>
+         
+      <field id="nombre_cuenta">
+           <label>Nombre o Razon Social</label>
+      </field>
+      <field id="subsistema_id" noshow="true" esClave="true" valauto="true">
+          <operador>=</operador>
+      </field>
+      <field id="imp" local="true">
+        <helper type="link" xml="solicitud_imp.xml" title="Imprimir" modal="true">
+            <parameter source="id_regcuenta" target="id_regcuenta" />
+        </helper>
+        <label>Imp</label>
+        <valor>'Imprimir Solicitud'</valor>
+
+      </field>
+    </fieldGroup>
+    <fieldGroup>
+      <field id="autoriz" local="true">
+        <helper type="link" xml="autorizar_cliente.xml" title="Autorizar">
+            <parameter source="id_regcuenta" target="id_regcuenta" />
+        </helper>
+        <label>Aut</label>
+        <valor>'Autorizar'</valor>
+
+      </field>
+      <field id="elimina" local="true">
+        <helper type="link" xml="eliminar_cliente.xml" title="Eliminar">
+            <parameter source="id_regcuenta" target="id_regcuenta" />
+        </helper>
+        <label>ELiminar</label>
+        <valor>'X'</valor>
+
+      </field>      
+    </fieldGroup>1
+    <order>
+      <field id="nro_cuenta" />
+    </order>
+  </table>
+  </consulta>
+</histrix>  

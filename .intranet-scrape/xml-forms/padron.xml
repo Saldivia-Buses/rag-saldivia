@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<abm tipo="consulta" paginar="500">
+	<titulo>PADRON</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="PADRON" >
+		    <titulo>PADRON ELECTORAL</titulo>
+			<campo id="mesa">
+				<label>Mesa</label>
+			</campo>
+		        <campo id="sexo">
+				<label>Sexo</label>
+			</campo>
+		        <campo id="orden">
+				<label>Orden</label>
+			</campo>
+		        <campo id="tipo">
+				<label>tipo</label>
+			</campo>
+		        <campo id="dni">
+				<label>Dni</label>
+			</campo>
+		        <campo id="nombre">
+				<label>Nombre</label>
+			</campo>
+		        <campo id="domicilio">
+				<label>domicilio</label>
+			</campo>
+		        <campo id="ocupacion">
+				<label>Ocupacion</label>
+			</campo>
+		        <campo id="nac">
+				<label>Nac.</label>
+			</campo>
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+		</tabla>
+	</consulta>	   
+</abm> 

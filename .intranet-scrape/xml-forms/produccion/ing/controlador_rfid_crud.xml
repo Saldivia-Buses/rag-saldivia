@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="crud">
+	<title>Controladores Rfid</title>
+	<obs></obs>
+	<form >
+		<table id="RFID_CONTROLADOR" >
+		    <title>Controladores Rfid</title>
+			<field id="id_rfid_controlador" noshow="true" esClave="true">
+				<label>Codigo</label>
+			</field>
+
+			<field id="controlador_rfid" required="true">
+				<label>Número</label>
+				<help>Número Controlador Rfid</help>
+				<tipo>integer</tipo>
+			</field>
+
+			<field id="puerto_controlador_rfid" required="true">
+				<label>Puerto</label>
+				<help>Puerto Controlador Rfid</help>
+				<tipo>integer</tipo>
+			</field>
+
+			<field id="seccion_id" required="true">
+				<label>Sección</label>
+				<helper id="MOMENTO" type="combo" empty="true">
+		            <field id="idMomento" />
+		            <field id="descripcion" />
+		            <field id="linea_id" oculto="true">
+		            	<condicion operador="=">1</condicion>
+		            </field>		            
+		            <field id="reportar" oculto="true">
+		            	<condicion operador="=">1</condicion>
+		            </field>
+			    </helper>
+			</field>
+
+			<field id="activo">
+				<label>Activo</label>
+				<options>
+					<option valor="0">Si</option>
+					<option valor="1">No</option>
+				</options>
+			</field>
+
+        </table>
+	</form>	   
+</histrix> 

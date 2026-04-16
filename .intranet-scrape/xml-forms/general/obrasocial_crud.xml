@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="crud" >
+		<title>Obras Sociales</title>
+		<obs></obs>
+		<form>
+		    <table id="GEN_OBRASSOCIALES" label="Obras Sociales">
+				<filters>
+					<field id="nombre_osocial">
+						<label>Nombre</label>
+						<operador>like</operador>
+				         </field>
+				</filters>
+
+				<field id="id_osocial" autoinc="true" esClave="true">
+					<label>Cod</label>
+				</field>
+
+		        <field id="nombre_osocial">
+					<label>Descripción</label>
+					<size>65</size>
+				</field>
+
+		        <field id="abreviacion_osocial" colstyle="Display:none;">
+					<label>Sigla</label>
+					<help>Sigla utilizada comunmente para identificar la Obra Social</help>
+					<size>12</size>
+				</field>
+
+		        <field id="provincia_id"  colstyle="Display:none;">
+		            <label>Provincia</label>
+		            <tabla_ex xml="provincia_qry.xml" dir="/ayudas" vacio="true" />
+		            <actualiza>
+		                <field destino="provincia_id" id="localidad_id" />
+		            </actualiza>
+		        </field>
+
+		        <field id="localidad_id" colstyle="Display:none;">
+		            <label>localidad</label>
+		            <tabla_ex xml="localidad_qry.xml" dir="/ayudas" vacio="true" >
+		                <field id="provincia_id">
+		                    <condicion operador="=">'[__provincia_id__]'</condicion>
+		                </field>
+		            </tabla_ex>
+		        </field>
+
+		        <field id="domicilio">
+					<label>Domicilio</label>
+				</field>
+
+		        <field id="telefono" colstyle="Display:none;">
+					<label>Teléfono</label>
+					<size>15</size>
+				</field>
+
+		        <field id="email" colstyle="Display:none;">
+					<label>E-Mail</label>
+					<size>35</size>
+				</field>
+
+		        <field id="web" colstyle="Display:none;">
+					<label>Sitio WEB</label>
+				</field>
+
+		    </table>
+		</form>
+    </histrix>
+
+
+<!--
+
+-->
+

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+    <title>FICHA SECCION</title>
+    <obs/>
+    <form detalle="seccion_art_detalle_crud.xml">
+        <table id="SECCION" label="Ficha Seccion">
+        	<filters>
+        	    <field id="nombre" _deshabilitado="false">
+                    <label>Nombre</label>
+                    <operador>like</operador>
+        	    </field>
+        	</filters>
+
+            <field id="id_seccion" noshow="true">
+                <label>Id</label>
+                <detalle>seccion_id</detalle>
+            </field>
+
+            <field id="nombre" _noshow="true" >
+                <label>Nombre</label>
+            </field>
+
+            <field id="abreviacion_seccion" >
+                <label>Abreviación</label>
+            </field>
+
+    	    <order>
+                <field id="nombre" />
+    	    </order>
+        </table>
+    </form>
+</histrix>

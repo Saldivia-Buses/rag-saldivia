@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" borra="no" inserta="no" imprime="false" subtipo="vertical" path="fotos/articulos" tooltip="false">
+    <title>DETALLE</title>
+    <obs></obs>
+    <form  detalle="stkinspec_hlp.xml">
+        <table id="CPSMOVIM" label="DETALLE">
+            <movimientos cabecera="facremit_cab.xml">
+                <relacion id="cpsmovim_ingmov.xml"></relacion>
+                <relacion id="stkinmov_ingmov_OC.xml"></relacion>
+                <relacion id="ocprecib_ingmov.xml"></relacion>
+
+                <relacion id="herramientas_ingmov.xml"></relacion>
+			<relacion id="herramientas_ingmov_close.xml"></relacion> 
+				
+                <relacion id="movdemeritos_ingmov.xml"></relacion>
+                <relacion id="cpsencab_rec_ingmov.xml"></relacion>
+
+            </movimientos>
+            <field id="siscod" oculto="true">
+                <label>Codigo Sis </label>
+                <condicion operador='='>''</condicion>
+            </field>
+            <field id="movfec" oculto="true">
+                <label>fecha</label>
+            </field>
+            <field id="idPed" deshabilitado="true" noshow="true">
+            </field>
+			
+            <field id="artcod" deshabilitado="true" esClave="true">
+                <label>Art.</label>
+                <help>Codigo de Articulo</help>
+                <detalle>artcod</detalle>
+            </field>
+			
+            <field id="mensaje" deshabilitado="true">
+                <label style="color:green;" Formstyle="display:none;" modpos="nobr"></label>
+                <expression>select PEDIDOINT.mensaje from PEDIDOINT where PEDIDOINT.idPed = CPSMOVIM.idPed and CPSMOVIM.idPed != 0 limit 1</expression>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="id_cpsmovim" deshabilitado="true" noshow="true" />
+            
+            <field id="ped" deshabilitado="true" esClave="true">
+                <label modpos="nobr">Fec.Ped.</label>
+                <expression>case when fecreq !='0000-00-00' then fecreq else movfec end</expression>
+                <tipo>date</tipo>
+            </field>
+            <field id="demora" deshabilitado="true">
+                <label modpos="nobr">demora</label>
+                <expression> to_days(now()) - to_days(fecreq)</expression>
+            </field>            
+
+<!--			<field id="detalle" deshabilitado="true" noshow="true">
+				<label Formstyle="width:20em;" >Detalle</label>
+				
+			</field> -->
+            <field id="detalle" deshabilitado="true" >
+                <label modpos="nobr" colspan="6" >Descrip</label>
+				
+                <expression>concat(CPSMOVIM.detalle,' ', CPSMOVIM.observaciones)</expression>
+				
+            </field>
+	    <field id="pendientes" obj="controles_qry.xml" local="true" esTabla="true">
+                <paring destino="artcod">artcod</paring>
+                <label modpos="nobr" colspan="4" rowspan="5"></label>
+            </field>	
+            <field id="movcps" deshabilitado="true">
+                <label>Pedido</label>
+                <help>Pedido (expresado en la unidad de compra)</help>
+                <tipo>numeric</tipo>
+            </field>
+            <field id="valuso" deshabilitado="true" noshow="true" tabla="STKINSUM">
+                <label>vuso</label>
+                <valor>1</valor>
+            </field>
+            <field id="valcps" deshabilitado="true" noshow="true" tabla="STKINSUM">
+                <label>vCompra</label>
+                <valor>1</valor>
+            </field>
+            <field id="ingresan" local="true" preventLoop="true">
+                <label modpos="nobr">Ingresan</label>
+                <help>Cantidad ingresada</help>
+                <jseval campodestino="Unidades" actxml="false">(valcps == 1)?(ingresan * valuso):(ingresan / valcps)</jseval>
+<!--                <jseval campodestino="coddem" actxml="false">(straFecha(\'ped\') &lt; straFecha( $(\'[name=movfec__1]\').val() ) )? 100 : 0 </jseval>  -->
+                <jseval campodestino="coddem" actxml="false">(demora &gt; 2 )? ((demora &gt; 15 )? 5 : 100) : 0 </jseval>  
+
+                <valor>0</valor>
+                <tipo>numeric</tipo>
+            </field>
+
+			<!-- tengo que agregar este campo para que el calculo no se haga sobre si mismo todo el tiempo -->
+            <field id="pen_cpsori" noshow="true" >
+                <expression>pencps</expression>
+                <label>pen_cpsori</label>
+            </field>
+			
+            <field id="pencps" deshabilitado="true" >
+                <label modpos="nobr">Pendiente</label>
+                <help>Pendiente (expresado en la unidad de compra)</help>
+                <if exp="ingresan != 0 &amp;&amp; codest != 3">
+                    <true>pen_cpsori - ingresan</true>
+                    <false>pen_cpsori </false>
+                </if>
+				
+            </field>
+			
+            <field id="mov_pen2" deshabilitado="true">
+                <expression>movcps - pencps</expression>
+                <if exp="pencps != 0">
+                    <true>movcps - pencps</true>
+                    <false>movcps - pencps</false>
+                </if>
+                <label >Recibido</label>
+                <help>Recibido</help>
+                <tipo>numeric</tipo>
+            </field>
+			
+            <field id="artuni_exp3" deshabilitado="true" >
+                <expression>STKINSUM.unicps</expression>
+                <label modpos="nobr" >U.Compra</label>
+                <help>Unidad de Compra</help>
+                <tabla_ex id="FSMUNIDS">
+					
+                    <field id="unicod" clave="true"></field>
+                    <field id="uniabv"></field>
+                </tabla_ex>
+                <tipo>integer</tipo>
+            </field>
+
+			
+            <field id="relacion" oculto="true" local="true">
+                <expression>STKINSUM.valcps</expression>
+                <label >relacion</label>
+                <help>relacion uso-cps</help>
+                <tipo>numeric</tipo>
+            </field>
+
+
+            <field id="recLote" tabla="STKINSUM" noshow="true" deshabilitado="true">
+                <label>Rec</label>
+            </field>
+			
+            <field id="Unidades" local="true" preventLoop="true">
+                <label modpos="nobr">Unidades</label>
+                <help>Cantidad de Unidades Fisicas recibidas</help>
+				
+                <jseval campodestino="ingresan" actxml="false">(valuso == 1)?(Unidades * valcps):(Unidades / valuso)</jseval>
+            </field>
+            <field id="cantetiq"  local="true" noshow="true" deshabilitado="true">
+                <label>Etiquetas</label>
+                <if exp="0recLote == 1">
+                    <true>1</true>
+                    <false>Unidades</false>
+					
+                </if>
+            </field>
+
+            <field id="artuni_exp4" deshabilitado="true">
+                <expression>STKINSUM.artuni</expression>
+                <label modpos="nobr">U.Uso</label>
+                <help>Unidad de Uso</help>
+                <tabla_ex id="FSMUNIDS">
+					
+                    <field id="unicod" clave="true"></field>
+                    <field id="uniabv"></field>
+
+                </tabla_ex>
+                <tipo>integer</tipo>
+			
+            </field>
+
+            <field id="codest" local="true">
+                <label >Estado</label>
+                <help>Estado</help>
+                <tabla_ex id="ESTADOBS">
+                    <field id="codest" clave="true"></field>
+                    <field id="nomest"></field>
+                </tabla_ex>
+                <valor>1</valor>
+            </field>
+            <field id="coddem" local="true">
+                <label modpos="nobr" colspan="3" style="color:red;">Demeritos</label>
+                <tabla_ex id="DEMERITO">
+                    <field id="coddem" clave="true"></field>
+                    <field id="desdem"></field>
+                </tabla_ex>
+            </field>
+				
+            <field id="trazable" tabla="STKINSUM" _oculto="true">
+                <label>Trazabilidad</label>
+                <help>Insumo Trazable</help>
+                <options>
+                    <option valor="0">No Trazable</option>
+                    <option valor="1">Trazable</option>
+                </options>
+            </field>
+			
+            <field id="ctacod" local="true" oculto="true">
+                <label>cuenta</label>
+                <tipo>integer</tipo>
+				
+            </field>
+            <field id="nrotraz" oculto="true" local="true" valop="true">
+                <expression>CPSMOVIM.artcod</expression>
+                <label>nrotraz</label>
+                <tabla_ex id="HERRAMIENTAS">
+                    <field id="artcod" clave="true">
+                    </field>
+                    <field id="id_herramienta">
+                        <expression> CAST(SUBSTRING(id_herramienta, 14, 10) AS DECIMAL) + 1</expression>
+                        <label>id_herramienta</label>
+                        <tipo>integer</tipo>
+                    </field>
+                    <field id="grucod">
+                        <condicion operador="=">2</condicion>
+                    </field>
+                </tabla_ex>
+                <tipo>char</tipo>
+				
+            </field>
+            <field id="grucod" local="true" oculto="true" >
+                <valor>2</valor>
+            </field>
+            <field id="id_traza1" local="true" deshabilitado="true" noshow="true">
+                <label>codigo1</label>
+                <if exp="(0trazable == 1) || (codest == 3 and ingresan > 0)">
+                    <true>('codest'==1 ? 'A': ('codest'==2 ? 'O':'R')).sprintf(
+						'%04d'.'%08s' , 'ctacod','artcod' )
+                    </true>
+                    <false>''</false>
+                </if>
+                <tipo>char</tipo>
+            </field>
+			
+            <field id="fecreq" local="true" oculto="true" esClave="true">
+                <label>Requerido</label>
+                <help>Fecha requerido</help>
+                <tipo>date</tipo>
+            </field>
+            <field id="grabo" local="true" oculto="true">
+                <label>grabo</label>
+                <if exp="ingresan > 0">
+                    <true>'true'</true>
+                    <false>'false'</false>
+                </if>
+                <tipo>char</tipo>
+            </field>
+             <field id="grabo_herr" local="true" oculto="true">
+                <label>grabo_herr</label>
+		<!-- aca poner si estado es rechazado-->
+                <if exp="(ingresan > 0 and  0trazable == 1) || (codest == 3 and ingresan > 0)">
+                    <true>'true'</true>
+                    <false>'false'</false>
+                </if>
+                <tipo>char</tipo>
+            </field>
+
+
+            <field id="grabo_deme" local="true" oculto="true">
+                <label>grabo_deme</label>
+                <if exp="codest > 1 and ingresan > 0 and 0trazable == 1">
+                    <true>'true'</true>
+                    <false>'false'</false>
+                </if>
+                <tipo>char</tipo>
+            </field>
+            <field id="movcod" local="true" oculto="true">
+                <label>movcod</label>
+                <if exp="1 == 1">
+                    <true>1</true>
+                    <false>1</false>
+                </if>
+                <tipo>char</tipo>
+            </field>
+			
+            <field id="sisprv" local="true" oculto="true">
+                <label>sisprv</label>
+                <if exp="1 == 1">
+                    <true>'01'</true>
+                    <false>'01'</false>
+                </if>
+                <tipo>char</tipo>
+            </field>
+						
+
+            <field id="ocpnro" >
+                <label>Nro </label>
+                <help>Numero de Orden de Compra</help>
+            </field>
+            <field id="nrocha" deshabilitado="true" esClave="true">
+                <label modpos="nobr">Coche</label>
+            </field>
+
+            <field id="cierre" local="true" suma="true" retroalimenta="true" acumula="true" deshabilitado="true" noshow="true">
+                <if exp="true" operador="=">
+                    <true>(pencps >= 0)?pencps:0</true>
+                    <false>1</false>
+                </if>
+                <label>cierre</label>
+                <tipo>integer</tipo>
+            </field>
+
+            <field id="cerrar" local="true" noshow="true" deshabilitado="true">
+                <if exp="cierre == 0 || 'forzarCump' == '1'">
+                    <true>'true'</true>
+                    <false>'false'</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="ocpren" noshow="true"></field>
+            <field id="fotopath" local="true" noshow="true">
+                <if exp="true">
+                    <true>'artcod/'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="foto" path="fotopath" _download="true" deshabilitado="true">
+                <expression>select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = STKINSUM.artcod order by revision desc limit 1 </expression>
+                <label Formstyle="display:none;">Imagen</label>
+                <tipo >file</tipo>
+                <size>40</size>
+            </field>
+	     <field id="historic" noshow="true" >
+                <label modpos="nobr" colspan="5">historic</label>
+                <expression>(SELECT (CASE WHEN COUNT(*) > 0 THEN 'historico_rechazados_qry.xml' ELSE '' END) FROM OCPRECIB where OCPRECIB.ctacod = '[__ctacod__]'  and OCPRECIB.artcod = STKINSUM.artcod and OCPRECIB.ocpnro = CPSMOVIM.ocpnro  and  OCPRECIB.ocpren =  CPSMOVIM.ocpren )</expression>
+            </field>
+	     <field _deshabilitado="true" id="historico" local="true" linkdes="rechazados" print="false">
+		<attribute id="linkint">historic</attribute>
+                <label Formstyle="display:none;">Historico</label>
+		<paring destino="ctacod">ctacod</paring>
+                <paring destino="ocpnro">ocpnro</paring>
+		<paring destino="artcod">artcod</paring>
+		<paring destino="ocpren">ocpren</paring>
+		<if exp="'historic' != ''">
+		   <true>'Historico'</true>
+		   <false>'    '</false>
+		</if>
+		
+	     </field>
+            <field id="observacion" local="true" >
+                <label modpos="nobr" colspan="4">Obs:</label>
+                <tipo>varchar</tipo>
+                <size>150</size>
+            </field>
+	    	
+            <order>
+                <field id="ocpren"></field>
+            </order>
+        </table>
+        <join tipo="left">
+            <table id="STKINSUM">
+                <field id="siscod" oculto="true">
+                    <label>STKINSUM.siscod</label>
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="artcod" oculto="true">
+                    <condicion operador="=">CPSMOVIM.artcod</condicion>
+                </field>
+                <field id="artuni" oculto="true">
+                </field>
+                <field id="unicps" oculto="true">
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

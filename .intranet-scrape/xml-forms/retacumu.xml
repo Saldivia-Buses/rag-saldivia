@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<abm tipo="abm">
+	<titulo>RETENCIONES</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="RETACUMU" label="RETENCION">
+
+			<filters>
+
+				<field id="ctacod" >
+					<label>Proveedor</label>
+					<operador>=</operador>
+				</field>
+				
+			</filters>	
+
+			<field id="ctacod" >
+				<label>Prov.</label>
+				<helper type="combo" id="CCTCUENT">
+					<field id="ctacod"></field>
+					<field id="ctanom"></field>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'01'</condicion>
+					</field>
+					<orden>
+						<field id="ctanom"></field>
+					</orden>
+<!-- 					<filtra>ctacod</filtra>
+ -->				</helper>
+			</field>
+
+			<field id="acufec">
+				<label>Acufec</label>
+			</field>			
+<!--			<field id="siscod" oculto="true">
+				<condicion operador="=">'10'</condicion>
+				<valor>'10'</valor>
+			</field> -->
+
+			<field id="movimp" tabla="CCTMOVIM" deshabilitado="true">
+				<label>Total OP</label>
+			</field>
+
+			<field id="nropag">
+				<label>O.P</label>
+			</field>
+
+			<field id="acupag">
+				<label>Neto</label>
+			</field>
+
+			<field id="acuret">
+				<label>Retención</label>
+			</field>
+			
+			<field id="ctanro"  tabla="CCTCUENT" deshabilitado="true">
+				<label>CUIT</label>
+				<tipo>varchar</tipo>
+			</field>	
+
+			<field id="year" >
+				<label>Año</label>
+			</field>			
+
+			<field id="mes" >
+				<label>Mes</label>
+			</field>			
+			
+		</tabla>
+		
+		<join tipo="left">
+			<tabla id="CCTCUENT">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">'01'</condicion>
+				</field>
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">RETACUMU.ctacod</condicion>
+				</field>
+			</tabla>
+		</join>
+
+		<join tipo="left">
+			<tabla id="CCTMOVIM">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">'01'</condicion>
+				</field>
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">RETACUMU.ctacod</condicion>
+				</field>
+				<field id="movnro" oculto="true">
+					<condicion operador="=">RETACUMU.nropag</condicion>
+				</field>
+				<field id="concod" oculto="true">
+					<condicion operador="=">4</condicion>
+				</field>
+<!--				<field id="movfec" oculto="true">
+					<condicion operador="=" valorde="acufec"></condicion>
+				</field> -->
+
+			</tabla>
+		</join>		
+	</consulta>	   
+</abm> 

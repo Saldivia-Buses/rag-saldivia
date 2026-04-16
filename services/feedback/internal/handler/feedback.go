@@ -8,10 +8,10 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 	"github.com/Camionerou/rag-saldivia/services/feedback/internal/repository"
 )
 
@@ -41,7 +41,7 @@ func (h *Feedback) Routes() chi.Router {
 func (h *Feedback) Summary(w http.ResponseWriter, r *http.Request) {
 	userID := r.Header.Get("X-User-ID")
 	if userID == "" {
-		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "not authenticated"})
+		httperr.WriteError(w, r, httperr.Unauthorized("not authenticated"))
 		return
 	}
 
@@ -51,32 +51,28 @@ func (h *Feedback) Summary(w http.ResponseWriter, r *http.Request) {
 	// AI quality
 	aiRow, err := h.repo.GetSummaryAIQuality(ctx, hours)
 	if err != nil {
-		slog.Error("summary: ai quality query failed", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 
 	// Errors
 	errRow, err := h.repo.GetSummaryErrors(ctx, hours)
 	if err != nil {
-		slog.Error("summary: errors query failed", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 
 	// Feature requests
 	featRow, err := h.repo.GetSummaryFeatures(ctx, hours)
 	if err != nil {
-		slog.Error("summary: features query failed", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 
 	// NPS (30 day rolling)
 	npsRow, err := h.repo.GetSummaryNPS(ctx)
 	if err != nil {
-		slog.Error("summary: nps query failed", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 
@@ -107,7 +103,7 @@ func (h *Feedback) Summary(w http.ResponseWriter, r *http.Request) {
 func (h *Feedback) Quality(w http.ResponseWriter, r *http.Request) {
 	userID := r.Header.Get("X-User-ID")
 	if userID == "" {
-		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "not authenticated"})
+		httperr.WriteError(w, r, httperr.Unauthorized("not authenticated"))
 		return
 	}
 
@@ -123,9 +119,7 @@ func (h *Feedback) Quality(w http.ResponseWriter, r *http.Request) {
 			Limit:  limit,
 		})
 		if err != nil {
-			reqID := middleware.GetReqID(ctx)
-			slog.Error("quality query failed", "error", err, "request_id", reqID)
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+			httperr.WriteError(w, r, httperr.Internal(err))
 			return
 		}
 
@@ -142,9 +136,7 @@ func (h *Feedback) Quality(w http.ResponseWriter, r *http.Request) {
 		Limit: limit,
 	})
 	if err != nil {
-		reqID := middleware.GetReqID(ctx)
-		slog.Error("quality query failed", "error", err, "request_id", reqID)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 
@@ -159,7 +151,7 @@ func (h *Feedback) Quality(w http.ResponseWriter, r *http.Request) {
 func (h *Feedback) Errors(w http.ResponseWriter, r *http.Request) {
 	userID := r.Header.Get("X-User-ID")
 	if userID == "" {
-		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "not authenticated"})
+		httperr.WriteError(w, r, httperr.Unauthorized("not authenticated"))
 		return
 	}
 
@@ -175,7 +167,7 @@ func (h *Feedback) Errors(w http.ResponseWriter, r *http.Request) {
 		Limit:  limit,
 	})
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 
@@ -204,7 +196,7 @@ func (h *Feedback) Errors(w http.ResponseWriter, r *http.Request) {
 func (h *Feedback) Usage(w http.ResponseWriter, r *http.Request) {
 	userID := r.Header.Get("X-User-ID")
 	if userID == "" {
-		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "not authenticated"})
+		httperr.WriteError(w, r, httperr.Unauthorized("not authenticated"))
 		return
 	}
 
@@ -213,7 +205,7 @@ func (h *Feedback) Usage(w http.ResponseWriter, r *http.Request) {
 
 	rows, err := h.repo.GetUsageByModule(ctx, hours)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		httperr.WriteError(w, r, httperr.Internal(err))
 		return
 	}
 
@@ -232,12 +224,12 @@ func (h *Feedback) Usage(w http.ResponseWriter, r *http.Request) {
 func (h *Feedback) HealthScore(w http.ResponseWriter, r *http.Request) {
 	tenantID := r.Header.Get("X-Tenant-ID")
 	if tenantID == "" {
-		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "not authenticated"})
+		httperr.WriteError(w, r, httperr.Unauthorized("not authenticated"))
 		return
 	}
 
 	if h.platformDB == nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "platform DB not configured"})
+		httperr.WriteError(w, r, httperr.Wrap(nil, httperr.CodeInternal, "platform DB not configured", http.StatusServiceUnavailable))
 		return
 	}
 
@@ -301,7 +293,7 @@ func parseIntParam(s string, fallback, max int) int {
 func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(v)
+	_ = json.NewEncoder(w).Encode(v)
 }
 
 // qualityEventToMap builds a response map from typed quality event fields.

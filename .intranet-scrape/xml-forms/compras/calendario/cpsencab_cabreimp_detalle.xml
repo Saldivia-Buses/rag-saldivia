@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" sololectura="true" _autoprint="true">
+    <title>ORDEN DE COMPRA</title>
+    <obs></obs>
+    <!--<pie>F 7,4 01.1111</pie> -->
+    <form >
+        
+        <table id="CPSENCAB" label="ORDEN DE COMPRA" graba="false">
+            <field id="ctacod"  deshabilitado="true" noshow="true" print="false">
+                <label size="23" posx="6" posy="24" PDFsize="11">Prv</label>
+                <help>Codigo de Cuenta</help>
+            </field>
+
+            <field id="ctanom" tabla="CCTCUENT">
+                <expression>concat('(',CCTCUENT.ctacod, ') ',CCTCUENT.ctanom)</expression>
+                <label size="23" posx="6" posy="+1" PDFsize="11" colspan="4">Proveedor</label>
+                <help>Nombre del proveedor</help>
+                <tipo>varchar</tipo>
+                <size>80</size>
+            </field>
+
+            <field id="ocpnro" deshabilitado="true">
+                <label >Numero O.C.</label>
+                <help>Numero de Orden de Compra</help>
+                <size>80</size>
+            </field>
+<!--
+            <field id="subj" noshow="true" email="subject" print="false">
+                <expression>concat('Orden de Compra Nro ',CPSENCAB.ocpnro)</expression>
+            </field>
+            <field id="Body" noshow="true" email="body" print="false">
+                <expression>concat('Le envio adjunto al presente la Orden de Compra Nro ',CPSENCAB.ocpnro, ' Muchas gracias')</expression>
+            </field>
+        -->
+
+            <field id="ctadir" tabla="CCTCUENT" deshabilitado="true">
+                <expression>concat(ctadir, ' - ', ctaloc)</expression>
+                <label size="23" posx="6" posy="0" PDFsize="11">Domicilio</label>
+                <help>Direccion del proveedor</help>
+                <tipo>varchar</tipo>
+                <size>80</size>
+            </field>
+
+            <field id="ocpfec" deshabilitado="true">
+                <label size="27" posx="130" posy="+1"  PDFsize="11">Fecha O.C</label>
+                <help>Fecha O.C.</help>
+            </field>
+            <!--			<field id="ctaloc" tabla="CCTCUENT" deshabilitado="true">
+                                <label size="23" posx="6" posy="+1" PDFsize="11">localidad</label>
+                                <help>Localidad del proveedor</help>
+                                <tipo>varchar</tipo>
+                        </field> -->
+            <field id="ctatel" tabla="CCTCUENT" deshabilitado="true">
+                <label size="23" posx="6" posy="0" PDFsize="11">Telefono</label>
+                <help>Telefono del proveedor</help>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="ocpent" deshabilitado="true">
+                <label size="27" colspan="4" posx="130" posy="+1" PDFsize="12">Entregar en</label>
+	               <helper type="combo"  xml="deposito.xml" dir="/compras/" />
+                <help>Lugar de Entrega</help>
+            </field>
+
+            <field id="ctafax" tabla="CCTCUENT" deshabilitado="true">
+                <label  size="23" posx="6" posy="0" PDFsize="11">Fax</label>
+                <help>Fax del proveedor</help>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="mail"  deshabilitado="true" email="to">
+                <expression>ifnull((select mail from CCTCONTA where siscod = '01' and CCTCONTA.ctacod = CPSENCAB.ctacod order by principal DESC limit 1), CCTCUENT.ctaema)</expression>
+                <label  size="23" posx="6"  posy="+1" PDFsize="11">Email</label>
+                <size>80</size>
+            </field>
+            <!--
+            <field id="fpago" >
+                    <label size="27" colspan="4" posx="130" posy="0" PDFsize="11">F.Pago</label>
+                    <help>Forma de Pago</help>
+                   <helper type="combo" xml="HLPformapago_qry.xml" dir="/ayudas_local"/>
+            </field>
+            -->
+<!--            <field id="estado">
+                <label posx="30" posy="+4" PDFsize="20" ></label>
+                   <expression>(case when ocpest = 0 then 'ORDEN DE COMPRA NO AUTORIZADA' else '' end)</expression>
+            </field>
+-->
+            <field id="movimientos" local="true" _obj="cpsmovim_reimp.xml" obj="cpsmovim_reimp_detalle.xml">
+                <label colspan="4" posx="6" posy="+4" PDFsize="8"></label>
+                <help>Detalle de la O.C.</help>
+                <paring destino="ocpnro">ocpnro</paring>
+<!--                <paring destino="movfec">ocpfec</paring>  -->
+            </field>
+
+
+            <field id="tabla_origen" local="true" noshow="true">
+                <valor>CPSMOVIM</valor>
+            </field>
+
+            <field id="seguimiento" local="true">
+                <valor>'Observaciones'</valor>
+                <tipo>varchar</tipo>
+                <helper type="object" xml="seguimiento.xml">
+                    <parameter target="regmovim_id" source="ocpnro" />
+                    <parameter target="tabla_origen" source="tabla_origen" />
+                </helper>
+            </field>
+
+
+            <!--		<field id="ocpfen"  deshabilitado="true">
+                                <label colspan="4" posx="6" posy="-1" PDFsize="12">Plazo de Entrega</label>
+                        </field>			-->
+
+            <!--
+
+            <field id="Normas" deshabilitado="true" local="true" obj="normainsumos_OC.xml">
+                <label colspan="4" posx="6" posy="+1" PDFsize="8" ></label>
+                <help>Normas</help>
+                <title>Deberá especificar en factura: "Los productos entregados cumplen con las normas............ certificados mediante ensayos Nro......... realizado por .......</title>
+            </field>
+           --> 
+            <field id="ocpobs" _deshabilitado="true" pdfancho="20">
+                <label  colspan="4" posx="6" posy="+1"  PDFsize="10" >Observaciones</label>
+                <help>Observaciones</help>
+                <tipo>varchar</tipo>
+                <size>80</size>
+                <!-- <pdfancho>170</pdfancho>-->
+
+            </field>
+            <!--
+            <field id="Leyenda" deshabilitado="true" local="true" obj="Observ_OC.xml">
+                <label colspan="4" posx="6" posy="+4" PDFsize="10" ></label>
+                <help>Leyenda</help>
+            </field>
+            <field id="citar" local="true" deshabilitado="true" _Styletbody="font-weight:700;">
+                <label colspan="4" posx="45" posy="+4" PDFsize="12" PDFnoborder="true"></label>
+                <help>Lugar de Entrega</help>
+                <expression>UPPER('Citar Numero de Orden de Compra en el Remito')</expression>
+            </field>
+            <field id="leyenda1" local="true" deshabilitado="true" >
+                <label  size="60" posx="15" posy="+20" PDFsize="12" PDFnoborder="true">Horario de Recepcion:</label>
+                <valor>' 7:00 a 12:00 y 12:30 a 15:30'</valor>
+            </field>
+            
+            
+            <field id="leyenda2" local="true" deshabilitado="true" >
+                <label  size="60" posx="15" posy="+2" PDFsize="12" PDFnoborder="true">Fecha Probable de Entrega:</label>
+                <valor>'..................................'</valor>
+            </field>
+            <field id="firma1" local="true" deshabilitado="true" >
+                <label  size="20" posx="140" posy="0" PDFsize="12" PDFnoborder="true">Firma</label>
+                <valor>'.....................'</valor>
+            </field>
+
+            <field id="leyenda3" local="true" deshabilitado="true" >
+                <label  size="60" posx="15" posy="+2" PDFsize="12" PDFnoborder="true">Fecha de Recepción:</label>
+                <valor>'..................................'</valor>
+            </field>
+            <field id="firma2" local="true" deshabilitado="true" >
+                <label  size="20" posx="140" posy="0" PDFsize="12" PDFnoborder="true">Firma </label>
+                <valor>'.....................'</valor>
+            </field>
+
+            <field id="leyenda4" local="true" deshabilitado="true" >
+                <label  size="60" posx="15" posy="+2" PDFsize="12" PDFnoborder="true">Controló Compras:</label>
+                <valor>'..................................'</valor>
+            </field>
+            <field id="firma3" local="true" deshabilitado="true" >
+                <label  size="20" posx="140" posy="0" PDFsize="12" PDFnoborder="true">Firma  </label>
+                <valor>'.....................'</valor>
+            </field>
+            
+            <field id="leyenda5" local="true" deshabilitado="true" >
+                <label  size="60" posx="15" posy="+2" PDFsize="12" PDFnoborder="true">Controló Depósito:</label>
+                <valor>'..................................'</valor>
+            </field>
+            <field id="firma4" local="true" deshabilitado="true" >
+                <label  size="20" posx="140" posy="0" PDFsize="12" PDFnoborder="true">Firma    </label>
+                <valor>'.....................'</valor>
+            </field>
+            -->
+        </table>
+        <join tipo="left">
+            <table id="CCTCUENT">
+                <field id="siscod" oculto="true">
+                    <label>CCTCUENT.siscod</label>
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="ctacod" oculto="true">
+                    <condicion operador="=">CPSENCAB.ctacod</condicion>
+                </field>
+            </table>
+        </join>
+   <!--     <join tipo="left">
+            <table id="CCTCONTA">
+                <field id="siscod">
+                    <label>cctcuent.siscod</label>
+                    <condicion operador="=">'01'</condicion>
+                </field>
+
+                <field id="ctacod" >
+                    <condicion operador="=">CPSENCAB.ctacod</condicion>
+                </field>
+
+            </table>
+        </join>
+-->
+    </form>
+</histrix>

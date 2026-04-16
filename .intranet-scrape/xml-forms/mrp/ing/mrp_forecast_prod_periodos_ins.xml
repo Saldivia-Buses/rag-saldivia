@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="nosql" grabafinal="true">
+    <title>Forecast Articulos</title>
+    <obs></obs>
+    <form >
+        <table id="MRP_FORECAST" label="Forecast">
+
+		<field id="xmrpperiodo_id"    		id_temp="xmrpperiodo_id" />
+		<field id="fecini_mrpperiodo" 		id_temp="fecini_mrpperiodo" />
+                <field id="fecfin_mrpperiodo" 		id_temp="fecfin_mrpperiodo" />
+                <field id="calculado" 	local="true"	id_temp="calculado" />
+                <field id="id_stkarticulo" 		id_temp="id_stkarticulo" />
+
+		<ejecuta> <![CDATA[
+		$arrkey = 'datosbase'.$_SESSION['db'];
+		$datos  = $_SESSION[$arrkey];
+
+		$calculo = new CalculoProduccion($datos->base,$datos->user,$datos->password, $datos->host);
+		$calculo->calcular('fecini_mrpperiodo','fecfin_mrpperiodo','xmrpperiodo_id', 'calculado','id_stkarticulo');
+		
+		$out=ob_get_contents();
+		ob_end_clean();
+		echo('<script type="text/javascript">alert("'.$out.'");</script>');
+		
+		]]></ejecuta>
+        </table>
+    </form>
+</histrix>

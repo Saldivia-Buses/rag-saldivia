@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" PDFlineColor="255,255,255" PDFfontSize="10">
+    <title>Movimientos</title>
+    <obs/>
+    <form>
+        <table id="CTB_DETALLES" label="Libro diario">
+
+            <field id="ejercicio_id" noshow="true" tabla="CTB_MOVIMIENTOS" print="false" />
+
+            <field id="concepto_id" noshow="true" tabla="CTB_MOVIMIENTOS" print="false" />
+
+            <field id="fecha_movimiento" noshow="true" tabla="CTB_MOVIMIENTOS" print="false">
+                <label>Fecha</label>
+                <help>Fecha movimiento</help>
+                <detalle>fecha_movimiento</detalle>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="nro_minuta" tabla="CTB_MOVIMIENTOS" colstyle="text-align:center;" noshow="true" print="false">
+                <label>NMinuta</label>
+                <help>Numero de la minuta</help>
+                <detalle>nro_minuta</detalle>
+                <size>4</size>
+            </field>
+
+            <field id="detalle_minuta" local="true" showObjTabla="true" showValor="true" PDFlineas="true" _PDFwidth="150">
+                <helper type="object" xml="libro_diario_minuta_det_qry.xml">
+                    <parameter source="nro_minuta" target="nro_minuta" />
+                    <parameter source="fecha_movimiento" target="fecha_movimiento" />
+                </helper>
+                <expression>CONCAT('Minuta Nº ', nro_minuta, IFNULL(CONCAT(' - ', CTB_MOVIMIENTOS.referencia), ''))</expression>
+                <label PDFnoborder="true" />
+            </field>
+
+            <group>
+                <field id="nro_minuta" />
+            </group>
+
+        </table>
+
+        <join tipo="left">
+            <table id="CTB_MOVIMIENTOS">
+                <field id="id_movimiento">
+                    <condicion operador="=">movimiento_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="inner">
+            <table id="CTB_CONCEPTOS">
+                <field id="id_concepto">
+                    <condicion operador="=">concepto_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

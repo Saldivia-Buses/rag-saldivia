@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="consulta">
+	<title>Cuentas Contables Habilitadas</title>
+	 <obs></obs>
+	  <form >
+		<table id="CTB_CUENTAS" label="Cuentas Habilitadas">
+
+			<field id="id_cuenta">
+			    <detalle>cuenta_id</detalle>
+			</field>
+			
+			<field id="nombres">
+			    <expression having="false">concat(nombre_cuenta, ' - ' ,id_cuenta)</expression>
+			</field>
+			
+			<field id="habilitada" noshow="true">
+				<condicion operador="=">1</condicion>
+			</field>
+			
+			<field id="ejercicio_id" noshow="true">
+				<condicion operador="=">(select id_ejercicio from CTB_EJERCICIOS where activo = 1 order by id_ejercicio DESC limit 1)</condicion>
+			</field>
+			
+			<field id="tipo_id" noshow="true" />
+			<order>
+				<field id="nombres" />
+			</order>
+	    </table>
+	</form>
+     </histrix>	

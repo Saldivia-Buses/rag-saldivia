@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert">
+  <title/>
+  <obs/>
+  <form>
+	<table id="REG_MOVIMIENTOS" idCampoCond="facturar">
+
+		<field id="subsistema_id"             id_temp="subsistema_fiscal" />
+		<field id="regcuenta_id"              id_temp="regcuenta_id" />
+		<field id="regcuentavendedor_id"      id_temp="regcuentavendedor_id" />
+		<field id="concepto_id"               id_temp="concepto_id" />
+		<field id="fecha_movimiento"          id_temp="fecha_movimiento" />
+		<field id="reg_periodo"               id_temp="reg_periodo" />
+		<field id="letra_movimiento"          id_temp="letra_movimiento" />
+		<field id="puesto_movimiento"         id_temp="puesto_movimiento" />
+		<field id="nro_movimiento">
+			<valor>ifnull((SELECT numero FROM REG_NUMERADORES RN WHERE RN.subsistema_id = '[__subsistema_fiscal__]' AND RN.puesto = '[__puesto_movimiento__]' AND RN.regconcepto_id = '[__concepto_id__]' AND RN.letra = '[__letra_movimiento__]' limit 1 ), 0)</valor>
+			<tipo>integer</tipo>
+		</field>
+		<field id="reg_fecha"                 id_temp="fecha_movimiento" />
+		<field id="vencimiento_movimiento">
+			<valor>ifnull(date_add(fecha_movimiento, interval (select ifnull(plazo,0) from REG_FORMAS where id_regforma = '[__regforma_id__]' limit 1) day), fecha_movimiento)</valor>
+			<tipo>integer</tipo>
+		</field>
+		<field id="stklista_id"               id_temp="stklista_id" />
+		<field id="neto_movimiento"           id_temp="neto_movimiento" />
+		<field id="alicuota_iva"              id_temp="alicuota_iva" />
+		<field id="importe_iva"               id_temp="importe_iva" />
+		<field id="importe_bon"               id_temp="importe_bon" />
+		<field id="importe_exento"            id_temp="importe_exento" />
+		<field id="importe_periodo"           id_temp="importe_periodo" />
+		<field id="importe_percepcion"        id_temp="importe_percepcion" />
+		<field id="importe_ibr"               id_temp="importe_ibr" />
+		<field id="importe_nogravado"         id_temp="importe_nogravado" />
+		<field id="importe_movimiento"        id_temp="importe_movimiento">
+			<tipo>custom_numeric</tipo>
+		</field>
+		<field id="saldo_movimiento"          id_temp="importe_movimiento"> 
+			<tipo>custom_numeric</tipo>
+		</field>
+		<field id="bonificaciones_movimiento" id_temp="bonificaciones_movimiento" />
+		<field id="alicuota_percepcion"       id_temp="alicuota_percepcion" />
+		<field id="regcuentatransporte_id"    id_temp="regcuentatransporte_id" />
+		<field id="regforma_id"               id_temp="regforma_id" />
+		<field id="nombre_movimiento"         id_temp="nombre_movimiento" />
+		<field id="cantidad_bultos"           id_temp="cantidad_bultos" />
+		<field id="domicilio_movimiento"      id_temp="domicilio_movimiento" />
+		<field id="iva_id"                    id_temp="iva_id" />
+		<field id="cuit_movimiento"           id_temp="cuit_movimiento" />
+		<field id="referencia_movimiento"     id_temp="referencia_movimiento">
+			<tipo>varchar</tipo>
+		</field>
+		<field id="tiposervicio_afip" 	      id_temp="tiposervicio_afip" />
+		<field id="dni_movimiento"            id_temp="dni_movimiento" />
+		<field id="genlocalidad_id"           id_temp="genlocalidad_id" />
+		<field id="pag_movimiento">
+			<valor>'A'</valor>
+			<tipo>integer</tipo>
+		</field>
+	  
+	</table>
+  </form>
+</histrix>

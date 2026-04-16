@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+	<title>Posiciones de Fabricacion</title>
+	<obs></obs>
+	<form >
+		<table id="POSICIONESFAB" >
+			<title>Posiciones</title>
+			<field id="id_posicionfab">
+			</field>
+
+			
+			<field id="nombre">
+				<label>Nombre</label>
+				<help>Nombre de la posicion</help>
+			</field>
+			<field id="linea_id" tabla="MOMENTO">
+				<expression having="false">MOMENTO.linea_id</expression>
+			</field>
+
+			<field id="pertenece_linea"/>
+
+			<field id="idMomento"   esClave="true" oculto="true">
+				<label>Seccion</label>
+				<help>Codigo de Seccion</help>
+			</field>
+			<field id="idPosicion"   esClave="true">
+				<label>Codigo</label>
+				<help>Codigo de Poscion</help>
+			</field>
+			
+   			<order>
+				<field id="orden" tabla="MOMENTO" />
+				<field id="nombre"/>
+			</order>
+		</table>
+		<join>
+			<table id="MOMENTO">
+				<field id="idMomento">
+					<condicion operador="=">POSICIONESFAB.idMomento</condicion>
+				</field>
+			</table>
+		</join>
+	</form>	   
+</histrix> 

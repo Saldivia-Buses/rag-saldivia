@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" preloadData="false" procesa="false" llenoreferente="true" tooltip="false" showCantidad="false" updateTotals="true" >
+  <title>Detalle</title>
+  <obs/>
+  <form >
+    <table id="REG_DETALLES" label="movimientos">
+
+      <!--<validation>
+        <condition><![CDATA[ cantidad_detalle + 0 > stkact + 0]]></condition>
+        <message>La cantidad ingresada supera el stock existente</message>
+      </validation>-->
+    
+      <movimientos>
+        <relacion id="pos_regdetalles_ins.xml" />
+        <relacion id="pos_stkmovimientos_ins.xml" /> 
+        <!-- relacion id="pos_stkseriales_upd.xml" / --> 
+
+        <relacion id="ticket_factura_imp.xml" />  
+      </movimientos>
+
+      <field id="codigo_detalle" deshabilitado="false" esClave="true" required="true">
+        <label style="font-size:16px;color:red;">Cod.</label>
+        <helper type="external" xml="stkarticulo_pos.xml" dir="/ayudas">
+
+	      <field id="regcuenta_id" local="true" noshow="true" />
+
+	      <field id="wstklista_id" local="true">
+	        <label>Lista</label>
+	        <valor>1</valor>
+	      </field>
+
+	      <field id="stkdeposito_id" local="true">
+	        <label>Deposito</label>
+	      </field>
+
+	      <field id="stkact">
+	        <label>Stock</label>
+	        <expresion>ifnull((SELECT cantidad_stock FROM STK_STOCKACTUAL WHERE stkarticulo_id = STK_ARTICULOS.id_stkarticulo and stkdeposito_id = '[__stkdeposito_id__]'), 0)</expresion>
+	    	<detalle>stkact</detalle>
+	    </field> 
+		<field id="valida_x_rubro" noshow="true">
+		    <label>Fact. S/Stock</label>
+		    <expression>STK_RUBROS.factura_sinstock</expression>
+		    <tipo>check</tipo>
+		    <detalle>valida_x_rubro</detalle>
+		</field>    
+        </helper>
+        <size>13</size>
+        <!--
+        <jsfunction event="onfocus">
+          $('[name=codigo_serie]', '#pos_regdetalles_grid_xml').attr('disabled', 'disable');
+        </jsfunction>
+        -->
+      </field>
+
+      <field id="id_regdetalle" noshow="true" esClave="false" />
+
+      <field id="stkarticulo_id" noshow="true" local="true">
+        <!--
+        <actualiza>
+          <field id="codigo_serie" destino="stkarticulo_id" />
+        </actualiza>
+        -->
+      </field>
+
+      <field id="descripcion_detalle" deshabilitado="true">
+        <label modpos="nobr" style="font-size:16px;">Descripción</label>
+        <size>30</size>
+      </field>
+      <field id="trazable" noshow="true" >
+      </field>
+
+      <field id="codigo_serie" _required="true">
+        <label>S/N</label>
+        <help>Ingrese S/N</help>
+        <size>15</size>
+        <!--
+        <helper type="external" xml="stkserial_codigo_pos_qry.xml" dir="/ayudas" />
+        <jsfunction event="onfocus">
+        var t =  $('[name=trazable]', '#pos_regdetalles_grid_xml').val();
+        if( t == 1){
+              $('[name=codigo_serie]', '#pos_regdetalles_grid_xml').removeAttr('disabled');
+              }
+        else {
+              $('[name=codigo_serie]', '#pos_regdetalles_grid_xml').attr('disabled', 'disable');
+        }
+        </jsfunction>
+        -->
+      </field>
+      
+      <field id="id_stkserial" local="true" noshow="true"/>
+      
+      <field id="nro_partida" Formstyle="display:none;">
+          <label>Nro.Partida</label>
+          <expression sql="true">(SELECT nro_partida FROM STK_PARTIDA_DETALLES LEFT JOIN STK_PARTIDAS ON STK_PARTIDA_DETALLES.stkpartida_id = STK_PARTIDAS.id_stkpartida WHERE stkarticulo_id = '[__stkarticulo_id__]' and pendiente >= [__cantidad_detalle__] ORDER BY id_stkpartida_detalle LIMIT 1)</expression>
+      </field>  
+
+      <field id="cantidad_detalle" required="true">
+        <label modpos="nobr" style="width:4em;text-align:center; font-size:16px;color:red;">cantidad</label>
+        <tipo>integer</tipo>
+        <valor>1</valor>
+        <size>4</size>
+        <jseval>(cantidad_detalle > 0 &amp;&amp; trazable == 0) || (cantidad_detalle == 1 &amp;&amp; trazable == 1)</jseval>
+      </field>
+
+      <!-- PRECIOS -->
+      <field id="precio_venta" local="true" esClave="true" required="true">
+        <label modpos="nobr" style="font-size:16px;color:green;">Precio</label>
+        <tipo>numeric</tipo>
+	    <size>20</size>
+        <jseval>precio_venta != 0 &amp;&amp; \'descripcion_detalle\' != \'\'</jseval>
+      </field>
+      
+      <field id="alicuota_iva"  noshow="true" _deshabilitado="true">
+        <label modpos="nobr">Alic</label>
+        <helper type="combo" xml="genalicuotas_qry.xml" dir="/ayudas" empty="true"/>
+        <tipo>numeric</tipo>
+        
+      </field>
+
+      <field id="neto_detalle" noshow="true" suma="true" deshabilitado="true">
+        <label modpos="nobr">Neto</label>
+        <tipo>decimal</tipo>
+        <if exp="true">
+    	    <true>( precio_venta / ( 1 + ( alicuota_iva / 100 ) ) ) * cantidad_detalle</true>
+    	    <false>0</false>
+        </if>
+        <formato>%01.2f</formato>
+        <jseval fielddestino="neto_movimiento" total="true">neto_detalle</jseval>
+      </field>
+
+      <field id="iva_detalle" noshow="true" suma="true" deshabilitado="true">
+        <label modpos="nobr">IVA</label>
+	    <tipo>numeric</tipo>
+        <if exp="true">
+    	    <true>(precio_venta * cantidad_detalle) - neto_detalle</true>
+    	    <false>0</false>
+        </if>
+        <jseval campodestino="importe_iva" total="true">iva_detalle</jseval>
+      </field>
+
+      <field id="total_detalle" suma="true" deshabilitado="true">
+        <label modpos="nobr" style="font-size:16px;color:red;">Total</label>
+        <tipo>numeric</tipo>
+        <if exp="true">
+    	    <true>precio_venta * cantidad_detalle</true>
+    	    <false>0</false>
+        </if>  
+        <jseval campodestino="importe_movimiento" total="true">total_detalle</jseval>
+        <detalle>importe_movimiento</detalle>
+      </field>
+
+
+
+
+
+
+      <!-- CONTABLE -->
+
+      <field id="cuenta_id" local="true" noshow="true">
+        <label modpos="nobr">haber</label>
+      </field>
+      <field id="doh" local="true" noshow="true">
+        <if exp="'debe' != 1">
+          <true>'1'</true>
+          <false>'0'</false>
+        </if>
+      </field>
+
+      <!-- MOVIMIENTOS DE STOCK -->
+      <fieldGroup local="true" noshow="true">
+        <field id="stkunidad_id"/>
+        <field id="stksector_id"/>
+        <field id="stkfamilia_id"/>
+        <field id="stkrubro_id"/>
+        <field id="precio_costo"/>
+     </fieldGroup>
+
+    <field id="stkact" local="true" noshow="true" />
+
+    <field id="valida_x_rubro" local="true" colstyle="display:none;" Formstyle="display:none;" />
+
+    <field id="valida_stock" local="true" _noshow="true" suma="true" colstyle="display:none;" Formstyle="display:none;">
+      <if exp="'cantidad_detalle' &gt; 'stkact' &amp;&amp; valida_x_rubro == '0'">
+        <true>'1'</true>
+        <false>'0'</false>
+      </if>
+      <jseval suma="true" total="true" actxml="false" campodestino="sin_stock">valida_stock</jseval>
+    </field>
+    
+    <field id="graba_serial" local="true" noshow="true">
+      <if exp="'codigo_serie' != ''">
+        <true>1</true>
+        <false>0</false>
+      </if>
+    </field>
+
+    <field id="resalta_detalle" clasefila="true" local="true" _noshow="true" suma="true" colstyle="display:none;" Formstyle="display:none;">
+      <if exp="'cantidad_detalle' &gt; 'stkact' &amp;&amp; valida_x_rubro == '0'">
+        <true>'resaltado'</true>
+        <false>'0'</false>
+      </if>
+    </field>
+
+
+    </table>
+  </form>
+</histrix>

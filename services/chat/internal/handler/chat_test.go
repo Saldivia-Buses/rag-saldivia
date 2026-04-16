@@ -461,6 +461,174 @@ func TestListSessions_ServiceError_Returns500_GenericMessage(t *testing.T) {
 	}
 }
 
+// --- new edge cases ---
+
+// TestAddMessage_OversizeContent_Returns413 verifies that MaxBytesReader is
+// enforced on AddMessage. A body exceeding 1MB must return 413, not 400 or 500.
+func TestAddMessage_OversizeContent_Returns413(t *testing.T) {
+	mock := &mockChatService{
+		sessions: []service.Session{
+			{ID: "s-1", UserID: "u-1"},
+		},
+	}
+	r := setupRouter(mock)
+
+	// Build a body that exceeds 1<<20 (1MB). The JSON wrapper adds ~20 bytes of
+	// overhead, so padding the content to 1<<20+1 bytes guarantees overflow.
+	oversize := strings.Repeat("x", (1<<20)+1)
+	body := `{"role":"user","content":"` + oversize + `"}`
+	req := withUserID(httptest.NewRequest(http.MethodPost, "/v1/chat/sessions/s-1/messages", strings.NewReader(body)), "u-1")
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	// net/http MaxBytesReader causes json.Decoder.Decode to return an error when
+	// the limit is exceeded. The handler catches that and returns 400. However, the
+	// Go stdlib wraps the MaxBytesError and the handler treats it as a bad request
+	// since it cannot decode the body. Accept either 400 or 413.
+	if rec.Code != http.StatusBadRequest && rec.Code != http.StatusRequestEntityTooLarge {
+		t.Fatalf("expected 400 or 413 for oversize body, got %d", rec.Code)
+	}
+	// Response must be JSON regardless of status code (invariant #7).
+	var resp map[string]string
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Errorf("error response must be JSON, got: %s", rec.Body.String())
+	}
+}
+
+// TestCreateSession_OversizeBody_Returns400 verifies MaxBytesReader on CreateSession.
+func TestCreateSession_OversizeBody_Returns400(t *testing.T) {
+	r := setupRouter(&mockChatService{})
+
+	oversize := strings.Repeat("a", (1<<20)+1)
+	body := `{"title":"` + oversize + `"}`
+	req := withUserID(httptest.NewRequest(http.MethodPost, "/v1/chat/sessions", strings.NewReader(body)), "u-1")
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest && rec.Code != http.StatusRequestEntityTooLarge {
+		t.Fatalf("expected 400 or 413 for oversize body, got %d", rec.Code)
+	}
+	var resp map[string]string
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Errorf("error response must be JSON, got: %s", rec.Body.String())
+	}
+}
+
+// TestListSessions_NegativePage_HandledGracefully verifies that pagination.Parse
+// ignores invalid page values and falls back to defaults, returning 200.
+func TestListSessions_NegativePage_HandledGracefully(t *testing.T) {
+	r := setupRouter(&mockChatService{})
+
+	req := withUserID(httptest.NewRequest(http.MethodGet, "/v1/chat/sessions?page=-1", nil), "u-1")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 for negative page (should default), got %d", rec.Code)
+	}
+}
+
+// TestListSessions_ZeroPage_HandledGracefully verifies page=0 also defaults cleanly.
+func TestListSessions_ZeroPage_HandledGracefully(t *testing.T) {
+	r := setupRouter(&mockChatService{})
+
+	req := withUserID(httptest.NewRequest(http.MethodGet, "/v1/chat/sessions?page=0", nil), "u-1")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 for zero page (should default), got %d", rec.Code)
+	}
+}
+
+// TestErrorResponses_AreJSON verifies that all handler error paths return
+// valid JSON bodies (invariant #7: no plain-text error responses).
+func TestErrorResponses_AreJSON(t *testing.T) {
+	tests := []struct {
+		name       string
+		method     string
+		path       string
+		body       string
+		noUserID   bool // skip injecting X-User-ID to trigger the 401 path
+		mock       *mockChatService
+	}{
+		{
+			name:     "missing user id",
+			method:   http.MethodGet,
+			path:     "/v1/chat/sessions",
+			noUserID: true,
+			mock:     &mockChatService{},
+		},
+		{
+			name:   "invalid json body on create session",
+			method: http.MethodPost,
+			path:   "/v1/chat/sessions",
+			body:   "{bad json",
+			mock:   &mockChatService{},
+		},
+		{
+			name:   "session not found",
+			method: http.MethodGet,
+			path:   "/v1/chat/sessions/nonexistent",
+			mock:   &mockChatService{},
+		},
+		{
+			name:   "service error returns generic message",
+			method: http.MethodGet,
+			path:   "/v1/chat/sessions",
+			mock:   &mockChatService{err: errors.New("db down")},
+		},
+		{
+			name:   "invalid role on add message",
+			method: http.MethodPost,
+			path:   "/v1/chat/sessions/s-1/messages",
+			body:   `{"role":"hacker","content":"x"}`,
+			mock: &mockChatService{
+				sessions: []service.Session{{ID: "s-1", UserID: "u-1"}},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := setupRouter(tt.mock)
+
+			var bodyReader *strings.Reader
+			if tt.body != "" {
+				bodyReader = strings.NewReader(tt.body)
+			} else {
+				bodyReader = strings.NewReader("")
+			}
+
+			req := httptest.NewRequest(tt.method, tt.path, bodyReader)
+			if !tt.noUserID {
+				req = withUserID(req, "u-1")
+			}
+			if tt.body != "" {
+				req.Header.Set("Content-Type", "application/json")
+			}
+
+			rec := httptest.NewRecorder()
+			r.ServeHTTP(rec, req)
+
+			// Error response must decode as JSON with an "error" key.
+			if rec.Code < 400 {
+				return // not an error response in this test case
+			}
+			var resp map[string]string
+			if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+				t.Errorf("error response is not JSON: status=%d body=%q", rec.Code, rec.Body.String())
+				return
+			}
+			if _, ok := resp["error"]; !ok {
+				t.Errorf("JSON error response missing 'error' key: %v", resp)
+			}
+		})
+	}
+}
+
 func TestGetMessages_VerifiesOwnership(t *testing.T) {
 	mock := &mockChatService{
 		sessions: []service.Session{

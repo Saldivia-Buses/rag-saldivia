@@ -57,12 +57,12 @@ func runTenantList(cmd *cobra.Command, args []string) {
 	}
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintf(w, "SLUG\tNAME\tPLAN\tENABLED\tCREATED\n")
+	_, _ = fmt.Fprintf(w, "SLUG\tNAME\tPLAN\tENABLED\tCREATED\n")
 	for _, t := range tenants {
-		fmt.Fprintf(w, "%s\t%s\t%s\t%v\t%s\n",
+		_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%v\t%s\n",
 			t.Slug, t.Name, t.PlanID, t.Enabled, t.CreatedAt.Format("2006-01-02"))
 	}
-	w.Flush()
+	_ = w.Flush()
 }
 
 func runTenantStatus(cmd *cobra.Command, args []string) {

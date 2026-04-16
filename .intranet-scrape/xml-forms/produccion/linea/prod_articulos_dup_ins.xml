@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" >
+  <title>ARTICULOS POR SECTOR</title>
+  <obs></obs>
+  <form >
+    <table id="STK_ARTICULO_PROCESO" label="insert articulos" >
+
+      <field id="proceso_id"      id_temp="new_proceso_id" />
+      <field id="homologacion_id" id_temp="new_homologacion_id" />
+      <field id="stkarticulo_id"  id_temp="stkarticulo_id" />
+      <field id="cantidad"        id_temp="cantidad" />
+      
+    </table>
+  </form>     
+</histrix>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" paginar="100">
+    <title>Imputacion de Comprobantes</title>
+    <obs/>
+    <form  detalle="imputacion_rec_cab.xml">
+        <table id="REG_MOVIMIENTOS" label="Movimientos">
+        
+    	    <filters>
+    		<field id="regcuenta_id">
+    		    <label>Cuenta</label>
+    		    <operador>=</operador>
+    		</field>
+                <field id="nro_movimiento" >
+	            <label >Numero</label>
+    	            <help/>
+    		    <operador>=</operador>
+
+            </field>
+    	    
+    	    </filters>
+        
+            <field id="subsistema_id" oculto="true">
+                <label>Cod.</label>
+                <valor>'02'</valor>
+                <condicion operador="=">'02'</condicion>
+                <detalle>subsistema_id</detalle>
+                
+                
+            </field>
+
+            <field id="id_regmovim" noshow="true">
+                
+                <detalle>regmovim_id</detalle>
+            </field>
+
+            <field id="regcuenta_id" noshow="true">
+                <label>Cuenta</label>
+    		    <helper type="combo" xml="regcuenta_c_saldo_neg2.xml" empty="true">
+                    <field id="subsistema_id" _oculto="true">
+                        <condicion operador="=">02</condicion>
+                    </field>
+                    
+                </helper>    		    
+                <detalle>id_regcuenta</detalle>
+                <detalle>regcuenta_id</detalle>
+                <condicion operador="=">0</condicion>
+            </field>
+
+	    <field id="abreviacion_concepto" tabla="REG_CONCEPTOS">
+		<label>Conc.</label>
+	    </field>
+
+            <field id="puesto_movimiento" >
+                <label modpos="nobr">PV</label>
+                <formato>%04d</formato>                     
+                <help/>
+                <detalle>movnpvOP</detalle>
+            </field>
+
+            <field id="nro_movimiento" >
+                <label _modpos="nobr">Numero</label>
+                <help/>
+                <detalle>movnroOP</detalle>
+<!--                                <formato>%08d</formato>      -->
+            </field>
+            <field id="concepto_id" noshow="true">
+                <detalle>concodOP</detalle>
+            </field>_
+            
+            <field id="fecha_movimiento" >
+                <label modpos="nobr">Fecha</label>
+                <help/>
+                <tipo>date</tipo>
+                <detalle>movfecOP</detalle>
+            </field>
+            <field id="saldo_movimiento" >
+                <label>saldo</label>
+                <expresion>(-1) * abs(saldo_movimiento)</expresion>
+
+        	    <condicion operador="!=">0</condicion>
+                <detalle>saldoOP</detalle>
+                <tipo>decimal</tipo>
+            </field>
+                <field id="imputacion_concepto" oculto="true" tabla="REG_CONCEPTOS">
+                    <condicion operador="=">1</condicion>
+                </field>                    
+            <order>
+                <field id="nro_movimiento"></field>
+            </order>
+        </table>
+    <join>
+      <table id="REG_CONCEPTOS">
+<!--        <field id="subsistema_id">
+           <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+        </field> -->
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+      </table>
+    </join>             
+    </form>
+</histrix>

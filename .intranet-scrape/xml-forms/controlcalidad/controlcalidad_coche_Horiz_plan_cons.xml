@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix _tipo="consulta" tipo="horizontalGrid">
+    <title>Control Calidad</title>
+    <obs/>
+
+    <form >
+        <table id="PROD_CONTROL_MOVIM">
+            <title>Control de Calidad</title>
+
+            <field id="nrofab" oculto="true">
+		    <expression having="false">nrofab_id</expression>
+            </field>
+            <field id="nrofab_id" noshow="true" />
+            <field id="homologacion_id" noshow="true" local="true"/>
+
+            <field id="fecha_control" style="font-size:1.2 !important;">
+        	<expression>max(fecha_control)</expression>
+                <tipo>date</tipo> 
+                <format>d/m</format> 
+                
+            </field>
+<!--
+            <field id="observaciones"  oculto="true" >
+                <expression><![CDATA[ group_concat((case when observacion_control != '' then concat(nombre_control,': ', observacion_control) end) SEPARATOR "\n") ]]></expression>
+
+            </field>
+            -->
+            <field id="verde" noshow="true">
+                <expression _having="false">(case 
+		    when ( (select count(*) from PROD_CONTROL_RETRABAJO 
+join PROD_CONTROL_MOVIM PR ON  controlmovim_id = PR.id_controlmovim  
+join PROD_CONTROLES PC on PC.id_prodcontrol = PR.prodcontrol_id 
+where PR.nrofab_id = PROD_CONTROL_MOVIM.nrofab_id and aprobado = 0 and PR.controlado= 0 and PC.seccion_id = PROD_CONTROLES.seccion_id) != 0) 
+			then 0
+
+                    when (sum(CASE WHEN conforme = 1 OR controlado = 1 or no_aplica = 1  THEN 1 ELSE 0 END ) = COUNT(*)) 
+                        then 1
+			
+                        else 0
+                    end)
+                </expression>
+                        <condicion operador="=">0</condicion>
+            </field>
+
+            <field id="color"  noshow="true" ><!--
+                <expression>case when sum(no_conforme) = 0 then 'background:#00ff00' 
+				when sum(no_conforme) != sum(controlado) then 'background:#ffff00' 
+				end
+                </expression>-->
+                <expression>(case 
+		    when ( (select count(*) from PROD_CONTROL_RETRABAJO 
+join PROD_CONTROL_MOVIM PR ON  controlmovim_id = PR.id_controlmovim  
+join PROD_CONTROLES PC on PC.id_prodcontrol = PR.prodcontrol_id 
+where PR.nrofab_id = PROD_CONTROL_MOVIM.nrofab_id and aprobado = 0 and PR.controlado= 0 and PC.seccion_id = PROD_CONTROLES.seccion_id) != 0) 
+			then 'background:#FFA500;font-size:1.5em !important;'
+
+                    when (sum(CASE WHEN conforme = 1 OR controlado = 1 or no_aplica = 1  THEN 1 ELSE 0 END ) = COUNT(*)) 
+                        then 'background:#00ff00; font-size:1.5em !important;'
+			
+                        else 'background:#ffff00; font-size:1.5em !important;'
+                    end)
+                </expression>
+            </field>
+
+
+<!--
+            <field id="color"  noshow="true" >
+                <expression>(select CONCAT('background-color:',color) from CONTROLCALIDAD as CTR
+                    left join CALIFICACION ON CALIFICACION.idCalificacion = CTR.idCalificacion
+                    where   CTR.nrofab = CONTROLCALIDAD.nrofab
+                        and CTR.idSeccion = CONTROLCALIDAD.idSeccion
+                    ORDER BY CTR.idControl DESC limit 1)
+                </expression>
+
+            </field>
+-->
+        
+            <field id="muestra" noshow="true" local="true">
+                <valor>0</valor>
+            </field>
+
+            <field id="abrev" tabla="MOMENTO" style="font-size:1.3em !important" >
+		<helper xml="prod_control_movim_qry.xml" type="link" title="control" dir="controlcalidad/" modal="true">
+		    <parameter source="nrofab_id" target="nrofab_id"/>
+		    <parameter source="seccion_id" target="seccion_id"/>
+            <parameter source="muestra" target="muestra"/>
+            <parameter source="homologacion_id" target="homologacion_id"/>
+		</helper>
+        	<expression>CONCAT(IFNULL(MOMENTO.abrev, 'CF'), ' (' , ifnull(sum( (case when controlado = 0 and no_conforme = 1 and (select count(*) from PROD_CONTROL_RETRABAJO RET where RET.controlmovim_id = id_controlmovim) = 0 then 1 else 0 end)), 0) ,'/' ,ifnull(sum((case when controlado = 0 then no_conforme else 0 end)), 0), ')')</expression>
+                <attribute id="style">color</attribute> 
+<!--                <attribute id="tooltip">observaciones</attribute> -->
+            </field>
+            <field id="seccion_id" noshow="true" tabla="PROD_CONTROLES"/>
+            
+            <field id="linea_id" local="true" noshow="true"/>
+            <field id="orden" noshow="true" tabla="MOMENTO"/>
+            
+	    <field id="ord_cf" noshow="true">
+		<expression>(CASE WHEN MOMENTO.abrev is null THEN 1 ELSE 0 END)</expression>
+	    </field>
+
+            
+            <order>
+        		<field id="ord_cf" />
+        	<field id="orden" tabla="MOMENTO"/>
+            </order>
+        
+            <group>
+                <field id="seccion_id" />
+            </group>
+
+        </table>
+
+        <join>
+            <table id="PROD_CONTROLES">
+                <field id="id_prodcontrol">
+                    <condicion operador="=">prodcontrol_id</condicion>
+                </field>
+                <field id="habilitado">
+                    <condicion operador="=">0</condicion>
+                </field>        
+            </table>
+        </join>
+
+        <join _tipo="left">
+            <table id="MOMENTO">
+                <field id="idMomento">
+                    <condicion operador="=">PROD_CONTROLES.seccion_id</condicion>
+                </field>
+                <!--
+                <field id="linea_id">
+                    <condicion operador="=">'[__linea_id__]'</condicion>
+                </field>       
+                -->
+                
+            </table>
+        </join>
+
+
+    </form>
+</histrix>

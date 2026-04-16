@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" subtipo="vertical">
+<title>PROPIEDADES</title>
+<obs></obs>
+<form detalle="prd_propiedades.xml">
+    <table id="PRD_CAMPOS_FICHA">
+        <title>Propiedades</title>
+
+
+        <field id="id_campoficha" esClave="true">
+            <label>Nombre del Campo</label>
+            <help>Nombre del campo de la ficha</help>
+            <tipo>varchar</tipo>
+            <detalle>campoficha_id</detalle>
+            <size>12</size>
+        </field>
+        <field id="descripcion_campoficha">
+            <label>Descripcion</label>
+            <help>Descripcion</help>
+            <size>30</size>
+        </field>
+        <order>
+            
+            <field id="descripcion_campoficha" />
+
+        </order>
+    </table>
+</form>	   
+</histrix>

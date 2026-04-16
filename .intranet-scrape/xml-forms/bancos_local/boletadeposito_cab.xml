@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="cabecera" graba="false">
+	<title>CABECERA BOLETA DEPOSITO</title>
+	<obs></obs>
+	<form >
+		
+		<table id="BCSMOVIM" label="Cabecera de BANCOS" graba="false">
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'sisbcs'</condicion>
+					</field>
+				</parametro>
+			</field>
+			<field id="siscar" oculto="true">
+				<label>siscar</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'siscar'</condicion>
+					</field>
+				</parametro>
+			</field>
+			<field id="ctbval" oculto="true" ctbcuenta="2">
+				<label>ctbval</label>
+				<parametro id="cajparam_paralf.xml" retorna="paralf">
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'05'</condicion>
+					</field>
+					
+					<field id="parcla">
+						<condicion operador="=">'ctbval'</condicion>
+					</field>
+				</parametro>
+			</field>			
+		
+
+			<field id="bcscta">
+				<label xml="bcscuent.xml">Cuenta</label>
+				<help>Cuenta Bancaria</help>
+				<ayuda_ex id="BCSCUENT" xml="HLPbcscuent.xml" dir="/help_local">
+					<field id="ccbcod"></field>
+					<field id="ccbnom">
+						<detalle>ccbnom</detalle>
+					</field>
+					<field id="ctbcod">
+						<detalle>ctbcod</detalle>
+					</field>
+					
+				</ayuda_ex>
+				<tipo>integer</tipo>
+				
+			</field>
+			<field id="ccbnom" deshabilitado="true">
+				<label modpos="nobr">Nombre</label>
+			</field>
+			
+			<field id="nroboleta" deshabilitado="true" ctbregnro="1">
+				<label modpos="nobr">Boleta Numero</label>
+				<parametro id="fsmparam_parent.xml" retorna="parent">
+<!--					<field id="siscod" oculto="true">
+						<condicion operador="=">04</condicion>
+					</field> -->
+					<field id="parcla" oculto="true">
+						<condicion operador="=">'bolnrc'</condicion>
+					</field>
+					<field id="parent">
+						<complete>parent + 1</complete>
+					</field>					
+				</parametro>
+			</field>
+			<field id="ctbcod" deshabilitado="true" ctbcuenta="1">
+				<label>Ctb</label>
+			</field>
+			
+			<field id="fecha" ctbfecha="1">
+				<label>Fecha Ingreso</label>
+				<help>Fecha del Movimiento</help>
+				<tipo>date</tipo>
+				<valor>today</valor>
+				
+			</field>
+			<field id="acreditacion">
+				<label>Acreditacion</label>
+				<help>Fecha de Acreditación</help>
+				<tipo>date</tipo>
+				<valor>today</valor>
+				
+			</field>
+			<field id="coddep" oculto="true">
+				<label modpos="nobr">Cod dep</label>
+				<parametro id="fsmparam_parent.xml" retorna="parent">
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'04'</condicion>
+					</field>
+					<field id="parcla">
+						<condicion operador="=">'coddep'</condicion>
+					</field>
+				</parametro>
+			</field>			
+
+
+		</table>
+	</form>
+</histrix>

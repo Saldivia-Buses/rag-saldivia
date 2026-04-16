@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" confirma="GENERAR" inserta="false" modifica="false" borra="false" imprime="false">
+  <title>Proceso cierre de Ejercicio</title>
+  <obs/>
+  <form>
+    <table id="CTB_EJERCICIOS" label="Recibo de ingreso">
+      <validation>
+        <condition>
+          <![CDATA[ 'ejercicio_origen' == 0 ]]>
+        </condition>
+        <message>Debe elegir un ejercicio origen</message>
+      </validation>
+      <validation>
+        <condition>
+          <![CDATA[ 'ejercicio_destino' == 0 ]]>
+        </condition>
+        <message>Debe elegir un ejercicio destino</message>
+      </validation>
+      <movimientos>
+        <relacion id="cierre_refundicion_ins.xml"/>
+        <relacion id="cierre_ins.xml"/>
+        <relacion id="cierre_apertura_ins.xml"/>
+        <relacion id="ejercicio_cerrado_upd.xml"/>
+        <relacion id="ejercicio_activo_upd.xml"/>
+      </movimientos>
+
+      <field id="ejercicio_origen" local="true">
+        <label>Ejercicio origen</label>
+        <helper type="combo" xml="ctbejercicio_qry.xml" dir="/ayudas" empty="true">
+          <field id="activo" noshow="true">
+            <condicion operador="=">1</condicion>
+          </field>
+          <field id="origen_comienza" noshow="true" valauto="true">
+            <expression>date_format(comienza, '%d/%m/%Y')</expression>
+          </field>
+          <field id="origen_finaliza" noshow="true">
+            <expression>date_format(finaliza, '%d/%m/%Y')</expression>
+          </field>
+        </helper>
+        <!--
+        <jseval campodestino="ejercicio_id" actxml="asiento_contable_cierre_qry.xml">ejercicio_origen</jseval>
+        <jsfunction event="onchange">filtracampos('FFormasiento_contable_cierre_qry_xml','asiento_contable_cierre_qry.xml');</jsfunction>
+        <jseval campodestino="ejercicio_id" actxml="asiento_apertura_qry.xml">ejercicio_origen</jseval>
+        <jsfunction event="onchange">filtracampos('FFormasiento_apertura_qry_xml','asiento_apertura_qry.xml');</jsfunction>
+        <jseval campodestino="ejercicio_id" actxml="asiento_refundicion_qry.xml">ejercicio_origen</jseval>
+        <jsfunction event="onchange">filtracampos('FFormasiento_refundicion_qry_xml','asiento_refundicion_qry.xml');</jsfunction>-->
+        <actualiza>
+          <field id="respuesta" destino="ejercicio_id" />
+          <field id="respuesta2" destino="ejercicio_id" />
+          <field id="respuesta3" destino="ejercicio_id" />
+        </actualiza>
+      </field>
+
+      <field id="ejercicio_destino" local="true">
+        <label modpos="nobr">Ejercicio Destino</label>
+        <helper type="combo" xml="ctbejercicios_crud.xml" dir="/contabilidad/man" empty="true">
+          <field id="cerrado">
+            <condicion operador="=">0</condicion>
+          </field>
+          <field id="destino_comienza" noshow="true">
+            <expression>date_format(comienza, '%d/%m/%Y')</expression>
+          </field>
+          <field id="destino_finaliza" noshow="true">
+            <expression>date_format(finaliza, '%d/%m/%Y')</expression>
+          </field>
+        </helper>
+        <condicion operador="IN">(select id_ejercicio from CTB_EJERCICIOS where activo = 1)</condicion>
+      </field>
+
+      <field id="origen_comienza" local="true" noshow="true">
+        <label>FecOrCom</label>
+        <tipo>date</tipo>
+      </field>
+      <field id="origen_finaliza" local="true" noshow="true">
+        <label>FecOrFin</label>
+        <tipo>date</tipo>
+      </field>
+      <field id="destino_comienza" local="true" noshow="true">
+        <label>FecDeCom</label>
+        <tipo>date</tipo>
+      </field>
+      <field id="destino_finaliza" local="true" noshow="true">
+        <label>FecDeFin</label>
+        <tipo>date</tipo>
+      </field>
+
+
+
+      <field id="respuesta" local="true">
+        <label colspan="8">REFUNDICION</label>
+        <helper type="object" xml="asiento_refundicion_qry.xml">
+          <parameter source="ejercicio_origen" target="ejercicio_id" />
+        </helper>
+      </field>
+
+      <field id="respuesta2" obj="asiento_contable_cierre_qry.xml" local="true">
+        <label colspan="8">CIERRE</label>
+        <paring destino="ejercicio_id">ejercicio_origen</paring>
+      </field>
+
+      <field id="respuesta3" obj="asiento_apertura_qry.xml" local="true">
+        <label colspan="8">APERTURA</label>
+        <paring destino="ejercicio_id">ejercicio_destino</paring>
+      </field>
+
+
+
+
+      <field id="refundicion" local="true" noshow="true">
+        <valor>'REFUNDICION EJERCICIO'</valor>
+      </field>
+      <field id="referencia" local="true" noshow="true">
+        <valor>'CIERRE EJERCICIO'</valor>
+      </field>
+      <field id="apertura" local="true" noshow="true">
+        <valor>'APERTURA EJERCICIO'</valor>
+      </field>
+
+
+
+      <field id="concepto_id" local="true" noshow="true">
+        <valor>1</valor>
+      </field>
+      <field id="fecha" local="true" noshow="true">
+        <valor>today</valor>
+        <tipo>date</tipo>
+      </field>
+      <field id="graba" local="true" noshow="true">
+        <valor>1</valor>
+      </field>
+      <field id="local" local="true" noshow="true">
+        <valor>0</valor>
+      </field>
+      <field id="activo" local="true" noshow="true">
+        <valor>1</valor>
+      </field>
+      <field id="cerrado" local="true" noshow="true">
+        <valor>1</valor>
+      </field>
+      
+    </table>
+
+
+  </form>
+</histrix>

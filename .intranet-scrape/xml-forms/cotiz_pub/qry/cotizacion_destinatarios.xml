@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="consulta" >
+    <title>Destinatarios</title>
+    <obs/>
+    <form >
+    	<table id="CPS_ENVIOS">
+        		<field id="cpsmovimiento_id" noshow="true">
+ 
+        		</field>
+        		<field id="regcuenta_id">
+        			<label>Cod</label>
+        		</field>
+        		<field id="nombre_cuenta" tabla="REG_CUENTA">
+        			<label>Proveedor</label>
+        		</field>
+        		<field id="email">
+        			<label>Email</label>
+        			<helper xml="email_qry.xml" dir="/histrix/mensajeria/" type="link">
+        				<parameter source="email_id" target="idMail" />
+        			</helper>
+        		</field>        		
+        		<field id="enviado">
+        			<label>Enviado</label>
+        			<tipo>date</tipo>
+        		</field>        		
+			    <field id="email_id" noshow="true">
+			    </field>
+    	</table>
+    	<join >
+    		<table id="REG_CUENTA">
+    			<field id="id_regcuenta">
+    				<condicion operador="=">CPS_ENVIOS.regcuenta_id</condicion>
+    			</field>
+
+    		</table>
+    	</join>
+    </form>
+</histrix>

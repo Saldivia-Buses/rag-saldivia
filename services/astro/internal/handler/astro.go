@@ -17,6 +17,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 	"github.com/Camionerou/rag-saldivia/pkg/llm"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/tenant"
@@ -69,8 +70,12 @@ func tenantAndUser(r *http.Request) (pgtype.UUID, pgtype.UUID, error) {
 		return pgtype.UUID{}, pgtype.UUID{}, fmt.Errorf("no user in context")
 	}
 	var tid, uidPG pgtype.UUID
-	tid.Scan(info.ID)
-	uidPG.Scan(uid)
+	if err := tid.Scan(info.ID); err != nil {
+		return pgtype.UUID{}, pgtype.UUID{}, fmt.Errorf("invalid tenant id: %w", err)
+	}
+	if err := uidPG.Scan(uid); err != nil {
+		return pgtype.UUID{}, pgtype.UUID{}, fmt.Errorf("invalid user id: %w", err)
+	}
 	return tid, uidPG, nil
 }
 
@@ -167,19 +172,22 @@ func (h *Handler) parseRequest(w http.ResponseWriter, r *http.Request) (*techniq
 func jsonError(w http.ResponseWriter, msg string, code int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
-	json.NewEncoder(w).Encode(map[string]string{"error": msg})
+	if err := json.NewEncoder(w).Encode(map[string]string{"error": msg}); err != nil {
+		slog.Error("encode error response", "error", err)
+	}
 }
 
-// serverError logs a 500-class error with request context, then sends a generic message.
-// The msg is logged but NOT sent to the client (M1 fix — no operation name leak).
-func serverError(w http.ResponseWriter, r *http.Request, msg string, err error) {
-	slog.Error(msg, "error", err, "request_id", middleware.GetReqID(r.Context()))
-	jsonError(w, "internal error", http.StatusInternalServerError)
+// serverError writes a structured 500 error via httperr.
+// The msg parameter is retained for signature compatibility but not exposed to clients.
+func serverError(w http.ResponseWriter, r *http.Request, _ string, err error) {
+	httperr.WriteError(w, r, httperr.Internal(err))
 }
 
 func jsonOK(w http.ResponseWriter, data any) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(data)
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		slog.Error("encode ok response", "error", err)
+	}
 }
 
 // --- Technique endpoints ---
@@ -472,7 +480,9 @@ func (h *Handler) Wheel(w http.ResponseWriter, r *http.Request) {
 	svg := natal.RenderWheel(chart, contact.Name)
 	w.Header().Set("Content-Type", "image/svg+xml")
 	w.Header().Set("Content-Security-Policy", "default-src 'none'")
-	w.Write([]byte(svg))
+	if _, err := w.Write([]byte(svg)); err != nil {
+		slog.Error("write svg response", "error", err)
+	}
 }
 
 // --- Multi-chart endpoints ---
@@ -724,7 +734,7 @@ func (h *Handler) Brief(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Query(w http.ResponseWriter, r *http.Request) {
 	flusher, ok := w.(http.Flusher)
 	if !ok {
-		http.Error(w, "streaming not supported", http.StatusInternalServerError)
+		http.Error(w, `{"error":"streaming not supported"}`, http.StatusInternalServerError)
 		return
 	}
 
@@ -1047,7 +1057,9 @@ func (h *Handler) CreateContact(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(contact)
+	if err := json.NewEncoder(w).Encode(contact); err != nil {
+		slog.Error("encode contact response", "error", err)
+	}
 }
 
 func (h *Handler) SearchContacts(w http.ResponseWriter, r *http.Request) {
@@ -1215,14 +1227,14 @@ func (h *Handler) DeleteContact(w http.ResponseWriter, r *http.Request) {
 
 func sseEvent(w http.ResponseWriter, f http.Flusher, event string, data any) {
 	if data == nil {
-		fmt.Fprintf(w, "event: %s\ndata: {}\n\n", event)
+		_, _ = fmt.Fprintf(w, "event: %s\ndata: {}\n\n", event) // SSE stream: write error unrecoverable
 	} else {
 		b, err := json.Marshal(data)
 		if err != nil {
 			slog.Error("sse marshal failed", "error", err, "event", event)
 			b = []byte(`{"error":"marshal failed"}`)
 		}
-		fmt.Fprintf(w, "event: %s\ndata: %s\n\n", event, b)
+		_, _ = fmt.Fprintf(w, "event: %s\ndata: %s\n\n", event, b) // SSE stream: write error unrecoverable
 	}
 	f.Flush()
 }

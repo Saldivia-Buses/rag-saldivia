@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud" _inserta="false" modifica="false" imprime="false" transaccional="true">
+  <title>Scan</title>
+  <obs/>
+  <customScript><![CDATA[
+var css = "\
+.path {\
+  position: absolute;\
+  overflow: hidden;\
+  width: 100%;\
+  height: 150px;\
+  background-color: transparent;\
+  margin: auto;\
+}\
+.shape {\
+  position: absolute;\
+  left: 0;\
+  background-color: lime;\
+  width: 100%;\
+  height: 3px;\
+  display: block;\
+  top: 0;\
+  x-transition: all 1s ease-in-out; \
+  animation: ani 4s infinite;\
+}\
+@keyframes ani {\
+  0% { top: 0; }\
+  50% { top: 150px;}\
+  100% {top: 0;}\
+}";
+
+$("<style>")
+    .prop("type", "text/css")
+    .html(css).appendTo("head");
+    
+    
+    
+    Histrix.audioCtx = new (window.AudioContext || 
+
+    window.webkitAudioContext || window.audioContext);
+
+    //All arguments are optional:
+
+    //duration of the tone in milliseconds. Default is 500
+    //frequency of the tone in hertz. default is 440
+    //volume of the tone. Default is 1, off is 0.
+    //type of tone. Possible values are sine, square, sawtooth, triangle, and custom. Default is sine.
+    //callback to use on end of tone
+    function beep(duration, frequency, volume, type, callback) {
+        var oscillator = Histrix.audioCtx.createOscillator();
+        var gainNode = Histrix.audioCtx.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(Histrix.audioCtx.destination);
+
+        if (volume){gainNode.gain.value = volume;};
+        if (frequency){oscillator.frequency.value = frequency;}
+        if (type){oscillator.type = type;}
+        if (callback){oscillator.onended = callback;}
+
+        oscillator.start();
+        setTimeout(function(){oscillator.stop()}, (duration ? duration : 500));
+    };
+
+
+
+    Histrix.scanQR = function scanQR() {
+    
+      $('#vidscan').remove();
+      $('#preview').remove();
+
+      var videoPreview = $('<div id="vidscan" style="width: 100%; height: 150px; overflow: hidden;"><div class="path"><span id="elem" class="shape trail"></span></div><video id="preview" style="width: 100%; ">Iniciando Cámara</video></div>');
+
+      var $barcode = $('[instance="[__instance__]"] [name="barcode"]');
+
+      $barcode.before(videoPreview);
+
+
+      let scanner = new Instascan.Scanner({ 
+          video: document.getElementById('preview'),
+          mirror: false,
+          backgroundScan: true,
+        });
+
+      Instascan.Camera.getCameras().then(function (cameras) {
+        if (cameras.length > 0) {
+
+          scanner.start(cameras[cameras.length - 1]);
+
+        } else {
+          Histrix.showMsg('No cameras found.', false, {type:'error'});
+        }
+      }).catch(function (e) {
+          Histrix.showMsg('cath error', false, {type:'error'});
+            console.error(e);
+      });
+
+      var onScan = function (content) {
+        beep(1,2000);
+        var data = content + '';
+        var art =  data.split("/")[1];
+        var locacion =  data.split("/")[0];
+
+        $('[name="barcode"]', $('#preview').closest('form')).val(content).css({'border': '2px solid lime'}).change();
+
+        $('[name="stkarticulo_id"]', $('#preview').closest('form')).val(art).change();
+
+        $('[name="stklocacion_id"]', $('#preview').closest('form')).val(locacion).change();
+
+        $('[name="cantidad_solicitud"]', $('#preview').closest('form')).focus();
+        Histrix.showMsg('Scan: '+ content, false, {timeOut:2});
+
+      };
+
+      $(scanner).off('scan', "**");
+      scanner.on('scan', onScan);
+
+      return scanner;
+    }
+
+    if (typeof(Instascan) == 'object') {
+      Histrix.scanner.off('scan', "**");
+      Histrix.scanner = Histrix.scanQR();
+    } else {
+      $.getScript(Histrix.mainUrl()+'/web/vendor/instascan.min/index.js', function (){
+          Histrix.scanner = Histrix.scanQR();
+      });
+    }
+
+  ]]></customScript>
+  <form >
+    <table id="STK_SOLICITUD_STKARTICULO" label="Scan">
+<!--
+      <movimientos>
+        <relacion id="scan_transfer_resta_ins.xml" />
+        <relacion id="scan_transfer_suma_ins.xml" />
+      </movimientos>
+-->
+      <fieldGroup>
+
+	<field id="id_stksolicitud" autoinc="true" noshow="true">
+	</field>
+
+	<field id="barcode" _local="true" deshabilitado="true">
+	    <label>Barcode</label>
+          <help>Escanear Código</help>
+        </field>
+
+        <field id="stkarticulo_id" noshow="true">
+          <label>Articulo</label>
+          <helper id="STK_ARTICULOS" type="external">
+            <field id="id_stkarticulo">
+            </field>
+            <field id="nombre_articulo" >
+              <detalle>nombre_articulo</detalle>
+            </field>
+            <field id="unidad_id" >
+              <expression>unidad_uso_id</expression>
+              <detalle>unidad_id</detalle>
+            </field>
+          </helper>
+        </field>
+        <field id="nombre_articulo" deshabilitado="true" tabla="STK_ARTICULO">
+          <label>Artículo</label>
+
+	    <expression>nombre_articulo</expression>
+        </field>
+
+        <field id="stklocacion_id" _local="true" noshow="true" deshabilitado="true">
+          <label>Locacion</label>
+          <helper id="STK_LOCACION" type="combo" empty="true">
+            <field id="id_stklocacion">
+            </field>
+            <field id="codigo_locacion" >
+              <detalle>codigo_locacion</detalle>
+            </field>
+            <field id="stkdeposito_id">
+              <detalle>stkdeposito_id</detalle>
+            </field>
+
+
+          </helper>
+        </field>
+
+        <field id="stkdeposito_id" noshow="true">
+        </field>
+
+
+        <field id="cantidad_solicitud" valauto="true" colstyle="display:none;">
+          <label>Cantidad</label>
+          <tipo>integer</tipo>
+          <valor default="true">1</valor>
+        </field>
+	<field id="user_id" valauto="true" noshow="true">
+	    <valor eval="true">$_SESSION['idUser']</valor>
+	</field>
+
+	<field id="filtro_user" noshow="true">
+	    <expression>user_id</expression>
+	    <condicion operado="=">'[__user_id__]'</condicion>
+	</field>
+        <field id="codigo_locacion" tabla="STK_LOCACION" deshabilitado="true" formStyle="display:none;">
+          <label>Locación</label>
+        </field>
+<!--
+        <field id="unidad_id"   noshow="true"/>
+-->
+
+	<field id="fecha_cierre" noshow="true">
+	    <condicion operador="=">'0000-00-00'</condicion>
+	</field>
+      </fieldGroup>
+
+    </table>
+    <join>
+	<table id="STK_ARTICULOS">
+	    <field id="id_stkarticulo">
+		<condicion operador="=">stkarticulo_id</condicion>
+	    </field>
+	</table>
+    </join>
+    <join>
+	<table id="STK_LOCACION">
+	    <field id="id_stklocacion">
+		<condicion operador="=">stklocacion_id</condicion>
+	    </field>
+	</table>
+    </join>
+  </form>
+</histrix>

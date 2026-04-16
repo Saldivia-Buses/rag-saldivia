@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="dashboard">
+        <titulo>Medidores de Calidad</titulo>
+
+        <widget id="acumulado"  width="48%" height="400px">
+           <title>Observaciones En todas las Areas</title>
+         <url><![CDATA[histrixLoader.php?xml=evolutivo_secciones.xml&dir=/estadisticas/calidad]]></url>
+        </widget> 
+        
+        <widget id="Evolucion7"  width="98%" height="400px">
+           <title>Observaciones Entrega</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_calidad_entrega.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="Evolucion8"  width="98%" height="400px">
+           <title>Observaciones Recepcion</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_calidad_recepcion.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+</histrix>

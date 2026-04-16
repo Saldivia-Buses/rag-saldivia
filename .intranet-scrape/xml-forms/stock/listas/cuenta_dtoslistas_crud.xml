@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" subtipo="vertical" preloadData="false">
+  <title>Descuento por Lista de Precios</title>
+  <obs/>
+  <form>
+    <table id="STK_DESCUENTOSLISTASCLI" label="Descuentos por Lista">
+      
+      <field id="id_descuentolistacli" autoinc="true" noshow="true" />
+      
+      <field id="regcuenta_id" noshow="true" />
+      
+      <field id="stklista_id">
+        <helper type="combo" xml="stklista_qry.xml" dir="/ayudas" empty="true"/>
+        <label>Listas de Precio</label>
+      </field>
+      
+      <field id="porcentaje_desc">
+        <label>Descuento 1</label>
+      </field> 
+      <field id="porcentaje_desc1">
+        <label>Descuento 2</label>
+      </field>
+      
+    </table>
+    
+    <join tipo="left">
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">STK_DESCUENTOSLISTASCLI.regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

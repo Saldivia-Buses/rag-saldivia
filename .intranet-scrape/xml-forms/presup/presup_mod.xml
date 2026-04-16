@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<abm tipo="abm-mini" subtipo="vertical" _class="consultaing3" imprime="false">
+	<titulo>MODIFICACION</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="VISTA_STK_COSTOS" label="MODIFICACION DE COSTOS" >
+            <filtros>
+                <campo id="movnro" esClave="true" oculto="true">
+                        <label >Numero</label>
+                        <valor>999</valor>
+                        <operador>=</operador>
+                </campo>
+                <campo id="artdes" deshabilitado="false" >
+                    <label >Articulo</label>
+                    <tipo>varchar</tipo>
+                    <operador>like</operador>
+                </campo>
+            </filtros>
+			<campo id="siscod" esClave="true" noshow="true">
+					<condicion operador="=">'PR'</condicion>
+					<valor>'PR'</valor>
+			</campo> 
+			<campo id="movnro" esClave="true" _oculto="true">
+
+                <tabla_ex id="NOTAENCA" vacio="true">
+					<campo id="movnro" esclave="true">
+						<label>Numero</label>
+						<tipo>integer</tipo>
+						<detalle>movnro</detalle>
+					</campo>
+					<campo id="movrefs">
+                        <expresion>CONCAT(movnro, ' - ', movref__1)</expresion>
+						<label>Referencia</label>
+						<size>30</size>
+					</campo>
+
+					<campo id="siscod" oculto="true">
+						<condicion operador="=">'PR'</condicion>
+						<detalle>siscod</detalle>
+					</campo>
+
+                </tabla_ex>
+                <label >Numero</label>
+            </campo>
+		
+			<campo id="artcod" esClave="true">
+				<label>codigo</label>
+					<ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/help_local">
+						<campo id="artcod">
+							<label>Cod.</label>
+							<detalle>artcod</detalle>
+						</campo>
+						<campo id="artdes">
+							<label>Insumo</label>
+							<detalle>artdes2</detalle>
+						</campo>
+
+						<campo id="unicps" oculto="true">
+							<detalle>unicps</detalle>
+
+						</campo>
+						<campo id="artuni" oculto="true">
+							<detalle>artuni</detalle>
+						</campo>
+
+						<campo id="valcps" oculto="true">
+							<detalle>valcps</detalle>
+						</campo>
+						<campo id="valuso" oculto="true">
+							<detalle>valuso</detalle>
+						</campo>						
+						<campo id="siscod" oculto="true">
+							<condicion operador="=">'01'</condicion>
+						</campo>
+						<campo id="movcod" local="true" noshow="true">
+                            <valor>1</valor>
+                            <detalle>movcod</detalle>
+						</campo>
+
+						<clave>artcod</clave>
+						<descripcion>artdes</descripcion>
+					</ayuda_ex>		
+			</campo>
+			<campo id="movcod" noshow="true" esClave="true" deshabilitado="true">
+					<label>movcod</label>
+    				<condicion operador="=">1</condicion>
+				<valor default="true">1</valor>
+			</campo>
+            <campo id="artdes2" local="true" deshabilitado="true">
+                <label modpos="nobr" colstyle="display:none;">Art.</label>
+            </campo>
+			<campo id="artdes" tabla="STKINSUM" >
+				<expresion>STKINSUM.artdes</expresion>
+				<label modpos="nobr" _Formstyle="display:none;">Art</label>
+				<tipo>char</tipo>
+				<size>20</size>
+			</campo>
+			<campo id="movpes"  >
+				<label modpos="nobr">Cantidad</label>
+			</campo>
+			<campo id="uninom" tabla="FSMUNIDS" deshabilitado="true">
+				<expresion >FSMUNIDS.uniabv</expresion>
+				<label modpos="nobr" Formstyle="display:none;">Unidad</label>
+				<tipo>varchar</tipo>
+			</campo> 
+<!--			<campo id="costo" >
+				<label>Costo</label>
+				<expresion>STKINSUM.artcos * STKINSUM.valcps / STKINSUM.valuso</expresion>
+			</campo> -->
+			<campo id="costo" >
+				<label Formstyle="display:none;">Costo</label>
+				<expresion>case when ((select round(STKINSPR.artcos, 2) from STKINSPR where STKINSPR.artcod = VISTA_STK_COSTOS.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) * STKINSUM.valcps / STKINSUM.valuso) > 0  then ((select round(STKINSPR.artcos, 2) from STKINSPR where STKINSPR.artcod = VISTA_STK_COSTOS.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) * STKINSUM.valcps / STKINSUM.valuso) else round(STKINSUM.artcos, 2) end</expresion>
+				<tipo>numeric</tipo>
+
+							</campo>
+			
+			<campo id="parcial"  suma="true">
+				<label modpos="nobr" Formstyle="display:none;">Parcial</label>
+			<!--	<expresion>(STKINSUM.artcos * STKINSUM.valcps / STKINSUM.valuso) * movpes</expresion>  -->
+			<!--	<expresion>((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = VISTA_STK_COSTOS.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) * STKINSUM.valcps / STKINSUM.valuso) * movpes</expresion>  -->
+				<expresion>(case when ((select round(STKINSPR.artcos, 2) from STKINSPR where STKINSPR.artcod = VISTA_STK_COSTOS.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) * STKINSUM.valcps / STKINSUM.valuso) > 0  then ((select round(STKINSPR.artcos, 2) from STKINSPR where STKINSPR.artcod = VISTA_STK_COSTOS.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) * STKINSUM.valcps / STKINSUM.valuso) else STKINSUM.artcos end) * movpes</expresion>
+				<tipo>numeric</tipo>
+			
+			</campo>
+			<campo id="fecult"  tipoOrden="DESC">
+				<expresion>(select STKINSPR.fecult from STKINSPR where STKINSPR.artcod = VISTA_STK_COSTOS.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) </expresion>
+				<label modpos="nobr" Formstyle="display:none;">ult.compra</label>
+				<tipo>date</tipo>
+			</campo>			
+			<campo id="ultsalida" >
+				<label Formstyle="display:none;">Ultima Salida</label>
+				<expresion>select max(STK.movfec) from STKINMOV as STK where STK.artcod = VISTA_STK_COSTOS.artcod and STK.siscod = '01' and STK.movcod = 10</expresion>
+				<tipo>date</tipo>
+			</campo>
+			<campo id="ctacod"  >
+				<expresion>(select ctacod from STKINSPR where STKINSPR.artcod = VISTA_STK_COSTOS.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) </expresion>
+				<label colspan="4" modpos="nobr" Formstyle="display:none;">Proveedor</label>
+				<tipo>integer</tipo>
+				<tabla_ex id="CCTCUENT">
+					<campo id="ctacod" />
+					<campo id="ctafan" />					
+					<campo id="siscod" oculto="true">
+						<condicion operador="=">'01'</condicion>
+					</campo>
+				</tabla_ex>
+			</campo>
+								
+			<campo id="ctbnom" tabla="CTBCUENT" >
+				<expresion>ctbnom</expresion>
+				<label modpos="nobr" Formstyle="display:none;">CtaCtb</label>
+				<tipo>varchar</tipo>
+			</campo>			 
+<!--			<group>
+				<campo id="STKINMOV.artcod" />
+				<campo id="STKINMOV.movfec" />
+			</group> -->
+			<orden>
+				<campo id="artdes"></campo>
+			
+			</orden>
+		</tabla>
+		<join tipo="left">
+		
+			<tabla id="STKINSUM">
+				<campo id="siscod" oculto="true">
+					<label>siscod</label>
+					<condicion operador="=">'01'</condicion>
+		
+				</campo>
+				<campo id="artcod" oculto="true">
+					<condicion operador="=">VISTA_STK_COSTOS.artcod</condicion>
+				</campo>
+		
+			</tabla>
+		</join>		
+		<join tipo="left">
+		
+			<tabla id="CTBCUENT">
+<!--				<campo id="siscod" >
+					<condicion operador="=">'10'</condicion>
+				</campo>
+-->				
+				<campo id="ctbcod" >
+					<condicion operador="=">STKINSUM.artctb</condicion>
+				</campo>
+		
+			</tabla>
+		</join>					
+		<join tipo="left">
+		
+			<tabla id="FSMUNIDS">
+				<campo id="unicod" oculto="true">
+					<condicion operador="=">STKINSUM.artuni</condicion>
+				</campo>
+		
+			</tabla>
+		</join>		
+
+	
+	</consulta>
+</abm>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+
+	Ayuda Registros de caja
+
+-->
+<histrix tipo="consulta">
+  <title>Registros</title>
+  <obs></obs>
+  <form>
+    <table id="CAJ_REGISTROS" label="Registros de Caja">
+
+		<field id="fecha_registro" esClave="true" tipoOrden="DESC" />
+
+		<field id="nombre_registro">
+			<expression>date_format(CAJ_REGISTROS.fecha_registro,'%d/%m/%Y')</expression>
+		</field>
+
+		<field id="cajpuesto_id" oculto="true">
+			<condicion operador="=">-1</condicion>
+		</field>
+
+		<field id="cajregistro_id">
+			<expression>id_cajregistro</expression>
+			<detalle>cajregistro_id</detalle>
+		</field>
+
+		<field id="cierre_caja" noshow="true">
+			<expression having="false">ifnull(CAJ_REGISTROS.cierre_caja, '0')</expression>
+			<condicion operador="=">1 OR CAJ_REGISTROS.cierre_caja = 5</condicion>
+		</field>
+		
+		<field id="importe_movimiento">
+
+			<expression>			
+			SELECT sum(CAJ_ARQUEO_CONTEOS.valor) - CAJ_ARQUEOS.apertura_arqueo
+			  FROM CAJ_ARQUEOS
+			  JOIN CAJ_ARQUEO_CONTEOS
+			    ON CAJ_ARQUEO_CONTEOS.cajarqueo_id    = CAJ_ARQUEOS.id_cajarqueo 
+			   AND CAJ_ARQUEO_CONTEOS.cajformapago_id = 1
+             WHERE CAJ_ARQUEOS.cajregistro_id         = CAJ_REGISTROS.id_cajregistro
+             </expression>
+
+
+		</field>
+
+		<field id="importe_tot_mov">
+			<expression>(SELECT SUM(importe_movimiento) FROM CAJ_MOVIMIENTOS WHERE cajregistro_id = CAJ_REGISTROS.id_cajregistro)</expression>
+			<!--<condicion operador="!=">0</condicion>-->
+		</field>
+
+                <field id="id_cajmovimiento" tabla="CAJ_MOVIMIENTOS">
+                    <condicion operador="in">(SELECT CAJ_DETALLES.cajmovimiento_id FROM CAJ_DETALLES WHERE CAJ_DETALLES.importe_detalle != 0)</condicion>
+                </field>
+
+		<order>
+			<field id="fecha_registro" />
+		</order>
+          
+    </table>
+
+    <join>
+		<tabla id="CAJ_MOVIMIENTOS">
+		    <field id="cajregistro_id">
+				<condicion operador="=">id_cajregistro</condicion>
+		    </field>
+		</tabla>
+    </join>
+<!--
+    <join>
+		<tabla id="CAJ_PUESTOS">
+		    <field id="id_cajpuesto">
+				<condicion operador="=">CAJ_MOVIMIENTOS.cajpuesto_id</condicion>
+		    </field>
+		</tabla>
+    </join>
+-->    
+  </form>
+</histrix>

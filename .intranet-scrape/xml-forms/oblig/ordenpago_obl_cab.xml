@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="cabecera">
+	<titulo>Orden de pago Oblig.</titulo>
+	<obs/>
+	<consulta>
+		<tabla id="OBLMOVIM" label="ORDEN DE PAGO OBLIG.">
+			<campo id="siscod" oculto="true" >
+				<label>Cod.</label>
+				<help/>
+				<valor>01</valor>
+				<!-- <condicion operador="=">'01'</condicion> -->
+			</campo>
+			<campo id="sisprv" oculto="true" >
+				<label>sisprv</label>
+				<help/>
+				<valor>01</valor>
+				<!-- <condicion operador="=">'01'</condicion> -->
+			</campo>
+			<campo id="ctacod">
+				<label xml="oblcuent.xml">Obligacion</label>
+				<help>Codigo de Obligacion</help>
+				<ayuda_ex id="OBLCUENT" xml="HLPoblcuent_saldo.xml" dir="/help_local">
+					<campo id="siscod" oculto="true">
+						<label>siscod</label>
+						<condicion operador="=">'01'</condicion>
+					</campo>
+					<campo id="ctacod">
+						<label>Nro</label>
+					</campo>
+					<campo id="ctanom">
+						<label>Nombre</label>
+						<detalle>ctanom</detalle>
+
+					</campo>
+					<campo id="movsal">
+						<expresion>sum(OBLMOVIM.movsal)</expresion>
+						<label>Saldo</label>
+						<detalle>saldoPR</detalle>
+					</campo>
+					<!--
+						<campo id="ivacod">
+							<detalle>ivacod</detalle>
+						</campo>
+						<campo id="zoncod">
+							<detalle>zoncod</detalle>
+						</campo>
+						<campo id="ivacod2">
+							<expresion>(case
+							when ivacod = 3 or ivacod = 6 then 'C'
+							when ivacod = 1 or ivacod = 2 then 'A' else 'B' end)</expresion>
+							<detalle>movlet</detalle>
+						</campo>
+						<campo id="doccod">
+							<detalle>doccod</detalle>
+						</campo>
+						-->
+						<campo id="ctanro" noshow="true">
+							<detalle>ctanro</detalle>
+						</campo>
+						<campo id="ctadir" noshow="true">
+							<detalle>ctadir</detalle>
+						</campo>
+						<campo id="ctaloc" noshow="true">
+							<detalle>ctaloc</detalle>
+						</campo>
+						<campo id="ctanib" noshow="true">
+							<detalle>ctanib</detalle>
+						</campo>
+						<campo id="ctagan" noshow="true">
+							<detalle>ctagan</detalle>
+						</campo>
+
+						<campo id="por1598" noshow="true">
+							<detalle>por1598</detalle>
+						</campo>
+						<campo id="acupag" noshow="true">
+							<expresion>sum(distinct acupag)</expresion>
+							<label>acupag</label>
+							<detalle>netoacum</detalle>
+						</campo>
+						<campo id="acuret" noshow="true">
+							<expresion>sum(distinct acuret)</expresion>
+							<label>acuret</label>
+							<detalle>acuret</detalle>
+
+						</campo>
+
+					<clave>ctacod</clave>
+					<descripcion>ctanom</descripcion>
+				</ayuda_ex>
+				<tipo>decimal</tipo>
+				<!--				<detalle>ctacod</detalle> -->
+			</campo>
+			<campo id="sisctb" oculto="true">
+				<label>sisctb</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<campo id="parcla">
+						<condicion operador="=">'sisctb'</condicion>
+					</campo>
+				</parametro>
+			</campo>
+			<campo id="sisret" oculto="true">
+				<label>sisret</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<campo id="parcla">
+						<condicion operador="=">'sisret'</condicion>
+					</campo>
+				</parametro>
+			</campo>
+			<campo ctbcuenta="1" id="ctbpro" oculto="true">
+				<label>ctbdeu</label>
+				<parametro id="ctbparam_paralf.xml" retorna="paralf">
+					<campo id="siscod">
+						<condicion operador="=" valorde="sisctb"/>
+					</campo>
+					<campo id="parcla">
+						<condicion operador="=">'ctbpro'</condicion>
+					</campo>
+				</parametro>
+			</campo>
+
+			<campo deshabilitado="true" id="ctanom" >
+				<label modpos="nobr">Señores</label>
+				<help>Nombre</help>
+				<tipo>character</tipo>
+			</campo>
+
+			<campo ctbfecha="1" id="movfec">
+				<label modpos="nobr">Fecha</label>
+				<help/>
+				<valor>today</valor>
+				<detalle>cajfec</detalle>
+				<detalle>movfec</detalle>
+			</campo>
+			<!--
+                  <campo id="ctadir" tabla="CCTCUENT">
+                      <label  >Domicilio</label>
+                      <help>Domicilio</help>
+					  <tipo>varchar</tipo>
+                  </campo>					  -->
+			<campo id="concod" oculto="true">
+				<label modpos="nobr">concod</label>
+				<help/>
+				<valor>4</valor>
+			</campo>
+			<campo ctbtipo="1" id="movcta" oculto="true">
+				<label modpos="nobr">movcta</label>
+				<help/>
+				<valor>1</valor>
+			</campo>
+			<campo id="zoncod" oculto="true">
+				<label modpos="nobr">zoncod</label>
+				<valor>0</valor>
+			</campo>
+			<campo deshabilitado="true" id="movnpv">
+				<label modpos="nobr">Orden de Pago</label>
+				<help>Comprobante</help>
+				<formato>%04d</formato>
+				<detalle>movnpv</detalle>
+			</campo>
+			<campo id="siscaj" oculto="true">
+				<label>siscaj</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<campo id="parcla">
+						<condicion operador="=">'siscaj'</condicion>
+					</campo>
+				</parametro>
+				<tipo>varchar</tipo>
+			</campo>
+			<campo id="year" oculto="true">
+				<label>año</label>
+				<valor eval="true">date('Y')</valor>
+			</campo>
+			<campo id="mes" oculto="true">
+				<label>mes</label>
+				<valor eval="true">date('m')</valor>
+			</campo>
+
+			<campo ctbregnro="1" deshabilitado="true" id="movnroOP" local="true" >
+				<label modpos="nobr">Numero</label>
+				<help>Numero</help>
+				<parametro id="cajparam_parent.xml" retorna="parent">
+					<!--					<campo id="siscod">
+						<condicion operador="=" valorde="siscaj"/>
+							<tipo>varchar</tipo>
+							<valor>'05'</valor>
+					</campo> -->
+					<campo id="parcla" oculto="true">
+						<condicion operador="=">'oblpag'</condicion>
+					</campo>re
+					<campo id="parent">
+						<complete>parent + 1</complete>
+					</campo>
+				</parametro>
+				<tipo>integer</tipo>
+				<formato>%012d</formato>
+				<detalle>movnro</detalle>
+				<detalle>cajnro</detalle>
+				<detalle>carpag</detalle>
+				<detalle>nropag</detalle>
+				<detalle>nrocom</detalle>
+				<detalle>carrec</detalle>
+				<detalle>referencia</detalle>
+			</campo>
+			<campo id="fpago" local="true" obj="ordenpago_cajmovim_ing.xml">
+				<label colspan="4">forma de pago</label>
+			</campo>
+			<campo deshabilitado="true" id="saldoPR">
+				<label modpos="nobr">Saldo Prov</label>
+				<tipo>numeric</tipo>
+			</campo>
+			<campo id="netoacum" deshabilitado="true">
+				<label modpos="nobr">Neto Acumulado</label>
+				<valor>0</valor>
+			</campo>
+			<!-- <campo id="acuret" deshabilitado="true" tabla="RETACUMU">
+				<label modpos="nobr">Ret. Acumu.</label>
+				<valor>0</valor>
+			</campo>-->
+
+			<campo id="movref__1" >
+				<label colspan="3" modpos="nobr">Ref</label>
+			</campo>
+			<campo id="ctanro" deshabilitado="true" noshow="true">
+				<label>cuit</label>
+				<tipo>varchar</tipo>
+			</campo>
+			<campo id="ctadir" deshabilitado="true" noshow="true">
+				<label modpos="nobr">dir</label>
+				<tipo>varchar</tipo>
+			</campo>
+			<campo id="ctaloc" deshabilitado="true" noshow="true">
+				<label modpos="nobr">loc</label>
+				<tipo>varchar</tipo>
+			</campo>
+			<campo id="ctanib" deshabilitado="true" noshow="true">
+				<label modpos="nobr">nib</label>
+				<tipo>varchar</tipo>
+			</campo>
+			<campo id="ctagan" local="true" deshabilitado="true" >
+				<label modpos="nobr">ctagan</label>
+			</campo>
+			<campo id="nroret"  deshabilitado="true" >
+				<label>nroRet</label>
+				<expresion>select max(nroret) + 1 from RET1598</expresion>
+				<parametro id="numerador_ret1598.xml" retorna="Entero">
+				</parametro>
+				<tipo>integer</tipo>
+
+			</campo>
+<!--			<campo id="nroret" local="true" deshabilitado="true" >
+				<label>nroRet</label>
+				<parametro id="retparam_parent.xml" retorna="parent">
+
+					<campo id="parcla" oculto="true">
+						<condicion operador="=">'ib1598'</condicion>
+					</campo>
+					<campo id="parent">
+						<complete>parent + 1</complete>
+				</campo>
+				</parametro>
+				<tipo>integer</tipo>
+			</campo>				-->
+			<campo id="por1598" local="true" deshabilitado="true">
+				<label modpos="nobr">por1598</label>
+				<tipo>decimal</tipo>
+				<valor>0</valor>
+			</campo>
+			<campo id="opecla" local="true" oculto="true">
+				<label>Usuario</label>
+				<valor eval="true">$_SESSION['usuario']</valor>
+			</campo>
+			<!--
+                  <campo id="ctaloc" tabla="CCTCUENT">
+                      <label  >Localidad</label>
+                      <help>Localidad</help>
+					  <tipo>varchar</tipo>
+                  </campo>
+                  <campo id="prvcod" tabla="CCTCUENT">
+                      <label  modpos="nobr"></label>
+                      <help>Provincia</help>
+					  <tabla_ex id="FSMPROVS">
+						  <campo id="prvcod"></campo>
+						  <campo id="prvnom"></campo>
+					  </tabla_ex>
+					  <tipo>varchar</tipo>
+
+                  </campo>
+                  <campo id="ctanro" tabla="CCTCUENT">
+                      <label  >Cuit</label>
+                      <help>Cuit</help>
+					  <tipo>varchar</tipo>
+
+                  </campo>
+
+
+
+                  <campo id="ivacod" tabla="CCTCUENT" >
+                      <label  modpos="nobr">Iva</label>
+                      <help>Nombre</help>
+					  <tabla_ex id="FSMCTIVA">
+						  <campo id="ivacod"></campo>
+						  <campo id="ivanom"></campo>
+					  </tabla_ex>
+					  <tipo>varchar</tipo>
+                  </campo>
+				<campo id="regmin" oculto="true">
+					<label>minuta</label>
+					<detalle>regmin</detalle>
+				</campo>
+
+                  <campo id="movimp" suma="true">
+                      <label posx="130" posy="+1"  PDFsize="12">Total Pago</label>
+                      <help> </help>
+					  <formato>%01.2f</formato>
+                  </campo>
+-->
+		</tabla>
+		<join tipo="left">
+			<tabla id="OBLCUENT">
+				<campo id="siscod" oculto="true">
+					<label>oblcuent.siscod</label>
+					<condicion operador="=">OBLMOVIM.siscod</condicion>
+				</campo>
+				<campo id="ctacod" oculto="true">
+					<condicion operador="=">OBLMOVIM.ctacod</condicion>
+				</campo>
+			</tabla>
+		</join>
+	</consulta>
+</abm>

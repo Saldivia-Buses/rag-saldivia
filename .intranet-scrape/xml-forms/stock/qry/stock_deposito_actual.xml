@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<histrix tipo="consulta" log="false">
+    <title>Consulta Por deposito</title>
+    <obs></obs>
+    <form>
+        <table id="STK_STOCKACTUAL" >
+	    <!-- <filters>
+            <field id="stkarticulo_id" deshabilitado="true">
+                <label>Código</label>
+            </field>
+            <field id="nombre_articulo" tabla="STK_ARTICULOS"  deshabilitado="true" noshow="true">
+                <label>Artículo</label>
+            </field>
+		
+	    </filters> -->
+
+            <field id="stkarticulo_id" >
+                <label>Código</label>
+            </field>
+            <field id="nombre_articulo" tabla="STK_ARTICULOS" noshow="true">
+                <label>Artículo</label>
+            </field>
+            <field id="stkdeposito_id" _noshow="true" />
+	    <field id="nombre_deposito" tabla="STK_DEPOSITOS">
+                <label>Depósito</label>
+            </field>
+    	    <field id="deshab" clasefila="true" noshow="true">
+		<expression>case when suma_total = 0 then 'grisado' end</expression>
+	    </field>
+            <field id="cantidad_stock" suma="true" _noZero="true" >
+                <label>Cantidad</label>
+		<expression>case when STK_DEPOSITOS.suma_total = 1 then cantidad_stock else 0 end</expression>
+                  <attribute id="tooltip">nombre_deposito</attribute>                       
+                <tipo>numeric</tipo>
+                <attribute id="linkdes">nombre_articulo</attribute>
+                <helper xml="fichakardex_art.xml" type="link" width="70%">
+                    <parameter source="stkarticulo_id" target="stkarticulo_id" />
+                    <parameter source="stkdeposito_id" target="stkdeposito_id" />
+                </helper>
+<!--		<condicion operador="!=">0</condicion> -->
+            </field>
+            <field id="cantidad_nosuma" _suma="true" noZero="true">
+		<expression>case when suma_total = 0 then cantidad_stock else 0 end</expression>
+                <label>No computable</label>
+                  <attribute id="tooltip">nombre_deposito</attribute>                       
+                <tipo>numeric</tipo>
+                <attribute id="linkdes">nombre_articulo</attribute>
+                <helper xml="fichakardex_art.xml" type="link" width="70%">
+                    <parameter source="stkarticulo_id" target="stkarticulo_id" />
+                    <parameter source="stkdeposito_id" target="stkdeposito_id" />
+                </helper>
+<!--		<condicion operador="!=">0</condicion> -->
+            </field>
+
+	    <!--
+	    <field id="locaciones">
+		<expression>select group_concat(sum(cantidad * (case when tipo_concepto = 0 then 1 else -1 end)) ) from STK_MOVIMIENTOS join STK_CONCEPTOS on id_stkconcepto = stkconcepto_id where STK_MOVIMIENTOS.stkarticulo_id = id_stkarticulo and STK_MOVIMIENTOS.stkdeposito_id = STK_STOCKACTUAL.stkdeposito_id group by STK_MOVIMIENTOS.stklocacion_id</expression>
+	    </field>
+		-->
+            <field id="locaciones"  _showObjTabla="true" style="font-weight:bold">
+                <label>Locación</label>
+                <expression>select group_concat(concat( codigo_locacion, ' ', (case when stklocacion_id = stklocacion_fija_id then '(FIJA) ' else ' ' end) ,':   ' , stock_actual, ' - ', (select date_format(max(fecha_movimiento), '%d/%m/%y') from STK_MOVIMIENTOS M where M.stkarticulo_id = id_stkarticulo and M.stkdeposito_id = STK_STOCKACTUAL.stkdeposito_id and stklocacion_id = id_stklocacion)) separator '&lt;br&gt;') 
+from STK_ARTICULO_LOCACION left join STK_LOCACION on stklocacion_id = id_stklocacion where stkarticulo_id = id_stkarticulo and stkdeposito_id = id_stkdeposito and (stock_actual != 0 or stklocacion_id = stklocacion_fija_id)</expression>
+		<!-- <expression>select group_concat(concat( codigo_locacion, ' ', (case when stklocacion_id = stklocacion_fija_id then '(FIJA) ' else ' ' end) ,':   ' , stock_actual, ' - ', (select date_format(max(fecha_movimiento), '%d/%m/%y') from STK_MOVIMIENTOS M where M.stkarticulo_id = id_stkarticulo and M.stkdeposito_id = STK_STOCKACTUAL.stkdeposito_id and M.stklocacion_id = STK_ARTICULO_LOCACION.stklocacion_id)) separator '&lt;br&gt;') 
+from STK_ARTICULO_LOCACION left join STK_LOCACION on stklocacion_id = id_stklocacion where stkarticulo_id = id_stkarticulo and stkdeposito_id = id_stkdeposito and (stock_actual != 0 or stklocacion_id = stklocacion_fija_id)</expression> -->
+		<!--
+		<expression>'Locaciones'</expression>
+                  <attribute id="tooltip">nombre_deposito</attribute>                       
+                <attribute id="linkdes">nombre_articulo</attribute>
+                <helper xml="stock_locacion_deposito_qry.xml" type="link" width="70%">
+                    <parameter source="stkarticulo_id" target="stkarticulo_id" />
+                    <parameter source="stkdeposito_id" target="stkdeposito_id" />
+                </helper>
+		-->
+            </field>
+	    <order>
+		<field id="nombre_deposito" />"
+	    </order>
+        </table>
+
+        <join _tipo="left">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">STK_STOCKACTUAL.stkarticulo_id</condicion>
+                </field>
+        
+            </table>
+        </join>       
+        
+        <join _tipo="left">
+            <table id="STK_DEPOSITOS">
+                <field id="id_stkdeposito">
+                    <condicion operador="=">STK_STOCKACTUAL.stkdeposito_id</condicion>
+                </field>
+		<field id="suma_total">
+		    <condicion operador="=">1</condicion>
+		</field>
+        
+            </table>
+        </join>
+
+    </form>
+</histrix>

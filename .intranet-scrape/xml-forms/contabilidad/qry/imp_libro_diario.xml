@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" limit="1" preloadData="false">
+  <title>Movimientos</title>
+  <obs />
+  <form detalle="cab_libro_diario_imp.xml">
+    <table id="CTB_MOVIMIENTOS" label="Imp. Libro diario">
+   
+      <filters>
+        <field id="ejercicio_id">
+          <label>Ejercicio</label>
+          <operador>=</operador>
+        </field>
+   
+        <field id="concepto_id">
+          <label modpos="nobr">Concepto</label>
+          <operador>=</operador>
+        </field>
+   
+        <field id="fecha_mov1" deshabilitado="false">
+          <label>Desde</label>
+          <operador>=</operador>
+          <valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m"), 1, date("Y")))</valor>
+        </field>
+
+        <field id="fecha_mov2" deshabilitado="false">
+          <label modpos="nobr">Hasta</label>
+          <operador>=</operador>
+          <valor>today</valor>
+        </field>
+
+        <field id="nroprox_hoja" deshabilitado="false">
+          <label>NroAsiento</label>
+          <operador>=</operador>
+          <valor>1</valor>
+        </field>
+      </filters>
+
+      <field id="nroprox_hoja" noshow="true" local="true">
+        <detalle>nroprox_hoja</detalle>
+      </field>
+
+      <field id="ejercicio_id" local="true" required="true">
+        <helper type="combo" xml="ctbejercicios_crud.xml" empty="true" dir="/contabilidad/man/">
+          <field id="activo" tipoOrden="DESC" />
+          <field id="fecha_mov1">
+            <expression>DATE_FORMAT(comienza, '%d/%m/%Y')</expression>
+            <tipo>date</tipo>
+            <detalle>ejercicio_id</detalle>
+          </field>
+          <field id="fecha_mov2">
+            <expression>DATE_FORMAT(finaliza, '%d/%m/%Y')</expression>
+            <tipo>date</tipo>
+          </field>
+          <field id="finaliza" />
+        </helper>
+        <label>Ejercicio</label>
+        <detalle>ejercicio_id</detalle>
+      </field>
+
+      <field id="concepto_id" local="true">
+        <helper type="combo" xml="ctbconcepto_qry.xml" dir="/ayudas" />
+        <label>Concepto</label>
+        <detalle>concepto_id</detalle>
+      </field>
+
+      <field id="fecha_mov1" local="true">
+        <label>Desde</label>
+        <detalle>desde_fecha</detalle>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="fecha_mov2" local="true">
+        <label>Hasta</label>
+        <detalle>hasta_fecha</detalle>
+        <tipo>date</tipo>
+      </field>
+
+    </table>
+  </form>
+</histrix>

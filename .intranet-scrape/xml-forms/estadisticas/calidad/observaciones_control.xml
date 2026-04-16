@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="consulta" path="/fotos/archivo/Coches/">
+	<title>Cantidad</title>
+	<obs></obs>
+	<form>
+		<table id="PROD_CONTROLES">
+		   <title>CANTIDAD DE OBSERVACIONES</title>
+
+		    <field id="id_prodcontrol" noshow="true" />
+
+		    <field id="seccion_id" noshow="true" />
+
+		    <field id="fecha_desde" local="true" noshow="true">
+		    	<tipo>date</tipo>
+		    </field>
+		    
+		    <field id="fecha_hasta" local="true" noshow="true">
+		    	<tipo>date</tipo>
+		    </field>
+
+		    <field id="fecha_control" tabla="PROD_CONTROL_MOVIM">
+		    	<tipo>date</tipo>
+		    	<label>Fecha Control</label>
+		    	<condicion operador="&gt;=">str_to_date('[__fecha_desde__]', '%d/%m/%Y') and fecha_control &lt;= str_to_date('[__fecha_hasta__]', '%d/%m/%Y')</condicion>
+		    </field>
+
+		    <field id="user_id" tabla="PROD_CONTROL_MOVIM" noshow="true">
+            	<label>Usuario</label>
+            </field>
+
+            <field id="usuario" tabla="HTXUSERS">
+            	<label>Usuario</label>
+            	<expression>concat(HTXUSERS.nombre,' ',HTXUSERS.apellido)</expression>
+            </field>
+
+		    <field id="descripcion" tabla="MOMENTO">
+		    	<label>Sección</label>
+		    </field>
+			
+		    <field id="habilitado" noshow="true">
+			   	<condicion operador="=">0</condicion>
+			</field>
+
+	        <field id="nombre_control">
+		       	<condicion operador="!=">''</condicion>
+		       	<label>Control</label>
+		    </field>
+
+	    <field id="nrofab_id" tabla="PROD_CONTROL_MOVIM" >
+	    	<label>Nro. Fab.</label>
+	    </field>
+	    <field id="fotopath" noshow="true" >
+	        <expression>concat(PROD_CONTROL_MOVIM.nrofab_id,'/controlcalidad/',id_prodcontrol)</expression>
+	    </field>	    
+	    <field id="foto" path="fotopath" tabla="PROD_CONTROL_MOVIM">
+	        <label>Foto</label>
+		<tipo>file</tipo>
+		<size>40</size>
+    	    </field>
+
+            <field id="no_conforme" noshow="true" tabla="PROD_CONTROL_MOVIM">
+				<condicion operador="=">1</condicion>
+            </field>
+
+	    <field id="nombre_controlcausal" tabla="PROD_CONTROL_CAUSAL">
+		<label>Causa</label>
+	    </field>
+
+            <field id="observacion_control" tabla="PROD_CONTROL_MOVIM">
+            	<label>Observación</label>
+            </field>
+			
+			<order>
+				<field id="fecha_control" tipoOrden="ASC" />
+			</order>
+					
+		</table>
+		
+		<join tipo="left">
+            <table id="PROD_CONTROL_MOVIM">
+                <field id="prodcontrol_id">
+                    <condicion operador="=">PROD_CONTROLES.id_prodcontrol</condicion>
+                </field>
+            </table>
+        </join>
+	<join tipo="left">
+	    <table id="PROD_CONTROL_CAUSAL">
+		<field id="id_controlcausal">
+		    <condicion operador="=">PROD_CONTROL_MOVIM.controlcausal_id</condicion>
+		</field>
+	    </table>
+	</join>
+        <join>
+            <table id="MOMENTO">
+                <field id="idMomento">
+                    <condicion operador="=">PROD_CONTROLES.seccion_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="HTXUSERS">
+                <field id="login">
+                    <condicion operador="=">PROD_CONTROL_MOVIM.user_id</condicion>
+                </field>
+            </table>
+        </join>
+
+	</form>
+</histrix>

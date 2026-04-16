@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" dataSource="HtxMailgunLists" filter="true" >
+  <title>Eventos</title>
+  <obs/>
+  <form >
+    <table id="Lists">
+      <field id="name">
+        <label>Nombre</label>
+        <size>30</size>
+      </field>
+
+      <field id="address" required="true">
+        <label>Direccion</label>
+        <size>80</size>
+      </field>
+
+      <field id="access_level" noshow="true">
+        <label>Access Level</label>
+      </field>
+
+      <field id="created_at" deshabilitado="true">
+        <label>Creado</label>
+        <size>80</size>
+      </field>
+
+      <field id="description">
+        <label>descripcion</label>
+        <size>90</size>
+      </field>
+
+      <field id="member_count" noshow="true" />
+
+      <field id="ver" local="true" Formstyle="display: none;" title="Miembros">
+        <helper xml="members_qry.xml" type="link">
+          <parameter source="address" target="list_id" />
+          <parameter source="member_count" target="member_count" />
+        </helper>
+        <label>Miembros</label>
+        <valor>'Miembros'</valor>
+      </field>
+
+      <field id="domain" noshow="true" _local="true">
+            <label>Domain</label>
+            <valor eval="true">$_SESSION['properties']['domain']</valor>
+      </field>
+
+    </table>
+  </form>
+</histrix>

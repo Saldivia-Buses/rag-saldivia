@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" exportasuma="true" PDFlineColor="255,255,255" PDFfont="Courier">
+	<title>Detalles</title>
+	<obs></obs>
+	<form >
+		<table id="REG_DETALLES" label="Detalle de Movimientos" styleTbody="height:150px;overflow-x:hidden;" PDFnoborder="true" >
+			<field id="id_regdetalle" esClave="true" noshow="true"/>
+			<field id="regmovim_id" noshow="true" PDFlineas="false"/>
+			<field id="orden" noshow="true" PDFlineas="false"/>
+			<field id="codigo_detalle" PDFsize="8"  PDFnoborder="true" PDFcolWidth="14">
+				<label size="30">Código</label>
+			</field>
+			<field id="descripcion_detalle" PDFsize="8" PDFlineas="false" PDFcolWidth="80">
+				<label modpos="nobr" size="80">Descripción</label>
+			</field>
+			<field id="cantidad" PDFsize="8" PDFlineas="false" PDFcolWidth="25">
+				<label modpos="nobr" size="20">Cant.</label>
+				<expression>
+					CONCAT(
+						TRUNCATE(REG_DETALLES.cantidad_detalle, 0), ' (', 
+						(CASE WHEN MOD((REG_DETALLES.cantidad_detalle / STK_ARTICULOS.cantidad_pack), 1) != 0 THEN
+							ROUND(REG_DETALLES.cantidad_detalle / STK_ARTICULOS.cantidad_pack, 2)
+						ELSE ROUND(REG_DETALLES.cantidad_detalle / STK_ARTICULOS.cantidad_pack, 0)
+						END),
+						' CAJ)'
+						)
+				</expression>
+			</field>
+			<field id="cantidad_pack" tabla="STK_ARTICULOS" noshow="true">
+				<label>Cant x Caja</label>
+			</field>
+			<field id="precio_venta" PDFsize="8" PDFlineas="false">
+				<label modpos="nobr" size="20">Precio</label>
+				<tipo>numeric</tipo>
+			</field>
+			<field id="porcentaje_desc0" PDFsize="8" PDFlineas="false">
+				<label modpos="nobr" size="20">Desc. %</label>
+				<tipo>numeric</tipo>
+			</field>
+			<field id="porcentaje_desc1" PDFsize="8" PDFlineas="false">
+				<label modpos="nobr" size="20">Desc. Adc %</label>
+				<tipo>numeric</tipo>
+			</field>
+			<field id="neto_unidad">
+				<label modpos="nobr" size="20">Neto</label>
+				<expresion> REG_DETALLES.neto_detalle / REG_DETALLES.cantidad_detalle</expresion>
+				<tipo>numeric</tipo>
+			</field>
+			<field id="neto_detalle"  total="true" PDFsize="8" PDFlineas="false" PDFnoborder="true">
+				<label size="25">Total.</label>
+				<tipo>numeric</tipo>
+				<detalle>SubTotal</detalle>
+			</field>
+			<order>
+				<field id="orden"/>
+			</order>
+			<group>
+				<field id="id_regdetalle" />
+			</group>
+		</table>
+		<join tipo="left">
+			<table id="STK_ARTICULOS">
+				<field id="id_stkarticulo">
+					<condicion operador="=">REG_DETALLES.codigo_detalle</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

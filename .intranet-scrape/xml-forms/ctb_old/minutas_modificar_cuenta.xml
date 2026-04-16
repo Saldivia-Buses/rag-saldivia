@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="ing" preloadData="false" transaccional="true" deleteRow="false" inserta="false" modifica="false">
+       <title>Minutas</title>
+        <obs></obs>
+               <form  >
+                  <table id="CTBREGIS" label="Minutas" >
+
+		    <movimientos>
+			<relacion id="minutas_modificar_update.xml" />
+		    </movimientos>
+              		  <filters>
+                			<field id="regfec"  >
+                			    <operador>>=</operador>
+                			    <label>Desde Fecha</label>
+                			    <valor>today</valor>
+                			</field>  
+                			<field id="regfec"  >
+                			    <operador>&lt;=</operador>
+                			    <label>Hasta Fecha</label>
+                			    <valor>today</valor>
+                			</field>  
+                			<field id="artcod">
+                				<operador>=</operador>
+                				<label>Articulo</label>
+                			</field>
+
+
+                			<field id="ctbcod">
+                				<operador>=</operador>
+                				<label>Cuenta a Modificar</label>
+                			</field>
+
+                      <field id="ctbnew" required="true">
+                        <operador>=</operador>
+                        <label>Cuenta Nueva</label>
+                      </field>              			
+              		  </filters>
+
+	    
+              <!--
+              		  <filtro_ex>
+              		    <label>CUENTA</label>
+              		    <tabla_ex id="CTBCUENT">
+              			<field id="ctbcod"></field>
+              			<field id="ctbnom"></field>
+              -			<field id="siscod" oculto="true"></field> 
+              -			<field id="ctbhab">
+              			<condicion operador="=">1</condicion>
+              			</field> 
+              			<order>
+              				<field id="ctbnom"></field>
+              			
+              			</order>
+              			<filtra>ctbcod</filtra>
+              		    </tabla_ex>
+              		  </filtro_ex>
+              -->
+                  <field id="siscod" oculto="true">
+                      <label>siscod</label>
+                      <help> Cod sistema</help>
+		                  <detalle>siscod</detalle>
+                  </field>
+		  <field id="id_ctbregis" noshow="true">
+
+		  </field>
+                  <field id="ctbcod" _noshow="true">
+			<helper type="external" id="CTBCUENT">
+				<field id="ctbcod"></field>
+				<field id="ctbnom"></field>
+				<order>
+        				<field id="ctbnom"></field>
+        			</order>
+        		</helper>
+                      <help> Cuenta</help>
+                  </field>
+
+                  <field id="ctbnew" _noshow="true" local="true">
+                      <help> Cuenta Nueva</help>
+			<helper type="external" id="CTBCUENT">
+				<field id="ctbcod"></field>
+				<field id="ctbnom"></field>
+				<order>
+        				<field id="ctbnom"></field>
+        			</order>
+        		</helper>
+
+                  </field>
+
+
+                  <field id="regfec" PDFwidth="4" tdWidth="4" noResize="true">
+                      <label>Fecha</label>
+                      <help>Fecha del Asiento (Movimiento Contable) </help>
+                      <detalle>regfec</detalle>
+
+                  </field>
+                  <field id="regmin" noshow="true">
+                      
+                      <help>Numero de Asiento </help>
+		                  <detalle>regmin</detalle>
+
+                  </field>
+		    <field id="movnro" tabla="CCTMOVIM">
+			<label>Comp</label>
+		    </field>
+		    <field id="ctanom" tabla="CCTMOVIM">
+			<label>Prov.</label>
+		    </field>
+
+<!--
+                  <field id="datos">
+                    <label>Minuta </label>
+                    <expression>concat(CTBREGIS.regmin,' - comp: ', regnro, ' ', regref)</expression>
+                  </field>
+
+-->
+                  <!--
+                  <field id="regnro" >
+                    <label>Nro</label>
+                  </field>
+
+                  <field id="regref">
+                      <label>Ref</label>
+                      <help>Referencia</help>
+                  </field>
+-->
+		  <field id="grabar" noshow="true">
+		    <expression>ifnull((select 1 from CTBCUENT where CTBCUENT.ctbcod = '[__ctbnew__]' limit 1),0)</expression>
+		  </field>
+		  <field id="nueva">
+		    <label>Nueva</label>
+		    <expression>ifnull((select ctbnom from CTBCUENT where CTBCUENT.ctbcod = '[__ctbnew__]' limit 1),'DEBE INGRESAR CUENTA')</expression>
+		  </field>
+
+                  <field id="minuta" showObjTabla="true" local="true">
+                    <label>Detalle</label>
+                    <helper xml="detalle_minuta.xml" type="object">
+                      <parameter source="regmin" target="regmin" />
+                      <parameter source="regfec" target="regfec" />
+                      <parameter source="siscod" target="siscod" />
+                    </helper>
+                  </field>
+
+
+                  <field id="cuenta" noshow="true">
+		      <expression>ctbnom</expression>
+                      <label>Cuenta</label>
+		      
+                      <help>Codigo de Cuenta Contable</help>
+		      <tipo>string</tipo>
+                  </field>
+
+		<!--
+                  <field id="regtip">
+                      <label>Cod.Comp.</label>
+                      <help>Codigo de Comprobante </help>
+                  </field>
+		  -->
+                  <!--
+                  <field id="debe" suma="true">
+		      <expression>regimp * (case when regdoh = 1 then 1 else 0 end)</expression>
+
+                      <label>Debe</label>
+                      <help>Importe del Movimiento en el Debe</help>
+                  </field>
+
+                  <field id="haber" suma="true">
+		                <expression>regimp * (case when regdoh = 2 then 1 else 0 end)</expression>
+                      <label>Haber</label>
+                      <help>Importe del Movimiento en el Haber</help>
+                  </field>
+-->
+<!--
+                  <field id="regpoa">
+                      <label>Estado</label>
+                      <help>Estado del Movimiento.Aprobado  o  Provisorio </help>
+                			<options>
+                			    <option valor="A">Aprobado</option>
+                			    <option valor="P">Provisorio</option>
+                			</options>
+                  </field>
+	    
+                  <field id="coscod">
+                      <label>Centro Costo</label>
+                      <help>Codigo de Centro de Costo </help>
+                  </field>
+                  <field id="impcod">
+                      <label>Cod.Imput.</label>
+                      <help>Codigo de Centro de Imputacion</help>
+                  </field>
+
+	
+                  <field id="idcos">
+                      <label>? </label>
+                      <help> </help>
+                  </field>
+                  <field id="idimpu">
+                      <label>? </label>
+                      <help> </help>
+                  </field>
+                  <field id="regcta">
+                      <label>? </label>
+                      <help> </help>
+                  </field>
+                  <field id="regfco">
+                      <label>Fecha Comprobante </label>
+                      <help> </help>
+                  </field>
+                  <field id="regnro">
+                      <label>Nro.</label>
+                      <help>Numero de Comprobante Correspondiente. </help>
+                  </field>
+
+		  -->
+
+<!--
+                  <field id="regnpv">
+                      <label>Nro Puesto </label>
+                      <help> </help>
+                  </field>
+                  <field id="regord">
+                      <label>Orden en el Asiento  . </label>
+                      <help> </help>
+                  </field>
+                  <field id="regsub">
+                      <label>Subdiario </label>
+                      <help> </help>
+                  </field>
+                  <field id="reguni">
+                      <label>Unidades Fisicas     . </label>
+                      <help>Unidades Fisicas. </help>
+                  </field>
+		  -->
+		    <field id="movnro" tabla="CCTMOVIM">
+			<label>Comp</label>
+		    </field>
+		    <field id="movimp" tabla="CCTMOVIM">
+			<label>$</label>
+			<tipo>numeric</tipo>
+		    </field>
+		    <field id="artcod" tabla="STKINMOV" noshow="true">
+			<label>Articulo</label>
+		    </field>
+
+            		  <order>
+                      <field id="regmin" tabla="CTBREGIS"></field>
+                      <field id="regord"></field>
+
+            		  </order>
+			  
+                  </table>
+            		  <join tipo="left">
+            		    <table id="CTBCUENT">
+            			<field id="ctbcod" oculto="true">
+	      			    <condicion operador="=">CTBREGIS.ctbcod</condicion>
+            			</field>
+            		    </table>
+            		  </join>
+
+            		  <join tipo="left">
+            		    <table id="CCTMOVIM">
+                			<field id="siscod" >
+              			    <condicion operador="=">'01'</condicion>
+                			</field>
+                			<field id="regmin" >
+              			    <condicion operador="=">CTBREGIS.regmin</condicion>
+                			</field>
+                			<field id="regfec" >
+              			    <condicion operador="=">CTBREGIS.regfec</condicion>
+                			</field>
+            		    </table>
+            		  </join>
+            		  <join tipo="left">
+            		    <table id="FACREMIMP">
+                		<field id="ctacod" >
+                 		    <condicion operador="=">CCTMOVIM.ctacod</condicion>
+                		</field>
+                		<field id="movnro" >
+	          		    <condicion operador="=">CCTMOVIM.movnro</condicion>
+                		</field>
+                		<field id="movnpv" >
+                  		    <condicion operador="=">CCTMOVIM.movnpv</condicion>
+                		</field>
+            		    </table>
+            		  </join>
+            		  <join tipo="left">
+            		    <table id="FACREMIT">
+                		<field id="ctacod" >
+                 		    <condicion operador="=">FACREMIMP.ctacod</condicion>
+                		</field>
+                		<field id="remnro" >
+	          		    <condicion operador="=">FACREMIMP.remnro</condicion>
+                		</field>
+<!--
+                		<field id="movnpv" >
+                  		    <condicion operador="=">FACREMIMP.remnpv</condicion>
+                		</field>
+-->
+            		    </table>
+            		  </join>
+            		  <join tipo="left">
+            		    <table id="STKINMOV">
+                		<field id="ctacod" >
+                 		    <condicion operador="=">FACREMIT.ctacod</condicion>
+                		</field>
+                		<field id="movnro" >
+	          		    <condicion operador="=">FACREMIT.remnro</condicion>
+                		</field>
+                		<field id="movnpv" >
+                  		    <condicion operador="=">FACREMIT.remnpv</condicion>
+                		</field>
+            		    </table>
+            		  </join>
+
+               </form>
+        </histrix>

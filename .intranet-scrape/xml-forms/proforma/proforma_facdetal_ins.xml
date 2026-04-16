@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert">
+    <title>Detalle</title>
+    <obs/>
+    <form>
+        <table id="FACDETAL">
+
+            <field id="siscod">
+                <valor>'03'</valor>
+            </field>
+            <field id="ctacod"  id_cab="ctacod" />
+            <field id="concod"  id_cab="concod" />
+            <field id="movlet"  id_cab="concod" />
+            <field id="nropue"  id_cab="movnpv" />
+            <field id="nrofac"  id_cab="movnro">
+                <valor>[__movnro__]</valor>
+            </field>
+            <field id="movfec"  id_cab="movfec" />
+            <field id="artcan"  id_temp="cant" />
+            <field id="detalle" id_temp="descripcion" />
+
+
+            <field id="artcom"  id_temp="precio" />
+            <field id="artali"  id_temp="alicuota" />
+            <field id="artiva"  id_temp="iva" />
+            <field id="artnet"  id_temp="subtot" />
+            <field id="arttot"  id_temp="total" />
+
+        </table>
+    </form>
+</histrix>

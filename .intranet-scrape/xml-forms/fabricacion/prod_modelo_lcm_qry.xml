@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" subtipo="vertical" width="50%">
+	<title>MODELOS POR LCM</title>
+	<obs></obs>
+	<form>
+		<table id="PROD_MODELO_LCM" >
+			<field id="id_modelo_lcm" autoinc="true" _noshow="true" deshabilitado="true">
+				<label>Nro</label>
+			</field>
+
+        <!--nombre del modelo lcm para las ayudas -->
+        <field id="nombre" local="true">
+                <label>Nombre</label>
+                <expression><![CDATA[IFNULL((SELECT CONCAT(CARROCERIA.desabv,' ',MARCHASIS.mardes,' ',MODCHASIS.desabv, ' ',EURO_TIPO.abrev_euro,' ', IFNULL(PROD_LCM.numero_lcm,''),' ', IFNULL(PROD_LCM.max_asientos_lcm,''),' As')
+                FROM PROD_MODELO_LCM PML
+                LEFT JOIN PROD_LCM ON id_lcm = PML.lcm_id
+                LEFT JOIN MODCHASIS ON id_modelo = PML.modelo_id
+                LEFT JOIN MARCHASIS ON MARCHASIS.marcod = MODCHASIS.marcod
+                LEFT JOIN EURO_TIPO ON EURO_TIPO.id_euro = MODCHASIS.euro_id 
+                LEFT JOIN CARROCERIA ON nrocar_id = nrocar
+                WHERE PML.id_modelo_lcm = PROD_MODELO_LCM.id_modelo_lcm limit 1),'')]]>
+                </expression>
+        </field>
+
+            <field id="nrocar_id">
+                <label>Mod.Carroceria</label>
+                <help>Modelo Carroceria</help>
+            </field>
+
+			<field id="marcod">
+                <label>Marca Chasis</label>
+                <help>Marca del Chasis</help>
+            </field>
+
+            <field id="modelo_id">
+                <label>Modelo Chasis</label>
+                <help>Modelo del Chasis</help>
+            </field>
+
+            <field id="lcm_id">
+                <label>LCM</label>
+                <help>NRO LCM</help>
+                <helper type="combo" id="PROD_LCM" empty="true">
+
+                    <field id="numero_lcm">
+                        <expression>numero_lcm</expression>
+                  </field>
+                </helper>
+            </field>
+
+        <field id="numero_lcm" local="true">
+                <label>Cant.Max</label>
+                <help>Cantidad Max Asientos</help>
+        </field>
+
+        <field id="max_asientos_lcm" tabla="PROD_LCM">
+				<label>Cant.Max</label>
+                <help>Cantidad Max Asientos</help>
+        </field>
+
+            <field id="modelo_lcm_activo">
+                <label>Activo</label>
+                <help>Activo</help>
+            </field>
+
+        <order>
+            <field id="nombre" tipoOrden="ASC" />
+        </order>
+
+    </table>
+        
+        <join tipo="left">
+            <table id="PROD_LCM">
+                <field id="id_lcm">
+                    <condicion operador="=">PROD_MODELO_LCM.lcm_id</condicion>
+                </field>
+            </table>
+        </join>
+	</form>	   
+</histrix> 

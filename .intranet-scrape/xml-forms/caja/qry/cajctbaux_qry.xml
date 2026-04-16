@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ayuda">
+  <title>Cuentas Auxiliares</title>
+  <obs/>
+  <form>
+
+    <table id="CAJ_CTBCUENTA_AUX" label="Puestos">
+
+      <field id="id_cajctbcuenta" noshow="true" esClave="true"/>
+
+      <field id="codigo" noshow="true">
+        <label>Codigo</label>        
+        <size>10</size>  
+      </field>
+
+      <field id="referencia_cuenta" noshow="true">
+        <label>Referencia</label>        
+        <size>20</size>  
+      </field>
+
+      <field id="ctbcuenta_id" oculto="true">
+        <label>Cuenta Contable Relacionada</label>
+        <helper type="combo" xml="cuentas_habilitadas_qry.xml" dir="/ayudas" empty="true"/>
+        <size>14</size>        
+      </field>
+
+      <field id="imputacion_cuenta" noshow="true">
+        <label>tipo</label>
+        <helper type="combo">
+            <option value="0">Ingresos</option>
+            <option value="1">Egresos</option>
+        </helper>
+      </field>     
+      <!--
+      <field id="es_facturable" noshow="true">
+          <label>Es facturable?</label>
+          <tipo>check</tipo>
+          <condicion operador="=">1</condicion>
+      </field>
+      -->
+      <field id="genregimen_id" noshow="true">
+        <label>Iva</label>
+        <helper type="combo">
+            <option value="0"></option>
+            <option value="1">10.5</option>
+            <option value="2">21.0</option>
+        </helper>        
+      </field>
+
+      <field id="importe" noshow="true">
+        <label>Importe</label>
+        <tipo>decimal</tipo>        
+      </field>                  
+
+	<field id="orden_cuenta">
+	    <label>Orden</label>
+	</field>
+
+	<order>
+	    <field id="orden_cuenta" />
+	</order>
+
+    </table>
+  </form>
+
+</histrix>

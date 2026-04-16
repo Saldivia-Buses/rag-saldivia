@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="insert">
+       <title>COMPROBANTES</title>
+        <obs></obs>
+               <form >
+					<table id="CCTIMPUT" label="FACTURAS">
+						<field id="siscod" id_cab="sispro">
+						</field>
+						<field id="ctacod" id_cab="ctacod">
+						</field>
+						<field id="movfec" id_temp="movfec">
+						</field>
+						<field id="concod" id_temp="concod">
+						</field>
+						<field id="movlet" id_temp="movlet">
+						</field>
+
+						<field id="movnpv" id_temp="movnpv">
+						</field>
+						<field id="movnro" id_temp="movnro">
+						</field>
+						<field id="movimp" id_temp="movimp">
+						</field>
+
+						<field id="movsal" id_cab="cero">
+						</field>
+
+						<field id="movicc" id_cab="concod">
+						</field>
+						<field id="movife" id_cab="movfec">
+						</field>
+
+						<field id="movipv" id_cab="movnpv">
+						</field>
+						<field id="movinc" id_cab="movnro">
+						</field>
+						<field id="ctacoddes" id_cab="cta_des">
+						</field>							
+<!--						<field id="regmin" > 
+						</field> 
+						
+						-->
+						
+					</table>
+               </form>
+        </histrix>

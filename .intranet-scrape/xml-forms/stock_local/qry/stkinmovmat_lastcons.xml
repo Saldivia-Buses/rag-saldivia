@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" graba="false">
+    <title>ENTRADA SALIDA STOCK POR CODIGO</title>
+    <obs></obs>
+    <form >
+        <table id="STKINMOV" label="SALIDA DE MATERIALES">
+	
+	    <field id="opecod">
+		<label>Operador</label>
+	        <help></help>
+              <helper type="combo" xml="HLPpersonal_ope.xml" dir="/help_local" empty="true"/>  
+            </field>
+	    <field id="nrocha">
+        	<label>Num.Fabric</label>
+                <tipo>integer</tipo>
+                <help>Nro de Fabricacion</help>
+            </field>
+            <field id="movfec">
+        	<label>Fecha Remito</label>
+                <help>Fecha Remito</help>
+            </field>
+	    <field id="movfec2" local="true" noshow="true">
+        	<label>test</label>
+                <help>Fecha Remito</help>
+            </field>          
+	    <field id="siscod" oculto="true">
+        	<label>Cod.Sistema</label>
+                <help></help>
+                <condicion operador="=">'01'</condicion>
+            </field>
+            <field id="movref">
+        	<label>Referencia</label>
+                <help></help>
+                <formato>%10s</formato>
+            </field>
+	    <field id="artcod">
+	        <label>Articulo</label>
+                <help>Codigo de Articulo.</help>
+    	    </field>
+            <field id="artdes" tabla="STKINSUM">
+                <label>Desc</label>
+                <tipo>varchar</tipo>
+            </field>      
+          
+           
+            <group>
+        	<field id="nrocha" ></field>
+                <field id="artcod" tabla="STKINMOV"></field>
+    	    </group> 
+
+	    <join tipo="left">
+        	<table id="STKINSUM">
+            	    <field id="artcod" oculto="true">
+                	<condicion operador="=">STKINMOV.artcod</condicion>
+                                    </field>
+                                            <field id="siscod" oculto="true">
+                                                      <condicion operador="=">STKINMOV.siscod</condicion>
+                                                              </field>
+                                                              
+                                                                    </table>
+                                                                        </join>    
+        </table>
+    </form>
+</histrix>

@@ -76,11 +76,9 @@ func FindContraindications(fullCtx *astrocontext.FullContext) []Contraindication
 		}
 	}
 
-	// 5. Birth time unknown warning
-	if fullCtx.Chart != nil && fullCtx.Chart.UTCOffset == 0 {
-		// Could indicate default offset — not definitive but worth noting
-		// This is a heuristic; proper check would be on the contact record
-	}
+	// 5. Birth time unknown warning — intentionally not raised here.
+	// UTCOffset == 0 could legitimately mean UTC or an unknown offset.
+	// Proper detection requires inspecting the contact record, not the chart.
 
 	return warnings
 }

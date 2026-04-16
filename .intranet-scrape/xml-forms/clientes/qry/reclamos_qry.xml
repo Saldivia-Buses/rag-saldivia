@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" imprime="false" deleteRow="false" paginar="100">
+	<title>Reclamos a clientes</title>
+	<obs/>
+	<form>
+		<table id="REG_CUENTA">
+			
+			<filters>
+				
+				<field id="nro_cuenta">
+					<label>Cliente</label>
+					<operador>=</operador>
+				</field>
+
+				<field id="separador" deshabilitado="true" editable="false" modpos="nobr"/>
+
+				<field id="regzona_id" deshabilitado="false" modpos="nobr">
+					<label>Ruta</label>
+					<operador>=</operador>
+				</field>
+
+				<field id="separador" deshabilitado="true" editable="false" modpos="nobr"/>
+
+				<field id="localidad_id" modpos="nobr">
+					<label>Localidad</label>
+					<operador>in</operador>
+				</field>
+
+				<field id="separador" deshabilitado="true" editable="false" modpos="nobr"/>
+
+				<field id="fecha_hasta" modpos="nobr">
+					<label>Hasta</label>
+					<valor>today</valor>
+				</field>
+
+			</filters>
+
+			
+
+			<field id="separador" deshabilitado="true" noshow="true"  local="true">
+                <size>1</size>
+            </field>
+
+
+			
+			<field id="id_regcuenta" noshow="true">
+				<detalle>regcuenta_id</detalle>
+			</field>
+			
+			<field id="fecha_desde" local="true" noshow="true">
+				<tipo>date</tipo>
+			</field>
+			
+			<field id="fecha_hasta" local="true" noshow="true">
+				<tipo>date</tipo>
+			</field>
+
+			<field id="regzona_id" colstyle="display: none;"  deshabilitado="false" print="false">
+				<expresion having="false">REG_CUENTA.regzona_id</expresion>
+				<helper type="combo" xml="regzonas_qry.xml" dir="/ayudas" />
+				<actualiza>
+					<field id="localidad_id" destino="regzona_id" />
+				</actualiza>
+			</field>
+
+			<field id="localidad_id" colstyle="display: none;">
+				<label>Localidad</label>
+				<helper type="combo"  xml="localidadesxzona_qry.xml" dir="/ayudas" _empty="true" multiple="true">
+					<field id="regzona_id" oculto="true">
+						<condicion operador="=">-1</condicion>
+					</field>
+				</helper>
+			</field>                                      
+
+			<field id="nro_cuenta" >
+				<label>Nro Cuenta</label>
+				<help>Nº/Nombre</help>
+				<helper type="external" xml="regcuenta_solamente_nro_qry.xml" dir="/ayudas" empty="true"/>
+			</field>
+
+			<field id="nombre_cuenta">
+				<label>Nombre</label>
+			</field>
+			
+			<field id="saldo_total">
+				<label>Saldo total</label>
+				<expression><![CDATA[ (SELECT SUM(saldo_movimiento) FROM REG_MOVIMIENTOS WHERE regcuenta_id = REG_CUENTA.id_regcuenta and vencimiento_movimiento <= CURDATE() and vencimiento_movimiento != '0000-00-00' and vencimiento_movimiento is not null and vencimiento_movimiento <= str_to_date('[__fecha_hasta__]', '%d/%m/%Y') and saldo_movimiento != 0 and concepto_id IN (SELECT id_concepto FROM REG_CONCEPTOS WHERE subsistema_id = REG_CUENTA.subsistema_id and informa_calculo = 0 )) ]]></expression>
+			</field>
+			
+			<field id="tiene_vencimientos" noshow="true">
+				<expression having="false"><![CDATA[ (SELECT 1 FROM REG_MOVIMIENTOS WHERE regcuenta_id = REG_CUENTA.id_regcuenta and vencimiento_movimiento <= CURDATE() and vencimiento_movimiento != '0000-00-00' and vencimiento_movimiento is not null and vencimiento_movimiento <= str_to_date('[__fecha_hasta__]', '%d/%m/%Y') and saldo_movimiento != 0 and concepto_id IN (SELECT id_concepto FROM REG_CONCEPTOS WHERE subsistema_id = REG_CUENTA.subsistema_id and informa_calculo = 0 ) LIMIT 1) ]]></expression>
+				<condicion operador="=">1</condicion>
+			</field>
+
+			<field id="id_reclamo" local="true" editable="true" refresh="true">
+				<label>Tipo de reclamo</label>
+				<helper type="combo" id="HTXOPTIONS" empty="true">
+					<field id="id_option" />
+					<field id="option_description" />
+					<field id="option_name">
+						<condicion operador="=">'SIS::02::MOD_RECLAMO'</condicion>
+					</field>
+				</helper>
+				<valor>0</valor>
+			</field>
+			<field id="impresion" local="true">
+				<if exp="'id_reclamo' == ''">
+					<true>''</true>
+					<false>('id_reclamo' == '0')? '' : '>>'</false>
+				</if>
+				<label>Impresión</label>
+				<helper type="link" xml="reclamos_imp_qry.xml" >
+					<parameter source="id_regcuenta" target="id_regcuenta" />
+					<parameter source="id_reclamo" target="id_reclamo" />
+					<parameter source="fecha_hasta" target="fecha_hasta" />
+				</helper>
+			</field>
+
+			<field id="subsistema_id" noshow="true" />
+			
+		</table>
+	</form>
+</histrix>

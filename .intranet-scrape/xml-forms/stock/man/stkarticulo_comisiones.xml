@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" subtipo="vertical">
+	<title>Vendedores</title>
+  <obs></obs>
+	<form >
+		<table id="STK_ARTICULOS_VENDEDORES" label="Comisiones Articulos"> 
+
+			<fieldGroup style="padding:2px 2px 2px 2px;vertical-align:middle;">
+
+				<field id="id_articulovendedor" noshow="true" />
+
+				<field id="regcuenta_id" noshow="true" valauto="true"/>
+
+				<field id="stkarticulo_id" noshow="true" valauto="true">
+					<label>Articulos</label>
+					<help>Seleccione el Articulo</help>
+				</field>
+
+				<field id="fecha_vigencia"  >
+					<label>Desde Fecha</label>
+					<help>Desde Fecha</help>
+	                <valor>today</valor>
+				</field>
+
+				<field id="fecha_limite" modpos="nobr" >
+					<label>Hasta Fecha</label>
+					<help>Limite pago de la comisión</help>
+					<tipo>date</tipo>
+	                <valor>today</valor>
+				</field>
+
+				<field id="valor_aplicado" modpos="nobr" >
+					<label>Comision</label>
+					<help>Comision</help>
+				</field>
+
+			</fieldGroup>
+
+		</table>
+
+	</form>
+
+
+</histrix>
+
+

@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" inserta="false" _preloadData="false" deleteRow="false" imprime="false" procesa="true" Form="false" llenoreferente="true"
+>
+  <title>Cta Ctes</title>
+  <obs/>
+  <form __detalle="notapedido_pend.xml" _detalle="regpendientes_qry.xml" _inline="true" >
+    <tabla id="REG_MOVIMIENTOS" idCampoCond="Imputado">
+     
+            <movimientos >
+                <relacion id="cps_pedidos_ingmov.xml"></relacion>
+            </movimientos>
+
+     
+      <!-- CONSULTA -->
+<!--    
+	<filters>
+		<field id="fecha_movimiento">
+			<operador>&gt;=</operador>
+			<label>Desde Fecha</label>
+			<help>Fecha movimiento</help>
+		</field>
+		<field id="fecha_movimiento">
+			<operador>&lt;=</operador>
+			<label modpos="nobr">Hasta Fecha</label>
+			<help>Fecha movimiento</help>
+		</field>
+		<field id="regcuenta_id">
+			<operador>>=</operador>
+			<label>Cliente</label>
+			<help>Cliente</help>
+		</field>
+		
+		<field id="regcuentavendedor_id"> 
+			<label modpos="nobr">Vendedor</label>
+			<help>Vendedor</help>
+			<operador>=</operador>                  
+		</field> 
+	</filters> 
+-->	
+		<field id="regcuenta_id" noshow="true">
+		</field>
+
+	<field id="id_regmovim" noshow="true" >
+		<detalle>id_regmovim</detalle>
+		<detalle>regmovim_id</detalle>
+	</field>
+
+	<field id="nro_cuenta" tabla="REG_CUENTA">
+		<label>Cod</label>
+	</field>
+	<field id="nombre_cuenta" tabla="REG_CUENTA ">
+		<label>Nombre Cuenta</label>
+	</field>
+	<field id="subsistemave_id" local="true" noshow="true" valauto="true"/>
+	<field id="subsistematr_id" local="true" noshow="true" valauto="true"/>    
+                 
+	<field id="regcuentavendedor_id" _noshow="true">
+		<label>Vendedor</label>
+		<helper type="combo" xml="regcuenta_solamente_qry.xml" dir="/ayudas" empty="true">
+                    <field id="subsistema_id">
+                        <condicion operador="=" _valorde="subsistemave_id">'22' </condicion>
+                    </field>
+                    <order>
+                    <field id="nombre_cuenta"></field>
+                    </order>
+                </helper>
+	</field> 
+
+	<field id="nro_movimiento"  >
+		<label>Numero</label>
+		<expresion>CONCAT(REG_MOVIMIENTOS.letra_movimiento,' ',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,'0'),'-',LPAD(case when REG_MOVIMIENTOS.cajmovimiento_id &gt;
+			 0 then REG_MOVIMIENTOS.cajmovimiento_id else REG_MOVIMIENTOS.nro_movimiento end ,8,'0'))
+		</expresion>
+		<helper type="link" dir="/clientes/qry" xml="imp_npinsumas_qry.xml" >
+		    <parameter source="id_regmovim" target="id_regmovim" />  
+		</helper>
+	</field>
+	
+
+	<field id="fecha_movimiento"  >
+		<label>Pedido</label>
+
+	</field>
+
+	<field id="codigo_detalle2" tabla="REG_DETALLES" _noshow="true" esClave="true">
+	    <label>Codigo</label>
+	    <expresion>UPPER(codigo_detalle)</expresion>
+	    <detalle>stkarticulo_id</detalle>
+	    <detalle>codigo_barra</detalle>
+
+	</field>
+	
+		    <field id="unidad_compra_id" tabla="STK_ARTICULOS" noshow="true">
+			<detalle>unidad_compra_id</detalle>
+		    </field>
+		    <field id="unidad_uso_id" tabla="STK_ARTICULOS" noshow="true">
+			<detalle>unidad_uso_id</detalle>
+		    </field>
+                    <field id="valor_compra" tabla="STK_ARTICULOS" noshow="true">
+                        <detalle>valor_compra</detalle>
+                    </field>
+                    <field id="valor_uso" tabla="STK_ARTICULOS" noshow="true">
+                        <detalle>valor_uso</detalle>
+                    </field>
+                    <field id="precio_costo" tabla="STK_ARTICULOS" _noshow="true">
+                	<expresion>ifnull(precio_costo, 0)</expresion>
+                    <label>precio</label>
+                        <detalle>precio_costo</detalle>
+                    </field>
+                    
+                    <field id="codigo_plu" tabla="STK_ARTICULOS" noshow="true">
+                         <expresion>(select prv_articulo from STK_ARTICULO_PROVEEDOR where stkarticulo_id = id_stkarticulo and regcuenta_id = '[__regcuenta_id__]' limit 1)</expresion>
+                         <detalle>codigo_plu</detalle>
+                    </field>
+
+                    <field id="alicuota" _tabla="STK_ARTICULOS" noshow="true" local="true">
+                        <detalle>alicuota</detalle>
+                        <valor>21.00</valor>
+                    </field>
+
+	
+	<!--
+	            <field id="fecha_requerido" local="true" _noshow="true">
+	            
+	        	<detalle>fecha_requerido</detalle>
+                <tipo>date</tipo>
+                
+                <valor eval="true">date("m/d/Y", mktime(0, 0, 0, date("m"), date("d")+15, date("Y")))</valor> 
+            </field>   -->
+
+	
+	<field id="nombre_articulo" tabla="STK_ARTICULOS">
+	    <label>Articulos</label>
+	    <detalle>nombre_articulo</detalle>
+
+	</field>
+	<field id="regcuentaprv_id" noshow="true">
+		<label>Prov</label>
+		<expresion having="false">(select regcuenta_id from STK_ARTICULO_PROVEEDOR ST WHERE ST.stkarticulo_id = REG_DETALLES.codigo_detalle limit 1)</expresion>
+<!--
+		<helper type="external" xml="regcuenta_solamente_qry.xml" dir="/ayudas" empty="true">
+                    <field id="subsistema_id">
+                        <condicion operador="=" _valorde="subsistemave_id">'01'</condicion>
+                    </field>
+                </helper> 
+    -->
+	</field> 
+
+	<field id="Pedido" local="true" noshow="true" >
+		<label>Pedido</label>
+		<expresion>REG_DETALLES.cantidad_detalle</expresion>
+		<tipo>numeric</tipo>
+	</field>
+                            <!--
+	<field id="cantidad_pallet" tabla="STK_ARTICULOS">
+		<label>Cantidad Pallet</label>
+		<detalle>cantidad_pallet</detalle>
+	</field>
+	                     
+	<field id="pallets" local="true">
+		<if exp="cantidad_pallet != 0">
+			<true>(valor_compra + 0 &gt; 0)? ((total_imputado / valor_compra) * valor_uso) / cantidad_pallet: 0</true>
+			<false></false>
+		</if>
+		<detalle>pallets</detalle>
+	</field>
+                                -->
+	<field id="actual" _noshow="true" noZero="true">
+		<label>Stock</label>
+		<expresion>ifnull((SELECT sum(cantidad_stock) FROM STK_STOCKACTUAL SA WHERE SA.stkarticulo_id= REG_DETALLES.codigo_detalle), 0)	</expresion>
+
+<!--		ifnull((SELECT sum(case when tipo_concepto=0 then 1 else -1 end * ifnull(cantidad,0)) 
+			FROM STK_CONCEPTOS SC left join STK_MOVIMIENTOS SM on SC.id_stkconcepto = SM.stkconcepto_id  
+			WHERE stkarticulo_id=REG_DETALLES.codigo_detalle), 0)
+-->
+		<tipo>numeric</tipo>
+	</field>
+<!--
+	<field id="actual" _noshow="true" noZero="true">
+		<label>Stock</label>
+		<expresion>ifnull((SELECT sum(case when tipo_concepto=0 then 1 else -1 end * ifnull(cantidad,0)) 
+			FROM STK_MOVIMIENTOS SM left join STK_CONCEPTOS SC  on SC.id_stkconcepto = SM.stkconcepto_id  
+			WHERE stkarticulo_id=REG_DETALLES.codigo_detalle), 0)
+		</expresion>
+		<tipo>numeric</tipo>
+	</field>
+    -->
+                                                 
+	<field id="Pendientes" _noshow="true" noZero="true" suma="true">
+		<label>Pendientes</label>
+
+		<expresion having="false">REG_DETALLES.cantidad_pendiente</expresion>
+		<condicion operador="&gt;">0</condicion>
+
+	    
+        </field>
+	
+<!--                               
+	<field id="Pendientes" _noshow="true" noZero="true">
+		<label>Pendientes</label>
+		<expresion having="false">REG_DETALLES.cantidad_detalle  -
+				ifnull((select sum(cantidad_imputada) from  REG_IMPUTACIONESDETALLES RI1 where RI1.regdetalleped_id = id_regdetalle), 0)
+		</expresion> 		
+
+		<tipo>numeric</tipo>
+		<condicion operador="&gt;">ifnull((SELECT sum(case when tipo_concepto=0 then 1 else -1 end * ifnull(cantidad,0)) 
+			FROM STK_MOVIMIENTOS SM left join STK_CONCEPTOS SC  on SC.id_stkconcepto = SM.stkconcepto_id  
+			WHERE stkarticulo_id=REG_DETALLES.codigo_detalle), 0)</condicion>
+			
+	</field>                   
+	
+	<field id="Pend2" oculto="true">
+		<expresion having="false">REG_DETALLES.cantidad_detalle  -
+				ifnull((select sum(cantidad_imputada) from  REG_IMPUTACIONESDETALLES RI1 where RI1.regdetalleped_id = id_regdetalle),0)
+		</expresion>
+
+		<condicion operador="&gt;">0</condicion>
+			
+	</field>
+	-->
+      <field id="Imputado" local="true" refresh="true">
+        <label>Imputar</label>
+        <tipo>check</tipo>       
+      </field>
+
+   <field id="total_imputado" local="true" suma="true" editable="true" _noshow="true">
+
+      	<label>Total Imputado</label>
+       <if exp="Imputado == 1">
+		    <true>(total_imputado != 0)?total_imputado:Pendientes</true>
+		    <false>0</false>
+        </if> 
+        <detalle>cantidad_compra</detalle>
+	<tipo>numeric</tipo>
+      </field>
+                            
+            <field id="impiva" deshabilitado="true"  local="true" noshow="true">
+                <label modpos="nobr">Iva</label>
+                <if exp="alicuota + 0 &gt; 0">
+                    <true>round((( precio_costo + 0 )* (total_imputado + 0 ) ) * alicuota / 100, 4)</true>
+                    <false>0</false>
+                </if>
+                <detalle>impiva</detalle>
+            </field> 
+            <field id="Total" deshabilitado="true" local="true" noshow="true">
+                <label modpos="nobr">Total</label>
+                <if exp="true">
+                    <true> round(( precio_costo + 0) * ( total_imputado + 0) + impiva, 4)</true>
+                    <false>0</false>
+                </if>
+                <detalle>Total</detalle>
+            </field>
+	                        
+	       	  <field id="Orden_compra" local="true" linkint="ordencompra_imp.xml" linkdes="Ordenes de Compra" linkdir="compras/qry">
+	           	      <label>Compra</label>
+	    	    <expresion>select concat('O.Compra ', cpsmovim_id) from REG_DETALLE_CPS where regdetalle_id = id_regdetalle limit 1</expresion>
+                      <paring destino="id_cpsmovimiento">Orden_compra</paring>
+                  </field>
+
+	<field id="colores" local="true" noshow="true" clasefila="true">
+	    <if exp="'Orden_compra'  != ''">
+		<true>'resaltado'</true>
+		<false>''</false>
+	    </if>
+	    
+	</field>
+	<field id="id_regdetalle" tabla="REG_DETALLES" noshow="true" />
+
+	<order>
+		<field id="codigo_detalle" tabla="REG_DETALLES"/>
+	</order>
+<!--
+	<group>
+		<field id="id_regdetalle" tabla="REG_DETALLES"/>
+	</group>
+    -->
+    </tabla>
+    <join>
+      <table id="HTXOPTIONS">
+        <field id="option_name">
+          <condicion operador="=">'ID_NOTA_PEDIDOS' and REG_MOVIMIENTOS.concepto_id = option_value</condicion>
+        </field>
+      </table>
+    </join>
+    <join>
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join>
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_DETALLES">
+        <field id="regmovim_id">
+          <condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">REG_DETALLES.codigo_detalle</condicion>
+        </field>
+      </table>
+    </join>    
+
+<!--    <join tipo="left">
+      <table id="REG_IMPUTACIONESDETALLES">
+        <field id="regdetalleped_id">
+          <condicion operador="=">REG_DETALLES.id_regdetalle</condicion>
+        </field>
+      </table>
+     </join>
+	<join tipo="LEFT">
+		<table id="(select * from REG_DETALLES) ss " >
+			<field id="id_regdetalle">
+				<condicion operador="=">REG_IMPUTACIONESDETALLES.regdetallefac_id</condicion>
+        </field>
+
+      </table>
+     </join>-->
+
+  </form>
+</histrix>
