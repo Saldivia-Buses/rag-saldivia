@@ -47,6 +47,11 @@ jobs:
     runs-on: [self-hosted, workstation-1]
     steps:
       - uses: actions/checkout@v4
+      - name: Link persistent config
+        run: |
+          cp /etc/sda/.env deploy/.env
+          mkdir -p deploy/secrets
+          cp /etc/sda/jwt_ed25519*.pem deploy/secrets/ 2>/dev/null || true
       - name: Run preflight checks
         run: bash deploy/scripts/preflight.sh
 
@@ -166,6 +171,12 @@ jobs:
     runs-on: [self-hosted, workstation-1]
     steps:
       - uses: actions/checkout@v4
+
+      - name: Link persistent config
+        run: |
+          cp /etc/sda/.env deploy/.env
+          mkdir -p deploy/secrets
+          cp /etc/sda/jwt_ed25519*.pem deploy/secrets/ 2>/dev/null || true
 
       - uses: actions/download-artifact@v4
         with:
