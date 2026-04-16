@@ -234,6 +234,10 @@ services:
       args:
         NEXT_PUBLIC_API_URL: ""
         NEXT_PUBLIC_TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
+    environment:
+      # Next.js standalone defaults to binding the container hostname only,
+      # which makes localhost-based healthchecks fail. Force all interfaces.
+      HOSTNAME: "0.0.0.0"
     restart: unless-stopped
     # Direct port for debugging — keep until Traefik routing is verified.
     ports:
