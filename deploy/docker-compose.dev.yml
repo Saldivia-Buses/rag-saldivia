@@ -235,6 +235,9 @@ services:
         NEXT_PUBLIC_API_URL: ""
         NEXT_PUBLIC_TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
     restart: unless-stopped
+    # Direct port for debugging — keep until Traefik routing is verified.
+    ports:
+      - "3000:3000"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:3000/ >/dev/null || exit 1"]
       interval: 15s
@@ -242,6 +245,7 @@ services:
       retries: 3
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=deploy_default"
       # Catch-all: lowest priority so /v1/* and /ws/* match first.
       - "traefik.http.routers.web-docker.rule=PathPrefix(`/`)"
       - "traefik.http.routers.web-docker.entrypoints=web"
