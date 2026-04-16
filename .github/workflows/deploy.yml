@@ -47,19 +47,18 @@ jobs:
           export BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)
           docker compose -f deploy/docker-compose.dev.yml --profile full up --build -d
 
-      - name: Restart Traefik (force re-scan of containers)
-        run: docker compose -f deploy/docker-compose.dev.yml restart traefik
+      - name: Restart Traefik then web (so Traefik sees web's create event)
+        run: |
+          docker compose -f deploy/docker-compose.dev.yml restart traefik
+          sleep 5
+          docker compose -f deploy/docker-compose.dev.yml restart web
 
       - name: Wait for health + diagnostics
         run: |
-          sleep 15
+          sleep 20
           docker ps --format "table {{.Names}}\t{{.Status}}" | sort
-          echo "--- web container labels ---"
-          docker inspect deploy-web-1 --format '{{json .Config.Labels}}' | python3 -m json.tool || true
-          echo "--- web networks ---"
-          docker inspect deploy-web-1 --format '{{json .NetworkSettings.Networks}}' | python3 -m json.tool || true
-          echo "--- web logs (tail 20) ---"
-          docker logs deploy-web-1 --tail 20 || true
+          echo "--- traefik logs (tail 60) ---"
+          docker logs deploy-traefik-1 --tail 60 2>&1 || true
           echo "--- curl localhost:80 ---"
           curl -sI http://localhost/ | head -3
           echo "--- curl localhost:3000 ---"
