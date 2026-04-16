@@ -185,11 +185,9 @@ http:
           - Content-Type
           - X-Tenant-Slug
           - X-Tenant-ID
-        accessControlAllowOriginList:
-          - "http://localhost:3000"
-          - "http://localhost:3001"
-          - "http://100.119.11.46:3000"
-          - "http://100.119.11.46:3001"
+        accessControlAllowOriginListRegex:
+          - "http://.*:3000"
+          - "http://.*:3001"
         accessControlAllowCredentials: true
         accessControlMaxAge: 3600
 
