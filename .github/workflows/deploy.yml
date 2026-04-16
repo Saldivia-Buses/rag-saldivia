@@ -16,14 +16,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build & start all services
+      - name: Ensure .env
+        run: "[ -f deploy/.env ] || cp deploy/.env.example deploy/.env"
+
+      - name: Start infra
+        run: docker compose -f deploy/docker-compose.dev.yml up -d postgres redis nats traefik mailpit minio
+
+      - name: Run migrations
         run: |
-          [ -f deploy/.env ] || cp deploy/.env.example deploy/.env
+          sleep 5
+          for f in db/platform/migrations/*.up.sql; do
+            docker compose -f deploy/docker-compose.dev.yml exec -T postgres psql -U sda sda_platform -v ON_ERROR_STOP=0 < "$f" >/dev/null 2>&1
+          done
+          for f in db/tenant/migrations/*.up.sql; do
+            docker compose -f deploy/docker-compose.dev.yml exec -T postgres psql -U sda sda_tenant_dev -v ON_ERROR_STOP=0 < "$f" >/dev/null 2>&1
+          done
+          echo "Migrations applied"
+
+      - name: Build & start services
+        run: |
           export GIT_SHA=$(git rev-parse --short HEAD)
           export BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)
           docker compose -f deploy/docker-compose.dev.yml --profile full up --build -d
 
       - name: Wait for health
         run: |
-          sleep 15
+          sleep 20
           docker ps --format "table {{.Names}}\t{{.Status}}" | sort
