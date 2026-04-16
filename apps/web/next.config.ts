@@ -29,7 +29,7 @@ const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost";
 const nextConfig: NextConfig = {
   output: "standalone",
   turbopack: {
-    root: ".",
+    root: import.meta.dirname,
   },
   experimental: {
     authInterrupts: true,
