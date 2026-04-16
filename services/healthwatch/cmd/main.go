@@ -2,14 +2,18 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 	"strings"
+
+	"github.com/nats-io/nats.go"
 
 	"github.com/Camionerou/rag-saldivia/pkg/config"
 	"github.com/Camionerou/rag-saldivia/pkg/database"
 	"github.com/Camionerou/rag-saldivia/pkg/health"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
 	"github.com/Camionerou/rag-saldivia/pkg/server"
 	"github.com/Camionerou/rag-saldivia/services/healthwatch/internal/collector"
@@ -52,23 +56,49 @@ func main() {
 	)
 	svcCollector := collector.NewService()
 
+	// NATS — for DLQ consumer + replay
+	natsURL := config.Env("NATS_URL", nats.DefaultURL)
+	nc, err := natspub.Connect(natsURL)
+	if err != nil {
+		slog.Error("failed to connect to NATS", "error", err)
+		os.Exit(1)
+	}
+	app.OnShutdown(func() { _ = nc.Drain() })
+	slog.Info("connected to NATS", "url", config.RedactURL(natsURL))
+
 	// Service layer
 	svc := service.New(pool, promCollector, dockerCollector, svcCollector)
 
 	// Start retention cleanup scheduler
 	svc.StartRetentionCleanup(ctx)
 
+	// DLQ consumer — reads dlq.> and persists to dead_events
+	dlqConsumer := service.NewDLQConsumer(pool, nc)
+	if err := dlqConsumer.Start(ctx); err != nil {
+		slog.Error("failed to start DLQ consumer", "error", err)
+		os.Exit(1)
+	}
+	app.OnShutdown(dlqConsumer.Stop)
+
 	// Health checker
 	hc := health.New("healthwatch")
 	hc.Add("postgres", func(ctx context.Context) error { return pool.Ping(ctx) })
+	hc.Add("nats", func(ctx context.Context) error {
+		if !nc.IsConnected() {
+			return fmt.Errorf("nats disconnected")
+		}
+		return nil
+	})
 
 	// Handler + routes
 	platformSlug := config.Env("PLATFORM_TENANT_SLUG", "platform")
 	hw := handler.New(svc, publicKey, platformSlug, blacklist)
+	dlqHandler := handler.NewDLQ(pool, nc)
 
 	r := app.Router()
 	r.Get("/health", hc.Handler())
 	r.Mount("/v1/healthwatch", hw.Routes())
+	dlqHandler.Routes(r)
 
 	app.Run()
 }

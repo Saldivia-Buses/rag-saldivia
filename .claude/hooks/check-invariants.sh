@@ -275,10 +275,12 @@ check "NATS publishes use tenant.{slug} prefix" bash -c '
 
 check "NATS consumer subjects defined with tenant.* prefix" bash -c '
     cd "'"$ROOT"'"
-    # Verify subject filter constants/vars include tenant.* pattern
+    # Verify subject filter constants/vars include tenant.* pattern.
+    # Exception: dlq.> subjects are cross-tenant operational (Plan 26 Fase 4).
     for consumer in $(grep -rlE "FilterSubject|Subjects:" services/*/internal/ --include="*.go" | grep -v _test.go); do
         svc_dir=$(echo "$consumer" | sed -n "s|\(services/[^/]*\)/.*|\1|p")
-        # Check that somewhere in this service there is a tenant.* subject definition
+        # Skip if the file defines a dlq.> subject (cross-tenant by design)
+        grep -q "dlq\." "$consumer" && continue
         grep -rq "tenant\.\*" "$svc_dir/internal/" --include="*.go" || \
             { echo "NO tenant.* SUBJECT in $svc_dir"; exit 1; }
     done
