@@ -571,6 +571,27 @@ services:
       - "traefik.http.routers.bigbrother-docker.priority=100"
       - "traefik.http.services.bigbrother-docker.loadbalancer.server.port=8012"
 
+  erp:
+    <<: *service-defaults
+    profiles: [full]
+    build:
+      context: ..
+      dockerfile: services/erp/Dockerfile
+    environment:
+      <<: *env-common
+      ERP_PORT: "8013"
+      TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
+      REDIS_URL: redis:6379
+    ports:
+      - "8013:8013"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.erp-docker.rule=PathPrefix(`/v1/erp`)"
+      - "traefik.http.routers.erp-docker.entrypoints=web"
+      - "traefik.http.routers.erp-docker.middlewares=dev-cors@file"
+      - "traefik.http.routers.erp-docker.priority=100"
+      - "traefik.http.services.erp-docker.loadbalancer.server.port=8013"
+
 volumes:
   postgres_data:
   redis_data:
