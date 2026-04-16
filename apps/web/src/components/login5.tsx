@@ -45,7 +45,7 @@ const Login5 = ({
 
     try {
       await login(email, password);
-      router.push("/inicio");
+      window.location.href = "/inicio";
     } catch (err) {
       if (err instanceof ApiError) {
         switch (err.status) {
