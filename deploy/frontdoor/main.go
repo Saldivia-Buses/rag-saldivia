@@ -59,22 +59,28 @@ type router struct {
 }
 
 func newRouter(logger *slog.Logger) (*router, error) {
+	return newRouterWithAddrs(logger, upstreamAddrs, nextjsURL)
+}
+
+// newRouterWithAddrs lets tests inject a fake upstream map + nextjs URL
+// without touching the production defaults.
+func newRouterWithAddrs(logger *slog.Logger, addrs map[string]string, nextjs string) (*router, error) {
 	r := &router{
 		logger:    logger,
-		upstreams: make(map[string]*httputil.ReverseProxy, len(upstreamAddrs)),
+		upstreams: make(map[string]*httputil.ReverseProxy, len(addrs)),
 	}
-	for name, addr := range upstreamAddrs {
+	for name, addr := range addrs {
 		rp, err := buildProxy(logger, addr)
 		if err != nil {
 			return nil, err
 		}
 		r.upstreams[name] = rp
 	}
-	nextjs, err := buildProxy(logger, nextjsURL)
+	nx, err := buildProxy(logger, nextjs)
 	if err != nil {
 		return nil, err
 	}
-	r.nextjs = nextjs
+	r.nextjs = nx
 	return r, nil
 }
 
