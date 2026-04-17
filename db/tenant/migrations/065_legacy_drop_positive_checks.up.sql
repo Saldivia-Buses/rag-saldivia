@@ -10,6 +10,9 @@
 -- on erp_* tables. The data integrity these were protecting can be re-
 -- enforced after the historical import if the business requires it.
 
+-- PG renders numeric checks as "x > (0)::numeric" — not "x > 0" — so the
+-- original regex version of this migration matched nothing. Use a LIKE
+-- pattern against the fully-rendered constraint definition.
 DO $$
 DECLARE
     rec RECORD;
@@ -24,8 +27,10 @@ BEGIN
         WHERE con.contype = 'c'
           AND nsp.nspname = 'public'
           AND cls.relname LIKE 'erp_%'
-          AND (pg_get_constraintdef(con.oid) ~ '> 0'
-            OR pg_get_constraintdef(con.oid) ~ '>= 0')
+          AND (pg_get_constraintdef(con.oid) LIKE '%> (0)::numeric%'
+            OR pg_get_constraintdef(con.oid) LIKE '%>= (0)::numeric%'
+            OR pg_get_constraintdef(con.oid) LIKE '%> 0)%'
+            OR pg_get_constraintdef(con.oid) LIKE '%>= 0)%')
     LOOP
         EXECUTE format('ALTER TABLE %I.%I DROP CONSTRAINT %I',
                        rec.schema_name, rec.table_name, rec.con_name);
