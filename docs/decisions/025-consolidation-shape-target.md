@@ -110,7 +110,30 @@ pattern, in this order, each its own session / PR:
    blocking, tracked for the session that lands the `app` binary
    under s6.
 3. **`rag`** — removes the biggest runtime coupling (agent→search+ingest).
-   First fusion that changes how the product runs (faster, in-process).
+   **✅ done (2026-04-17).** ingest + search + agent absorbed into
+   `services/app/internal/rag/{ingest,search,agent}/`. The three old
+   `services/*` shells are deleted; `go.work` holds four standalone
+   service entries (chat, erp, notification, ws) plus `services/app`;
+   the frontdoor map shrank 7 → 4; Makefile / compose / deploy scripts
+   drop the three names. Paths preserved (`/v1/ingest/*`, `/v1/search/*`,
+   `/v1/agent/*`) so clients see zero change. First fusion that
+   deletes process-boundary scaffolding that used to be load-bearing:
+   - agent→search gRPC is gone. The `:50051` listener,
+     `searchv1.RegisterSearchServiceServer`, `handler/grpc.go` and the
+     agent-side `GRPCSearchClient` (~170 LOC) are all deleted because
+     agent — search's only consumer — now calls `SearchDocuments`
+     in-process. `pkg/grpc` survives because chat↔ws still uses it;
+     that link collapses in the realtime fusion.
+   - `agenttools.Executor` grew a `SearchBackend` / `IngestBackend`
+     seam. Core tools (search_documents, check_job_status) dispatch
+     in-process via the struct-concrete path; cross-module tools
+     (notification, bigbrother, erp) still ride HTTP.
+   - Env vars `SEARCH_SERVICE_URL`, `SEARCH_GRPC_URL`,
+     `INGEST_SERVICE_URL` are no longer read anywhere and got dropped
+     from compose + Makefile.
+   Same open followups as ops + core pilots (NATS per-service users,
+   traefik dynamic, Grafana, `.env.example`); non-blocking, tracked
+   for the session that lands the `app` binary under s6.
 4. **`realtime`** — user-facing, ws/chat gRPC removal. Test coverage matters
    here; do it after `rag` validates the pattern end-to-end.
 5. **`erp`** — only if/when ERP shrinks. 38 k LOC folded in one move is
@@ -135,7 +158,7 @@ Today, `deploy/frontdoor/main.go` has 13 entries. After each fusion:
 
 - After `ops`:      map shrinks by 3 → 10 entries. `ops` routes land in app.
 - After `core`:     map shrinks by 3 → 7 entries.
-- After `rag`:      map shrinks by 3 → 4 entries.
+- After `rag`:      map shrinks by 3 → 4 entries. **✅ done.**
 - After `realtime`: map shrinks by 3 → 1 entry (`erp` only).
 - After `erp`:      **map empty, frontdoor binary deleted.**
 
