@@ -45,8 +45,8 @@ var upstreams = map[string]string{
 	"traces":       "http://127.0.0.1:8009",
 	"search":       "http://127.0.0.1:8010",
 	"erp":          "http://127.0.0.1:8013",
-	"bigbrother":   "http://127.0.0.1:8011",
-	"healthwatch":  "http://127.0.0.1:8012",
+	"bigbrother":   "http://127.0.0.1:8012",
+	"healthwatch":  "http://127.0.0.1:8014",
 }
 
 const nextjsURL = "http://127.0.0.1:3000"
