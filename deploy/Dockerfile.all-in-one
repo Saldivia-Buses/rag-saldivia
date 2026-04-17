@@ -207,6 +207,13 @@ COPY --from=web-builder --chown=sda:sda /web/public/           /opt/sda/web/publ
 VOLUME ["/data"]
 EXPOSE 80
 
+# start-period=30s covers Postgres cold-start (3–5 s) + NATS/Redis/MinIO
+# (<1 s each) + first-boot initdb on an empty /data volume (~20 s). After
+# that, /readyz is sub-millisecond. Only checks the frontdoor for now —
+# future work: extend /readyz to probe the backends too.
+HEALTHCHECK --interval=10s --timeout=3s --start-period=30s --retries=3 \
+    CMD curl -fsS http://127.0.0.1/readyz || exit 1
+
 # s6-overlay boots the supervision tree; service set is driven by the user
 # bundle in /etc/s6-overlay/s6-rc.d/user/contents.d/.
 ENTRYPOINT ["/init"]
