@@ -34,14 +34,11 @@ import (
 // When the consolidation campaign absorbs these into a monolith, this map
 // is the one place that has to change.
 var upstreamAddrs = map[string]string{
-	"auth":         "http://127.0.0.1:8001",
 	"ws":           "http://127.0.0.1:8002",
 	"chat":         "http://127.0.0.1:8003",
 	"agent":        "http://127.0.0.1:8004",
 	"notification": "http://127.0.0.1:8005",
-	"platform":     "http://127.0.0.1:8006",
 	"ingest":       "http://127.0.0.1:8007",
-	"feedback":     "http://127.0.0.1:8008",
 	"search":       "http://127.0.0.1:8010",
 	"erp":          "http://127.0.0.1:8013",
 }

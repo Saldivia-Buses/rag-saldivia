@@ -265,29 +265,10 @@ services:
   # ── Go Services (profile: full) ──────────────────────────────────────
   # Only start with: docker compose --profile full up --build
   # Traefik auto-discovers these via Docker labels (priority 100).
-
-  auth:
-    <<: *service-defaults
-    profiles: [full]
-    build:
-      context: ..
-      dockerfile: services/auth/Dockerfile
-    environment:
-      <<: *env-common
-      AUTH_PORT: "8001"
-      TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
-      # Dev/VPN access is HTTP same-origin — Secure cookies would be dropped
-      # by the browser. Refresh-token cookie keeps HttpOnly + SameSite=Lax.
-      SDA_COOKIE_SECURE: "false"
-    ports:
-      - "8001:8001"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.auth-docker.rule=PathPrefix(`/v1/auth`)"
-      - "traefik.http.routers.auth-docker.entrypoints=web"
-      - "traefik.http.routers.auth-docker.middlewares=dev-cors@file"
-      - "traefik.http.routers.auth-docker.priority=100"
-      - "traefik.http.services.auth-docker.loadbalancer.server.port=8001"
+  # Note: auth/platform/feedback absorbed into `app` monolith per ADR 025
+  # (core fusion); bigbrother/healthwatch/traces per ops pilot. Those paths
+  # are no longer served by standalone containers — the monolith's routing
+  # into docker-compose is a separate commit.
 
   ws:
     <<: *service-defaults
@@ -388,31 +369,6 @@ services:
       - "traefik.http.routers.notification-docker.priority=100"
       - "traefik.http.services.notification-docker.loadbalancer.server.port=8005"
 
-  platform:
-    <<: *service-defaults
-    profiles: [full]
-    build:
-      context: ..
-      dockerfile: services/platform/Dockerfile
-    environment:
-      <<: *env-common
-      PLATFORM_PORT: "8006"
-      POSTGRES_PLATFORM_URL: postgres://sda:sda_dev@postgres:5432/sda_platform?sslmode=disable
-      REDIS_URL: redis:6379
-    ports:
-      - "8006:8006"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.platform-docker.rule=PathPrefix(`/v1/platform`)"
-      - "traefik.http.routers.platform-docker.entrypoints=web"
-      - "traefik.http.routers.platform-docker.middlewares=dev-cors@file"
-      - "traefik.http.routers.platform-docker.priority=100"
-      - "traefik.http.services.platform-docker.loadbalancer.server.port=8006"
-      - "traefik.http.routers.flags-docker.rule=PathPrefix(`/v1/flags`)"
-      - "traefik.http.routers.flags-docker.entrypoints=web"
-      - "traefik.http.routers.flags-docker.middlewares=dev-cors@file"
-      - "traefik.http.routers.flags-docker.service=platform-docker"
-
   ingest:
     <<: *service-defaults
     profiles: [full]
@@ -458,27 +414,6 @@ services:
       - "traefik.http.routers.search-docker.middlewares=dev-cors@file"
       - "traefik.http.routers.search-docker.priority=100"
       - "traefik.http.services.search-docker.loadbalancer.server.port=8010"
-
-  feedback:
-    <<: *service-defaults
-    profiles: [full]
-    build:
-      context: ..
-      dockerfile: services/feedback/Dockerfile
-    environment:
-      <<: *env-common
-      FEEDBACK_PORT: "8008"
-      POSTGRES_PLATFORM_URL: postgres://sda:sda_dev@postgres:5432/sda_platform?sslmode=disable
-      REDIS_URL: redis:6379
-    ports:
-      - "8008:8008"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.feedback-docker.rule=PathPrefix(`/v1/feedback`)"
-      - "traefik.http.routers.feedback-docker.entrypoints=web"
-      - "traefik.http.routers.feedback-docker.middlewares=dev-cors@file"
-      - "traefik.http.routers.feedback-docker.priority=100"
-      - "traefik.http.services.feedback-docker.loadbalancer.server.port=8008"
 
   erp:
     <<: *service-defaults

@@ -46,17 +46,14 @@ dev-services: ## Start all Go services on host (requires infra running)
 		REDIS_URL=localhost:6379 NATS_URL=nats://localhost:4222 TENANT_SLUG=dev \
 		JWT_PUBLIC_KEY=LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUNvd0JRWURLMlZ3QXlFQVpMSmkrZmtPbitKUllNQmc4VkVBTkh2bXRzZUxQK3JmRFdFUStZL3ZIU0E9Ci0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLQo= \
 		JWT_PRIVATE_KEY=LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1DNENBUUF3QlFZREsyVndCQ0lFSUZvSXFxYU1BcjVjYnZFSE9Rc2g0cnVQTUUzeCtRSkVlVDByNnkxQ2tjMmgKLS0tLS1FTkQgUFJJVkFURSBLRVktLS0tLQo="; \
-	env $$ENV_COMMON AUTH_PORT=8001 nohup go run ./services/auth/cmd/... > /tmp/sda-auth.log 2>&1 & \
 	env $$ENV_COMMON WS_PORT=8002 WS_ALLOWED_ORIGINS="http://localhost:3000" nohup go run ./services/ws/cmd/... > /tmp/sda-ws.log 2>&1 & \
 	env $$ENV_COMMON CHAT_PORT=8003 nohup go run ./services/chat/cmd/... > /tmp/sda-chat.log 2>&1 & \
 	env $$ENV_COMMON AGENT_PORT=8004 SEARCH_SERVICE_URL=http://localhost:8010 INGEST_SERVICE_URL=http://localhost:8007 NOTIFICATION_SERVICE_URL=http://localhost:8005 nohup go run ./services/agent/cmd/... > /tmp/sda-agent.log 2>&1 & \
 	env $$ENV_COMMON NOTIFICATION_PORT=8005 SMTP_HOST=localhost SMTP_PORT=1025 SMTP_FROM=noreply@sda.local nohup go run ./services/notification/cmd/... > /tmp/sda-notification.log 2>&1 & \
-	env $$ENV_COMMON PLATFORM_PORT=8006 nohup go run ./services/platform/cmd/... > /tmp/sda-platform.log 2>&1 & \
 	env $$ENV_COMMON INGEST_PORT=8007 INGEST_STAGING_DIR=/tmp/ingest-staging nohup go run ./services/ingest/cmd/... > /tmp/sda-ingest.log 2>&1 & \
-	env $$ENV_COMMON FEEDBACK_PORT=8008 nohup go run ./services/feedback/cmd/... > /tmp/sda-feedback.log 2>&1 & \
 	env $$ENV_COMMON SEARCH_PORT=8010 SEARCH_GRPC_PORT=50051 nohup go run ./services/search/cmd/... > /tmp/sda-search.log 2>&1 & \
 	env $$ENV_COMMON ERP_PORT=8013 nohup go run ./services/erp/cmd/... > /tmp/sda-erp.log 2>&1 & \
-	env $$ENV_COMMON APP_PORT=8020 SCAN_MODE=passive PROMETHEUS_URL=http://localhost:9090 DOCKER_PROXY_URL=http://localhost:2375 PLATFORM_TENANT_SLUG=platform nohup go run ./services/app/cmd > /tmp/sda-app.log 2>&1 & \
+	env $$ENV_COMMON APP_PORT=8020 TENANT_ID=dev SCAN_MODE=passive PROMETHEUS_URL=http://localhost:9090 DOCKER_PROXY_URL=http://localhost:2375 PLATFORM_TENANT_SLUG=platform nohup go run ./services/app/cmd > /tmp/sda-app.log 2>&1 & \
 	echo "All services starting. Logs in /tmp/sda-*.log" && echo "Run 'make status' to check."
 
 dev-frontend: ## Start Next.js frontend in dev/HMR mode (LOCAL laptop @ localhost only — remote IP access fails to hydrate)
@@ -107,7 +104,7 @@ build-%: ## Build a specific service (e.g., make build-auth)
 
 test: ## Run all Go tests
 	go test ./pkg/... -count=1
-	@for svc in agent app auth chat erp feedback ingest notification platform search ws; do \
+	@for svc in agent app chat erp ingest notification search ws; do \
 		echo "▸ testing services/$$svc"; \
 		(cd services/$$svc && go test ./... -count=1) || exit 1; \
 	done
@@ -124,13 +121,10 @@ test-coverage: ## Run tests with coverage report
 		github.com/Camionerou/rag-saldivia/pkg/... \
 		github.com/Camionerou/rag-saldivia/services/agent/... \
 		github.com/Camionerou/rag-saldivia/services/app/... \
-		github.com/Camionerou/rag-saldivia/services/auth/... \
 		github.com/Camionerou/rag-saldivia/services/chat/... \
 		github.com/Camionerou/rag-saldivia/services/erp/... \
-		github.com/Camionerou/rag-saldivia/services/feedback/... \
 		github.com/Camionerou/rag-saldivia/services/ingest/... \
 		github.com/Camionerou/rag-saldivia/services/notification/... \
-		github.com/Camionerou/rag-saldivia/services/platform/... \
 		github.com/Camionerou/rag-saldivia/services/search/... \
 		github.com/Camionerou/rag-saldivia/services/ws/... \
 		github.com/Camionerou/rag-saldivia/tools/cli/... \
@@ -144,13 +138,10 @@ test-integration: ## Run integration tests (requires Docker)
 	go test \
 		github.com/Camionerou/rag-saldivia/services/agent/... \
 		github.com/Camionerou/rag-saldivia/services/app/... \
-		github.com/Camionerou/rag-saldivia/services/auth/... \
 		github.com/Camionerou/rag-saldivia/services/chat/... \
 		github.com/Camionerou/rag-saldivia/services/erp/... \
-		github.com/Camionerou/rag-saldivia/services/feedback/... \
 		github.com/Camionerou/rag-saldivia/services/ingest/... \
 		github.com/Camionerou/rag-saldivia/services/notification/... \
-		github.com/Camionerou/rag-saldivia/services/platform/... \
 		github.com/Camionerou/rag-saldivia/services/search/... \
 		github.com/Camionerou/rag-saldivia/services/ws/... \
 		-tags=integration -count=1 -v
@@ -290,10 +281,9 @@ versions: ## Show running vs expected service versions
 	printf "%-20s %-10s %-10s %-22s %s\n" "SERVICE" "VERSION" "GIT SHA" "BUILD TIME" "STATUS"; \
 	echo "────────────────────────────────────────────────────────────────────────────────"; \
 	for entry in \
-		"8001:auth" "8002:ws" "8003:chat" "8004:agent" \
-		"8005:notification" "8006:platform" "8007:ingest" \
-		"8008:feedback" "8010:search" \
-		"8013:erp" "8020:app"; do \
+		"8002:ws" "8003:chat" "8004:agent" \
+		"8005:notification" "8007:ingest" \
+		"8010:search" "8013:erp" "8020:app"; do \
 		port=$$(echo $$entry | cut -d: -f1); \
 		name=$$(echo $$entry | cut -d: -f2); \
 		info=$$(curl -sf --max-time 2 http://localhost:$$port/v1/info 2>/dev/null || echo ""); \
@@ -354,14 +344,11 @@ status: ## Full system status — infra, services, frontend, GPU
 	@echo ""
 	@echo "── Go Services ─────────────────────────────────────────────"
 	@for entry in \
-		"8001:sda-auth" \
 		"8002:sda-ws" \
 		"8003:sda-chat" \
 		"8004:sda-agent" \
 		"8005:sda-notification" \
-		"8006:sda-platform" \
 		"8007:sda-ingest" \
-		"8008:sda-feedback" \
 		"8010:sda-search" \
 		"8013:sda-erp" \
 		"8020:sda-app"; do \

@@ -258,56 +258,10 @@ services:
           cpus: "1.0"
 
   # ── Go Services ────────────────────────────────────────────────────────
-
-  auth:
-    <<: *service-defaults
-    image: ghcr.io/saldivia-buses/sda-auth:${AUTH_VERSION:-local}
-    build:
-      context: ..
-      dockerfile: services/auth/Dockerfile
-      args:
-        <<: *build-args
-        VERSION: ${AUTH_VERSION:-dev}
-    depends_on:
-      postgres-platform:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      nats:
-        condition: service_healthy
-    environment:
-      AUTH_PORT: "8001"
-      REDIS_URL: redis:6379
-      NATS_URL: nats://auth:${AUTH_NATS_PASS}@nats:4222
-      TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
-      # HTTP same-origin via Traefik (no TLS on VPN/IP access).
-      # Set to "true" once TLS is in front (Tailscale Funnel, Cloudflare, ACME).
-      SDA_COOKIE_SECURE: ${SDA_COOKIE_SECURE:-false}
-    secrets:
-      - jwt_private_key
-      - jwt_public_key
-      - db_platform_url
-      - service_account_key
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8001/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    networks:
-      - frontend
-      - backend
-      - data
-    labels:
-      - "traefik.enable=true"
-      - "autoheal=true"
-      - "traefik.http.routers.auth.rule=PathPrefix(`/v1/auth`) || PathPrefix(`/v1/modules`)"
-      - "traefik.http.routers.auth.entrypoints=web,websecure"
-      - "traefik.http.services.auth.loadbalancer.server.port=8001"
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-          cpus: "1.0"
+  # Note: auth + platform + feedback absorbed into the `app` monolith per
+  # ADR 025 (core fusion); bigbrother/healthwatch/traces per the ops pilot.
+  # These no longer have standalone services here; wiring the monolith
+  # binary into compose/s6 is a separate session (not this commit).
 
   ws:
     <<: *service-defaults
@@ -555,55 +509,6 @@ services:
           memory: 128M
           cpus: "1.0"
 
-  platform:
-    <<: *service-defaults
-    image: ghcr.io/saldivia-buses/sda-platform:${PLATFORM_VERSION:-local}
-    build:
-      context: ..
-      dockerfile: services/platform/Dockerfile
-      args:
-        <<: *build-args
-        VERSION: ${PLATFORM_VERSION:-dev}
-    depends_on:
-      postgres-platform:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      nats:
-        condition: service_healthy
-    environment:
-      PLATFORM_PORT: "8006"
-      REDIS_URL: redis:6379
-      PLATFORM_TENANT_SLUG: platform
-      NATS_URL: nats://platform:${PLATFORM_NATS_PASS}@nats:4222
-      <<: *jwt-public
-    secrets:
-      - jwt_public_key
-      - db_platform_url
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8006/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    networks:
-      - frontend
-      - backend
-      - data
-    labels:
-      - "traefik.enable=true"
-      - "autoheal=true"
-      - "traefik.http.routers.platform.rule=PathPrefix(`/v1/platform`)"
-      - "traefik.http.routers.platform.entrypoints=web,websecure"
-      - "traefik.http.services.platform.loadbalancer.server.port=8006"
-      - "traefik.http.routers.flags.rule=PathPrefix(`/v1/flags`)"
-      - "traefik.http.routers.flags.entrypoints=web,websecure"
-      - "traefik.http.routers.flags.service=platform"
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-          cpus: "1.0"
-
   ingest:
     <<: *service-defaults
     image: ghcr.io/saldivia-buses/sda-ingest:${INGEST_VERSION:-local}
@@ -648,52 +553,6 @@ services:
       resources:
         limits:
           memory: 256M
-          cpus: "1.0"
-
-  feedback:
-    <<: *service-defaults
-    image: ghcr.io/saldivia-buses/sda-feedback:${FEEDBACK_VERSION:-local}
-    build:
-      context: ..
-      dockerfile: services/feedback/Dockerfile
-      args:
-        <<: *build-args
-        VERSION: ${FEEDBACK_VERSION:-dev}
-    depends_on:
-      postgres-platform:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      nats:
-        condition: service_healthy
-    environment:
-      FEEDBACK_PORT: "8008"
-      REDIS_URL: redis:6379
-      NATS_URL: nats://feedback:${FEEDBACK_NATS_PASS}@nats:4222
-    secrets:
-      - jwt_public_key
-      - db_platform_url
-      - db_tenant_template_url
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8008/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    networks:
-      - frontend
-      - backend
-      - data
-    labels:
-      - "traefik.enable=true"
-      - "autoheal=true"
-      - "traefik.http.routers.feedback.rule=PathPrefix(`/v1/feedback`) || PathPrefix(`/v1/platform/feedback`)"
-      - "traefik.http.routers.feedback.entrypoints=web,websecure"
-      - "traefik.http.services.feedback.loadbalancer.server.port=8008"
-      - "traefik.docker.network=frontend"
-    deploy:
-      resources:
-        limits:
-          memory: 128M
           cpus: "1.0"
 
   # ── Extractor (Python OCR + Vision pipeline) ──────────────────────────

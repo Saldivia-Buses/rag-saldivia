@@ -77,7 +77,6 @@ func TestRouting(t *testing.T) {
 		{"root goes to nextjs", "GET", "/", http.StatusOK, "nextjs"},
 		{"static goes to nextjs", "GET", "/favicon.ico", http.StatusOK, "nextjs"},
 		{"deep path goes to nextjs", "GET", "/dashboard/chats/42", http.StatusOK, "nextjs"},
-		{"v1 auth", "GET", "/v1/auth/login", http.StatusOK, "auth"},
 		{"v1 chat", "POST", "/v1/chat/messages", http.StatusOK, "chat"},
 		{"v1 agent", "GET", "/v1/agent/sessions/abc", http.StatusOK, "agent"},
 		{"v1 erp", "GET", "/v1/erp/orders", http.StatusOK, "erp"},
@@ -129,7 +128,7 @@ func TestXForwardedHeaders(t *testing.T) {
 
 	r, err := newRouterWithAddrs(
 		slog.New(slog.NewTextHandler(io.Discard, nil)),
-		map[string]string{"auth": up.URL},
+		map[string]string{"chat": up.URL},
 		up.URL,
 	)
 	if err != nil {
@@ -138,7 +137,7 @@ func TestXForwardedHeaders(t *testing.T) {
 	srv := httptest.NewServer(newMux(r))
 	defer srv.Close()
 
-	resp, err := srv.Client().Get(srv.URL + "/v1/auth/probe")
+	resp, err := srv.Client().Get(srv.URL + "/v1/chat/probe")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -175,12 +174,12 @@ func TestUnknownUpstreamBody(t *testing.T) {
 // test just proves the map has an entry for every service name the
 // Makefile's build target compiles.
 func TestUpstreamMapCoverage(t *testing.T) {
-	// Mirrors the service list compiled by Dockerfile.all-in-one's
-	// go-services-builder stage.
+	// Mirrors the standalone service list compiled by the all-in-one's
+	// go-services-builder stage — must exclude anything absorbed into the
+	// app monolith (ops + core, per ADR 025).
 	want := []string{
-		"agent", "auth", "chat", "erp", "feedback",
-		"ingest", "notification", "platform",
-		"search", "ws",
+		"agent", "chat", "erp", "ingest",
+		"notification", "search", "ws",
 	}
 	for _, name := range want {
 		if _, ok := upstreamAddrs[name]; !ok {
