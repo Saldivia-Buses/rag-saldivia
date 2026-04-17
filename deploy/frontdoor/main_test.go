@@ -77,12 +77,10 @@ func TestRouting(t *testing.T) {
 		{"root goes to nextjs", "GET", "/", http.StatusOK, "nextjs"},
 		{"static goes to nextjs", "GET", "/favicon.ico", http.StatusOK, "nextjs"},
 		{"deep path goes to nextjs", "GET", "/dashboard/chats/42", http.StatusOK, "nextjs"},
-		{"v1 chat", "POST", "/v1/chat/messages", http.StatusOK, "chat"},
 		{"v1 erp", "GET", "/v1/erp/orders", http.StatusOK, "erp"},
 		{"v1 with no service is 404", "GET", "/v1/", http.StatusNotFound, ""},
 		{"v1 unknown service is 404", "GET", "/v1/doesnotexist/foo", http.StatusNotFound, ""},
-		{"ws root goes to ws", "GET", "/ws", http.StatusOK, "ws"},
-		{"ws sub-path goes to ws", "GET", "/ws/chat/42", http.StatusOK, "ws"},
+		{"ws path falls through to nextjs", "GET", "/ws", http.StatusOK, "nextjs"},
 	}
 
 	for _, tc := range tests {
@@ -127,7 +125,7 @@ func TestXForwardedHeaders(t *testing.T) {
 
 	r, err := newRouterWithAddrs(
 		slog.New(slog.NewTextHandler(io.Discard, nil)),
-		map[string]string{"chat": up.URL},
+		map[string]string{"erp": up.URL},
 		up.URL,
 	)
 	if err != nil {
@@ -136,7 +134,7 @@ func TestXForwardedHeaders(t *testing.T) {
 	srv := httptest.NewServer(newMux(r))
 	defer srv.Close()
 
-	resp, err := srv.Client().Get(srv.URL + "/v1/chat/probe")
+	resp, err := srv.Client().Get(srv.URL + "/v1/erp/probe")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -175,11 +173,9 @@ func TestUnknownUpstreamBody(t *testing.T) {
 func TestUpstreamMapCoverage(t *testing.T) {
 	// Mirrors the standalone service list compiled by the all-in-one's
 	// go-services-builder stage — must exclude anything absorbed into the
-	// app monolith (ops + core, per ADR 025).
-	want := []string{
-		"chat", "erp",
-		"notification", "ws",
-	}
+	// app monolith (ops + core + rag + realtime per ADR 025). Only erp
+	// is still a standalone at this point.
+	want := []string{"erp"}
 	for _, name := range want {
 		if _, ok := upstreamAddrs[name]; !ok {
 			t.Errorf("upstreamAddrs missing entry for %q", name)

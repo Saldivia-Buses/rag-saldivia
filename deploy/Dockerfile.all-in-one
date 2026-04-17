@@ -69,9 +69,9 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
         -X github.com/Camionerou/rag-saldivia/pkg/build.Version=${VERSION} \
         -X github.com/Camionerou/rag-saldivia/pkg/build.GitSHA=${GIT_SHA} \
         -X github.com/Camionerou/rag-saldivia/pkg/build.BuildTime=${BUILD_TIME}"; \
-    echo "▸ building app (ops + core + rag: bigbrother + healthwatch + traces + auth + platform + feedback + ingest + search + agent)"; \
+    echo "▸ building app (ops + core + rag + realtime: bigbrother + healthwatch + traces + auth + platform + feedback + ingest + search + agent + chat + ws + notification)"; \
     go build -ldflags "$LDFLAGS" -o /out/app ./services/app/cmd; \
-    for svc in chat erp notification ws; do \
+    for svc in erp; do \
         echo "▸ building $svc"; \
         go build -ldflags "$LDFLAGS" -o "/out/$svc" "./services/$svc/cmd"; \
     done; \

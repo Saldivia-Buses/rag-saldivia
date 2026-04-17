@@ -46,11 +46,8 @@ dev-services: ## Start all Go services on host (requires infra running)
 		REDIS_URL=localhost:6379 NATS_URL=nats://localhost:4222 TENANT_SLUG=dev \
 		JWT_PUBLIC_KEY=LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUNvd0JRWURLMlZ3QXlFQVpMSmkrZmtPbitKUllNQmc4VkVBTkh2bXRzZUxQK3JmRFdFUStZL3ZIU0E9Ci0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLQo= \
 		JWT_PRIVATE_KEY=LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1DNENBUUF3QlFZREsyVndCQ0lFSUZvSXFxYU1BcjVjYnZFSE9Rc2g0cnVQTUUzeCtRSkVlVDByNnkxQ2tjMmgKLS0tLS1FTkQgUFJJVkFURSBLRVktLS0tLQo="; \
-	env $$ENV_COMMON WS_PORT=8002 WS_ALLOWED_ORIGINS="http://localhost:3000" nohup go run ./services/ws/cmd/... > /tmp/sda-ws.log 2>&1 & \
-	env $$ENV_COMMON CHAT_PORT=8003 nohup go run ./services/chat/cmd/... > /tmp/sda-chat.log 2>&1 & \
-	env $$ENV_COMMON NOTIFICATION_PORT=8005 SMTP_HOST=localhost SMTP_PORT=1025 SMTP_FROM=noreply@sda.local nohup go run ./services/notification/cmd/... > /tmp/sda-notification.log 2>&1 & \
 	env $$ENV_COMMON ERP_PORT=8013 nohup go run ./services/erp/cmd/... > /tmp/sda-erp.log 2>&1 & \
-	env $$ENV_COMMON APP_PORT=8020 TENANT_ID=dev SCAN_MODE=passive PROMETHEUS_URL=http://localhost:9090 DOCKER_PROXY_URL=http://localhost:2375 PLATFORM_TENANT_SLUG=platform INGEST_STAGING_DIR=/tmp/ingest-staging NOTIFICATION_SERVICE_URL=http://localhost:8005 BIGBROTHER_SERVICE_URL=http://localhost:8020 ERP_SERVICE_URL=http://localhost:8013 nohup go run ./services/app/cmd > /tmp/sda-app.log 2>&1 & \
+	env $$ENV_COMMON APP_PORT=8020 TENANT_ID=dev SCAN_MODE=passive PROMETHEUS_URL=http://localhost:9090 DOCKER_PROXY_URL=http://localhost:2375 PLATFORM_TENANT_SLUG=platform INGEST_STAGING_DIR=/tmp/ingest-staging SMTP_HOST=localhost SMTP_PORT=1025 SMTP_FROM=noreply@sda.local WS_ALLOWED_ORIGINS="http://localhost:3000" NOTIFICATION_SERVICE_URL=http://localhost:8020 BIGBROTHER_SERVICE_URL=http://localhost:8020 ERP_SERVICE_URL=http://localhost:8013 nohup go run ./services/app/cmd > /tmp/sda-app.log 2>&1 & \
 	echo "All services starting. Logs in /tmp/sda-*.log" && echo "Run 'make status' to check."
 
 dev-frontend: ## Start Next.js frontend in dev/HMR mode (LOCAL laptop @ localhost only — remote IP access fails to hydrate)
@@ -101,7 +98,7 @@ build-%: ## Build a specific service (e.g., make build-auth)
 
 test: ## Run all Go tests
 	go test ./pkg/... -count=1
-	@for svc in app chat erp notification ws; do \
+	@for svc in app erp; do \
 		echo "▸ testing services/$$svc"; \
 		(cd services/$$svc && go test ./... -count=1) || exit 1; \
 	done
@@ -117,10 +114,7 @@ test-coverage: ## Run tests with coverage report
 	go test \
 		github.com/Camionerou/rag-saldivia/pkg/... \
 		github.com/Camionerou/rag-saldivia/services/app/... \
-		github.com/Camionerou/rag-saldivia/services/chat/... \
 		github.com/Camionerou/rag-saldivia/services/erp/... \
-		github.com/Camionerou/rag-saldivia/services/notification/... \
-		github.com/Camionerou/rag-saldivia/services/ws/... \
 		github.com/Camionerou/rag-saldivia/tools/cli/... \
 		github.com/Camionerou/rag-saldivia/tools/mcp/... \
 		github.com/Camionerou/rag-saldivia/tools/pkg/... \
@@ -131,10 +125,7 @@ test-coverage: ## Run tests with coverage report
 test-integration: ## Run integration tests (requires Docker)
 	go test \
 		github.com/Camionerou/rag-saldivia/services/app/... \
-		github.com/Camionerou/rag-saldivia/services/chat/... \
 		github.com/Camionerou/rag-saldivia/services/erp/... \
-		github.com/Camionerou/rag-saldivia/services/notification/... \
-		github.com/Camionerou/rag-saldivia/services/ws/... \
 		-tags=integration -count=1 -v
 
 test-frontend: ## Run frontend tests
@@ -269,8 +260,6 @@ versions: ## Show running vs expected service versions
 	printf "%-20s %-10s %-10s %-22s %s\n" "SERVICE" "VERSION" "GIT SHA" "BUILD TIME" "STATUS"; \
 	echo "────────────────────────────────────────────────────────────────────────────────"; \
 	for entry in \
-		"8002:ws" "8003:chat" \
-		"8005:notification" \
 		"8013:erp" "8020:app"; do \
 		port=$$(echo $$entry | cut -d: -f1); \
 		name=$$(echo $$entry | cut -d: -f2); \
@@ -332,9 +321,6 @@ status: ## Full system status — infra, services, frontend, GPU
 	@echo ""
 	@echo "── Go Services ─────────────────────────────────────────────"
 	@for entry in \
-		"8002:sda-ws" \
-		"8003:sda-chat" \
-		"8005:sda-notification" \
 		"8013:sda-erp" \
 		"8020:sda-app"; do \
 		port=$$(echo $$entry | cut -d: -f1); \

@@ -4,8 +4,11 @@
 //
 //	/readyz, /healthz    → answered in-process
 //	/v1/<service>/...    → reverse-proxied to that Go service's localhost port
-//	/ws, /ws/...         → reverse-proxied to the ws service (WebSocket upgrade)
 //	/*                   → reverse-proxied to the Next.js standalone on :3000
+//
+// /ws used to live here too; once the realtime fusion absorbed ws into the
+// app monolith there is no standalone ws service to proxy to. Clients hit
+// the monolith directly for /ws routing.
 //
 // One small Go binary replaces what would otherwise be an in-container
 // Traefik (explicitly rejected in ADR 024 alt 5). When the service
@@ -34,10 +37,7 @@ import (
 // When the consolidation campaign absorbs these into a monolith, this map
 // is the one place that has to change.
 var upstreamAddrs = map[string]string{
-	"ws":           "http://127.0.0.1:8002",
-	"chat":         "http://127.0.0.1:8003",
-	"notification": "http://127.0.0.1:8005",
-	"erp":          "http://127.0.0.1:8013",
+	"erp": "http://127.0.0.1:8013",
 }
 
 const nextjsURL = "http://127.0.0.1:3000"
@@ -120,10 +120,6 @@ func (r *router) v1(w http.ResponseWriter, req *http.Request) {
 	rp.ServeHTTP(w, req)
 }
 
-func (r *router) ws(w http.ResponseWriter, req *http.Request) {
-	r.upstreams["ws"].ServeHTTP(w, req)
-}
-
 func (r *router) next(w http.ResponseWriter, req *http.Request) {
 	r.nextjs.ServeHTTP(w, req)
 }
@@ -151,8 +147,6 @@ func newMux(r *router) *http.ServeMux {
 	mux.HandleFunc("GET /readyz", ready)
 	mux.HandleFunc("GET /healthz", ready)
 	mux.HandleFunc("/v1/", r.v1)
-	mux.HandleFunc("/ws", r.ws)
-	mux.HandleFunc("/ws/", r.ws)
 	mux.HandleFunc("/", r.next)
 	return mux
 }

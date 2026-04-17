@@ -118,3 +118,4 @@ config/.env.*
 firecrawl/
 .firecrawl/
 .claude/settings.local.json
+deploy/frontdoor/frontdoor

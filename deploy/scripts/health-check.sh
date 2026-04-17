@@ -17,9 +17,6 @@ INTERVAL=5
 
 # Service name → port mapping (must match docker-compose)
 declare -A SERVICES=(
-  [ws]=8002
-  [chat]=8003
-  [notification]=8005
   [erp]=8013
   [app]=8020
 )
