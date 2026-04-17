@@ -81,7 +81,16 @@ The first fusion (`ops`) is the pilot. Subsequent fusions follow the same
 pattern, in this order, each its own session / PR:
 
 1. **`ops`** (pilot) — smallest, NATS-consumer shape, admin-only HTTP.
-   Proves the pattern with minimum blast radius.
+   Proves the pattern with minimum blast radius. **✅ done (2026-04-17).**
+   bigbrother + healthwatch + traces absorbed into
+   `services/app/internal/ops/{bigbrother,healthwatch,traces}/`. The three
+   old `services/*` shells are deleted, `go.work` holds one `services/app`
+   entry, the frontdoor map shrank 13 → 10 and Makefile / compose / deploy
+   scripts route the three old names through `app` (port 8020). `app`
+   binary is not yet under s6 supervision — that lands when more modules
+   have fused (separate session). Followups surfaced: NATS per-service
+   users, traefik dynamic configs, Grafana dashboards and `.env.example`
+   still reference the 3 old names; harmless today but will need a sweep.
 2. **`core`** — internal identity + config. Still no product hot paths.
 3. **`rag`** — removes the biggest runtime coupling (agent→search+ingest).
    First fusion that changes how the product runs (faster, in-process).
