@@ -1,4 +1,4 @@
-package otel
+package server
 
 import (
 	"context"
@@ -6,86 +6,86 @@ import (
 	"time"
 )
 
-// These tests verify that Setup and Shutdown do not panic when the OTel
-// collector is unreachable. Shutdown may return an error (the gRPC exporter
-// drops data silently when the endpoint is down) — that is expected behavior
-// and is NOT asserted here. The tests only verify no panic occurs.
+// These tests verify that setupOTel and its shutdown do not panic when the
+// OTel collector is unreachable. Shutdown may return an error — the gRPC
+// exporter drops data silently when the endpoint is down. That is expected
+// behavior and is NOT asserted here. The tests only verify no panic occurs.
 
-func TestSetup_UnreachableEndpoint_NoPanic(t *testing.T) {
-	cfg := Config{
+func TestSetupOTel_UnreachableEndpoint_NoPanic(t *testing.T) {
+	cfg := otelConfig{
 		ServiceName:    "test-service",
 		ServiceVersion: "0.0.1",
 		Endpoint:       "localhost:19999",
 	}
-	shutdown, err := Setup(t.Context(), cfg)
+	shutdown, err := setupOTel(t.Context(), cfg)
 	if err != nil {
-		t.Fatalf("Setup with unreachable endpoint should not error, got: %v", err)
+		t.Fatalf("setupOTel with unreachable endpoint should not error, got: %v", err)
 	}
 	if shutdown == nil {
 		t.Fatal("shutdown function should not be nil")
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
-	_ = shutdown(ctx) // error expected — endpoint unreachable
+	_ = shutdown(ctx)
 }
 
-func TestSetup_ShutdownCallable(t *testing.T) {
-	cfg := Config{
+func TestSetupOTel_ShutdownCallable(t *testing.T) {
+	cfg := otelConfig{
 		ServiceName:    "shutdown-test",
 		ServiceVersion: "1.0.0",
 		Endpoint:       "localhost:19998",
 	}
-	shutdown, err := Setup(t.Context(), cfg)
+	shutdown, err := setupOTel(t.Context(), cfg)
 	if err != nil {
-		t.Fatalf("Setup: %v", err)
+		t.Fatalf("setupOTel: %v", err)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
-	_ = shutdown(ctx) // first call — error expected, must not panic
-	_ = shutdown(ctx) // second call — must not panic either
+	_ = shutdown(ctx)
+	_ = shutdown(ctx)
 }
 
-func TestSetup_DefaultEndpoint(t *testing.T) {
-	cfg := Config{
+func TestSetupOTel_DefaultEndpoint(t *testing.T) {
+	cfg := otelConfig{
 		ServiceName:    "default-ep",
 		ServiceVersion: "0.1.0",
 		Endpoint:       "",
 	}
-	shutdown, err := Setup(t.Context(), cfg)
+	shutdown, err := setupOTel(t.Context(), cfg)
 	if err != nil {
-		t.Fatalf("Setup with empty endpoint: %v", err)
+		t.Fatalf("setupOTel with empty endpoint: %v", err)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
 	_ = shutdown(ctx)
 }
 
-func TestSetup_EmptyServiceName(t *testing.T) {
-	cfg := Config{
+func TestSetupOTel_EmptyServiceName(t *testing.T) {
+	cfg := otelConfig{
 		ServiceName:    "",
 		ServiceVersion: "",
 		Endpoint:       "localhost:19997",
 	}
-	shutdown, err := Setup(t.Context(), cfg)
+	shutdown, err := setupOTel(t.Context(), cfg)
 	if err != nil {
-		t.Fatalf("Setup with empty service name: %v", err)
+		t.Fatalf("setupOTel with empty service name: %v", err)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
 	_ = shutdown(ctx)
 }
 
-func TestSetup_CancelledContext(t *testing.T) {
+func TestSetupOTel_CancelledContext(t *testing.T) {
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
-	cfg := Config{
+	cfg := otelConfig{
 		ServiceName:    "cancelled",
 		ServiceVersion: "0.0.1",
 		Endpoint:       "localhost:19996",
 	}
-	shutdown, err := Setup(ctx, cfg)
+	shutdown, err := setupOTel(ctx, cfg)
 	if err != nil {
-		return // expected: context cancelled during setup
+		return
 	}
 	if shutdown != nil {
 		shutCtx, shutCancel := context.WithTimeout(context.Background(), 100*time.Millisecond)

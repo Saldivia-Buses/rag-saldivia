@@ -34,7 +34,6 @@ import (
 	"github.com/Camionerou/rag-saldivia/pkg/build"
 	"github.com/Camionerou/rag-saldivia/pkg/config"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
-	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
@@ -91,7 +90,7 @@ func New(name string, opts ...Option) *App {
 
 	// OpenTelemetry
 	version := build.ReadVersionFile("VERSION")
-	otelShutdown, err := sdaotel.Setup(ctx, sdaotel.Config{
+	otelShutdown, err := setupOTel(ctx, otelConfig{
 		ServiceName:    name,
 		ServiceVersion: version,
 		Endpoint:       config.Env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
