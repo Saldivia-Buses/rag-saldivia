@@ -58,7 +58,6 @@ out/
 *.tsbuildinfo
 .turbo/
 **/.turbo/
-bun.lock
 
 # --- Docker ---
 docker-compose.override.yml
