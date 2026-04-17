@@ -7,7 +7,6 @@ use (
 	./services/app
 	./services/chat
 	./services/erp
-	./services/feedback
 	./services/ingest
 	./services/notification
 	./services/search

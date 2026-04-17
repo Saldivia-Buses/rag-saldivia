@@ -12,7 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/Camionerou/rag-saldivia/pkg/httperr"
-	"github.com/Camionerou/rag-saldivia/services/feedback/internal/repository"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/core/feedback/repository"
 )
 
 // Feedback handles tenant-scoped feedback endpoints (read-only).

@@ -21,7 +21,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 
-	"github.com/Camionerou/rag-saldivia/services/feedback/internal/repository"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/core/feedback/repository"
 )
 
 // ---------------------------------------------------------------------------

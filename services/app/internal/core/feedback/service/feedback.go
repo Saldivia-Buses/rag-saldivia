@@ -10,7 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/Camionerou/rag-saldivia/services/feedback/internal/repository"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/core/feedback/repository"
 )
 
 // FeedbackEvent represents a single feedback event to be stored.
