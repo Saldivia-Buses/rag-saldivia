@@ -4,6 +4,7 @@ use (
 	./gen/go
 	./pkg
 	./services/agent
+	./services/app
 	./services/auth
 	./services/bigbrother
 	./services/chat
