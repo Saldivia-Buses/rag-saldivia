@@ -42,11 +42,8 @@ var upstreamAddrs = map[string]string{
 	"platform":     "http://127.0.0.1:8006",
 	"ingest":       "http://127.0.0.1:8007",
 	"feedback":     "http://127.0.0.1:8008",
-	"traces":       "http://127.0.0.1:8009",
 	"search":       "http://127.0.0.1:8010",
-	"bigbrother":   "http://127.0.0.1:8012",
 	"erp":          "http://127.0.0.1:8013",
-	"healthwatch":  "http://127.0.0.1:8014",
 }
 
 const nextjsURL = "http://127.0.0.1:3000"

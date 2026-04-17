@@ -28,11 +28,11 @@ BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 declare -A SERVICE_PORTS=(
     [auth]=8001 [ws]=8002 [chat]=8003 [agent]=8004
     [notification]=8005 [platform]=8006 [ingest]=8007
-    [feedback]=8008 [traces]=8009 [search]=8010
-    [bigbrother]=8012 [erp]=8013
+    [feedback]=8008 [search]=8010
+    [erp]=8013 [app]=8020
 )
 
-ALL_GO_SERVICES=(auth ws chat agent search traces notification platform ingest feedback bigbrother erp)
+ALL_GO_SERVICES=(auth ws chat agent search notification platform ingest feedback erp app)
 ALL_FRONTEND_SERVICES=(web)
 ALL_SERVICES=("${ALL_GO_SERVICES[@]}" "${ALL_FRONTEND_SERVICES[@]}")
 

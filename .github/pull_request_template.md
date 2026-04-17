@@ -27,9 +27,9 @@
 
 ## Traces freeze (Plan 26 → 28)
 
-`services/traces/` está congelado a bug fixes mientras se migra a `pkg/spine` (Plan 28).
+`services/app/internal/ops/traces/` está congelado a bug fixes mientras se migra a `pkg/spine` (Plan 28).
 
-- [ ] Este PR **NO** agrega funcionalidad nueva a `services/traces/`, O
+- [ ] Este PR **NO** agrega funcionalidad nueva a `services/app/internal/ops/traces/`, O
 - [ ] Agrega funcionalidad nueva justificada — label `traces-exception` aplicado + razón en "Notas para el reviewer"
 
 ## Notas para el reviewer

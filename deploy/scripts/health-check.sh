@@ -25,11 +25,9 @@ declare -A SERVICES=(
   [platform]=8006
   [ingest]=8007
   [feedback]=8008
-  [traces]=8009
   [search]=8010
-  [bigbrother]=8012
   [erp]=8013
-  [healthwatch]=8014
+  [app]=8020
 )
 
 # ── Parse args ──────────────────────────────────────────────────────────

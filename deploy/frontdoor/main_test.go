@@ -80,8 +80,6 @@ func TestRouting(t *testing.T) {
 		{"v1 auth", "GET", "/v1/auth/login", http.StatusOK, "auth"},
 		{"v1 chat", "POST", "/v1/chat/messages", http.StatusOK, "chat"},
 		{"v1 agent", "GET", "/v1/agent/sessions/abc", http.StatusOK, "agent"},
-		{"v1 bigbrother (fixed port)", "GET", "/v1/bigbrother/status", http.StatusOK, "bigbrother"},
-		{"v1 healthwatch (fixed port)", "GET", "/v1/healthwatch/probe", http.StatusOK, "healthwatch"},
 		{"v1 erp", "GET", "/v1/erp/orders", http.StatusOK, "erp"},
 		{"v1 with no service is 404", "GET", "/v1/", http.StatusNotFound, ""},
 		{"v1 unknown service is 404", "GET", "/v1/doesnotexist/foo", http.StatusNotFound, ""},
@@ -180,9 +178,9 @@ func TestUpstreamMapCoverage(t *testing.T) {
 	// Mirrors the service list compiled by Dockerfile.all-in-one's
 	// go-services-builder stage.
 	want := []string{
-		"agent", "auth", "bigbrother", "chat", "erp", "feedback",
-		"healthwatch", "ingest", "notification", "platform",
-		"search", "traces", "ws",
+		"agent", "auth", "chat", "erp", "feedback",
+		"ingest", "notification", "platform",
+		"search", "ws",
 	}
 	for _, name := range want {
 		if _, ok := upstreamAddrs[name]; !ok {

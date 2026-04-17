@@ -459,27 +459,6 @@ services:
       - "traefik.http.routers.search-docker.priority=100"
       - "traefik.http.services.search-docker.loadbalancer.server.port=8010"
 
-  traces:
-    <<: *service-defaults
-    profiles: [full]
-    build:
-      context: ..
-      dockerfile: services/traces/Dockerfile
-    environment:
-      <<: *env-common
-      TRACES_PORT: "8009"
-      POSTGRES_PLATFORM_URL: postgres://sda:sda_dev@postgres:5432/sda_platform?sslmode=disable
-      REDIS_URL: redis:6379
-    ports:
-      - "8009:8009"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.traces-docker.rule=PathPrefix(`/v1/traces`)"
-      - "traefik.http.routers.traces-docker.entrypoints=web"
-      - "traefik.http.routers.traces-docker.middlewares=dev-cors@file"
-      - "traefik.http.routers.traces-docker.priority=100"
-      - "traefik.http.services.traces-docker.loadbalancer.server.port=8009"
-
   feedback:
     <<: *service-defaults
     profiles: [full]
@@ -500,52 +479,6 @@ services:
       - "traefik.http.routers.feedback-docker.middlewares=dev-cors@file"
       - "traefik.http.routers.feedback-docker.priority=100"
       - "traefik.http.services.feedback-docker.loadbalancer.server.port=8008"
-
-  healthwatch:
-    <<: *service-defaults
-    profiles: [full]
-    build:
-      context: ..
-      dockerfile: services/healthwatch/Dockerfile
-    environment:
-      <<: *env-common
-      HEALTHWATCH_PORT: "8014"
-      POSTGRES_PLATFORM_URL: postgres://sda:sda_dev@postgres:5432/sda_platform?sslmode=disable
-      REDIS_URL: redis:6379
-      PROMETHEUS_URL: http://host.docker.internal:9090
-      DOCKER_PROXY_URL: http://host.docker.internal:2375
-    ports:
-      - "8014:8014"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.healthwatch-docker.rule=PathPrefix(`/v1/healthwatch`)"
-      - "traefik.http.routers.healthwatch-docker.entrypoints=web"
-      - "traefik.http.routers.healthwatch-docker.middlewares=dev-cors@file"
-      - "traefik.http.routers.healthwatch-docker.priority=100"
-      - "traefik.http.services.healthwatch-docker.loadbalancer.server.port=8014"
-
-  bigbrother:
-    <<: *service-defaults
-    profiles: [full]
-    build:
-      context: ..
-      dockerfile: services/bigbrother/Dockerfile
-    environment:
-      <<: *env-common
-      BIGBROTHER_PORT: "8012"
-      SCAN_MODE: passive
-      TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
-      EVENT_RETENTION_DAYS: "90"
-      REDIS_URL: redis:6379
-    ports:
-      - "8012:8012"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.bigbrother-docker.rule=PathPrefix(`/v1/bigbrother`)"
-      - "traefik.http.routers.bigbrother-docker.entrypoints=web"
-      - "traefik.http.routers.bigbrother-docker.middlewares=dev-cors@file"
-      - "traefik.http.routers.bigbrother-docker.priority=100"
-      - "traefik.http.services.bigbrother-docker.loadbalancer.server.port=8012"
 
   erp:
     <<: *service-defaults

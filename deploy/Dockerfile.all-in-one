@@ -40,7 +40,7 @@ WORKDIR /src/frontdoor
 RUN go build -ldflags="-s -w" -o /out/frontdoor .
 
 # ──────────────────────────────────────────────────────────────────────────
-# Stage 1b: Go builder — the 13 app services (go.work-wide build).
+# Stage 1b: Go builder — app monolith + remaining standalone services.
 # ──────────────────────────────────────────────────────────────────────────
 FROM golang:1.25-bookworm AS go-services-builder
 
@@ -57,8 +57,10 @@ COPY pkg/     ./pkg/
 COPY services/ ./services/
 COPY tools/    ./tools/
 
-# One builder stage for all 13 services keeps the module graph + build cache
-# warm across them. Extractor is Python, skipped here.
+# One builder stage keeps the module graph + build cache warm across all
+# binaries. Per ADR 025 the app monolith is absorbing services one domain
+# at a time; anything not yet folded still builds as its own binary.
+# Extractor is Python, skipped here.
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg/mod \
     set -eux; \
@@ -67,8 +69,10 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
         -X github.com/Camionerou/rag-saldivia/pkg/build.Version=${VERSION} \
         -X github.com/Camionerou/rag-saldivia/pkg/build.GitSHA=${GIT_SHA} \
         -X github.com/Camionerou/rag-saldivia/pkg/build.BuildTime=${BUILD_TIME}"; \
-    for svc in agent auth bigbrother chat erp feedback healthwatch ingest \
-               notification platform search traces ws; do \
+    echo "▸ building app (ops: bigbrother + healthwatch + traces)"; \
+    go build -ldflags "$LDFLAGS" -o /out/app ./services/app/cmd; \
+    for svc in agent auth chat erp feedback ingest \
+               notification platform search ws; do \
         echo "▸ building $svc"; \
         go build -ldflags "$LDFLAGS" -o "/out/$svc" "./services/$svc/cmd"; \
     done; \
