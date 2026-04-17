@@ -11,7 +11,7 @@ import (
 	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/tenant"
-	"github.com/Camionerou/rag-saldivia/services/search/internal/service"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/rag/search/service"
 )
 
 // Handler wraps the Search service for HTTP.

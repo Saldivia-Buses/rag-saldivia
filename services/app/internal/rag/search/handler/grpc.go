@@ -6,7 +6,7 @@ import (
 
 	searchv1 "github.com/Camionerou/rag-saldivia/gen/go/search/v1"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
-	"github.com/Camionerou/rag-saldivia/services/search/internal/service"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/rag/search/service"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

@@ -8,7 +8,6 @@ use (
 	./services/chat
 	./services/erp
 	./services/notification
-	./services/search
 	./services/ws
 	./tools/cli
 	./tools/eventsgen
