@@ -37,7 +37,6 @@ const MODULE_ROOTS: Route[] = [
   { path: "/administracion" },
   { path: "/rrhh" },
   { path: "/seguridad" },
-  { path: "/astro" },
   { path: "/feedback" },
 ];
 
@@ -66,12 +65,11 @@ const ALL_ROUTES: Route[] = [...CORE, ...MODULE_ROOTS, ...SUB_PAGES];
 
 function isIgnorableConsoleError(text: string): boolean {
   return (
+    // Dev-mode HMR client tries webpack-hmr endpoint that bun/turbopack
+    // doesn't expose — environmental, not a regression.
     text.includes("webpack-hmr") ||
     text.includes("react-devtools") ||
-    text.includes("Download the React DevTools") ||
-    text.includes("WebSocket connection to") ||
-    text.includes("HTTP Authentication failed") ||
-    (text.includes("Failed to load resource") && text.includes("404"))
+    text.includes("Download the React DevTools")
   );
 }
 

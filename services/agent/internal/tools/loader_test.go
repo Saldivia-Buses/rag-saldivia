@@ -181,21 +181,21 @@ func TestLoadModuleTools_EmptyToolsList(t *testing.T) {
 
 func TestParseEnabledModules_Empty(t *testing.T) {
 	m := ParseEnabledModules("")
-	if !m["fleet"] || !m["astro"] || !m["bigbrother"] || !m["erp"] {
+	if !m["fleet"] || !m["bigbrother"] || !m["erp"] {
 		t.Errorf("empty string should enable all known modules, got: %v", m)
 	}
 }
 
 func TestParseEnabledModules_All(t *testing.T) {
 	m := ParseEnabledModules("all")
-	if !m["fleet"] || !m["astro"] || !m["bigbrother"] || !m["erp"] {
+	if !m["fleet"] || !m["bigbrother"] || !m["erp"] {
 		t.Errorf("\"all\" should enable all known modules, got: %v", m)
 	}
 }
 
 func TestParseEnabledModules_AllCaseInsensitive(t *testing.T) {
 	m := ParseEnabledModules("ALL")
-	if !m["fleet"] || !m["astro"] {
+	if !m["fleet"] || !m["erp"] {
 		t.Errorf("\"ALL\" should enable all known modules, got: %v", m)
 	}
 }
@@ -212,8 +212,8 @@ func TestParseEnabledModules_Subset(t *testing.T) {
 	if !m["fleet"] || !m["erp"] {
 		t.Errorf("expected fleet and erp enabled, got: %v", m)
 	}
-	if m["astro"] || m["bigbrother"] {
-		t.Errorf("astro and bigbrother should not be enabled, got: %v", m)
+	if m["bigbrother"] {
+		t.Errorf("bigbrother should not be enabled, got: %v", m)
 	}
 	if len(m) != 2 {
 		t.Errorf("expected exactly 2 entries, got %d: %v", len(m), m)
@@ -221,9 +221,9 @@ func TestParseEnabledModules_Subset(t *testing.T) {
 }
 
 func TestParseEnabledModules_Single(t *testing.T) {
-	m := ParseEnabledModules("astro")
-	if !m["astro"] {
-		t.Errorf("expected astro enabled, got: %v", m)
+	m := ParseEnabledModules("fleet")
+	if !m["fleet"] {
+		t.Errorf("expected fleet enabled, got: %v", m)
 	}
 	if len(m) != 1 {
 		t.Errorf("expected exactly 1 entry, got %d: %v", len(m), m)
@@ -255,13 +255,13 @@ func TestResolveEndpoint_GRPCProtocol(t *testing.T) {
 func TestResolveEndpoint_HTTPProtocol_WithVerb(t *testing.T) {
 	method, url := resolveEndpoint("http://svc:8000", ManifestTool{
 		Protocol: "http",
-		Endpoint: "POST /v1/astro/natal",
+		Endpoint: "POST /v1/fleet/vehicles",
 	})
 	if method != "POST" {
 		t.Errorf("expected POST, got %s", method)
 	}
-	if url != "http://svc:8000/v1/astro/natal" {
-		t.Errorf("expected http://svc:8000/v1/astro/natal, got %s", url)
+	if url != "http://svc:8000/v1/fleet/vehicles" {
+		t.Errorf("expected http://svc:8000/v1/fleet/vehicles, got %s", url)
 	}
 }
 
@@ -282,13 +282,13 @@ func TestResolveEndpoint_HTTPProtocol_PathOnly(t *testing.T) {
 	// Endpoint without verb defaults to POST
 	method, url := resolveEndpoint("http://svc:8000", ManifestTool{
 		Protocol: "http",
-		Endpoint: "/v1/astro/transits",
+		Endpoint: "/v1/fleet/refuel",
 	})
 	if method != "POST" {
 		t.Errorf("expected POST for path-only endpoint, got %s", method)
 	}
-	if url != "http://svc:8000/v1/astro/transits" {
-		t.Errorf("expected http://svc:8000/v1/astro/transits, got %s", url)
+	if url != "http://svc:8000/v1/fleet/refuel" {
+		t.Errorf("expected http://svc:8000/v1/fleet/refuel, got %s", url)
 	}
 }
 
@@ -323,20 +323,20 @@ func TestResolveEndpoint_UnknownProtocol_DefaultsToGRPCBehavior(t *testing.T) {
 func TestLoadModuleTools_HTTPProtocolTool(t *testing.T) {
 	// Verify HTTP protocol tools get their endpoint resolved correctly
 	dir := t.TempDir()
-	modDir := filepath.Join(dir, "astromod")
+	modDir := filepath.Join(dir, "fleetmod")
 	if err := os.MkdirAll(modDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 	manifest := `
-module: astromod
-name: Astro Module
+module: fleetmod
+name: Fleet Module
 tools:
-  - id: natal_chart
-    service: astro
-    endpoint: "POST /v1/astro/natal"
+  - id: list_vehicles
+    service: fleet
+    endpoint: "POST /v1/fleet/vehicles"
     protocol: http
     type: read
-    description: "Build natal chart"
+    description: "List vehicles"
 `
 	if err := os.WriteFile(filepath.Join(modDir, "tools.yaml"), []byte(manifest), 0644); err != nil {
 		t.Fatal(err)
@@ -344,8 +344,8 @@ tools:
 
 	defs, err := LoadModuleTools(
 		dir,
-		map[string]bool{"astromod": true},
-		map[string]string{"astro": "http://astro:9000"},
+		map[string]bool{"fleetmod": true},
+		map[string]string{"fleet": "http://fleet:9000"},
 	)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -356,7 +356,7 @@ tools:
 	if defs[0].Method != "POST" {
 		t.Errorf("expected POST method, got %s", defs[0].Method)
 	}
-	if defs[0].Endpoint != "http://astro:9000/v1/astro/natal" {
-		t.Errorf("expected http://astro:9000/v1/astro/natal, got %s", defs[0].Endpoint)
+	if defs[0].Endpoint != "http://fleet:9000/v1/fleet/vehicles" {
+		t.Errorf("expected http://fleet:9000/v1/fleet/vehicles, got %s", defs[0].Endpoint)
 	}
 }

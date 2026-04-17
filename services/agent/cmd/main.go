@@ -54,7 +54,6 @@ func main() {
 	searchURL := config.Env("SEARCH_SERVICE_URL", "http://localhost:8010")
 	ingestURL := config.Env("INGEST_SERVICE_URL", "http://localhost:8007")
 	notificationURL := config.Env("NOTIFICATION_SERVICE_URL", "http://localhost:8005")
-	astroURL := config.Env("ASTRO_SERVICE_URL", "http://localhost:8011")
 	bigbrotherURL := config.Env("BIGBROTHER_SERVICE_URL", "http://localhost:8012")
 	erpURL := config.Env("ERP_SERVICE_URL", "http://localhost:8013")
 
@@ -77,7 +76,7 @@ func main() {
 	modulesDir := config.Env("MODULES_DIR", "modules")
 	serviceURLs := map[string]string{
 		"search": searchURL, "ingest": ingestURL, "notification": notificationURL,
-		"astro": astroURL, "bigbrother": bigbrotherURL, "erp": erpURL,
+		"bigbrother": bigbrotherURL, "erp": erpURL,
 	}
 	// ENABLED_MODULES controls which module tool manifests are loaded.
 	// Accepts a comma-separated list of module IDs (e.g. "fleet,erp") or

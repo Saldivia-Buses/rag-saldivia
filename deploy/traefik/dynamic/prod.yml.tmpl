@@ -63,13 +63,6 @@ http:
       entryPoints: [web]
       middlewares: [strip-spoofed-headers, tenant-from-subdomain, rate-limit, cors]
 
-    # Astro — astrological intelligence engine
-    astro:
-      rule: "PathPrefix(`/v1/astro`)"
-      service: astro
-      entryPoints: [web]
-      middlewares: [strip-spoofed-headers, tenant-from-subdomain, rate-limit, cors]
-
     # Platform — admin-only (platform.$SDA_DOMAIN)
     platform:
       rule: "Host(`platform.$SDA_DOMAIN`) && PathPrefix(`/v1/platform`)"
@@ -132,10 +125,6 @@ http:
       loadBalancer:
         servers:
           - url: "http://ingest:8007"
-    astro:
-      loadBalancer:
-        servers:
-          - url: "http://astro:8011"
 
   middlewares:
     # Strip client-spoofed tenant headers before processing

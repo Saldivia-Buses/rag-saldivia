@@ -4,10 +4,10 @@
 
 DELETE FROM tenant_modules WHERE module_id IN (
     'manufactura', 'produccion', 'calidad', 'ingenieria', 'mantenimiento',
-    'compras', 'administracion', 'rrhh', 'seguridad', 'astro'
+    'compras', 'administracion', 'rrhh', 'seguridad'
 );
 
 DELETE FROM modules WHERE id IN (
     'manufactura', 'produccion', 'calidad', 'ingenieria', 'mantenimiento',
-    'compras', 'administracion', 'rrhh', 'seguridad', 'astro'
+    'compras', 'administracion', 'rrhh', 'seguridad'
 );

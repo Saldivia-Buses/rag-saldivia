@@ -49,7 +49,7 @@ dev-services: ## Start all Go services on host (requires infra running)
 	env $$ENV_COMMON AUTH_PORT=8001 nohup go run ./services/auth/cmd/... > /tmp/sda-auth.log 2>&1 & \
 	env $$ENV_COMMON WS_PORT=8002 WS_ALLOWED_ORIGINS="http://localhost:3000" nohup go run ./services/ws/cmd/... > /tmp/sda-ws.log 2>&1 & \
 	env $$ENV_COMMON CHAT_PORT=8003 nohup go run ./services/chat/cmd/... > /tmp/sda-chat.log 2>&1 & \
-	env $$ENV_COMMON AGENT_PORT=8004 SEARCH_SERVICE_URL=http://localhost:8010 INGEST_SERVICE_URL=http://localhost:8007 NOTIFICATION_SERVICE_URL=http://localhost:8005 ASTRO_SERVICE_URL=http://localhost:8011 nohup go run ./services/agent/cmd/... > /tmp/sda-agent.log 2>&1 & \
+	env $$ENV_COMMON AGENT_PORT=8004 SEARCH_SERVICE_URL=http://localhost:8010 INGEST_SERVICE_URL=http://localhost:8007 NOTIFICATION_SERVICE_URL=http://localhost:8005 nohup go run ./services/agent/cmd/... > /tmp/sda-agent.log 2>&1 & \
 	env $$ENV_COMMON NOTIFICATION_PORT=8005 SMTP_HOST=localhost SMTP_PORT=1025 SMTP_FROM=noreply@sda.local nohup go run ./services/notification/cmd/... > /tmp/sda-notification.log 2>&1 & \
 	env $$ENV_COMMON PLATFORM_PORT=8006 nohup go run ./services/platform/cmd/... > /tmp/sda-platform.log 2>&1 & \
 	env $$ENV_COMMON INGEST_PORT=8007 INGEST_STAGING_DIR=/tmp/ingest-staging nohup go run ./services/ingest/cmd/... > /tmp/sda-ingest.log 2>&1 & \
@@ -87,17 +87,11 @@ stop: ## Stop all services (Docker + Go + frontend)
 
 # ── Build ────────────────────────────────────────────────────────────────
 
-build: ## Build all Go services (including astro with CGO)
+build: ## Build all Go services
 	@for svc in $(GO_SERVICES); do \
 		echo "Building $$svc..."; \
 		ver=$$(cat $(SERVICES_DIR)/$$svc/VERSION 2>/dev/null | tr -d '[:space:]' || echo "dev"); \
-		if [ "$$svc" = "astro" ]; then \
-			cd $(SERVICES_DIR)/$$svc && CGO_ENABLED=1 \
-				CGO_LDFLAGS="-L$(SERVICES_DIR)/astro -lm" \
-				go build \
-				-ldflags '$(LDFLAGS_BASE) -X github.com/Camionerou/rag-saldivia/pkg/build.Version='"$$ver" \
-				-o $(GOBIN)/$$svc ./cmd/... || exit 1; \
-		elif [ "$$svc" = "bigbrother" ]; then \
+		if [ "$$svc" = "bigbrother" ]; then \
 			cd $(SERVICES_DIR)/$$svc && go build \
 				-ldflags '$(LDFLAGS_BASE) -X github.com/Camionerou/rag-saldivia/pkg/build.Version='"$$ver" \
 				-o $(GOBIN)/$$svc ./cmd/ || exit 1; \
@@ -111,14 +105,6 @@ build: ## Build all Go services (including astro with CGO)
 	done
 	@echo "All services built → $(GOBIN)/ (sha: $(GIT_SHA))"
 
-build-astro: ## Build astro service (requires CGO for Swiss Ephemeris)
-	@ver=$$(cat $(SERVICES_DIR)/astro/VERSION 2>/dev/null | tr -d '[:space:]' || echo "dev"); \
-	cd $(SERVICES_DIR)/astro && CGO_ENABLED=1 \
-		CGO_LDFLAGS="-L$(SERVICES_DIR)/astro -lm" \
-		go build \
-		-ldflags '$(LDFLAGS_BASE) -X github.com/Camionerou/rag-saldivia/pkg/build.Version='"$$ver" \
-		-o $(GOBIN)/astro ./cmd/...
-
 build-%: ## Build a specific service (e.g., make build-auth)
 	@ver=$$(cat $(SERVICES_DIR)/$*/VERSION 2>/dev/null | tr -d '[:space:]' || echo "dev"); \
 	cd $(SERVICES_DIR)/$* && go build \
@@ -127,7 +113,7 @@ build-%: ## Build a specific service (e.g., make build-auth)
 
 # ── Testing ──────────────────────────────────────────────────────────────
 
-test: ## Run all Go tests (excludes astro — requires CGO; use make test-astro)
+test: ## Run all Go tests
 	go test ./pkg/... -count=1
 	@for svc in agent auth bigbrother chat erp feedback ingest notification platform search traces ws; do \
 		echo "▸ testing services/$$svc"; \
@@ -138,15 +124,10 @@ test: ## Run all Go tests (excludes astro — requires CGO; use make test-astro)
 		(cd tools/$$tool && go test ./... -count=1) || exit 1; \
 	done
 
-test-astro: ## Run astro tests (requires CGO + EPHE_PATH)
-	cd $(SERVICES_DIR)/astro && CGO_ENABLED=1 \
-		CGO_LDFLAGS="-L$(SERVICES_DIR)/astro -lm" \
-		go test ./... -count=1 -v
-
 test-%: ## Run tests for a specific service (e.g., make test-auth)
 	cd $(SERVICES_DIR)/$* && go test ./... -count=1 -v
 
-test-coverage: ## Run tests with coverage report (excludes astro — requires CGO)
+test-coverage: ## Run tests with coverage report
 	go test \
 		github.com/Camionerou/rag-saldivia/pkg/... \
 		github.com/Camionerou/rag-saldivia/services/agent/... \
@@ -168,7 +149,7 @@ test-coverage: ## Run tests with coverage report (excludes astro — requires CG
 	go tool cover -html=coverage.out -o cover.html
 	@echo "Coverage report → cover.html"
 
-test-integration: ## Run integration tests (requires Docker; excludes astro)
+test-integration: ## Run integration tests (requires Docker)
 	go test \
 		github.com/Camionerou/rag-saldivia/services/agent/... \
 		github.com/Camionerou/rag-saldivia/services/auth/... \
@@ -322,7 +303,7 @@ versions: ## Show running vs expected service versions
 		"8001:auth" "8002:ws" "8003:chat" "8004:agent" \
 		"8005:notification" "8006:platform" "8007:ingest" \
 		"8008:feedback" "8009:traces" "8010:search" \
-		"8011:astro" "8012:bigbrother" "8013:erp" \
+		"8012:bigbrother" "8013:erp" \
 		"8014:healthwatch"; do \
 		port=$$(echo $$entry | cut -d: -f1); \
 		name=$$(echo $$entry | cut -d: -f2); \
@@ -394,7 +375,6 @@ status: ## Full system status — infra, services, frontend, GPU
 		"8008:sda-feedback" \
 		"8009:sda-traces" \
 		"8010:sda-search" \
-		"8011:sda-astro" \
 		"8012:sda-bigbrother" \
 		"8013:sda-erp"; do \
 		port=$$(echo $$entry | cut -d: -f1); \

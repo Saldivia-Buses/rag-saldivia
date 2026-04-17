@@ -7,7 +7,6 @@ import {
   ArrowRight,
   MessageSquare,
   Database,
-  Sparkles,
 } from "lucide-react";
 
 const MODULE_CATEGORIES: { title: string; description: string; range: [number, number] }[] = [
@@ -124,7 +123,7 @@ export default function InicioPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid gap-3 sm:grid-cols-3 mb-10">
+        <div className="grid gap-3 sm:grid-cols-2 mb-10">
           <QuickAction
             href="/chat"
             icon={MessageSquare}
@@ -136,12 +135,6 @@ export default function InicioPage() {
             icon={Database}
             label="Colecciones"
             sublabel="Bases de conocimiento"
-          />
-          <QuickAction
-            href="/astro"
-            icon={Sparkles}
-            label="Astro"
-            sublabel="Análisis inteligente"
           />
         </div>
 

@@ -13,7 +13,7 @@ Version: 0.1.0 | Port: 8004
 
 ```
 User message → guardrails → LLM (via pkg/llm) → tool calls?
-  YES → execute tools (Search, Ingest, Astro, Notify, etc.) → feed results → LLM → ...
+  YES → execute tools (Search, Ingest, Notify, etc.) → feed results → LLM → ...
   NO  → output guardrails → response
 ```
 
@@ -30,11 +30,12 @@ Tools are loaded from two sources:
 
 The loader (`internal/tools/loader.go`) supports two protocols:
 - **gRPC**: `method: SearchVehicles` → POST to `baseURL/method`
-- **HTTP**: `endpoint: POST /v1/astro/natal` → verb + path parsed from endpoint field
+- **HTTP**: `endpoint: POST /v1/fleet/vehicles` → verb + path parsed from endpoint field
 
 Currently enabled modules:
 - `fleet` — transport/logistics tools
-- `astro` — 54 astrological tools (techniques, business, sessions, predictions)
+- `erp` — ERP business modules
+- `bigbrother` — network intelligence
 
 ### Tool Execution
 
@@ -46,7 +47,7 @@ The executor (`internal/tools/executor.go`) handles:
 
 ## Trace Publishing
 
-Publishes execution traces to NATS via `pkg/traces/publisher.go` (shared with astro):
+Publishes execution traces to NATS via `pkg/traces/publisher.go`:
 - `traces.start` — query received
 - `traces.event` — each LLM call + tool call
 - `traces.end` — final response with token counts + cost
@@ -63,7 +64,7 @@ Publishes execution traces to NATS via `pkg/traces/publisher.go` (shared with as
 
 ```json
 {
-  "message": "carta natal de Adrian Saldivia",
+  "message": "cuántos buses están en producción",
   "history": []
 }
 ```
@@ -80,7 +81,6 @@ Publishes execution traces to NATS via `pkg/traces/publisher.go` (shared with as
 | `SEARCH_SERVICE_URL` | No | `http://localhost:8010` | Search service |
 | `INGEST_SERVICE_URL` | No | `http://localhost:8007` | Ingest service |
 | `NOTIFICATION_SERVICE_URL` | No | `http://localhost:8005` | Notification service |
-| `ASTRO_SERVICE_URL` | No | `http://localhost:8011` | Astro service |
 | `SEARCH_GRPC_URL` | No | — | gRPC endpoint for search (optional) |
 | `NATS_URL` | No | `nats://localhost:4222` | NATS for trace publishing |
 | `MODULES_DIR` | No | `modules` | Directory with module tool manifests |
@@ -92,6 +92,5 @@ Publishes execution traces to NATS via `pkg/traces/publisher.go` (shared with as
 - **Search Service** — document search tool
 - **Ingest Service** — document upload tool
 - **Notification Service** — notification sending tool
-- **Astro Service** — 54 astrological tools
 - **NATS** — trace publishing (optional, degrades gracefully)
 - **Redis** — JWT blacklist

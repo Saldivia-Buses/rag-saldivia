@@ -98,7 +98,6 @@ const routeLabels: Record<string, string> = {
   "/seguridad/inspecciones": "Inspecciones",
   "/seguridad/medicina": "Medicina Laboral",
   "/seguridad/incidentes": "Incidentes",
-  "/astro": "Astro",
   "/feedback": "Calidad IA",
 };
 

@@ -29,10 +29,10 @@ declare -A SERVICE_PORTS=(
     [auth]=8001 [ws]=8002 [chat]=8003 [agent]=8004
     [notification]=8005 [platform]=8006 [ingest]=8007
     [feedback]=8008 [traces]=8009 [search]=8010
-    [astro]=8011 [bigbrother]=8012 [erp]=8013
+    [bigbrother]=8012 [erp]=8013
 )
 
-ALL_GO_SERVICES=(auth ws chat agent search astro traces notification platform ingest feedback bigbrother erp)
+ALL_GO_SERVICES=(auth ws chat agent search traces notification platform ingest feedback bigbrother erp)
 ALL_FRONTEND_SERVICES=(web)
 ALL_SERVICES=("${ALL_GO_SERVICES[@]}" "${ALL_FRONTEND_SERVICES[@]}")
 

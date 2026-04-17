@@ -1,7 +1,7 @@
 # ADR 019: Astro intelligence layer — deterministic, no LLM
 
 **Date:** 2026-04-08
-**Status:** Accepted
+**Status:** Superseded 2026-04-17 — astro service removed entirely from scope. Product pivot: Saldivia RAG for bus company.
 **Plan:** 12
 
 ## Decision

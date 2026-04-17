@@ -94,13 +94,6 @@ http:
       entryPoints: [web]
       middlewares: [dev-cors, dev-tenant]
 
-    # Astro — astrological calculations + SSE query
-    astro:
-      rule: "PathPrefix(`/v1/astro`)"
-      service: astro
-      entryPoints: [web]
-      middlewares: [dev-cors, dev-tenant]
-
     # ERP — legacy Histrix replacement modules
     erp:
       rule: "PathPrefix(`/v1/erp`)"
@@ -156,10 +149,6 @@ http:
       loadBalancer:
         servers:
           - url: "http://host.docker.internal:8007"
-    astro:
-      loadBalancer:
-        servers:
-          - url: "http://host.docker.internal:8011"
     erp:
       loadBalancer:
         servers:

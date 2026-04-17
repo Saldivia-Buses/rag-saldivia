@@ -23,7 +23,7 @@ horizontal-scale patterns — most won't buy you anything here.
 
 ```
 apps/web/          Next.js app (frontend)
-services/          15 Go microservices: agent, astro, auth, bigbrother, chat, erp,
+services/          14 Go microservices: agent, auth, bigbrother, chat, erp,
                    extractor, feedback, healthwatch, ingest, notification,
                    platform, search, traces, ws
 pkg/               32 shared Go packages (jwt, nats, tenant, httperr, middleware, …)
@@ -131,7 +131,7 @@ If the harness is wrong, fix the harness first. Don't work around it.
 The north star for this codebase is this shape — not today, but every decision
 should bend toward it:
 
-- **From 15 services → 3-5.** Group by domain, not by noun. (See `continuous-improvement`.)
+- **From 14 services → 3-5.** Group by domain, not by noun. (See `continuous-improvement`.)
 - **From 32 packages → ~10.** Delete unused ones, inline one-importer packages.
 - **From ~89 k LOC → whatever it takes** to express the same product with fewer lines.
 - **Question multi-tenant** at every opportunity. If it isn't a real product requirement,

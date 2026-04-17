@@ -239,7 +239,6 @@ services:
       TRACES_NATS_PASS: ${TRACES_NATS_PASS}
       PLATFORM_NATS_PASS: ${PLATFORM_NATS_PASS}
       EXTRACTOR_NATS_PASS: ${EXTRACTOR_NATS_PASS}
-      ASTRO_NATS_PASS: ${ASTRO_NATS_PASS}
       BIGBROTHER_NATS_PASS: ${BIGBROTHER_NATS_PASS}
       ERP_NATS_PASS: ${ERP_NATS_PASS}
     volumes:
@@ -430,7 +429,6 @@ services:
       SEARCH_GRPC_URL: search:50051
       INGEST_SERVICE_URL: http://ingest:8007
       NOTIFICATION_SERVICE_URL: http://notification:8005
-      ASTRO_SERVICE_URL: http://astro:8011
       LLM_API_KEY: ${LLM_API_KEY:-}
       MODULES_DIR: /modules
       <<: *jwt-public
@@ -742,61 +740,6 @@ services:
         limits:
           memory: 128M
           cpus: "1.0"
-
-  # ── Astro (Plan 13 — astrological intelligence engine, CGO) ────────
-  astro:
-    <<: *service-defaults
-    image: ghcr.io/saldivia-buses/sda-astro:${ASTRO_VERSION:-local}
-    build:
-      context: ..
-      dockerfile: services/astro/Dockerfile
-      args:
-        <<: *build-args
-        VERSION: ${ASTRO_VERSION:-dev}
-    depends_on:
-      postgres-platform:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      nats:
-        condition: service_healthy
-    environment:
-      ASTRO_PORT: "8011"
-      REDIS_URL: redis:6379
-      NATS_URL: nats://astro:${ASTRO_NATS_PASS:-astro}@nats:4222
-      TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
-      SGLANG_LLM_URL: ${SGLANG_LLM_URL:-http://host.docker.internal:8102}
-      SGLANG_LLM_MODEL: ${SGLANG_LLM_MODEL:-}
-      EPHE_PATH: /ephe
-      LLM_API_KEY: ${LLM_API_KEY:-}
-      <<: *jwt-public
-    secrets:
-      - jwt_public_key
-      - db_tenant_template_url
-    volumes:
-      - ${EPHE_DATA_PATH:-./ephe}:/ephe:ro
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8011/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    networks:
-      - frontend
-      - backend
-      - data
-    labels:
-      - "traefik.enable=true"
-      - "autoheal=true"
-      - "traefik.http.routers.astro.rule=PathPrefix(`/v1/astro`)"
-      - "traefik.http.routers.astro.entrypoints=web,websecure"
-      - "traefik.http.services.astro.loadbalancer.server.port=8011"
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-          cpus: "2.0"
-        reservations:
-          memory: 128M
 
   # ── Extractor (Python OCR + Vision pipeline) ──────────────────────────
 

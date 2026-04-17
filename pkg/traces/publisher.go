@@ -1,5 +1,5 @@
 // Package traces provides a shared trace event publisher for NATS.
-// Used by agent, astro, and any service that publishes execution traces.
+// Used by any service that publishes execution traces.
 package traces
 
 import (

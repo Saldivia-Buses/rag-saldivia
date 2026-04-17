@@ -10,16 +10,15 @@ Extract trace publishing and Redis caching to shared `pkg/` packages so multiple
 
 ## Context
 
-The agent service had a `TracePublisher` for NATS event publishing. The astro service needed the same pattern. Duplicating would create drift.
+The agent service needed a `TracePublisher` for NATS event publishing. Extracted to `pkg/` early so new services could reuse the pattern without duplication.
 
 ## Choice
 
-- `pkg/traces/publisher.go` — shared Publisher with methods: Start, End, Event, Feedback, Notify, Broadcast. Used by agent + astro. Agent wraps it with backward-compatible method names.
-- `pkg/cache/redis.go` — generic Redis JSON cache with graceful degradation (nil client = no-op). JSONCache with Get/Set/Del.
+- `pkg/traces/publisher.go` — shared Publisher with methods: Start, End, Event, Feedback, Notify, Broadcast. Used by agent. Agent wraps it with backward-compatible method names.
+- `pkg/cache/redis.go` — generic Redis JSON cache with graceful degradation (nil client = no-op). JSONCache with Get/Set/Del. *Note: as of 2026-04-17, pkg/cache has zero importers and is slated for deletion in the dead-package cleanup pass.*
 
 ## Consequences
 
 - Any new service gets trace publishing by importing `pkg/traces`
-- Redis caching available to search, agent, and future services
 - Agent's `service/traces.go` is a thin wrapper (backward compat)
-- Both packages have zero external dependencies beyond nats.go
+- pkg/traces has zero external dependencies beyond nats.go

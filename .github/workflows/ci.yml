@@ -43,12 +43,7 @@ jobs:
             [ -f "${svc}cmd/main.go" ] || continue
             SVC_NAME=$(basename "$svc")
             echo "::group::Building ${SVC_NAME}"
-            if [ "$SVC_NAME" = "astro" ]; then
-              CGO_ENABLED=1 CGO_LDFLAGS="-L${GITHUB_WORKSPACE}/services/astro -lm" \
-                go build "./${svc}cmd/"
-            else
-              go build "./${svc}cmd/"
-            fi
+            go build "./${svc}cmd/"
             echo "::endgroup::"
           done
 
@@ -67,12 +62,7 @@ jobs:
             [ -f "${svc}go.mod" ] || continue
             SVC_NAME=$(basename "$svc")
             echo "::group::Vetting ${SVC_NAME}"
-            if [ "$SVC_NAME" = "astro" ]; then
-              CGO_ENABLED=1 CGO_LDFLAGS="-L${GITHUB_WORKSPACE}/services/astro -lm" \
-                go vet "./${svc}..."
-            else
-              go vet "./${svc}..."
-            fi
+            go vet "./${svc}..."
             echo "::endgroup::"
           done
           go vet ./pkg/...
@@ -110,12 +100,7 @@ jobs:
             [ -f "${svc}go.mod" ] || continue
             SVC_NAME=$(basename "$svc")
             echo "::group::Testing ${SVC_NAME}"
-            if [ "$SVC_NAME" = "astro" ]; then
-              CGO_ENABLED=1 CGO_LDFLAGS="-L${GITHUB_WORKSPACE}/services/astro -lm" \
-                go test -race -count=1 "./${svc}..."
-            else
-              go test -race -count=1 "./${svc}..."
-            fi
+            go test -race -count=1 "./${svc}..."
             echo "::endgroup::"
           done
       - name: Test shared packages
@@ -163,13 +148,7 @@ jobs:
         run: |
           for svc in services/*/; do
             [ -f "${svc}go.mod" ] || continue
-            SVC_NAME=$(basename "$svc")
-            if [ "$SVC_NAME" = "astro" ]; then
-              CGO_ENABLED=1 CGO_LDFLAGS="-L${GITHUB_WORKSPACE}/services/astro -lm" \
-                gosec -quiet "./${svc}..."
-            else
-              gosec -quiet "./${svc}..."
-            fi
+            gosec -quiet "./${svc}..."
           done
           gosec -quiet ./pkg/...
       - name: Trivy filesystem scan

@@ -10,7 +10,7 @@ import (
 // KnownServices is the hardcoded service whitelist.
 // NEVER accept service names from user input — prevents PromQL injection ([M3]).
 var KnownServices = []string{
-	"auth", "ws", "chat", "agent", "search", "astro",
+	"auth", "ws", "chat", "agent", "search",
 	"traces", "notification", "platform", "ingest",
 	"feedback", "bigbrother", "erp", "healthwatch",
 }
@@ -27,7 +27,6 @@ var ServicePortMap = map[string]string{
 	"feedback":     "8008",
 	"traces":       "8009",
 	"search":       "8010",
-	"astro":        "8011",
 	"bigbrother":   "8012",
 	"erp":          "8013",
 	"healthwatch":  "8014",

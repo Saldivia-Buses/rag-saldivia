@@ -36,7 +36,6 @@ var KnownServices = []struct {
 	{Name: "feedback", Port: "8008"},
 	{Name: "traces", Port: "8009"},
 	{Name: "search", Port: "8010"},
-	{Name: "astro", Port: "8011"},
 }
 
 // ServiceHealth checks the /health endpoint of all known services.

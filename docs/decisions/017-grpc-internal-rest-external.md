@@ -24,4 +24,4 @@ Services need to communicate. Options: all REST, all gRPC, or hybrid.
 - `pkg/grpc/` provides server helpers
 - Agent Runtime uses gRPC for search (falls back to HTTP if unavailable)
 - WS Hub uses gRPC for chat mutations
-- Module tools (fleet, astro) use HTTP (simpler, compute-dominated, gRPC overhead negligible)
+- Module tools (fleet, erp) use HTTP (simpler, compute-dominated, gRPC overhead negligible)

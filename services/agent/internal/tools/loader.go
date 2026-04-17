@@ -15,7 +15,7 @@ import (
 // map[string]bool suitable for LoadModuleTools.
 //
 // Special values:
-//   - "" (empty) or "all" → enable all known modules (fleet, astro, bigbrother, erp)
+//   - "" (empty) or "all" → enable all known modules (fleet, bigbrother, erp)
 //   - "none"              → disable all modules (empty map)
 //   - "fleet,erp"         → enable only the listed modules
 //
@@ -28,10 +28,9 @@ func ParseEnabledModules(csv string) map[string]bool {
 	csv = strings.TrimSpace(csv)
 	if csv == "" || strings.EqualFold(csv, "all") {
 		return map[string]bool{
-			"fleet":       true,
-			"astro":       true,
-			"bigbrother":  true,
-			"erp":         true,
+			"fleet":      true,
+			"bigbrother": true,
+			"erp":        true,
 		}
 	}
 	if strings.EqualFold(csv, "none") {
@@ -135,7 +134,7 @@ func LoadModuleTools(modulesDir string, enabledModules map[string]bool, serviceU
 func resolveEndpoint(baseURL string, t ManifestTool) (httpMethod, fullURL string) {
 	switch t.Protocol {
 	case "http":
-		// Endpoint format: "POST /v1/astro/natal" or "GET /v1/astro/contacts"
+		// Endpoint format: "POST /v1/fleet/vehicles" or "GET /v1/erp/invoices"
 		if t.Endpoint != "" {
 			parts := strings.SplitN(t.Endpoint, " ", 2)
 			if len(parts) == 2 {

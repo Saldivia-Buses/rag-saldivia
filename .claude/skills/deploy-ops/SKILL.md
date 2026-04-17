@@ -77,7 +77,7 @@ No per-tenant `docker-compose.yml`.
 
 - `SDA_TENANT` — slug, used for log context, branding, storage paths.
 - `SDA_BRAND_*` — logo URL, display name, palette overrides.
-- Feature flags — booleans (`FEATURE_ASTRO=1`, `FEATURE_ERP=0`).
+- Feature flags — booleans (`FEATURE_ERP=1`, `FEATURE_BIGBROTHER=0`).
 - Internal service URLs are **not** env vars anymore — everything listens on
   localhost inside the container (Postgres on Unix socket, NATS/Redis/MinIO on
   `127.0.0.1:<port>`).
@@ -258,12 +258,10 @@ not "nice to have" — they are the reason the harness principle #0 (reduce) exi
 
 - **`:latest` tags** in `deploy/docker-compose.dev.yml` (mailpit, minio, sglang ×2)
   and `deploy/docker-compose.prod.yml` (crowdsec). **Pin a version** on sight.
-- **11 Go Dockerfiles without `HEALTHCHECK`.** Every Go service image must declare
+- **Go Dockerfiles without `HEALTHCHECK`.** Every Go service image must declare
   one hitting `/readyz`. Traefik can mitigate but the image must still be honest.
-- **`debian:bookworm-slim` runtime in `services/astro/Dockerfile`** + `python:3.12-slim`
-  in `services/extractor/Dockerfile`. Go services → **distroless**. The CGO one
-  (astro) can use `gcr.io/distroless/cc-debian12`. Python stays slim-ish but must
-  not `apt install` in runtime stage.
+- **`python:3.12-slim`** in `services/extractor/Dockerfile`. Go services → **distroless**.
+  Python stays slim-ish but must not `apt install` in runtime stage.
 
 ### Makefile (root)
 

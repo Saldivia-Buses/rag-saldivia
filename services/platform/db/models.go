@@ -28,6 +28,32 @@ type AuditLog struct {
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
+type DeadEvent struct {
+	ID              pgtype.UUID        `json:"id"`
+	OriginalSubject string             `json:"original_subject"`
+	OriginalStream  string             `json:"original_stream"`
+	ConsumerName    string             `json:"consumer_name"`
+	TenantID        pgtype.Text        `json:"tenant_id"`
+	EventType       pgtype.Text        `json:"event_type"`
+	DeliveryCount   int32              `json:"delivery_count"`
+	LastError       string             `json:"last_error"`
+	DeadAt          pgtype.Timestamptz `json:"dead_at"`
+	Envelope        []byte             `json:"envelope"`
+	Headers         []byte             `json:"headers"`
+	ReplayCount     int32              `json:"replay_count"`
+	LastReplayedAt  pgtype.Timestamptz `json:"last_replayed_at"`
+	DroppedAt       pgtype.Timestamptz `json:"dropped_at"`
+}
+
+type DeadEventsReplay struct {
+	ID               pgtype.UUID        `json:"id"`
+	DeadEventID      pgtype.UUID        `json:"dead_event_id"`
+	ReplayedAt       pgtype.Timestamptz `json:"replayed_at"`
+	ReplayedByUserID string             `json:"replayed_by_user_id"`
+	NewEventID       pgtype.UUID        `json:"new_event_id"`
+	Status           string             `json:"status"`
+}
+
 type DeployLog struct {
 	ID          string             `json:"id"`
 	Service     string             `json:"service"`

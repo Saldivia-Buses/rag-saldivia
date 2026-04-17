@@ -19,8 +19,7 @@ INSERT INTO modules (id, name, category, tier_min) VALUES
     ('compras',        'Compras',               'vertical', 'starter'),
     ('administracion', 'Administracion',        'vertical', 'starter'),
     ('rrhh',           'Recursos Humanos',      'vertical', 'starter'),
-    ('seguridad',      'Higiene y Seguridad',   'vertical', 'starter'),
-    ('astro',          'Astro',                 'ai_service', 'starter')
+    ('seguridad',      'Higiene y Seguridad',   'vertical', 'starter')
 ON CONFLICT (id) DO NOTHING;
 
 -- Enable every Saldivia ERP module + the existing 'feedback' AI module
@@ -39,7 +38,6 @@ CROSS JOIN (VALUES
     ('administracion'),
     ('rrhh'),
     ('seguridad'),
-    ('astro'),
     ('feedback')
 ) AS m(id)
 WHERE t.slug IN ('saldivia', 'dev')

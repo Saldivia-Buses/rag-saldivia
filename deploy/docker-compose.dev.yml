@@ -347,7 +347,6 @@ services:
       SEARCH_SERVICE_URL: http://host.docker.internal:8010
       INGEST_SERVICE_URL: http://host.docker.internal:8007
       NOTIFICATION_SERVICE_URL: http://host.docker.internal:8005
-      ASTRO_SERVICE_URL: http://host.docker.internal:8011
       LLM_API_KEY: ${LLM_API_KEY:-}
       SEARCH_GRPC_URL: search:50051
     ports:
@@ -434,32 +433,6 @@ services:
       - "traefik.http.routers.ingest-docker.middlewares=dev-cors@file"
       - "traefik.http.routers.ingest-docker.priority=100"
       - "traefik.http.services.ingest-docker.loadbalancer.server.port=8007"
-
-  astro:
-    <<: *service-defaults
-    profiles: [full]
-    build:
-      context: ..
-      dockerfile: services/astro/Dockerfile
-    environment:
-      <<: *env-common
-      ASTRO_PORT: "8011"
-      EPHE_PATH: "/ephe"
-      REDIS_URL: redis:6379
-      SGLANG_LLM_URL: ${SGLANG_LLM_URL:-}
-      SGLANG_LLM_MODEL: ${SGLANG_LLM_MODEL:-}
-      LLM_API_KEY: ${LLM_API_KEY:-}
-    ports:
-      - "8011:8011"
-    volumes:
-      - astro_ephe:/ephe:ro
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.astro-docker.rule=PathPrefix(`/v1/astro`)"
-      - "traefik.http.routers.astro-docker.entrypoints=web"
-      - "traefik.http.routers.astro-docker.middlewares=dev-cors@file"
-      - "traefik.http.routers.astro-docker.priority=100"
-      - "traefik.http.services.astro-docker.loadbalancer.server.port=8011"
 
   search:
     <<: *service-defaults
@@ -601,4 +574,3 @@ volumes:
   nats_data:
   minio_data:
   model_cache:
-  astro_ephe:
