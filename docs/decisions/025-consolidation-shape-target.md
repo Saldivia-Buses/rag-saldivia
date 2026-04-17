@@ -169,6 +169,43 @@ pattern, in this order, each its own session / PR:
 5. **`erp`** — only if/when ERP shrinks. 38 k LOC folded in one move is
    too big; defer or split `erp` internally first.
 
+### Post-fusion wiring session (2026-04-17)
+
+With the four planned fusions complete, the `app` binary landed under
+s6 supervision:
+
+- `deploy/s6-overlay/s6-rc.d/app/` — longrun (`s6-setuidgid sda +
+  /opt/sda/bin/app`), depends on `db-init`, `nats`, `redis`.
+- `deploy/s6-overlay/s6-rc.d/db-init/` — oneshot that polls
+  `pg_isready` on the Unix socket, creates `sda_platform` +
+  `sda_tenant_dev` if missing, and runs `migrate.sh`. Gates the app
+  longrun so the monolith only starts once schema is current.
+- `deploy/Dockerfile.all-in-one` — COPY `db/` to `/db` and the canonical
+  `migrate.sh` into the s6 scripts dir; default ENV values for the DB
+  URLs (trust-auth, Unix socket, per ADR 023), `NATS_URL`, `REDIS_URL`,
+  `APP_PORT=8020`.
+- `deploy/frontdoor/main.go` — `/v1/<svc>` falls back to `app:8020`
+  when not in the map (only `erp` remains explicit), `/ws` routes to
+  app (realtime fusion moved ws into the monolith), `/readyz` probes
+  app `/health` so the container HEALTHCHECK fails when the monolith
+  is dead even if frontdoor is still alive. `/healthz` stays liveness
+  only.
+
+The frontdoor binary does NOT dissolve yet — that's item 5 (ERP fusion)
+and lands in its own session (~2–3 commits: absorb ERP, take over `:80`
+directly in `cmd/sda/main.go`, delete `deploy/frontdoor/`). Until then
+`:80` is owned by frontdoor, with the routing posture described above.
+
+The remaining followups called out in the fusion notes split cleanly:
+
+- NATS per-service users, traefik dynamic configs, alertmanager webhook
+  — all consolidated in earlier commits on 2026-04-17.
+- Grafana dashboards still reference the 13 old service names in 40+
+  label selectors — mechanical but needs Grafana running locally to
+  verify panels render. Separate session.
+- `deploy/.env.example` no longer references the absorbed services
+  (already pruned to app + erp + extractor).
+
 Each fusion session:
 
 - Create `services/app/internal/<module>/` by moving code from the N

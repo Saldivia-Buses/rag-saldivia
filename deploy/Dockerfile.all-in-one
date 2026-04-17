@@ -222,10 +222,10 @@ COPY --from=web-builder --chown=sda:sda /web/public/           /opt/sda/web/publ
 VOLUME ["/data"]
 EXPOSE 80
 
-# start-period=30s covers Postgres cold-start (3–5 s) + NATS/Redis/MinIO
-# (<1 s each) + first-boot initdb on an empty /data volume (~20 s). After
-# that, /readyz is sub-millisecond. Only checks the frontdoor for now —
-# future work: extend /readyz to probe the backends too.
+# start-period=30s covers Postgres cold-start (3–5 s), NATS/Redis/MinIO
+# (<1 s each), first-boot initdb on an empty /data volume (~20 s), and
+# the app binary's OTel + pool-ping warm-up (~5 s). /readyz reports the
+# aggregate: frontdoor alive AND app /health green.
 HEALTHCHECK --interval=10s --timeout=3s --start-period=30s --retries=3 \
     CMD curl -fsS http://127.0.0.1/readyz || exit 1
 
