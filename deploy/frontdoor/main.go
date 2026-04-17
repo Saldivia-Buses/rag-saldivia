@@ -2,19 +2,17 @@
 //
 // It owns the public port of the all-in-one tenant image (ADR 023 + 024):
 //
-//	/readyz, /healthz    → answered in-process
-//	/v1/<service>/...    → reverse-proxied to that Go service's localhost port
-//	/*                   → reverse-proxied to the Next.js standalone on :3000
-//
-// /ws used to live here too; once the realtime fusion absorbed ws into the
-// app monolith there is no standalone ws service to proxy to. Clients hit
-// the monolith directly for /ws routing.
+//	/readyz              → in-process, probes app /health on :8020
+//	/healthz             → in-process liveness
+//	/v1/erp/...          → erp standalone on :8013 (until the ERP fusion)
+//	/v1/<anything-else>  → app monolith on :8020
+//	/ws                  → app monolith on :8020 (realtime fusion absorbed ws)
+//	/*                   → Next.js standalone on :3000
 //
 // One small Go binary replaces what would otherwise be an in-container
-// Traefik (explicitly rejected in ADR 024 alt 5). When the service
-// consolidation campaign (ADR 021) lands and the 13 services collapse into
-// a single monolith, this binary folds into that monolith's chi router and
-// goes away entirely.
+// Traefik (explicitly rejected in ADR 024 alt 5). When the ERP fusion
+// lands and erp folds into the monolith, this binary folds into app's
+// chi router and goes away entirely.
 package main
 
 import (
@@ -32,30 +30,38 @@ import (
 	"time"
 )
 
-// upstreamAddrs is the service name → localhost URL map. Ports match each
-// service's `server.WithPort(...)` default in services/<svc>/cmd/main.go.
-// When the consolidation campaign absorbs these into a monolith, this map
-// is the one place that has to change.
+// upstreamAddrs is the service name → localhost URL map for the minority
+// of /v1/<svc>/... prefixes that still belong to standalone services.
+// Anything not listed here falls through to appURL.
 var upstreamAddrs = map[string]string{
 	"erp": "http://127.0.0.1:8013",
 }
 
-const nextjsURL = "http://127.0.0.1:3000"
+const (
+	appURL    = "http://127.0.0.1:8020"
+	nextjsURL = "http://127.0.0.1:3000"
+)
+
+// appHealthURL is what /readyz probes to prove the monolith is serving.
+// Must point at an endpoint that doesn't need auth — /health is wired
+// unprotected by services/app/cmd/main.go.
+const appHealthURL = appURL + "/health"
 
 // router holds pre-built reverse proxies so the hot path does no allocation.
 type router struct {
 	logger    *slog.Logger
 	upstreams map[string]*httputil.ReverseProxy
+	app       *httputil.ReverseProxy
 	nextjs    *httputil.ReverseProxy
 }
 
 func newRouter(logger *slog.Logger) (*router, error) {
-	return newRouterWithAddrs(logger, upstreamAddrs, nextjsURL)
+	return newRouterWithAddrs(logger, upstreamAddrs, appURL, nextjsURL)
 }
 
-// newRouterWithAddrs lets tests inject a fake upstream map + nextjs URL
+// newRouterWithAddrs lets tests inject fake upstream + app + nextjs URLs
 // without touching the production defaults.
-func newRouterWithAddrs(logger *slog.Logger, addrs map[string]string, nextjs string) (*router, error) {
+func newRouterWithAddrs(logger *slog.Logger, addrs map[string]string, app, nextjs string) (*router, error) {
 	r := &router{
 		logger:    logger,
 		upstreams: make(map[string]*httputil.ReverseProxy, len(addrs)),
@@ -67,6 +73,11 @@ func newRouterWithAddrs(logger *slog.Logger, addrs map[string]string, nextjs str
 		}
 		r.upstreams[name] = rp
 	}
+	ap, err := buildProxy(logger, app)
+	if err != nil {
+		return nil, err
+	}
+	r.app = ap
 	nx, err := buildProxy(logger, nextjs)
 	if err != nil {
 		return nil, err
@@ -111,20 +122,63 @@ func (r *router) v1(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "missing service in /v1/<service>/...", http.StatusNotFound)
 		return
 	}
-	rp, ok := r.upstreams[svc]
-	if !ok {
-		r.logger.Warn("unknown upstream", "service", svc, "path", req.URL.Path)
-		http.Error(w, "unknown service: "+svc, http.StatusNotFound)
+	if rp, ok := r.upstreams[svc]; ok {
+		rp.ServeHTTP(w, req)
 		return
 	}
-	rp.ServeHTTP(w, req)
+	// Default: the app monolith owns everything else under /v1.
+	r.app.ServeHTTP(w, req)
+}
+
+func (r *router) ws(w http.ResponseWriter, req *http.Request) {
+	r.app.ServeHTTP(w, req)
 }
 
 func (r *router) next(w http.ResponseWriter, req *http.Request) {
 	r.nextjs.ServeHTTP(w, req)
 }
 
-func ready(w http.ResponseWriter, _ *http.Request) {
+// probeApp returns nil if app's /health replies 200 within the timeout.
+// Called from /readyz on every request — keep it cheap.
+var probeApp = func(ctx context.Context) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, appHealthURL, nil)
+	if err != nil {
+		return err
+	}
+	client := http.Client{Timeout: 2 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return errors.New(resp.Status)
+	}
+	return nil
+}
+
+// readyz returns 503 unless the app monolith is also reporting /health.
+// frontdoor alive + app alive is the contract the container HEALTHCHECK
+// relies on; degrading one of them should mark the container unhealthy.
+func readyz(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	status := "ok"
+	code := http.StatusOK
+	if err := probeApp(req.Context()); err != nil {
+		status = "app-unhealthy"
+		code = http.StatusServiceUnavailable
+	}
+	w.WriteHeader(code)
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"status":   status,
+		"tenant":   os.Getenv("SDA_TENANT"),
+		"hostname": hostname(),
+	})
+}
+
+// healthz is liveness only — 200 as long as the frontdoor process is
+// accepting requests. Does NOT probe app (that's readyz's job).
+func healthz(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(map[string]any{
@@ -144,8 +198,9 @@ func hostname() string {
 
 func newMux(r *router) *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /readyz", ready)
-	mux.HandleFunc("GET /healthz", ready)
+	mux.HandleFunc("GET /readyz", readyz)
+	mux.HandleFunc("GET /healthz", healthz)
+	mux.HandleFunc("/ws", r.ws)
 	mux.HandleFunc("/v1/", r.v1)
 	mux.HandleFunc("/", r.next)
 	return mux
