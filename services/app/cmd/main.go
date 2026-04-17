@@ -16,6 +16,7 @@ package main
 import (
 	"context"
 	"crypto/ed25519"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"os"
@@ -32,8 +33,10 @@ import (
 	"github.com/Camionerou/rag-saldivia/pkg/config"
 	"github.com/Camionerou/rag-saldivia/pkg/crypto"
 	"github.com/Camionerou/rag-saldivia/pkg/database"
+	"github.com/Camionerou/rag-saldivia/pkg/guardrails"
 	"github.com/Camionerou/rag-saldivia/pkg/health"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	agentllm "github.com/Camionerou/rag-saldivia/pkg/llm"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	"github.com/Camionerou/rag-saldivia/pkg/outbox"
@@ -59,6 +62,16 @@ import (
 
 	trhandler "github.com/Camionerou/rag-saldivia/services/app/internal/ops/traces/handler"
 	trservice "github.com/Camionerou/rag-saldivia/services/app/internal/ops/traces/service"
+
+	agenthandler "github.com/Camionerou/rag-saldivia/services/app/internal/rag/agent/handler"
+	agentservice "github.com/Camionerou/rag-saldivia/services/app/internal/rag/agent/service"
+	agenttools "github.com/Camionerou/rag-saldivia/services/app/internal/rag/agent/tools"
+
+	ingesthandler "github.com/Camionerou/rag-saldivia/services/app/internal/rag/ingest/handler"
+	ingestservice "github.com/Camionerou/rag-saldivia/services/app/internal/rag/ingest/service"
+
+	searchhandler "github.com/Camionerou/rag-saldivia/services/app/internal/rag/search/handler"
+	searchservice "github.com/Camionerou/rag-saldivia/services/app/internal/rag/search/service"
 )
 
 func main() {
@@ -123,6 +136,10 @@ func main() {
 	wireBigBrother(app, r, hc, tenantPool, nc, rdb, publicKey, blacklist)
 	wireHealthwatch(ctx, app, r, platformPool, nc, publicKey, blacklist)
 	wireTraces(ctx, app, r, platformPool, nc, publicKey, blacklist)
+
+	ingestSvc := wireIngest(ctx, app, r, tenantPool, nc, publicKey, blacklist, tenantSlug)
+	searchSvc := wireSearch(r, tenantPool, publicKey, blacklist)
+	wireAgent(r, nc, publicKey, blacklist, searchSvc, ingestSvc)
 
 	app.Run()
 }
@@ -440,5 +457,162 @@ func wireFeedback(
 			FailOpen:  false, // admin routes: security > availability
 		}))
 		r.Mount("/v1/platform/feedback", platformFbH.Routes())
+	})
+}
+
+// wireIngest mounts /v1/ingest (FailOpen=false — uploads are state-changing)
+// and starts the NATS-driven ingest worker. The outbox drainer is shared with
+// wireAuth's (one per tenant pool, single-tenant silo).
+func wireIngest(
+	ctx context.Context, app *server.App, r chi.Router,
+	tenantPool *pgxpool.Pool, nc *nats.Conn,
+	publicKey ed25519.PublicKey, blacklist *security.TokenBlacklist,
+	tenantSlug string,
+) *ingestservice.Ingest {
+	cfg := ingestservice.Config{
+		BlueprintURL: config.Env("RAG_SERVER_URL", "http://localhost:8081"),
+		StagingDir:   config.Env("INGEST_STAGING_DIR", "/tmp/ingest-staging"),
+		Timeout:      120 * time.Second,
+	}
+
+	svc := ingestservice.New(tenantPool, nc, cfg)
+
+	worker := ingestservice.NewWorker(nc, tenantPool, tenantSlug, svc, cfg)
+	if err := worker.Start(ctx); err != nil {
+		slog.Error("failed to start ingest worker", "error", err)
+		os.Exit(1)
+	}
+	app.OnShutdown(worker.Stop)
+
+	h := ingesthandler.NewIngest(svc)
+	r.Group(func(r chi.Router) {
+		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{
+			Blacklist: blacklist,
+			FailOpen:  false,
+		}))
+		r.Mount("/v1/ingest", h.Routes())
+	})
+	return svc
+}
+
+// wireSearch mounts /v1/search (FailOpen=true — read-only, availability wins)
+// with a per-user rate limit. No gRPC server any more — search's only
+// consumer (agent) now calls SearchDocuments in-process.
+func wireSearch(
+	r chi.Router,
+	tenantPool *pgxpool.Pool,
+	publicKey ed25519.PublicKey, blacklist *security.TokenBlacklist,
+) *searchservice.Search {
+	llmEndpoint := config.Env("SGLANG_LLM_URL", "http://localhost:8102")
+	llmModel := config.Env("SGLANG_LLM_MODEL", "")
+
+	svc := searchservice.New(tenantPool, llmEndpoint, llmModel)
+	auditWriter := audit.NewWriter(tenantPool)
+	h := searchhandler.New(svc, auditWriter)
+
+	searchRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 30, Window: time.Minute, KeyFunc: sdamw.ByUser})
+	r.Group(func(r chi.Router) {
+		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist, FailOpen: true}))
+		r.Use(searchRL)
+		r.Mount("/v1/search", h.Routes())
+	})
+	return svc
+}
+
+// searchBackend adapts *searchservice.Search to agenttools.SearchBackend.
+// The interface returns `any` so tools/ doesn't have to import rag/search.
+type searchBackend struct{ svc *searchservice.Search }
+
+func (b searchBackend) SearchDocuments(ctx context.Context, query, collectionID string, maxNodes int) (any, error) {
+	return b.svc.SearchDocuments(ctx, query, collectionID, maxNodes)
+}
+
+// ingestBackend adapts *ingestservice.Ingest to agenttools.IngestBackend.
+type ingestBackend struct{ svc *ingestservice.Ingest }
+
+func (b ingestBackend) ListJobs(ctx context.Context, userID string, limit int) (any, error) {
+	return b.svc.ListJobs(ctx, userID, limit)
+}
+
+// wireAgent mounts /v1/agent with FailOpen=false + per-user rate limit.
+// Core tools (search_documents, check_job_status) dispatch in-process via
+// the SearchBackend / IngestBackend wired here; module tools and cross-module
+// tools (notification, bigbrother, erp) still ride HTTP.
+func wireAgent(
+	r chi.Router, nc *nats.Conn,
+	publicKey ed25519.PublicKey, blacklist *security.TokenBlacklist,
+	searchSvc *searchservice.Search, ingestSvc *ingestservice.Ingest,
+) {
+	tracePublisher := agentservice.NewTracePublisher(nc)
+
+	llmEndpoint := config.Env("SGLANG_LLM_URL", "http://localhost:8102")
+	llmModel := config.Env("SGLANG_LLM_MODEL", "")
+	llmAPIKey := config.Env("LLM_API_KEY", "")
+	adapter := agentllm.NewClient(llmEndpoint, llmModel, llmAPIKey)
+
+	notificationURL := config.Env("NOTIFICATION_SERVICE_URL", "http://localhost:8005")
+	bigbrotherURL := config.Env("BIGBROTHER_SERVICE_URL", "http://localhost:8020")
+	erpURL := config.Env("ERP_SERVICE_URL", "http://localhost:8013")
+
+	// Core tools. Endpoint is a placeholder for the inlined ones — the
+	// executor dispatches to SearchBackend / IngestBackend instead.
+	toolDefs := []agenttools.Definition{
+		{Name: "search_documents", Service: "search", Type: "read",
+			Description: "Search through document trees to find relevant sections. Returns text with citations.",
+			Parameters:  json.RawMessage(`{"type":"object","required":["query"],"properties":{"query":{"type":"string","description":"the search query"},"collection_id":{"type":"string","description":"optional collection filter"},"max_nodes":{"type":"integer","description":"max tree nodes to select"}}}`)},
+		{Name: "create_ingest_job", Service: "ingest", Type: "action", RequiresConfirmation: true,
+			Description: "Upload and process a new document into the knowledge base.",
+			Parameters:  json.RawMessage(`{"type":"object","required":["file_name","collection"],"properties":{"file_name":{"type":"string","description":"name of the file"},"collection":{"type":"string","description":"target collection"}}}`)},
+		{Name: "check_job_status", Service: "ingest", Type: "read",
+			Description: "List document ingestion jobs and their statuses.",
+			Parameters:  json.RawMessage(`{"type":"object","properties":{"job_id":{"type":"string","description":"optional job ID filter"}}}`)},
+	}
+
+	modulesDir := config.Env("MODULES_DIR", "modules")
+	serviceURLs := map[string]string{
+		"notification": notificationURL,
+		"bigbrother":   bigbrotherURL,
+		"erp":          erpURL,
+	}
+	enabledModules := agenttools.ParseEnabledModules(config.Env("ENABLED_MODULES", ""))
+	slog.Info("enabled module set", "modules", enabledModules)
+	if moduleDefs, err := agenttools.LoadModuleTools(modulesDir, enabledModules, serviceURLs); err != nil {
+		slog.Warn("failed to load module tools", "error", err)
+	} else if len(moduleDefs) > 0 {
+		toolDefs = append(toolDefs, moduleDefs...)
+		slog.Info("loaded module tools", "count", len(moduleDefs))
+	}
+
+	executor := agenttools.NewExecutor(toolDefs)
+	executor.SetSearchBackend(searchBackend{svc: searchSvc})
+	executor.SetIngestBackend(ingestBackend{svc: ingestSvc})
+
+	schemas := make([]agentllm.ToolSchema, len(toolDefs))
+	for i, d := range toolDefs {
+		schemas[i] = agentllm.ToolSchema{
+			Type: "function",
+			Function: agentllm.ToolDefinition{
+				Name:        d.Name,
+				Description: d.Description,
+				Parameters:  d.Parameters,
+			},
+		}
+	}
+
+	svc := agentservice.New(adapter, executor, schemas, tracePublisher, agentservice.Config{
+		SystemPrompt:        config.Env("SYSTEM_PROMPT", "Sos el asistente inteligente. Responde en espanol. Usa las tools disponibles para buscar informacion. Siempre cita la fuente."),
+		MaxToolCallsPerTurn: 25,
+		MaxLoopIterations:   10,
+		Temperature:         0.2,
+		MaxTokens:           8192,
+		GuardrailsConfig:    guardrails.DefaultInputConfig(10000),
+	})
+
+	h := agenthandler.New(svc)
+	aiRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 30, Window: time.Minute, KeyFunc: sdamw.ByUser})
+	r.Group(func(r chi.Router) {
+		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist, FailOpen: false}))
+		r.Use(aiRL)
+		r.Mount("/v1/agent", h.Routes())
 	})
 }
