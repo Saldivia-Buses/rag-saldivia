@@ -75,6 +75,25 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     ls -la /out
 
 # ──────────────────────────────────────────────────────────────────────────
+# Stage 1c: Next.js standalone build (bun install + next build).
+# ──────────────────────────────────────────────────────────────────────────
+FROM oven/bun:1-alpine AS web-builder
+WORKDIR /web
+
+COPY apps/web/package.json apps/web/bun.lock* ./
+RUN bun install --frozen-lockfile 2>/dev/null || bun install
+
+COPY apps/web/ ./
+# Tenant-specific values (slug, API URL) are resolved at request time via
+# SSR env vars (ADR 024); build-time NEXT_PUBLIC_* are defaults only.
+ARG NEXT_PUBLIC_API_URL=
+ARG NEXT_PUBLIC_TENANT_SLUG=dev
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \
+    NEXT_PUBLIC_TENANT_SLUG=$NEXT_PUBLIC_TENANT_SLUG \
+    NEXT_TELEMETRY_DISABLED=1
+RUN bun run build
+
+# ──────────────────────────────────────────────────────────────────────────
 # Stage 2: runtime — debian:12-slim + s6-overlay + Postgres 16.
 # ──────────────────────────────────────────────────────────────────────────
 FROM debian:12-slim AS runtime
@@ -148,6 +167,14 @@ RUN set -eux; \
     chmod 0755 /usr/local/bin/minio; \
     /usr/local/bin/minio --version
 
+# Node.js 22 for the Next.js standalone server.
+RUN set -eux; \
+    curl -fsSL https://deb.nodesource.com/setup_22.x | bash -; \
+    apt-get install -y --no-install-recommends nodejs; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*; \
+    node --version
+
 # s6-overlay v3 — two-tar install (noarch + arch-specific).
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp/s6-noarch.tar.xz
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz /tmp/s6-bin.tar.xz
@@ -169,6 +196,12 @@ COPY --from=go-frontdoor-builder /out/frontdoor /usr/local/bin/frontdoor
 # "chat", etc.) don't collide with anything on the global PATH. Their s6
 # wiring lands in a later commit; for now the binaries just sit in the image.
 COPY --from=go-services-builder /out/ /opt/sda/bin/
+
+# Next.js standalone bundle. `server.js` lands at /opt/sda/web/server.js;
+# the Next runtime also needs .next/static and public/ alongside it.
+COPY --from=web-builder --chown=sda:sda /web/.next/standalone/ /opt/sda/web/
+COPY --from=web-builder --chown=sda:sda /web/.next/static/     /opt/sda/web/.next/static/
+COPY --from=web-builder --chown=sda:sda /web/public/           /opt/sda/web/public/
 
 # Volume + ports.
 VOLUME ["/data"]
