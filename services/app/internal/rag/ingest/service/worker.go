@@ -19,7 +19,7 @@ import (
 	ingestevt "github.com/Camionerou/rag-saldivia/pkg/events/gen/ingest"
 	"github.com/Camionerou/rag-saldivia/pkg/outbox"
 	"github.com/Camionerou/rag-saldivia/pkg/spine"
-	"github.com/Camionerou/rag-saldivia/services/ingest/internal/repository"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/rag/ingest/repository"
 )
 
 // JobStatusUpdater is the narrow dependency the Worker needs from Ingest.

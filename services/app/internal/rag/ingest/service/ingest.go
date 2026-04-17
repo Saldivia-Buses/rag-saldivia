@@ -23,7 +23,7 @@ import (
 	"github.com/nats-io/nats.go"
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
-	"github.com/Camionerou/rag-saldivia/services/ingest/internal/repository"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/rag/ingest/repository"
 )
 
 var ErrJobNotFound = errors.New("job not found")

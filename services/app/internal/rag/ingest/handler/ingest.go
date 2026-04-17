@@ -15,8 +15,8 @@ import (
 
 	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
-	"github.com/Camionerou/rag-saldivia/services/ingest/internal/repository"
-	"github.com/Camionerou/rag-saldivia/services/ingest/internal/service"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/rag/ingest/repository"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/rag/ingest/service"
 )
 
 // MaxUploadSize is the maximum document upload size (100MB).

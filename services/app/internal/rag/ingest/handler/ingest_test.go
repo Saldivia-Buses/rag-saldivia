@@ -16,8 +16,8 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
-	"github.com/Camionerou/rag-saldivia/services/ingest/internal/repository"
-	"github.com/Camionerou/rag-saldivia/services/ingest/internal/service"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/rag/ingest/repository"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/rag/ingest/service"
 )
 
 // --- mock ---

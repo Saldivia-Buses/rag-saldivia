@@ -18,7 +18,7 @@ import (
 	"github.com/nats-io/nats.go"
 
 	"github.com/Camionerou/rag-saldivia/pkg/storage"
-	"github.com/Camionerou/rag-saldivia/services/ingest/internal/repository"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/rag/ingest/repository"
 )
 
 var safeSubjectToken = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)

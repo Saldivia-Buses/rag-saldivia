@@ -10,8 +10,8 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 
-	"github.com/Camionerou/rag-saldivia/services/ingest/internal/repository"
-	"github.com/Camionerou/rag-saldivia/services/ingest/internal/tree"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/rag/ingest/repository"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/rag/ingest/tree"
 )
 
 // ExtractorConsumer subscribes to extractor results and stores pages + generates trees.
