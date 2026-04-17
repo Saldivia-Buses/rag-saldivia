@@ -52,7 +52,6 @@ WORKDIR /src
 ENV CGO_ENABLED=0 GOOS=linux GOFLAGS=-trimpath
 
 COPY go.work go.work.sum ./
-COPY gen/     ./gen/
 COPY pkg/     ./pkg/
 COPY services/ ./services/
 COPY tools/    ./tools/
