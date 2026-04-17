@@ -112,3 +112,5 @@ _archive/
 apps/web/.firecrawl/
 config/.env.saldivia
 config/.env.*
+firecrawl/
+.firecrawl/

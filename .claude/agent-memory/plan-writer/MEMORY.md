@@ -1,8 +1,0 @@
-- [Plan 04 context](project_plan04_hardening.md) — hardening plan written 2026-04-03, 8 phases, security-first
-- [Plan 02 rewrite](project_plan02_rewrite.md) — Full Wiring rewritten 2026-04-03, 11 phases reduced to 6, 70% already done
-- [Plan 05 redesign](project_plan05_redesign.md) — frontend redesign written 2026-04-03, 8 phases, dark-first Linear-inspired, visual only
-- [Plan 07 consolidation](project_plan07_consolidation.md) — consolidation plan reviewed 2026-04-05, conditional approval, 3 blockers
-- [Plan 09 gRPC](project_plan09_grpc.md) — gRPC inter-service plan written 2026-04-05, 8 phases, pragmatic scope
-- [Plan 10 polish](project_plan10_polish.md) — backend polish plan written 2026-04-05, 9 phases, last backend round before frontend
-- [Plan 16 polish](project_plan16_polish.md) — v2.0.5 backend polish, 25 audit findings, 6 phases, zero features, written 2026-04-09
-- [Plan 24 test reinforcement](project_plan24_test_reinforcement.md) — test reinforcement written 2026-04-14, 10 services, unit + integration, one big PR

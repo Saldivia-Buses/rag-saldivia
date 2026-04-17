@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ssh sistemas@srv-ia-01 \"tail -f /tmp/sda-dryrun-v2.log\")",
+      "Bash(ssh sistemas@srv-ia-01 \"tail -f /tmp/dry-run-v3.log\")",
+      "Bash(ssh sistemas@srv-ia-01 \"tail -f /tmp/dry-run-v4.log\")",
+      "Skill(update-config)",
+      "Bash(ssh sistemas@srv-ia-01 \"tail -f /tmp/migrate-real.log\")",
+      "Bash(ssh sistemas@srv-ia-01 \"tail -f /tmp/migrate-resume.log\")",
+      "Bash(rm -rf .claude/agents .claude/hooks .claude/agent-memory .claude/commands .claude/review-prompts .claude/skills/superpowers .claude/skills/architecture-diagram)",
+      "Bash(rm -f .claude/CLAUDE.md .claude/scheduled_tasks.lock)"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "repowise",
+    "repomix",
+    "CodeGraphContext",
+    "github",
+    "firecrawl",
+    "playwright"
+  ]
+}

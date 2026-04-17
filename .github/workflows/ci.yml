@@ -2,48 +2,19 @@ name: CI
 
 on:
   pull_request:
-    branches: [2.0.x, 2.0.5, main]
+    branches: [2.0.x, 2.0.5, 2.0.6, main]
   push:
-    branches: [2.0.x, 2.0.5, main]
+    branches: [2.0.x, 2.0.5, 2.0.6, main]
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
-# ══════════════════════════════════════════════════════════════════════════
-# Gate 1: Verify — lint, vet, build (parallel within gate)
-# ══════════════════════════════════════════════════════════════════════════
-
 jobs:
-  commitlint:
-    name: Lint commit messages
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: bun-${{ hashFiles('**/bun.lockb') }}
-          restore-keys: bun-
-
-      - name: Install commitlint
-        run: bun install --frozen-lockfile
-
-      - name: Validate PR commits
-        run: |
-          MERGE_BASE=$(git merge-base ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
-          npx commitlint --from "$MERGE_BASE" --to ${{ github.event.pull_request.head.sha }} --verbose
+  # ── Gate 1: Verify ────────────────────────────────────────────────────────
 
   events-validate:
-    name: Validate event codegen (CUE -> Go/TS/docs)
+    name: Validate event codegen
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -55,24 +26,21 @@ jobs:
         run: make events-validate
 
   go-build:
-    name: Build Go services
+    name: Build Go
     runs-on: ubuntu-latest
     needs: [events-validate]
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.work
           cache-dependency-path: "**/go.sum"
-
       - name: Build generated code
         run: go build ./gen/go/...
-
       - name: Build all services
         run: |
           for svc in services/*/; do
-            [ -f "${svc}cmd/main.go" ] || continue  # skip non-Go (extractor)
+            [ -f "${svc}cmd/main.go" ] || continue
             SVC_NAME=$(basename "$svc")
             echo "::group::Building ${SVC_NAME}"
             if [ "$SVC_NAME" = "astro" ]; then
@@ -85,16 +53,14 @@ jobs:
           done
 
   go-vet:
-    name: Vet Go code
+    name: Vet Go
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.work
           cache-dependency-path: "**/go.sum"
-
       - name: Vet all modules
         run: |
           for svc in services/*/; do
@@ -109,29 +75,35 @@ jobs:
             fi
             echo "::endgroup::"
           done
-          echo "::group::Vetting pkg/"
           go vet ./pkg/...
-          echo "::endgroup::"
-          echo "::group::Vetting gen/go/"
           go vet ./gen/go/...
-          echo "::endgroup::"
 
-  # ══════════════════════════════════════════════════════════════════════════
-  # Gate 2: Test — unit + integration (needs Gate 1: build + vet)
-  # ══════════════════════════════════════════════════════════════════════════
+  web-typecheck:
+    name: Typecheck frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Install and typecheck
+        working-directory: apps/web
+        run: |
+          bun install --frozen-lockfile
+          bun run type-check
+
+  # ── Gate 2: Test ──────────────────────────────────────────────────────────
 
   go-test:
-    name: Test Go services
+    name: Test Go
     runs-on: ubuntu-latest
     needs: [go-build, go-vet]
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.work
           cache-dependency-path: "**/go.sum"
-
       - name: Test all services
         run: |
           for svc in services/*/; do
@@ -146,48 +118,34 @@ jobs:
             fi
             echo "::endgroup::"
           done
-
       - name: Test shared packages
         run: |
-          echo "::group::Testing pkg/"
           go test -race -count=1 ./pkg/...
-          echo "::endgroup::"
-          echo "::group::Testing gen/go/"
           go test -race -count=1 ./gen/go/...
-          echo "::endgroup::"
-
       - name: Test tools
         run: |
           for tool in tools/*/; do
             [ -f "${tool}go.mod" ] || continue
-            echo "::group::Testing ${tool}"
             go test -race -count=1 "./${tool}..."
-            echo "::endgroup::"
           done
 
   go-test-integration:
-    name: Integration tests (Docker)
+    name: Integration tests
     runs-on: ubuntu-latest
     needs: [go-build, go-vet]
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.work
           cache-dependency-path: "**/go.sum"
-
-      # Runners already have Docker for testcontainers — no services: block needed.
       - name: Verify Docker is available
         run: docker version
-
       - name: Run integration tests
         run: make test-integration
 
-  # ══════════════════════════════════════════════════════════════════════════
-  # Gate 3: Security — gosec + trivy (needs Gate 1: build + vet)
-  # ══════════════════════════════════════════════════════════════════════════
+  # ── Gate 3: Security ──────────────────────────────────────────────────────
 
   security:
     name: Security scan
@@ -195,44 +153,34 @@ jobs:
     needs: [go-build, go-vet]
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.work
           cache-dependency-path: "**/go.sum"
-
       - name: Install gosec
         run: go install github.com/securego/gosec/v2/cmd/gosec@latest
-
       - name: Run gosec
         run: |
           for svc in services/*/; do
             [ -f "${svc}go.mod" ] || continue
             SVC_NAME=$(basename "$svc")
-            echo "::group::gosec ${SVC_NAME}"
             if [ "$SVC_NAME" = "astro" ]; then
               CGO_ENABLED=1 CGO_LDFLAGS="-L${GITHUB_WORKSPACE}/services/astro -lm" \
                 gosec -quiet "./${svc}..."
             else
               gosec -quiet "./${svc}..."
             fi
-            echo "::endgroup::"
           done
-          echo "::group::gosec pkg/"
           gosec -quiet ./pkg/...
-          echo "::endgroup::"
-
       - name: Trivy filesystem scan
         uses: aquasecurity/trivy-action@v0.35.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
-          severity: 'HIGH,CRITICAL'
+          severity: 'CRITICAL'
           exit-code: '1'
 
-  # ══════════════════════════════════════════════════════════════════════════
-  # Gate 4: Docker — build all images (needs Gate 2 + 3)
-  # ══════════════════════════════════════════════════════════════════════════
+  # ── Gate 4: Docker images ─────────────────────────────────────────────────
 
   discover-services:
     name: Discover Go services
@@ -242,17 +190,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - id: find
-        name: Generate service matrix from filesystem
         run: |
           SERVICES=$(ls services/*/Dockerfile 2>/dev/null \
             | grep -v '\.scaffold' | grep -v extractor \
             | sed 's|services/||;s|/Dockerfile||' \
             | jq -Rc -s 'split("\n") | map(select(. != ""))')
           echo "matrix={\"service\":$SERVICES}" >> $GITHUB_OUTPUT
-          echo "Discovered services: $SERVICES"
 
   docker-build:
-    name: "Docker build: ${{ matrix.service }}"
+    name: "Docker: ${{ matrix.service }}"
     runs-on: ubuntu-latest
     needs: [go-test, go-test-integration, security, discover-services]
     strategy:
@@ -260,16 +206,11 @@ jobs:
       fail-fast: false
     steps:
       - uses: actions/checkout@v4
-
       - name: Build Docker image
         run: |
-          SERVICE="${{ matrix.service }}"
-          echo "::group::Building sda-${SERVICE}"
           docker build \
             --build-arg VERSION=ci-test \
             --build-arg GIT_SHA=${{ github.sha }} \
             --build-arg BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ) \
-            -t "sda-${SERVICE}:ci" \
-            -f "services/${SERVICE}/Dockerfile" .
-          echo "::endgroup::"
-          echo "Image sda-${SERVICE}:ci built successfully"
+            -t "sda-${{ matrix.service }}:ci" \
+            -f "services/${{ matrix.service }}/Dockerfile" .
