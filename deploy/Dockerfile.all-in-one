@@ -46,6 +46,8 @@ FROM debian:12-slim AS runtime
 
 ARG S6_OVERLAY_VERSION=3.2.0.2
 ARG NATS_VERSION=2.10.24
+# MinIO pins to a release tag so the image is reproducible; bump as needed.
+ARG MINIO_RELEASE=RELEASE.2025-01-20T14-49-07Z
 ARG TARGETARCH=amd64
 
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -97,6 +99,19 @@ RUN set -eux; \
     install -m 0755 "/tmp/nats-server-v${NATS_VERSION}-${natsarch}/nats-server" /usr/local/bin/nats-server; \
     rm -rf /tmp/nats.tgz "/tmp/nats-server-v${NATS_VERSION}-${natsarch}"; \
     /usr/local/bin/nats-server --version
+
+# MinIO server (single static binary).
+RUN set -eux; \
+    arch="$(dpkg --print-architecture)"; \
+    case "$arch" in \
+        amd64) minioarch="linux-amd64" ;; \
+        arm64) minioarch="linux-arm64" ;; \
+        *) echo "unsupported arch: $arch" >&2; exit 1 ;; \
+    esac; \
+    url="https://dl.min.io/server/minio/release/${minioarch}/archive/minio.${MINIO_RELEASE}"; \
+    curl -fsSL "$url" -o /usr/local/bin/minio; \
+    chmod 0755 /usr/local/bin/minio; \
+    /usr/local/bin/minio --version
 
 # s6-overlay v3 — two-tar install (noarch + arch-specific).
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp/s6-noarch.tar.xz
