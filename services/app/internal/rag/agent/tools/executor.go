@@ -1,5 +1,11 @@
 // Package tools provides the tool execution layer for the Agent Runtime.
 // Each tool is a wrapper around a service call (Search, Ingest, etc.).
+//
+// Inside the consolidated app binary (ADR 025), calls that used to cross
+// HTTP or gRPC boundaries (search_documents, check_job_status) are served
+// by in-process backends set via SetSearchBackend / SetIngestBackend.
+// Tools that still target external services (notification, bigbrother, erp)
+// keep going over HTTP via Definition.Endpoint.
 package tools
 
 import (
@@ -12,6 +18,8 @@ import (
 	"time"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+
+	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 )
 
 // Result is the output of a tool execution.
@@ -27,7 +35,7 @@ type Result struct {
 type Definition struct {
 	Name                 string          `json:"name"`
 	Service              string          `json:"service"`
-	Endpoint             string          `json:"endpoint"` // full URL
+	Endpoint             string          `json:"endpoint"` // full URL (unused when an in-process backend handles the tool)
 	Method               string          `json:"method"`   // HTTP method
 	Type                 string          `json:"type"`     // "read" or "action"
 	RequiresConfirmation bool            `json:"requires_confirmation"`
@@ -35,12 +43,25 @@ type Definition struct {
 	Parameters           json.RawMessage `json:"parameters"` // JSON schema
 }
 
-// Executor calls tools by name, routing to the correct service.
-// Supports both HTTP and gRPC backends per tool.
+// SearchBackend serves the search_documents tool in-process. The return
+// value must be JSON-marshalable (typically *search.SearchResult).
+type SearchBackend interface {
+	SearchDocuments(ctx context.Context, query, collectionID string, maxNodes int) (any, error)
+}
+
+// IngestBackend serves ingest-related tools in-process.
+type IngestBackend interface {
+	ListJobs(ctx context.Context, userID string, limit int) (any, error)
+}
+
+// Executor calls tools by name, routing to the correct backend.
+// Inlined tools (search/ingest) go straight to the registered backend;
+// everything else falls through to HTTP.
 type Executor struct {
-	tools        map[string]Definition
-	client       *http.Client
-	grpcSearch   *GRPCSearchClient // nil = fallback to HTTP
+	tools  map[string]Definition
+	client *http.Client
+	search SearchBackend
+	ingest IngestBackend
 }
 
 // NewExecutor creates a tool executor with the given tool definitions.
@@ -50,7 +71,7 @@ func NewExecutor(defs []Definition) *Executor {
 		m[d.Name] = d
 	}
 	return &Executor{
-		tools:  m,
+		tools: m,
 		client: &http.Client{
 			Timeout:   30 * time.Second,
 			Transport: otelhttp.NewTransport(http.DefaultTransport),
@@ -58,11 +79,11 @@ func NewExecutor(defs []Definition) *Executor {
 	}
 }
 
-// SetGRPCSearch configures gRPC for the search_documents tool.
-// If set, search calls use gRPC instead of HTTP.
-func (e *Executor) SetGRPCSearch(c *GRPCSearchClient) {
-	e.grpcSearch = c
-}
+// SetSearchBackend wires the in-process search service for search_documents.
+func (e *Executor) SetSearchBackend(s SearchBackend) { e.search = s }
+
+// SetIngestBackend wires the in-process ingest service for ingest tools.
+func (e *Executor) SetIngestBackend(i IngestBackend) { e.ingest = i }
 
 // Execute calls a tool by name with the given parameters and JWT.
 // If the tool requires confirmation, returns a pending_confirmation result
@@ -76,7 +97,6 @@ func (e *Executor) Execute(ctx context.Context, jwt, toolName string, params jso
 		}, nil
 	}
 
-	// Check if tool requires confirmation
 	if def.RequiresConfirmation {
 		return &Result{
 			Status:               "pending_confirmation",
@@ -86,11 +106,9 @@ func (e *Executor) Execute(ctx context.Context, jwt, toolName string, params jso
 		}, nil
 	}
 
-	// Use gRPC for search if available
-	if toolName == "search_documents" && e.grpcSearch != nil {
-		return e.grpcSearch.Execute(ctx, jwt, params)
+	if r, handled := e.executeInProcess(ctx, toolName, params); handled {
+		return r, nil
 	}
-
 	return e.executeHTTP(ctx, jwt, def, params)
 }
 
@@ -105,10 +123,62 @@ func (e *Executor) ExecuteConfirmed(ctx context.Context, jwt, toolName string, p
 	if !def.RequiresConfirmation {
 		return &Result{Status: "error", Error: fmt.Sprintf("tool %q does not require confirmation", toolName)}, nil
 	}
-	if toolName == "search_documents" && e.grpcSearch != nil {
-		return e.grpcSearch.Execute(ctx, jwt, params)
+	if r, handled := e.executeInProcess(ctx, toolName, params); handled {
+		return r, nil
 	}
 	return e.executeHTTP(ctx, jwt, def, params)
+}
+
+// executeInProcess handles the subset of tools that have a registered backend.
+// Returns (result, true) when the tool was dispatched in-process; (nil, false)
+// otherwise so the caller can fall back to HTTP.
+func (e *Executor) executeInProcess(ctx context.Context, toolName string, params json.RawMessage) (*Result, bool) {
+	switch toolName {
+	case "search_documents":
+		if e.search == nil {
+			return nil, false
+		}
+		var p struct {
+			Query        string `json:"query"`
+			CollectionID string `json:"collection_id"`
+			MaxNodes     int    `json:"max_nodes"`
+		}
+		if err := json.Unmarshal(params, &p); err != nil {
+			return &Result{Status: "error", Error: "invalid search params"}, true
+		}
+		res, err := e.search.SearchDocuments(ctx, p.Query, p.CollectionID, p.MaxNodes)
+		if err != nil {
+			return &Result{Status: "error", Error: "search failed"}, true
+		}
+		data, err := json.Marshal(res)
+		if err != nil {
+			return &Result{Status: "error", Error: "search failed"}, true
+		}
+		return &Result{Status: "success", Data: data}, true
+
+	case "check_job_status":
+		if e.ingest == nil {
+			return nil, false
+		}
+		userID := sdamw.UserIDFromContext(ctx)
+		if userID == "" {
+			return &Result{Status: "denied", Error: "missing user identity"}, true
+		}
+		var p struct {
+			Limit int `json:"limit"`
+		}
+		_ = json.Unmarshal(params, &p) // params optional
+		jobs, err := e.ingest.ListJobs(ctx, userID, p.Limit)
+		if err != nil {
+			return &Result{Status: "error", Error: "list jobs failed"}, true
+		}
+		data, err := json.Marshal(map[string]any{"jobs": jobs})
+		if err != nil {
+			return &Result{Status: "error", Error: "list jobs failed"}, true
+		}
+		return &Result{Status: "success", Data: data}, true
+	}
+	return nil, false
 }
 
 func (e *Executor) executeHTTP(ctx context.Context, jwt string, def Definition, params json.RawMessage) (*Result, error) {
