@@ -28,9 +28,10 @@ type Orchestrator struct {
 	// UseParallelCopyWriter. When set, the orchestrator also switches its
 	// table runner to the pipelined variant (runTablePipeline) so reads and
 	// writes overlap. The old BatchWriter path is preserved as a fallback.
-	fastWriter      Writer
-	usePipeline     bool
-	archiveSkipped  bool
+	fastWriter       Writer
+	usePipeline      bool
+	archiveSkipped   bool
+	transformWorkers int
 	readers         []TableMigrator
 	setupHooks      []SetupHook
 	afterTableHooks map[string][]SetupHook
@@ -59,6 +60,17 @@ func (o *Orchestrator) UseParallelCopyWriter(workers int) {
 func (o *Orchestrator) UsePipelineOnly() {
 	o.fastWriter = AsWriter(o.writer)
 	o.usePipeline = true
+}
+
+// SetTransformWorkers sets the fan-out count for per-row Transform work
+// inside the pipeline reader. 0/1 means sequential; larger values split a
+// batch across goroutines for CPU-bound transforms. Cap to batch size
+// automatically; caller typically passes runtime.NumCPU()/2 or similar.
+func (o *Orchestrator) SetTransformWorkers(n int) {
+	if n < 1 {
+		n = 1
+	}
+	o.transformWorkers = n
 }
 
 // EnableSkipArchive tells the pipeline to write every row that a migrator

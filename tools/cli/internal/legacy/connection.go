@@ -52,8 +52,11 @@ func Connect(dsn string) (*sql.DB, error) {
 
 	// Wrap connector so each new connection is validated as read-only before use.
 	db := sql.OpenDB(readOnlyConnector{Connector: connector})
-	db.SetMaxOpenConns(10)
-	db.SetMaxIdleConns(4)
+	// Bulk import benefits from more MySQL connections when the pipeline
+	// has multiple readers (currently just one per migrator, but the pool
+	// also absorbs burst patterns from rescue scans).
+	db.SetMaxOpenConns(32)
+	db.SetMaxIdleConns(8)
 	db.SetConnMaxLifetime(30 * time.Minute)
 
 	pingCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

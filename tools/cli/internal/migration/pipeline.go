@@ -109,8 +109,10 @@ func (o *Orchestrator) runTablePipeline(ctx context.Context, runID, progressID u
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	// Buffered: 2 slots. See comment block.
-	batches := make(chan pipelineBatch, 2)
+	// Buffered: 8 slots so the MySQL reader can stay ahead of the PG writer
+	// when they run at similar speeds (the 2-slot default was leaving 95%
+	// CPU idle on the workstation). Memory cost is bounded by batch size.
+	batches := make(chan pipelineBatch, 8)
 
 	// Reader goroutine: pulls batches from legacy, runs Transform, publishes
 	// to the channel. Owns the resumeKey cursor but never persists it.
@@ -139,26 +141,94 @@ func (o *Orchestrator) runTablePipeline(ctx context.Context, runID, progressID u
 				return // EOF
 			}
 
+			// Fork-join Transform: the read side of the pipeline was the
+			// bottleneck — single-goroutine Transform left 95% CPU idle on
+			// the workstation with 24 writer workers. Now we fan Transform
+			// out across `o.transformWorkers` cores, preserving per-row
+			// order via fixed-index slices so checkpoints stay correct.
+			transformedByIdx := make([][]any, len(rows))
+			skippedFlag := make([]bool, len(rows))
+			var firstTransformErr error
+			var transformErrMu sync.Mutex
+
+			tw := o.transformWorkers
+			if tw <= 1 {
+				tw = 1
+			}
+			if tw > len(rows) {
+				tw = len(rows)
+			}
+			if tw <= 1 {
+				// Small batch — stay sequential, no point paying goroutine cost.
+				for i, row := range rows {
+					vals, err := m.Transform(ctx, row, o.mapper)
+					if err != nil {
+						firstTransformErr = fmt.Errorf("transform %s: %w", m.LegacyTable(), err)
+						break
+					}
+					if vals == nil {
+						skippedFlag[i] = true
+					} else {
+						transformedByIdx[i] = vals
+					}
+				}
+			} else {
+				var twg sync.WaitGroup
+				chunk := (len(rows) + tw - 1) / tw
+				for w := 0; w < tw; w++ {
+					start := w * chunk
+					end := start + chunk
+					if end > len(rows) {
+						end = len(rows)
+					}
+					if start >= end {
+						continue
+					}
+					twg.Add(1)
+					go func(start, end int) {
+						defer twg.Done()
+						for i := start; i < end; i++ {
+							vals, err := m.Transform(ctx, rows[i], o.mapper)
+							if err != nil {
+								transformErrMu.Lock()
+								if firstTransformErr == nil {
+									firstTransformErr = fmt.Errorf("transform %s: %w", m.LegacyTable(), err)
+								}
+								transformErrMu.Unlock()
+								return
+							}
+							if vals == nil {
+								skippedFlag[i] = true
+							} else {
+								transformedByIdx[i] = vals
+							}
+						}
+					}(start, end)
+				}
+				twg.Wait()
+			}
+			if firstTransformErr != nil {
+				readErr = firstTransformErr
+				return
+			}
+
 			skipped := 0
 			transformed := make([][]any, 0, len(rows))
 			var skippedRows []map[string]any
 			if o.archiveSkipped {
 				skippedRows = make([]map[string]any, 0, len(rows)/10)
 			}
-			for _, row := range rows {
-				vals, err := m.Transform(ctx, row, o.mapper)
-				if err != nil {
-					readErr = fmt.Errorf("transform %s: %w", m.LegacyTable(), err)
-					return
-				}
-				if vals == nil {
+			for i := range rows {
+				if skippedFlag[i] {
 					skipped++
 					if o.archiveSkipped {
-						skippedRows = append(skippedRows, row)
+						skippedRows = append(skippedRows, rows[i])
 					}
 					continue
 				}
-				transformed = append(transformed, vals)
+				if transformedByIdx[i] != nil {
+					transformed = append(transformed, transformedByIdx[i])
+				}
 			}
 
 			select {

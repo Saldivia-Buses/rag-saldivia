@@ -75,6 +75,12 @@ func init() {
 	// SDA table or in the archive.
 	migrateLegacyCmd.Flags().Bool("archive-skips", false, "Archive rows the transform rejected into erp_legacy_archive (requires pipeline writer)")
 
+	// Transform fan-out: when the writer can't keep the CPU busy (workstation
+	// sat at 5% CPU with 24 writer workers), split the per-row Transform loop
+	// across N goroutines. Keeps the structure single-reader so MySQL load is
+	// unchanged; parallelises the CPU-bound transform step only.
+	migrateLegacyCmd.Flags().Int("transform-workers", 1, "Parallel goroutines per batch for the Transform step (0/1 = sequential)")
+
 	if err := migrateLegacyCmd.MarkFlagRequired("tenant"); err != nil {
 		panic(err)
 	}
@@ -115,7 +121,15 @@ func runMigrateLegacy(cmd *cobra.Command, args []string) error {
 	defer func() { _ = mysqlDB.Close() }()
 
 	slog.Info("connecting to PostgreSQL", "dsn", maskDSN(pgDSN))
-	pgPool, err := pgxpool.New(ctx, pgDSN)
+	pgCfg, err := pgxpool.ParseConfig(pgDSN)
+	if err != nil {
+		return fmt.Errorf("parse pg dsn: %w", err)
+	}
+	// Bulk import can fan out up to parallel-copy workers plus pipeline
+	// overhead. Default pgxpool cap of 4 serializes the whole rig.
+	pgCfg.MaxConns = 48
+	pgCfg.MinConns = 8
+	pgPool, err := pgxpool.NewWithConfig(ctx, pgCfg)
 	if err != nil {
 		return fmt.Errorf("pg connect: %w", err)
 	}
@@ -161,6 +175,10 @@ func runMigrateLegacy(cmd *cobra.Command, args []string) error {
 	if archiveSkips, _ := cmd.Flags().GetBool("archive-skips"); archiveSkips {
 		orch.EnableSkipArchive()
 		slog.Info("archiving skipped rows into erp_legacy_archive")
+	}
+	if tw, _ := cmd.Flags().GetInt("transform-workers"); tw > 1 {
+		orch.SetTransformWorkers(tw)
+		slog.Info("parallel transform enabled", "workers", tw)
 	}
 
 	// Seed dry-run flag before initialising fallback so EnsureUnassignedWarehouse

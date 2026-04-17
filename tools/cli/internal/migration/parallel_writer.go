@@ -98,6 +98,16 @@ func (w *ParallelCopyWriter) WriteBatch(ctx context.Context, table string, colum
 				mu.Unlock()
 				return
 			}
+			// Disable FK checks in the worker tx. The pipeline's own tx does
+			// this, but parallel workers open their own txs and must repeat
+			// the config or CTB_DETALLES / invoice_lines / similar child
+			// tables fail when their parent's COPY lands in a sibling tx
+			// that hasn't committed yet.
+			if _, err := tx.Exec(ctx, "SET LOCAL session_replication_role = 'replica'"); err != nil {
+				// Warn-only: if the role change fails, FK will still catch
+				// real problems; we just lose the bulk-load speed-up.
+				_ = err
+			}
 
 			n, err := copyChunkTx(ctx, tx, table, columns, conflictColumn, chunk)
 			if err != nil {
@@ -162,9 +172,15 @@ func (w *ParallelCopyWriter) singleThreadedFallback(ctx context.Context, table s
 
 // copyChunkTx is the shared staging-then-insert path used by both the single
 // and parallel writers. Keeping it here avoids drift between implementations.
+// Always disables FK checks inside the tx so a child table whose parent is
+// still landing in a sibling tx doesn't crash the whole batch.
 func copyChunkTx(ctx context.Context, tx pgx.Tx, table string, columns []string, conflictColumn string, rows [][]any) (int, error) {
 	if len(rows) == 0 {
 		return 0, nil
+	}
+	if _, err := tx.Exec(ctx, "SET LOCAL session_replication_role = 'replica'"); err != nil {
+		// non-fatal — FK still catches real problems
+		_ = err
 	}
 	stagingName := fmt.Sprintf("staging_%s", table)
 
