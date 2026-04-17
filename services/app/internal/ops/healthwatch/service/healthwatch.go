@@ -12,7 +12,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/Camionerou/rag-saldivia/services/healthwatch/internal/collector"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/ops/healthwatch/collector"
 )
 
 // ErrCheckCooldown is returned when a manual check is triggered too soon.

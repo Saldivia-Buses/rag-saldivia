@@ -17,7 +17,7 @@ import (
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
 	"github.com/Camionerou/rag-saldivia/pkg/tenant"
-	"github.com/Camionerou/rag-saldivia/services/healthwatch/internal/service"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/ops/healthwatch/service"
 )
 
 // HealthwatchService defines the operations the handler needs.

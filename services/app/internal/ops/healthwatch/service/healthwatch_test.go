@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/Camionerou/rag-saldivia/services/healthwatch/internal/collector"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/ops/healthwatch/collector"
 )
 
 // newTestCollectors creates collectors pointing at mock servers.
