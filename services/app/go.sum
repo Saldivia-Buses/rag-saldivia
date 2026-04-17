@@ -6,8 +6,6 @@ github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c h1:udKWzYgxTojEK
 github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c/go.mod h1:xomTg63KZ2rFqZQzSB4Vz2SUXa1BpHTVz9L5PTmPC4E=
 github.com/Azure/go-ntlmssp v0.0.0-20221128193559-754e69321358 h1:mFRzDkZVAjdal+s7s0MwaRv9igoPqLRdzOLzw/8Xvq8=
 github.com/Azure/go-ntlmssp v0.0.0-20221128193559-754e69321358/go.mod h1:chxPXzSsl7ZWRAuOIE23GDNzjWuZquvFlgA8xmpunjU=
-github.com/Camionerou/rag-saldivia/gen/go v0.0.0-20260416082426-7045c9b53f20 h1:0nFSHGW+2Z//W2ShuNYcsiAB2BbJNqMw3Sk9wRspG7c=
-github.com/Camionerou/rag-saldivia/gen/go v0.0.0-20260416082426-7045c9b53f20/go.mod h1:t+W90Y2esEeBMpf1AKWDne4kWbxOZRQYOWcPfZt20EM=
 github.com/Camionerou/rag-saldivia/pkg v0.0.0-20260416082426-7045c9b53f20 h1:rAY9jABtqLB1IWYov3XzwWbDZvJ/3rXpCW4ujlsCves=
 github.com/Camionerou/rag-saldivia/pkg v0.0.0-20260416082426-7045c9b53f20/go.mod h1:PM7ph4fPIu9bCOeErvZAAcpYMO3aVbD6+VLqLTCTLqs=
 github.com/ChrisTrenkamp/goxpath v0.0.0-20210404020558-97928f7e12b6 h1:w0E0fgc1YafGEh5cROhlROMWXiNoZqApk2PDN0M1+Ns=

@@ -3,80 +3,45 @@ package hub
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"time"
 
-	chatv1 "github.com/Camionerou/rag-saldivia/gen/go/chat/v1"
-	sdagrpc "github.com/Camionerou/rag-saldivia/pkg/grpc"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/encoding/protojson"
+	chatservice "github.com/Camionerou/rag-saldivia/services/app/internal/realtime/chat/service"
 )
 
-// MutationHandler routes mutation messages to the appropriate gRPC service.
+// MutationHandler routes mutation messages to the chat service in-process.
+//
+// Pre-ADR-025-realtime this dialed a gRPC client against the standalone chat
+// service. After the fusion, chat lives next door under internal/realtime/chat
+// so we invoke its service methods directly — one fewer hop, one fewer client
+// to configure, one fewer failure mode.
 type MutationHandler struct {
-	chatClient chatv1.ChatServiceClient
-	chatConn   *grpc.ClientConn
+	chat *chatservice.Chat
 }
 
-// NewMutationHandler creates a handler that routes mutations to Chat via gRPC.
-// Returns nil if the chat gRPC target is empty (mutations stay as stub).
-func NewMutationHandler(chatGRPCTarget string) *MutationHandler {
-	if chatGRPCTarget == "" {
+// NewMutationHandler creates a handler that dispatches mutations to chat.
+// Returns nil if chat is nil (mutations stay disabled — hub tolerates this).
+func NewMutationHandler(chat *chatservice.Chat) *MutationHandler {
+	if chat == nil {
 		return nil
 	}
-
-	conn, err := sdagrpc.Dial(chatGRPCTarget)
-	if err != nil {
-		slog.Warn("chat grpc client failed, mutations disabled", "error", err)
-		return nil
-	}
-
-	slog.Info("mutations enabled via grpc", "chat_target", chatGRPCTarget)
-	return &MutationHandler{
-		chatClient: chatv1.NewChatServiceClient(conn),
-		chatConn:   conn,
-	}
+	return &MutationHandler{chat: chat}
 }
 
-// Close closes the underlying gRPC connection.
-func (h *MutationHandler) Close() {
-	if h.chatConn != nil {
-		_ = h.chatConn.Close()
-	}
-}
+// Close is a no-op — kept so callers can keep their shutdown hooks symmetrical.
+// The old gRPC connection close lived here; there is nothing to close now.
+func (h *MutationHandler) Close() {}
 
-// Handle dispatches a mutation message to the appropriate gRPC service.
+// Handle dispatches a mutation message to the chat service.
 // Runs in a goroutine to avoid blocking the hub event loop.
 func (h *MutationHandler) Handle(client *Client, msg Message) {
 	go func() {
 		result, err := h.dispatch(client, msg)
 		if err != nil {
-			// B1: clean error messages, detect token expiry (B2)
-			errMsg := "mutation failed"
-			errCode := ""
-			if st, ok := status.FromError(err); ok {
-				switch st.Code() {
-				case codes.Unauthenticated:
-					errMsg = "authentication required"
-					errCode = "token_expired"
-				case codes.NotFound:
-					errMsg = "not found"
-				case codes.PermissionDenied:
-					errMsg = "permission denied"
-				case codes.InvalidArgument:
-					errMsg = st.Message()
-				}
-			}
-			resp := Message{Type: Error, ID: msg.ID, Error: errMsg}
-			if errCode != "" {
-				resp.Data = json.RawMessage(`{"code":"` + errCode + `"}`)
-			}
-			client.SendMessage(resp)
+			client.SendMessage(Message{Type: Error, ID: msg.ID, Error: userFacingError(err)})
 			return
 		}
-
 		client.SendMessage(Message{
 			Type: Event,
 			ID:   msg.ID,
@@ -86,62 +51,86 @@ func (h *MutationHandler) Handle(client *Client, msg Message) {
 }
 
 func (h *MutationHandler) dispatch(client *Client, msg Message) (json.RawMessage, error) {
-	baseCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	ctx := sdagrpc.ForwardJWT(baseCtx, client.JWT)
 
 	switch msg.Action {
 	case "create_session":
-		var req chatv1.CreateSessionRequest
+		var req struct {
+			Title      string  `json:"title"`
+			Collection *string `json:"collection,omitempty"`
+		}
 		if err := json.Unmarshal(msg.Data, &req); err != nil {
 			return nil, err
 		}
-		req.UserId = client.UserID
-		resp, err := h.chatClient.CreateSession(ctx, &req)
+		s, err := h.chat.CreateSession(ctx, client.UserID, req.Title, req.Collection)
 		if err != nil {
 			return nil, err
 		}
-		return protojson.Marshal(resp)
+		return json.Marshal(s)
 
 	case "delete_session":
-		var req chatv1.DeleteSessionRequest
+		var req struct {
+			SessionID string `json:"session_id"`
+		}
 		if err := json.Unmarshal(msg.Data, &req); err != nil {
 			return nil, err
 		}
-		req.UserId = client.UserID
-		resp, err := h.chatClient.DeleteSession(ctx, &req)
-		if err != nil {
+		if err := h.chat.DeleteSession(ctx, req.SessionID, client.UserID); err != nil {
 			return nil, err
 		}
-		return protojson.Marshal(resp)
+		return json.RawMessage(`{}`), nil
 
 	case "rename_session":
-		var req chatv1.RenameSessionRequest
+		var req struct {
+			SessionID string `json:"session_id"`
+			Title     string `json:"title"`
+		}
 		if err := json.Unmarshal(msg.Data, &req); err != nil {
 			return nil, err
 		}
-		req.UserId = client.UserID
-		resp, err := h.chatClient.RenameSession(ctx, &req)
-		if err != nil {
+		if err := h.chat.RenameSession(ctx, req.SessionID, client.UserID, req.Title); err != nil {
 			return nil, err
 		}
-		return protojson.Marshal(resp)
+		return json.RawMessage(`{}`), nil
 
 	case "send_message":
-		var req chatv1.AddMessageRequest
+		var req struct {
+			SessionID string          `json:"session_id"`
+			Role      string          `json:"role"`
+			Content   string          `json:"content"`
+			Thinking  *string         `json:"thinking,omitempty"`
+			Sources   json.RawMessage `json:"sources,omitempty"`
+			Metadata  json.RawMessage `json:"metadata,omitempty"`
+		}
 		if err := json.Unmarshal(msg.Data, &req); err != nil {
 			return nil, err
 		}
-		req.UserId = client.UserID
-		resp, err := h.chatClient.AddMessage(ctx, &req)
+		m, err := h.chat.AddMessage(ctx, req.SessionID, client.UserID,
+			req.Role, req.Content, req.Thinking, req.Sources, req.Metadata)
 		if err != nil {
 			return nil, err
 		}
-		return protojson.Marshal(resp)
+		return json.Marshal(m)
 
 	default:
 		return nil, &unknownActionError{action: msg.Action}
 	}
+}
+
+// userFacingError maps internal errors to short strings safe to ship to the
+// browser. The old gRPC path inspected status.Code() and mapped Unauthenticated
+// to a "token_expired" hint — the in-process path has no token check (WS
+// already authenticated the client on upgrade), so that branch is gone.
+func userFacingError(err error) string {
+	switch {
+	case errors.Is(err, chatservice.ErrSessionNotFound):
+		return "session not found"
+	case errors.Is(err, chatservice.ErrNotOwner):
+		return "permission denied"
+	}
+	slog.Debug("mutation failed", "error", err)
+	return "mutation failed"
 }
 
 type unknownActionError struct{ action string }
