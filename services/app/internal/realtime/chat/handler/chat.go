@@ -14,7 +14,7 @@ import (
 	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
-	"github.com/Camionerou/rag-saldivia/services/chat/internal/service"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/realtime/chat/service"
 )
 
 // ChatService defines the operations the handler needs from the service layer.

@@ -6,7 +6,7 @@ import (
 
 	chatv1 "github.com/Camionerou/rag-saldivia/gen/go/chat/v1"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
-	"github.com/Camionerou/rag-saldivia/services/chat/internal/service"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/realtime/chat/service"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"

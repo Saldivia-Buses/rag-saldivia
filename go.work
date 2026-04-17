@@ -4,7 +4,6 @@ use (
 	./gen/go
 	./pkg
 	./services/app
-	./services/chat
 	./services/erp
 	./services/ws
 	./tools/cli
