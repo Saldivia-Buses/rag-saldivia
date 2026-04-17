@@ -13,7 +13,7 @@ import (
 	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
-	"github.com/Camionerou/rag-saldivia/services/ws/internal/hub"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/realtime/ws/hub"
 )
 
 // WS handles WebSocket upgrade requests.

@@ -6,6 +6,7 @@ require (
 	github.com/Camionerou/rag-saldivia/gen/go v0.0.0-20260416082426-7045c9b53f20
 	github.com/Camionerou/rag-saldivia/pkg v0.0.0-20260416082426-7045c9b53f20
 	github.com/Ullaakut/nmap/v3 v3.1.0
+	github.com/coder/websocket v1.8.14
 	github.com/go-chi/chi/v5 v5.2.5
 	github.com/google/uuid v1.6.0
 	github.com/gosnmp/gosnmp v1.43.2
