@@ -29,11 +29,11 @@ import (
 	"time"
 )
 
-// upstreams is the service name → localhost URL map. Ports match the
-// per-service conventions in the Makefile (dev-services target). When the
-// consolidation campaign absorbs these into a monolith, this map is the one
-// place that has to change.
-var upstreams = map[string]string{
+// upstreamAddrs is the service name → localhost URL map. Ports match each
+// service's `server.WithPort(...)` default in services/<svc>/cmd/main.go.
+// When the consolidation campaign absorbs these into a monolith, this map
+// is the one place that has to change.
+var upstreamAddrs = map[string]string{
 	"auth":         "http://127.0.0.1:8001",
 	"ws":           "http://127.0.0.1:8002",
 	"chat":         "http://127.0.0.1:8003",
@@ -44,12 +44,121 @@ var upstreams = map[string]string{
 	"feedback":     "http://127.0.0.1:8008",
 	"traces":       "http://127.0.0.1:8009",
 	"search":       "http://127.0.0.1:8010",
-	"erp":          "http://127.0.0.1:8013",
 	"bigbrother":   "http://127.0.0.1:8012",
+	"erp":          "http://127.0.0.1:8013",
 	"healthwatch":  "http://127.0.0.1:8014",
 }
 
 const nextjsURL = "http://127.0.0.1:3000"
+
+// router holds pre-built reverse proxies so the hot path does no allocation.
+type router struct {
+	logger    *slog.Logger
+	upstreams map[string]*httputil.ReverseProxy
+	nextjs    *httputil.ReverseProxy
+}
+
+func newRouter(logger *slog.Logger) (*router, error) {
+	r := &router{
+		logger:    logger,
+		upstreams: make(map[string]*httputil.ReverseProxy, len(upstreamAddrs)),
+	}
+	for name, addr := range upstreamAddrs {
+		rp, err := buildProxy(logger, addr)
+		if err != nil {
+			return nil, err
+		}
+		r.upstreams[name] = rp
+	}
+	nextjs, err := buildProxy(logger, nextjsURL)
+	if err != nil {
+		return nil, err
+	}
+	r.nextjs = nextjs
+	return r, nil
+}
+
+// buildProxy constructs a ReverseProxy for a single upstream. Uses the
+// modern Rewrite API (Go 1.20+): SetXForwarded populates X-Forwarded-For,
+// X-Forwarded-Host and X-Forwarded-Proto, which the legacy Director API
+// only partially did. WebSocket upgrades flow through unchanged since the
+// default Transport preserves the Connection: Upgrade header.
+func buildProxy(logger *slog.Logger, addr string) (*httputil.ReverseProxy, error) {
+	u, err := url.Parse(addr)
+	if err != nil {
+		return nil, err
+	}
+	rp := &httputil.ReverseProxy{
+		Rewrite: func(r *httputil.ProxyRequest) {
+			r.SetURL(u)
+			r.SetXForwarded()
+			if _, ok := r.Out.Header["User-Agent"]; !ok {
+				r.Out.Header.Set("User-Agent", "sda-frontdoor")
+			}
+		},
+		ErrorHandler: func(w http.ResponseWriter, req *http.Request, err error) {
+			logger.Warn("upstream failed",
+				"target", addr,
+				"path", req.URL.Path,
+				"err", err.Error())
+			http.Error(w, "upstream unavailable", http.StatusBadGateway)
+		},
+	}
+	return rp, nil
+}
+
+func (r *router) v1(w http.ResponseWriter, req *http.Request) {
+	rest := strings.TrimPrefix(req.URL.Path, "/v1/")
+	svc, _, _ := strings.Cut(rest, "/")
+	if svc == "" {
+		http.Error(w, "missing service in /v1/<service>/...", http.StatusNotFound)
+		return
+	}
+	rp, ok := r.upstreams[svc]
+	if !ok {
+		r.logger.Warn("unknown upstream", "service", svc, "path", req.URL.Path)
+		http.Error(w, "unknown service: "+svc, http.StatusNotFound)
+		return
+	}
+	rp.ServeHTTP(w, req)
+}
+
+func (r *router) ws(w http.ResponseWriter, req *http.Request) {
+	r.upstreams["ws"].ServeHTTP(w, req)
+}
+
+func (r *router) next(w http.ResponseWriter, req *http.Request) {
+	r.nextjs.ServeHTTP(w, req)
+}
+
+func ready(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"status":   "ok",
+		"tenant":   os.Getenv("SDA_TENANT"),
+		"hostname": hostname(),
+	})
+}
+
+func hostname() string {
+	h, err := os.Hostname()
+	if err != nil {
+		return "unknown"
+	}
+	return h
+}
+
+func newMux(r *router) *http.ServeMux {
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /readyz", ready)
+	mux.HandleFunc("GET /healthz", ready)
+	mux.HandleFunc("/v1/", r.v1)
+	mux.HandleFunc("/ws", r.ws)
+	mux.HandleFunc("/ws/", r.ws)
+	mux.HandleFunc("/", r.next)
+	return mux
+}
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
@@ -60,17 +169,15 @@ func main() {
 		addr = ":80"
 	}
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /readyz", ready)
-	mux.HandleFunc("GET /healthz", ready)
-	mux.Handle("/v1/", v1Proxy(logger))
-	mux.Handle("/ws", wsProxy(logger))
-	mux.Handle("/ws/", wsProxy(logger))
-	mux.Handle("/", nextjsProxy(logger))
+	r, err := newRouter(logger)
+	if err != nil {
+		logger.Error("router init failed", "err", err.Error())
+		os.Exit(1)
+	}
 
 	srv := &http.Server{
 		Addr:              addr,
-		Handler:           mux,
+		Handler:           newMux(r),
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 
@@ -92,84 +199,4 @@ func main() {
 	if err := srv.Shutdown(shutdownCtx); err != nil {
 		logger.Warn("shutdown error", "err", err.Error())
 	}
-}
-
-func ready(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(map[string]any{
-		"status":   "ok",
-		"tenant":   os.Getenv("SDA_TENANT"),
-		"hostname": hostname(),
-	})
-}
-
-// v1Proxy extracts the service name from /v1/<service>/... and proxies to it.
-// It preserves the original path, so the upstream service sees the same
-// /v1/<service>/... URL it would see behind Traefik today.
-func v1Proxy(logger *slog.Logger) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// /v1/<service>/<rest...>
-		rest := strings.TrimPrefix(r.URL.Path, "/v1/")
-		svc, _, _ := strings.Cut(rest, "/")
-		if svc == "" {
-			http.Error(w, "missing service in /v1/<service>/...", http.StatusNotFound)
-			return
-		}
-		target, ok := upstreams[svc]
-		if !ok {
-			logger.Warn("unknown upstream", "service", svc, "path", r.URL.Path)
-			http.Error(w, "unknown service: "+svc, http.StatusNotFound)
-			return
-		}
-		proxy(w, r, target, logger)
-	})
-}
-
-func wsProxy(logger *slog.Logger) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		proxy(w, r, upstreams["ws"], logger)
-	})
-}
-
-func nextjsProxy(logger *slog.Logger) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		proxy(w, r, nextjsURL, logger)
-	})
-}
-
-// proxy reverse-proxies a single request to `target`. httputil.ReverseProxy
-// handles WebSocket upgrades transparently when the default transport is
-// used — the hop-by-hop header `Connection: Upgrade` is preserved by the
-// standard library's reverse proxy since Go 1.12.
-func proxy(w http.ResponseWriter, r *http.Request, target string, logger *slog.Logger) {
-	u, err := url.Parse(target)
-	if err != nil {
-		logger.Error("bad upstream url", "target", target, "err", err.Error())
-		http.Error(w, "bad upstream", http.StatusInternalServerError)
-		return
-	}
-	rp := httputil.NewSingleHostReverseProxy(u)
-	rp.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
-		logger.Warn("upstream failed", "target", target, "path", r.URL.Path, "err", err.Error())
-		http.Error(w, "upstream unavailable", http.StatusBadGateway)
-	}
-	// Rewrite to the backend host so Host header matches the upstream's
-	// expectations (most Go services don't care, but be explicit).
-	rp.Director = func(req *http.Request) {
-		req.URL.Scheme = u.Scheme
-		req.URL.Host = u.Host
-		if _, ok := req.Header["User-Agent"]; !ok {
-			req.Header.Set("User-Agent", "sda-frontdoor")
-		}
-	}
-	rp.ServeHTTP(w, r)
-}
-
-func hostname() string {
-	h, err := os.Hostname()
-	if err != nil {
-		return "unknown"
-	}
-	return h
 }
