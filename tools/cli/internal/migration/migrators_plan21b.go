@@ -892,6 +892,11 @@ func NewNonconformityMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				desc += " | Causa: " + causa
 			}
 
+			// assigned_to is uuid FK → erp_entities. Legacy stores it as a
+			// string name; fold it into the description so no data is lost.
+			if resp := row.String("responsable_nconf"); resp != "" {
+				desc += " | Responsable: " + resp
+			}
 			return []any{
 				id, tenantID,
 				fmt.Sprintf("NC-%d", legacyID),
@@ -901,7 +906,7 @@ func NewNonconformityMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				desc,
 				severity,
 				status,
-				row.NullString("responsable_nconf"), // assigned_to as string
+				(*uuid.UUID)(nil), // assigned_to — legacy had name string, preserved in desc above
 				SafeDate(timeFromRow(row, "fecha_cierrenconf")),
 				LegacyUserID,
 			}, nil
