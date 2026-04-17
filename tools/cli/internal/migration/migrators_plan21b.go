@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -1157,11 +1158,23 @@ func NewControlledDocumentMigrator(db *sql.DB, tenantID string) *GenericMigrator
 			}
 			metaJSON, _ := json.Marshal(meta)
 
+			// revision is int4 in SDA; legacy stores it as text (e.g. "A", "2").
+			// Parse what we can, default to 1, keep the original text in metadata.
+			revisionInt := 1
+			revText := strings.TrimSpace(row.String("revision_documento"))
+			if n, err := strconv.Atoi(revText); err == nil && n > 0 {
+				revisionInt = n
+			}
+			code := strings.TrimSpace(row.String("codigo_documento"))
+			if code == "" {
+				code = fmt.Sprintf("DOC-%d", legacyID)
+			}
+
 			return []any{
 				id, tenantID,
-				row.String("codigo_documento"),
+				code,
 				row.String("nombre_documento"),
-				row.String("revision_documento"),
+				revisionInt,
 				docTypeID,
 				row.String("archivo_documento"), // file_key — legacy file path
 				approvedBy,
