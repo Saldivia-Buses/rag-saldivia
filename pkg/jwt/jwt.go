@@ -214,3 +214,17 @@ func MustLoadPublicKey(envVar string) ed25519.PublicKey {
 	}
 	return key
 }
+
+// MustLoadPrivateKey reads a base64-encoded private key from an env var or panics.
+// Mirror of MustLoadPublicKey for services that sign tokens (auth + monolith).
+func MustLoadPrivateKey(envVar string) ed25519.PrivateKey {
+	b64 := os.Getenv(envVar)
+	if b64 == "" {
+		panic(fmt.Sprintf("%s environment variable is required", envVar))
+	}
+	key, err := ParsePrivateKeyEnv(b64)
+	if err != nil {
+		panic(fmt.Sprintf("failed to parse %s: %v", envVar, err))
+	}
+	return key
+}

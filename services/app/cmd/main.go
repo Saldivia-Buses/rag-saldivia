@@ -36,8 +36,18 @@ import (
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
+	"github.com/Camionerou/rag-saldivia/pkg/outbox"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
 	"github.com/Camionerou/rag-saldivia/pkg/server"
+
+	authhandler "github.com/Camionerou/rag-saldivia/services/app/internal/core/auth/handler"
+	authservice "github.com/Camionerou/rag-saldivia/services/app/internal/core/auth/service"
+
+	fbhandler "github.com/Camionerou/rag-saldivia/services/app/internal/core/feedback/handler"
+	fbservice "github.com/Camionerou/rag-saldivia/services/app/internal/core/feedback/service"
+
+	plhandler "github.com/Camionerou/rag-saldivia/services/app/internal/core/platform/handler"
+	plservice "github.com/Camionerou/rag-saldivia/services/app/internal/core/platform/service"
 
 	bbhandler "github.com/Camionerou/rag-saldivia/services/app/internal/ops/bigbrother/handler"
 	bbscanner "github.com/Camionerou/rag-saldivia/services/app/internal/ops/bigbrother/scanner"
@@ -58,6 +68,11 @@ func main() {
 	// Shared dependencies. Any of these failing is fatal — the monolith
 	// cannot partially boot. (Old per-service main.go had the same rule.)
 	publicKey := sdajwt.MustLoadPublicKey("JWT_PUBLIC_KEY")
+	privateKey := sdajwt.MustLoadPrivateKey("JWT_PRIVATE_KEY")
+	jwtCfg := sdajwt.DefaultConfig(privateKey, publicKey)
+
+	tenantID := config.Env("TENANT_ID", "dev")
+	tenantSlug := config.Env("TENANT_SLUG", "dev")
 
 	redisURL := config.Env("REDIS_URL", "localhost:6379")
 	blacklist := security.InitBlacklist(ctx, redisURL)
@@ -100,6 +115,10 @@ func main() {
 
 	r := app.Router()
 	r.Get("/health", hc.Handler())
+
+	wireAuth(ctx, app, r, tenantPool, nc, jwtCfg, publicKey, blacklist, tenantID, tenantSlug)
+	wirePlatform(app, r, platformPool, nc, publicKey, blacklist)
+	wireFeedback(ctx, app, r, tenantPool, platformPool, nc, publicKey, blacklist, tenantID, tenantSlug)
 
 	wireBigBrother(app, r, hc, tenantPool, nc, rdb, publicKey, blacklist)
 	wireHealthwatch(ctx, app, r, platformPool, nc, publicKey, blacklist)
@@ -293,5 +312,133 @@ func wireTraces(
 			FailOpen:  true,
 		}))
 		r.Mount("/v1/traces", handler.Routes())
+	})
+}
+
+// wireAuth mounts /v1/auth/* and /v1/modules/enabled and starts the outbox
+// drainer for the silo tenant. Single-tenant per ADR 022 — the container is
+// the tenant, so one authservice/pool/drainer covers the whole binary.
+func wireAuth(
+	ctx context.Context, app *server.App, r chi.Router,
+	tenantPool *pgxpool.Pool, nc *nats.Conn,
+	jwtCfg sdajwt.Config, publicKey ed25519.PublicKey,
+	blacklist *security.TokenBlacklist,
+	tenantID, tenantSlug string,
+) {
+	authSvc := authservice.NewAuth(tenantPool, jwtCfg, tenantID, tenantSlug)
+	authSvc.SetBlacklist(blacklist)
+
+	// Transactional outbox drainer — publishes events written by Login/
+	// UpdateProfile/password-reset to NATS. One drainer per tenant pool
+	// (here, the silo's single tenant).
+	drainer := outbox.NewDrainer(tenantPool, nc, tenantSlug)
+	drainerCtx, drainerCancel := context.WithCancel(ctx)
+	go drainer.Run(drainerCtx)
+	app.OnShutdown(drainerCancel)
+
+	h := authhandler.NewAuth(authSvc)
+	h.SetJWTConfig(jwtCfg)
+
+	if key := loadSecret("/run/secrets/service_account_key",
+		config.Env("SERVICE_ACCOUNT_KEY", "")); key != "" {
+		h.SetServiceTokenConfig(authhandler.ServiceTokenConfig{
+			Key:              key,
+			PlatformTenantID: config.Env("PLATFORM_TENANT_ID", "platform"),
+			PlatformSlug:     config.Env("PLATFORM_TENANT_SLUG", "platform"),
+		})
+		slog.Info("auth service token endpoint enabled")
+	}
+
+	loginRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 5, Window: time.Minute, KeyFunc: sdamw.ByIP})
+	refreshRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 10, Window: time.Minute, KeyFunc: sdamw.ByIP})
+	mfaRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 5, Window: time.Minute, KeyFunc: sdamw.ByIP})
+	svcTokenRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 5, Window: time.Minute, KeyFunc: sdamw.ByIP})
+
+	r.With(loginRL).Post("/v1/auth/login", h.Login)
+	r.With(refreshRL).Post("/v1/auth/refresh", h.Refresh)
+	r.Post("/v1/auth/logout", h.Logout)
+	r.With(svcTokenRL).Post("/v1/auth/service-token", h.ServiceToken)
+	r.With(mfaRL).Post("/v1/auth/mfa/verify", h.VerifyMFALogin)
+
+	r.Group(func(r chi.Router) {
+		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{
+			Blacklist: blacklist,
+			FailOpen:  false,
+		}))
+		r.Get("/v1/auth/me", h.Me)
+		r.Patch("/v1/auth/me", h.UpdateMe)
+		r.With(sdamw.RequirePermission("users.read")).Get("/v1/auth/users", h.ListUsers)
+		r.Get("/v1/modules/enabled", h.EnabledModules)
+		r.Post("/v1/auth/mfa/setup", h.SetupMFA)
+		r.Post("/v1/auth/mfa/verify-setup", h.VerifySetup)
+		r.Post("/v1/auth/mfa/disable", h.DisableMFA)
+	})
+}
+
+// wirePlatform mounts /v1/platform/* (tenant + deploy admin) and /v1/flags/*
+// (feature flag evaluation). The handler owns its own admin middleware via
+// requirePlatformAdmin, so routes mount directly under r (no outer Group).
+func wirePlatform(
+	app *server.App, r chi.Router,
+	pool *pgxpool.Pool, nc *nats.Conn,
+	publicKey ed25519.PublicKey,
+	blacklist *security.TokenBlacklist,
+) {
+	_ = app // shutdown hooks wired by caller's pools; platform has nothing of its own
+	publisher := natspub.New(nc)
+	svc := plservice.New(pool, publisher)
+	platformSlug := config.Env("PLATFORM_TENANT_SLUG", "platform")
+	h := plhandler.NewPlatform(svc, publicKey, platformSlug, blacklist)
+
+	r.Mount("/v1/platform", h.Routes())
+	r.Mount("/v1/flags", h.FlagsRoutes())
+}
+
+// wireFeedback mounts /v1/feedback/* (tenant-scoped, FailOpen=true so
+// feedback submission keeps working if the blacklist is down) and
+// /v1/platform/feedback/* (admin, FailOpen=false), and starts the NATS
+// consumer + hourly aggregator that produces feedback metrics and alerts.
+func wireFeedback(
+	ctx context.Context, app *server.App, r chi.Router,
+	tenantPool, platformPool *pgxpool.Pool, nc *nats.Conn,
+	publicKey ed25519.PublicKey,
+	blacklist *security.TokenBlacklist,
+	tenantID, tenantSlug string,
+) {
+	publisher := natspub.New(nc)
+	feedbackSvc := fbservice.NewFeedback(tenantPool, platformPool)
+	alerter := fbservice.NewAlerter(platformPool, publisher)
+
+	consumer := fbservice.NewConsumer(nc, feedbackSvc)
+	if err := consumer.Start(ctx); err != nil {
+		slog.Error("failed to start feedback consumer", "error", err)
+		os.Exit(1)
+	}
+	app.OnShutdown(consumer.Stop)
+
+	aggInterval := 1 * time.Hour
+	if config.Env("AGGREGATION_INTERVAL", "") == "1m" {
+		aggInterval = 1 * time.Minute // test override
+	}
+	aggregator := fbservice.NewAggregator(tenantPool, platformPool, feedbackSvc, alerter, aggInterval)
+	aggregator.Start(ctx, tenantID, tenantSlug)
+	app.OnShutdown(aggregator.Stop)
+
+	feedbackH := fbhandler.NewFeedback(feedbackSvc.Repo(), platformPool)
+	r.Group(func(r chi.Router) {
+		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{
+			Blacklist: blacklist,
+			FailOpen:  true,
+		}))
+		r.Mount("/v1/feedback", feedbackH.Routes())
+	})
+
+	platformFbH := fbhandler.NewPlatformFeedback(platformPool)
+	r.Group(func(r chi.Router) {
+		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{
+			Blacklist: blacklist,
+			FailOpen:  false, // admin routes: security > availability
+		}))
+		r.Mount("/v1/platform/feedback", platformFbH.Routes())
 	})
 }
