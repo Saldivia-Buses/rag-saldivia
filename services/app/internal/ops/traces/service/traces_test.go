@@ -56,7 +56,7 @@ func TestNilIfEmpty_Whitespace_ReturnsPointer(t *testing.T) {
 //
 // TDD-ANCHOR: Full ListTraces testing (SQL, pagination, tenant isolation) requires
 // a real PostgreSQL connection. Run with: //go:build integration + testcontainers.
-// See services/auth/internal/service/auth_integration_test.go for the pattern.
+// See services/app/internal/core/auth/service/auth_integration_test.go for the pattern.
 // ---------------------------------------------------------------------------
 
 func TestListTraces_LimitClampSpec(t *testing.T) {

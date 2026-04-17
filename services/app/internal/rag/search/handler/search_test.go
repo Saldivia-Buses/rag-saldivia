@@ -220,4 +220,4 @@ func TestSearch_ErrorResponses_AreAlwaysJSON(t *testing.T) {
 //
 // To make these handler tests possible without integration infra, the production
 // handler should accept a SearchService interface instead of *service.Search directly.
-// See: services/chat/internal/handler/chat.go for the pattern (ChatService interface).
+// See: services/app/internal/realtime/chat/handler/chat.go for the pattern (ChatService interface).

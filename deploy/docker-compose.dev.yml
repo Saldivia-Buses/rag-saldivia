@@ -2,7 +2,7 @@
 #
 # Two modes:
 #   make dev       → infra only (postgres, redis, nats, traefik, mailpit)
-#                    run Go services on host: go run ./services/auth/cmd/...
+#                    run Go services on host: go run ./services/app/cmd  (plus erp, extractor)
 #                    traefik routes via deploy/traefik/dynamic/dev.yml → host.docker.internal
 #
 #   make dev-full  → infra + all Go services in Docker

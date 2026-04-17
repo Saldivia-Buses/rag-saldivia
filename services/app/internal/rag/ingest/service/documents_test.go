@@ -31,7 +31,7 @@ import (
 // TDD-ANCHOR: UploadDocument full happy path and error paths require:
 //   - testcontainers (PostgreSQL) for repository calls
 //   - either a real NATS server or interface extraction for *nats.Conn
-//   - See services/ingest/internal/service/ingest_integration_test.go for the integration suite
+//   - See services/app/internal/rag/ingest/service/ingest_integration_test.go for the integration suite
 
 // --- mock storage.Store ---
 
