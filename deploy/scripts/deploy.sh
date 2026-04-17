@@ -26,12 +26,12 @@ GIT_SHA=$(cd "$ROOT_DIR" && git rev-parse --short HEAD 2>/dev/null || echo "unkn
 BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
 declare -A SERVICE_PORTS=(
-    [ws]=8002 [chat]=8003 [agent]=8004
-    [notification]=8005 [ingest]=8007
-    [search]=8010 [erp]=8013 [app]=8020
+    [ws]=8002 [chat]=8003
+    [notification]=8005
+    [erp]=8013 [app]=8020
 )
 
-ALL_GO_SERVICES=(ws chat agent search notification ingest erp app)
+ALL_GO_SERVICES=(ws chat notification erp app)
 ALL_FRONTEND_SERVICES=(web)
 ALL_SERVICES=("${ALL_GO_SERVICES[@]}" "${ALL_FRONTEND_SERVICES[@]}")
 

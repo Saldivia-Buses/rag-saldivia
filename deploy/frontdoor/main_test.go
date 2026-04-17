@@ -78,7 +78,6 @@ func TestRouting(t *testing.T) {
 		{"static goes to nextjs", "GET", "/favicon.ico", http.StatusOK, "nextjs"},
 		{"deep path goes to nextjs", "GET", "/dashboard/chats/42", http.StatusOK, "nextjs"},
 		{"v1 chat", "POST", "/v1/chat/messages", http.StatusOK, "chat"},
-		{"v1 agent", "GET", "/v1/agent/sessions/abc", http.StatusOK, "agent"},
 		{"v1 erp", "GET", "/v1/erp/orders", http.StatusOK, "erp"},
 		{"v1 with no service is 404", "GET", "/v1/", http.StatusNotFound, ""},
 		{"v1 unknown service is 404", "GET", "/v1/doesnotexist/foo", http.StatusNotFound, ""},
@@ -178,8 +177,8 @@ func TestUpstreamMapCoverage(t *testing.T) {
 	// go-services-builder stage — must exclude anything absorbed into the
 	// app monolith (ops + core, per ADR 025).
 	want := []string{
-		"agent", "chat", "erp", "ingest",
-		"notification", "search", "ws",
+		"chat", "erp",
+		"notification", "ws",
 	}
 	for _, name := range want {
 		if _, ok := upstreamAddrs[name]; !ok {

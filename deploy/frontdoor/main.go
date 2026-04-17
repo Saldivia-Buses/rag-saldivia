@@ -36,10 +36,7 @@ import (
 var upstreamAddrs = map[string]string{
 	"ws":           "http://127.0.0.1:8002",
 	"chat":         "http://127.0.0.1:8003",
-	"agent":        "http://127.0.0.1:8004",
 	"notification": "http://127.0.0.1:8005",
-	"ingest":       "http://127.0.0.1:8007",
-	"search":       "http://127.0.0.1:8010",
 	"erp":          "http://127.0.0.1:8013",
 }
 

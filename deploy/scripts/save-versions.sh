@@ -14,10 +14,7 @@ set -euo pipefail
 declare -A SERVICES=(
   [ws]=8002
   [chat]=8003
-  [agent]=8004
   [notification]=8005
-  [ingest]=8007
-  [search]=8010
   [erp]=8013
   [app]=8020
 )
