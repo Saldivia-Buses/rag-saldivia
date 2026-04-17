@@ -12,7 +12,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/Camionerou/rag-saldivia/services/notification/internal/service"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/realtime/notification/service"
 )
 
 // --- mock ---

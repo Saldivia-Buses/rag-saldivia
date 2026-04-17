@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Camionerou/rag-saldivia/services/notification/internal/service"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/realtime/notification/service"
 )
 
 // --- mock alert store ---

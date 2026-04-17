@@ -23,7 +23,7 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/stretchr/testify/require"
 
-	"github.com/Camionerou/rag-saldivia/services/notification/internal/repository"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/realtime/notification/repository"
 )
 
 // ---------------------------------------------------------------------------

@@ -6,7 +6,6 @@ use (
 	./services/app
 	./services/chat
 	./services/erp
-	./services/notification
 	./services/ws
 	./tools/cli
 	./tools/eventsgen

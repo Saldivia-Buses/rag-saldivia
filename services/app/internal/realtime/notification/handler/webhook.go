@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/Camionerou/rag-saldivia/pkg/httperr"
-	"github.com/Camionerou/rag-saldivia/services/notification/internal/service"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/realtime/notification/service"
 )
 
 // Mailer sends email notifications (satisfied by service.SMTPMailer).

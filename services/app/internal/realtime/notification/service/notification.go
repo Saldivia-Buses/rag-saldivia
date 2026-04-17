@@ -13,7 +13,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
-	"github.com/Camionerou/rag-saldivia/services/notification/internal/repository"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/realtime/notification/repository"
 )
 
 var (
