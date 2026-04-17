@@ -91,7 +91,24 @@ pattern, in this order, each its own session / PR:
    have fused (separate session). Followups surfaced: NATS per-service
    users, traefik dynamic configs, Grafana dashboards and `.env.example`
    still reference the 3 old names; harmless today but will need a sweep.
-2. **`core`** — internal identity + config. Still no product hot paths.
+2. **`core`** — internal identity + config. **✅ done (2026-04-17).**
+   auth + platform + feedback absorbed into
+   `services/app/internal/core/{auth,platform,feedback}/`. The three
+   old `services/*` shells are deleted; `go.work` holds 7 standalone
+   service entries (agent, chat, erp, ingest, notification, search, ws)
+   plus `services/app`; the frontdoor map shrank 10 → 7; Makefile /
+   compose / deploy scripts drop the three names. Paths preserved
+   (`/v1/auth/*`, `/v1/modules/*`, `/v1/platform/*`, `/v1/flags/*`,
+   `/v1/feedback/*`, `/v1/platform/feedback/*`) so clients see zero
+   change. Single-tenant path hardening shipped with the move:
+   `handler.NewMultiTenantAuth` + `pkg/tenant.Resolver` wiring deleted
+   from auth (dead code under ADR 022), replaced by a
+   `handler.SetJWTConfig` seam called in `wireAuth`. One
+   `pkg/outbox.NewDrainer` per silo takes over from the registry of
+   per-tenant drainers. Same open followups as ops pilot (NATS per-
+   service users, traefik dynamic, Grafana, `.env.example`); non-
+   blocking, tracked for the session that lands the `app` binary
+   under s6.
 3. **`rag`** — removes the biggest runtime coupling (agent→search+ingest).
    First fusion that changes how the product runs (faster, in-process).
 4. **`realtime`** — user-facing, ws/chat gRPC removal. Test coverage matters
