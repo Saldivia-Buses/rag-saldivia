@@ -35,8 +35,6 @@ jobs:
         with:
           go-version-file: go.work
           cache-dependency-path: "**/go.sum"
-      - name: Build generated code
-        run: go build ./gen/go/...
       - name: Build all services
         run: |
           for svc in services/*/; do
@@ -66,7 +64,6 @@ jobs:
             echo "::endgroup::"
           done
           go vet ./pkg/...
-          go vet ./gen/go/...
 
   web-typecheck:
     name: Typecheck frontend
@@ -106,7 +103,6 @@ jobs:
       - name: Test shared packages
         run: |
           go test -race -count=1 ./pkg/...
-          go test -race -count=1 ./gen/go/...
       - name: Test tools
         run: |
           for tool in tools/*/; do

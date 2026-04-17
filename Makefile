@@ -22,7 +22,7 @@ LDFLAGS_BASE := -s -w \
 
 export GOBIN
 
-.PHONY: help dev stop test lint build proto migrate deploy new-service clean versions
+.PHONY: help dev stop test lint build migrate deploy new-service clean versions
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -177,12 +177,6 @@ lint-frontend: ## Lint frontend code
 	cd apps/web && bun run lint
 
 # ── Code Generation ─────────────────────────────────────────────────────
-
-proto: ## Generate gRPC code from proto files
-	@echo "Generating protobuf code..."
-	cd proto && buf lint && buf generate
-	cd gen/go && go mod tidy
-	@echo "Generated → gen/go/"
 
 sqlc: ## Generate Go code from SQL queries (all services)
 	@for svc in $(GO_SERVICES); do \

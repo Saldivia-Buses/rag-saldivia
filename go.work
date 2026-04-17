@@ -1,7 +1,6 @@
 go 1.25.0
 
 use (
-	./gen/go
 	./pkg
 	./services/app
 	./services/erp
