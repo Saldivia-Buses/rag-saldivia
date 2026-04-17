@@ -134,8 +134,38 @@ pattern, in this order, each its own session / PR:
    Same open followups as ops + core pilots (NATS per-service users,
    traefik dynamic, Grafana, `.env.example`); non-blocking, tracked
    for the session that lands the `app` binary under s6.
-4. **`realtime`** — user-facing, ws/chat gRPC removal. Test coverage matters
-   here; do it after `rag` validates the pattern end-to-end.
+4. **`realtime`** — user-facing, ws/chat gRPC removal. **✅ done (2026-04-17).**
+   chat + ws + notification absorbed into
+   `services/app/internal/realtime/{chat,ws,notification}/`. The three old
+   `services/*` shells are deleted; `go.work` holds one standalone service
+   entry (erp) plus `services/app`; the frontdoor map shrank 4 → 1;
+   Makefile / compose / deploy scripts drop the three names. Paths
+   preserved (`/v1/chat/sessions/*`, `/v1/notifications/*`, `/ws`) so
+   clients see zero change. Second fusion to collapse a gRPC seam:
+   - ws→chat gRPC is gone. `MutationHandler` now holds a
+     `*chatservice.Chat` and dispatches in-process — no dial, no
+     `ForwardJWT`, no `protojson.Marshal`. Response JSON comes from
+     plain `encoding/json` on the service's domain structs; field
+     names stay snake_case (proto tags = Go json tags), so the wire
+     protocol is unchanged from the browser's perspective.
+   - chat gRPC server deleted outright: `handler/grpc.go`, the
+     `:50052` listener in `cmd/main.go`, the `RegisterChatServiceServer`
+     call — none of it has a caller any more.
+   - The WS upgrade path moves into the monolith's chi router with
+     two small lifecycle tweaks: `server.WithTimeout(0)` disables
+     the 30s request-timeout middleware so hijacked connections
+     survive, and `app.RunWithWriteTimeout(0)` matches what the
+     standalone ws did on `http.Server.WriteTimeout`.
+   Taking those consumers out finally drains `pkg/grpc` — no
+   in-process callers remain, so `pkg/grpc/`, `gen/go/` (whole
+   workspace module, every proto package), and `proto/` (source
+   plus buf config) all delete in a follow-up commit together with
+   the `make proto` target and the CI steps that built / vetted /
+   tested `./gen/go/...`. ADR 017 is superseded by that deletion
+   and marked Deprecated. Same open followups as ops + core + rag
+   pilots (NATS per-service users, traefik dynamic, Grafana,
+   `.env.example`); non-blocking, tracked for the session that
+   lands the `app` binary under s6.
 5. **`erp`** — only if/when ERP shrinks. 38 k LOC folded in one move is
    too big; defer or split `erp` internally first.
 
@@ -159,7 +189,7 @@ Today, `deploy/frontdoor/main.go` has 13 entries. After each fusion:
 - After `ops`:      map shrinks by 3 → 10 entries. `ops` routes land in app.
 - After `core`:     map shrinks by 3 → 7 entries.
 - After `rag`:      map shrinks by 3 → 4 entries. **✅ done.**
-- After `realtime`: map shrinks by 3 → 1 entry (`erp` only).
+- After `realtime`: map shrinks by 3 → 1 entry (`erp` only). **✅ done.**
 - After `erp`:      **map empty, frontdoor binary deleted.**
 
 `cmd/sda/main.go` then owns `:80` directly; `/*` proxy to Next.js lives
