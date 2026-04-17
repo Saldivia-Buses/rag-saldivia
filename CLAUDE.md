@@ -1,9 +1,10 @@
 # SDA Framework
 
 Go backend + Next.js frontend, deployed **one container per tenant** (silo model,
-all-in-one image — see ADR 022 + ADR 023). Backend on inhouse workstation
-(single-box vertical scale — see below). Frontend on CDN. No pool-tenant in the
-code: the tenant **is** the container.
+all-in-one image with frontend baked in — see ADR 022 + ADR 023 + ADR 024). Runs
+on the inhouse workstation (single-box vertical scale — see below). No pool-tenant
+in the code: the tenant **is** the container, and the container carries the entire
+product (Go app + Next.js + Postgres + NATS + Redis + MinIO) under `s6-overlay`.
 
 **Workstation (`srv-ia-01`, `172.22.100.23`):**
 - **CPU:** AMD Threadripper Pro 9975WX (32c/64t)
@@ -26,7 +27,7 @@ apps/web/          Next.js app (frontend)
 services/          14 Go microservices: agent, auth, bigbrother, chat, erp,
                    extractor, feedback, healthwatch, ingest, notification,
                    platform, search, traces, ws
-pkg/               32 shared Go packages (jwt, nats, tenant, httperr, middleware, …)
+pkg/               24 shared Go packages (jwt, nats, tenant, httperr, middleware, …)
 deploy/            docker-compose, Traefik, scripts
 tools/cli/         `sda` CLI (migrations, admin)
 docs/plans/        historical plans — read-only, never edit
@@ -105,7 +106,7 @@ If the harness is wrong, fix the harness first. Don't work around it.
 ## Principles (apply everywhere)
 
 0. **Reduce before adding.** The project is over-engineered for a one-dev
-   vertical-scale box: ~89 k LOC of Go, 15 services, 32 packages. The direction is
+   vertical-scale box: ~66 k LOC of Go (down from 89 k), 14 services, 24 packages. The direction is
    **consolidate, delete, unify** — not add. Every feature request, every refactor,
    every new package starts with the question: *can this be done by removing
    something instead?* When in doubt, delete. A session that ends with net-negative
@@ -131,9 +132,11 @@ If the harness is wrong, fix the harness first. Don't work around it.
 The north star for this codebase is this shape — not today, but every decision
 should bend toward it:
 
-- **From 14 services → 3-5.** Group by domain, not by noun. (See `continuous-improvement`.)
-- **From 32 packages → ~10.** Delete unused ones, inline one-importer packages.
-- **From ~89 k LOC → whatever it takes** to express the same product with fewer lines.
+- **From 14 services → 3-5.** Group by domain, not by noun. Inside the all-in-one
+  container (ADR 024) these are internal modules of one binary, not separate
+  processes. (See `continuous-improvement`.)
+- **From 24 packages → ~10.** Delete unused ones, inline one-importer packages.
+- **From ~66 k LOC → whatever it takes** to express the same product with fewer lines.
 - **Question multi-tenant** at every opportunity. If it isn't a real product requirement,
   its scaffolding is the biggest single simplification available.
 
