@@ -114,7 +114,12 @@ ENV DEBIAN_FRONTEND=noninteractive \
     S6_CMD_WAIT_FOR_SERVICES_MAXTIME=60000 \
     S6_VERBOSITY=1 \
     PGDATA=/data/postgres \
-    PATH=/opt/sda/bin:/usr/lib/postgresql/16/bin:/command:/package/admin/s6-overlay-3/command:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    PATH=/opt/sda/bin:/usr/lib/postgresql/16/bin:/command:/package/admin/s6-overlay-3/command:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+    APP_PORT=8020 \
+    NATS_URL=nats://127.0.0.1:4222 \
+    REDIS_URL=127.0.0.1:6379 \
+    POSTGRES_TENANT_URL="postgres:///sda_tenant_dev?host=/var/run/postgresql&user=postgres&sslmode=disable" \
+    POSTGRES_PLATFORM_URL="postgres:///sda_platform?host=/var/run/postgresql&user=postgres&sslmode=disable"
 
 # Base packages + Postgres 16 (pgdg). Kept as one RUN to collapse apt layers.
 RUN set -eux; \
@@ -189,14 +194,22 @@ RUN set -eux; \
 COPY deploy/s6-overlay/s6-rc.d/ /etc/s6-overlay/s6-rc.d/
 COPY deploy/s6-overlay/scripts/ /etc/s6-overlay/scripts/
 COPY deploy/s6-overlay/config/  /etc/sda/
+# Canonical migrate.sh also lives under deploy/scripts/ so `sda db migrate`
+# can invoke it from the repo. In-image it runs from the s6 scripts dir.
+COPY deploy/scripts/migrate.sh  /etc/s6-overlay/scripts/migrate.sh
+# Migrations are consumed by /etc/s6-overlay/scripts/migrate.sh at /db
+# (its default DB_DIR when the path exists).
+COPY db/                        /db/
 RUN chmod -R 0755 /etc/s6-overlay/scripts /etc/s6-overlay/s6-rc.d
 
 # Frontdoor binary (deploy glue).
 COPY --from=go-frontdoor-builder /out/frontdoor /usr/local/bin/frontdoor
 
-# Go app binaries — namespaced under /opt/sda/bin so the names ("auth",
-# "chat", etc.) don't collide with anything on the global PATH. Their s6
-# wiring lands in a later commit; for now the binaries just sit in the image.
+# Go app binaries — namespaced under /opt/sda/bin so the names ("app",
+# "erp") don't collide with anything on the global PATH. The `app` binary
+# is driven by s6-rc.d/app (longrun) after s6-rc.d/db-init creates the
+# databases and runs migrations. erp has no s6 longrun here — it still
+# ships as its own docker-compose service until a future fusion absorbs it.
 COPY --from=go-services-builder /out/ /opt/sda/bin/
 
 # Next.js standalone bundle. `server.js` lands at /opt/sda/web/server.js;
