@@ -114,3 +114,4 @@ config/.env.saldivia
 config/.env.*
 firecrawl/
 .firecrawl/
+.claude/settings.local.json
