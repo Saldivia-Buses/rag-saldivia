@@ -72,10 +72,24 @@ import (
 
 	searchhandler "github.com/Camionerou/rag-saldivia/services/app/internal/rag/search/handler"
 	searchservice "github.com/Camionerou/rag-saldivia/services/app/internal/rag/search/service"
+
+	chathandler "github.com/Camionerou/rag-saldivia/services/app/internal/realtime/chat/handler"
+	chatservice "github.com/Camionerou/rag-saldivia/services/app/internal/realtime/chat/service"
+
+	notifhandler "github.com/Camionerou/rag-saldivia/services/app/internal/realtime/notification/handler"
+	notifservice "github.com/Camionerou/rag-saldivia/services/app/internal/realtime/notification/service"
+
+	wshandler "github.com/Camionerou/rag-saldivia/services/app/internal/realtime/ws/handler"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/realtime/ws/hub"
 )
 
 func main() {
-	app := server.New("sda-app", server.WithPort("APP_PORT", "8020"))
+	// WithTimeout(0) disables the request-timeout middleware so the hijacked
+	// /ws connections survive past the default 30s. Handlers that need a
+	// deadline (ingest upload, agent streaming, auth login) set their own.
+	app := server.New("sda-app",
+		server.WithPort("APP_PORT", "8020"),
+		server.WithTimeout(0))
 	ctx := app.Context()
 
 	// Shared dependencies. Any of these failing is fatal — the monolith
@@ -141,7 +155,13 @@ func main() {
 	searchSvc := wireSearch(r, tenantPool, publicKey, blacklist)
 	wireAgent(r, nc, publicKey, blacklist, searchSvc, ingestSvc)
 
-	app.Run()
+	wireNotification(ctx, app, r, tenantPool, platformPool, nc, publicKey, blacklist)
+	chatSvc := wireChat(r, tenantPool, publicKey, blacklist, tenantSlug)
+	wireWS(app, r, nc, publicKey, blacklist, chatSvc)
+
+	// WriteTimeout(0) keeps long-lived /ws connections alive — the only
+	// other streaming endpoint (/v1/agent) self-limits via its own ctx.
+	app.RunWithWriteTimeout(0)
 }
 
 func mustConnectDB(ctx context.Context, name, url string) *pgxpool.Pool {
@@ -615,4 +635,110 @@ func wireAgent(
 		r.Use(aiRL)
 		r.Mount("/v1/agent", h.Routes())
 	})
+}
+
+// wireNotification mounts /v1/notifications (FailOpen=false), starts the NATS
+// consumer that persists incoming notify.* events and sends emails, and
+// exposes the internal /internal/webhook/alert endpoint (token-authenticated,
+// for Alertmanager). Platform DB is the already-connected shared pool, so
+// this function does not open its own; the alert webhook is disabled if the
+// token is absent.
+func wireNotification(
+	ctx context.Context, app *server.App, r chi.Router,
+	tenantPool, platformPool *pgxpool.Pool, nc *nats.Conn,
+	publicKey ed25519.PublicKey, blacklist *security.TokenBlacklist,
+) {
+	mailer := notifservice.NewSMTPMailer(
+		config.Env("SMTP_HOST", "localhost"),
+		config.Env("SMTP_PORT", "1025"),
+		config.Env("SMTP_FROM", "noreply@sda.local"),
+	)
+	svc := notifservice.New(tenantPool)
+	svc.SetMailer(mailer)
+
+	consumer := notifservice.NewConsumer(nc, svc, mailer)
+	if err := consumer.Start(ctx); err != nil {
+		slog.Error("failed to start notification consumer", "error", err)
+		os.Exit(1)
+	}
+	app.OnShutdown(consumer.Stop)
+
+	h := notifhandler.NewNotification(svc)
+	r.Group(func(r chi.Router) {
+		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{
+			Blacklist: blacklist,
+			FailOpen:  false,
+		}))
+		r.Mount("/v1/notifications", h.Routes())
+	})
+
+	// Internal alert webhook: not JWT — token-authenticated per ADR 022
+	// (only reachable via the Docker internal network). Disabled if the
+	// token is unset or too short.
+	webhookToken := loadSecret("/run/secrets/alertmanager_webhook_token",
+		config.Env("ALERTMANAGER_WEBHOOK_TOKEN", ""))
+	if webhookToken == "" {
+		slog.Info("alert webhook disabled (no token configured)")
+		return
+	}
+	if len(webhookToken) < 32 {
+		slog.Error("alert webhook token too short, minimum 32 bytes required")
+		return
+	}
+	alertStore := notifservice.NewPgAlertStore(platformPool)
+	alertTo := config.Env("ALERT_CRITICAL_EMAIL", "")
+	webhook := notifhandler.NewAlertWebhook(webhookToken, alertStore, mailer, alertTo)
+	r.Post("/internal/webhook/alert", webhook.HandleAlertWebhook)
+	slog.Info("alert webhook enabled", "path", "/internal/webhook/alert")
+}
+
+// wireChat mounts /v1/chat/sessions (FailOpen=false — chat is state-changing)
+// and returns the chat service so wireWS can hand it to the hub mutation
+// handler. The outbox drainer is not started here — wireAuth already runs one
+// per tenant pool.
+func wireChat(
+	r chi.Router,
+	tenantPool *pgxpool.Pool,
+	publicKey ed25519.PublicKey, blacklist *security.TokenBlacklist,
+	tenantSlug string,
+) *chatservice.Chat {
+	svc := chatservice.NewChat(tenantPool, tenantSlug)
+
+	h := chathandler.NewChat(svc)
+	r.Group(func(r chi.Router) {
+		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{
+			Blacklist: blacklist,
+			FailOpen:  false,
+		}))
+		r.Mount("/v1/chat/sessions", h.Routes())
+	})
+	return svc
+}
+
+// wireWS mounts /ws (JWT validated on upgrade by the handler — no chi auth
+// middleware), starts the hub event loop and the NATS→WS bridge, and wires
+// the mutation handler so WS clients can invoke chat operations in-process
+// (ws→chat gRPC gone as of the ADR 025 realtime fusion).
+func wireWS(
+	app *server.App, r chi.Router, nc *nats.Conn,
+	publicKey ed25519.PublicKey, blacklist *security.TokenBlacklist,
+	chatSvc *chatservice.Chat,
+) {
+	h := hub.New()
+	go h.Run()
+
+	bridge := hub.NewNATSBridge(h, nc)
+	if err := bridge.Start(); err != nil {
+		slog.Error("failed to start NATS bridge", "error", err)
+		os.Exit(1)
+	}
+	app.OnShutdown(bridge.Stop)
+
+	if mutations := hub.NewMutationHandler(chatSvc); mutations != nil {
+		h.Mutations = mutations
+		app.OnShutdown(mutations.Close)
+	}
+
+	wsHandler := wshandler.NewWS(h, publicKey, blacklist)
+	r.Get("/ws", wsHandler.Upgrade)
 }
