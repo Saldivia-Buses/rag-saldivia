@@ -66,6 +66,7 @@ func init() {
 	// system noise) and park its rows in erp_legacy_archive as JSONB. Gives
 	// the "no silent data loss" guarantee.
 	migrateLegacyCmd.Flags().Bool("archive", false, "Archive every non-migrated, non-HTX legacy table into erp_legacy_archive as JSONB")
+	migrateLegacyCmd.Flags().Bool("archive-only", false, "Skip the structured migration; only run the universal JSONB archive over non-migrated tables")
 
 	// --archive-skips: whenever a migrator transform rejects a row (returns
 	// nil because of a zero PK, missing FK that no ghost covered, etc.) the
@@ -205,6 +206,21 @@ func runMigrateLegacy(cmd *cobra.Command, args []string) error {
 
 	// Register all migrators in FK dependency order
 	registerMigrators(orch, mysqlDB, tenantSlug)
+
+	// --- Archive-only fast path ---
+	// Skips the entire structured migration and goes straight to the
+	// universal JSONB archive. Useful when the structured migration is
+	// already complete (e.g. after a successful --resume) and you just
+	// want to ship the non-modeled legacy tables.
+	if archiveOnly, _ := cmd.Flags().GetBool("archive-only"); archiveOnly {
+		fmt.Println("Archive-only mode: skipping structured migration, running universal archive...")
+		covered := migration.CoveredLegacyTables(orch)
+		if err := migration.ArchiveAll(ctx, mysqlDB, pgPool, tenantSlug, covered); err != nil {
+			return fmt.Errorf("archive-only: %w", err)
+		}
+		fmt.Println("Archive-only done.")
+		return nil
+	}
 
 	// --- Pre-validation (dry-run only) ---
 	var dryRunID uuid.UUID
