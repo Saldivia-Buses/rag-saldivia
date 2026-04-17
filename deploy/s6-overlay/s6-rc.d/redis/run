@@ -1,0 +1,6 @@
+#!/command/execlineb -P
+with-contenv
+foreground { s6-echo "redis: starting" }
+foreground { install -d -o sda -g sda -m 0750 /data/redis }
+s6-setuidgid sda
+/usr/bin/redis-server /etc/sda/redis.conf
