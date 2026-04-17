@@ -27,9 +27,9 @@
 #     └── uploads/    ← ingest staging
 #
 # ──────────────────────────────────────────────────────────────────────────
-# Stage 1: Go builder — frontdoor stub (real services join in commit 5).
+# Stage 1a: Go builder — frontdoor stub (deploy glue, outside go.work).
 # ──────────────────────────────────────────────────────────────────────────
-FROM golang:1.25-bookworm AS go-builder
+FROM golang:1.25-bookworm AS go-frontdoor-builder
 
 WORKDIR /src
 # Frontdoor has its own go.mod and lives outside go.work on purpose — it is
@@ -38,6 +38,41 @@ ENV GOWORK=off CGO_ENABLED=0 GOOS=linux GOFLAGS=-trimpath
 COPY deploy/frontdoor/ ./frontdoor/
 WORKDIR /src/frontdoor
 RUN go build -ldflags="-s -w" -o /out/frontdoor .
+
+# ──────────────────────────────────────────────────────────────────────────
+# Stage 1b: Go builder — the 13 app services (go.work-wide build).
+# ──────────────────────────────────────────────────────────────────────────
+FROM golang:1.25-bookworm AS go-services-builder
+
+ARG VERSION=dev
+ARG GIT_SHA=unknown
+ARG BUILD_TIME=unknown
+
+WORKDIR /src
+ENV CGO_ENABLED=0 GOOS=linux GOFLAGS=-trimpath
+
+COPY go.work go.work.sum ./
+COPY gen/     ./gen/
+COPY pkg/     ./pkg/
+COPY services/ ./services/
+COPY tools/    ./tools/
+
+# One builder stage for all 13 services keeps the module graph + build cache
+# warm across them. Extractor is Python, skipped here.
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    --mount=type=cache,target=/go/pkg/mod \
+    set -eux; \
+    mkdir -p /out; \
+    LDFLAGS="-s -w \
+        -X github.com/Camionerou/rag-saldivia/pkg/build.Version=${VERSION} \
+        -X github.com/Camionerou/rag-saldivia/pkg/build.GitSHA=${GIT_SHA} \
+        -X github.com/Camionerou/rag-saldivia/pkg/build.BuildTime=${BUILD_TIME}"; \
+    for svc in agent auth bigbrother chat erp feedback healthwatch ingest \
+               notification platform search traces ws; do \
+        echo "▸ building $svc"; \
+        go build -ldflags "$LDFLAGS" -o "/out/$svc" "./services/$svc/cmd"; \
+    done; \
+    ls -la /out
 
 # ──────────────────────────────────────────────────────────────────────────
 # Stage 2: runtime — debian:12-slim + s6-overlay + Postgres 16.
@@ -58,7 +93,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     S6_CMD_WAIT_FOR_SERVICES_MAXTIME=60000 \
     S6_VERBOSITY=1 \
     PGDATA=/data/postgres \
-    PATH=/usr/lib/postgresql/16/bin:/command:/package/admin/s6-overlay-3/command:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    PATH=/opt/sda/bin:/usr/lib/postgresql/16/bin:/command:/package/admin/s6-overlay-3/command:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 # Base packages + Postgres 16 (pgdg). Kept as one RUN to collapse apt layers.
 RUN set -eux; \
@@ -127,8 +162,13 @@ COPY deploy/s6-overlay/scripts/ /etc/s6-overlay/scripts/
 COPY deploy/s6-overlay/config/  /etc/sda/
 RUN chmod -R 0755 /etc/s6-overlay/scripts /etc/s6-overlay/s6-rc.d
 
-# Frontdoor binary (built above).
-COPY --from=go-builder /out/frontdoor /usr/local/bin/frontdoor
+# Frontdoor binary (deploy glue).
+COPY --from=go-frontdoor-builder /out/frontdoor /usr/local/bin/frontdoor
+
+# Go app binaries — namespaced under /opt/sda/bin so the names ("auth",
+# "chat", etc.) don't collide with anything on the global PATH. Their s6
+# wiring lands in a later commit; for now the binaries just sit in the image.
+COPY --from=go-services-builder /out/ /opt/sda/bin/
 
 # Volume + ports.
 VOLUME ["/data"]
