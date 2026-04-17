@@ -45,6 +45,7 @@ RUN go build -ldflags="-s -w" -o /out/frontdoor .
 FROM debian:12-slim AS runtime
 
 ARG S6_OVERLAY_VERSION=3.2.0.2
+ARG NATS_VERSION=2.10.24
 ARG TARGETARCH=amd64
 
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -55,7 +56,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     S6_CMD_WAIT_FOR_SERVICES_MAXTIME=60000 \
     S6_VERBOSITY=1 \
     PGDATA=/data/postgres \
-    PATH=/usr/lib/postgresql/16/bin:/command:/package/admin/s6-overlay-3/command:/usr/local/bin:/usr/bin:/bin
+    PATH=/usr/lib/postgresql/16/bin:/command:/package/admin/s6-overlay-3/command:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 # Base packages + Postgres 16 (pgdg). Kept as one RUN to collapse apt layers.
 RUN set -eux; \
@@ -76,7 +77,25 @@ RUN set -eux; \
     rm -rf /var/lib/apt/lists/*; \
     # Postgres package creates an initial cluster on install; we drop it because
     # our cluster lives on the host volume at /data/postgres.
-    rm -rf /var/lib/postgresql/16/main || true
+    rm -rf /var/lib/postgresql/16/main || true; \
+    # Shared unprivileged user for NATS / Redis / MinIO (postgres keeps its own).
+    groupadd --system --gid 990 sda; \
+    useradd --system --uid 990 --gid sda --home-dir /nonexistent --shell /usr/sbin/nologin sda
+
+# NATS server (single binary). Downloaded + verified + installed.
+RUN set -eux; \
+    arch="$(dpkg --print-architecture)"; \
+    case "$arch" in \
+        amd64) natsarch="linux-amd64" ;; \
+        arm64) natsarch="linux-arm64" ;; \
+        *) echo "unsupported arch: $arch" >&2; exit 1 ;; \
+    esac; \
+    url="https://github.com/nats-io/nats-server/releases/download/v${NATS_VERSION}/nats-server-v${NATS_VERSION}-${natsarch}.tar.gz"; \
+    curl -fsSL "$url" -o /tmp/nats.tgz; \
+    tar -xzf /tmp/nats.tgz -C /tmp; \
+    install -m 0755 "/tmp/nats-server-v${NATS_VERSION}-${natsarch}/nats-server" /usr/local/bin/nats-server; \
+    rm -rf /tmp/nats.tgz "/tmp/nats-server-v${NATS_VERSION}-${natsarch}"; \
+    /usr/local/bin/nats-server --version
 
 # s6-overlay v3 — two-tar install (noarch + arch-specific).
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp/s6-noarch.tar.xz
@@ -86,9 +105,10 @@ RUN set -eux; \
     tar -C / -Jxpf /tmp/s6-bin.tar.xz; \
     rm -f /tmp/s6-noarch.tar.xz /tmp/s6-bin.tar.xz
 
-# s6 service bundles + helper scripts.
+# s6 service bundles + helper scripts + config.
 COPY deploy/s6-overlay/s6-rc.d/ /etc/s6-overlay/s6-rc.d/
 COPY deploy/s6-overlay/scripts/ /etc/s6-overlay/scripts/
+COPY deploy/s6-overlay/config/  /etc/sda/
 RUN chmod -R 0755 /etc/s6-overlay/scripts /etc/s6-overlay/s6-rc.d
 
 # Frontdoor binary (built above).
