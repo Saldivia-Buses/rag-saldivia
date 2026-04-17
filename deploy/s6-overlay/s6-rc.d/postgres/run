@@ -1,6 +1,5 @@
 #!/command/execlineb -P
 with-contenv
-foreground { s6-echo "postgres: starting" }
 s6-setuidgid postgres
 /usr/lib/postgresql/16/bin/postgres
   -D /data/postgres

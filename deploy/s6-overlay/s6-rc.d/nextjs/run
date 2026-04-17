@@ -1,6 +1,5 @@
 #!/command/execlineb -P
 with-contenv
-foreground { s6-echo "nextjs: starting" }
 export PORT 3000
 export HOSTNAME 127.0.0.1
 export NEXT_TELEMETRY_DISABLED 1

@@ -1,4 +1,3 @@
 #!/command/execlineb -P
 with-contenv
-foreground { s6-echo "frontdoor: starting" }
 /usr/local/bin/frontdoor
