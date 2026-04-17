@@ -213,14 +213,22 @@ func (r *CompositeKeyReader) ReadBatch(ctx context.Context, resumeKey string, li
 	var where string
 	var args []any
 	if len(parsed) > 0 {
-		// Build (col1, col2) > (?, ?) for composite key ordering
-		colList := strings.Join(r.PKColumns, ", ")
-		placeholders := make([]string, len(r.PKColumns))
-		for i, col := range r.PKColumns {
-			placeholders[i] = "?"
-			args = append(args, parsed[col])
+		// MySQL 5.7 does not optimize tuple comparison `(a,b) > (?,?)` into a range
+		// scan — it falls back to a full index scan, which is O(N²) across batches
+		// for large tables (e.g., FICHADADIA 934K rows). Expand into an OR chain
+		// the planner does understand: `a > ?0 OR (a = ?0 AND b > ?1) OR ...`.
+		clauses := make([]string, 0, len(r.PKColumns))
+		for i := range r.PKColumns {
+			parts := make([]string, 0, i+1)
+			for j := 0; j < i; j++ {
+				parts = append(parts, fmt.Sprintf("%s = ?", r.PKColumns[j]))
+				args = append(args, parsed[r.PKColumns[j]])
+			}
+			parts = append(parts, fmt.Sprintf("%s > ?", r.PKColumns[i]))
+			args = append(args, parsed[r.PKColumns[i]])
+			clauses = append(clauses, "("+strings.Join(parts, " AND ")+")")
 		}
-		where = fmt.Sprintf("(%s) > (%s)", colList, strings.Join(placeholders, ", "))
+		where = strings.Join(clauses, " OR ")
 	} else {
 		where = "1=1"
 	}
