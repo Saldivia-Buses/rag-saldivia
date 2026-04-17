@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Camionerou/rag-saldivia/services/bigbrother/internal/scanner"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/ops/bigbrother/scanner"
 )
 
 // newBareDevices creates a Devices with all optional services nil.

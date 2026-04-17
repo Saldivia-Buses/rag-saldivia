@@ -3,7 +3,7 @@ package fingerprint
 import (
 	"strings"
 
-	"github.com/Camionerou/rag-saldivia/services/bigbrother/internal/scanner"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/ops/bigbrother/scanner"
 )
 
 // DeviceType is the classified type of a network device.

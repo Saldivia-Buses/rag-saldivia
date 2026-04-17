@@ -10,8 +10,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
 
-	"github.com/Camionerou/rag-saldivia/services/bigbrother/internal/fingerprint"
-	"github.com/Camionerou/rag-saldivia/services/bigbrother/internal/scanner"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/ops/bigbrother/fingerprint"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/ops/bigbrother/scanner"
 )
 
 // maxNewDevicesPerScan prevents MAC spoofing table bloat.

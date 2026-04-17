@@ -7,7 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/Camionerou/rag-saldivia/pkg/httperr"
-	"github.com/Camionerou/rag-saldivia/services/bigbrother/internal/service"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/ops/bigbrother/service"
 )
 
 // Control handles PLC and exec-related endpoints.

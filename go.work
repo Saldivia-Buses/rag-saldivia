@@ -6,7 +6,6 @@ use (
 	./services/agent
 	./services/app
 	./services/auth
-	./services/bigbrother
 	./services/chat
 	./services/erp
 	./services/feedback

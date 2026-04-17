@@ -3,7 +3,7 @@ package fingerprint
 import (
 	"testing"
 
-	"github.com/Camionerou/rag-saldivia/services/bigbrother/internal/scanner"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/ops/bigbrother/scanner"
 )
 
 func TestClassifyDevice(t *testing.T) {
