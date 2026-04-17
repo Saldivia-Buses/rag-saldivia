@@ -35,11 +35,10 @@ func NewCashMovementMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				row.Int("regmin"), row.String("siscod"), row.Int("succod"))
 			legacyID := int64(hashCode(compositeKey))
 
-			// Amount must be > 0 (CHECK constraint). Use absolute value, skip zeros.
+			// Amount: cajimp can be zero (legacy recorded informational movements).
+			// Migration 061 relaxed the CHECK from >0 to >=0 so we keep them.
 			amount := ParseDecimal(row.Decimal("cajimp")).Abs()
-			if amount.IsZero() {
-				return nil, nil // skip zero-amount movements
-			}
+			zeroAmt := amount.IsZero()
 
 			// Movement type: cash movements are cash_in or cash_out.
 			// cajimp positive → cash_in, negative → cash_out
@@ -84,6 +83,9 @@ func NewCashMovementMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 
 			// Notes: combine references
 			var notes []string
+			if zeroAmt {
+				notes = append(notes, "[legacy:zero_amount]")
+			}
 			if ref1 := row.String("cajref__1"); ref1 != "" {
 				notes = append(notes, ref1)
 			}
@@ -315,14 +317,13 @@ func NewAccountMovementMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				return nil, nil
 			}
 
-			// Entity FK: regcuenta_id → REG_CUENTA (NOT NULL in target)
+			// Entity FK: regcuenta_id → REG_CUENTA (NOT NULL in target).
+			// Flex-resolve + UNKNOWN fallback — 1,911 saldivia rows have
+			// regcuenta_id=0 and were being silently dropped.
 			regcuentaID := row.Int64("regcuenta_id")
-			if regcuentaID == 0 {
-				return nil, nil // skip rows with no entity
-			}
-			entityID, err := mapper.Resolve(ctx, "entity", "REG_CUENTA", regcuentaID)
-			if err != nil {
-				return nil, nil // skip if entity not migrated
+			entityID, _ := mapper.ResolveEntityFlexible(ctx, regcuentaID)
+			if entityID == uuid.Nil {
+				return nil, nil
 			}
 
 			// Direction: subsistema_id → receivable/payable
@@ -333,11 +334,9 @@ func NewAccountMovementMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 			conceptoID := row.Int("concepto_id")
 			movType := mapMovementTypeFromConcepto(conceptoID)
 
-			// Amount: must be > 0 (CHECK constraint), use absolute value
+			// Amount from importe_movimiento. Migration 061 allows 0 for
+			// adjustment / closure records that Histrix booked without a delta.
 			amount := ParseDecimal(row.Decimal("importe_movimiento")).Abs()
-			if amount.IsZero() {
-				return nil, nil // skip zero-amount movements
-			}
 
 			// Balance from saldo_movimiento
 			balance := ParseDecimal(row.Decimal("saldo_movimiento"))
@@ -445,14 +444,10 @@ func NewPaymentAllocationMigrator(db *sql.DB, tenantID string) *GenericMigrator 
 				return nil, nil // skip if invoice movement not migrated
 			}
 
-			// Amount: movimp, must be > 0
+			// Amount: prefer movimp, fallback movint. Zero is allowed (061).
 			amount := ParseDecimal(row.Decimal("movimp")).Abs()
 			if amount.IsZero() {
-				// Try movsal (saldo) or movint as fallback
 				amount = ParseDecimal(row.Decimal("movint")).Abs()
-			}
-			if amount.IsZero() {
-				return nil, nil // skip zero allocations
 			}
 
 			id, err := mapper.Map(ctx, nil, "current_account", "CCTIMPUT", legacyID, nil)
@@ -487,21 +482,20 @@ func NewWithholdingIIBBMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				row.Int("year"), row.Int("mes"), row.String("nropag"))
 			legacyID := int64(hashCode(compositeKey))
 
-			// Entity FK: ctacod → REG_CUENTA (NOT NULL in target)
+			// Entity FK: ctacod → REG_CUENTA (NOT NULL in target). ctacod in
+			// RETACUMU is ambiguous (id_regcuenta / nro_cuenta) — flex-resolve
+			// then fall back to the synthetic UNKNOWN entity rather than drop.
+			// Empirical impact on saldivia: 29,461 → a few dozen rescued rows.
 			ctacod := row.Int64("ctacod")
-			if ctacod == 0 {
-				return nil, nil // skip rows with no entity
-			}
-			entityID, err := mapper.Resolve(ctx, "entity", "REG_CUENTA", ctacod)
-			if err != nil {
-				return nil, nil // skip if entity not migrated
+			entityID, _ := mapper.ResolveEntityFlexible(ctx, ctacod)
+			if entityID == uuid.Nil {
+				return nil, nil // UNKNOWN hook didn't run — degrade gracefully
 			}
 
-			// Amount: acuret (withholding amount), must be > 0
+			// Amount: acuret (withholding amount). Many RETACUMU rows (~29K on
+			// saldivia) carry acuret=0 as valid "no tax withheld this period"
+			// records. Migration 061 relaxed the CHECK to >= 0 so we keep them.
 			amount := ParseDecimal(row.Decimal("acuret")).Abs()
-			if amount.IsZero() {
-				return nil, nil // skip zero withholdings
-			}
 
 			// Base amount: acupag (payment amount)
 			baseAmount := ParseDecimal(row.Decimal("acupag")).Abs()
@@ -513,7 +507,7 @@ func NewWithholdingIIBBMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 			certNum := row.NullString("nropag")
 
 			// Date: acufec
-			date := SafeDate(timeFromRow(row, "acufec"))
+			date := SafeDateRequired(timeFromRow(row, "acufec"))
 
 			id, err := mapper.Map(ctx, nil, "invoicing", "RETACUMU", legacyID, nil)
 			if err != nil {

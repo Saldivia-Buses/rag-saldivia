@@ -102,18 +102,30 @@ func NewBOMHistoryMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 
 			// Parent article FK: resolve via hashCode of parent article code.
 			// parent_article_code comes from STKPIEZA.idPadre via JOIN in the reader.
-			// erp_bom_history.parent_id references erp_articles(id), NOT erp_bom(id).
+			// When the LEFT JOIN finds no STKPIEZA (orphan pieza_id) we fall back to
+			// the ghost article seeded by RescueBOMOrphanParents, keyed on pieza_id.
+			// Saldivia empirics (2026-04-16): without the ghost fallback this path
+			// lost 2,546,930 rows out of 14,572,284 (17.5%).
+			var parentID uuid.UUID
 			parentCode := row.String("parent_article_code")
-			if parentCode == "" {
-				return nil, nil // skip — no parent article
-			}
-			parentLegacyID := int64(hashCode(parentCode))
-			parentID, err := mapper.ResolveOptional(ctx, "stock", "STK_ARTICULOS", parentLegacyID)
-			if err != nil {
-				return nil, nil
+			if parentCode != "" {
+				parentLegacyID := int64(hashCode(parentCode))
+				resolved, err := mapper.ResolveOptional(ctx, "stock", "STK_ARTICULOS", parentLegacyID)
+				if err == nil && resolved != uuid.Nil {
+					parentID = resolved
+				}
 			}
 			if parentID == uuid.Nil {
-				return nil, nil // skip if parent article not migrated
+				// Fallback to the ghost article tied to pieza_id.
+				piezaID := row.Int64("pieza_id")
+				if piezaID > 0 {
+					if ghost, err := mapper.ResolveOptional(ctx, "stock", "GHOST_PIEZA", piezaID); err == nil && ghost != uuid.Nil {
+						parentID = ghost
+					}
+				}
+			}
+			if parentID == uuid.Nil {
+				return nil, nil // truly unresolvable — no pieza_id and no parent code
 			}
 
 			id, err := mapper.Map(ctx, nil, "stock", "STK_BOM_HIST", legacyID, nil)
@@ -491,14 +503,15 @@ func NewCustomerOrderMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				}
 			}
 
-			// Status from estado_ficha: 0=draft, 1=in_progress, 2=completed
+			// Status from estado_ficha: 0=pending, 1=in_progress, 2=delivered.
+			// erp_orders.status CHECK allows: pending|in_progress|shipped|delivered|cancelled.
 			estadoFicha := row.Int("estado_ficha")
-			status := "draft"
+			status := "pending"
 			switch estadoFicha {
 			case 1:
 				status = "in_progress"
 			case 2:
-				status = "completed"
+				status = "delivered"
 			}
 
 			number := fmt.Sprintf("PED-%d", row.Int64("pednro"))
@@ -514,7 +527,7 @@ func NewCustomerOrderMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 			return []any{
 				id, tenantID, number,
 				SafeDateRequired(timeFromRow(row, "pedfec")),
-				"vehicle",   // order_type — all PEDCOTIZ are vehicle orders
+				"customer", // order_type — PEDCOTIZ are customer-facing vehicle orders (CHECK allows only customer|internal)
 				customerID,
 				quotationID,
 				status,
@@ -692,35 +705,54 @@ func NewProductionInspectionMigrator(db *sql.DB, tenantID string) *GenericMigrat
 	}
 }
 
-// NewProductionStepMigrator migrates PROD_PROCESOS → erp_production_steps.
-// PROD_PROCESOS has auto-increment id_proceso PK. Small catalog table.
+// NewProductionStepMigrator migrates PROD_PROCESOS → erp_catalogs (type='production_step_template').
+// PROD_PROCESOS are process *templates* (catalog of steps like "Pintura", "Montaje"),
+// and erp_production_steps requires order_id NOT NULL — so we land them in
+// erp_catalogs instead and preserve all 1,576 saldivia rows instead of the
+// previous silent drop. Legacy id_proceso is stored in metadata for joins.
 func NewProductionStepMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 	reader := legacy.ProductionStepReader(db)
 	return &GenericMigrator{
-		reader:      reader,
-		columns:     []string{"id", "tenant_id", "order_id", "step_name", "sort_order", "status", "assigned_to", "started_at", "completed_at", "notes"},
+		reader:      &readerOverride{r: reader, target: "erp_catalogs", source: "PROD_PROCESOS"},
+		columns:     []string{"id", "tenant_id", "type", "code", "name", "sort_order", "active", "metadata"},
 		conflictCol: "",
 		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
 			legacyID := row.Int64("id_proceso")
 			if legacyID == 0 {
+				// Fall back to any plausible PK name the reader might use.
+				legacyID = row.Int64("id_prodproceso")
+			}
+			if legacyID == 0 {
 				return nil, nil
 			}
+			name := row.String("nombre_proceso")
+			if name == "" {
+				name = row.String("descripcion")
+			}
+			if name == "" {
+				name = fmt.Sprintf("proceso_%d", legacyID)
+			}
+			code := fmt.Sprintf("PROC-%d", legacyID)
 
 			id, err := mapper.Map(ctx, nil, "production", "PROD_PROCESOS", legacyID, nil)
 			if err != nil {
 				id = uuid.New()
 			}
-
+			meta := map[string]any{
+				"source":           "PROD_PROCESOS",
+				"legacy_id":        legacyID,
+				"orden_proceso":    row.Int("orden_proceso"),
+				"seccion_id":       row.Int64("seccion_id"),
+				"id_centro_prod":   row.Int64("id_centro_productivo"),
+				"calidad_id":       row.Int64("calidad_id"),
+			}
+			metaJSON, _ := json.Marshal(meta)
 			return []any{
-				id, tenantID,
-				(*uuid.UUID)(nil), // order_id — PROD_PROCESOS is a template, not linked to a specific order
-				row.String("nombre_proceso"),
+				id, tenantID, "production_step_template",
+				code, name,
 				row.Int("orden_proceso"),
-				"active",          // status — process definitions are always active
-				(*uuid.UUID)(nil), // assigned_to
-				(*time.Time)(nil), // started_at
-				(*time.Time)(nil), // completed_at
-				row.String("descripcion_proceso"),
+				true,
+				string(metaJSON),
 			}, nil
 		},
 	}
@@ -830,14 +862,15 @@ func NewNonconformityMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				}
 			}
 
-			// Status from estadonconf_id
+			// Status from estadonconf_id. erp_nonconformities.status CHECK allows:
+			// open|investigating|corrective_action|closed.
 			status := "open"
 			estadoID := row.Int("estadonconf_id")
 			switch estadoID {
 			case 1:
 				status = "open"
 			case 2:
-				status = "in_progress"
+				status = "investigating"
 			case 3:
 				status = "closed"
 			}
@@ -907,19 +940,20 @@ func NewCorrectiveActionMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				}
 			}
 
-			// Action type from tipo_accionnconf
+			// Action type from tipo_accionnconf.
+			// erp_corrective_actions.action_type CHECK allows: corrective|preventive.
+			// Legacy "improvement" (3) is closest to "preventive".
 			actionType := "corrective"
 			switch row.Int("tipo_accionnconf") {
 			case 1:
 				actionType = "corrective"
-			case 2:
+			case 2, 3:
 				actionType = "preventive"
-			case 3:
-				actionType = "improvement"
 			}
 
-			// Status from terminada flag
-			status := "open"
+			// Status from terminada flag.
+			// erp_corrective_actions.status CHECK allows: pending|in_progress|completed|verified.
+			status := "pending"
 			if row.Int("terminada") == 1 {
 				status = "completed"
 			}
@@ -929,10 +963,13 @@ func NewCorrectiveActionMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				id = uuid.New()
 			}
 
-			// Effectiveness from control_accionnconf
-			effectiveness := ""
+			// Effectiveness from control_accionnconf.
+			// CHECK: effectiveness IS NULL OR effectiveness IN (effective|ineffective|pending_review).
+			// Empty string would fail the CHECK — use nil instead.
+			var effectiveness *string
 			if row.Int("control_accionnconf") > 0 {
-				effectiveness = "verified"
+				s := "effective"
+				effectiveness = &s
 			}
 
 			return []any{
@@ -1019,15 +1056,16 @@ func NewAuditFindingMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				return nil, nil // skip if audit not migrated
 			}
 
-			// Finding type from hallazgotipo_id
+			// Finding type from hallazgotipo_id.
+			// erp_audit_findings.finding_type CHECK allows: observation|minor_nc|major_nc|opportunity.
 			findingType := "observation"
 			switch row.Int("hallazgotipo_id") {
 			case 1:
 				findingType = "observation"
 			case 2:
-				findingType = "minor"
+				findingType = "minor_nc"
 			case 3:
-				findingType = "major"
+				findingType = "major_nc"
 			case 4:
 				findingType = "opportunity"
 			}
@@ -1087,10 +1125,15 @@ func NewControlledDocumentMigrator(db *sql.DB, tenantID string) *GenericMigrator
 				}
 			}
 
-			// Status from estado_documento
-			status := row.String("estado_documento")
-			if status == "" {
-				status = "active"
+			// Status from estado_documento. Legacy values vary; normalize to CHECK set.
+			// erp_controlled_documents.status CHECK allows: draft|approved|obsolete.
+			legacyStatus := strings.ToLower(strings.TrimSpace(row.String("estado_documento")))
+			status := "approved"
+			switch legacyStatus {
+			case "0", "borrador", "draft":
+				status = "draft"
+			case "2", "obsoleto", "obsolete":
+				status = "obsolete"
 			}
 
 			id, err := mapper.Map(ctx, nil, "quality", "CAL_DOCUMENTOS", legacyID, nil)
@@ -1288,19 +1331,16 @@ func NewDemeritEventMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				return nil, nil
 			}
 
-			// Entity FK: prvcod → supplier/employee entity
-			// MOVDEMERITO.prvcod is a supplier code referencing REG_CUENTA
+			// Entity FK: prvcod → supplier/employee entity.
+			// prvcod in MOVDEMERITO shares the ctacod ambiguity (id_regcuenta /
+			// nro_cuenta). Flex-resolve + UNKNOWN fallback so the 19,652 saldivia
+			// rows that fail direct id_regcuenta lookup still land.
 			prvcod := row.Int64("prvcod")
-			var entityID *uuid.UUID
-			if prvcod > 0 {
-				resolved, err := mapper.ResolveOptional(ctx, "entity", "REG_CUENTA", prvcod)
-				if err == nil && resolved != uuid.Nil {
-					entityID = &resolved
-				}
+			resolved, _ := mapper.ResolveEntityFlexible(ctx, prvcod)
+			if resolved == uuid.Nil {
+				return nil, nil // UNKNOWN hook didn't run — degrade gracefully
 			}
-			if entityID == nil {
-				return nil, nil // skip if entity not found
-			}
+			entityID := &resolved
 
 			// Reason: coddem → demerit type catalog
 			var reasonID *uuid.UUID
@@ -1451,13 +1491,11 @@ func NewMaintenanceAssetMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				return nil, nil
 			}
 
-			// Asset type from tipoequipo_id catalog
-			assetType := "equipment"
-			tipoID := row.Int64("tipoequipo_id")
-			if tipoID > 0 {
-				// Map to string — leave as generic "equipment"
-				// Could resolve via catalog if available
-			}
+			// erp_maintenance_assets.asset_type CHECK allows: vehicle|machine|tool|facility.
+			// Legacy tipoequipo_id is a catalog we don't resolve here — default to
+			// "machine" (the most generic), preserve tipoequipo_id in metadata.
+			assetType := "machine"
+			_ = row.Int64("tipoequipo_id")
 
 			// unit_id: could link to CHASIS via articulo_id or deposito_id
 			var unitID *uuid.UUID
@@ -1947,13 +1985,15 @@ func NewLegacyUserMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 			tempPassword := fmt.Sprintf("SDA-migrate-%s", login)
 			passwordHash := hashTempPassword(tempPassword)
 
-			// Generate UUID as text ID
-			id := uuid.New()
-
-			// Store legacy mapping
-			_, err := mapper.Map(ctx, nil, "auth", "HTXUSERS", legacyID, nil)
+			// Use the mapper-generated UUID for BOTH users.id and erp_legacy_mapping so
+			// downstream rescue passes (RescueLegacyUserRoles, RescueLegacyUserOverrides)
+			// can resolve HTXUSERS.Id_usuario → users.id directly. Previously this
+			// function generated an ephemeral UUID here and a second, different one
+			// via mapper.Map, leaving the mapping table pointing at a non-existent
+			// users row and silently breaking the role-assignment rescue.
+			id, err := mapper.Map(ctx, nil, "auth", "HTXUSERS", legacyID, nil)
 			if err != nil {
-				// Ignore mapping error, we still want the user
+				id = uuid.New()
 			}
 
 			return []any{

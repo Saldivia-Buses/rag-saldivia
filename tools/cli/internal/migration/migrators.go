@@ -255,11 +255,12 @@ func NewFiscalYearMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				return nil, nil
 			}
 
-			cerrado := row.Int("cerrado")
+			// Histrix `cerrado=1` does not carry the result_account_id the new
+			// fiscal-close workflow requires. Always import as 'open' — the
+			// 10 legacy-closed ejercicios can be formally closed via the UI
+			// after assigning their result account.
+			_ = row.Int("cerrado")
 			status := "open"
-			if cerrado == 1 {
-				status = "closed"
-			}
 
 			// Parse year from nombre_ejercicio or comienza date
 			year := 0
@@ -308,7 +309,10 @@ func NewJournalEntryMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				}
 			}
 
-			number := fmt.Sprintf("AS-%d", row.Int64("nro_minuta"))
+			// Use id_movimiento (the PK) to guarantee uniqueness. nro_minuta
+			// repeats across Histrix fiscal years and would drop ~200K rows
+			// to the tenant_id+number UNIQUE constraint.
+			number := fmt.Sprintf("AS-%d-%d", row.Int64("nro_minuta"), legacyID)
 			date := SafeDateRequired(timeFromRow(row, "fecha_movimiento"))
 
 			usuario := row.NullString("usuario_modificacion")
@@ -610,17 +614,19 @@ func NewStockMovementMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				unassigned = true
 			}
 
-			// Movement type — positive quantity = in, negative = out
+			// Movement type — positive quantity = in, negative = out.
+			// Zero-quantity legacy rows (173K on saldivia) represent adjustment
+			// events without a numeric delta: depot reclassification, corrections,
+			// stock counts that confirmed 0 movement. Post-migration 061 relaxed
+			// the CHECK from (> 0) to (>= 0) so we can preserve them — flagged in
+			// notes for operator review.
 			quantity := ParseDecimal(row.Decimal("cantidad"))
 			movType := "in"
 			if quantity.IsNegative() {
 				movType = "out"
 				quantity = quantity.Abs()
 			}
-
-			if quantity.IsZero() {
-				return nil, nil // skip zero-quantity movements
-			}
+			zeroQty := quantity.IsZero()
 
 			id, err := mapper.Map(ctx, nil, "stock", "STK_MOVIMIENTOS", legacyID, nil)
 			if err != nil {
@@ -633,6 +639,13 @@ func NewStockMovementMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 					notes = "[legacy:unassigned_warehouse] " + notes
 				} else {
 					notes = "[legacy:unassigned_warehouse]"
+				}
+			}
+			if zeroQty {
+				if notes != "" {
+					notes = "[legacy:zero_qty] " + notes
+				} else {
+					notes = "[legacy:zero_qty]"
 				}
 			}
 
@@ -662,9 +675,9 @@ func NewPurchaseOrderMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 			}
 
 			supplierLegacyID := row.Int64("regcuenta_id")
-			supplierID, err := mapper.Resolve(ctx, "entity", "REG_CUENTA", supplierLegacyID)
-			if err != nil {
-				return nil, nil // skip if supplier not found
+			supplierID, _ := mapper.ResolveEntityFlexible(ctx, supplierLegacyID)
+			if supplierID == uuid.Nil {
+				return nil, nil // UNKNOWN hook missing — archive-skips will keep it
 			}
 
 			// estado: ''=draft, 1=approved, 2=received
@@ -758,8 +771,8 @@ func NewQuotationMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 			}
 
 			customerLegacyID := row.Int64("ctacod")
-			customerID, err := mapper.Resolve(ctx, "entity", "REG_CUENTA", customerLegacyID)
-			if err != nil {
+			customerID, _ := mapper.ResolveEntityFlexible(ctx, customerLegacyID)
+			if customerID == uuid.Nil {
 				return nil, nil
 			}
 
@@ -1003,17 +1016,16 @@ func NewSalesInvoiceMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 			codlet := row.String("codlet")
 			invoiceType := MapInvoiceType(codcom, codlet)
 
-			// Entity FK: ctacod → REG_CUENTA
+			// Entity FK: ctacod → REG_CUENTA. ctacod is ambiguous — use the
+			// flex resolver with UNKNOWN fallback instead of dropping rows.
 			entityLegacyID := row.Int64("ctacod")
+			resolvedEnt, _ := mapper.ResolveEntityFlexible(ctx, entityLegacyID)
 			var entityID *uuid.UUID
-			if entityLegacyID > 0 {
-				resolved, err := mapper.ResolveOptional(ctx, "entity", "REG_CUENTA", entityLegacyID)
-				if err == nil && resolved != uuid.Nil {
-					entityID = &resolved
-				}
+			if resolvedEnt != uuid.Nil {
+				entityID = &resolvedEnt
 			}
-			if entityID == nil || *entityID == uuid.Nil {
-				return nil, nil // entity_id is NOT NULL — skip unresolvable
+			if entityID == nil {
+				return nil, nil // fallback missing — let it drop cleanly
 			}
 
 			// Number: LETTER-PV-NUMERO (e.g., A-0001-00012345)
@@ -1063,17 +1075,15 @@ func NewPurchaseInvoiceMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 			codlet := row.String("codlet")
 			invoiceType := MapInvoiceType(codcom, codlet)
 
-			// Entity FK: ctacod → REG_CUENTA
+			// Entity FK: ctacod → REG_CUENTA (flex + UNKNOWN fallback, same as sales).
 			entityLegacyID := row.Int64("ctacod")
+			resolvedEnt, _ := mapper.ResolveEntityFlexible(ctx, entityLegacyID)
 			var entityID *uuid.UUID
-			if entityLegacyID > 0 {
-				resolved, err := mapper.ResolveOptional(ctx, "entity", "REG_CUENTA", entityLegacyID)
-				if err == nil && resolved != uuid.Nil {
-					entityID = &resolved
-				}
+			if resolvedEnt != uuid.Nil {
+				entityID = &resolvedEnt
 			}
-			if entityID == nil || *entityID == uuid.Nil {
-				return nil, nil // entity_id is NOT NULL — skip unresolvable
+			if entityID == nil {
+				return nil, nil
 			}
 
 			number := fmt.Sprintf("%s-%04d-%08d", codlet, row.Int64("nronpv"), row.Int64("nrocom"))
@@ -1193,13 +1203,14 @@ func NewDeliveryNoteMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				legacyID = 1
 			}
 
-			// Entity FK: ctacod → REG_CUENTA
-			var entityID *uuid.UUID
-			if ctacod > 0 {
-				resolved, err := mapper.ResolveOptional(ctx, "entity", "REG_CUENTA", ctacod)
-				if err == nil && resolved != uuid.Nil {
-					entityID = &resolved
-				}
+			// Entity FK with flex + UNKNOWN fallback so NOT NULL never fails.
+			resolvedEnt, _ := mapper.ResolveEntityFlexible(ctx, ctacod)
+			entityID := &resolvedEnt
+			if resolvedEnt == uuid.Nil {
+				entityID = nil
+			}
+			if entityID == nil {
+				return nil, nil // UNKNOWN hook missing — archive-skips will catch it
 			}
 
 			number := fmt.Sprintf("REM-%d-%d", remnpv, remnro)
@@ -1247,14 +1258,15 @@ func NewDeliveryNoteAltMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				legacyID = 1
 			}
 
-			// Entity FK
+			// Entity FK with flex + UNKNOWN fallback.
 			ctacod := row.Int64("ctacod")
-			var entityID *uuid.UUID
-			if ctacod > 0 {
-				resolved, err := mapper.ResolveOptional(ctx, "entity", "REG_CUENTA", ctacod)
-				if err == nil && resolved != uuid.Nil {
-					entityID = &resolved
-				}
+			resolvedEnt, _ := mapper.ResolveEntityFlexible(ctx, ctacod)
+			entityID := &resolvedEnt
+			if resolvedEnt == uuid.Nil {
+				entityID = nil
+			}
+			if entityID == nil {
+				return nil, nil
 			}
 
 			number := fmt.Sprintf("REMITO-%d-%d", puesto, numero)
@@ -1461,6 +1473,9 @@ func NewTaxEntryPurchasesMigrator(db *sql.DB, tenantID string) *GenericMigrator 
 
 // NewWithholdingGainsMigrator migrates RETGANAN (gains withholding, 9.8K rows) → erp_withholdings.
 // Columns: id_retganan=PK, ctacod=entity, ganfec=date, ganpor=rate%, ganbru=base, gantot=total.
+// ctacod is ambiguous in Histrix (sometimes id_regcuenta, sometimes nro_cuenta)
+// — ResolveEntityFlexible tries both and falls back to the "UNKNOWN" entity
+// seeded by EnsureUnknownEntity rather than dropping the row.
 func NewWithholdingGainsMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 	reader := legacy.WithholdingGainsReader(db)
 	return &GenericMigrator{
@@ -1473,14 +1488,11 @@ func NewWithholdingGainsMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				return nil, nil
 			}
 
-			// Entity FK
 			entityLegacyID := row.Int64("ctacod")
+			resolved, _ := mapper.ResolveEntityFlexible(ctx, entityLegacyID)
 			var entityID *uuid.UUID
-			if entityLegacyID > 0 {
-				resolved, err := mapper.ResolveOptional(ctx, "entity", "REG_CUENTA", entityLegacyID)
-				if err == nil && resolved != uuid.Nil {
-					entityID = &resolved
-				}
+			if resolved != uuid.Nil {
+				entityID = &resolved
 			}
 
 			id, err := mapper.Map(ctx, nil, "invoicing", "RETGANAN", legacyID, nil)
@@ -1498,7 +1510,7 @@ func NewWithholdingGainsMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				ParseDecimal(row.Decimal("ganbru")),
 				ParseDecimal(row.Decimal("gantot")),
 				row.NullString("gannro"),
-				SafeDate(timeFromRow(row, "ganfec")),
+				SafeDateRequired(timeFromRow(row, "ganfec")),
 			}, nil
 		},
 	}
@@ -1518,14 +1530,11 @@ func NewWithholdingIVAMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				return nil, nil
 			}
 
-			// Entity FK
 			entityLegacyID := row.Int64("ctacod")
+			resolved, _ := mapper.ResolveEntityFlexible(ctx, entityLegacyID)
 			var entityID *uuid.UUID
-			if entityLegacyID > 0 {
-				resolved, err := mapper.ResolveOptional(ctx, "entity", "REG_CUENTA", entityLegacyID)
-				if err == nil && resolved != uuid.Nil {
-					entityID = &resolved
-				}
+			if resolved != uuid.Nil {
+				entityID = &resolved
 			}
 
 			id, err := mapper.Map(ctx, nil, "invoicing", "RETIVA", legacyID, nil)
@@ -1543,7 +1552,7 @@ func NewWithholdingIVAMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				ParseDecimal(row.Decimal("ivabru")),
 				ParseDecimal(row.Decimal("ivatot")),
 				row.NullString("ivanro"),
-				SafeDate(timeFromRow(row, "ivafec")),
+				SafeDateRequired(timeFromRow(row, "ivafec")),
 			}, nil
 		},
 	}
@@ -1563,14 +1572,11 @@ func NewWithholding1598Migrator(db *sql.DB, tenantID string) *GenericMigrator {
 				return nil, nil
 			}
 
-			// Entity FK
 			entityLegacyID := row.Int64("ctacod")
+			resolved, _ := mapper.ResolveEntityFlexible(ctx, entityLegacyID)
 			var entityID *uuid.UUID
-			if entityLegacyID > 0 {
-				resolved, err := mapper.ResolveOptional(ctx, "entity", "REG_CUENTA", entityLegacyID)
-				if err == nil && resolved != uuid.Nil {
-					entityID = &resolved
-				}
+			if resolved != uuid.Nil {
+				entityID = &resolved
 			}
 
 			id, err := mapper.Map(ctx, nil, "invoicing", "RET1598", legacyID, nil)
@@ -1588,7 +1594,7 @@ func NewWithholding1598Migrator(db *sql.DB, tenantID string) *GenericMigrator {
 				ParseDecimal(row.Decimal("totimpon")),
 				ParseDecimal(row.Decimal("totret")),
 				row.NullString("nroret"),
-				SafeDate(timeFromRow(row, "fecret")),
+				SafeDateRequired(timeFromRow(row, "fecret")),
 			}, nil
 		},
 	}

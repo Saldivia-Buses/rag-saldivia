@@ -23,10 +23,52 @@ type Orchestrator struct {
 	tenantID        string
 	mapper          *Mapper
 	writer          *BatchWriter
+	// fastWriter, when non-nil, replaces the per-batch multi-INSERT with a
+	// COPY-based or Parallel-COPY-based bulk path. Set via UseCopyWriter or
+	// UseParallelCopyWriter. When set, the orchestrator also switches its
+	// table runner to the pipelined variant (runTablePipeline) so reads and
+	// writes overlap. The old BatchWriter path is preserved as a fallback.
+	fastWriter      Writer
+	usePipeline     bool
+	archiveSkipped  bool
 	readers         []TableMigrator
 	setupHooks      []SetupHook
 	afterTableHooks map[string][]SetupHook
 	batchSize       int
+}
+
+// UseCopyWriter switches the orchestrator to COPY+staging for writes and
+// enables the pipeline runner. Idempotent (INSERT ... SELECT ... ON CONFLICT
+// DO NOTHING from staging), so safe for re-runs.
+func (o *Orchestrator) UseCopyWriter() {
+	o.fastWriter = AsCopyWriter(NewCopyWriter(o.pg, o.tenantID))
+	o.usePipeline = true
+}
+
+// UseParallelCopyWriter switches to N-way parallel COPY. Good for the largest
+// tables (STK_BOM_HIST, PROD_CONTROL_MOVIM, FICHADADIA). Idempotency preserved.
+// workers<=0 defaults to 4.
+func (o *Orchestrator) UseParallelCopyWriter(workers int) {
+	o.fastWriter = AsParallelWriter(NewParallelCopyWriter(o.pg, o.tenantID, workers))
+	o.usePipeline = true
+}
+
+// UsePipelineOnly enables the reader/writer pipeline while keeping the legacy
+// BatchWriter for the write stage. Useful when you want overlap but can't
+// use COPY (e.g. target lacks CREATE TEMP permission).
+func (o *Orchestrator) UsePipelineOnly() {
+	o.fastWriter = AsWriter(o.writer)
+	o.usePipeline = true
+}
+
+// EnableSkipArchive tells the pipeline to write every row that a migrator
+// transform decided to drop (returned nil) into erp_legacy_archive in the
+// same transaction as the batch that produced it. Guarantees zero silent
+// data loss: anything the structured migrator can't land because of a
+// constraint or missing FK still ends up queryable via the archive.
+// Requires --writer=copy|parallel-copy (the pipeline path).
+func (o *Orchestrator) EnableSkipArchive() {
+	o.archiveSkipped = true
 }
 
 // TableMigrator defines how to migrate a single legacy table.
@@ -92,6 +134,14 @@ func (o *Orchestrator) AddAfterTableHook(legacyTable string, fn SetupHook) {
 // GetMapper returns the mapper (for external setup hooks).
 func (o *Orchestrator) GetMapper() *Mapper {
 	return o.mapper
+}
+
+// PGPool exposes the underlying pool for rescue hooks that need to upsert
+// side-loaded data (ghost articles, sentinel entities) before a migrator runs.
+// Kept read-only from the caller's perspective by returning the pgxpool
+// pointer — callers cannot replace it.
+func (o *Orchestrator) PGPool() *pgxpool.Pool {
+	return o.pg
 }
 
 // Run executes the full migration for specified domains (empty = all).
@@ -436,6 +486,22 @@ func batchSizeFor(base, numCols int) int {
 }
 
 func (o *Orchestrator) runTable(ctx context.Context, runID uuid.UUID, m TableMigrator) (TableStats, error) {
+	// Pipeline dispatch: when enabled, route to the read/write-overlapping
+	// variant with the configured fast writer. Falls back to the legacy
+	// single-thread path otherwise so behaviour is preserved when callers
+	// do not opt in.
+	if o.usePipeline && o.fastWriter != nil {
+		var progressID uuid.UUID
+		err := o.pg.QueryRow(ctx,
+			`SELECT id FROM erp_migration_table_progress
+			 WHERE run_id = $1 AND legacy_table = $2 AND tenant_id = $3`,
+			runID, m.LegacyTable(), o.tenantID,
+		).Scan(&progressID)
+		if err != nil {
+			return TableStats{}, fmt.Errorf("get progress id: %w", err)
+		}
+		return o.runTablePipeline(ctx, runID, progressID, m, "", 0, 0, 0, o.fastWriter)
+	}
 	return o.runTableResume(ctx, runID, uuid.Nil, m, "", 0, 0, 0)
 }
 

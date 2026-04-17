@@ -32,8 +32,10 @@ type Mapper struct {
 	dateCache             map[uuid.UUID]time.Time         // entry UUID → date (for journal line date resolution)
 	regMovimIndex         map[int64]uuid.UUID             // regmovim_id → invoice UUID (for FACDETAL FK resolution)
 	legajoIndex           map[int64]uuid.UUID             // PERSONAL.legajo → entity UUID (HR FK resolution)
+	nroCuentaIndex        map[int64]uuid.UUID             // REG_CUENTA.nro_cuenta → entity UUID (ctacod ambiguity)
 	remitoByID            map[int64]uuid.UUID             // REMITO.idRemito → REMITO UUID (REMDETAL FK resolution)
 	unassignedWarehouseID uuid.UUID                       // fallback warehouse for STK_MOVIMIENTOS with stkdeposito_id=0
+	unknownEntityID       uuid.UUID                       // fallback entity for rows whose ctacod cannot be resolved
 	pending               []pendingMapping                // batch of mappings to flush
 }
 
@@ -83,6 +85,104 @@ func (m *Mapper) EnsureUnassignedWarehouse(ctx context.Context, pgPool *pgxpool.
 // not called — callers must treat that as "skip row" rather than insert NULL.
 func (m *Mapper) UnassignedWarehouseID() uuid.UUID {
 	return m.unassignedWarehouseID
+}
+
+// EnsureUnknownEntity is the entity-side counterpart to EnsureUnassignedWarehouse.
+// Several Histrix tables (RETACUMU, MOVDEMERITO, IVA*) reference entities through
+// `ctacod` which can be either REG_CUENTA.id_regcuenta OR REG_CUENTA.nro_cuenta;
+// the legacy codebase never normalised which one. When neither lookup succeeds
+// we fall back to this synthetic "UNKNOWN" entity so the row still lands —
+// flagged in the caller's notes with "[legacy:unknown_entity:<ctacod>]" so ops
+// can reassign them from the admin UI.
+func (m *Mapper) EnsureUnknownEntity(ctx context.Context, pgPool *pgxpool.Pool) error {
+	if m.dryRun {
+		m.unknownEntityID = m.deterministicUUID("entity", "UNKNOWN", "0")
+		return nil
+	}
+	const code = "UNKNOWN-LEGACY"
+	var id uuid.UUID
+	err := pgPool.QueryRow(ctx,
+		`INSERT INTO erp_entities (tenant_id, type, code, name, active)
+		 VALUES ($1, 'customer', $2, 'Desconocido (Legacy)', false)
+		 ON CONFLICT (tenant_id, type, code) DO UPDATE SET code = EXCLUDED.code
+		 RETURNING id`, m.tenantID, code).Scan(&id)
+	if err != nil {
+		return fmt.Errorf("ensure unknown entity: %w", err)
+	}
+	m.unknownEntityID = id
+	return nil
+}
+
+// UnknownEntityID returns the synthetic "UNKNOWN" entity UUID created by
+// EnsureUnknownEntity, or uuid.Nil if that hook never ran (treat as skip).
+func (m *Mapper) UnknownEntityID() uuid.UUID {
+	return m.unknownEntityID
+}
+
+// BuildNroCuentaIndex builds nro_cuenta → entity UUID so migrators that carry
+// ctacod (which is `nro_cuenta`, NOT `id_regcuenta`) can still resolve. Runs
+// after NewEntityMigrator finishes. Cheap: REG_CUENTA is small (~5.5K rows
+// on saldivia) and we already have the id_regcuenta → UUID cache.
+func (m *Mapper) BuildNroCuentaIndex(ctx context.Context, mysqlDB *sql.DB) error {
+	if m.dryRun {
+		return nil
+	}
+	rows, err := mysqlDB.QueryContext(ctx,
+		`SELECT id_regcuenta, nro_cuenta FROM REG_CUENTA WHERE nro_cuenta > 0`)
+	if err != nil {
+		return fmt.Errorf("build nro_cuenta index: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.nroCuentaIndex == nil {
+		m.nroCuentaIndex = make(map[int64]uuid.UUID)
+	}
+	cacheKey := m.cacheKey("entity", "REG_CUENTA")
+	count, orphans := 0, 0
+	for rows.Next() {
+		var idReg, nroCta int64
+		if err := rows.Scan(&idReg, &nroCta); err != nil {
+			return fmt.Errorf("scan nro_cuenta index: %w", err)
+		}
+		uid, ok := m.cache[cacheKey][idReg]
+		if !ok {
+			orphans++
+			continue
+		}
+		m.nroCuentaIndex[nroCta] = uid
+		count++
+	}
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("iterate nro_cuenta index: %w", err)
+	}
+	fmt.Printf("  nro_cuenta index: loaded %d mappings (%d orphans)\n", count, orphans)
+	return nil
+}
+
+// ResolveEntityFlexible tries to resolve an entity UUID from a ctacod field
+// whose semantics vary by source table. Order: id_regcuenta → nro_cuenta →
+// unknown entity fallback. Returns (uuid, "matched") where matched is one of
+// "id_regcuenta", "nro_cuenta", "unknown". Caller uses the tag for tracing
+// and can stash it in notes when the fallback fires.
+func (m *Mapper) ResolveEntityFlexible(ctx context.Context, ctacod int64) (uuid.UUID, string) {
+	if ctacod > 0 {
+		if uid, err := m.ResolveOptional(ctx, "entity", "REG_CUENTA", ctacod); err == nil && uid != uuid.Nil {
+			return uid, "id_regcuenta"
+		}
+		m.mu.RLock()
+		if uid, ok := m.nroCuentaIndex[ctacod]; ok {
+			m.mu.RUnlock()
+			return uid, "nro_cuenta"
+		}
+		m.mu.RUnlock()
+	}
+	if m.unknownEntityID != uuid.Nil {
+		return m.unknownEntityID, "unknown"
+	}
+	return uuid.Nil, ""
 }
 
 func (m *Mapper) cacheKey(domain, table string) string {
@@ -137,6 +237,12 @@ func (m *Mapper) Map(ctx context.Context, tx pgx.Tx, domain, table string, legac
 
 // FlushPending bulk-inserts all pending mappings into erp_legacy_mapping.
 // Call once per batch, inside the transaction.
+//
+// PG's extended-protocol hard cap is 65535 bind parameters per statement.
+// Each mapping contributes 5 params → chunk at 12_000 rows for 64k headroom.
+// Before this chunk loop, batches of ≥ 13107 mappings (not uncommon in
+// CTB_MOVIMIENTOS or STK_BOM_HIST) failed with "extended protocol limited
+// to 65535 parameters".
 func (m *Mapper) FlushPending(ctx context.Context, q querier) error {
 	m.mu.Lock()
 	batch := m.pending
@@ -147,22 +253,30 @@ func (m *Mapper) FlushPending(ctx context.Context, q querier) error {
 		return nil
 	}
 
-	var sb strings.Builder
-	sb.WriteString("INSERT INTO erp_legacy_mapping (tenant_id, domain, legacy_table, legacy_id, sda_id) VALUES ")
-	args := make([]any, 0, len(batch)*5)
-	for i, p := range batch {
-		if i > 0 {
-			sb.WriteString(",")
+	const chunkSize = 12_000
+	for start := 0; start < len(batch); start += chunkSize {
+		end := start + chunkSize
+		if end > len(batch) {
+			end = len(batch)
 		}
-		n := i * 5
-		sb.WriteString(fmt.Sprintf("($%d,$%d,$%d,$%d,$%d)", n+1, n+2, n+3, n+4, n+5))
-		args = append(args, m.tenantID, p.domain, p.table, p.legacyID, p.sdaID)
-	}
-	sb.WriteString(" ON CONFLICT (tenant_id, domain, legacy_table, legacy_id) DO NOTHING")
+		sub := batch[start:end]
 
-	_, err := q.Exec(ctx, sb.String(), args...)
-	if err != nil {
-		return fmt.Errorf("flush %d mappings: %w", len(batch), err)
+		var sb strings.Builder
+		sb.WriteString("INSERT INTO erp_legacy_mapping (tenant_id, domain, legacy_table, legacy_id, sda_id) VALUES ")
+		args := make([]any, 0, len(sub)*5)
+		for i, p := range sub {
+			if i > 0 {
+				sb.WriteString(",")
+			}
+			n := i * 5
+			sb.WriteString(fmt.Sprintf("($%d,$%d,$%d,$%d,$%d)", n+1, n+2, n+3, n+4, n+5))
+			args = append(args, m.tenantID, p.domain, p.table, p.legacyID, p.sdaID)
+		}
+		sb.WriteString(" ON CONFLICT (tenant_id, domain, legacy_table, legacy_id) DO NOTHING")
+
+		if _, err := q.Exec(ctx, sb.String(), args...); err != nil {
+			return fmt.Errorf("flush %d mappings (chunk %d-%d): %w", len(batch), start, end, err)
+		}
 	}
 	return nil
 }
@@ -419,6 +533,22 @@ func (m *Mapper) ResolveByLegajo(legajo int64) (uuid.UUID, bool) {
 // Must be called after REMITO migrator finishes.
 func (m *Mapper) BuildRemitoIndex(ctx context.Context, mysqlDB *sql.DB) error {
 	if m.dryRun {
+		return nil
+	}
+	// REMITO's schema varies across saldivia snapshots: some have the
+	// auto-increment idRemito column REMDETAL references, most don't. When
+	// absent we log a warning and leave the index empty — REMDETAL rows with
+	// orphan parents will be archived by --archive-skips instead of blocking
+	// the entire run.
+	var hasIDRemito int
+	if err := mysqlDB.QueryRowContext(ctx, `
+		SELECT COUNT(*) FROM information_schema.columns
+		WHERE table_schema = DATABASE() AND table_name = 'REMITO' AND column_name = 'idRemito'
+	`).Scan(&hasIDRemito); err != nil {
+		return fmt.Errorf("detect REMITO.idRemito: %w", err)
+	}
+	if hasIDRemito == 0 {
+		fmt.Println("  remito index: REMITO.idRemito column not present — REMDETAL FKs will flow through archive-skips")
 		return nil
 	}
 	rows, err := mysqlDB.QueryContext(ctx,
