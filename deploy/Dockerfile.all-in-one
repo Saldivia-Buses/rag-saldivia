@@ -1,0 +1,103 @@
+# syntax=docker/dockerfile:1.7
+#
+# SDA all-in-one per-tenant image (ADR 023 + ADR 024).
+#
+# One container per tenant. Everything this tenant needs runs inside — Go app,
+# Postgres 16, NATS, Redis, MinIO, and the Next.js frontend — supervised by
+# s6-overlay. State lives on the host at /data (bind-mounted).
+#
+# Build:
+#   docker build -f deploy/Dockerfile.all-in-one -t sda:dev .
+#
+# Run (prototype):
+#   docker run --rm -p 8080:80 -v $PWD/.data/dev:/data \
+#     -e SDA_TENANT=dev sda:dev
+#   curl http://localhost:8080/readyz
+#
+# Layout inside the image (progressively populated across commits):
+#   /usr/local/bin/frontdoor           Go :80 entrypoint (stub today; proxy later)
+#   /usr/lib/postgresql/16/bin/...     Postgres 16 server (pgdg)
+#   /etc/s6-overlay/s6-rc.d/           s6-rc service definitions
+#   /etc/s6-overlay/scripts/           helper shell scripts (postgres-init, etc.)
+#   /data/                             bind-mounted host volume
+#     ├── postgres/   ← PGDATA
+#     ├── nats/       ← JetStream file store (added in commit 2)
+#     ├── redis/      ← AOF/RDB            (added in commit 3)
+#     ├── minio/      ← object buckets     (added in commit 4)
+#     └── uploads/    ← ingest staging
+#
+# ──────────────────────────────────────────────────────────────────────────
+# Stage 1: Go builder — frontdoor stub (real services join in commit 5).
+# ──────────────────────────────────────────────────────────────────────────
+FROM golang:1.25-bookworm AS go-builder
+
+WORKDIR /src
+# Frontdoor has its own go.mod and lives outside go.work on purpose — it is
+# deploy glue, not application code. Build it in isolation with GOWORK=off.
+ENV GOWORK=off CGO_ENABLED=0 GOOS=linux GOFLAGS=-trimpath
+COPY deploy/frontdoor/ ./frontdoor/
+WORKDIR /src/frontdoor
+RUN go build -ldflags="-s -w" -o /out/frontdoor .
+
+# ──────────────────────────────────────────────────────────────────────────
+# Stage 2: runtime — debian:12-slim + s6-overlay + Postgres 16.
+# ──────────────────────────────────────────────────────────────────────────
+FROM debian:12-slim AS runtime
+
+ARG S6_OVERLAY_VERSION=3.2.0.2
+ARG TARGETARCH=amd64
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    S6_KEEP_ENV=1 \
+    S6_BEHAVIOUR_IF_STAGE2_FAILS=2 \
+    S6_CMD_WAIT_FOR_SERVICES_MAXTIME=60000 \
+    S6_VERBOSITY=1 \
+    PGDATA=/data/postgres \
+    PATH=/usr/lib/postgresql/16/bin:/command:/package/admin/s6-overlay-3/command:/usr/local/bin:/usr/bin:/bin
+
+# Base packages + Postgres 16 (pgdg). Kept as one RUN to collapse apt layers.
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        ca-certificates curl gnupg xz-utils tini locales \
+        procps tzdata; \
+    # pgdg keyring + repo
+    install -d -m 0755 /usr/share/keyrings; \
+    curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+        | gpg --dearmor -o /usr/share/keyrings/pgdg.gpg; \
+    echo "deb [signed-by=/usr/share/keyrings/pgdg.gpg] http://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" \
+        > /etc/apt/sources.list.d/pgdg.list; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        postgresql-16 postgresql-client-16; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*; \
+    # Postgres package creates an initial cluster on install; we drop it because
+    # our cluster lives on the host volume at /data/postgres.
+    rm -rf /var/lib/postgresql/16/main || true
+
+# s6-overlay v3 — two-tar install (noarch + arch-specific).
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp/s6-noarch.tar.xz
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz /tmp/s6-bin.tar.xz
+RUN set -eux; \
+    tar -C / -Jxpf /tmp/s6-noarch.tar.xz; \
+    tar -C / -Jxpf /tmp/s6-bin.tar.xz; \
+    rm -f /tmp/s6-noarch.tar.xz /tmp/s6-bin.tar.xz
+
+# s6 service bundles + helper scripts.
+COPY deploy/s6-overlay/s6-rc.d/ /etc/s6-overlay/s6-rc.d/
+COPY deploy/s6-overlay/scripts/ /etc/s6-overlay/scripts/
+RUN chmod -R 0755 /etc/s6-overlay/scripts /etc/s6-overlay/s6-rc.d
+
+# Frontdoor binary (built above).
+COPY --from=go-builder /out/frontdoor /usr/local/bin/frontdoor
+
+# Volume + ports.
+VOLUME ["/data"]
+EXPOSE 80
+
+# s6-overlay boots the supervision tree; service set is driven by the user
+# bundle in /etc/s6-overlay/s6-rc.d/user/contents.d/.
+ENTRYPOINT ["/init"]
