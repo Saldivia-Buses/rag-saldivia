@@ -155,11 +155,25 @@ func RescueLegacyUserRoles(ctx context.Context, mysqlDB *sql.DB, pgPool *pgxpool
 		if err != nil || roleUUID == uuid.Nil {
 			continue
 		}
+		// Mapper cache can get out of sync with users.id after a --resume
+		// (ON CONFLICT DO NOTHING kept the first-run id but the second-run
+		// mapper generated a new one). Verify the user actually exists and
+		// skip the assignment rather than fail the whole hook.
+		var exists bool
+		if err := tx.QueryRow(ctx,
+			`SELECT EXISTS(SELECT 1 FROM users WHERE id = $1)`,
+			userUUID.String(),
+		).Scan(&exists); err != nil || !exists {
+			continue
+		}
 		if _, err := tx.Exec(ctx, `
 			INSERT INTO user_roles (user_id, role_id) VALUES ($1, $2)
 			ON CONFLICT (user_id, role_id) DO NOTHING
 		`, userUUID.String(), roleUUID.String()); err != nil {
-			return fmt.Errorf("insert user_role (%s, %s): %w", userUUID, roleUUID, err)
+			// Log-only: this is an auxiliary rescue; it must never block the
+			// main migration.
+			slog.Warn("user_role insert failed", "user", userUUID, "role", roleUUID, "err", err)
+			continue
 		}
 		assigned++
 
