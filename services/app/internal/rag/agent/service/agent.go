@@ -12,7 +12,7 @@ import (
 	"github.com/Camionerou/rag-saldivia/pkg/guardrails"
 	"github.com/Camionerou/rag-saldivia/pkg/tenant"
 	"github.com/Camionerou/rag-saldivia/pkg/llm"
-	"github.com/Camionerou/rag-saldivia/services/agent/internal/tools"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/rag/agent/tools"
 )
 
 // Agent orchestrates chat queries: guardrails → LLM → tools → response.

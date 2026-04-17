@@ -10,7 +10,7 @@ import (
 	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 	"github.com/Camionerou/rag-saldivia/pkg/llm"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
-	"github.com/Camionerou/rag-saldivia/services/agent/internal/service"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/rag/agent/service"
 )
 
 // Handler wraps the Agent service for HTTP.
