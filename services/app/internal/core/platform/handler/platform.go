@@ -19,8 +19,8 @@ import (
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
 	"github.com/Camionerou/rag-saldivia/pkg/tenant"
-	"github.com/Camionerou/rag-saldivia/services/platform/db"
-	"github.com/Camionerou/rag-saldivia/services/platform/internal/service"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/core/platform/db"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/core/platform/service"
 )
 
 // PlatformService defines the operations the handler needs from the service layer.

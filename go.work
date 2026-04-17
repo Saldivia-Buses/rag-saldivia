@@ -10,7 +10,6 @@ use (
 	./services/feedback
 	./services/ingest
 	./services/notification
-	./services/platform
 	./services/search
 	./services/ws
 	./tools/cli

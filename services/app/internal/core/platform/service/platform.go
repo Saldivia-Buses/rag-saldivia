@@ -21,7 +21,7 @@ import (
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
-	"github.com/Camionerou/rag-saldivia/services/platform/db"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/core/platform/db"
 )
 
 var slugRegex = regexp.MustCompile(`^[a-z][a-z0-9-]{1,62}$`)

@@ -13,8 +13,8 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
-	"github.com/Camionerou/rag-saldivia/services/platform/db"
-	"github.com/Camionerou/rag-saldivia/services/platform/internal/service"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/core/platform/db"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/core/platform/service"
 )
 
 var testPub ed25519.PublicKey

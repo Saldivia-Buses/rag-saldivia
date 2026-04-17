@@ -16,7 +16,7 @@ import (
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
 
-	"github.com/Camionerou/rag-saldivia/services/platform/db"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/core/platform/db"
 )
 
 func setupTestDB(t *testing.T) (*pgxpool.Pool, func()) {
