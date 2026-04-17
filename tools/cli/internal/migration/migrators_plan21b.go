@@ -816,7 +816,7 @@ func NewProductionRequestMigrator(db *sql.DB, tenantID string) *GenericMigrator 
 				centerID,
 				ParseDecimal(row.Decimal("cantidad_pieza_unidad")),
 				status,
-				"normal", // priority — not in MRP_PEDIDO_PRODUCCION
+				0, // priority (int: 0=normal, 1=high, -1=low) — not in MRP_PEDIDO_PRODUCCION
 				LegacyUserID,
 				"", // notes — not in MRP_PEDIDO_PRODUCCION
 			}, nil
