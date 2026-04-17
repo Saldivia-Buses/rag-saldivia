@@ -32,6 +32,7 @@ type Orchestrator struct {
 	usePipeline      bool
 	archiveSkipped   bool
 	transformWorkers int
+	readWorkers      int
 	readers         []TableMigrator
 	setupHooks      []SetupHook
 	afterTableHooks map[string][]SetupHook
@@ -60,6 +61,18 @@ func (o *Orchestrator) UseParallelCopyWriter(workers int) {
 func (o *Orchestrator) UsePipelineOnly() {
 	o.fastWriter = AsWriter(o.writer)
 	o.usePipeline = true
+}
+
+// SetReadWorkers tells the pipeline to fan-out MySQL reads across N
+// connections, each covering a disjoint PK range. Only applies to migrators
+// whose reader implements the PKRange/ReadBatchRange shape (GenericReader).
+// n<=1 means single reader (legacy behaviour). Resume is disabled per-table
+// when n>1 because checkpoints aren't linear across fragments.
+func (o *Orchestrator) SetReadWorkers(n int) {
+	if n < 1 {
+		n = 1
+	}
+	o.readWorkers = n
 }
 
 // SetTransformWorkers sets the fan-out count for per-row Transform work

@@ -114,6 +114,86 @@ type GenericReader struct {
 	ExtraWhere  string // optional WHERE clause (without WHERE keyword)
 }
 
+// SinglePKTableInfo exposes the table's PK column name. Used by the pipeline
+// to detect GenericReader-backed migrators so it can fan-out reads by range.
+func (r *GenericReader) SinglePKColumn() string { return r.PKColumn }
+func (r *GenericReader) DBHandle() *sql.DB      { return r.DB }
+
+// PKRange returns the MIN and MAX of the PK column, honoring ExtraWhere.
+// Returns (0, 0) when the table is empty — caller treats that as "skip fan-out".
+func (r *GenericReader) PKRange(ctx context.Context) (int64, int64, error) {
+	where := "1=1"
+	if r.ExtraWhere != "" {
+		where = r.ExtraWhere
+	}
+	q := fmt.Sprintf("SELECT COALESCE(MIN(%s), 0), COALESCE(MAX(%s), 0) FROM %s WHERE %s",
+		r.PKColumn, r.PKColumn, r.Table, where)
+	var min, max int64
+	if err := r.DB.QueryRowContext(ctx, q).Scan(&min, &max); err != nil {
+		return 0, 0, fmt.Errorf("pk range %s: %w", r.Table, err)
+	}
+	return min, max, nil
+}
+
+// ReadBatchRange reads one batch of rows with `PK > startExclusive` and
+// `PK <= endInclusive`, capped at `limit` rows. startExclusive=0 means start
+// from the beginning of the range; endInclusive=0 disables the upper bound.
+// Used by the pipeline's multi-reader to partition the table across N
+// concurrent readers. Returns (rows, nextStartKey, error). When no more rows
+// remain in range, returns an empty slice with nextStartKey == "" (EOF).
+func (r *GenericReader) ReadBatchRange(ctx context.Context, startExclusive, endInclusive int64, limit int) ([]LegacyRow, string, error) {
+	where := fmt.Sprintf("%s > ?", r.PKColumn)
+	args := []any{startExclusive}
+	if endInclusive > 0 {
+		where += fmt.Sprintf(" AND %s <= ?", r.PKColumn)
+		args = append(args, endInclusive)
+	}
+	if r.ExtraWhere != "" {
+		where += " AND " + r.ExtraWhere
+	}
+
+	query := fmt.Sprintf("SELECT %s FROM %s WHERE %s ORDER BY %s LIMIT ?",
+		r.Columns, r.Table, where, r.PKColumn)
+	args = append(args, limit)
+
+	rows, err := r.DB.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, "", fmt.Errorf("read %s range: %w", r.Table, err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	cols, err := rows.Columns()
+	if err != nil {
+		return nil, "", fmt.Errorf("columns %s: %w", r.Table, err)
+	}
+
+	var result []LegacyRow
+	var lastKey int64
+	for rows.Next() {
+		values := make([]any, len(cols))
+		ptrs := make([]any, len(cols))
+		for i := range values {
+			ptrs[i] = &values[i]
+		}
+		if err := rows.Scan(ptrs...); err != nil {
+			return nil, "", fmt.Errorf("scan %s: %w", r.Table, err)
+		}
+		row := make(LegacyRow, len(cols))
+		for i, col := range cols {
+			row[col] = values[i]
+		}
+		result = append(result, row)
+		lastKey = row.Int64(r.PKColumn)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, "", fmt.Errorf("iterate %s range: %w", r.Table, err)
+	}
+	if len(result) == 0 {
+		return nil, "", nil
+	}
+	return result, strconv.FormatInt(lastKey, 10), nil
+}
+
 func (r *GenericReader) LegacyTable() string { return r.Table }
 func (r *GenericReader) SDATable() string     { return r.Target }
 func (r *GenericReader) Domain() string       { return r.DomainName }

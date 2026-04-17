@@ -4,12 +4,15 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"strconv"
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/Camionerou/rag-saldivia/tools/cli/internal/legacy"
 )
 
 // Writer abstracts how a migrator's output rows reach PostgreSQL so we can
@@ -18,8 +21,6 @@ import (
 type Writer interface {
 	// WriteBatch inserts rows into `table` idempotently. Returns the number
 	// of rows actually persisted (after ON CONFLICT dedup).
-	// `q` is a pgx.Tx when the caller owns the transaction (sequential mode),
-	// or nil when the writer manages its own per-chunk txs (parallel mode).
 	WriteBatch(ctx context.Context, q pgx.Tx, table string, columns []string, conflictColumn string, rows [][]any) (int, error)
 }
 
@@ -31,11 +32,9 @@ func (a batchWriterAdapter) WriteBatch(ctx context.Context, q pgx.Tx, table stri
 	return a.BatchWriter.WriteBatch(ctx, q, table, columns, conflictColumn, rows)
 }
 
-// AsWriter wraps a *BatchWriter as Writer. Kept here so callers don't have to
-// know about the adapter type.
+// AsWriter wraps a *BatchWriter as Writer.
 func AsWriter(w *BatchWriter) Writer { return batchWriterAdapter{BatchWriter: w} }
 
-// copyWriterAdapter makes CopyWriter implement Writer.
 type copyWriterAdapter struct{ *CopyWriter }
 
 func (a copyWriterAdapter) WriteBatch(ctx context.Context, q pgx.Tx, table string, columns []string, conflictColumn string, rows [][]any) (int, error) {
@@ -45,8 +44,6 @@ func (a copyWriterAdapter) WriteBatch(ctx context.Context, q pgx.Tx, table strin
 // AsCopyWriter wraps a *CopyWriter as Writer.
 func AsCopyWriter(w *CopyWriter) Writer { return copyWriterAdapter{CopyWriter: w} }
 
-// parallelWriterAdapter adapts ParallelCopyWriter. Its WriteBatch ignores the
-// passed-in tx and owns its own worker-tx set (one per chunk).
 type parallelWriterAdapter struct{ *ParallelCopyWriter }
 
 func (a parallelWriterAdapter) WriteBatch(ctx context.Context, _ pgx.Tx, table string, columns []string, conflictColumn string, rows [][]any) (int, error) {
@@ -56,46 +53,29 @@ func (a parallelWriterAdapter) WriteBatch(ctx context.Context, _ pgx.Tx, table s
 // AsParallelWriter wraps a *ParallelCopyWriter as Writer.
 func AsParallelWriter(w *ParallelCopyWriter) Writer { return parallelWriterAdapter{ParallelCopyWriter: w} }
 
-// pipelineBatch carries a single transformed batch from the reader goroutine
-// to the writer goroutine.
+// pipelineBatch carries a single transformed batch from reader goroutines to
+// the writer goroutine.
 type pipelineBatch struct {
-	rows       [][]any          // transformed, ready to INSERT/COPY
-	readN      int              // number of legacy rows consumed to produce this batch
-	skipped    int              // skipped during transform
-	skippedRow []map[string]any // raw rows the transform rejected, kept when archiveSkipped
-	nextKey    string           // resume checkpoint after this batch
+	rows       [][]any
+	readN      int
+	skipped    int
+	skippedRow []map[string]any
+	nextKey    string // last-PK hint — only meaningful when single reader
+	fragIdx    int    // 0-based fragment id, -1 when single reader
 }
 
-// pipelineResult summarises everything a migrator produced.
-type pipelineResult struct {
-	stats    TableStats
-	lastKey  string
-	duration time.Duration
-}
-
-// runTablePipeline replaces the old sequential read → transform → write loop
-// with a two-stage pipeline: a reader goroutine fills a small channel with
-// pre-transformed batches while a writer goroutine drains it. When the read
-// side is I/O-bound (MySQL over the LAN) and the write side is CPU/network-
-// bound (PG COPY), the two stages overlap almost perfectly.
+// runTablePipeline streams legacy rows through the pipeline: N reader
+// goroutines (one per PK fragment when readWorkers>1 and the migrator uses a
+// GenericReader, else one) feed a channel of transformed batches; the writer
+// loop drains the channel, one tx per batch.
 //
-// Checkpointing: the writer owns the checkpoint update. The reader advances
-// its cursor eagerly to keep the channel full, but the `last_legacy_key` we
-// persist in erp_migration_table_progress only moves after the batch is
-// committed on the writer side. Crash + resume therefore cannot lose rows.
-//
-// Error fan-in: the first error from either side shuts the pipeline down and
-// is returned to the caller. We use a context with cancellation so a write
-// failure stops the reader mid-batch.
-//
-// Buffered channel size: 2. One batch in flight is being written, one is
-// transformed and waiting. More than that pins memory for no throughput
-// gain (PG COPY + fsync is the bottleneck, not the read).
+// Checkpointing: when readers >1, last_legacy_key is meaningless (fragments
+// advance independently) so we only persist rows_* counters mid-run. Single-
+// reader runs keep the old resumeKey semantics.
 func (o *Orchestrator) runTablePipeline(ctx context.Context, runID, progressID uuid.UUID, m TableMigrator, resumeKey string, readSoFar, writtenSoFar, skippedSoFar int, writer Writer) (TableStats, error) {
 	slog.Info("migrating table (pipeline)", "legacy", m.LegacyTable(), "sda", m.SDATable(), "resume_key", resumeKey)
 	start := time.Now()
 
-	// Mark in_progress outside the pipeline so we do not race with the writer.
 	if _, err := o.pg.Exec(ctx,
 		`UPDATE erp_migration_table_progress SET status = 'in_progress', started_at = COALESCE(started_at, now()) WHERE id = $1`,
 		progressID,
@@ -109,156 +89,242 @@ func (o *Orchestrator) runTablePipeline(ctx context.Context, runID, progressID u
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	// Buffered: 8 slots so the MySQL reader can stay ahead of the PG writer
-	// when they run at similar speeds (the 2-slot default was leaving 95%
-	// CPU idle on the workstation). Memory cost is bounded by batch size.
-	batches := make(chan pipelineBatch, 8)
+	chanSize := 8
+	if o.readWorkers > 1 {
+		chanSize = 8 * o.readWorkers
+	}
+	batches := make(chan pipelineBatch, chanSize)
 
-	// Reader goroutine: pulls batches from legacy, runs Transform, publishes
-	// to the channel. Owns the resumeKey cursor but never persists it.
 	var readErr error
+	var readErrMu sync.Mutex
+	setReadErr := func(err error) {
+		readErrMu.Lock()
+		if readErr == nil {
+			readErr = err
+		}
+		readErrMu.Unlock()
+	}
+
+	// Detect multi-reader eligibility: readWorkers>1 + no resume + reader is
+	// a GenericReader under the readerAdapter wrapper.
+	multiReader := false
+	var genericReader *legacy.GenericReader
+	var pkFragments [][2]int64
+
+	if o.readWorkers > 1 && resumeKey == "" {
+		if adapter, ok := m.Reader().(*readerAdapter); ok {
+			if gr, ok := adapter.r.(*legacy.GenericReader); ok {
+				minPK, maxPK, err := gr.PKRange(ctx)
+				if err != nil {
+					slog.Warn("pk range scan failed, falling back to single reader", "table", m.LegacyTable(), "err", err)
+				} else if maxPK > minPK && maxPK-minPK > int64(effectiveBatch)*int64(o.readWorkers) {
+					genericReader = gr
+					step := (maxPK - minPK) / int64(o.readWorkers)
+					for i := 0; i < o.readWorkers; i++ {
+						// startExclusive: include minPK on fragment 0, then
+						// each subsequent fragment picks up where the last
+						// finished (endInclusive of previous).
+						start := minPK - 1 + step*int64(i)
+						end := start + step
+						if i == o.readWorkers-1 {
+							end = maxPK
+						}
+						pkFragments = append(pkFragments, [2]int64{start, end})
+					}
+					multiReader = true
+					slog.Info("pipeline multi-reader", "table", m.LegacyTable(),
+						"fragments", len(pkFragments), "min", minPK, "max", maxPK)
+				}
+			}
+		}
+	}
+
+	// sendTransformed fans Transform across o.transformWorkers goroutines,
+	// preserving per-row order via fixed-index slices, then sends the batch.
+	sendTransformed := func(rows []map[string]any, nextKey string, fragIdx int) error {
+		transformedByIdx := make([][]any, len(rows))
+		skippedFlag := make([]bool, len(rows))
+		var firstTransformErr error
+		var transformErrMu sync.Mutex
+
+		tw := o.transformWorkers
+		if tw < 1 {
+			tw = 1
+		}
+		if tw > len(rows) {
+			tw = len(rows)
+		}
+		if tw <= 1 {
+			for i := range rows {
+				vals, err := m.Transform(ctx, rows[i], o.mapper)
+				if err != nil {
+					return fmt.Errorf("transform %s: %w", m.LegacyTable(), err)
+				}
+				if vals == nil {
+					skippedFlag[i] = true
+				} else {
+					transformedByIdx[i] = vals
+				}
+			}
+		} else {
+			var twg sync.WaitGroup
+			chunk := (len(rows) + tw - 1) / tw
+			for w := 0; w < tw; w++ {
+				startI := w * chunk
+				endI := startI + chunk
+				if endI > len(rows) {
+					endI = len(rows)
+				}
+				if startI >= endI {
+					continue
+				}
+				twg.Add(1)
+				go func(s, e int) {
+					defer twg.Done()
+					for i := s; i < e; i++ {
+						vals, err := m.Transform(ctx, rows[i], o.mapper)
+						if err != nil {
+							transformErrMu.Lock()
+							if firstTransformErr == nil {
+								firstTransformErr = fmt.Errorf("transform %s: %w", m.LegacyTable(), err)
+							}
+							transformErrMu.Unlock()
+							return
+						}
+						if vals == nil {
+							skippedFlag[i] = true
+						} else {
+							transformedByIdx[i] = vals
+						}
+					}
+				}(startI, endI)
+			}
+			twg.Wait()
+			if firstTransformErr != nil {
+				return firstTransformErr
+			}
+		}
+
+		skipped := 0
+		transformed := make([][]any, 0, len(rows))
+		var skippedRows []map[string]any
+		if o.archiveSkipped {
+			skippedRows = make([]map[string]any, 0, len(rows)/10)
+		}
+		for i := range rows {
+			if skippedFlag[i] {
+				skipped++
+				if o.archiveSkipped {
+					skippedRows = append(skippedRows, rows[i])
+				}
+				continue
+			}
+			if transformedByIdx[i] != nil {
+				transformed = append(transformed, transformedByIdx[i])
+			}
+		}
+
+		select {
+		case batches <- pipelineBatch{
+			rows:       transformed,
+			readN:      len(rows),
+			skipped:    skipped,
+			skippedRow: skippedRows,
+			nextKey:    nextKey,
+			fragIdx:    fragIdx,
+		}:
+			return nil
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
+
 	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
+
+	// Single-reader loop: uses the existing TableMigrator.Reader adapter.
+	singleReaderLoop := func(cursor string) {
 		defer wg.Done()
-		defer close(batches)
-
 		reader := m.Reader()
-		cursor := resumeKey
-
 		for {
 			if ctx.Err() != nil {
-				readErr = ctx.Err()
+				setReadErr(ctx.Err())
 				return
 			}
-
 			rows, nextKey, err := reader.ReadBatch(ctx, cursor, effectiveBatch)
 			if err != nil {
-				readErr = fmt.Errorf("read %s: %w", m.LegacyTable(), err)
+				setReadErr(fmt.Errorf("read %s: %w", m.LegacyTable(), err))
 				return
 			}
 			if len(rows) == 0 {
-				return // EOF
-			}
-
-			// Fork-join Transform: the read side of the pipeline was the
-			// bottleneck — single-goroutine Transform left 95% CPU idle on
-			// the workstation with 24 writer workers. Now we fan Transform
-			// out across `o.transformWorkers` cores, preserving per-row
-			// order via fixed-index slices so checkpoints stay correct.
-			transformedByIdx := make([][]any, len(rows))
-			skippedFlag := make([]bool, len(rows))
-			var firstTransformErr error
-			var transformErrMu sync.Mutex
-
-			tw := o.transformWorkers
-			if tw <= 1 {
-				tw = 1
-			}
-			if tw > len(rows) {
-				tw = len(rows)
-			}
-			if tw <= 1 {
-				// Small batch — stay sequential, no point paying goroutine cost.
-				for i, row := range rows {
-					vals, err := m.Transform(ctx, row, o.mapper)
-					if err != nil {
-						firstTransformErr = fmt.Errorf("transform %s: %w", m.LegacyTable(), err)
-						break
-					}
-					if vals == nil {
-						skippedFlag[i] = true
-					} else {
-						transformedByIdx[i] = vals
-					}
-				}
-			} else {
-				var twg sync.WaitGroup
-				chunk := (len(rows) + tw - 1) / tw
-				for w := 0; w < tw; w++ {
-					start := w * chunk
-					end := start + chunk
-					if end > len(rows) {
-						end = len(rows)
-					}
-					if start >= end {
-						continue
-					}
-					twg.Add(1)
-					go func(start, end int) {
-						defer twg.Done()
-						for i := start; i < end; i++ {
-							vals, err := m.Transform(ctx, rows[i], o.mapper)
-							if err != nil {
-								transformErrMu.Lock()
-								if firstTransformErr == nil {
-									firstTransformErr = fmt.Errorf("transform %s: %w", m.LegacyTable(), err)
-								}
-								transformErrMu.Unlock()
-								return
-							}
-							if vals == nil {
-								skippedFlag[i] = true
-							} else {
-								transformedByIdx[i] = vals
-							}
-						}
-					}(start, end)
-				}
-				twg.Wait()
-			}
-			if firstTransformErr != nil {
-				readErr = firstTransformErr
 				return
 			}
-
-			skipped := 0
-			transformed := make([][]any, 0, len(rows))
-			var skippedRows []map[string]any
-			if o.archiveSkipped {
-				skippedRows = make([]map[string]any, 0, len(rows)/10)
-			}
-			for i := range rows {
-				if skippedFlag[i] {
-					skipped++
-					if o.archiveSkipped {
-						skippedRows = append(skippedRows, rows[i])
-					}
-					continue
-				}
-				if transformedByIdx[i] != nil {
-					transformed = append(transformed, transformedByIdx[i])
-				}
-			}
-
-			select {
-			case batches <- pipelineBatch{
-				rows:       transformed,
-				readN:      len(rows),
-				skipped:    skipped,
-				skippedRow: skippedRows,
-				nextKey:    nextKey,
-			}:
-			case <-ctx.Done():
-				readErr = ctx.Err()
+			if err := sendTransformed(rows, nextKey, -1); err != nil {
+				setReadErr(err)
 				return
 			}
 			cursor = nextKey
 		}
-	}()
+	}
 
-	// Writer loop (this goroutine): drain the channel, one batch per tx.
+	// Range-reader loop for multi-reader mode. Each goroutine owns a disjoint
+	// PK fragment. nextKey isn't persisted (fragments progress independently),
+	// but we still emit it so the writer can log progress per fragment.
+	rangeReaderLoop := func(startExcl, endIncl int64, fragIdx int) {
+		defer wg.Done()
+		cursor := startExcl
+		for {
+			if ctx.Err() != nil {
+				setReadErr(ctx.Err())
+				return
+			}
+			rows, nextKeyStr, err := genericReader.ReadBatchRange(ctx, cursor, endIncl, effectiveBatch)
+			if err != nil {
+				setReadErr(fmt.Errorf("read %s[frag %d]: %w", m.LegacyTable(), fragIdx, err))
+				return
+			}
+			if len(rows) == 0 {
+				return
+			}
+			out := make([]map[string]any, len(rows))
+			for i, r := range rows {
+				out[i] = map[string]any(r)
+			}
+			if err := sendTransformed(out, nextKeyStr, fragIdx); err != nil {
+				setReadErr(err)
+				return
+			}
+			last, _ := strconv.ParseInt(nextKeyStr, 10, 64)
+			if last <= cursor {
+				return
+			}
+			cursor = last
+		}
+	}
+
+	if multiReader {
+		for i, frag := range pkFragments {
+			wg.Add(1)
+			go rangeReaderLoop(frag[0], frag[1], i)
+		}
+	} else {
+		wg.Add(1)
+		go singleReaderLoop(resumeKey)
+	}
+	go func() { wg.Wait(); close(batches) }()
+
+	// Writer loop: one tx per batch.
 	for b := range batches {
 		stats.RowsRead += b.readN
 		stats.RowsSkipped += b.skipped
 
-		if len(b.rows) == 0 {
-			// Nothing to write, but we still advance the checkpoint.
-			if err := updateCheckpoint(ctx, o.pg, progressID, b.nextKey, stats); err != nil {
-				cancel()
-				<-batchesDrain(batches)
-				wg.Wait()
-				return stats, err
+		if len(b.rows) == 0 && len(b.skippedRow) == 0 {
+			// Nothing to persist. Checkpoint only when single-reader.
+			if !multiReader && b.fragIdx == -1 {
+				if err := updateCheckpoint(ctx, o.pg, progressID, b.nextKey, stats); err != nil {
+					cancel()
+					wg.Wait()
+					return stats, err
+				}
 			}
 			continue
 		}
@@ -269,7 +335,6 @@ func (o *Orchestrator) runTablePipeline(ctx context.Context, runID, progressID u
 			wg.Wait()
 			return stats, fmt.Errorf("begin tx: %w", err)
 		}
-
 		if _, err := tx.Exec(ctx, "SELECT set_config('app.tenant_id', $1, true)", o.tenantID); err != nil {
 			_ = tx.Rollback(ctx)
 			cancel()
@@ -279,7 +344,6 @@ func (o *Orchestrator) runTablePipeline(ctx context.Context, runID, progressID u
 		if _, err := tx.Exec(ctx, "SET LOCAL session_replication_role = 'replica'"); err != nil {
 			slog.Warn("could not disable FK checks in tx", "err", err)
 		}
-
 		if err := o.mapper.FlushPending(ctx, tx); err != nil {
 			_ = tx.Rollback(ctx)
 			cancel()
@@ -287,20 +351,18 @@ func (o *Orchestrator) runTablePipeline(ctx context.Context, runID, progressID u
 			return stats, err
 		}
 
-		written, err := writer.WriteBatch(ctx, tx, m.SDATable(), m.Columns(), m.ConflictColumn(), b.rows)
-		if err != nil {
-			_ = tx.Rollback(ctx)
-			cancel()
-			wg.Wait()
-			markTableFailed(ctx, o.pg, progressID, err.Error())
-			return stats, err
+		if len(b.rows) > 0 {
+			written, err := writer.WriteBatch(ctx, tx, m.SDATable(), m.Columns(), m.ConflictColumn(), b.rows)
+			if err != nil {
+				_ = tx.Rollback(ctx)
+				cancel()
+				wg.Wait()
+				markTableFailed(ctx, o.pg, progressID, err.Error())
+				return stats, err
+			}
+			stats.RowsWritten += written
 		}
-		stats.RowsWritten += written
 
-		// Archive anything the transform decided to drop so no row is ever
-		// silently lost. Runs in the same tx as the batch — if the write
-		// succeeds, the archive lands with it; if it fails, the rollback
-		// covers both paths.
 		if o.archiveSkipped && len(b.skippedRow) > 0 {
 			if err := archiveSkippedRows(ctx, tx, o.tenantID, m.LegacyTable(), b.skippedRow); err != nil {
 				_ = tx.Rollback(ctx)
@@ -311,13 +373,26 @@ func (o *Orchestrator) runTablePipeline(ctx context.Context, runID, progressID u
 			}
 		}
 
-		if _, err := tx.Exec(ctx,
-			`UPDATE erp_migration_table_progress
-			 SET last_legacy_key = $1, rows_read = $2, rows_written = $3, rows_skipped = $4
-			 WHERE id = $5`,
-			b.nextKey, stats.RowsRead, stats.RowsWritten, stats.RowsSkipped, progressID,
-		); err != nil {
-			slog.Error("failed to update progress checkpoint", "err", err)
+		// Only update last_legacy_key when single-reader; multi-reader
+		// fragments don't have a linear key.
+		if !multiReader && b.fragIdx == -1 {
+			if _, err := tx.Exec(ctx,
+				`UPDATE erp_migration_table_progress
+				 SET last_legacy_key = $1, rows_read = $2, rows_written = $3, rows_skipped = $4
+				 WHERE id = $5`,
+				b.nextKey, stats.RowsRead, stats.RowsWritten, stats.RowsSkipped, progressID,
+			); err != nil {
+				slog.Error("failed to update progress checkpoint", "err", err)
+			}
+		} else {
+			if _, err := tx.Exec(ctx,
+				`UPDATE erp_migration_table_progress
+				 SET rows_read = $1, rows_written = $2, rows_skipped = $3
+				 WHERE id = $4`,
+				stats.RowsRead, stats.RowsWritten, stats.RowsSkipped, progressID,
+			); err != nil {
+				slog.Error("failed to update progress counters", "err", err)
+			}
 		}
 
 		if err := tx.Commit(ctx); err != nil {

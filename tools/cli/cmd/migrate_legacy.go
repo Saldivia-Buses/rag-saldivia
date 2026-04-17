@@ -80,6 +80,7 @@ func init() {
 	// across N goroutines. Keeps the structure single-reader so MySQL load is
 	// unchanged; parallelises the CPU-bound transform step only.
 	migrateLegacyCmd.Flags().Int("transform-workers", 1, "Parallel goroutines per batch for the Transform step (0/1 = sequential)")
+	migrateLegacyCmd.Flags().Int("read-workers", 1, "Parallel MySQL readers per table via PK range partitioning (GenericReader-backed tables only; disables per-table resume when >1)")
 
 	if err := migrateLegacyCmd.MarkFlagRequired("tenant"); err != nil {
 		panic(err)
@@ -179,6 +180,10 @@ func runMigrateLegacy(cmd *cobra.Command, args []string) error {
 	if tw, _ := cmd.Flags().GetInt("transform-workers"); tw > 1 {
 		orch.SetTransformWorkers(tw)
 		slog.Info("parallel transform enabled", "workers", tw)
+	}
+	if rw, _ := cmd.Flags().GetInt("read-workers"); rw > 1 {
+		orch.SetReadWorkers(rw)
+		slog.Info("multi-reader enabled", "workers", rw)
 	}
 
 	// Seed dry-run flag before initialising fallback so EnsureUnassignedWarehouse
