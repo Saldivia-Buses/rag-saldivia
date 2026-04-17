@@ -26,12 +26,18 @@ if [[ ! -s "$PGDATA/PG_VERSION" ]]; then
     mkdir -p "$PGDATA"
     chown "$PGUID:$PGGID" "$PGDATA"
     chmod 700 "$PGDATA"
+    # Explicit auth methods: local socket connections trust the uid (the
+    # container is our isolation boundary — ADR 023), but any TCP listener
+    # that someone might re-enable later requires a real password. Be
+    # defensive: someone else editing postgresql.conf shouldn't also have
+    # to remember to tighten pg_hba.conf.
     s6-setuidgid postgres "$PGBIN/initdb" \
         --encoding=UTF8 \
         --locale=C.UTF-8 \
         --username=postgres \
         -D "$PGDATA" \
-        -A trust
+        --auth-local=trust \
+        --auth-host=scram-sha-256
 
     # Single-tenant, local-only hardening. The container is the isolation
     # boundary; Postgres listens on the Unix socket only.
