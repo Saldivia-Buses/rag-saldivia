@@ -1,5 +1,9 @@
 # Alertmanager configuration for SDA Framework.
-# Routes alerts from Prometheus to the notification service webhook.
+# Routes alerts from Prometheus to the app monolith's webhook endpoint.
+#
+# Post ADR 025 the notification module lives inside `app`, so the webhook
+# moved from http://notification:8005/... to http://app:8020/... . The
+# handler path is unchanged.
 #
 # Auth: Bearer token from Docker secret (DS3).
 # The webhook URL is Docker-internal (no Traefik routing).
@@ -34,7 +38,7 @@ receivers:
   # Default: webhook to notification service (warning/info alerts)
   - name: 'default'
     webhook_configs:
-      - url: 'http://notification:8005/internal/webhook/alert'
+      - url: 'http://app:8020/internal/webhook/alert'
         http_config:
           authorization:
             credentials_file: /run/secrets/alertmanager_webhook_token
@@ -43,7 +47,7 @@ receivers:
   # Critical: same webhook (handler sends email for critical severity)
   - name: 'critical'
     webhook_configs:
-      - url: 'http://notification:8005/internal/webhook/alert'
+      - url: 'http://app:8020/internal/webhook/alert'
         http_config:
           authorization:
             credentials_file: /run/secrets/alertmanager_webhook_token
