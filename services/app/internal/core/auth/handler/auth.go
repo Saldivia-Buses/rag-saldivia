@@ -5,18 +5,14 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log/slog"
 	"net/http"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
-	"github.com/Camionerou/rag-saldivia/pkg/security"
-	"github.com/Camionerou/rag-saldivia/pkg/tenant"
-	"github.com/Camionerou/rag-saldivia/services/auth/internal/service"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/core/auth/service"
 )
 
 // AuthService defines the operations the handler needs from the service layer.
@@ -33,64 +29,32 @@ type AuthService interface {
 	ListUsers(ctx context.Context, limit, offset int32) ([]service.UserListItem, error)
 }
 
-// Auth handles HTTP requests for authentication.
+// Auth handles HTTP requests for authentication. Single-tenant per ADR 022 —
+// the container is the tenant, so auth binds to one service + one JWT config
+// at startup. Multi-tenant resolver machinery was removed with ADR 025 core
+// fusion.
 type Auth struct {
-	authSvc         AuthService      // static service (single-tenant mode)
-	resolver        *tenant.Resolver // per-request resolution (multi-tenant mode)
-	jwtCfg          sdajwt.Config
-	blacklist       *security.TokenBlacklist // for multi-tenant service wiring
-	svcCache        sync.Map         // slug → AuthService (multi-tenant cache)
-	serviceTokenCfg *ServiceTokenConfig      // for POST /v1/auth/service-token
+	authSvc         AuthService
+	jwtCfg          sdajwt.Config       // used by Logout bearer verify + ServiceToken signing
+	serviceTokenCfg *ServiceTokenConfig // for POST /v1/auth/service-token
 }
 
-// NewAuth creates auth HTTP handlers in single-tenant mode.
+// NewAuth creates auth HTTP handlers.
 func NewAuth(authSvc AuthService) *Auth {
 	return &Auth{authSvc: authSvc}
 }
 
-// NewMultiTenantAuth creates auth HTTP handlers that resolve the tenant DB per request.
-// Event publishing is handled via the transactional outbox inside the service layer.
-func NewMultiTenantAuth(resolver *tenant.Resolver, jwtCfg sdajwt.Config, blacklist *security.TokenBlacklist) *Auth {
-	return &Auth{
-		resolver:  resolver,
-		jwtCfg:    jwtCfg,
-		blacklist: blacklist,
-	}
+// SetJWTConfig wires the JWT signing/verification config. Required for
+// Logout (bearer JTI blacklisting) and ServiceToken (admin token issue).
+// Called by the monolith's wireAuth after handler construction.
+func (h *Auth) SetJWTConfig(cfg sdajwt.Config) {
+	h.jwtCfg = cfg
 }
 
-// resolveService returns the AuthService for the current request's tenant.
-// In single-tenant mode, returns the static service. In multi-tenant mode,
-// resolves the tenant DB from the X-Tenant-Slug header and caches the
-// service struct per slug to avoid allocation per request.
-func (h *Auth) resolveService(r *http.Request) (AuthService, error) {
-	if h.authSvc != nil {
-		return h.authSvc, nil
-	}
-
-	slug := r.Header.Get("X-Tenant-Slug")
-	if slug == "" {
-		return nil, errors.New("missing tenant context")
-	}
-
-	// Check cache first
-	if cached, ok := h.svcCache.Load(slug); ok {
-		return cached.(AuthService), nil
-	}
-
-	pool, err := h.resolver.PostgresPool(r.Context(), slug)
-	if err != nil {
-		return nil, err
-	}
-
-	tenantID, err := h.resolver.TenantID(r.Context(), slug)
-	if err != nil {
-		return nil, err
-	}
-
-	svc := service.NewAuth(pool, h.jwtCfg, tenantID, slug)
-	svc.SetBlacklist(h.blacklist)
-	h.svcCache.Store(slug, svc)
-	return svc, nil
+// resolveService returns the bound AuthService. Kept as a seam so per-handler
+// err-handling stays uniform, but in single-tenant mode it never fails.
+func (h *Auth) resolveService(_ *http.Request) (AuthService, error) {
+	return h.authSvc, nil
 }
 
 type loginRequest struct {
@@ -275,24 +239,17 @@ func (h *Auth) Me(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, user)
 }
 
-// EnabledModules handles GET /v1/modules/enabled
-// Returns modules enabled for the current tenant from Platform DB.
-// In single-tenant mode or if resolver is unavailable, returns core defaults.
-func (h *Auth) EnabledModules(w http.ResponseWriter, r *http.Request) {
-	tenantID := r.Header.Get("X-Tenant-ID")
-
-	if h.resolver != nil && tenantID != "" {
-		modules, err := h.resolver.ListEnabledModules(r.Context(), tenantID)
-		if err != nil {
-			slog.Warn("list enabled modules failed, using defaults", "error", err)
-		} else {
-			writeJSON(w, http.StatusOK, modules)
-			return
-		}
+// EnabledModules handles GET /v1/modules/enabled. Returns the silo's core
+// module set. Per-tenant module resolution was dropped with ADR 022 (one
+// container per tenant) — the enabled set is baked into the deploy, not
+// looked up per-request.
+func (h *Auth) EnabledModules(w http.ResponseWriter, _ *http.Request) {
+	type enabledModule struct {
+		ID       string `json:"id"`
+		Name     string `json:"name"`
+		Category string `json:"category"`
 	}
-
-	// Fallback: core modules when no resolver (single-tenant mode)
-	writeJSON(w, http.StatusOK, []tenant.EnabledModule{
+	writeJSON(w, http.StatusOK, []enabledModule{
 		{ID: "chat", Name: "Chat + RAG", Category: "core"},
 		{ID: "auth", Name: "Auth + RBAC", Category: "core"},
 		{ID: "notifications", Name: "Notificaciones", Category: "core"},

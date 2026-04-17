@@ -9,7 +9,7 @@ import (
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
 	sdacrypto "github.com/Camionerou/rag-saldivia/pkg/crypto"
-	"github.com/Camionerou/rag-saldivia/services/auth/internal/repository"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/core/auth/repository"
 )
 
 // MFASetupResult holds the data needed for a user to configure their authenticator app.

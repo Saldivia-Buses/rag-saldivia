@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/Camionerou/rag-saldivia/pkg/httperr"
-	"github.com/Camionerou/rag-saldivia/services/auth/internal/service"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/core/auth/service"
 )
 
 type mfaCodeRequest struct {

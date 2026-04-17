@@ -5,7 +5,6 @@ use (
 	./pkg
 	./services/agent
 	./services/app
-	./services/auth
 	./services/chat
 	./services/erp
 	./services/feedback

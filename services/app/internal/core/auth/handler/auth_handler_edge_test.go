@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Camionerou/rag-saldivia/services/auth/internal/service"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/core/auth/service"
 )
 
 // --- Login edge cases ---

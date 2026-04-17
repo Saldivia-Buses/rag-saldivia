@@ -23,7 +23,7 @@ import (
 	"github.com/Camionerou/rag-saldivia/pkg/outbox"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
 	"github.com/Camionerou/rag-saldivia/pkg/spine"
-	"github.com/Camionerou/rag-saldivia/services/auth/internal/repository"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/core/auth/repository"
 )
 
 var (
