@@ -13,7 +13,6 @@ use (
 	./services/notification
 	./services/platform
 	./services/search
-	./services/traces
 	./services/ws
 	./tools/cli
 	./tools/eventsgen

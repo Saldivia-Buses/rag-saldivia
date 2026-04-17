@@ -12,7 +12,7 @@ import (
 
 	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 	"github.com/Camionerou/rag-saldivia/pkg/tenant"
-	"github.com/Camionerou/rag-saldivia/services/traces/internal/service"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/ops/traces/service"
 )
 
 // TracesService is the narrow interface the handler needs.
