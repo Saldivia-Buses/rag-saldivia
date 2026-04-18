@@ -84,6 +84,11 @@ import (
 )
 
 func main() {
+	// Distroless has no shell/wget, so the container healthcheck runs the
+	// binary itself with --healthcheck. Must happen before server.New()
+	// so the probe doesn't spin up the full stack.
+	server.RunHealthcheckAndExit("APP_PORT", "8020")
+
 	// WithTimeout(0) disables the request-timeout middleware so the hijacked
 	// /ws connections survive past the default 30s. Handlers that need a
 	// deadline (ingest upload, agent streaming, auth login) set their own.

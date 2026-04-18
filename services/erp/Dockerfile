@@ -26,4 +26,8 @@ FROM gcr.io/distroless/static-debian12
 COPY --from=builder /bin/erp /erp
 USER nonroot:nonroot
 EXPOSE 8013
+# Binary self-probes /health via pkg/server.RunHealthcheckAndExit — no shell
+# needed (distroless has none). Compose healthchecks must also use CMD form.
+HEALTHCHECK --interval=10s --timeout=3s --start-period=20s --retries=3 \
+  CMD ["/erp", "--healthcheck"]
 ENTRYPOINT ["/erp"]

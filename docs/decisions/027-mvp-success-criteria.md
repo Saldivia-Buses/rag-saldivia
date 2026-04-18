@@ -261,15 +261,16 @@ that justifies the waiver. The waiver ADR number goes in the item.
   today).
 - Identify the top-20 ERP write actions from Histrix audit logs for the
   Phase 2 chat-coverage item.
-- Harden prod deploy leftovers the app-in-compose work surfaced:
-  (a) ~~redis auth~~ — shipped in 2.0.7: `config.EnvOrFile` reads
-  `REDIS_PASSWORD` / `REDIS_PASSWORD_FILE`, `security.InitBlacklist` takes
-  `*redis.Options`, both `app` and `erp` pass Addr + Password to redis client
-  + blacklist, prod compose mounts `redis_password` secret on both services.
-  (b) prod compose `healthcheck:` for `app` and `erp` uses `wget` but the runtime
-  base is `distroless/static-debian12` (no shell, no wget) — the healthcheck
-  never actually runs. Either add a `--healthcheck` self-probe to the Go
-  binaries or ship a tiny static probe alongside.
-  (c) `db_tenant_template_url` secret is mounted for erp and meant for app,
-  but both services read `POSTGRES_TENANT_URL` env directly — the secret
-  is dead weight unless plumbed through an init step.
+- Prod deploy leftovers the app-in-compose work surfaced — all shipped in 2.0.7:
+  (a) redis auth — `config.EnvOrFile` reads `REDIS_PASSWORD` /
+  `REDIS_PASSWORD_FILE`, `security.InitBlacklist` takes `*redis.Options`, both
+  `app` and `erp` pass Addr + Password to redis client + blacklist, prod compose
+  mounts `redis_password` secret on both services.
+  (b) distroless healthcheck — `pkg/server.RunHealthcheckAndExit` plus a
+  `--healthcheck` subcommand in `services/app/cmd` and `services/erp/cmd`
+  self-probes `/health` without needing shell/wget in the runtime image.
+  Dockerfiles declare `HEALTHCHECK CMD ["/app" or "/erp", "--healthcheck"]`;
+  compose uses the same exec form.
+  (c) dead `db_tenant_template_url` secret — removed from `docker-compose.prod.yml`
+  and from erp's `secrets:` list. Both services read `POSTGRES_TENANT_URL` env
+  directly, which is now the only tenant-URL plumbing.

@@ -26,6 +26,11 @@ import (
 )
 
 func main() {
+	// Distroless has no shell/wget, so the container healthcheck runs the
+	// binary itself with --healthcheck. Must happen before server.New()
+	// so the probe doesn't spin up the full stack.
+	server.RunHealthcheckAndExit("ERP_PORT", "8013")
+
 	app := server.New("sda-erp", server.WithPort("ERP_PORT", "8013"))
 	ctx := app.Context()
 
