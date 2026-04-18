@@ -643,15 +643,6 @@ func (m *Mapper) cacheCount(domain, legacyTable string) int {
 	return len(m.cache[m.cacheKey(domain, legacyTable)])
 }
 
-// legajoIndexCount returns the size of the PERSONAL.legajo → entity UUID
-// index. Used by tests to confirm BuildLegajoIndex produced non-zero mappings;
-// not used in production code.
-func (m *Mapper) legajoIndexCount() int {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-	return len(m.legajoIndex)
-}
-
 // PreloadDomain loads all existing mappings for a domain into cache (for FK resolution performance).
 func (m *Mapper) PreloadDomain(ctx context.Context, domain string) error {
 	rows, err := m.pool.Query(ctx,
