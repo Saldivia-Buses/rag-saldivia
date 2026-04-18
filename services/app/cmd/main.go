@@ -39,7 +39,7 @@ import (
 	agentllm "github.com/Camionerou/rag-saldivia/services/app/internal/llm"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
-	"github.com/Camionerou/rag-saldivia/pkg/outbox"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/outbox"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
 	"github.com/Camionerou/rag-saldivia/pkg/server"
 

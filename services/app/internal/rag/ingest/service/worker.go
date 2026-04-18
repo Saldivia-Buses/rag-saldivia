@@ -17,7 +17,7 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 
 	ingestevt "github.com/Camionerou/rag-saldivia/pkg/events/gen/ingest"
-	"github.com/Camionerou/rag-saldivia/pkg/outbox"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/outbox"
 	"github.com/Camionerou/rag-saldivia/pkg/spine"
 	"github.com/Camionerou/rag-saldivia/services/app/internal/rag/ingest/repository"
 )

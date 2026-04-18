@@ -20,7 +20,7 @@ import (
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
 	authnotify "github.com/Camionerou/rag-saldivia/pkg/events/gen/notify"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
-	"github.com/Camionerou/rag-saldivia/pkg/outbox"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/outbox"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
 	"github.com/Camionerou/rag-saldivia/pkg/spine"
 	"github.com/Camionerou/rag-saldivia/services/app/internal/core/auth/repository"
