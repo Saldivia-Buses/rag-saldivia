@@ -17,17 +17,17 @@ SSH tunnel).
 | Segment | Count | Rows |
 |---|---:|---:|
 | Histrix tables in `.intranet-scrape/db-tables.txt` | 675 | 18,940,293 |
-| Tables with a registered migrator/reader | 109 | ≈ 13,963,770 |
-| Tables uncovered (total) | 566 | — |
+| Tables with a registered migrator/reader | 110 | ≈ 14,153,633 |
+| Tables uncovered (total) | 565 | — |
 | &nbsp;&nbsp;— Histrix infra (HTX*, 31) — waived W-004 | 31 | 3,486,776 |
 | &nbsp;&nbsp;— `*_OLD` superseded (5) — waived W-005 | 5 | 423,678 |
 | &nbsp;&nbsp;— zero-row dead tables — waived W-006 | 225 | 0 |
-| &nbsp;&nbsp;— **business-data gap remaining** | **305** | **≈ 1,066,069** |
+| &nbsp;&nbsp;— **business-data gap remaining** | **304** | **≈ 876,206** |
 
-The 109 "covered" tables now account for ≈ **74 %** of all Histrix rows
+The 110 "covered" tables now account for ≈ **75 %** of all Histrix rows
 (up from 68 % post-2.0.9, 61 % post-2.0.8 and 47 % pre-2.0.8). After the
-three bulk waivers, **305 business tables with rows** remain to migrate
-or waive individually. Those 305 tables hold about 1.07 M rows — 5.6 %
+three bulk waivers, **304 business tables with rows** remain to migrate
+or waive individually. Those 304 tables hold about 876 K rows — 4.6 %
 of Histrix's total data volume.
 
 **2.0.10 deltas** (Pareto #3 + Pareto #4 in one PR):
@@ -48,6 +48,22 @@ of Histrix's total data volume.
    `reg_date` uses `SafeDate` (NULL for the 8 zero-date rows).
    Phase 0 invariant from live Histrix: `rows_read = 604,579 = rows_written
    (604,579) + rows_skipped (0) + rows_duplicate (0)` on first run.
+
+3. **Pareto #5 — STKINSPR (189,863 rows live — scraped 180,412)**
+   migrated via `NewArticleSupplierCostMigrator` → new table
+   `erp_article_costs` (migration `073`). Despite the opaque STKINSPR
+   name (probably "STock INSumo PRecios"), the table is the per-supplier
+   cost ledger: one row per (artcod, ctacod) snapshot, maintained by the
+   invoice-import triggers + periodic recalc runs. Live XML-form scrape
+   confirmed 40 references across stock/costos/, costos/, remitos/
+   factura_stkinspr_ingmov, estadisticas/evolutivo_costo. Resolution:
+   article_id via stock default-subsystem lookup; supplier_entity_id via
+   ResolveEntityFlexible(ctacod) (id_regcuenta → nro_cuenta index → NULL).
+   Sister table STK_COSTO_HIST (Pareto #8, 95 K rows) is the cost
+   *history* and is the next obvious accounting-adjacent candidate; both
+   tables ride the same erp_articles FK. No new permissions (reuses
+   erp.stock.*). Phase 0 invariant: `rows_read = 189,863 = rows_written
+   (189,863) + rows_skipped (0) + rows_duplicate (0)` on first run.
 
 2. **Pareto #4 — HERRAMIENTAS (389,253 rows live) + HERRMOVS (11,680
    rows live)** migrated via `NewToolMigrator` + `NewToolMovementMigrator`
@@ -125,7 +141,7 @@ Row volume in the uncovered bucket is extremely concentrated:
 | 2 | ~~FICHADAS~~ — **migrated 2.0.9** | ~~1,464,575~~ | — |
 | 3 | ~~CTBREGIS~~ — **migrated 2.0.10** (604,579 live) | ~~572,076~~ | — |
 | 4 | ~~HERRAMIENTAS~~ — **migrated 2.0.10** (389,253 live) | ~~225,355~~ | — |
-| 5 | STKINSPR | 180,412 | 82.3 % |
+| 5 | ~~STKINSPR~~ — **migrated 2.0.10** (189,863 live) | ~~180,412~~ | — |
 | 6 | PRODUCTO_ATRIB_VALORES | 153,835 | 84.7 % |
 | 7 | PROD_CONTROL_HOMOLOG | 105,683 | 86.5 % |
 | 8 | STK_COSTO_HIST | 95,217 | 88.0 % |
@@ -155,12 +171,12 @@ Row volume in the uncovered bucket is extremely concentrated:
 **Pre-2.0.8 Pareto:** top 10 covered 90.6 %, top 20 covered 95.8 % of
 the uncovered row volume. Ranks 1 (STK_ARTICULO_PROCESO_HIST_DETALLE,
 2.6 M rows), 2 (FICHADAS + PERSONAL_TARJETA, 1.5 M rows), 3
-(CTBREGIS, 605 K rows) and 4 (HERRAMIENTAS + HERRMOVS, 401 K rows) are
-now **migrated** (2.0.8 + 2.0.9 + 2.0.10), closing together about
-**82 %** of the original uncovered row volume. Next obvious candidate:
-STKINSPR (rank 5, 180 K — stock inspection records) — probably a
-straightforward extension of the `erp_stock` domain rather than a new
-surface.
+(CTBREGIS, 605 K rows), 4 (HERRAMIENTAS + HERRMOVS, 401 K rows) and 5
+(STKINSPR, 190 K rows — turned out to be a per-supplier cost ledger,
+not stock inspection) are now **migrated** (2.0.8 + 2.0.9 + 2.0.10),
+closing together about **85 %** of the original uncovered row volume.
+Next obvious candidate: PRODUCTO_ATRIB_VALORES (rank 6, 154 K rows —
+product attribute values, likely an `erp_articles` extension).
 
 ## Business domains to attack next
 
@@ -205,9 +221,10 @@ when touching any of these):
    it is the serialized inventory tag ledger (one row per physical item
    received, barcode-per-unit). HERRMOVS is the lending ledger.
    Kept the Histrix "Herramientas" naming for operational menu parity.
-5. **STKINSPR + STK_COSTO_*** (320 K combined) — stock pricing history.
-   Likely attached to the Phase 1 pricing UI; read
-   `.intranet-scrape/xml-forms/stock/precios*.xml` first.
+5. ~~**STKINSPR** (180 K scraped / 190 K live)~~ — **closed 2.0.10**
+   (→ `erp_article_costs` via Pareto #5). Discovery: STKINSPR is the
+   per-supplier article cost ledger, NOT stock inspection. Sister
+   STK_COSTO_HIST (95 K) is the history table and remains a candidate.
 
 ## Business-data tables with rows but without coverage
 

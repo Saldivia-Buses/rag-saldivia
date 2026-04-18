@@ -694,3 +694,71 @@ func (q *Queries) UpsertStockLevel(ctx context.Context, arg UpsertStockLevelPara
 	)
 	return err
 }
+
+const listArticleCosts = `-- name: ListArticleCosts :many
+SELECT id, tenant_id, legacy_id, article_code, article_id, subsystem_code,
+       cost, percentage_1, percentage_2, percentage_3,
+       supplier_article_code, supplier_code, supplier_entity_id,
+       invoice_date, last_update_date,
+       movement_no, movement_post, movement_date, recalc_flag, created_at
+FROM erp_article_costs
+WHERE tenant_id = $1 AND article_id = $2
+ORDER BY last_update_date DESC NULLS LAST, supplier_code
+LIMIT $3 OFFSET $4
+`
+
+type ListArticleCostsParams struct {
+	TenantID  string      `json:"tenant_id"`
+	ArticleID pgtype.UUID `json:"article_id"`
+	Limit     int32       `json:"limit"`
+	Offset    int32       `json:"offset"`
+}
+
+// Per-supplier cost ledger for a single article. The migrated STKINSPR
+// rows carry one entry per (article, supplier) pair with the last update
+// date.
+func (q *Queries) ListArticleCosts(ctx context.Context, arg ListArticleCostsParams) ([]ErpArticleCost, error) {
+	rows, err := q.db.Query(ctx, listArticleCosts,
+		arg.TenantID,
+		arg.ArticleID,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ErpArticleCost{}
+	for rows.Next() {
+		var i ErpArticleCost
+		if err := rows.Scan(
+			&i.ID,
+			&i.TenantID,
+			&i.LegacyID,
+			&i.ArticleCode,
+			&i.ArticleID,
+			&i.SubsystemCode,
+			&i.Cost,
+			&i.Percentage1,
+			&i.Percentage2,
+			&i.Percentage3,
+			&i.SupplierArticleCode,
+			&i.SupplierCode,
+			&i.SupplierEntityID,
+			&i.InvoiceDate,
+			&i.LastUpdateDate,
+			&i.MovementNo,
+			&i.MovementPost,
+			&i.MovementDate,
+			&i.RecalcFlag,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

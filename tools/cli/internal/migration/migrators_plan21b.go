@@ -2371,6 +2371,100 @@ func NewHomologationRevisionLineMigrator(db *sql.DB, tenantID string) *GenericMi
 }
 
 // ============================================================================
+// Phase 4c — Stock cost tracking (STKINSPR)
+// ============================================================================
+
+// NewArticleSupplierCostMigrator migrates STKINSPR → erp_article_costs.
+// Pareto #5 of the Phase 1 §Data migration gap post-2.0.10
+// (189,863 rows live, ~17 % of remaining uncovered row volume).
+//
+// STKINSPR is the per-supplier cost ledger — one row per
+// (article, supplier) cost snapshot, maintained by invoice-import
+// triggers + the recalc flag for periodic re-costs. Source of the live
+// stock/costos/ and estadisticas/evolutivo_costo screens.
+//
+// Resolution:
+//   - article_id via stock default-subsystem lookup
+//     (articleCompositeCode(artcod, "")) — same pattern as
+//     HomologationRevisionLine / ToolMigrator. Orphan articles migrate
+//     with article_id NULL and article_code preserved.
+//   - supplier_entity_id via ResolveEntityFlexible(ctacod) — tries
+//     id_regcuenta first, then the nro_cuenta index (built as a hook
+//     after REG_CUENTA in Phase 2), then falls through to NULL.
+//
+// Dates: fecfac is ~99.9 % zero in live data (legacy column, rarely
+// populated) — SafeDate → NULL. fecult is the business "as-of" date and
+// is populated on 99.99 % of rows. movfec zero on 4.7 % of rows.
+//
+// Phase 0 invariant: rows_read = rows_written + rows_skipped + 0
+// duplicate. Skips: idCosto == 0 (defensive — AI PK, 0 rows observed).
+func NewArticleSupplierCostMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.ArticleSupplierCostReader(db)
+	return &GenericMigrator{
+		reader: reader,
+		columns: []string{
+			"id", "tenant_id", "legacy_id",
+			"article_code", "article_id", "subsystem_code",
+			"cost", "percentage_1", "percentage_2", "percentage_3",
+			"supplier_article_code", "supplier_code", "supplier_entity_id",
+			"invoice_date", "last_update_date",
+			"movement_no", "movement_post", "movement_date",
+			"recalc_flag",
+		},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("idCosto")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			artCode := strings.TrimSpace(row.String("artcod"))
+			var articleID *uuid.UUID
+			if artCode != "" {
+				artLegacyID := int64(hashCode(articleCompositeCode(artCode, "")))
+				if resolved, rerr := mapper.ResolveOptional(ctx, "stock", "STK_ARTICULOS", artLegacyID); rerr == nil && resolved != uuid.Nil {
+					articleID = &resolved
+				}
+			}
+
+			ctacod := row.Int64("ctacod")
+			var supplierEntityID *uuid.UUID
+			if ctacod > 0 {
+				if resolved, tag := mapper.ResolveEntityFlexible(ctx, ctacod); resolved != uuid.Nil && tag != "unknown" {
+					supplierEntityID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "stock", "STKINSPR", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			invoiceDate := SafeDate(timeFromRow(row, "fecfac"))
+			lastUpdate := SafeDate(timeFromRow(row, "fecult"))
+			moveDate := SafeDate(timeFromRow(row, "movfec"))
+
+			return []any{
+				id, tenantID, legacyID,
+				artCode, articleID,
+				strings.TrimSpace(row.String("siscod")),
+				ParseDecimal(row.Decimal("artcos")),
+				ParseDecimal(row.Decimal("artpor__1")),
+				ParseDecimal(row.Decimal("artpor__2")),
+				ParseDecimal(row.Decimal("artpor__3")),
+				strings.TrimSpace(row.String("artpro")),
+				int32(ctacod), supplierEntityID,
+				invoiceDate, lastUpdate,
+				int32(row.Int("movnro")),
+				int32(row.Int("movnpv")),
+				moveDate,
+				int32(row.Int("recalc")),
+			}, nil
+		},
+	}
+}
+
+// ============================================================================
 // Phase 4b — Tools / serialized inventory (HERRAMIENTAS + HERRMOVS)
 // ============================================================================
 

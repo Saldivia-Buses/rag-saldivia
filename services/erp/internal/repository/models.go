@@ -2005,3 +2005,26 @@ type ErpToolMovement struct {
 	ConceptCode  int16              `json:"concept_code"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 }
+
+type ErpArticleCost struct {
+	ID                  pgtype.UUID        `json:"id"`
+	TenantID            string             `json:"tenant_id"`
+	LegacyID            int64              `json:"legacy_id"`
+	ArticleCode         string             `json:"article_code"`
+	ArticleID           pgtype.UUID        `json:"article_id"`
+	SubsystemCode       string             `json:"subsystem_code"`
+	Cost                pgtype.Numeric     `json:"cost"`
+	Percentage1         pgtype.Numeric     `json:"percentage_1"`
+	Percentage2         pgtype.Numeric     `json:"percentage_2"`
+	Percentage3         pgtype.Numeric     `json:"percentage_3"`
+	SupplierArticleCode string             `json:"supplier_article_code"`
+	SupplierCode        int32              `json:"supplier_code"`
+	SupplierEntityID    pgtype.UUID        `json:"supplier_entity_id"`
+	InvoiceDate         pgtype.Date        `json:"invoice_date"`
+	LastUpdateDate      pgtype.Date        `json:"last_update_date"`
+	MovementNo          int32              `json:"movement_no"`
+	MovementPost        int32              `json:"movement_post"`
+	MovementDate        pgtype.Date        `json:"movement_date"`
+	RecalcFlag          int32              `json:"recalc_flag"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+}

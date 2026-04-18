@@ -389,6 +389,15 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 		migration.NewToolMovementMigrator(mysqlDB, tenantID),
 	)
 
+	// Phase 4c: Per-supplier article cost ledger (STKINSPR → erp_article_costs).
+	// Pareto #5 of the Phase 1 §Data migration gap post-2.0.10 (~190 K rows).
+	// Depends on both the stock article index (built by NewArticleMigrator above
+	// in Phase 4) and the entity / nro_cuenta index (built by Phase 2's REG_CUENTA
+	// + AddAfterTableHook("REG_CUENTA", BuildNroCuentaIndex)). No new hooks needed.
+	orch.RegisterMigrators(
+		migration.NewArticleSupplierCostMigrator(mysqlDB, tenantID),
+	)
+
 	// Phase 5: HR (depends on entities)
 	orch.RegisterMigrators(
 		migration.NewEmployeeDetailMigrator(mysqlDB, tenantID),
