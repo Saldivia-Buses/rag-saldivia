@@ -1,16 +1,19 @@
 groups:
   - name: sda-service-health
     rules:
-      # Service metric series disappeared (service crashed or stopped exporting)
+      # Service metric series disappeared (service crashed or stopped exporting).
+      # Metrics arrive via OTel Collector remote-write — there are no Prometheus
+      # scrape jobs — so the prior `up{job=~"sda-.*"}` expression always fired
+      # (empty vector → absent == 1). Probe a real OTel-emitted metric instead.
       - alert: ServiceDown
         expr: |
-          absent(up{job=~"sda-.*"}) == 1
+          absent_over_time(http_server_request_duration_seconds_count[5m]) == 1
         for: 3m
         labels:
           severity: critical
         annotations:
           summary: "SDA service metrics absent — possible crash"
-          description: "No metrics received from SDA services for 3 minutes. Check OTel collector and service health."
+          description: "No HTTP request metrics received from any SDA service for 5 minutes. Check OTel collector and service health."
 
       # Error rate above 5% for 5 minutes
       - alert: HighErrorRate

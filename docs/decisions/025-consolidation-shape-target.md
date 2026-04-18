@@ -200,9 +200,16 @@ The remaining followups called out in the fusion notes split cleanly:
 
 - NATS per-service users, traefik dynamic configs, alertmanager webhook
   — all consolidated in earlier commits on 2026-04-17.
-- Grafana dashboards still reference the 13 old service names in 40+
-  label selectors — mechanical but needs Grafana running locally to
-  verify panels render. Separate session.
+- Grafana dashboards (logs, system-health, traces-cost) — the `$service`
+  template var was a hardcoded list of the 10 pre-fusion service names
+  (sda-auth, sda-ws, sda-chat, sda-agent, sda-search, sda-notification,
+  sda-platform, sda-ingest, sda-feedback, sda-traces). Replaced with
+  the current 3-service set (sda-app, sda-erp, sda-extractor) on
+  2026-04-18, verified against Grafana 11.6. Also fixed the ServiceDown
+  alert in `prometheus/alerts.yml` — its prior `absent(up{job=~"sda-.*"})`
+  expression always fired (no scrape jobs configured; OTel Collector
+  remote-writes instead), replaced with
+  `absent_over_time(http_server_request_duration_seconds_count[5m])`.
 - `deploy/.env.example` no longer references the absorbed services
   (already pruned to app + erp + extractor).
 
