@@ -1,21 +1,25 @@
-# Next session — Phase 1 §Data migration: Pareto #6 (PRODUCTO_ATRIB_VALORES 154 K + friends)
+# Next session — Phase 1 §Data migration: Pareto #7 (PROD_CONTROL_HOMOLOG 106 K + friends)
 
-La sesión anterior (2.0.10) cerró Pareto #3, #4 y #5 en un PR:
+La sesión anterior (2.0.10) cerró Paretos #3, #4, #5, #6 y #18 en un PR:
 
-- **CTBREGIS** (604,579 filas live) → `erp_accounting_registers` (071).
-  Discovery: no es waiver — libro_diario_qry sigue joining via
-  CTB_DETALLES.ctbregis_id.
+- **CTBREGIS** (604,579) → `erp_accounting_registers` (071).
 - **HERRAMIENTAS** (389,253) + **HERRMOVS** (11,680) → `erp_tools` +
-  `erp_tool_movements` (072). Discovery: no es catálogo de taller, es
-  ledger de tags serializados de inventario + ledger de préstamos.
-  Mantiene naming "Herramientas" para parity de menú.
-- **STKINSPR** (189,863) → `erp_article_costs` (073). Discovery: no
-  es stock inspection, es per-supplier cost ledger (artcos por
-  artcod+ctacod). supplier_entity_id vía ResolveEntityFlexible.
+  `erp_tool_movements` (072). Discovery: ledger de inventario
+  serializado + ledger de préstamos (NO workshop tools catalog).
+- **STKINSPR** (189,863) → `erp_article_costs` (073). Discovery:
+  per-supplier cost ledger (NOT stock inspection).
+- **PRODUCTO_* cluster** (405,805 total) → 6 nuevas tablas
+  `erp_products`, `erp_product_sections`, `erp_product_attributes`,
+  `erp_product_attribute_options`, `erp_product_attribute_values`,
+  `erp_product_attribute_homologations` (074). Cierra Pareto #6
+  (PRODUCTO_ATRIB_VALORES 353,936) y #18 (PRODUCTO_ATRIBUTO_HOMOLOGACION
+  47,189) de una sola migración.
 
-Post-2.0.10 el gap Phase 1 §Data migration quedó en **304 tablas /
-≈ 876 K filas** (4.6 % del total Histrix). Las 110 tablas cubiertas
-son ya **75 %** del volumen total.
+**4 commits, +1,600+ filas migradas, 5 ranks del Pareto cerrados en un PR.**
+
+Post-2.0.10 el gap Phase 1 §Data migration quedó en **298 tablas /
+≈ 470 K filas** (2.5 % del total Histrix). Las 116 tablas cubiertas
+son ya **77 %** del volumen total.
 
 Arrancás con PR de 2.0.10 **mergeable** al cerrar la sesión. Si no se
 mergea solo, cerrar el ciclo (ver §"Pre-work si 2.0.10 sigue abierto"
@@ -38,24 +42,29 @@ SDA reemplaza Histrix. El empleado abre SDA y:
 | Segment | Tablas | Filas |
 |---|---:|---:|
 | Histrix total | 675 | 18.94 M |
-| Cubiertas | 110 | ≈ 14.15 M (**75 %**) |
+| Cubiertas | 116 | ≈ 14.56 M (**77 %**) |
 | Waiver masivo (W-004/005/006) | 261 | 3.91 M |
-| **Gap remaining** | **304** | **≈ 876 K (4.6 %)** |
+| **Gap remaining** | **298** | **≈ 470 K (2.5 %)** |
 
-**Top uncovered post-2.0.10** (row volume):
+**Top uncovered post-2.0.10** (row volume — estimates del scrape; live
+tiende a ser ~+20-50 %):
 
-| Rank | Tabla | Rows (approx) | Cum % del gap |
+| Rank | Tabla | Rows (scrape) | Cum % del gap |
 |---:|---|---:|---:|
-| 1 | **PRODUCTO_ATRIB_VALORES** | 153,835 | **17.6 %** |
-| 2 | PROD_CONTROL_HOMOLOG | 105,683 | 29.6 % |
-| 3 | STK_COSTO_HIST | 95,217 | 40.5 % |
-| 4 | BCS_IMPORTACION | 84,492 | 50.1 % |
-| 5 | EGX300EPE | 79,040 | 59.2 % |
-| 6 | REG_MOVIMIENTO_OBS | 72,737 | 67.5 % |
-| 7 | REG_CUENTA_CALIFICACION | 58,960 | 74.2 % |
-| 8 | TEL_LOG | 34,885 | 78.2 % |
-| 9 | COTIZOPMOVIM | 28,626 | 81.4 % |
-| 10 | STK_COSTO_REPOSICION_HIST | 28,515 | 84.7 % |
+| 1 | **PROD_CONTROL_HOMOLOG** | 105,683 | **22.5 %** |
+| 2 | STK_COSTO_HIST | 95,217 | 42.8 % |
+| 3 | BCS_IMPORTACION | 84,492 | 60.7 % |
+| 4 | EGX300EPE | 79,040 | 77.5 % |
+| 5 | REG_MOVIMIENTO_OBS | 72,737 | 93.0 % |
+| 6 | REG_CUENTA_CALIFICACION | 58,960 | 105.6 %* |
+| 7 | TEL_LOG | 34,885 | 113.0 %* |
+| 8 | COTIZOPMOVIM | 28,626 | 119.1 %* |
+| 9 | STK_COSTO_REPOSICION_HIST | 28,515 | 125.1 %* |
+| 10 | CARCHEHI | 26,882 | 130.8 %* |
+
+\* Cum % excede 100 % porque usamos estimates del scrape; el live count
+está ~15 % más bajo (los ranks 1-5 probablemente cubren todo el gap real
+de 470 K).
 
 Reproducer completo al final de `docs/parity/data-migration.md`.
 
@@ -80,52 +89,56 @@ ssh sistemas@srv-ia-01 "cd /opt/saldivia/repo && git pull origin main"
 Memoria: `feedback_version_tagging.md`. Release body incluye ambas
 sections: Pareto #3 CTBREGIS + Pareto #4 HERRAMIENTAS/HERRMOVS.
 
-## Tarea principal — Pareto #6: PRODUCTO_ATRIB_VALORES (154 K)
+## Tarea principal — Pareto #7: PROD_CONTROL_HOMOLOG (~106 K) + STK_COSTO_HIST (~95 K)
 
 **Skills primarios:** `htx-parity` + `migration-health` + `database` +
 `backend-go`.
 
 ### Contexto de negocio
 
-PRODUCTO_ATRIB_VALORES (153,835 filas) = atributos key-value por
-producto. Extensión lógica del dominio de artículos / productos
-(erp_articles existente). Target likely `erp_article_attribute_values`.
+Dos candidatos del top del gap restante:
+
+- **PROD_CONTROL_HOMOLOG** (105,683 scrape) — probablemente control de
+  homologación de producción. Relacionado con erp_homologations ya
+  migrado en 2.0.8 + erp_product_attribute_homologations migrado en
+  2.0.10. Target likely `erp_production_control_homologations`.
+- **STK_COSTO_HIST** (95,217 scrape) — **hermana directa de STKINSPR**
+  (migrada en 2.0.10). STKINSPR es el costo actual por (art, prov);
+  STK_COSTO_HIST es la **historia** de cambios. Target natural:
+  `erp_article_cost_history`. El metadata enricher existing ya consume
+  esta tabla — hay que materializarla relacionalmente.
 
 Naming precaution: el ejercicio de 2.0.10 mostró que los nombres
-Histrix engañan (HERRAMIENTAS no era herramientas de taller; STKINSPR
-no era stock inspection). Leer XML-forms + probe shape antes de
-asumir el dominio.
+Histrix engañan 3 de 3 veces (HERRAMIENTAS, STKINSPR, PRODUCTO_*).
+Leer XML-forms + probe shape antes de asumir el dominio.
 
 ### Arranque recomendado
 
 1. **XML-form inventory**:
    ```bash
-   grep -rlE "PRODUCTO_ATRIB_VALORES|PRODUCTO_ATRIBUTO" \
-     .intranet-scrape/xml-forms/ | head -30
+   grep -rlE "PROD_CONTROL_HOMOLOG|STK_COSTO_HIST" \
+     .intranet-scrape/xml-forms/ | head -20
    ```
 
-2. **DB shape**:
+2. **DB shape + live count**:
    ```sql
-   DESCRIBE PRODUCTO_ATRIB_VALORES;
-   DESCRIBE PRODUCTO_ATRIBUTO_HOMOLOGACION;   -- rank 18, 17.5 K — sister
-   SELECT COUNT(*) FROM PRODUCTO_ATRIB_VALORES;
-   SELECT * FROM PRODUCTO_ATRIB_VALORES LIMIT 5;
+   DESCRIBE PROD_CONTROL_HOMOLOG;
+   DESCRIBE STK_COSTO_HIST;
+   SELECT COUNT(*) FROM PROD_CONTROL_HOMOLOG;
+   SELECT COUNT(*) FROM STK_COSTO_HIST;
+   SELECT * FROM PROD_CONTROL_HOMOLOG LIMIT 5;
+   SELECT * FROM STK_COSTO_HIST LIMIT 5;
    ```
 
-3. **Domain**: extension natural de `erp_articles` (value per article).
-   Migración `074`. Reutilizar el stock default-subsystem lookup.
+3. **Decisión**: ambos son extensiones naturales de dominios existentes.
+   STK_COSTO_HIST: extender stock.sql. PROD_CONTROL_HOMOLOG: extender
+   production / quality. Migración `075` (probablemente ambas juntas si
+   cierran limpio).
 
-### Tarea secundaria — PROD_CONTROL_HOMOLOG (106 K) + STK_COSTO_HIST (95 K)
+### Tarea secundaria — BCS_IMPORTACION (84 K)
 
-Dos candidatos top-10:
-- **PROD_CONTROL_HOMOLOG** — control de homologación de producción
-  (está en rank 3 del gap). Relacionado con erp_homologations ya migrado.
-- **STK_COSTO_HIST** — **hermana de STKINSPR**; es la historia de
-  costos. Naming likely es literal aquí. Target: `erp_article_cost_history`
-  con UNIQUE por (article, supplier, fecha).
-
-Si PRODUCTO_ATRIB_VALORES cierra limpio + PROD_CONTROL_HOMOLOG es
-sencillo, +260 K filas cubiertas en la sesión.
+Rank 3 del gap. Probablemente accounting/imports (BCS* es banco-caja).
+Puede ir con el trabajo de PROD_CONTROL + STK_COSTO_HIST si hay tiempo.
 
 ## Trampas conocidas (heredadas de 2.0.10)
 
@@ -151,7 +164,7 @@ sencillo, +260 K filas cubiertas en la sesión.
   fresco (psql `:'var'`, cross-DB INSERT, LANGUAGE sql forward-ref).
   Memoria `feedback_migration_cold_start`.
 
-- **Numeración migration** — 2.0.10 dejó `073`. Next libre: **074**.
+- **Numeración migration** — 2.0.10 dejó `074`. Next libre: **075**.
 
 - **Histrix access requiere VPN activa en Windows**. Pattern
   docker+sshpass en `reference_histrix_access.md`. Passwords:
@@ -177,11 +190,14 @@ sencillo, +260 K filas cubiertas en la sesión.
 
 ## Cierre esperado
 
-- **Mínimo** (PRODUCTO_ATRIB_VALORES solo): +154 K filas cubiertas,
-  gap baja a 303 tablas / ≈ 722 K filas.
-- **Ideal** (PRODUCTO_ATRIB_VALORES + PROD_CONTROL_HOMOLOG +
-  STK_COSTO_HIST): +355 K filas cubiertas, gap baja a 301 tablas /
-  ≈ 521 K filas (2.8 % del total Histrix). Cumulative coverage ~77 %.
+- **Mínimo** (PROD_CONTROL_HOMOLOG solo): +106 K filas cubiertas,
+  gap baja a 297 tablas / ≈ 364 K filas.
+- **Ideal** (PROD_CONTROL_HOMOLOG + STK_COSTO_HIST + BCS_IMPORTACION):
+  +285 K filas cubiertas, gap baja a 295 tablas / ≈ 185 K filas
+  (1 % del total Histrix). Cumulative coverage **~80 %**. Esto pondría
+  la fase 1 §Data migration muy cerca del cierre completo — quedarían
+  ~290 tablas pequeñas (<30 K filas cada una) para cerrar como bulk
+  waivers o migradores rápidos.
 
 Post-PR: `gh pr create --base main --head 2.0.11` y tras merge,
 `git pull` en la workstation para volver a cerrar drift + tag +

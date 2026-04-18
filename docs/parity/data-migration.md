@@ -17,17 +17,17 @@ SSH tunnel).
 | Segment | Count | Rows |
 |---|---:|---:|
 | Histrix tables in `.intranet-scrape/db-tables.txt` | 675 | 18,940,293 |
-| Tables with a registered migrator/reader | 110 | ≈ 14,153,633 |
-| Tables uncovered (total) | 565 | — |
+| Tables with a registered migrator/reader | 116 | ≈ 14,559,438 |
+| Tables uncovered (total) | 559 | — |
 | &nbsp;&nbsp;— Histrix infra (HTX*, 31) — waived W-004 | 31 | 3,486,776 |
 | &nbsp;&nbsp;— `*_OLD` superseded (5) — waived W-005 | 5 | 423,678 |
 | &nbsp;&nbsp;— zero-row dead tables — waived W-006 | 225 | 0 |
-| &nbsp;&nbsp;— **business-data gap remaining** | **304** | **≈ 876,206** |
+| &nbsp;&nbsp;— **business-data gap remaining** | **298** | **≈ 470,401** |
 
-The 110 "covered" tables now account for ≈ **75 %** of all Histrix rows
+The 116 "covered" tables now account for ≈ **77 %** of all Histrix rows
 (up from 68 % post-2.0.9, 61 % post-2.0.8 and 47 % pre-2.0.8). After the
-three bulk waivers, **304 business tables with rows** remain to migrate
-or waive individually. Those 304 tables hold about 876 K rows — 4.6 %
+three bulk waivers, **298 business tables with rows** remain to migrate
+or waive individually. Those 298 tables hold about 470 K rows — 2.5 %
 of Histrix's total data volume.
 
 **2.0.10 deltas** (Pareto #3 + Pareto #4 in one PR):
@@ -48,6 +48,29 @@ of Histrix's total data volume.
    `reg_date` uses `SafeDate` (NULL for the 8 zero-date rows).
    Phase 0 invariant from live Histrix: `rows_read = 604,579 = rows_written
    (604,579) + rows_skipped (0) + rows_duplicate (0)` on first run.
+
+4. **Pareto #6 (+ #18) — PRODUCTO_* cluster (405,805 rows live — original
+   scrape estimate was 172 K for the two Pareto ranks combined; live
+   count +136 %)** migrated as a 6-table bundle: `erp_products` (4,108),
+   `erp_product_sections` (10), `erp_product_attributes` (415),
+   `erp_product_attribute_options` (147), `erp_product_attribute_values`
+   (**353,936 rows — Pareto #6**), `erp_product_attribute_homologations`
+   (**47,189 rows — Pareto #18**). Migration `074`. The PRODUCTO_* tables
+   are the chassis/unit catalog: PRODUCTOS holds 4 K master product codes
+   (each bus model), PRODUCTO_ATRIB_VALORES is the per-product attribute
+   key-value store the UI renders in producto/producto_atributos_valores.xml.
+   The existing `articleProductAttributes` metadata-enricher still runs
+   in parallel and attaches attribute data as JSONB on `erp_articles`;
+   this migration ALSO materializes the full relational shape so the
+   native Histrix screens (producto/ing/producto_atributos_valores_ins,
+   producto/producto_atributos_homologacion_qry, ventas/
+   ficha_venta_seccion_qry) can map 1:1 post-cutover. Resolution strategy
+   preserves FKs with orphan tolerance: 89 % of values resolve
+   product_id, 11 % migrate with NULL (producto_id not in PRODUCTOS);
+   100 % resolve attribute_id (zero orphan); homologation_id resolves
+   against erp_homologations from 2.0.8. Phase 0 invariant across the
+   cluster: `rows_read = 405,805 = rows_written (405,805) + rows_skipped
+   (0) + rows_duplicate (0)` on first run.
 
 3. **Pareto #5 — STKINSPR (189,863 rows live — scraped 180,412)**
    migrated via `NewArticleSupplierCostMigrator` → new table
@@ -142,7 +165,7 @@ Row volume in the uncovered bucket is extremely concentrated:
 | 3 | ~~CTBREGIS~~ — **migrated 2.0.10** (604,579 live) | ~~572,076~~ | — |
 | 4 | ~~HERRAMIENTAS~~ — **migrated 2.0.10** (389,253 live) | ~~225,355~~ | — |
 | 5 | ~~STKINSPR~~ — **migrated 2.0.10** (189,863 live) | ~~180,412~~ | — |
-| 6 | PRODUCTO_ATRIB_VALORES | 153,835 | 84.7 % |
+| 6 | ~~PRODUCTO_ATRIB_VALORES~~ — **migrated 2.0.10** (353,936 live) | ~~153,835~~ | — |
 | 7 | PROD_CONTROL_HOMOLOG | 105,683 | 86.5 % |
 | 8 | STK_COSTO_HIST | 95,217 | 88.0 % |
 | 9 | BCS_IMPORTACION | 84,492 | 89.4 % |
@@ -154,7 +177,7 @@ Row volume in the uncovered bucket is extremely concentrated:
 | 15 | STK_COSTO_REPOSICION_HIST | 28,515 | 94.3 % |
 | 16 | CARCHEHI | 26,882 | 94.7 % |
 | 17 | ACCESORIOS_COCHE | 19,671 | 95.0 % |
-| 18 | PRODUCTO_ATRIBUTO_HOMOLOGACION | 17,558 | 95.3 % |
+| 18 | ~~PRODUCTO_ATRIBUTO_HOMOLOGACION~~ — **migrated 2.0.10** (47,189 live) | ~~17,558~~ | — |
 | 19 | EGX_300 | 15,702 | 95.6 % |
 | 20 | RECLAMOPAGOS | 15,463 | 95.8 % |
 | 21 | STK_COSTOS | 15,066 | 96.1 % |
@@ -169,14 +192,12 @@ Row volume in the uncovered bucket is extremely concentrated:
 | 30 | CONTROLCALIDAD | 7,753 | 97.5 % |
 
 **Pre-2.0.8 Pareto:** top 10 covered 90.6 %, top 20 covered 95.8 % of
-the uncovered row volume. Ranks 1 (STK_ARTICULO_PROCESO_HIST_DETALLE,
-2.6 M rows), 2 (FICHADAS + PERSONAL_TARJETA, 1.5 M rows), 3
-(CTBREGIS, 605 K rows), 4 (HERRAMIENTAS + HERRMOVS, 401 K rows) and 5
-(STKINSPR, 190 K rows — turned out to be a per-supplier cost ledger,
-not stock inspection) are now **migrated** (2.0.8 + 2.0.9 + 2.0.10),
-closing together about **85 %** of the original uncovered row volume.
-Next obvious candidate: PRODUCTO_ATRIB_VALORES (rank 6, 154 K rows —
-product attribute values, likely an `erp_articles` extension).
+the uncovered row volume. Ranks 1, 2, 3, 4, 5 AND 6+18 (PRODUCTO_* full
+cluster — 406 K rows) are now **migrated** (2.0.8 + 2.0.9 + 2.0.10),
+closing together about **92 %** of the original uncovered row volume.
+Next obvious candidate: PROD_CONTROL_HOMOLOG (rank 7 original / rank 2
+of remaining gap, 106 K rows — production control homologation,
+probably an `erp_homologations` extension).
 
 ## Business domains to attack next
 
@@ -225,6 +246,13 @@ when touching any of these):
    (→ `erp_article_costs` via Pareto #5). Discovery: STKINSPR is the
    per-supplier article cost ledger, NOT stock inspection. Sister
    STK_COSTO_HIST (95 K) is the history table and remains a candidate.
+6. ~~**PRODUCTO_* cluster** (172 K scraped ranks 6+18 / 406 K live)~~ —
+   **closed 2.0.10** (→ 6 new erp_product_* tables via the Pareto #6+#18
+   bundle). PRODUCTOS + sections + attributes + options + values +
+   attribute-homolog in one cluster. PRODUCTO_ATRIB_VALORES live count
+   was 354 K vs 154 K scrape — +130 % growth. Both the native relational
+   shape and the existing metadata-enricher JSONB on erp_articles
+   coexist.
 
 ## Business-data tables with rows but without coverage
 

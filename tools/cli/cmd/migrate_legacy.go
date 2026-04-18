@@ -533,6 +533,21 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 		migration.NewHomologationRevisionLineMigrator(mysqlDB, tenantID),
 	)
 
+	// Phase 11c: Products domain (PRODUCTO_* cluster). Pareto #6 of the
+	// Phase 1 §Data migration gap (PRODUCTO_ATRIB_VALORES, 354 K rows) plus
+	// Pareto #18 (PRODUCTO_ATRIBUTO_HOMOLOGACION, 47 K rows, needs the
+	// Phase 11b HOMOLOGMOD cache). Order: sections → products →
+	// attributes → options → values → atrib_homologations, each parent
+	// before children so ResolveOptional finds the mapped UUID.
+	orch.RegisterMigrators(
+		migration.NewProductSectionMigrator(mysqlDB, tenantID),
+		migration.NewProductMigrator(mysqlDB, tenantID),
+		migration.NewProductAttributeMigrator(mysqlDB, tenantID),
+		migration.NewProductAttributeOptionMigrator(mysqlDB, tenantID),
+		migration.NewProductAttributeValueMigrator(mysqlDB, tenantID),
+		migration.NewProductAttributeHomologationMigrator(mysqlDB, tenantID),
+	)
+
 	// Phase 12: Quality (ISO 9001)
 	orch.RegisterMigrators(
 		migration.NewNonconformityMigrator(mysqlDB, tenantID),

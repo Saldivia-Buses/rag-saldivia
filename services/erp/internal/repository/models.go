@@ -2028,3 +2028,87 @@ type ErpArticleCost struct {
 	RecalcFlag          int32              `json:"recalc_flag"`
 	CreatedAt           pgtype.Timestamptz `json:"created_at"`
 }
+
+type ErpProductSection struct {
+	ID        pgtype.UUID        `json:"id"`
+	TenantID  string             `json:"tenant_id"`
+	LegacyID  int64              `json:"legacy_id"`
+	Name      string             `json:"name"`
+	SortOrder int32              `json:"sort_order"`
+	RubroID   int32              `json:"rubro_id"`
+	Active    bool               `json:"active"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpProduct struct {
+	ID               pgtype.UUID        `json:"id"`
+	TenantID         string             `json:"tenant_id"`
+	LegacyID         int64              `json:"legacy_id"`
+	Description      string             `json:"description"`
+	SupplierEntityID pgtype.UUID        `json:"supplier_entity_id"`
+	SupplierCode     int32              `json:"supplier_code"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpProductAttribute struct {
+	ID                     pgtype.UUID        `json:"id"`
+	TenantID               string             `json:"tenant_id"`
+	LegacyID               int64              `json:"legacy_id"`
+	Name                   string             `json:"name"`
+	AttributeType          string             `json:"attribute_type"`
+	SectionID              pgtype.UUID        `json:"section_id"`
+	SectionLegacyID        int32              `json:"section_legacy_id"`
+	ArticleCode            string             `json:"article_code"`
+	HelperXML              string             `json:"helper_xml"`
+	HelperDir              string             `json:"helper_dir"`
+	Parameters             string             `json:"parameters"`
+	SortOrder              int32              `json:"sort_order"`
+	Active                 bool               `json:"active"`
+	PrintLabel             bool               `json:"print_label"`
+	PrintValue             bool               `json:"print_value"`
+	ActiveInQuote          bool               `json:"active_in_quote"`
+	ActiveInTechSheet      bool               `json:"active_in_tech_sheet"`
+	QuoteDescription       string             `json:"quote_description"`
+	DefineBeforeSectionID  int32              `json:"define_before_section_id"`
+	StandardAdditional     int16              `json:"standard_additional"`
+	Code                   string             `json:"code"`
+	PrintSectionID         string             `json:"print_section_id"`
+	CreatedAt              pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpProductAttributeOption struct {
+	ID                pgtype.UUID        `json:"id"`
+	TenantID          string             `json:"tenant_id"`
+	LegacyID          int64              `json:"legacy_id"`
+	AttributeID       pgtype.UUID        `json:"attribute_id"`
+	AttributeLegacyID int32              `json:"attribute_legacy_id"`
+	OptionName        string             `json:"option_name"`
+	OptionValue       string             `json:"option_value"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpProductAttributeValue struct {
+	ID                pgtype.UUID        `json:"id"`
+	TenantID          string             `json:"tenant_id"`
+	LegacyID          int64              `json:"legacy_id"`
+	ProductID         pgtype.UUID        `json:"product_id"`
+	ProductLegacyID   int32              `json:"product_legacy_id"`
+	AttributeID       pgtype.UUID        `json:"attribute_id"`
+	AttributeLegacyID int32              `json:"attribute_legacy_id"`
+	Value             string             `json:"value"`
+	Quantity          int32              `json:"quantity"`
+	QuoteLegacyID     int32              `json:"quote_legacy_id"`
+	RecordedAt        pgtype.Timestamptz `json:"recorded_at"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpProductAttributeHomologation struct {
+	ID                   pgtype.UUID        `json:"id"`
+	TenantID             string             `json:"tenant_id"`
+	LegacyID             int64              `json:"legacy_id"`
+	AttributeID          pgtype.UUID        `json:"attribute_id"`
+	AttributeLegacyID    int32              `json:"attribute_legacy_id"`
+	HomologationID       pgtype.UUID        `json:"homologation_id"`
+	HomologationLegacyID int32              `json:"homologation_legacy_id"`
+	CreatedAt            pgtype.Timestamptz `json:"created_at"`
+}

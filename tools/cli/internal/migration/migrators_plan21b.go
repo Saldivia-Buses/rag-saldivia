@@ -2371,6 +2371,300 @@ func NewHomologationRevisionLineMigrator(db *sql.DB, tenantID string) *GenericMi
 }
 
 // ============================================================================
+// Phase 4d — Products domain (PRODUCTO_* cluster)
+// ============================================================================
+//
+// Six tables in one cluster: PRODUCTO_SECCION (10) + PRODUCTOS (4,108) +
+// PRODUCTO_ATRIBUTOS (415) + PRODUCTO_ATRIB_OPCIONES (147) +
+// PRODUCTO_ATRIB_VALORES (353,936 — Pareto #6) +
+// PRODUCTO_ATRIBUTO_HOMOLOGACION (47,189 — Pareto #18). ~406 K rows total.
+//
+// Domain = "productos" (distinct from "stock" / STK_ARTICULOS even though
+// the two domains overlap — a bus-model article has a STK_ARTICULOS.artcod
+// that equals PRODUCTOS.descripcion_producto). The existing metadata
+// enricher (metadata_enrichment.articleProductAttributes) keeps working
+// in parallel and attaches attribute data as JSONB on erp_articles; this
+// migrator additionally materializes the full relational shape so the UI
+// forms read their native schema post-cutover.
+
+// NewProductSectionMigrator — PRODUCTO_SECCION → erp_product_sections.
+func NewProductSectionMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.ProductSectionReader(db)
+	return &GenericMigrator{
+		reader: reader,
+		columns: []string{
+			"id", "tenant_id", "legacy_id", "name", "sort_order",
+			"rubro_id", "active",
+		},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_prdseccion")
+			if legacyID == 0 {
+				return nil, nil
+			}
+			id, err := mapper.Map(ctx, nil, "productos", "PRODUCTO_SECCION", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+			return []any{
+				id, tenantID, legacyID,
+				strings.TrimSpace(row.String("nombre_seccion")),
+				int32(row.Int("orden_seccion")),
+				int32(row.Int("rubro_id")),
+				row.Int("activa_seccion") != 0,
+			}, nil
+		},
+	}
+}
+
+// NewProductMigrator — PRODUCTOS → erp_products. descripcion_producto is
+// both the product description AND the STK_ARTICULOS.artcod short code
+// for unit-level articles (bus chassis). supplier resolved via
+// ResolveEntityFlexible(regcuenta_id).
+func NewProductMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.ProductReader(db)
+	return &GenericMigrator{
+		reader: reader,
+		columns: []string{
+			"id", "tenant_id", "legacy_id", "description",
+			"supplier_entity_id", "supplier_code",
+		},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_producto")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			regcuenta := row.Int64("regcuenta_id")
+			var supplierEntityID *uuid.UUID
+			if regcuenta > 0 {
+				if resolved, tag := mapper.ResolveEntityFlexible(ctx, regcuenta); resolved != uuid.Nil && tag != "unknown" {
+					supplierEntityID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "productos", "PRODUCTOS", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+			return []any{
+				id, tenantID, legacyID,
+				strings.TrimSpace(row.String("descripcion_producto")),
+				supplierEntityID,
+				int32(regcuenta),
+			}, nil
+		},
+	}
+}
+
+// NewProductAttributeMigrator — PRODUCTO_ATRIBUTOS → erp_product_attributes.
+func NewProductAttributeMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.ProductAttributeReader(db)
+	return &GenericMigrator{
+		reader: reader,
+		columns: []string{
+			"id", "tenant_id", "legacy_id", "name", "attribute_type",
+			"section_id", "section_legacy_id", "article_code",
+			"helper_xml", "helper_dir", "parameters", "sort_order",
+			"active", "print_label", "print_value",
+			"active_in_quote", "active_in_tech_sheet", "quote_description",
+			"define_before_section_id", "standard_additional",
+			"code", "print_section_id",
+		},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_prdatributo")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			sectionLegacyID := row.Int64("prdseccion_id")
+			var sectionID *uuid.UUID
+			if sectionLegacyID > 0 {
+				if resolved, rerr := mapper.ResolveOptional(ctx, "productos", "PRODUCTO_SECCION", sectionLegacyID); rerr == nil && resolved != uuid.Nil {
+					sectionID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "productos", "PRODUCTO_ATRIBUTOS", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+			return []any{
+				id, tenantID, legacyID,
+				strings.TrimSpace(row.String("nombre_atributo")),
+				strings.TrimSpace(row.String("tipo_atributo")),
+				sectionID, int32(sectionLegacyID),
+				strings.TrimSpace(row.String("stkarticulo_id")),
+				strings.TrimSpace(row.String("helper_xml")),
+				strings.TrimSpace(row.String("helper_dir")),
+				strings.TrimSpace(row.String("parametros")),
+				int32(row.Int("orden_atributo")),
+				row.Int("activo") != 0,
+				row.Int("print_label") != 0,
+				row.Int("print_value") != 0,
+				row.Int("activo_cotizacion") != 0,
+				row.Int("activo_fichatecnica") != 0,
+				strings.TrimSpace(row.String("descrip_cotizacion")),
+				int32(row.Int("definir_antes_seccion_id")),
+				int16(row.Int("estandar_adicional")),
+				strings.TrimSpace(row.String("codigo")),
+				strings.TrimSpace(row.String("print_seccion_id")),
+			}, nil
+		},
+	}
+}
+
+// NewProductAttributeOptionMigrator — PRODUCTO_ATRIB_OPCIONES →
+// erp_product_attribute_options.
+func NewProductAttributeOptionMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.ProductAttributeOptionReader(db)
+	return &GenericMigrator{
+		reader: reader,
+		columns: []string{
+			"id", "tenant_id", "legacy_id",
+			"attribute_id", "attribute_legacy_id",
+			"option_name", "option_value",
+		},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_atribopcion")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			attrLegacyID := row.Int64("prdatributo_id")
+			var attrID *uuid.UUID
+			if attrLegacyID > 0 {
+				if resolved, rerr := mapper.ResolveOptional(ctx, "productos", "PRODUCTO_ATRIBUTOS", attrLegacyID); rerr == nil && resolved != uuid.Nil {
+					attrID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "productos", "PRODUCTO_ATRIB_OPCIONES", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+			return []any{
+				id, tenantID, legacyID,
+				attrID, int32(attrLegacyID),
+				strings.TrimSpace(row.String("nombre_opcion")),
+				strings.TrimSpace(row.String("valor_opcion")),
+			}, nil
+		},
+	}
+}
+
+// NewProductAttributeValueMigrator — PRODUCTO_ATRIB_VALORES →
+// erp_product_attribute_values. The Pareto #6 target (353,936 rows).
+// 89 % resolve producto_id against PRODUCTOS; 11 % orphan migrate with
+// product_id NULL preserving raw producto_legacy_id. 100 % resolve
+// prdatributo_id against PRODUCTO_ATRIBUTOS.
+func NewProductAttributeValueMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.ProductAttributeValueReader(db)
+	return &GenericMigrator{
+		reader: reader,
+		columns: []string{
+			"id", "tenant_id", "legacy_id",
+			"product_id", "product_legacy_id",
+			"attribute_id", "attribute_legacy_id",
+			"value", "quantity", "quote_legacy_id", "recorded_at",
+		},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_atribvalor")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			productLegacyID := row.Int64("producto_id")
+			var productID *uuid.UUID
+			if productLegacyID > 0 {
+				if resolved, rerr := mapper.ResolveOptional(ctx, "productos", "PRODUCTOS", productLegacyID); rerr == nil && resolved != uuid.Nil {
+					productID = &resolved
+				}
+			}
+
+			attrLegacyID := row.Int64("prdatributo_id")
+			var attrID *uuid.UUID
+			if attrLegacyID > 0 {
+				if resolved, rerr := mapper.ResolveOptional(ctx, "productos", "PRODUCTO_ATRIBUTOS", attrLegacyID); rerr == nil && resolved != uuid.Nil {
+					attrID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "productos", "PRODUCTO_ATRIB_VALORES", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			recordedAt := SafeDate(timeFromRow(row, "timestamp_atributo"))
+
+			return []any{
+				id, tenantID, legacyID,
+				productID, int32(productLegacyID),
+				attrID, int32(attrLegacyID),
+				strings.TrimSpace(row.String("valor_atributo")),
+				int32(row.Int("cantidad_atributo")),
+				int32(row.Int("cotizacion_id")),
+				recordedAt,
+			}, nil
+		},
+	}
+}
+
+// NewProductAttributeHomologationMigrator — PRODUCTO_ATRIBUTO_HOMOLOGACION
+// → erp_product_attribute_homologations (Pareto #18 rank, 47,189 rows).
+// Join table between product attributes and vehicle homologations
+// migrated in 2.0.8 (erp_homologations). Resolves both FKs with orphan
+// tolerance.
+func NewProductAttributeHomologationMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.ProductAttributeHomologationReader(db)
+	return &GenericMigrator{
+		reader: reader,
+		columns: []string{
+			"id", "tenant_id", "legacy_id",
+			"attribute_id", "attribute_legacy_id",
+			"homologation_id", "homologation_legacy_id",
+		},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_atrib_homolog")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			attrLegacyID := row.Int64("prdatributo_id")
+			var attrID *uuid.UUID
+			if attrLegacyID > 0 {
+				if resolved, rerr := mapper.ResolveOptional(ctx, "productos", "PRODUCTO_ATRIBUTOS", attrLegacyID); rerr == nil && resolved != uuid.Nil {
+					attrID = &resolved
+				}
+			}
+
+			homologLegacyID := row.Int64("homologacion_id")
+			var homologID *uuid.UUID
+			if homologLegacyID > 0 {
+				if resolved, rerr := mapper.ResolveOptional(ctx, "production", "HOMOLOGMOD", homologLegacyID); rerr == nil && resolved != uuid.Nil {
+					homologID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "productos", "PRODUCTO_ATRIBUTO_HOMOLOGACION", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+			return []any{
+				id, tenantID, legacyID,
+				attrID, int32(attrLegacyID),
+				homologID, int32(homologLegacyID),
+			}, nil
+		},
+	}
+}
+
+// ============================================================================
 // Phase 4c — Stock cost tracking (STKINSPR)
 // ============================================================================
 
