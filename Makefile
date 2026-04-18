@@ -191,19 +191,19 @@ sqlc-%: ## Generate sqlc for a specific service
 
 # ── Events codegen (Plan 26 spine) ───────────────────────────────────────
 
-events-gen: ## Regenerate Go/TS/Markdown from pkg/events/spec/*.cue
+events-gen: ## Regenerate Go/TS/Markdown from services/app/internal/events/spec/*.cue
 	@cd $(ROOT_DIR)/tools/eventsgen && go run . \
-		-spec $(ROOT_DIR)/pkg/events/spec \
-		-out-go $(ROOT_DIR)/pkg/events/gen \
+		-spec $(ROOT_DIR)/services/app/internal/events/spec \
+		-out-go $(ROOT_DIR)/services/app/internal/events/gen \
 		-out-ts $(ROOT_DIR)/apps/web/src/lib/events/gen \
 		-out-docs $(ROOT_DIR)/docs/events
 
 events-validate: ## Verify generated events match spec (used by CI)
 	@tmpdir=$$(mktemp -d); \
 	cd $(ROOT_DIR)/tools/eventsgen && go run . \
-		-spec $(ROOT_DIR)/pkg/events/spec \
+		-spec $(ROOT_DIR)/services/app/internal/events/spec \
 		-out-go $$tmpdir/go -out-ts $$tmpdir/ts -out-docs $$tmpdir/docs; \
-	diff -r $$tmpdir/go $(ROOT_DIR)/pkg/events/gen >/dev/null || { echo "pkg/events/gen out of date — run 'make events-gen'"; rm -rf $$tmpdir; exit 1; }; \
+	diff -r $$tmpdir/go $(ROOT_DIR)/services/app/internal/events/gen >/dev/null || { echo "services/app/internal/events/gen out of date — run 'make events-gen'"; rm -rf $$tmpdir; exit 1; }; \
 	diff -r $$tmpdir/ts $(ROOT_DIR)/apps/web/src/lib/events/gen --exclude=envelope.ts >/dev/null || { echo "apps/web/src/lib/events/gen out of date"; rm -rf $$tmpdir; exit 1; }; \
 	diff -r $$tmpdir/docs $(ROOT_DIR)/docs/events --exclude=README.md >/dev/null || { echo "docs/events out of date"; rm -rf $$tmpdir; exit 1; }; \
 	rm -rf $$tmpdir; \

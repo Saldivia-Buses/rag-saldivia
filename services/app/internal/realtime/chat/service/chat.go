@@ -13,7 +13,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
-	notify "github.com/Camionerou/rag-saldivia/pkg/events/gen/notify"
+	notify "github.com/Camionerou/rag-saldivia/services/app/internal/events/gen/notify"
 	"github.com/Camionerou/rag-saldivia/services/app/internal/outbox"
 	"github.com/Camionerou/rag-saldivia/pkg/spine"
 	"github.com/Camionerou/rag-saldivia/services/app/internal/realtime/chat/repository"

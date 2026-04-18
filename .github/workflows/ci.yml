@@ -22,7 +22,7 @@ jobs:
         with:
           go-version-file: go.work
           cache-dependency-path: "**/go.sum"
-      - name: Validate pkg/events/gen is in sync with pkg/events/spec
+      - name: Validate services/app/internal/events/gen is in sync with services/app/internal/events/spec
         run: make events-validate
 
   go-build:

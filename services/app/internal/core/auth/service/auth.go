@@ -18,7 +18,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
-	authnotify "github.com/Camionerou/rag-saldivia/pkg/events/gen/notify"
+	authnotify "github.com/Camionerou/rag-saldivia/services/app/internal/events/gen/notify"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/services/app/internal/outbox"
 	"github.com/Camionerou/rag-saldivia/pkg/security"

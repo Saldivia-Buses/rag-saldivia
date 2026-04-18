@@ -4,7 +4,7 @@
 // The spine wraps NATS with typed envelopes, schema versioning, and consumer
 // guarantees (panic recovery, idempotency, DLQ). Callers publish and consume
 // Envelope[T] values whose type T is generated from CUE specs in
-// pkg/events/spec. See docs/plans/2.0.x-plan26-spine.md.
+// services/app/internal/events/spec. See docs/plans/2.0.x-plan26-spine.md.
 package spine
 
 import (
@@ -18,7 +18,7 @@ import (
 
 // Envelope wraps a typed payload with canonical metadata for the spine bus.
 //
-// The payload T is typically generated from a CUE spec (pkg/events/spec/*.cue).
+// The payload T is typically generated from a CUE spec (services/app/internal/events/spec/*.cue).
 // All envelopes share the same outer shape regardless of T, so a consumer can
 // PeekHeader to route by Type before committing to a typed handler.
 type Envelope[T any] struct {
