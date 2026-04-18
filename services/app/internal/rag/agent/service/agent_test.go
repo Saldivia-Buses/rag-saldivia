@@ -19,7 +19,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/Camionerou/rag-saldivia/services/app/internal/guardrails"
-	"github.com/Camionerou/rag-saldivia/pkg/llm"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/llm"
 	"github.com/Camionerou/rag-saldivia/pkg/tenant"
 	"github.com/Camionerou/rag-saldivia/services/app/internal/rag/agent/tools"
 )

@@ -1,9 +1,6 @@
-// Package llm provides a single OpenAI-compatible HTTP client for the entire
-// SDA Framework. All services that need to call an LLM (SGLang, OpenAI, any
-// provider) import this package instead of implementing their own client.
-//
-// Supports: chat, tool calling, token counting, trace propagation (otelhttp),
-// API key auth, and a SimplePrompt convenience method.
+// Package llm provides a single OpenAI-compatible HTTP client used by the
+// app binary (agent, ingest, search). Supports chat, tool calling, token
+// counting, trace propagation (otelhttp), API key auth, and SimplePrompt.
 package llm
 
 import (

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Camionerou/rag-saldivia/pkg/llm"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/llm"
 )
 
 // Generator builds a document tree from extracted pages using LLM calls.

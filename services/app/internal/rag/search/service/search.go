@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/Camionerou/rag-saldivia/services/app/internal/guardrails"
-	"github.com/Camionerou/rag-saldivia/pkg/llm"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/llm"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

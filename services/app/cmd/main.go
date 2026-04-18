@@ -36,7 +36,7 @@ import (
 	"github.com/Camionerou/rag-saldivia/services/app/internal/guardrails"
 	"github.com/Camionerou/rag-saldivia/pkg/health"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
-	agentllm "github.com/Camionerou/rag-saldivia/pkg/llm"
+	agentllm "github.com/Camionerou/rag-saldivia/services/app/internal/llm"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	"github.com/Camionerou/rag-saldivia/pkg/outbox"
