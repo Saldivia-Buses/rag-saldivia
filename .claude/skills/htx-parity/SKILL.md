@@ -1,6 +1,6 @@
 ---
 name: htx-parity
-description: Use when planning or implementing a Phase 1 capability — anything that replicates what Histrix does. The contract lives in .intranet-scrape/ (676 tables, 434 XML-forms). Every "new ERP feature" starts by reading the relevant XML-form first; every ERP feature ships with a tick on the ADR 027 Phase 1 UI-parity checklist.
+description: Use when planning or implementing a Phase 1 capability — anything that replicates what Histrix does. The contract lives in .intranet-scrape/ (676 tables, ~4,500 XML-forms across 99 area groups). Every "new ERP feature" starts by reading the relevant XML-form first; every ERP feature ships with a tick on the ADR 027 Phase 1 UI-parity checklist.
 ---
 
 # htx-parity
@@ -16,7 +16,7 @@ in that directory, or an explicit waiver in `docs/parity/waivers.md`.
 |---|---|
 | `db-schema.sql` (1 MB) | Full Histrix MySQL schema — DDL for all 676 tables |
 | `db-tables.txt` | Bare list of 676 table names (easier to grep) |
-| `xml-forms/` | **434 XML-forms** — one per Histrix screen. The visual + logical contract of every CRUD surface |
+| `xml-forms/` | **99 form-groups + 335 top-level forms = 434 top-level entries; ~4,500 XML files total** — each form ≈ one Histrix screen. The visual + logical contract of every CRUD surface |
 | `php/` | Backend PHP. Read it to understand data flow / validations |
 | `js/` | Frontend JS. Read it to understand client-side behavior |
 | `intranet-all-menu-items.json` | The menu tree — what's in the nav, grouped by area |

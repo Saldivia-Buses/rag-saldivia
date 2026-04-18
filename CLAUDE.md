@@ -44,7 +44,10 @@ The employee opens SDA and:
 
 The parity yardstick is concrete and on disk: **`.intranet-scrape/`**.
 - 676 tables (`db-tables.txt`)
-- 434 XML-forms (`xml-forms/`) — the complete Histrix screen inventory
+- XML-forms (`xml-forms/`) — the complete Histrix screen inventory.
+  99 area form-groups (stock, proveedores, producto, cotizacion, pos,
+  calidad, …) + 335 top-level forms = 434 top-level entries;
+  ~4,500 XML files in total across all nested levels.
 - PHP backend + JS frontend captures
 
 Every "new ERP feature" starts by reading the relevant XML-form first.
@@ -149,13 +152,13 @@ Live in their skills — read the skill before touching the scope.
 
 | Rule | Owner skill |
 |---|---|
-| **Phase 0 gates (integrity, tool perms, prod drift)** | `continuous-improvement` + per-scope skill |
+| **Phase 0 gates (integrity, tool permissions, prod drift)** | `continuous-improvement` + per-scope skill |
 | JWT is the only identity (ed25519, server-side) | `auth-security` |
 | Every write publishes a NATS event | `backend-go` |
 | Migrations ship in up/down pairs, one sequence | `database` |
 | Error responses are JSON | `backend-go` |
 | No tenant plumbing in code (ADR 022) | `auth-security` + `database` |
-| Every agent tool has a declared capability + perm check | `agent-tools` |
+| Every agent tool has a declared capability + permission check | `agent-tools` |
 | Parity sessions consult `.intranet-scrape/` first | `htx-parity` |
 | Migration changes verify `read = written + skipped` | `migration-health` |
 | Reduce before add (ADR 021) | `continuous-improvement` |

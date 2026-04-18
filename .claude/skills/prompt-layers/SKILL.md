@@ -48,6 +48,40 @@ layer with its own editing rules and token budget:
 | **memories_global** | memory curator agent + admin UI | DB `erp_memories_global` | background job |
 | **memories_user** | memory curator agent + user themselves | DB `erp_memories_user` | background job + UI |
 
+### File loading mechanism
+
+`system.md` and `area/*.md` ship as part of the binary via `//go:embed`:
+
+```go
+//go:embed prompts/system.md prompts/area/*.md
+var promptsFS embed.FS
+```
+
+This removes runtime disk-access fragility and makes the rollback story
+trivial (revert the commit → redeploy → old prompts back). It also makes
+the build fail loudly if a referenced file is missing, which is the
+verification path for the token-budget + completeness tests below.
+
+The DB-owned layers (`user prompt`, `memories_*`) load per-request via
+the sqlc-generated repo layer — same pattern as any other tenant data.
+
+### Build-time prompt validation
+
+`make check-prompts` (to be added; same pattern as `make events-validate`)
+runs a script that:
+
+1. Walks the embedded prompts + every area slug in the `areas` config.
+2. Counts tokens per layer (use a fixed tokenizer so the count is
+   stable across machines — recommend `tiktoken` via a small Go wrapper,
+   or a dev dependency call-out).
+3. Fails with non-zero exit and a per-file line count if any layer
+   exceeds its declared budget (see §Token budgets below).
+
+CI runs this step before the Go build, so a prompt-over-budget PR cannot
+merge. The validation test that enforces this lives under
+`services/app/internal/rag/agent/prompts/prompts_test.go` (golden +
+budget).
+
 ## Token budgets
 
 The assembly caps each layer so none starves the others. Default
@@ -151,13 +185,45 @@ erp_memories_user (
 )
 ```
 
-Curator agent (see `background-agents`) scans chat logs nightly,
-extracts candidate memories, writes them. Global memories need admin
-review before use (flagged `confidence<80` defaults to pending).
+### Split of responsibility with `background-agents`
 
-Retrieval: at query time, the top-K memories (by recency + tag match +
-embedding similarity) are injected into the memories layer, up to the
-budget.
+`background-agents` skill owns the **write** side of memories (curator
+agent scans chat logs, extracts candidate memories, writes rows).
+`prompt-layers` (this skill) owns the **read** side:
+
+| Operation | Owner | Where |
+|---|---|---|
+| Candidate extraction (LLM call) | `background-agents` | curator agent goroutine |
+| Idempotency (content hash dedup) | `background-agents` | curator's write path |
+| Confidence scoring + pending queue | `background-agents` | curator policy |
+| Admin review UI | `background-agents` + `frontend-next` | admin page |
+| Retrieval + ranking at query time | `prompt-layers` | agent's context assembly |
+| Budget enforcement per layer | `prompt-layers` | assembly code |
+| ACL filter (per-user visibility) | `prompt-layers` + `auth-security` | retrieval query |
+
+The concrete interface between the two skills is the shared repo layer
+(`sqlc`-generated queries on `erp_memories_*`). Curator does
+`Upsert...`, retrieval does `List...ByRelevance`. Neither skill is
+allowed to bypass the repo — no ad-hoc `db.Exec` writes from the
+curator, no ad-hoc reads from the agent.
+
+### Retrieval flow
+
+At query time `prompt-layers` assembles the memories layer by:
+
+1. Compute the query embedding (reuse the RAG embedding path).
+2. Fetch top-K candidate memories filtered by:
+   - ACL: user's area, global memories they have the role for.
+   - Recency: last T days (configurable).
+   - Tag match: soft boost if any tag matches query terms.
+3. Rank by weighted (embedding similarity + recency + tag match).
+4. Truncate to the per-layer token budget.
+5. Log the selected memories for audit (alongside the rest of the
+   assembled prompt).
+
+Global memories below `confidence<80` stay in a pending queue (never
+retrieved) until an admin approves them — that's the curator's
+responsibility per `background-agents`.
 
 ## Assembly + logging
 

@@ -1,6 +1,6 @@
 ---
 name: agent-tools
-description: Use when adding a new agent tool, changing an existing tool's behavior, or wiring tool permissions. Owns the Phase 0 "every tool declares a capability + perm check" gate and the Phase 2 "Chat ↔ UI capability parity" goal (the agent is the user's representative — it can do anything the user can do in the UI, never more).
+description: Use when adding a new agent tool, changing an existing tool's behavior, or wiring tool permissions. Owns the Phase 0 "every tool declares a capability + permission check" gate and the Phase 2 "Chat ↔ UI capability parity" goal (the agent is the user's representative — it can do anything the user can do in the UI, never more).
 ---
 
 # agent-tools

@@ -23,7 +23,9 @@ new UI is better.
 The scrape under `.intranet-scrape/` is the concrete yardstick:
 
 - **676 tables** in the legacy MySQL (`db-tables.txt`).
-- **434 XML-forms** (one form ≈ one CRUD screen) in `xml-forms/`.
+- **XML-forms** in `xml-forms/`: 99 area form-groups (stock, proveedores,
+  producto, …) + 335 top-level forms = 434 top-level entries, ~4,500 XML
+  files in total across nested levels. Each form ≈ one CRUD screen.
 - Full backend PHP + frontend JS + menu maps captured.
 
 That's the "parity surface" SDA must cover before the switch.
@@ -49,7 +51,7 @@ gated by a transversal phase 0.
 
 The gating phase. SDA does not exist as a product until this ships.
 
-- Every one of the 434 XML-forms has an SDA equivalent, or an explicit waiver
+- Every XML-form (~4,500 across 99 area groups) has an SDA equivalent, or an explicit waiver
   (recorded per-form as an ADR or a line in a scoped document).
 - Zero ghost rows in `erp_migration_table_progress`.
 - Seamless cutover: a real employee can do a full work day in SDA and never
@@ -108,7 +110,7 @@ Data is the strategic asset; we capture everything.
 
 **Negative**
 
-- The explicit scope (434 forms + 676 tables) is sobering. It forces honest
+- The explicit scope (676 tables + ~4,500 XML-forms across 99 area groups) is sobering. It forces honest
   scheduling instead of the earlier "consolidate the pkg/ dir" busywork.
 - No shortcut path exists for Phase 2+ that skips parity. Product value
   lives on top of a correctly migrated base.

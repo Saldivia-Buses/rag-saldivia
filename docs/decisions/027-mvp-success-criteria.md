@@ -28,6 +28,8 @@ that justifies the waiver. The waiver ADR number goes in the item.
 
 ### Phase 0 — Transversal (every session verifies these are still green)
 
+**Owners:** `migration-health` (integrity + orphan tables), `agent-tools` (tool perm), `deploy-ops` (prod drift).
+
 - [ ] **Migration integrity**: for every row in `erp_migration_table_progress`
       for the latest prod run, `rows_read == rows_written + rows_skipped`.
       Today: fails (214K ghost rows).
@@ -43,7 +45,11 @@ that justifies the waiver. The waiver ADR number goes in the item.
 
 ### Phase 1 — Histrix parity + shutdown
 
+**Sub-section order inside Phase 1** (pick items top-down, same rule as phases): Data migration → UI parity → Operational parity → Cutover readiness. UI parity work stalls if Data migration has an open ghost-row or missing-table item.
+
 #### Data migration
+
+**Owners:** `migration-health` (integrity, replay), `htx-parity` (table coverage), `backend-go` (archive read endpoint).
 
 - [ ] Every legacy Histrix table in `.intranet-scrape/db-tables.txt` is
       either migrated into an `erp_*` SDA table, or has a waiver ADR
@@ -58,6 +64,8 @@ that justifies the waiver. The waiver ADR number goes in the item.
 
 #### UI parity
 
+**Owners:** `htx-parity` (form coverage, waivers), `frontend-next` (page implementation, nav, pagination).
+
 - [ ] Every XML-form in `.intranet-scrape/xml-forms/` has either:
       - (a) an `apps/web/src/app/**/page.tsx` equivalent reachable from
         the nav, OR
@@ -71,6 +79,8 @@ that justifies the waiver. The waiver ADR number goes in the item.
 
 #### Operational parity
 
+**Owners:** `htx-parity` (reports + seamless-day), `backend-go` (batch/cron equivalents).
+
 - [ ] Every critical Histrix report has an SDA equivalent (list in
       `docs/parity/reports.md`).
 - [ ] All Histrix batch/cron jobs the company relies on have SDA
@@ -79,6 +89,8 @@ that justifies the waiver. The waiver ADR number goes in the item.
       SDA without opening Histrix. Written record of what was missing.
 
 #### Cutover readiness
+
+**Owners:** `deploy-ops` (runbook, rollback, shutdown date), `migration-health` (read-only/replay quiescence).
 
 - [ ] Cutover runbook in `docs/cutover/` with rollback plan.
 - [ ] Shutdown date set and agreed.
@@ -89,6 +101,8 @@ that justifies the waiver. The waiver ADR number goes in the item.
 
 #### Chat as UI
 
+**Owners:** `agent-tools` (tool registry, perm tests), `rag-pipeline` (dispatcher + streaming), `auth-security` (capability model).
+
 - [ ] Tool coverage: for the top-20 ERP write actions (identified from
       Histrix audit logs), the agent can execute each via chat and the
       resulting data matches what the UI would have produced.
@@ -98,6 +112,8 @@ that justifies the waiver. The waiver ADR number goes in the item.
       "who the user is" wiring.
 
 #### Hierarchical prompts
+
+**Owners:** `prompt-layers` (layer design, budgets, assembly, logging), `database` (per-user prompt table).
 
 - [ ] `services/app/internal/rag/agent/prompts/` contains:
       - `system.md` (the company overview, jargon, policies)
@@ -111,6 +127,8 @@ that justifies the waiver. The waiver ADR number goes in the item.
 
 #### Memories
 
+**Owners:** `prompt-layers` (retrieval + assembly side, schema requirements — see that skill for the full column list), `background-agents` (memory curator), `database` (migrations).
+
 - [ ] `erp_memories_global` and `erp_memories_user` (or equivalent)
       exist with time, source, user, area, content fields.
 - [ ] Memory curator agent runs on a schedule; writes are idempotent
@@ -120,6 +138,8 @@ that justifies the waiver. The waiver ADR number goes in the item.
 
 #### Tree-RAG with ACL
 
+**Owners:** `rag-pipeline` (collection filter in retrieval), `auth-security` (role → collection mapping), `database` (collection table).
+
 - [ ] Collections are first-class: `erp_collections` (or equivalent)
       with (id, name, area, role_required).
 - [ ] Every tree node belongs to exactly one collection.
@@ -127,6 +147,8 @@ that justifies the waiver. The waiver ADR number goes in the item.
       Tested with a cross-area denial test.
 
 ### Phase 3 — Background agents + data hoarding
+
+**Owners:** `background-agents` (every item). Sub-owners: `prompt-layers` (memory curator output side), `rag-pipeline` (mail/WhatsApp tree integration), `database` (new tables).
 
 - [ ] Mail agent running as a durable NATS consumer; last-seen message
       ID persisted; replay after a 24h outage is clean.
@@ -139,6 +161,8 @@ that justifies the waiver. The waiver ADR number goes in the item.
       data.
 
 ### Phase 4 — Differential UX
+
+**Owners:** `frontend-next` (dashboard + widgets + routine UI), `backend-go` (persistence + routine-run API), `agent-tools` (routines that execute tool sequences).
 
 - [ ] Dashboard-personal page where the user adds, removes, and arranges
       widgets; state persists per-user.

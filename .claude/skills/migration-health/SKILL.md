@@ -98,6 +98,37 @@ WHERE schemaname = 'public' AND relname LIKE 'erp_%'
 ORDER BY n_live_tup DESC LIMIT 50;
 ```
 
+### Orphan tables (ADR 027 Phase 0 "every migrated table has a sqlc query")
+
+"Orphan" = schema exists in the tenant DB, no sqlc query reads or writes
+it. The check is static (grep sqlc query files) not dynamic (row counts).
+Run against the repo, not the live DB:
+
+```bash
+# list erp_ tables in the migration tree
+rg -N "CREATE TABLE (IF NOT EXISTS )?(erp_[a-z_]+)" db/tenant/migrations/ \
+  --only-matching -r '$2' | sort -u > /tmp/erp-tables.txt
+
+# list erp_ tables referenced by any sqlc query
+rg -NI "(FROM|JOIN|INTO|UPDATE) (erp_[a-z_]+)" \
+  services/app/db/queries/ services/erp/db/queries/ \
+  --only-matching -r '$2' | sort -u > /tmp/erp-queried.txt
+
+# diff: tables with no query coverage
+comm -23 /tmp/erp-tables.txt /tmp/erp-queried.txt
+```
+
+Zero output = green. Any table listed is either (a) a waiver candidate
+(write a short ADR saying why it has no query), or (b) a new feature to
+wire up.
+
+Known orphans today (per backend audit 2026-04-18, 16 total):
+`chat_feedback`, `connectors`, `tags`, `tool_calls`, `erp_article_photos`,
+`erp_bom_history`, `erp_communication_recipients`, `erp_legacy_archive`,
+`erp_sequences`, `erp_survey_questions`, `erp_training_attendees`,
+`erp_unit_photos`, plus 4 under the bigbrother raw-SQL area
+(`bb_capabilities`, `bb_computer_info`, `bb_ports`, `bb_plc_registers`).
+
 ## Fixing a broken migrator
 
 Root-cause-first (see `systematic-debugging`):
