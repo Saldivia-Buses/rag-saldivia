@@ -452,15 +452,3 @@ func updateCheckpoint(ctx context.Context, pg *pgxpool.Pool, progressID uuid.UUI
 	)
 	return err
 }
-
-// batchesDrain is a helper to drain a channel the reader is still writing
-// to, so the reader goroutine can exit cleanly after a writer error.
-func batchesDrain(ch <-chan pipelineBatch) <-chan struct{} {
-	done := make(chan struct{})
-	go func() {
-		defer close(done)
-		for range ch {
-		}
-	}()
-	return done
-}
