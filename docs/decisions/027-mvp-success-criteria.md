@@ -60,8 +60,19 @@ that justifies the waiver. The waiver ADR number goes in the item.
       against `docs/parity/waivers.md` entries.
 - [ ] **Every agent tool declares a capability** and is rejected at dispatch
       time when the user lacks the permission. Today: not implemented.
-- [ ] **Workstation SHA == `main` HEAD**. A drift-detect script runs and
-      passes. Today: fails (workstation runs pre-fusion 14 services).
+- [x] **Workstation SHA == `main` HEAD**. A drift-detect script runs and
+      passes. Shipped 2026-04-18 (2.0.7): `make check-prod-drift` target
+      compares `/opt/saldivia/repo` HEAD vs `origin/main` and checks that
+      running containers' compose source lives under `/opt/saldivia/`.
+      Workstation moved off the stale GitHub-runner workspace onto the
+      canonical `/opt/saldivia/deploy/` compose and the post-fusion shape
+      (`{erp, web, postgres, redis, nats, traefik, mailpit, minio}`); the
+      pre-fusion 14-service stack is gone. The monolith `app` service is
+      not in compose yet — that wiring is itself the next Phase 0/ADR 025
+      work item, not part of this tick. Pre-transition backup:
+      `/var/backups/saldivia/postgres/pre-deploy-transition-20260418_045110.sql.gz`
+      (2.7 GB) + orphaned `deploy_postgres_platform_data` volume archived to
+      `/var/backups/saldivia/archives/deploy_postgres_platform_data_orphaned-20260418_045507.tar.gz`.
 
 ### Phase 1 — Histrix parity + shutdown
 
@@ -248,7 +259,9 @@ that justifies the waiver. The waiver ADR number goes in the item.
 
 - Populate `docs/parity/waivers.md` and `docs/parity/reports.md` (empty
   today).
-- Define the drift-detect script (`make check-prod-drift` target?) for
-  the Phase 0 "workstation SHA == main HEAD" check.
 - Identify the top-20 ERP write actions from Histrix audit logs for the
   Phase 2 chat-coverage item.
+- Wire the monolith `app` service into `deploy/docker-compose.dev.yml`
+  (and `.prod.yml`) — the fusion exists as code (`services/app/cmd`) but
+  not yet as a deploy unit. Gating follow-up before additional Phase 1/2
+  work lands on the workstation.

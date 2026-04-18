@@ -22,7 +22,7 @@ LDFLAGS_BASE := -s -w \
 
 export GOBIN
 
-.PHONY: help dev stop test lint build migrate deploy new-service clean versions
+.PHONY: help dev stop test lint build migrate deploy new-service clean versions check-prod-drift
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -236,6 +236,28 @@ deploy-prod: deploy-preflight deploy-gen ## Build + deploy + verify all services
 deploy-stop: ## Stop all running services
 	docker compose -f $(DEPLOY_DIR)/docker-compose.prod.yml down 2>/dev/null || true
 	docker compose -f $(DEPLOY_DIR)/docker-compose.dev.yml down 2>/dev/null || true
+
+check-prod-drift: ## Phase 0 gate: workstation SHA == origin/main + compose sourced from /opt/saldivia
+	@set -e; \
+	WKS_HOST=$${WKS_HOST:-sistemas@100.119.11.46}; \
+	git fetch origin main >/dev/null 2>&1 || true; \
+	MAIN_SHA=$$(git rev-parse origin/main); \
+	WS_SHA=$$(ssh -o ConnectTimeout=5 $$WKS_HOST 'cd /opt/saldivia/repo && git rev-parse HEAD'); \
+	COMPOSE_CFG=$$(ssh $$WKS_HOST 'sudo docker inspect deploy-postgres-1 --format "{{index .Config.Labels \"com.docker.compose.project.config_files\"}}" 2>/dev/null' || echo ""); \
+	printf "%-20s %s\n" "origin/main:" "$$MAIN_SHA"; \
+	printf "%-20s %s\n" "/opt/saldivia/repo:" "$$WS_SHA"; \
+	printf "%-20s %s\n" "compose source:" "$$COMPOSE_CFG"; \
+	fail=0; \
+	if [ "$$MAIN_SHA" != "$$WS_SHA" ]; then \
+		printf "\033[31mDRIFT\033[0m: /opt/saldivia/repo HEAD != origin/main\n"; fail=1; \
+	fi; \
+	case "$$COMPOSE_CFG" in \
+		/opt/saldivia/*) ;; \
+		"") printf "\033[33mWARN\033[0m: deploy-postgres-1 not running (stack down)\n"; fail=1;; \
+		*) printf "\033[31mDRIFT\033[0m: compose source is %s (expected /opt/saldivia/*)\n" "$$COMPOSE_CFG"; fail=1;; \
+	esac; \
+	if [ $$fail -eq 0 ]; then printf "\033[32mOK\033[0m: no drift\n"; fi; \
+	exit $$fail
 
 deploy: ## Deploy all services to production (legacy — use deploy-prod)
 	$(GOBIN)/sda deploy --all
