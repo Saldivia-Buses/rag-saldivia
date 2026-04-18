@@ -388,16 +388,23 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 	})
 
 	// Phase 6b: Invoice lines + delivery notes (depends on invoice headers).
-	// REMITO must run before REMDETAL so the remito index is built in-between.
+	// REMITO + REMITOINT must run before REMDETAL so both indexes are built in-between.
 	orch.RegisterMigrators(
 		migration.NewInvoiceLineMigrator(mysqlDB, tenantID),
 		migration.NewDeliveryNoteMigrator(mysqlDB, tenantID),
 		migration.NewDeliveryNoteAltMigrator(mysqlDB, tenantID),
+		migration.NewInternalDeliveryNoteMigrator(mysqlDB, tenantID),
 	)
 
 	// After-table hook: REMITO.idRemito → REMITO UUID index (consumed by REMDETAL).
 	orch.AddAfterTableHook("REMITO", func(ctx context.Context, mapper *migration.Mapper) error {
 		return mapper.BuildRemitoIndex(ctx, mysqlDB)
+	})
+
+	// After-table hook: REMITOINT.idRemito → REMITOINT UUID index (consumed by REMDETAL).
+	// Closes W-001: REMDETAL.idRemito references REMITOINT (not REMITO) on saldivia.
+	orch.AddAfterTableHook("REMITOINT", func(ctx context.Context, mapper *migration.Mapper) error {
+		return mapper.BuildRemitoIntIndex(ctx)
 	})
 
 	orch.RegisterMigrators(
@@ -474,6 +481,18 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 		migration.NewProductionStepMigrator(mysqlDB, tenantID),
 		migration.NewProductionInspectionMigrator(mysqlDB, tenantID),
 		migration.NewProductionInspectionDetailMigrator(mysqlDB, tenantID),
+	)
+
+	// Phase 11b: Homologations — vehicle model homologations + their cost/process
+	// revision history. STK_ARTICULO_PROCESO_HIST_DETALLE is 2.6 M rows (Pareto #1
+	// of the Phase 1 §Data migration gap, 42.7 % of uncovered row volume).
+	// Order: HOMOLOGMOD (parent) → STK_ARTICULO_PROCESO_HIST (revisions) →
+	// STK_ARTICULO_PROCESO_HIST_DETALLE (lines). Detail line resolves article_id
+	// through the erp_articles cache produced by NewArticleMigrator in Phase 4.
+	orch.RegisterMigrators(
+		migration.NewHomologationMigrator(mysqlDB, tenantID),
+		migration.NewHomologationRevisionMigrator(mysqlDB, tenantID),
+		migration.NewHomologationRevisionLineMigrator(mysqlDB, tenantID),
 	)
 
 	// Phase 12: Quality (ISO 9001)

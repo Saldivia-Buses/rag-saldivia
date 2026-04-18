@@ -2087,3 +2087,169 @@ func hashTempPassword(password string) string {
 	// Format: $migration$<fnv64-hex> to clearly mark this as a migration placeholder.
 	return fmt.Sprintf("$migration$%016x", hashCode(password))
 }
+
+// ============================================================================
+// Homologations (HOMOLOGMOD + STK_ARTICULO_PROCESO_HIST + _HIST_DETALLE)
+// ============================================================================
+// Despite the STK_ prefix on the HIST tables, these are production-domain
+// artifacts — the UX lives in .intranet-scrape/xml-forms/produccion/linea/
+// under "HOMOLOGACION POR MODELO". Together they cover 2,642,734 Histrix rows
+// (585 homologations + 1,173 revisions + 2,640,976 detail lines), i.e. 42.7 %
+// of the Phase 1 §Data migration row-volume gap.
+
+// NewHomologationMigrator migrates HOMOLOGMOD (vehicle model homologations, 585 rows)
+// → erp_homologations. AI PK id_homologacion. `baja` flips to `active = (baja == 0)`.
+// Columns beyond the minimal Phase 1 set stay in Histrix for a follow-up extension.
+func NewHomologationMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.HomologationReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "plano", "expte", "dispos", "fecha_aprob", "fecha_vto", "seats", "seats_lower", "weight_tare", "weight_gross", "vin", "commercial_code", "commercial_desc", "active"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_homologacion")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			id, err := mapper.Map(ctx, nil, "production", "HOMOLOGMOD", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			active := row.Int("baja") == 0
+
+			return []any{
+				id, tenantID,
+				row.String("plano"),
+				row.String("expte"),
+				row.String("dispos"),
+				SafeDate(timeFromRow(row, "fechaAprob")),
+				SafeDate(timeFromRow(row, "fechaVto")),
+				row.Int("asientos"),
+				row.Int("asientos_plantabaja"),
+				ParseDecimal(row.Decimal("tara")),
+				ParseDecimal(row.Decimal("bruto")),
+				row.String("vin"),
+				row.String("codigo_comercial"),
+				row.String("desc_comercial"),
+				active,
+			}, nil
+		},
+	}
+}
+
+// NewHomologationRevisionMigrator migrates STK_ARTICULO_PROCESO_HIST
+// (homologation cost/process revisions, 1,173 rows) → erp_homologation_revisions.
+// AI PK id_artproceso_hist. FK homologacion_id → erp_homologations.id via the
+// preloaded "production" domain cache.
+func NewHomologationRevisionMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.HomologationRevisionReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "homologation_id", "date", "notes"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_artproceso_hist")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			homID := row.Int64("homologacion_id")
+			homologationUUID, err := mapper.ResolveOptional(ctx, "production", "HOMOLOGMOD", homID)
+			if err != nil || homologationUUID == uuid.Nil {
+				return nil, nil // orphan revision — parent homologation missing
+			}
+
+			id, err := mapper.Map(ctx, nil, "production", "STK_ARTICULO_PROCESO_HIST", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID,
+				homologationUUID,
+				SafeDateRequired(timeFromRow(row, "fecha")),
+				row.String("observaciones"),
+			}, nil
+		},
+	}
+}
+
+// NewHomologationRevisionLineMigrator migrates STK_ARTICULO_PROCESO_HIST_DETALLE
+// (2,640,976 rows — #1 in the Phase 1 Pareto) → erp_homologation_revision_lines.
+// AI PK id_artproceso_hist_detalle. FK artproceso_hist_id → erp_homologation_revisions.
+// article_id is best-effort: artcod without subsistema resolves to the default-
+// subsystem article if present, otherwise nil; article_code is always preserved.
+func NewHomologationRevisionLineMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.HomologationRevisionLineReader(db)
+	return &GenericMigrator{
+		reader: reader,
+		columns: []string{
+			"id", "tenant_id", "revision_id", "article_id",
+			"article_code", "article_desc", "article_unit",
+			"process_1", "process_2", "process_3", "process_4",
+			"multiplier", "quantity",
+			"replacement_cost", "replacement_partial",
+			"replacement_cost_desc", "replacement_partial_desc",
+			"account_code", "account_name",
+			"partial_with_surcharge", "region_percentage",
+			"partial_clog", "partial_surcharge_log", "logistics_cost",
+		},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_artproceso_hist_detalle")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			revLegacyID := row.Int64("artproceso_hist_id")
+			revisionUUID, err := mapper.ResolveOptional(ctx, "production", "STK_ARTICULO_PROCESO_HIST", revLegacyID)
+			if err != nil || revisionUUID == uuid.Nil {
+				return nil, nil // orphan line — parent revision missing
+			}
+
+			// Best-effort article resolution. DETALLE carries only artcod (no
+			// subsistema_id), so we look up the default-subsystem article; rows
+			// whose artcod exists only under a non-default subsystem keep
+			// article_id NULL but article_code preserved.
+			var articleID *uuid.UUID
+			artCode := row.String("artcod")
+			if artCode != "" {
+				artLegacyID := int64(hashCode(articleCompositeCode(artCode, "")))
+				if resolved, rerr := mapper.ResolveOptional(ctx, "stock", "STK_ARTICULOS", artLegacyID); rerr == nil && resolved != uuid.Nil {
+					articleID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "production", "STK_ARTICULO_PROCESO_HIST_DETALLE", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID, revisionUUID, articleID,
+				artCode,
+				row.String("artdes"),
+				row.String("artuni"),
+				row.String("proceso1"),
+				row.String("proceso2"),
+				row.String("proceso3"),
+				row.String("proceso4"),
+				ParseDecimal(row.Decimal("multiplo")),
+				ParseDecimal(row.Decimal("cantidad")),
+				ParseDecimal(row.Decimal("costo_reposicion")),
+				ParseDecimal(row.Decimal("parcial_reposicion")),
+				ParseDecimal(row.Decimal("costo_reposicion_desc")),
+				ParseDecimal(row.Decimal("parcial_reposicion_desc")),
+				row.String("ctbcod"),
+				row.String("ctbnom"),
+				ParseDecimal(row.Decimal("parcial_con_recargo")),
+				ParseDecimal(row.Decimal("porcentaje_region")),
+				ParseDecimal(row.Decimal("parcial_clog")),
+				ParseDecimal(row.Decimal("parcial_recargo_log")),
+				ParseDecimal(row.Decimal("costo_logistico")),
+			}, nil
+		},
+	}
+}

@@ -33,7 +33,8 @@ type Mapper struct {
 	regMovimIndex         map[int64]uuid.UUID             // regmovim_id → invoice UUID (for FACDETAL FK resolution)
 	legajoIndex           map[int64]uuid.UUID             // PERSONAL.legajo → entity UUID (HR FK resolution)
 	nroCuentaIndex        map[int64]uuid.UUID             // REG_CUENTA.nro_cuenta → entity UUID (ctacod ambiguity)
-	remitoByID            map[int64]uuid.UUID             // REMITO.idRemito → REMITO UUID (REMDETAL FK resolution)
+	remitoByID            map[int64]uuid.UUID             // REMITO.idRemito → REMITO UUID (REMDETAL FK resolution — usually empty on saldivia: REMITO has no idRemito)
+	remitoIntByID         map[int64]uuid.UUID             // REMITOINT.idRemito → REMITOINT UUID (REMDETAL's real parent on saldivia, closes W-001)
 	unassignedWarehouseID uuid.UUID                       // fallback warehouse for STK_MOVIMIENTOS with stkdeposito_id=0
 	unknownEntityID       uuid.UUID                       // fallback entity for rows whose ctacod cannot be resolved
 	pending               []pendingMapping                // batch of mappings to flush
@@ -47,8 +48,9 @@ func NewMapper(pool *pgxpool.Pool, tenantID string) *Mapper {
 		cache:       make(map[string]map[int64]uuid.UUID),
 		codeIndex:   make(map[string]map[string]uuid.UUID),
 		dateCache:   make(map[uuid.UUID]time.Time),
-		legajoIndex: make(map[int64]uuid.UUID),
-		remitoByID:  make(map[int64]uuid.UUID),
+		legajoIndex:   make(map[int64]uuid.UUID),
+		remitoByID:    make(map[int64]uuid.UUID),
+		remitoIntByID: make(map[int64]uuid.UUID),
 	}
 }
 
@@ -631,6 +633,53 @@ func (m *Mapper) ResolveByRemitoID(idRemito int64) (uuid.UUID, bool) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	id, ok := m.remitoByID[idRemito]
+	return id, ok
+}
+
+// BuildRemitoIntIndex builds an in-memory index: REMITOINT.idRemito → REMITOINT UUID.
+// Unlike BuildRemitoIndex (which has to bridge REMITO's composite hash →
+// physical idRemito), REMITOINT's legacy_id IS the idRemito (simple AI PK), so
+// this index is a direct pass-through over the preloaded "invoicing" domain
+// cache — no MySQL query needed.
+//
+// Must be called after the REMITOINT migrator finishes. Closes waiver W-001:
+// REMDETAL.idRemito references REMITOINT.idRemito on saldivia (REMITO's
+// saldivia schema has no idRemito), so without this index every REMDETAL row
+// silently skipped for missing parent FK (5,125 rows in prod saldivia).
+func (m *Mapper) BuildRemitoIntIndex(ctx context.Context) error {
+	if m.dryRun {
+		return nil
+	}
+	if err := m.PreloadDomain(ctx, "invoicing"); err != nil {
+		return fmt.Errorf("preload invoicing for remitoint index: %w", err)
+	}
+	key := m.cacheKey("invoicing", "REMITOINT")
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.remitoIntByID == nil {
+		m.remitoIntByID = make(map[int64]uuid.UUID)
+	}
+	count := 0
+	for idRemito, uid := range m.cache[key] {
+		m.remitoIntByID[idRemito] = uid
+		count++
+	}
+	fmt.Printf("  remitoint index: loaded %d mappings\n", count)
+	return nil
+}
+
+// ResolveByRemitoIntID looks up a REMITOINT UUID by its idRemito auto-inc PK.
+// Returns (uuid.Nil, false) if the REMITOINT parent is not found.
+func (m *Mapper) ResolveByRemitoIntID(idRemito int64) (uuid.UUID, bool) {
+	if idRemito <= 0 {
+		return uuid.Nil, false
+	}
+	if m.dryRun {
+		return m.deterministicUUID("remitoint_id", fmt.Sprintf("%d", idRemito)), true
+	}
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	id, ok := m.remitoIntByID[idRemito]
 	return id, ok
 }
 

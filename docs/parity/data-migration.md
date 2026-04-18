@@ -12,22 +12,46 @@ joined with `information_schema.tables.table_rows` from the live Histrix
 DB at `172.22.100.99` (saldivia schema, read-only query via WireGuard +
 SSH tunnel).
 
-## Totals (2026-04-18)
+## Totals (2026-04-18, post-2.0.8 mid-PR)
 
 | Segment | Count | Rows |
 |---|---:|---:|
 | Histrix tables in `.intranet-scrape/db-tables.txt` | 675 | 18,940,293 |
-| Tables with a registered migrator/reader | 100 | ≈ 8,850,131 |
-| Tables uncovered (total) | 575 | — |
+| Tables with a registered migrator/reader | 104 | ≈ 11,491,853 |
+| Tables uncovered (total) | 571 | — |
 | &nbsp;&nbsp;— Histrix infra (HTX*, 31) — waived W-004 | 31 | 3,486,776 |
 | &nbsp;&nbsp;— `*_OLD` superseded (5) — waived W-005 | 5 | 423,678 |
 | &nbsp;&nbsp;— zero-row dead tables — waived W-006 | 225 | 0 |
-| &nbsp;&nbsp;— **business-data gap remaining** | **314** | **6,179,708** |
+| &nbsp;&nbsp;— **business-data gap remaining** | **310** | **≈ 3,537,986** |
 
-The 100 "covered" tables account for ≈ **47 %** of all Histrix rows.
-After the three bulk waivers, **314 business tables with rows** remain
-to migrate or waive individually. Those 314 tables hold 6.2 M rows — 33
-% of Histrix's total data volume.
+The 104 "covered" tables now account for ≈ **61 %** of all Histrix rows
+(up from 47 % pre-2.0.8). After the three bulk waivers, **310 business
+tables with rows** remain to migrate or waive individually. Those 310
+tables hold about 3.54 M rows — 19 % of Histrix's total data volume.
+
+**2.0.8 deltas** (one commit closes each):
+
+1. **W-001** — REMITOINT (746 rows) moved from gap → covered via
+   `NewInternalDeliveryNoteMigrator`; closing W-001 also unblocks 5,125
+   REMDETAL rows that were silently archive-skipped.
+2. **Pareto #1** — HOMOLOGMOD (535 rows live / 585 AI) +
+   STK_ARTICULO_PROCESO_HIST (951 rows live / 1,173 AI) +
+   STK_ARTICULO_PROCESO_HIST_DETALLE (**2,822,689 live** / 3.45 M AI)
+   migrated via `NewHomologationMigrator` +
+   `NewHomologationRevisionMigrator` +
+   `NewHomologationRevisionLineMigrator` → new tables
+   `erp_homologations` / `erp_homologation_revisions` /
+   `erp_homologation_revision_lines` (migration `069`). Live SQL
+   against Histrix confirmed 0 orphans in both parent→child cascades
+   and 99.9987 % artcod resolution against `STK_ARTICULOS` default
+   subsystem.
+
+Note: live COUNT(*) for the DETALLE came out **higher** (2,822,689) than
+the `information_schema.table_rows` estimate used to build the original
+Pareto (2,640,976). The gap-rows totals above mix both sources
+(estimate-based totals minus the Pareto's estimate for the migrated
+tables) and are therefore approximate ± a few hundred-thousand rows.
+The reproducer at the bottom regenerates exact counts.
 
 ## The Pareto finding
 
@@ -127,7 +151,7 @@ too long to paste inline and changes as work lands.
 
 | ID | Scope | Count | Rows |
 |---|---|---:|---:|
-| W-001 | REMDETAL → erp_invoice_lines silent drop | 1 | 5,125 |
+| ~~W-001~~ | ~~REMDETAL → erp_invoice_lines silent drop~~ — **closed 2.0.8** | — | — |
 | W-002 | CLI-internal migration tables | 4 | — |
 | W-003 | Phase 1 UI placeholder tables | 5 | 0 |
 | W-004 | Histrix intranet infrastructure tables (HTX*) | 31 | 3,486,776 |

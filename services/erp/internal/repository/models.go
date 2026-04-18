@@ -1858,3 +1858,59 @@ type UserRole struct {
 	UserID string `json:"user_id"`
 	RoleID string `json:"role_id"`
 }
+
+type ErpHomologation struct {
+	ID             pgtype.UUID        `json:"id"`
+	TenantID       string             `json:"tenant_id"`
+	Plano          string             `json:"plano"`
+	Expte          string             `json:"expte"`
+	Dispos         string             `json:"dispos"`
+	FechaAprob     pgtype.Date        `json:"fecha_aprob"`
+	FechaVto       pgtype.Date        `json:"fecha_vto"`
+	Seats          int32              `json:"seats"`
+	SeatsLower     int32              `json:"seats_lower"`
+	WeightTare     pgtype.Numeric     `json:"weight_tare"`
+	WeightGross    pgtype.Numeric     `json:"weight_gross"`
+	Vin            string             `json:"vin"`
+	CommercialCode string             `json:"commercial_code"`
+	CommercialDesc string             `json:"commercial_desc"`
+	Active         bool               `json:"active"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpHomologationRevision struct {
+	ID             pgtype.UUID        `json:"id"`
+	TenantID       string             `json:"tenant_id"`
+	HomologationID pgtype.UUID        `json:"homologation_id"`
+	Date           pgtype.Date        `json:"date"`
+	Notes          string             `json:"notes"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpHomologationRevisionLine struct {
+	ID                     pgtype.UUID        `json:"id"`
+	TenantID               string             `json:"tenant_id"`
+	RevisionID             pgtype.UUID        `json:"revision_id"`
+	ArticleID              pgtype.UUID        `json:"article_id"`
+	ArticleCode            string             `json:"article_code"`
+	ArticleDesc            string             `json:"article_desc"`
+	ArticleUnit            string             `json:"article_unit"`
+	Process1               string             `json:"process_1"`
+	Process2               string             `json:"process_2"`
+	Process3               string             `json:"process_3"`
+	Process4               string             `json:"process_4"`
+	Multiplier             pgtype.Numeric     `json:"multiplier"`
+	Quantity               pgtype.Numeric     `json:"quantity"`
+	ReplacementCost        pgtype.Numeric     `json:"replacement_cost"`
+	ReplacementPartial     pgtype.Numeric     `json:"replacement_partial"`
+	ReplacementCostDesc    pgtype.Numeric     `json:"replacement_cost_desc"`
+	ReplacementPartialDesc pgtype.Numeric     `json:"replacement_partial_desc"`
+	AccountCode            string             `json:"account_code"`
+	AccountName            string             `json:"account_name"`
+	PartialWithSurcharge   pgtype.Numeric     `json:"partial_with_surcharge"`
+	RegionPercentage       pgtype.Numeric     `json:"region_percentage"`
+	PartialClog            pgtype.Numeric     `json:"partial_clog"`
+	PartialSurchargeLog    pgtype.Numeric     `json:"partial_surcharge_log"`
+	LogisticsCost          pgtype.Numeric     `json:"logistics_cost"`
+	CreatedAt              pgtype.Timestamptz `json:"created_at"`
+}

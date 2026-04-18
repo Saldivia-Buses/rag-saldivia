@@ -81,7 +81,9 @@ func DeliveryNoteReader(db *sql.DB) *CompositeKeyReader {
 }
 
 // DeliveryNoteLineReader creates a reader for REMDETAL (detalle de remitos de compra).
-// Has auto-increment idRemdet PK. Linked to REMITO via idRemito.
+// Has auto-increment idRemdet PK. idRemito is documented in the Histrix code as
+// "FK to REMITO" but saldivia's live snapshot of REMITO has no idRemito column —
+// the actual parent is REMITOINT.idRemito. See W-001 + InternalDeliveryNoteReader.
 func DeliveryNoteLineReader(db *sql.DB) *GenericReader {
 	return &GenericReader{
 		DB:         db,
@@ -92,6 +94,22 @@ func DeliveryNoteLineReader(db *sql.DB) *GenericReader {
 		Columns: "idRemdet, idRemito, artcod, unidadCompra, cantCompra, " +
 			"fecreq, movref, cantUso, nrofab, " +
 			"pendienteCompra, PendienteUso, unidadUso, idPed",
+	}
+}
+
+// InternalDeliveryNoteReader creates a reader for REMITOINT (remitos internos, 746 rows).
+// Auto-increment idRemito PK. Covers internal depot-to-depot stock transfers —
+// the real parent of REMDETAL.idRemito (not REMITO, whose saldivia schema has
+// no idRemito column). Closing this gap recovers the 5,125 REMDETAL rows that
+// W-001 documented as silently skipped.
+func InternalDeliveryNoteReader(db *sql.DB) *GenericReader {
+	return &GenericReader{
+		DB:         db,
+		Table:      "REMITOINT",
+		Target:     "erp_invoices",
+		DomainName: "invoicing",
+		PKColumn:   "idRemito",
+		Columns:    "idRemito, fecha, idDepositoOrig, idDepositoDest, login, recibido",
 	}
 }
 
