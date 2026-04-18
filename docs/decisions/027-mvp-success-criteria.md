@@ -261,7 +261,11 @@ that justifies the waiver. The waiver ADR number goes in the item.
   today).
 - Identify the top-20 ERP write actions from Histrix audit logs for the
   Phase 2 chat-coverage item.
-- Wire the monolith `app` service into `deploy/docker-compose.dev.yml`
-  (and `.prod.yml`) — the fusion exists as code (`services/app/cmd`) but
-  not yet as a deploy unit. Gating follow-up before additional Phase 1/2
-  work lands on the workstation.
+- Wire the monolith `app` service into `deploy/docker-compose.prod.yml`.
+  Dev is wired (branch 2.0.7, `services/app/Dockerfile` +
+  `docker-compose.dev.yml` `app` service under profile `full`, running
+  on the workstation). Prod needs the secrets scaffolding modelled after
+  `services/erp` in `docker-compose.prod.yml` — `jwt_public_key` +
+  `jwt_private_key` + `db_platform_url` + `bb_kek` +
+  `service_account_key` + `alertmanager_webhook_token`, plus the
+  per-module NATS password envs.
