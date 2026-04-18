@@ -1644,6 +1644,34 @@ func timeFromRow(row legacy.LegacyRow, col string) time.Time {
 	}
 }
 
+// combineDateTime builds a TIMESTAMPTZ-safe *time.Time from a DATE and a
+// TIME-of-day string (e.g. "08:30:00"). Returns nil when either input is
+// empty or unparseable — the COPY writer encodes nil as NULL, which is
+// what every nullable timestamptz column in erp_* expects.
+//
+// Histrix stores clock-in / clock-out as MySQL TIME columns (plain
+// HH:MM:SS strings) and attendance date as a separate DATE. Target schema
+// is TIMESTAMPTZ. Passing the raw *string through pgx' binary COPY path
+// fails with "cannot find encode plan ... *string into binary format for
+// timestamptz (OID 1184)" — time.Time is the only accepted Go type.
+func combineDateTime(date time.Time, timeStr string) *time.Time {
+	if date.IsZero() || timeStr == "" {
+		return nil
+	}
+	// MySQL's driver hands us "HH:MM:SS" for TIME columns. Accept a few
+	// common shapes just in case.
+	for _, layout := range []string{"15:04:05", "15:04", "2006-01-02 15:04:05"} {
+		t, err := time.Parse(layout, timeStr)
+		if err != nil {
+			continue
+		}
+		combined := time.Date(date.Year(), date.Month(), date.Day(),
+			t.Hour(), t.Minute(), t.Second(), 0, time.UTC)
+		return &combined
+	}
+	return nil
+}
+
 // hashCode generates a stable non-negative int64 hash from a string code using
 // FNV-1a 64-bit, clearing the sign bit. Used for tables where the PK is varchar
 // (e.g. STK_ARTICULOS) or composite, so they can be stored as int64 legacy_id in

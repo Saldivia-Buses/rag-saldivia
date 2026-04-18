@@ -1268,11 +1268,20 @@ func NewAttendanceMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 			hoursStr := row.String("trabajadas")
 			hours := parseHoursString(hoursStr)
 
+			// erp_attendance.clock_in / clock_out are TIMESTAMPTZ — Histrix
+			// stores the clock times as TIME-of-day strings, so we combine
+			// them with `fecha` (the attendance date) for a full timestamp.
+			// combineDateTime returns nil when the time cell is empty, which
+			// the COPY writer encodes as NULL.
+			fecha := SafeDateRequired(timeFromRow(row, "fecha"))
+			clockIn := combineDateTime(fecha, row.String("hingreso"))
+			clockOut := combineDateTime(fecha, row.String("hegreso"))
+
 			return []any{
 				id, tenantID, *entityID,
-				SafeDateRequired(timeFromRow(row, "fecha")),
-				row.NullString("hingreso"), // clock_in
-				row.NullString("hegreso"),  // clock_out
+				fecha,
+				clockIn,
+				clockOut,
 				hours,
 				"rfid", // source — CHECK allows only manual/rfid/biometric
 			}, nil

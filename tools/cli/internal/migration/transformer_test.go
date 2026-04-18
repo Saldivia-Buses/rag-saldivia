@@ -72,6 +72,53 @@ func TestSafeDate(t *testing.T) {
 	}
 }
 
+// TestCombineDateTime guards the FICHADADIA clock_in / clock_out encoding fix.
+// Before this helper, NewAttendanceMigrator passed *string directly into a
+// TIMESTAMPTZ column and every batch failed with "cannot find encode plan ...
+// *string into binary format for timestamptz (OID 1184)" once the pipeline
+// finally had a non-empty legajo index and tried to write real rows.
+func TestCombineDateTime(t *testing.T) {
+	day := time.Date(2026, 4, 15, 0, 0, 0, 0, time.UTC)
+
+	tests := []struct {
+		name    string
+		date    time.Time
+		timeStr string
+		wantNil bool
+		wantH   int
+		wantM   int
+		wantS   int
+	}{
+		{"hh:mm:ss full", day, "08:30:45", false, 8, 30, 45},
+		{"hh:mm short", day, "14:15", false, 14, 15, 0},
+		{"iso timestamp", day, "2099-12-31 23:59:59", false, 23, 59, 59},
+		{"empty time → nil", day, "", true, 0, 0, 0},
+		{"zero date → nil", time.Time{}, "08:30:45", true, 0, 0, 0},
+		{"garbage → nil", day, "not-a-time", true, 0, 0, 0},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := combineDateTime(tc.date, tc.timeStr)
+			if tc.wantNil {
+				if got != nil {
+					t.Errorf("combineDateTime(%v, %q) = %v, want nil", tc.date, tc.timeStr, got)
+				}
+				return
+			}
+			if got == nil {
+				t.Fatalf("combineDateTime(%v, %q) = nil, want non-nil", tc.date, tc.timeStr)
+			}
+			if got.Year() != tc.date.Year() || got.Month() != tc.date.Month() || got.Day() != tc.date.Day() {
+				t.Errorf("date part = %v, want date %v", got, tc.date)
+			}
+			if got.Hour() != tc.wantH || got.Minute() != tc.wantM || got.Second() != tc.wantS {
+				t.Errorf("time part = %02d:%02d:%02d, want %02d:%02d:%02d",
+					got.Hour(), got.Minute(), got.Second(), tc.wantH, tc.wantM, tc.wantS)
+			}
+		})
+	}
+}
+
 func TestSafeDateRequired(t *testing.T) {
 	zero := time.Time{}
 	result := SafeDateRequired(zero)
