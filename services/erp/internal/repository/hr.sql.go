@@ -1131,3 +1131,121 @@ func (q *Queries) UpsertLeaveBalance(ctx context.Context, arg UpsertLeaveBalance
 	)
 	return i, err
 }
+
+const listEmployeeCards = `-- name: ListEmployeeCards :many
+SELECT id, tenant_id, entity_id, card_code, effective_from, created_at
+FROM erp_employee_cards
+WHERE tenant_id = $1 AND entity_id = $2
+ORDER BY effective_from DESC
+`
+
+type ListEmployeeCardsParams struct {
+	TenantID string      `json:"tenant_id"`
+	EntityID pgtype.UUID `json:"entity_id"`
+}
+
+// Versioned card-to-employee assignments. The FICHADAS resolver picks the
+// row with the largest effective_from <= event_date for each card.
+func (q *Queries) ListEmployeeCards(ctx context.Context, arg ListEmployeeCardsParams) ([]ErpEmployeeCard, error) {
+	rows, err := q.db.Query(ctx, listEmployeeCards, arg.TenantID, arg.EntityID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ErpEmployeeCard{}
+	for rows.Next() {
+		var i ErpEmployeeCard
+		if err := rows.Scan(
+			&i.ID,
+			&i.TenantID,
+			&i.EntityID,
+			&i.CardCode,
+			&i.EffectiveFrom,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTimeClockEventsForEmployee = `-- name: ListTimeClockEventsForEmployee :many
+SELECT id, tenant_id, entity_id, card_code, event_time, event_type,
+       terminal, marca, deleted_flag, insert_key, legacy_id
+FROM erp_time_clock_events
+WHERE tenant_id = $1 AND entity_id = $2
+  AND deleted_flag = 0
+  AND event_time IS NOT NULL
+  AND event_time >= $3
+  AND event_time <  $4
+ORDER BY event_time
+LIMIT $5 OFFSET $6
+`
+
+type ListTimeClockEventsForEmployeeParams struct {
+	TenantID    string             `json:"tenant_id"`
+	EntityID    pgtype.UUID        `json:"entity_id"`
+	EventTime   pgtype.Timestamptz `json:"event_time"`
+	EventTime_2 pgtype.Timestamptz `json:"event_time_2"`
+	Limit       int32              `json:"limit"`
+	Offset      int32              `json:"offset"`
+}
+
+type ListTimeClockEventsForEmployeeRow struct {
+	ID          pgtype.UUID        `json:"id"`
+	TenantID    string             `json:"tenant_id"`
+	EntityID    pgtype.UUID        `json:"entity_id"`
+	CardCode    string             `json:"card_code"`
+	EventTime   pgtype.Timestamptz `json:"event_time"`
+	EventType   string             `json:"event_type"`
+	Terminal    string             `json:"terminal"`
+	Marca       int16              `json:"marca"`
+	DeletedFlag int16              `json:"deleted_flag"`
+	InsertKey   string             `json:"insert_key"`
+	LegacyID    int64              `json:"legacy_id"`
+}
+
+// Raw clock-punch stream for a single employee over a date range. Excludes
+// rows flagged borrado in Histrix (deleted_flag != 0).
+func (q *Queries) ListTimeClockEventsForEmployee(ctx context.Context, arg ListTimeClockEventsForEmployeeParams) ([]ListTimeClockEventsForEmployeeRow, error) {
+	rows, err := q.db.Query(ctx, listTimeClockEventsForEmployee,
+		arg.TenantID,
+		arg.EntityID,
+		arg.EventTime,
+		arg.EventTime_2,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListTimeClockEventsForEmployeeRow{}
+	for rows.Next() {
+		var i ListTimeClockEventsForEmployeeRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.TenantID,
+			&i.EntityID,
+			&i.CardCode,
+			&i.EventTime,
+			&i.EventType,
+			&i.Terminal,
+			&i.Marca,
+			&i.DeletedFlag,
+			&i.InsertKey,
+			&i.LegacyID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

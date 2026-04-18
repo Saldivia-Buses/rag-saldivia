@@ -12,22 +12,40 @@ joined with `information_schema.tables.table_rows` from the live Histrix
 DB at `172.22.100.99` (saldivia schema, read-only query via WireGuard +
 SSH tunnel).
 
-## Totals (2026-04-18, post-2.0.8 mid-PR)
+## Totals (2026-04-18, post-2.0.9 mid-PR)
 
 | Segment | Count | Rows |
 |---|---:|---:|
 | Histrix tables in `.intranet-scrape/db-tables.txt` | 675 | 18,940,293 |
-| Tables with a registered migrator/reader | 104 | ≈ 11,491,853 |
-| Tables uncovered (total) | 571 | — |
+| Tables with a registered migrator/reader | 106 | ≈ 12,958,258 |
+| Tables uncovered (total) | 569 | — |
 | &nbsp;&nbsp;— Histrix infra (HTX*, 31) — waived W-004 | 31 | 3,486,776 |
 | &nbsp;&nbsp;— `*_OLD` superseded (5) — waived W-005 | 5 | 423,678 |
 | &nbsp;&nbsp;— zero-row dead tables — waived W-006 | 225 | 0 |
-| &nbsp;&nbsp;— **business-data gap remaining** | **310** | **≈ 3,537,986** |
+| &nbsp;&nbsp;— **business-data gap remaining** | **308** | **≈ 2,071,581** |
 
-The 104 "covered" tables now account for ≈ **61 %** of all Histrix rows
-(up from 47 % pre-2.0.8). After the three bulk waivers, **310 business
-tables with rows** remain to migrate or waive individually. Those 310
-tables hold about 3.54 M rows — 19 % of Histrix's total data volume.
+The 106 "covered" tables now account for ≈ **68 %** of all Histrix rows
+(up from 61 % post-2.0.8 and 47 % pre-2.0.8). After the three bulk
+waivers, **308 business tables with rows** remain to migrate or waive
+individually. Those 308 tables hold about 2.07 M rows — 11 % of
+Histrix's total data volume.
+
+**2.0.9 deltas** (one commit for both pieces):
+
+1. **Pareto #2** — FICHADAS (**1,465,002 rows live**) + PERSONAL_TARJETA
+   (1,403 rows live) migrated via `NewTimeClockEventMigrator` +
+   `NewEmployeeCardMigrator` → new tables `erp_time_clock_events` +
+   `erp_employee_cards` (migration `070`). FICHADAS is the raw
+   clock-punch stream (XML-form scrape confirmed 116 direct references
+   across rrhh, sueldos, dashboard, estadisticas, rh_evaluaciones —
+   not dead weight). FICHADAS.tarjeta is INT; PERSONAL_TARJETA.tarjeta
+   is VARCHAR and date-versioned (cards reassign across employees over
+   time). The migrator resolves card+event_date → employee via the
+   new `Mapper.BuildTarjetaIndex` / `Mapper.ResolveByTarjetaAtDate`
+   helpers (largest `effective_from <= event_date` wins). Orphan
+   tarjetas (card never assigned, or only assigned after the event)
+   migrate with `entity_id NULL` so the raw event is preserved.
+   Zero-date fecha rows (56 of 1.46 M) migrate with `event_time NULL`.
 
 **2.0.8 deltas** (one commit closes each):
 
@@ -59,8 +77,8 @@ Row volume in the uncovered bucket is extremely concentrated:
 
 | Rank | Table | Rows | Cum % |
 |---:|---|---:|---:|
-| 1 | STK_ARTICULO_PROCESO_HIST_DETALLE | 2,640,976 | 42.7 % |
-| 2 | FICHADAS | 1,464,575 | 66.4 % |
+| 1 | ~~STK_ARTICULO_PROCESO_HIST_DETALLE~~ — **migrated 2.0.8** | ~~2,640,976~~ | — |
+| 2 | ~~FICHADAS~~ — **migrated 2.0.9** | ~~1,464,575~~ | — |
 | 3 | CTBREGIS | 572,076 | 75.7 % |
 | 4 | HERRAMIENTAS | 225,355 | 79.3 % |
 | 5 | STKINSPR | 180,412 | 82.3 % |
@@ -90,13 +108,13 @@ Row volume in the uncovered bucket is extremely concentrated:
 | 29 | STK_ATRIBUTO_VALORES | 8,390 | 97.5 % |
 | 30 | CONTROLCALIDAD | 7,753 | 97.5 % |
 
-**The top 10 cover 90.6 % of the uncovered row volume. The top 20 cover
-95.8 %.** Migrating 20 new tables (with the right design — most are
-audit / history / attribute-value tables, not pure CRUD) closes the
-vast majority of Phase 1 §Data migration. The remaining 294 tables with
-rows tail off into thousands-of-rows territory — many of those are
-still business-meaningful (names of entities, HR records, etc.) but the
-row-volume signal is low.
+**Pre-2.0.8 Pareto:** top 10 covered 90.6 %, top 20 covered 95.8 % of
+the uncovered row volume. Ranks 1 (STK_ARTICULO_PROCESO_HIST_DETALLE,
+2.6 M rows) and 2 (FICHADAS + PERSONAL_TARJETA, 1.5 M rows) are now
+**migrated** (2.0.8 + 2.0.9), closing together about **66 %** of the
+original uncovered row volume. The remaining top-30 tail still
+concentrates the row volume: CTBREGIS (rank 3, 572 K) and
+HERRAMIENTAS (rank 4, 225 K) are the next-obvious Pareto candidates.
 
 ## Business domains to attack next
 
@@ -105,7 +123,7 @@ Aggregating the top-30 by the prefix convention:
 | Domain cluster | Tables (top 30) | Rows (top 30) |
 |---|---|---:|
 | Stock / inventory | STK_ARTICULO_PROCESO_HIST_DETALLE, STKINSPR, STK_COSTO_HIST, STK_COSTO_REPOSICION_HIST, STK_COSTOS, STK_ARTICULO_LOCACION, STK_BOM_ENPROCESO, STK_ATRIBUTO_VALORES | ≈ 2,995,135 |
-| HR / fichadas | FICHADAS, RH_EVALUACION_RESPUESTAS | 1,476,044 |
+| HR / fichadas | RH_EVALUACION_RESPUESTAS (FICHADAS migrated 2.0.9) | 11,469 |
 | Accounting | CTBREGIS, BCS_IMPORTACION | 656,568 |
 | Tools / equipment | HERRAMIENTAS, HERRMOVS | 236,981 |
 | Product attrs | PRODUCTO_ATRIB_VALORES, PRODUCTO_ATRIBUTO_HOMOLOGACION | 171,393 |
@@ -123,13 +141,12 @@ Aggregating the top-30 by the prefix convention:
 Suggested ordering for follow-up sessions (read `htx-parity` skill first
 when touching any of these):
 
-1. **STK article-process history** (2.6 M rows) — `stock` domain, feeds
-   production trazabilidad. Read the `.intranet-scrape/xml-forms/stock/`
-   forms first. Probably needs a join migrator (`STK_ARTICULOS` →
-   `STK_ARTICULO_PROCESO_HIST_*`).
-2. **FICHADAS** (1.5 M rows) — HR. `FICHADADIA` is already covered;
-   `FICHADAS` is the raw-event table; `RH_EVALUACION_RESPUESTAS` comes
-   along in the same session.
+1. ~~**STK article-process history** (2.6 M rows)~~ — **closed 2.0.8**
+   (HOMOLOGMOD + STK_ARTICULO_PROCESO_HIST + _DETALLE → Pareto #1).
+2. ~~**FICHADAS** (1.5 M rows)~~ — **closed 2.0.9** (FICHADAS +
+   PERSONAL_TARJETA → `erp_time_clock_events` + `erp_employee_cards`
+   via Pareto #2). `RH_EVALUACION_RESPUESTAS` (11.5 K rows) is still
+   open and can ride an upcoming HR-adjacent session.
 3. **CTBREGIS** (572 K rows) — accounting registros. `CTB_DETALLES` /
    `CTB_MOVIMIENTOS` (new schema) is covered; CTBREGIS is the legacy
    registro log. Likely a waiver if the data already rolled up into
@@ -143,7 +160,7 @@ when touching any of these):
 
 ## Business-data tables with rows but without coverage
 
-314 tables. Full list rendered as `<row_count>\t<table_name>` sorted
+308 tables. Full list rendered as `<row_count>\t<table_name>` sorted
 desc is regenerable from the recipe at the bottom of this file — it is
 too long to paste inline and changes as work lands.
 

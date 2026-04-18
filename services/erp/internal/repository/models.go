@@ -1914,3 +1914,27 @@ type ErpHomologationRevisionLine struct {
 	LogisticsCost          pgtype.Numeric     `json:"logistics_cost"`
 	CreatedAt              pgtype.Timestamptz `json:"created_at"`
 }
+
+type ErpEmployeeCard struct {
+	ID            pgtype.UUID        `json:"id"`
+	TenantID      string             `json:"tenant_id"`
+	EntityID      pgtype.UUID        `json:"entity_id"`
+	CardCode      string             `json:"card_code"`
+	EffectiveFrom pgtype.Date        `json:"effective_from"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpTimeClockEvent struct {
+	ID          pgtype.UUID        `json:"id"`
+	TenantID    string             `json:"tenant_id"`
+	EntityID    pgtype.UUID        `json:"entity_id"`
+	CardCode    string             `json:"card_code"`
+	EventTime   pgtype.Timestamptz `json:"event_time"`
+	EventType   string             `json:"event_type"`
+	Terminal    string             `json:"terminal"`
+	Marca       int16              `json:"marca"`
+	DeletedFlag int16              `json:"deleted_flag"`
+	InsertKey   string             `json:"insert_key"`
+	LegacyID    int64              `json:"legacy_id"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+}

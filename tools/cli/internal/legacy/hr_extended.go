@@ -122,3 +122,44 @@ func AdditionalPayReader(db *sql.DB) *CompositeKeyReader {
 		Columns:    "legajo, descripcion, porcentaje, fijo, maximo, desdeFecha, hastaFecha",
 	}
 }
+
+// ---------------------------------------------------------------------------
+// Employee cards (PERSONAL_TARJETA) — date-versioned card-to-employee assignments
+// ---------------------------------------------------------------------------
+
+// EmployeeCardReader creates a reader for PERSONAL_TARJETA (card-to-employee
+// assignments, 1,403 rows). The table has no single PK — it's a composite
+// (idPersona, tarjeta, fechaDesde) where the same card can reassign across
+// employees over time. FICHADAS (raw clock events) depend on this table to
+// resolve card_code + event_date → employee at that point in time.
+func EmployeeCardReader(db *sql.DB) *CompositeKeyReader {
+	return &CompositeKeyReader{
+		DB:         db,
+		Table:      "PERSONAL_TARJETA",
+		Target:     "erp_employee_cards",
+		DomainName: "hr",
+		PKColumns:  []string{"idPersona", "tarjeta", "fechaDesde"},
+		Columns:    "idPersona, tarjeta, fechaDesde",
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Raw clock-punch events (FICHADAS)
+// ---------------------------------------------------------------------------
+
+// TimeClockEventReader creates a reader for FICHADAS (raw clock-punch events,
+// 1,465,002 rows — Pareto #2 of the Phase 1 §Data migration gap, 41 % of
+// uncovered row volume post-2.0.8). Each row is one marcaje from a physical
+// terminal. AI PK id_fichada + UNIQUE insertkey (MD5-ish dedup hash). Employee
+// resolution goes through tarjeta + fecha → PERSONAL_TARJETA (date-versioned)
+// → PERSONAL → erp_entities; orphan tarjetas migrate with entity_id NULL.
+func TimeClockEventReader(db *sql.DB) *GenericReader {
+	return &GenericReader{
+		DB:         db,
+		Table:      "FICHADAS",
+		Target:     "erp_time_clock_events",
+		DomainName: "hr",
+		PKColumn:   "id_fichada",
+		Columns:    "id_fichada, tarjeta, fecha, hora, reloj, codigo, marca, borrado, insertkey",
+	}
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -21,6 +22,15 @@ type pendingMapping struct {
 	sdaID         uuid.UUID
 }
 
+// tarjetaAssignment is one (effectiveFrom, entityID) pair in tarjetaIndex — a
+// single card-to-employee assignment starting on effectiveFrom. The FICHADAS
+// migrator resolves card+eventDate → employee via the entry whose
+// effectiveFrom is the largest one still <= eventDate.
+type tarjetaAssignment struct {
+	effectiveFrom time.Time
+	entityID      uuid.UUID
+}
+
 // Mapper handles legacy INT → SDA UUID mapping with in-memory cache.
 type Mapper struct {
 	pool                  *pgxpool.Pool
@@ -35,6 +45,7 @@ type Mapper struct {
 	nroCuentaIndex        map[int64]uuid.UUID             // REG_CUENTA.nro_cuenta → entity UUID (ctacod ambiguity)
 	remitoByID            map[int64]uuid.UUID             // REMITO.idRemito → REMITO UUID (REMDETAL FK resolution — usually empty on saldivia: REMITO has no idRemito)
 	remitoIntByID         map[int64]uuid.UUID             // REMITOINT.idRemito → REMITOINT UUID (REMDETAL's real parent on saldivia, closes W-001)
+	tarjetaIndex          map[string][]tarjetaAssignment  // PERSONAL_TARJETA.tarjeta → sorted (desc by effectiveFrom) assignments; FICHADAS resolves card+date → entity UUID through this
 	unassignedWarehouseID uuid.UUID                       // fallback warehouse for STK_MOVIMIENTOS with stkdeposito_id=0
 	unknownEntityID       uuid.UUID                       // fallback entity for rows whose ctacod cannot be resolved
 	pending               []pendingMapping                // batch of mappings to flush
@@ -690,6 +701,104 @@ func (m *Mapper) cacheCount(domain, legacyTable string) int {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return len(m.cache[m.cacheKey(domain, legacyTable)])
+}
+
+// BuildTarjetaIndex builds an in-memory index: PERSONAL_TARJETA.tarjeta →
+// sorted list of (effectiveFrom, entity UUID) assignments. Consumed by the
+// FICHADAS migrator (raw clock-punch events) to resolve card_code + event_date
+// → employee UUID through the date-versioned assignment history.
+//
+// FICHADAS.tarjeta is INT(11) and PERSONAL_TARJETA.tarjeta is VARCHAR(20) —
+// we normalize to string on both sides (card_code) so INT "628" lines up with
+// VARCHAR "628". Cards reassign across employees over time (1,225 distinct
+// tarjetas in 1,403 PERSONAL_TARJETA rows on saldivia), which is why the
+// value is a sorted list rather than a single UUID.
+//
+// Must run after PERSONAL_TARJETA is migrated (PERSONAL must be in cache to
+// resolve idPersona → entity UUID).
+func (m *Mapper) BuildTarjetaIndex(ctx context.Context, mysqlDB *sql.DB) error {
+	if m.dryRun {
+		return nil
+	}
+	if err := m.PreloadDomain(ctx, "entity"); err != nil {
+		return fmt.Errorf("preload entity for tarjeta index: %w", err)
+	}
+	rows, err := mysqlDB.QueryContext(ctx,
+		`SELECT idPersona, tarjeta, fechaDesde FROM PERSONAL_TARJETA WHERE idPersona > 0 AND tarjeta <> ''`)
+	if err != nil {
+		return fmt.Errorf("build tarjeta index: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	key := m.cacheKey("entity", "PERSONAL")
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.tarjetaIndex == nil {
+		m.tarjetaIndex = make(map[string][]tarjetaAssignment)
+	}
+	count := 0
+	orphans := 0
+	for rows.Next() {
+		var idPersona int64
+		var card string
+		var effFrom time.Time
+		if err := rows.Scan(&idPersona, &card, &effFrom); err != nil {
+			return fmt.Errorf("scan tarjeta index: %w", err)
+		}
+		uid, ok := m.cache[key][idPersona]
+		if !ok {
+			orphans++
+			continue
+		}
+		m.tarjetaIndex[card] = append(m.tarjetaIndex[card], tarjetaAssignment{
+			effectiveFrom: effFrom,
+			entityID:      uid,
+		})
+		count++
+	}
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("iterate tarjeta index: %w", err)
+	}
+	for card, list := range m.tarjetaIndex {
+		sort.Slice(list, func(i, j int) bool {
+			return list[i].effectiveFrom.After(list[j].effectiveFrom)
+		})
+		m.tarjetaIndex[card] = list
+	}
+	fmt.Printf("  tarjeta index: %d mappings across %d cards (%d PERSONAL_TARJETA rows with no cached PERSONAL UUID)\n",
+		count, len(m.tarjetaIndex), orphans)
+	return nil
+}
+
+// ResolveByTarjetaAtDate returns the employee UUID that held `card` on
+// `fecha`. It picks the assignment with the largest effectiveFrom <= fecha.
+// Returns (uuid.Nil, false) when the card was never assigned OR its earliest
+// assignment is strictly after fecha. A zero-date `fecha` falls back to the
+// most-recent assignment, which matches how Histrix displays orphan raw
+// events in the RRHH views.
+func (m *Mapper) ResolveByTarjetaAtDate(card string, fecha time.Time) (uuid.UUID, bool) {
+	if card == "" {
+		return uuid.Nil, false
+	}
+	if m.dryRun {
+		return m.deterministicUUID("tarjeta", card), true
+	}
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	list, ok := m.tarjetaIndex[card]
+	if !ok || len(list) == 0 {
+		return uuid.Nil, false
+	}
+	if fecha.IsZero() {
+		return list[0].entityID, true
+	}
+	for _, a := range list {
+		if !a.effectiveFrom.After(fecha) {
+			return a.entityID, true
+		}
+	}
+	return uuid.Nil, false
 }
 
 // PreloadDomain loads all existing mappings for a domain into cache (for FK resolution performance).

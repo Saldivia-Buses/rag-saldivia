@@ -514,6 +514,22 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 		migration.NewAdditionalPayEventMigrator(mysqlDB, tenantID),
 	)
 
+	// Phase 13b: Time clock — raw clock-punch events (FICHADAS) + the
+	// card-to-employee assignment table they resolve through. Pareto #2 of
+	// the Phase 1 §Data migration gap post-2.0.8 (1.46 M rows, 41 % of the
+	// remaining uncovered row volume). PERSONAL_TARJETA must run before
+	// FICHADAS so BuildTarjetaIndex can see every assignment; FICHADAS uses
+	// ResolveByTarjetaAtDate to pick the right employee for each event date.
+	orch.RegisterMigrators(
+		migration.NewEmployeeCardMigrator(mysqlDB, tenantID),
+	)
+	orch.AddAfterTableHook("PERSONAL_TARJETA", func(ctx context.Context, mapper *migration.Mapper) error {
+		return mapper.BuildTarjetaIndex(ctx, mysqlDB)
+	})
+	orch.RegisterMigrators(
+		migration.NewTimeClockEventMigrator(mysqlDB, tenantID),
+	)
+
 	// Phase 14: Maintenance & Fleet
 	orch.RegisterMigrators(
 		migration.NewMaintenanceAssetMigrator(mysqlDB, tenantID),

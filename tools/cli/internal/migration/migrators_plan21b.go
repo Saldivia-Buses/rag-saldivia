@@ -1501,6 +1501,122 @@ func NewAdditionalPayEventMigrator(db *sql.DB, tenantID string) *GenericMigrator
 }
 
 // ============================================================================
+// Phase 13b — Time clock (FICHADAS + PERSONAL_TARJETA)
+// ============================================================================
+//
+// Phase 1 §Data migration Pareto #2 — 41 % of the remaining uncovered row
+// volume post-2.0.8. FICHADAS (1.46 M rows) is the raw clock-punch stream
+// from the physical terminals; FICHADADIA (migrated in 2.0.6 → erp_attendance)
+// is the DAILY rollup. XML-form scrape shows 116 direct references to the raw
+// table across rrhh, sueldos, dashboard, estadisticas, rh_evaluaciones — raw
+// events are not dead weight. PERSONAL_TARJETA (1,403 rows) is the versioned
+// card-to-employee assignment that makes FICHADAS queryable by employee.
+
+// NewEmployeeCardMigrator migrates PERSONAL_TARJETA → erp_employee_cards.
+// Composite (non-unique) natural key (idPersona, tarjeta, fechaDesde). Cards
+// reassign across employees over time — we preserve the full history so
+// FICHADAS can resolve card+event_date → correct employee for that day.
+// idPersona → entity UUID through the preloaded "entity" domain cache.
+func NewEmployeeCardMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.EmployeeCardReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "entity_id", "card_code", "effective_from"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			idPersona := row.Int64("idPersona")
+			card := row.String("tarjeta")
+			if idPersona == 0 || card == "" {
+				return nil, nil
+			}
+
+			entityID, err := mapper.ResolveOptional(ctx, "entity", "PERSONAL", idPersona)
+			if err != nil || entityID == uuid.Nil {
+				return nil, nil // orphan — PERSONAL parent not migrated (usually baja removals)
+			}
+
+			effFrom := SafeDateRequired(timeFromRow(row, "fechaDesde"))
+			compositeKey := fmt.Sprintf("PERSONAL_TARJETA:%d:%s:%s", idPersona, card, effFrom.Format("2006-01-02"))
+			legacyID := int64(hashCode(compositeKey))
+
+			id, err := mapper.Map(ctx, nil, "hr", "PERSONAL_TARJETA", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID,
+				entityID,
+				card,
+				effFrom,
+			}, nil
+		},
+	}
+}
+
+// NewTimeClockEventMigrator migrates FICHADAS → erp_time_clock_events.
+// AI PK id_fichada + UNIQUE insertkey VARCHAR(80). tarjeta is INT(11) on
+// FICHADAS but VARCHAR on PERSONAL_TARJETA; we normalize both to string
+// (card_code) and resolve employee through BuildTarjetaIndex's date-versioned
+// lookup. Orphan tarjetas (card never assigned, or assigned strictly after
+// the event) migrate with entity_id NULL — the raw marcaje is preserved.
+// Zero-date fecha rows migrate with event_time NULL for the same reason.
+func NewTimeClockEventMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.TimeClockEventReader(db)
+	return &GenericMigrator{
+		reader: reader,
+		columns: []string{
+			"id", "tenant_id", "entity_id", "card_code",
+			"event_time", "event_type", "terminal",
+			"marca", "deleted_flag", "insert_key", "legacy_id",
+		},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_fichada")
+			if legacyID == 0 {
+				return nil, nil
+			}
+			insertKey := row.String("insertkey")
+			if insertKey == "" {
+				return nil, nil
+			}
+
+			tarjetaInt := row.Int64("tarjeta")
+			cardCode := ""
+			if tarjetaInt > 0 {
+				cardCode = fmt.Sprintf("%d", tarjetaInt)
+			}
+
+			fecha := timeFromRow(row, "fecha")
+			eventTime := combineDateTime(fecha, row.String("hora"))
+
+			var entityID *uuid.UUID
+			if cardCode != "" {
+				if resolved, ok := mapper.ResolveByTarjetaAtDate(cardCode, fecha); ok {
+					entityID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "hr", "FICHADAS", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID, entityID, cardCode,
+				eventTime,
+				strings.TrimSpace(row.String("codigo")),
+				strings.TrimSpace(row.String("reloj")),
+				int16(row.Int("marca")),
+				int16(row.Int("borrado")),
+				insertKey,
+				legacyID,
+			}, nil
+		},
+	}
+}
+
+// ============================================================================
 // Phase 14 — Maintenance
 // ============================================================================
 
