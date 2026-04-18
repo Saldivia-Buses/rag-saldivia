@@ -265,11 +265,37 @@ services:
   # ── Go Services (profile: full) ──────────────────────────────────────
   # Only start with: docker compose --profile full up --build
   # Traefik auto-discovers these via Docker labels (priority 100).
-  # Note: auth + platform + feedback folded into `app` per ADR 025 core;
-  # bigbrother + healthwatch + traces per ops pilot; ingest + search +
-  # agent per rag fusion; chat + ws + notification per realtime fusion.
-  # Only erp is still a standalone here — the monolith's own routing
-  # into docker-compose lands in a separate commit.
+  # Post-ADR-025: auth + platform + feedback + bigbrother + healthwatch +
+  # traces + ingest + search + agent + chat + ws + notification all live
+  # in the `app` monolith (services/app/cmd). `erp` is the last standalone.
+
+  app:
+    <<: *service-defaults
+    profiles: [full]
+    build:
+      context: ..
+      dockerfile: services/app/Dockerfile
+    environment:
+      <<: *env-common
+      APP_PORT: "8020"
+      TENANT_ID: ${SDA_TENANT_ID:-dev}
+      TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
+      # Platform pool (sda_platform DB in the shared postgres). Dev only;
+      # prod uses a Docker secret (see docker-compose.prod.yml).
+      POSTGRES_PLATFORM_URL: postgres://sda:sda_dev@postgres:5432/sda_platform?sslmode=disable
+      # Cross-service URLs for agent tool dispatch (still HTTP for erp,
+      # in-process for search/ingest).
+      ERP_SERVICE_URL: http://erp:8013
+    ports:
+      - "8020:8020"
+    labels:
+      - "traefik.enable=true"
+      # Catch every /v1/* and /ws except /v1/erp (erp router has priority 100).
+      - "traefik.http.routers.app-docker.rule=PathPrefix(`/v1`) || PathPrefix(`/ws`) || PathPrefix(`/internal`)"
+      - "traefik.http.routers.app-docker.entrypoints=web"
+      - "traefik.http.routers.app-docker.middlewares=dev-cors@file"
+      - "traefik.http.routers.app-docker.priority=50"
+      - "traefik.http.services.app-docker.loadbalancer.server.port=8020"
 
   erp:
     <<: *service-defaults
