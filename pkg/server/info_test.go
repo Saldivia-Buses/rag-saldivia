@@ -1,4 +1,4 @@
-package build
+package server
 
 import (
 	"encoding/json"
@@ -10,8 +10,8 @@ import (
 	"testing"
 )
 
-func TestInfo_ContainsExpectedFields(t *testing.T) {
-	info := Info("sda-test")
+func TestBuildInfo_ContainsExpectedFields(t *testing.T) {
+	info := BuildInfo("sda-test")
 
 	expected := map[string]string{
 		"service":    "sda-test",
@@ -24,37 +24,37 @@ func TestInfo_ContainsExpectedFields(t *testing.T) {
 	for key, want := range expected {
 		got, ok := info[key]
 		if !ok {
-			t.Errorf("Info() missing key %q", key)
+			t.Errorf("BuildInfo() missing key %q", key)
 			continue
 		}
 		if got != want {
-			t.Errorf("Info()[%q] = %q, want %q", key, got, want)
+			t.Errorf("BuildInfo()[%q] = %q, want %q", key, got, want)
 		}
 	}
 }
 
-func TestInfo_ServiceNamePassedThrough(t *testing.T) {
+func TestBuildInfo_ServiceNamePassedThrough(t *testing.T) {
 	tests := []struct {
 		name    string
 		service string
 	}{
-		{name: "auth service", service: "sda-auth"},
-		{name: "chat service", service: "sda-chat"},
+		{name: "app service", service: "sda-app"},
+		{name: "erp service", service: "sda-erp"},
 		{name: "empty name", service: ""},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			info := Info(tt.service)
+			info := BuildInfo(tt.service)
 			if info["service"] != tt.service {
-				t.Errorf("Info(%q)[service] = %q, want %q", tt.service, info["service"], tt.service)
+				t.Errorf("BuildInfo(%q)[service] = %q, want %q", tt.service, info["service"], tt.service)
 			}
 		})
 	}
 }
 
-func TestInfo_NonEmptyDefaults(t *testing.T) {
-	info := Info("test")
+func TestBuildInfo_NonEmptyDefaults(t *testing.T) {
+	info := BuildInfo("test")
 
 	// GitSHA and BuildTime are set in init() — they should never be empty
 	if info["git_sha"] == "" {
@@ -68,8 +68,8 @@ func TestInfo_NonEmptyDefaults(t *testing.T) {
 	}
 }
 
-func TestHandler_Returns200WithJSON(t *testing.T) {
-	h := Handler("sda-auth")
+func TestBuildInfoHandler_Returns200WithJSON(t *testing.T) {
+	h := BuildInfoHandler("sda-app")
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodGet, "/v1/info", nil)
@@ -89,16 +89,16 @@ func TestHandler_Returns200WithJSON(t *testing.T) {
 		t.Fatalf("failed to decode response body: %v", err)
 	}
 
-	if body["service"] != "sda-auth" {
-		t.Errorf("body[service] = %q, want %q", body["service"], "sda-auth")
+	if body["service"] != "sda-app" {
+		t.Errorf("body[service] = %q, want %q", body["service"], "sda-app")
 	}
 	if body["go_version"] != runtime.Version() {
 		t.Errorf("body[go_version] = %q, want %q", body["go_version"], runtime.Version())
 	}
 }
 
-func TestHandler_ConsistentAcrossCalls(t *testing.T) {
-	h := Handler("sda-chat")
+func TestBuildInfoHandler_ConsistentAcrossCalls(t *testing.T) {
+	h := BuildInfoHandler("sda-erp")
 
 	// Call twice — the payload is cached at creation time
 	for i := range 2 {
@@ -114,8 +114,8 @@ func TestHandler_ConsistentAcrossCalls(t *testing.T) {
 		if err := json.NewDecoder(w.Body).Decode(&body); err != nil {
 			t.Fatalf("call %d: decode error: %v", i, err)
 		}
-		if body["service"] != "sda-chat" {
-			t.Errorf("call %d: service = %q, want sda-chat", i, body["service"])
+		if body["service"] != "sda-erp" {
+			t.Errorf("call %d: service = %q, want sda-erp", i, body["service"])
 		}
 	}
 }

@@ -65,9 +65,9 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     set -eux; \
     mkdir -p /out; \
     LDFLAGS="-s -w \
-        -X github.com/Camionerou/rag-saldivia/pkg/build.Version=${VERSION} \
-        -X github.com/Camionerou/rag-saldivia/pkg/build.GitSHA=${GIT_SHA} \
-        -X github.com/Camionerou/rag-saldivia/pkg/build.BuildTime=${BUILD_TIME}"; \
+        -X github.com/Camionerou/rag-saldivia/pkg/server.Version=${VERSION} \
+        -X github.com/Camionerou/rag-saldivia/pkg/server.GitSHA=${GIT_SHA} \
+        -X github.com/Camionerou/rag-saldivia/pkg/server.BuildTime=${BUILD_TIME}"; \
     echo "▸ building app (ops + core + rag + realtime: bigbrother + healthwatch + traces + auth + platform + feedback + ingest + search + agent + chat + ws + notification)"; \
     go build -ldflags "$LDFLAGS" -o /out/app ./services/app/cmd; \
     for svc in erp; do \

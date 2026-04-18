@@ -1,7 +1,4 @@
-// Package build provides version and build information for SDA services.
-// Values are set via -ldflags at build time, with automatic fallback
-// to Go's debug.ReadBuildInfo() for dev builds.
-package build
+package server
 
 import (
 	"encoding/json"
@@ -14,9 +11,9 @@ import (
 
 // Set via -ldflags:
 //
-//	go build -ldflags "-X github.com/Camionerou/rag-saldivia/pkg/build.Version=0.1.0
-//	  -X github.com/Camionerou/rag-saldivia/pkg/build.GitSHA=$(git rev-parse --short HEAD)
-//	  -X github.com/Camionerou/rag-saldivia/pkg/build.BuildTime=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+//	go build -ldflags "-X github.com/Camionerou/rag-saldivia/pkg/server.Version=0.1.0
+//	  -X github.com/Camionerou/rag-saldivia/pkg/server.GitSHA=$(git rev-parse --short HEAD)
+//	  -X github.com/Camionerou/rag-saldivia/pkg/server.BuildTime=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 var (
 	Version   = "dev"
 	GitSHA    = ""
@@ -66,8 +63,8 @@ func ReadVersionFile(path string) string {
 	return v
 }
 
-// Info returns build information as a map.
-func Info(serviceName string) map[string]string {
+// BuildInfo returns build information as a map keyed by service name.
+func BuildInfo(serviceName string) map[string]string {
 	return map[string]string{
 		"service":    serviceName,
 		"version":    Version,
@@ -77,12 +74,11 @@ func Info(serviceName string) map[string]string {
 	}
 }
 
-// Handler returns an http.HandlerFunc that responds with build info as JSON.
-// Register as: r.Get("/v1/info", build.Handler("sda-auth"))
-func Handler(serviceName string) http.HandlerFunc {
-	info := Info(serviceName)
-	payload, _ := json.Marshal(info)
-
+// BuildInfoHandler returns an http.HandlerFunc that responds with build info
+// as JSON. Register as: r.Get("/v1/info", BuildInfoHandler("sda-app")). The
+// payload is marshalled once at call time and reused for every request.
+func BuildInfoHandler(serviceName string) http.HandlerFunc {
+	payload, _ := json.Marshal(BuildInfo(serviceName))
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write(payload)

@@ -11,7 +11,6 @@
 //	ctx := app.Context() // signal-aware context (SIGINT/SIGTERM)
 //	// ... service-specific setup using ctx ...
 //	r.Get("/health", hc.Handler())
-//	r.Get("/v1/info", build.Handler("sda-auth"))
 //	r.Post("/v1/auth/login", handler.Login)
 //	app.Run() // blocks until signal, then graceful shutdown
 //
@@ -31,7 +30,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
-	"github.com/Camionerou/rag-saldivia/pkg/build"
 	"github.com/Camionerou/rag-saldivia/pkg/config"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -89,7 +87,7 @@ func New(name string, opts ...Option) *App {
 	}
 
 	// OpenTelemetry
-	version := build.ReadVersionFile("VERSION")
+	version := ReadVersionFile("VERSION")
 	otelShutdown, err := setupOTel(ctx, otelConfig{
 		ServiceName:    name,
 		ServiceVersion: version,
@@ -113,7 +111,7 @@ func New(name string, opts ...Option) *App {
 	}
 
 	// /v1/info endpoint
-	r.Get("/v1/info", build.Handler(name))
+	r.Get("/v1/info", BuildInfoHandler(name))
 
 	app.router = r
 	return app

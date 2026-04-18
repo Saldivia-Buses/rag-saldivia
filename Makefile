@@ -17,8 +17,8 @@ GO_SERVICES := $(shell ls -d $(SERVICES_DIR)/*/go.mod 2>/dev/null | xargs -I{} d
 GIT_SHA := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 BUILD_TIME := $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 LDFLAGS_BASE := -s -w \
-	-X github.com/Camionerou/rag-saldivia/pkg/build.GitSHA=$(GIT_SHA) \
-	-X github.com/Camionerou/rag-saldivia/pkg/build.BuildTime=$(BUILD_TIME)
+	-X github.com/Camionerou/rag-saldivia/pkg/server.GitSHA=$(GIT_SHA) \
+	-X github.com/Camionerou/rag-saldivia/pkg/server.BuildTime=$(BUILD_TIME)
 
 export GOBIN
 
@@ -83,7 +83,7 @@ build: ## Build all Go services
 		echo "Building $$svc..."; \
 		ver=$$(cat $(SERVICES_DIR)/$$svc/VERSION 2>/dev/null | tr -d '[:space:]' || echo "dev"); \
 		cd $(SERVICES_DIR)/$$svc && go build \
-			-ldflags '$(LDFLAGS_BASE) -X github.com/Camionerou/rag-saldivia/pkg/build.Version='"$$ver" \
+			-ldflags '$(LDFLAGS_BASE) -X github.com/Camionerou/rag-saldivia/pkg/server.Version='"$$ver" \
 			-o $(GOBIN)/$$svc ./cmd || exit 1; \
 	done
 	@echo "All services built → $(GOBIN)/ (sha: $(GIT_SHA))"
@@ -91,7 +91,7 @@ build: ## Build all Go services
 build-%: ## Build a specific service (e.g., make build-auth)
 	@ver=$$(cat $(SERVICES_DIR)/$*/VERSION 2>/dev/null | tr -d '[:space:]' || echo "dev"); \
 	cd $(SERVICES_DIR)/$* && go build \
-		-ldflags '$(LDFLAGS_BASE) -X github.com/Camionerou/rag-saldivia/pkg/build.Version='"$$ver" \
+		-ldflags '$(LDFLAGS_BASE) -X github.com/Camionerou/rag-saldivia/pkg/server.Version='"$$ver" \
 		-o $(GOBIN)/$* ./cmd
 
 # ── Testing ──────────────────────────────────────────────────────────────
