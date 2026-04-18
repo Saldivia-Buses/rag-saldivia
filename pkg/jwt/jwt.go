@@ -201,30 +201,53 @@ func ParsePublicKeyEnv(b64 string) (ed25519.PublicKey, error) {
 	return ParsePublicKeyPEM(pemData)
 }
 
-// MustLoadPublicKey reads a base64-encoded public key from an env var or panics.
-// Replaces the copy-pasted loadPublicKey() in every cmd/main.go.
+// MustLoadPublicKey loads a public key, preferring the env var `envVar`
+// (base64-encoded PEM, the dev/docker-compose convention) and falling back
+// to `envVar+"_FILE"` (path to a raw PEM file, the Docker-secrets convention
+// used by `docker-compose.prod.yml`). Panics if neither is set or parsing
+// fails.
 func MustLoadPublicKey(envVar string) ed25519.PublicKey {
-	b64 := os.Getenv(envVar)
-	if b64 == "" {
-		panic(fmt.Sprintf("%s environment variable is required", envVar))
+	if b64 := os.Getenv(envVar); b64 != "" {
+		key, err := ParsePublicKeyEnv(b64)
+		if err != nil {
+			panic(fmt.Sprintf("failed to parse %s: %v", envVar, err))
+		}
+		return key
 	}
-	key, err := ParsePublicKeyEnv(b64)
-	if err != nil {
-		panic(fmt.Sprintf("failed to parse %s: %v", envVar, err))
+	if path := os.Getenv(envVar + "_FILE"); path != "" {
+		pemData, err := os.ReadFile(path)
+		if err != nil {
+			panic(fmt.Sprintf("failed to read %s_FILE (%s): %v", envVar, path, err))
+		}
+		key, err := ParsePublicKeyPEM(pemData)
+		if err != nil {
+			panic(fmt.Sprintf("failed to parse %s_FILE (%s): %v", envVar, path, err))
+		}
+		return key
 	}
-	return key
+	panic(fmt.Sprintf("%s or %s_FILE environment variable is required", envVar, envVar))
 }
 
-// MustLoadPrivateKey reads a base64-encoded private key from an env var or panics.
-// Mirror of MustLoadPublicKey for services that sign tokens (auth + monolith).
+// MustLoadPrivateKey mirrors MustLoadPublicKey for services that sign tokens
+// (the `app` monolith via services/app/cmd). Same env/file precedence.
 func MustLoadPrivateKey(envVar string) ed25519.PrivateKey {
-	b64 := os.Getenv(envVar)
-	if b64 == "" {
-		panic(fmt.Sprintf("%s environment variable is required", envVar))
+	if b64 := os.Getenv(envVar); b64 != "" {
+		key, err := ParsePrivateKeyEnv(b64)
+		if err != nil {
+			panic(fmt.Sprintf("failed to parse %s: %v", envVar, err))
+		}
+		return key
 	}
-	key, err := ParsePrivateKeyEnv(b64)
-	if err != nil {
-		panic(fmt.Sprintf("failed to parse %s: %v", envVar, err))
+	if path := os.Getenv(envVar + "_FILE"); path != "" {
+		pemData, err := os.ReadFile(path)
+		if err != nil {
+			panic(fmt.Sprintf("failed to read %s_FILE (%s): %v", envVar, path, err))
+		}
+		key, err := ParsePrivateKeyPEM(pemData)
+		if err != nil {
+			panic(fmt.Sprintf("failed to parse %s_FILE (%s): %v", envVar, path, err))
+		}
+		return key
 	}
-	return key
+	panic(fmt.Sprintf("%s or %s_FILE environment variable is required", envVar, envVar))
 }

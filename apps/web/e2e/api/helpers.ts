@@ -4,8 +4,10 @@
  * Run with: TARGET=http://172.22.100.23 bun test apps/web/e2e/api/
  *
  * No browser involved — pure HTTP. The suite logs in once via the
- * test user seeded by db/tenant/migrations/053_e2e_test_user.up.sql
- * and reuses the access token across requests.
+ * test user seeded by deploy/scripts/seed.sh (`make seed`) — previously
+ * seeded by db/tenant/migrations/057_e2e_test_user.up.sql, relocated
+ * in F-02 so production silos never hold the default credentials.
+ * Reuses the access token across requests.
  */
 
 export const TARGET = process.env.TARGET ?? "http://localhost";

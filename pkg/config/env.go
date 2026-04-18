@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strings"
 )
 
 // Env reads an environment variable with a fallback default.
@@ -28,6 +29,29 @@ func MustEnv(key string) string {
 		panic(fmt.Sprintf("required environment variable %s is not set", key))
 	}
 	return v
+}
+
+// EnvOrFile reads an env var, and if empty, falls back to the content of the
+// file at `key+"_FILE"`. Trailing whitespace is trimmed (Docker secrets often
+// ship with a trailing newline). Returns "" when neither is set or the file
+// cannot be read — callers that require a value should check the return.
+//
+// Matches the secrets convention used by docker-compose.prod.yml: services
+// mount a secret at /run/secrets/<name> and export the path via
+// <VAR>_FILE=/run/secrets/<name>.
+func EnvOrFile(key string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	path := os.Getenv(key + "_FILE")
+	if path == "" {
+		return ""
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return ""
+	}
+	return strings.TrimRight(string(data), " \t\n\r")
 }
 
 // RedactURL strips credentials from a URL for safe logging.

@@ -24,7 +24,7 @@ machine). Don't reach for horizontal-scale patterns — most won't buy you
 anything here.
 
 **Remote:** `github.com/Saldivia-Buses/rag-saldivia` · **Main:** `main` ·
-**Working:** `2.0.6`
+**Working:** `2.0.7`
 
 ---
 

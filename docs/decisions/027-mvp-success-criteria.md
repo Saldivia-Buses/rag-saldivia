@@ -58,10 +58,38 @@ that justifies the waiver. The waiver ADR number goes in the item.
       `erp_communication_recipients`, `erp_sequences`, `erp_survey_questions`,
       `erp_unit_photos`, waiver `W-003`). Canonical check now runs green
       against `docs/parity/waivers.md` entries.
-- [ ] **Every agent tool declares a capability** and is rejected at dispatch
-      time when the user lacks the permission. Today: not implemented.
-- [ ] **Workstation SHA == `main` HEAD**. A drift-detect script runs and
-      passes. Today: fails (workstation runs pre-fusion 14 services).
+- [x] **Every agent tool declares a capability** and is rejected at dispatch
+      time when the user lacks the permission. Shipped 2026-04-18 (2.0.7):
+      `Definition.Capability` + `ManifestTool.capability` land in
+      `services/app/internal/rag/agent/tools/`; loader skips (with ERROR log)
+      any tool missing a capability — fail-closed, the LLM never sees it.
+      `Executor.permitted` checks capability against `sdamw.HasPermission`
+      (admin bypass + wildcard match, shared with HTTP `RequirePermission`);
+      `"authed"` sentinel covers chat-wide reads (search_documents,
+      check_job_status, dashboard KPIs). Denials return
+      `Result{Status:"denied"}` to the LLM and write an `agent.tool.denied`
+      audit row; allowed dispatches write `agent.tool.dispatch`. Re-checked
+      on the confirmation path so a user who loses a perm between preview
+      and confirm cannot complete the write. All 28 YAML module tools
+      (erp/bigbrother/fleet) backfilled; 3 core tools backfilled in
+      `cmd/main.go`. Tests: `TestExecute_{Denies_,Admin_Bypasses,Authed_,
+      Unauth_,EmptyCapability_,Wildcard_}*`,
+      `TestExecuteConfirmed_Denies_WhenCapabilityMissing`,
+      `TestExecute_AuditLogger_Records`, `TestExecute_MultiToolIndependence`,
+      `TestLoadModuleTools_MissingCapability_Skipped` — all green.
+- [x] **Workstation SHA == `main` HEAD**. A drift-detect script runs and
+      passes. Shipped 2026-04-18 (2.0.7): `make check-prod-drift` target
+      compares `/opt/saldivia/repo` HEAD vs `origin/main` and checks that
+      running containers' compose source lives under `/opt/saldivia/`.
+      Workstation moved off the stale GitHub-runner workspace onto the
+      canonical `/opt/saldivia/deploy/` compose and the post-fusion shape
+      (`{erp, web, postgres, redis, nats, traefik, mailpit, minio}`); the
+      pre-fusion 14-service stack is gone. The monolith `app` service is
+      not in compose yet — that wiring is itself the next Phase 0/ADR 025
+      work item, not part of this tick. Pre-transition backup:
+      `/var/backups/saldivia/postgres/pre-deploy-transition-20260418_045110.sql.gz`
+      (2.7 GB) + orphaned `deploy_postgres_platform_data` volume archived to
+      `/var/backups/saldivia/archives/deploy_postgres_platform_data_orphaned-20260418_045507.tar.gz`.
 
 ### Phase 1 — Histrix parity + shutdown
 
@@ -248,7 +276,18 @@ that justifies the waiver. The waiver ADR number goes in the item.
 
 - Populate `docs/parity/waivers.md` and `docs/parity/reports.md` (empty
   today).
-- Define the drift-detect script (`make check-prod-drift` target?) for
-  the Phase 0 "workstation SHA == main HEAD" check.
 - Identify the top-20 ERP write actions from Histrix audit logs for the
   Phase 2 chat-coverage item.
+- Prod deploy leftovers the app-in-compose work surfaced — all shipped in 2.0.7:
+  (a) redis auth — `config.EnvOrFile` reads `REDIS_PASSWORD` /
+  `REDIS_PASSWORD_FILE`, `security.InitBlacklist` takes `*redis.Options`, both
+  `app` and `erp` pass Addr + Password to redis client + blacklist, prod compose
+  mounts `redis_password` secret on both services.
+  (b) distroless healthcheck — `pkg/server.RunHealthcheckAndExit` plus a
+  `--healthcheck` subcommand in `services/app/cmd` and `services/erp/cmd`
+  self-probes `/health` without needing shell/wget in the runtime image.
+  Dockerfiles declare `HEALTHCHECK CMD ["/app" or "/erp", "--healthcheck"]`;
+  compose uses the same exec form.
+  (c) dead `db_tenant_template_url` secret — removed from `docker-compose.prod.yml`
+  and from erp's `secrets:` list. Both services read `POSTGRES_TENANT_URL` env
+  directly, which is now the only tenant-URL plumbing.

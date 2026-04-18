@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"errors"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -570,4 +571,108 @@ func TestVerify_RefreshToken_ValidatesCorrectly(t *testing.T) {
 // isErr wraps errors.Is for readable table-driven assertions.
 func isErr(err, target error) bool {
 	return errors.Is(err, target)
+}
+
+// encodeTestKeysPEM returns (public PEM bytes, private PEM bytes) for testing
+// the env-file loading paths. Matches the encoding TestParseKeyPEM_Roundtrip uses.
+func encodeTestKeysPEM(t *testing.T) (pubPEM, privPEM []byte) {
+	t.Helper()
+	pub, priv := generateTestKeys(t)
+	pubBytes, err := x509.MarshalPKIXPublicKey(pub)
+	if err != nil {
+		t.Fatalf("marshal public key: %v", err)
+	}
+	privBytes, err := x509.MarshalPKCS8PrivateKey(priv)
+	if err != nil {
+		t.Fatalf("marshal private key: %v", err)
+	}
+	pubPEM = pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: pubBytes})
+	privPEM = pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: privBytes})
+	return pubPEM, privPEM
+}
+
+func TestMustLoadPublicKey_EnvVarMode(t *testing.T) {
+	pubPEM, _ := encodeTestKeysPEM(t)
+	b64 := base64.StdEncoding.EncodeToString(pubPEM)
+	t.Setenv("TEST_PUB_KEY", b64)
+	t.Setenv("TEST_PUB_KEY_FILE", "")
+	got := MustLoadPublicKey("TEST_PUB_KEY")
+	if len(got) != ed25519.PublicKeySize {
+		t.Fatalf("expected Ed25519 public key of size %d, got %d", ed25519.PublicKeySize, len(got))
+	}
+}
+
+func TestMustLoadPublicKey_FileMode(t *testing.T) {
+	pubPEM, _ := encodeTestKeysPEM(t)
+	dir := t.TempDir()
+	path := dir + "/pub.pem"
+	if err := os.WriteFile(path, pubPEM, 0o600); err != nil {
+		t.Fatalf("write pub pem: %v", err)
+	}
+	t.Setenv("TEST_PUB_KEY", "")
+	t.Setenv("TEST_PUB_KEY_FILE", path)
+	got := MustLoadPublicKey("TEST_PUB_KEY")
+	if len(got) != ed25519.PublicKeySize {
+		t.Fatalf("expected Ed25519 public key of size %d, got %d", ed25519.PublicKeySize, len(got))
+	}
+}
+
+func TestMustLoadPublicKey_EnvPreferredOverFile(t *testing.T) {
+	pubPEM, _ := encodeTestKeysPEM(t)
+	b64 := base64.StdEncoding.EncodeToString(pubPEM)
+	t.Setenv("TEST_PUB_KEY", b64)
+	// _FILE points at /dev/null — if env-first logic regresses we'd get a PEM parse panic.
+	t.Setenv("TEST_PUB_KEY_FILE", "/dev/null")
+	got := MustLoadPublicKey("TEST_PUB_KEY")
+	if len(got) != ed25519.PublicKeySize {
+		t.Fatalf("expected Ed25519 public key of size %d, got %d", ed25519.PublicKeySize, len(got))
+	}
+}
+
+func TestMustLoadPublicKey_NeitherSet_Panics(t *testing.T) {
+	t.Setenv("TEST_PUB_KEY", "")
+	t.Setenv("TEST_PUB_KEY_FILE", "")
+	defer func() {
+		if r := recover(); r == nil {
+			t.Fatal("expected panic when neither env var is set")
+		}
+	}()
+	_ = MustLoadPublicKey("TEST_PUB_KEY")
+}
+
+func TestMustLoadPrivateKey_EnvVarMode(t *testing.T) {
+	_, privPEM := encodeTestKeysPEM(t)
+	b64 := base64.StdEncoding.EncodeToString(privPEM)
+	t.Setenv("TEST_PRIV_KEY", b64)
+	t.Setenv("TEST_PRIV_KEY_FILE", "")
+	got := MustLoadPrivateKey("TEST_PRIV_KEY")
+	if len(got) != ed25519.PrivateKeySize {
+		t.Fatalf("expected Ed25519 private key of size %d, got %d", ed25519.PrivateKeySize, len(got))
+	}
+}
+
+func TestMustLoadPrivateKey_FileMode(t *testing.T) {
+	_, privPEM := encodeTestKeysPEM(t)
+	dir := t.TempDir()
+	path := dir + "/priv.pem"
+	if err := os.WriteFile(path, privPEM, 0o600); err != nil {
+		t.Fatalf("write priv pem: %v", err)
+	}
+	t.Setenv("TEST_PRIV_KEY", "")
+	t.Setenv("TEST_PRIV_KEY_FILE", path)
+	got := MustLoadPrivateKey("TEST_PRIV_KEY")
+	if len(got) != ed25519.PrivateKeySize {
+		t.Fatalf("expected Ed25519 private key of size %d, got %d", ed25519.PrivateKeySize, len(got))
+	}
+}
+
+func TestMustLoadPrivateKey_NeitherSet_Panics(t *testing.T) {
+	t.Setenv("TEST_PRIV_KEY", "")
+	t.Setenv("TEST_PRIV_KEY_FILE", "")
+	defer func() {
+		if r := recover(); r == nil {
+			t.Fatal("expected panic when neither env var is set")
+		}
+	}()
+	_ = MustLoadPrivateKey("TEST_PRIV_KEY")
 }

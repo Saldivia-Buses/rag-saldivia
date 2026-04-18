@@ -147,5 +147,8 @@ http:
     dev-tenant:
       headers:
         customRequestHeaders:
-          X-Tenant-ID: "dev-tenant-id"
+          # ID and slug deliberately equal in dev — main.go's aggregator upserts
+          # tenant_health_scores with TENANT_ID (env, default "dev") as
+          # tenants(id), and seed.sh inserts the row with id='dev' too.
+          X-Tenant-ID: "dev"
           X-Tenant-Slug: "dev"

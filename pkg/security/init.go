@@ -8,20 +8,21 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// InitBlacklist connects to Redis and returns a TokenBlacklist.
-// Returns nil if Redis is unavailable (graceful degradation).
-// All services should call this on startup for consistent blacklist wiring.
-func InitBlacklist(ctx context.Context, redisURL string) *TokenBlacklist {
-	if redisURL == "" {
+// InitBlacklist connects to Redis using the provided options and returns a
+// TokenBlacklist. Returns nil if opts is nil, Addr is unset, or Redis is
+// unreachable (graceful degradation). Callers build the full *redis.Options
+// so auth / TLS / DB / retry settings stay co-located at the wire-up site.
+func InitBlacklist(ctx context.Context, opts *redis.Options) *TokenBlacklist {
+	if opts == nil || opts.Addr == "" {
 		return nil
 	}
 
-	rdb := redis.NewClient(&redis.Options{Addr: redisURL})
+	rdb := redis.NewClient(opts)
 	if err := rdb.Ping(ctx).Err(); err != nil {
 		slog.Warn("redis not available, token blacklist disabled", "error", err)
 		return nil
 	}
 
-	slog.Info("token blacklist enabled", "redis", config.RedactURL(redisURL))
+	slog.Info("token blacklist enabled", "redis", config.RedactURL(opts.Addr))
 	return NewTokenBlacklist(rdb)
 }

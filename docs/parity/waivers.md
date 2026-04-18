@@ -86,3 +86,132 @@ hasn't landed). The archive keeps the raw data for forensic queries.
 `NewInternalDeliveryNoteMigrator` for REMITOINT, wire a
 `BuildRemitoIntIndex`, and repoint `NewDeliveryNoteLineMigrator` at the
 new index. Tracked in ADR 027 as a Phase 1 data-migration follow-up.
+
+## W-004 — Histrix intranet infrastructure tables (HTX*)
+
+**Scope**: 31 tables owned by the Histrix intranet platform itself
+(menus, mail, calendar, chat, prefs, media library, auth plumbing,
+logging, record-level ACLs, etc.) — not business data.
+
+```
+HTXACCESSLOG, HTXADDRESSBOOK, HTXCALENDAR, HTXCHAT, HTXFONTS, HTXLOG,
+HTXMAIL, HTXMENU, HTXMESSAGES, HTXNEWS, HTXNOTIFUSER, HTXOPTIONS,
+HTXPREFS, HTXPRINTERS, HTXPROFILEDIR, HTXTHEME, HTX_ACCESS_TOKEN,
+HTX_ATTRIBUTES, HTX_ATTRIBUTE_OPTIONS, HTX_CRONTAB, HTX_EMPRESAS,
+HTX_MEDIA, HTX_NOTIFICATION_TOKEN, HTX_OPENIDS, HTX_RECORD_AUTH,
+HTX_SUBSYSTEM_AUTH, HTX_TABLE_ATTRIBUTE, HTX_TABLE_TAGS, HTX_TAGS,
+HTX_URLS, HTX_USER_PROFILE
+```
+
+**Why**: These back Histrix-as-a-CMS, not Saldivia-as-a-company. SDA
+replaces the surface they power:
+
+- `HTXMENU`, `HTXPROFILEDIR`, `HTX_SUBSYSTEM_AUTH`, `HTX_RECORD_AUTH`,
+  `HTX_URLS`, `HTX_ACCESS_TOKEN`, `HTX_OPENIDS`, `HTX_USER_PROFILE`,
+  `HTXPREFS`, `HTXOPTIONS`, `HTXTHEME`, `HTXFONTS`, `HTXPRINTERS` →
+  SDA's own auth, routing, RBAC, per-user preferences.
+- `HTXMAIL`, `HTXADDRESSBOOK`, `HTXNEWS`, `HTXNOTIFUSER`, `HTX_MEDIA`,
+  `HTXNOTIFUSER`, `HTX_NOTIFICATION_TOKEN` → replaced by
+  `erp_communications` (migration 029) + the Phase 3 mail / WhatsApp
+  ingest agents (ADR 027 §Phase 3).
+- `HTXCHAT`, `HTXMESSAGES` → replaced by SDA chat sessions
+  (migration 003 chat tables) and the Phase 2 agent.
+- `HTXCALENDAR` → replaced by `erp_communications` events
+  (migration 029 is the successor; calendar-event UX is Phase 1 admin).
+- `HTXACCESSLOG`, `HTXLOG` → replaced by `audit_log` (migration 001) +
+  structured slog streamed to OTel.
+- `HTX_ATTRIBUTES`, `HTX_ATTRIBUTE_OPTIONS`, `HTX_TABLE_ATTRIBUTE`,
+  `HTX_TABLE_TAGS`, `HTX_TAGS`, `HTX_CRONTAB`, `HTX_EMPRESAS` →
+  platform-generic machinery; SDA is single-tenant (silo per ADR 022),
+  schedules live in NATS consumers (per ADR 027 §Phase 3 background
+  agents), tags are a RAG concern (Phase 2).
+
+**Blast radius**: zero. None of these hold Saldivia business state.
+Historical `HTXACCESSLOG` / `HTXLOG` rows are interesting only for the
+retrospective "who touched what in Histrix on day X" question; that
+stays on the Histrix box for as long as it runs and is orthogonal to
+cutover readiness.
+
+**Revisit**: never — these are cutover casualties by design. If a
+forensic need surfaces for historical Histrix access logs, that's a
+one-shot dump into `erp_legacy_archive`, not a new migrator.
+
+## W-005 — `*_OLD` superseded Histrix tables
+
+**Scope**: 5 schema-reboot leftovers inside Histrix itself:
+`CPSENCAB_OLD`, `CPSMOVIM_OLD`, `CTBCONCE_OLD`, `CTBCUENT_OLD`,
+`CTBPARAM_OLD`.
+
+**Why**: The `*_OLD` suffix is Histrix's own convention for "we rebooted
+this table — use the unsuffixed version". The current, in-use tables
+(`CPSENCAB`, `CPSMOVIM`, `CTBCONCE`, `CTBCUENT`, `CTBPARAM`) appear in
+the parity list separately — covering those (or waiving them) is the
+real work. Migrating the `*_OLD` rows would import abandoned historical
+snapshots that Histrix already decided were wrong.
+
+**Blast radius**: zero for the live business. Rows in the `*_OLD`
+tables are not referenced by any Histrix form or handler today;
+retaining them would pull dead-weight into the SDA schema and inflate
+Phase 0 integrity checks for no benefit.
+
+**Revisit**: if a forensic need emerges, dump the `*_OLD` rows into
+`erp_legacy_archive` and query there — same shape as the HTXLOG
+archive path in W-004.
+
+## W-006 — zero-row uncovered Histrix tables (bulk waiver)
+
+**Scope**: 225 tables from `.intranet-scrape/db-tables.txt` that have
+no migrator/reader registered AND return `table_rows = 0` from
+`information_schema.tables` on the live Histrix DB (`saldivia` schema
+at `172.22.100.99`, query run 2026-04-18).
+
+The list is pinned in `docs/parity/data-migration.md` (top-of-repo
+reproducer regenerates it against the live DB).
+
+By prefix family, the largest chunks are:
+
+- 22× `STK_*` — abandoned stock subsystems (inspección detail,
+  sub-rubros, parámetros, insumos).
+- 17× `REG_*` — entity-extension tables never populated
+  (certificados, comisiones, contactos grupos, categorías).
+- 11× `GEN_*` — secondary catalogs never seeded beyond the 17 already
+  migrated.
+- 11× `CAJ_*` — treasury parametrization tables (numeradores, formas,
+  conceptos aux) never used on this tenant.
+- 9× `MANT_*` — maintenance subsystem tables (talleres, ajustes, tipos
+  equipo) never populated.
+- 8× `RH_*` — HR extended (cursos plan, docentes) never used.
+- 7× `oauth_*` — Sabre OAuth server tables (library leftover — never
+  configured).
+- 8× calendar/cards tables (`calendars`, `calendarobjects`,
+  `calendarsubscriptions`, `calendarchanges`, `addressbooks`,
+  `addressbookchanges`, `cards`, `principals`) — Sabre CalDAV/CardDAV
+  library leftover.
+- 4× `HtxMailgun*` + assorted lowercase tables (`users`, `groupmembers`,
+  `locks`, `tmp_mac`, `t_d_SwipeRecord`, `replicasql`) — third-party
+  integration leftovers that Histrix ships with but Saldivia never
+  activated.
+- Remaining 130+ — individual dead tables (`VUNIDADES`, `VSTOCK`,
+  various `TIPO*` and unsuffixed legacy variants like `CTBCONCE`,
+  `CTBCUENT`, `CPSMOVIM`, `CARCHE`, `BCSMOVIM`, `CCTMOVIM` —
+  confirming these are the dead-side of the schema reboot captured by
+  W-005 at finer granularity).
+
+**Why**: table_rows = 0 from MySQL's `information_schema` means the
+table is either truly empty or has never had a row (the statistic is
+updated on every write). A 0-row table has no data to migrate. If a
+table was intended to hold data but never got any, that's the feature
+never being used — the parity contract is "don't lose data", not "don't
+lose feature surface that no one ever used".
+
+**Blast radius**: zero row data to lose. Zero risk of corrupting an SDA
+table that a later feature might need: the table shape is still
+discoverable in `.intranet-scrape/db-schema.sql` if a future Phase 1
+feature resurrects one of these subsystems — at which point the cost is
+writing a migrator plus seed data, not data recovery.
+
+**Revisit**: if a later Phase 1 session needs one of these subsystems
+live (e.g. someone decides to activate Sabre calendar, or enable the
+fleet GPS tables), strike that entry from W-006 in the same PR and
+write the migrator + seed. Default answer for a PR that touches a
+W-006 table: either bring rows along with a migrator, or keep it waived.

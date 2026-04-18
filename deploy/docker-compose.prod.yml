@@ -18,8 +18,6 @@ secrets:
     file: ./secrets/jwt-public.pem
   db_platform_url:
     file: ./secrets/db-platform-url
-  db_tenant_template_url:
-    file: ./secrets/db-tenant-template-url
   redis_password:
     file: ./secrets/redis-password
   encryption_master_key:
@@ -228,19 +226,13 @@ services:
     <<: *service-defaults
     image: nats:2-alpine
     command: ["-c", "/etc/nats/nats-server.conf", "-m", "8222"]
+    # Post ADR 025: nats-server.conf only defines three users — app (monolith),
+    # erp, extractor. The per-module envs (AUTH_, CHAT_, WS_, …) were dropped
+    # when the fusion landed.
     environment:
-      AUTH_NATS_PASS: ${AUTH_NATS_PASS}
-      CHAT_NATS_PASS: ${CHAT_NATS_PASS}
-      WS_NATS_PASS: ${WS_NATS_PASS}
-      NOTIF_NATS_PASS: ${NOTIF_NATS_PASS}
-      INGEST_NATS_PASS: ${INGEST_NATS_PASS}
-      FEEDBACK_NATS_PASS: ${FEEDBACK_NATS_PASS}
-      AGENT_NATS_PASS: ${AGENT_NATS_PASS}
-      TRACES_NATS_PASS: ${TRACES_NATS_PASS}
-      PLATFORM_NATS_PASS: ${PLATFORM_NATS_PASS}
-      EXTRACTOR_NATS_PASS: ${EXTRACTOR_NATS_PASS}
-      BIGBROTHER_NATS_PASS: ${BIGBROTHER_NATS_PASS}
+      APP_NATS_PASS: ${APP_NATS_PASS}
       ERP_NATS_PASS: ${ERP_NATS_PASS}
+      EXTRACTOR_NATS_PASS: ${EXTRACTOR_NATS_PASS}
     volumes:
       - nats_data:/data
       - ./nats/nats-server.conf:/etc/nats/nats-server.conf:ro
@@ -258,11 +250,85 @@ services:
           cpus: "1.0"
 
   # ── Go Services ────────────────────────────────────────────────────────
-  # Note: auth + platform + feedback folded into `app` per ADR 025 core;
-  # bigbrother + healthwatch + traces per the ops pilot; ingest + search +
-  # agent per the rag fusion; chat + ws + notification per the realtime
-  # fusion. Only erp (below) remains as a standalone; wiring the monolith
-  # binary into compose/s6 is a separate session.
+  # Post ADR 025: auth + platform + feedback + bigbrother + healthwatch +
+  # traces + ingest + search + agent + chat + ws + notification all live
+  # in the `app` monolith (services/app/cmd). `erp` is the only remaining
+  # standalone Go service; `extractor` is the Python sidecar.
+
+  # ── App monolith ──────────────────────────────────────────────────────
+
+  app:
+    <<: *service-defaults
+    image: ghcr.io/saldivia-buses/sda-app:${APP_VERSION:-local}
+    build:
+      context: ..
+      dockerfile: services/app/Dockerfile
+      args:
+        <<: *build-args
+        VERSION: ${APP_VERSION:-dev}
+    depends_on:
+      postgres-platform:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    environment:
+      APP_PORT: "8020"
+      TENANT_ID: ${SDA_TENANT_SLUG:-dev}
+      TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
+      REDIS_URL: redis:6379
+      REDIS_PASSWORD_FILE: /run/secrets/redis_password
+      NATS_URL: nats://app:${APP_NATS_PASS}@nats:4222
+      # JWT keys read from raw PEM secret files via the _FILE fallback added
+      # to pkg/jwt.MustLoadPublicKey/MustLoadPrivateKey in this commit.
+      JWT_PUBLIC_KEY_FILE: /run/secrets/jwt_public_key
+      JWT_PRIVATE_KEY_FILE: /run/secrets/jwt_private_key
+      # Platform pool: main.go reads `POSTGRES_PLATFORM_URL` and falls back
+      # to the `/run/secrets/db_platform_url` file via loadSecret().
+      # Tenant pool: per-silo URL, must be provided by the operator's .env.
+      POSTGRES_TENANT_URL: ${POSTGRES_TENANT_URL}
+      # Bigbrother KEK + service-account key + alert webhook: loadSecret()
+      # checks the default paths below and falls back to env; nothing to set
+      # here unless overriding.
+      # Module enablement (CSV list, e.g. "bigbrother,fleet,erp").
+      ENABLED_MODULES: ${ENABLED_MODULES:-}
+      # URLs for cross-service tool dispatch.
+      ERP_SERVICE_URL: http://erp:8013
+    secrets:
+      - jwt_public_key
+      - jwt_private_key
+      - db_platform_url
+      - bb_kek
+      - service_account_key
+      - alertmanager_webhook_token
+      - redis_password
+    healthcheck:
+      # Distroless has no shell/wget — binary self-probes via pkg/server.RunHealthcheckAndExit.
+      test: ["CMD", "/app", "--healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - frontend
+      - backend
+      - data
+      - lan
+    labels:
+      - "traefik.enable=true"
+      - "autoheal=true"
+      # Same routing strategy as dev: priority 50 so erp's /v1/erp (100) wins first.
+      - "traefik.http.routers.app.rule=PathPrefix(`/v1`) || PathPrefix(`/ws`) || PathPrefix(`/internal`)"
+      - "traefik.http.routers.app.entrypoints=web,websecure"
+      - "traefik.http.routers.app.priority=50"
+      - "traefik.http.services.app.loadbalancer.server.port=8020"
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "2.0"
+        reservations:
+          memory: 256M
 
   # ── Extractor (Python OCR + Vision pipeline) ──────────────────────────
 
@@ -314,14 +380,16 @@ services:
     environment:
       ERP_PORT: "8013"
       REDIS_URL: redis:6379
+      REDIS_PASSWORD_FILE: /run/secrets/redis_password
       NATS_URL: nats://erp:${ERP_NATS_PASS}@nats:4222
       TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
       <<: *jwt-public
     secrets:
       - jwt_public_key
-      - db_tenant_template_url
+      - redis_password
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8013/health || exit 1"]
+      # Distroless has no shell/wget — binary self-probes via pkg/server.RunHealthcheckAndExit.
+      test: ["CMD", "/erp", "--healthcheck"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -334,6 +402,10 @@ services:
       - "autoheal=true"
       - "traefik.http.routers.erp.rule=PathPrefix(`/v1/erp`)"
       - "traefik.http.routers.erp.entrypoints=web,websecure"
+      # Explicit priority higher than app.priority=50 so /v1/erp always hits erp
+      # (with app's rule being a disjunction, traefik's default rule-length
+      # tiebreaker isn't reliable).
+      - "traefik.http.routers.erp.priority=100"
       - "traefik.http.services.erp.loadbalancer.server.port=8013"
     deploy:
       resources:

@@ -54,6 +54,10 @@ type ModuleManifest struct {
 }
 
 // ManifestTool is a tool definition from a YAML manifest.
+//
+// Capability is mandatory: tools missing it are rejected at load time
+// (ADR 027 Phase 0 item 4 — every agent tool declares a capability). Use
+// CapabilityAuthed ("authed") for tools open to any authed user.
 type ManifestTool struct {
 	ID                   string         `yaml:"id"`
 	Service              string         `yaml:"service"`
@@ -61,6 +65,7 @@ type ManifestTool struct {
 	Endpoint             string         `yaml:"endpoint"` // HTTP "VERB /path" (protocol: http)
 	Protocol             string         `yaml:"protocol"` // "grpc" or "http"
 	Type                 string         `yaml:"type"`
+	Capability           string         `yaml:"capability"` // RBAC string; "authed" for any authed user
 	RequiresConfirmation bool           `yaml:"requires_confirmation"`
 	Description          string         `yaml:"description"`
 	Parameters           map[string]any `yaml:"parameters"`
@@ -98,6 +103,14 @@ func LoadModuleTools(modulesDir string, enabledModules map[string]bool, serviceU
 		}
 
 		for _, t := range manifest.Tools {
+			// Fail-closed: a tool without a declared capability cannot be
+			// dispatched (ADR 027 Phase 0 item 4). The LLM never sees it.
+			if strings.TrimSpace(t.Capability) == "" {
+				slog.Error("skip tool, missing capability (fail-closed)",
+					"module", manifest.Module, "tool", t.ID)
+				continue
+			}
+
 			baseURL, ok := serviceURLs[t.Service]
 			if !ok {
 				slog.Warn("skip tool, no service URL", "tool", t.ID, "service", t.Service)
@@ -115,6 +128,7 @@ func LoadModuleTools(modulesDir string, enabledModules map[string]bool, serviceU
 				Endpoint:             fullURL,
 				Method:               httpMethod,
 				Type:                 t.Type,
+				Capability:           t.Capability,
 				RequiresConfirmation: t.RequiresConfirmation,
 				Description:          t.Description,
 				Parameters:           params,

@@ -134,6 +134,33 @@ Implications when choosing defaults:
 - **Storage** is fast enough to not need aggressive caching; `io_uring` / `O_DIRECT`
   patterns are overkill for this workload.
 
+## Workstation filesystem layout
+
+Established 2026-04-18 (cycle 2.0.7). Before this, everything lived in
+`/home/sistemas/` mixed with dotfiles. The on-box source of truth is
+`/opt/saldivia/README.md`.
+
+```
+/opt/saldivia/            code + tools
+├── repo/                 git clone of main (the canonical one; not the runner workspace)
+├── bin/sda -> sda-<v>    versioned CLI binary + symlink
+├── bin/sda-<v>           each cut is archived here, never overwritten in place
+└── deploy/ → repo/deploy symlink: docker-compose source of truth
+
+/var/backups/saldivia/    preserved data (dumps + one-off archives)
+├── postgres/             pg_dump -Fc outputs, named <db>_<timestamp>.dump
+└── archives/             legacy tgzs, frozen one-off scripts
+
+/data/saldivia/           reserved for ADR 023 all-in-one bind mounts (empty today)
+```
+
+The **currently running stack** still comes from the GitHub runner workspace at
+`/home/sistemas/actions-runner/_work/rag-saldivia/rag-saldivia/deploy/docker-compose.dev.yml`
+(legacy, pre-ADR-025 — 14 services). Migrating that to
+`/opt/saldivia/deploy/` is part of the ADR 027 Phase 0 item 5 work, not yet
+done. Until then `/opt/saldivia/repo` is the clone you `git pull` + build
+from, the runner workspace is the clone the running stack actually uses.
+
 ## Workstation access
 
 Host: `srv-ia-01` (`172.22.100.23`), user `sistemas`. SSH. Credentials live in

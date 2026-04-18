@@ -23,6 +23,7 @@ tools:
     method: Search
     protocol: grpc
     type: read
+    capability: authed
     description: "A test tool"
     parameters:
       type: object
@@ -36,6 +37,7 @@ tools:
     method: DoAction
     protocol: grpc
     type: action
+    capability: erp.entities.write
     requires_confirmation: true
     description: "A dangerous test action"
     parameters:
@@ -130,12 +132,14 @@ tools:
     method: Do
     protocol: grpc
     type: read
+    capability: authed
     description: "known service"
   - id: unknown_tool
     service: unknown_svc
     method: Do
     protocol: grpc
     type: read
+    capability: authed
     description: "missing service URL"
 `
 	if err := os.WriteFile(filepath.Join(modDir, "tools.yaml"), []byte(manifest), 0644); err != nil {
@@ -155,6 +159,64 @@ tools:
 	}
 	if defs[0].Name != "known_tool" {
 		t.Errorf("expected known_tool, got %s", defs[0].Name)
+	}
+}
+
+// TestLoadModuleTools_MissingCapability_Skipped verifies the fail-closed
+// behaviour required by ADR 027 Phase 0 item 4: a tool YAML without a
+// `capability:` field is dropped at load time (with an ERROR log) and
+// never appears in the registry. The LLM never sees such a tool.
+func TestLoadModuleTools_MissingCapability_Skipped(t *testing.T) {
+	dir := t.TempDir()
+	modDir := filepath.Join(dir, "capless")
+	if err := os.MkdirAll(modDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	manifest := `
+module: capless
+name: Cap-less Module
+tools:
+  - id: fine_tool
+    service: svc
+    method: Do
+    protocol: grpc
+    type: read
+    capability: authed
+    description: "has capability"
+  - id: cap_missing
+    service: svc
+    method: Do
+    protocol: grpc
+    type: read
+    description: "no capability declared"
+  - id: cap_blank
+    service: svc
+    method: Do
+    protocol: grpc
+    type: read
+    capability: "   "
+    description: "whitespace-only capability is also rejected"
+`
+	if err := os.WriteFile(filepath.Join(modDir, "tools.yaml"), []byte(manifest), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	defs, err := LoadModuleTools(
+		dir,
+		map[string]bool{"capless": true},
+		map[string]string{"svc": "http://svc:9000"},
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(defs) != 1 {
+		t.Fatalf("expected exactly 1 tool (fine_tool), got %d: %+v", len(defs), defs)
+	}
+	if defs[0].Name != "fine_tool" {
+		t.Fatalf("expected fine_tool loaded, got %q", defs[0].Name)
+	}
+	if defs[0].Capability != "authed" {
+		t.Fatalf("expected capability %q, got %q", "authed", defs[0].Capability)
 	}
 }
 
@@ -336,6 +398,7 @@ tools:
     endpoint: "POST /v1/fleet/vehicles"
     protocol: http
     type: read
+    capability: authed
     description: "List vehicles"
 `
 	if err := os.WriteFile(filepath.Join(modDir, "tools.yaml"), []byte(manifest), 0644); err != nil {
