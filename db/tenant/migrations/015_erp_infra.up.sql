@@ -1,6 +1,14 @@
 -- 015_erp_infra.up.sql
 -- Plan 17 Phase 0: ERP infrastructure — audit_log fix, financial triggers, sequences
 
+-- next_erp_sequence below references erp_sequences, which is created in
+-- 016_erp_catalogs. LANGUAGE sql parses the body at CREATE time (unlike
+-- LANGUAGE plpgsql which defers to call time), so this migration cannot
+-- validate the body on a fresh database. Defer validation — the table
+-- will exist by the time any caller runs the function. Scope is LOCAL
+-- so the session restores the default after commit.
+SET LOCAL check_function_bodies = off;
+
 -- Fix: audit_log.tenant_id was added as UUID in migration 013 but pkg/audit
 -- writes TEXT slugs (e.g., "saldivia", "dev"). Change to TEXT so audit writes work.
 ALTER TABLE audit_log ALTER COLUMN tenant_id TYPE TEXT USING tenant_id::TEXT;
