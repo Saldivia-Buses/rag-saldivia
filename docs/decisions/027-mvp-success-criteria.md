@@ -262,10 +262,10 @@ that justifies the waiver. The waiver ADR number goes in the item.
 - Identify the top-20 ERP write actions from Histrix audit logs for the
   Phase 2 chat-coverage item.
 - Harden prod deploy leftovers the app-in-compose work surfaced:
-  (a) `REDIS_URL` in both `app` and `erp` is `redis:6379` host:port only, but prod
-  redis has `--requirepass`; Go clients don't pass a password. Either add
-  `REDIS_PASSWORD_FILE` reads at startup or switch REDIS_URL to a full
-  `redis://:pass@host:port` URL string the client parses.
+  (a) ~~redis auth~~ — shipped in 2.0.7: `config.EnvOrFile` reads
+  `REDIS_PASSWORD` / `REDIS_PASSWORD_FILE`, `security.InitBlacklist` takes
+  `*redis.Options`, both `app` and `erp` pass Addr + Password to redis client
+  + blacklist, prod compose mounts `redis_password` secret on both services.
   (b) prod compose `healthcheck:` for `app` and `erp` uses `wget` but the runtime
   base is `distroless/static-debian12` (no shell, no wget) — the healthcheck
   never actually runs. Either add a `--healthcheck` self-probe to the Go

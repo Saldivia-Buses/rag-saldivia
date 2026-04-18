@@ -102,7 +102,11 @@ func main() {
 	tenantSlug := config.Env("TENANT_SLUG", "dev")
 
 	redisURL := config.Env("REDIS_URL", "localhost:6379")
-	blacklist := security.InitBlacklist(ctx, redisURL)
+	redisOpts := &redis.Options{
+		Addr:     redisURL,
+		Password: config.EnvOrFile("REDIS_PASSWORD"),
+	}
+	blacklist := security.InitBlacklist(ctx, redisOpts)
 	if blacklist == nil {
 		// healthwatch admin routes fail-closed on blacklist unavailability.
 		slog.Error("redis is required for token revocation")
@@ -126,7 +130,7 @@ func main() {
 			config.Env("POSTGRES_PLATFORM_URL", "")))
 	app.OnShutdown(platformPool.Close)
 
-	rdb := redis.NewClient(&redis.Options{Addr: redisURL})
+	rdb := redis.NewClient(redisOpts)
 	app.OnShutdown(func() { _ = rdb.Close() })
 
 	hc := health.New("app")

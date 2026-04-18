@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/nats-io/nats.go"
+	"github.com/redis/go-redis/v9"
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
 	"github.com/Camionerou/rag-saldivia/pkg/config"
@@ -35,7 +36,10 @@ func main() {
 	}
 
 	publicKey := sdajwt.MustLoadPublicKey("JWT_PUBLIC_KEY")
-	blacklist := security.InitBlacklist(ctx, config.Env("REDIS_URL", "localhost:6379"))
+	blacklist := security.InitBlacklist(ctx, &redis.Options{
+		Addr:     config.Env("REDIS_URL", "localhost:6379"),
+		Password: config.EnvOrFile("REDIS_PASSWORD"),
+	})
 
 	pool, err := database.NewPool(ctx, tenantDBURL)
 	if err != nil {

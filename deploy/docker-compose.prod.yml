@@ -279,10 +279,8 @@ services:
       APP_PORT: "8020"
       TENANT_ID: ${SDA_TENANT_SLUG:-dev}
       TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
-      # Redis password is on the server but the Go monolith's REDIS_URL
-      # today is host:port only — redis client auth plumbing is a separate
-      # follow-up (same gap erp has). Dev redis has no password so parity is OK.
       REDIS_URL: redis:6379
+      REDIS_PASSWORD_FILE: /run/secrets/redis_password
       NATS_URL: nats://app:${APP_NATS_PASS}@nats:4222
       # JWT keys read from raw PEM secret files via the _FILE fallback added
       # to pkg/jwt.MustLoadPublicKey/MustLoadPrivateKey in this commit.
@@ -306,6 +304,7 @@ services:
       - bb_kek
       - service_account_key
       - alertmanager_webhook_token
+      - redis_password
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8020/health || exit 1"]
       interval: 10s
@@ -382,12 +381,14 @@ services:
     environment:
       ERP_PORT: "8013"
       REDIS_URL: redis:6379
+      REDIS_PASSWORD_FILE: /run/secrets/redis_password
       NATS_URL: nats://erp:${ERP_NATS_PASS}@nats:4222
       TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
       <<: *jwt-public
     secrets:
       - jwt_public_key
       - db_tenant_template_url
+      - redis_password
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8013/health || exit 1"]
       interval: 10s
