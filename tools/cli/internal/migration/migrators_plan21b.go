@@ -2371,6 +2371,122 @@ func NewHomologationRevisionLineMigrator(db *sql.DB, tenantID string) *GenericMi
 }
 
 // ============================================================================
+// Phase 11d — Production inspection × homologation cross-reference
+// ============================================================================
+
+// NewProductionInspectionHomologationMigrator — PROD_CONTROL_HOMOLOG →
+// erp_production_inspection_homologations. Pareto #7 of the post-2.0.10
+// gap (403,028 rows live vs 105,683 scrape estimate — +282 % growth).
+//
+// Simple join table: production inspection templates × homologated
+// vehicle models. Live Histrix shows 0 orphans on both FKs. Dependencies:
+// PROD_CONTROLES (Phase 7/8) and HOMOLOGMOD (Phase 11b) both already
+// migrated; this just wires the join.
+func NewProductionInspectionHomologationMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.ProductionInspectionHomologationReader(db)
+	return &GenericMigrator{
+		reader: reader,
+		columns: []string{
+			"id", "tenant_id", "legacy_id",
+			"inspection_id", "inspection_legacy_id",
+			"homologation_id", "homologation_legacy_id",
+		},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_controlhomolog")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			prodcontrolID := row.Int64("prodcontrol_id")
+			var inspectionID *uuid.UUID
+			if prodcontrolID > 0 {
+				if resolved, rerr := mapper.ResolveOptional(ctx, "production", "PROD_CONTROLES", prodcontrolID); rerr == nil && resolved != uuid.Nil {
+					inspectionID = &resolved
+				}
+			}
+
+			homologLegacyID := row.Int64("homologacion_id")
+			var homologID *uuid.UUID
+			if homologLegacyID > 0 {
+				if resolved, rerr := mapper.ResolveOptional(ctx, "production", "HOMOLOGMOD", homologLegacyID); rerr == nil && resolved != uuid.Nil {
+					homologID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "production", "PROD_CONTROL_HOMOLOG", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+			return []any{
+				id, tenantID, legacyID,
+				inspectionID, int32(prodcontrolID),
+				homologID, int32(homologLegacyID),
+			}, nil
+		},
+	}
+}
+
+// ============================================================================
+// Phase 4e — Article cost history (STK_COSTO_HIST)
+// ============================================================================
+
+// NewArticleCostHistoryMigrator — STK_COSTO_HIST →
+// erp_article_cost_history. Pareto #8 of the post-2.0.10 gap
+// (103,799 rows live). Composite natural PK (articulo_id, anio_hist,
+// mes_hist) with no AI surrogate — we synthesize legacy_id via
+// hashCode("articulo_id|anio|mes") to keep the idempotency UNIQUE
+// (tenant_id, legacy_id) constraint working.
+//
+// article_id is resolved via the stock default-subsystem lookup (same
+// pattern as STKINSPR / tools). Rows with empty articulo_id (observed
+// in sample data — possibly orphan periods) migrate with article_id
+// NULL and article_code preserved.
+func NewArticleCostHistoryMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.ArticleCostHistoryReader(db)
+	return &GenericMigrator{
+		reader: reader,
+		columns: []string{
+			"id", "tenant_id", "legacy_id",
+			"article_code", "article_id",
+			"year", "month", "cost", "period_code",
+		},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			artCode := strings.TrimSpace(row.String("articulo_id"))
+			year := row.Int("anio_hist")
+			month := row.Int("mes_hist")
+			if year == 0 && month == 0 && artCode == "" {
+				return nil, nil // defensive — fully blank row
+			}
+
+			compositeKey := fmt.Sprintf("STK_COSTO_HIST:%s:%d:%d", artCode, year, month)
+			legacyID := hashCode(compositeKey)
+
+			var articleID *uuid.UUID
+			if artCode != "" {
+				artLegacyID := int64(hashCode(articleCompositeCode(artCode, "")))
+				if resolved, rerr := mapper.ResolveOptional(ctx, "stock", "STK_ARTICULOS", artLegacyID); rerr == nil && resolved != uuid.Nil {
+					articleID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "stock", "STK_COSTO_HIST", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+			return []any{
+				id, tenantID, legacyID,
+				artCode, articleID,
+				int32(year), int16(month),
+				ParseDecimal(row.Decimal("costo_hist")),
+				strings.TrimSpace(row.String("periodo_hist")),
+			}, nil
+		},
+	}
+}
+
+// ============================================================================
 // Phase 4d — Products domain (PRODUCTO_* cluster)
 // ============================================================================
 //

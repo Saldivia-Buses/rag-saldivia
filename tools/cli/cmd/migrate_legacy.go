@@ -398,6 +398,13 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 		migration.NewArticleSupplierCostMigrator(mysqlDB, tenantID),
 	)
 
+	// Phase 4e: Article cost history (STK_COSTO_HIST → erp_article_cost_history).
+	// Pareto #8 (~104 K rows). Composite natural PK (article_code, year, month)
+	// preserved via hashCode. Depends on the stock article index from Phase 4.
+	orch.RegisterMigrators(
+		migration.NewArticleCostHistoryMigrator(mysqlDB, tenantID),
+	)
+
 	// Phase 5: HR (depends on entities)
 	orch.RegisterMigrators(
 		migration.NewEmployeeDetailMigrator(mysqlDB, tenantID),
@@ -546,6 +553,15 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 		migration.NewProductAttributeOptionMigrator(mysqlDB, tenantID),
 		migration.NewProductAttributeValueMigrator(mysqlDB, tenantID),
 		migration.NewProductAttributeHomologationMigrator(mysqlDB, tenantID),
+	)
+
+	// Phase 11d: Production inspection × homologation cross-reference
+	// (PROD_CONTROL_HOMOLOG → erp_production_inspection_homologations).
+	// Pareto #7 (~403 K rows live — scrape was 106 K, +282 % growth).
+	// Depends on both PROD_CONTROLES (Phase 7/8) and HOMOLOGMOD
+	// (Phase 11b) caches being populated. 0 orphans confirmed live.
+	orch.RegisterMigrators(
+		migration.NewProductionInspectionHomologationMigrator(mysqlDB, tenantID),
 	)
 
 	// Phase 12: Quality (ISO 9001)

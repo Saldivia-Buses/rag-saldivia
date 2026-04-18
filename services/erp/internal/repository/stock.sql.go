@@ -762,3 +762,45 @@ func (q *Queries) ListArticleCosts(ctx context.Context, arg ListArticleCostsPara
 	}
 	return items, nil
 }
+
+const listArticleCostHistory = `-- name: ListArticleCostHistory :many
+SELECT id, tenant_id, legacy_id, article_code, article_id,
+       year, month, cost, period_code, created_at
+FROM erp_article_cost_history
+WHERE tenant_id = $1 AND article_id = $2
+ORDER BY year DESC, month DESC
+LIMIT $3 OFFSET $4
+`
+
+type ListArticleCostHistoryParams struct {
+	TenantID  string      `json:"tenant_id"`
+	ArticleID pgtype.UUID `json:"article_id"`
+	Limit     int32       `json:"limit"`
+	Offset    int32       `json:"offset"`
+}
+
+// Monthly cost history snapshots per article (STK_COSTO_HIST migrated).
+func (q *Queries) ListArticleCostHistory(ctx context.Context, arg ListArticleCostHistoryParams) ([]ErpArticleCostHistory, error) {
+	rows, err := q.db.Query(ctx, listArticleCostHistory,
+		arg.TenantID, arg.ArticleID, arg.Limit, arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ErpArticleCostHistory{}
+	for rows.Next() {
+		var i ErpArticleCostHistory
+		if err := rows.Scan(
+			&i.ID, &i.TenantID, &i.LegacyID, &i.ArticleCode, &i.ArticleID,
+			&i.Year, &i.Month, &i.Cost, &i.PeriodCode, &i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

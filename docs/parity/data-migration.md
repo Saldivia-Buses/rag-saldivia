@@ -17,18 +17,22 @@ SSH tunnel).
 | Segment | Count | Rows |
 |---|---:|---:|
 | Histrix tables in `.intranet-scrape/db-tables.txt` | 675 | 18,940,293 |
-| Tables with a registered migrator/reader | 116 | ≈ 14,559,438 |
-| Tables uncovered (total) | 559 | — |
+| Tables with a registered migrator/reader | 118 | ≈ 15,066,265 (live) |
+| Tables uncovered (total) | 557 | — |
 | &nbsp;&nbsp;— Histrix infra (HTX*, 31) — waived W-004 | 31 | 3,486,776 |
 | &nbsp;&nbsp;— `*_OLD` superseded (5) — waived W-005 | 5 | 423,678 |
 | &nbsp;&nbsp;— zero-row dead tables — waived W-006 | 225 | 0 |
-| &nbsp;&nbsp;— **business-data gap remaining** | **298** | **≈ 470,401** |
+| &nbsp;&nbsp;— **business-data gap remaining** | **296** | **≈ 200 K** (scrape) |
 
-The 116 "covered" tables now account for ≈ **77 %** of all Histrix rows
-(up from 68 % post-2.0.9, 61 % post-2.0.8 and 47 % pre-2.0.8). After the
-three bulk waivers, **298 business tables with rows** remain to migrate
-or waive individually. Those 298 tables hold about 470 K rows — 2.5 %
-of Histrix's total data volume.
+The 118 "covered" tables now account for **~80 %** of all Histrix rows
+by live COUNT(*) — up from 68 % post-2.0.9, 61 % post-2.0.8 and 47 %
+pre-2.0.8. Caveat: the live-covered sum + waivers now slightly exceeds
+the `information_schema.tables.table_rows` total, which is a known
+InnoDB estimate problem (see `feedback_live_count_vs_scrape_estimate`).
+Scrape-anchored accounting: 305 business tables remain with about
+200 K scraped rows (~1 % of Histrix). The long tail from here is
+sub-100 K tables where bulk waivers or quick migrators close the
+remaining coverage.
 
 **2.0.10 deltas** (Pareto #3 + Pareto #4 in one PR):
 
@@ -48,6 +52,24 @@ of Histrix's total data volume.
    `reg_date` uses `SafeDate` (NULL for the 8 zero-date rows).
    Phase 0 invariant from live Histrix: `rows_read = 604,579 = rows_written
    (604,579) + rows_skipped (0) + rows_duplicate (0)` on first run.
+
+5. **Pareto #7 + #8 — PROD_CONTROL_HOMOLOG (403,028 rows live, scrape
+   105,683) + STK_COSTO_HIST (103,799 rows live, scrape 95,217)**
+   migrated via `NewProductionInspectionHomologationMigrator` +
+   `NewArticleCostHistoryMigrator` → new tables
+   `erp_production_inspection_homologations` +
+   `erp_article_cost_history` (migration `075`). Two simple join /
+   history tables. PROD_CONTROL_HOMOLOG is the inspection-template ×
+   homologation cross-reference used by `controlcalidad/
+   prod_control_homolog.xml` (live UI); 0 orphans on both FKs. Live
+   count was +282 % vs scrape — largest growth delta observed this
+   cycle. STK_COSTO_HIST is monthly cost snapshots per article, already
+   consumed as JSONB metadata on `erp_articles` by the metadata
+   enricher; this migration adds the native relational shape for
+   structured history queries. Composite natural PK
+   (articulo_id, anio, mes) hashed into legacy_id for idempotency.
+   Phase 0 invariant: 403,028 + 103,799 = 506,827 rows all migrated,
+   0 skipped, 0 duplicate.
 
 4. **Pareto #6 (+ #18) — PRODUCTO_* cluster (405,805 rows live — original
    scrape estimate was 172 K for the two Pareto ranks combined; live
@@ -166,8 +188,8 @@ Row volume in the uncovered bucket is extremely concentrated:
 | 4 | ~~HERRAMIENTAS~~ — **migrated 2.0.10** (389,253 live) | ~~225,355~~ | — |
 | 5 | ~~STKINSPR~~ — **migrated 2.0.10** (189,863 live) | ~~180,412~~ | — |
 | 6 | ~~PRODUCTO_ATRIB_VALORES~~ — **migrated 2.0.10** (353,936 live) | ~~153,835~~ | — |
-| 7 | PROD_CONTROL_HOMOLOG | 105,683 | 86.5 % |
-| 8 | STK_COSTO_HIST | 95,217 | 88.0 % |
+| 7 | ~~PROD_CONTROL_HOMOLOG~~ — **migrated 2.0.10** (403,028 live, +282 %) | ~~105,683~~ | — |
+| 8 | ~~STK_COSTO_HIST~~ — **migrated 2.0.10** (103,799 live) | ~~95,217~~ | — |
 | 9 | BCS_IMPORTACION | 84,492 | 89.4 % |
 | 10 | EGX300EPE | 79,040 | 90.6 % |
 | 11 | REG_MOVIMIENTO_OBS | 72,737 | 91.8 % |

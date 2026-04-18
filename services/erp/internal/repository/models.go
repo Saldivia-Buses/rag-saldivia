@@ -2112,3 +2112,27 @@ type ErpProductAttributeHomologation struct {
 	HomologationLegacyID int32              `json:"homologation_legacy_id"`
 	CreatedAt            pgtype.Timestamptz `json:"created_at"`
 }
+
+type ErpProductionInspectionHomologation struct {
+	ID                   pgtype.UUID        `json:"id"`
+	TenantID             string             `json:"tenant_id"`
+	LegacyID             int64              `json:"legacy_id"`
+	InspectionID         pgtype.UUID        `json:"inspection_id"`
+	InspectionLegacyID   int32              `json:"inspection_legacy_id"`
+	HomologationID       pgtype.UUID        `json:"homologation_id"`
+	HomologationLegacyID int32              `json:"homologation_legacy_id"`
+	CreatedAt            pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpArticleCostHistory struct {
+	ID          pgtype.UUID        `json:"id"`
+	TenantID    string             `json:"tenant_id"`
+	LegacyID    int64              `json:"legacy_id"`
+	ArticleCode string             `json:"article_code"`
+	ArticleID   pgtype.UUID        `json:"article_id"`
+	Year        int32              `json:"year"`
+	Month       int16              `json:"month"`
+	Cost        pgtype.Numeric     `json:"cost"`
+	PeriodCode  string             `json:"period_code"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+}

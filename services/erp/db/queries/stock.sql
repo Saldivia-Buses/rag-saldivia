@@ -127,3 +127,14 @@ FROM erp_article_costs
 WHERE tenant_id = $1 AND article_id = $2
 ORDER BY last_update_date DESC NULLS LAST, supplier_code
 LIMIT $3 OFFSET $4;
+
+-- name: ListArticleCostHistory :many
+-- Monthly cost history snapshots per article (STK_COSTO_HIST migrated).
+-- Most-recent period first. Backs the evolucion_costos / evolutivo_costo
+-- screens 1:1 post-cutover.
+SELECT id, tenant_id, legacy_id, article_code, article_id,
+       year, month, cost, period_code, created_at
+FROM erp_article_cost_history
+WHERE tenant_id = $1 AND article_id = $2
+ORDER BY year DESC, month DESC
+LIMIT $3 OFFSET $4;

@@ -11,6 +11,24 @@ import (
 // BOM — Bill of Materials (STKPIEZA)
 // ---------------------------------------------------------------------------
 
+// ArticleCostHistoryReader — STK_COSTO_HIST (103,799 rows live, scrape
+// 95,217). Monthly cost snapshots per article. Composite PK
+// (articulo_id, anio_hist, mes_hist) — no AI PK. Already consumed as
+// JSONB metadata on erp_articles by the metadata enricher's
+// articleCostHistory spec; this reader materializes the native
+// relational shape so structured history reports can read it without
+// parsing JSON. Pareto #8 of the post-2.0.10 gap.
+func ArticleCostHistoryReader(db *sql.DB) *CompositeKeyReader {
+	return &CompositeKeyReader{
+		DB:         db,
+		Table:      "STK_COSTO_HIST",
+		Target:     "erp_article_cost_history",
+		DomainName: "stock",
+		PKColumns:  []string{"articulo_id", "anio_hist", "mes_hist"},
+		Columns:    "articulo_id, anio_hist, mes_hist, costo_hist, periodo_hist",
+	}
+}
+
 // ArticleSupplierCostReader creates a reader for STKINSPR (189,863 rows
 // live — Pareto #5 of the Phase 1 §Data migration gap post-2.0.10,
 // ~17 % of uncovered row volume).

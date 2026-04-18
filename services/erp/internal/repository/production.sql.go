@@ -891,3 +891,47 @@ func (q *Queries) ListHomologationRevisionLines(ctx context.Context, arg ListHom
 	}
 	return items, nil
 }
+
+const listProductionInspectionHomologations = `-- name: ListProductionInspectionHomologations :many
+SELECT id, tenant_id, legacy_id,
+       inspection_id, inspection_legacy_id,
+       homologation_id, homologation_legacy_id, created_at
+FROM erp_production_inspection_homologations
+WHERE tenant_id = $1 AND inspection_id = $2
+ORDER BY homologation_legacy_id
+LIMIT $3 OFFSET $4
+`
+
+type ListProductionInspectionHomologationsParams struct {
+	TenantID     string      `json:"tenant_id"`
+	InspectionID pgtype.UUID `json:"inspection_id"`
+	Limit        int32       `json:"limit"`
+	Offset       int32       `json:"offset"`
+}
+
+// Production inspection templates × homologated vehicle models. Pareto #7.
+func (q *Queries) ListProductionInspectionHomologations(ctx context.Context, arg ListProductionInspectionHomologationsParams) ([]ErpProductionInspectionHomologation, error) {
+	rows, err := q.db.Query(ctx, listProductionInspectionHomologations,
+		arg.TenantID, arg.InspectionID, arg.Limit, arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ErpProductionInspectionHomologation{}
+	for rows.Next() {
+		var i ErpProductionInspectionHomologation
+		if err := rows.Scan(
+			&i.ID, &i.TenantID, &i.LegacyID,
+			&i.InspectionID, &i.InspectionLegacyID,
+			&i.HomologationID, &i.HomologationLegacyID, &i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
