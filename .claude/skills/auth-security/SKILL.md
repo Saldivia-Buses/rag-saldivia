@@ -5,8 +5,9 @@ description: Use when touching JWT verification, RBAC, auth middleware, rate lim
 
 # auth-security
 
-Scope: `pkg/jwt/`, `pkg/middleware/`, `services/auth/`, any handler that reads/writes
-data, any NATS publisher or subscriber.
+Scope: `pkg/jwt/`, `pkg/middleware/`, `services/app/internal/core/auth/`,
+`services/erp/internal/handler/`, any handler that reads/writes data,
+any NATS publisher or subscriber.
 
 ## Tenant isolation is not a code concern
 

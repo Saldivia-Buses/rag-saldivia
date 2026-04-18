@@ -204,8 +204,8 @@ still in the tree. Representative offenders:
 
 - `gen/go/auth/v1/auth.pb.go` + `gen/go/chat/v1/chat.pb.go` — `TenantSlug` in
   protobuf messages. Regenerate once the `.proto` drops the field.
-- `services/feedback/internal/service/aggregator.go:40` — `Start(ctx, tenantID, tenantSlug)`.
-- `services/ingest/internal/service/documents.go:36` — constructor takes tenant.
+- `services/app/internal/core/feedback/service/aggregator.go:40` — `Start(ctx, tenantID, tenantSlug)`.
+- `services/app/internal/rag/ingest/service/documents.go:36` — constructor takes tenant.
 - `pkg/tenant/context.go` — the whole package is scheduled for deletion.
 - `pkg/metrics/business.go:44–50` — every metric has a `tenant_slug` label; all
   useless in the silo model.
@@ -244,11 +244,11 @@ func (s *Service) runTicker(ctx context.Context) {
 // launched as: go s.runTicker(ctx)
 ```
 
-Current offenders to clean up on contact:
-- `services/healthwatch/internal/service/healthwatch.go:280`
-- `services/feedback/internal/service/aggregator.go:43`
-- `services/chat/cmd/main.go:98`
-- `services/ingest/internal/service/extractor_consumer.go:83`
+Current offenders to clean up on contact (paths post-ADR 025):
+- `services/app/internal/ops/healthwatch/service/healthwatch.go:280`
+- `services/app/internal/core/feedback/service/aggregator.go:43`
+- `services/app/cmd/main.go` (realtime fusion absorbed what used to be services/chat/cmd/main.go:98)
+- `services/app/internal/rag/ingest/service/extractor_consumer.go:83`
 - `services/erp/internal/handler/analytics.go:868` (has WaitGroup but no timeout)
 
 ### `panic()` in request paths
@@ -258,8 +258,8 @@ Panic is reserved for program-wide invariant violations at startup (bad config,
 missing key file) — never for runtime validation.
 
 Current offenders:
-- `services/ingest/internal/service/documents.go:38` — tenant validation.
-- `services/bigbrother/internal/scanner/stub.go:34` — MAC parsing util.
+- `services/app/internal/rag/ingest/service/documents.go:38` — tenant validation.
+- `services/app/internal/ops/bigbrother/scanner/stub.go:34` — MAC parsing util.
 
 ### `fmt.Println` / `log.Printf` outside `tools/cli`
 
@@ -267,7 +267,14 @@ Production services use `slog.*Context`. CLI tools (`tools/cli/`) may use
 `fmt.Println` for user-facing output, but **migrate to `slog.InfoContext` with a
 text handler** when the output is a log rather than a report.
 
-### main.go boilerplate across 14 services
+### main.go boilerplate (historical, post-ADR 025 mostly absorbed)
+
+**Status:** Post-ADR 025 fusion, most of this was absorbed. There are
+now only 2 Go main.go files: `services/app/cmd/main.go` (the monolith)
+and `services/erp/cmd/main.go` (erp standalone, pending fusion). The
+original "14 services × ~300-400 LOC" pattern below describes the
+pre-fusion state and is kept for historical reference to the kind of
+waste that consolidation removed.
 
 Each service's `cmd/main.go` duplicates ~300–400 LOC of config load, DB pool, NATS
 connect, health, middleware wire, server start. This is the single largest

@@ -135,7 +135,7 @@ Apply the invariant checklist for each scope the diff touches. Do not skip.
   Fix: reject unsigned tokens; assert alg in {EdDSA}.
 
 ### Critical (N)
-- [security, tenant-isolation] services/chat/handler.go:118 — list endpoint omits tenant_id.
+- [security, tenant-isolation] services/app/internal/realtime/chat/handler/chat.go:118 — list endpoint omits tenant_id.
   Fix: use ListChatsByTenant, add two-tenant integration test.
 
 ### High (N)
@@ -148,7 +148,7 @@ Apply the invariant checklist for each scope the diff touches. Do not skip.
 - …
 
 ### Simplicity wins
-- services/chat/service.go:60 — two helpers unused once the branch collapses.
+- services/app/internal/realtime/chat/service/chat.go:60 — two helpers unused once the branch collapses.
   Drop them; net -40 LOC, same behavior.
 
 ### Waivers

@@ -6,8 +6,9 @@ description: Use when touching the Histrix → SDA migration pipeline (tools/cli
 # migration-health
 
 Scope: the migration pipeline (`tools/cli/internal/migration/`,
-`tools/cli/cmd/migrate_legacy.go`, `services/app/db/migrations/`),
-and the live `erp_migration_*` tables on the workstation.
+`tools/cli/cmd/migrate_legacy.go`), the tenant migrations at
+`db/tenant/migrations/` that create the `erp_*` schema, and the
+live `erp_migration_*` tables on the workstation.
 
 ## The two hard invariants (Phase 0, ADR 027)
 

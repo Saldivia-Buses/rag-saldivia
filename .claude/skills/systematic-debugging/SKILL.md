@@ -122,10 +122,11 @@ goroutine count visible in pprof never goes down.
 rg -nB1 "go func\(" services/ -g '!*_test.go'
 ```
 
-Audited offenders: `services/healthwatch/internal/service/healthwatch.go:280`,
-`services/feedback/internal/service/aggregator.go:43`,
-`services/chat/cmd/main.go:98`,
-`services/ingest/internal/service/extractor_consumer.go:83`,
+Audited offenders (paths post-ADR 025 fusion):
+`services/app/internal/ops/healthwatch/service/healthwatch.go:280`,
+`services/app/internal/core/feedback/service/aggregator.go:43`,
+`services/app/cmd/main.go` (chat main absorbed),
+`services/app/internal/rag/ingest/service/extractor_consumer.go:83`,
 `services/erp/internal/handler/analytics.go:868`.
 
 ### `panic()` in a request path
@@ -138,8 +139,9 @@ always the same: return an `httperr` typed error.
 rg -n "panic\(" services/ -g '!*_test.go'
 ```
 
-Audited offenders: `services/ingest/internal/service/documents.go:38`,
-`services/bigbrother/internal/scanner/stub.go:34`.
+Audited offenders (paths post-ADR 025 fusion):
+`services/app/internal/rag/ingest/service/documents.go:38`,
+`services/app/internal/ops/bigbrother/scanner/stub.go:34`.
 
 ### Tenant-residual as a debugging clue
 

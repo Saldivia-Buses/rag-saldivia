@@ -109,12 +109,12 @@ In production: each tenant deployment runs its own migrations as part of the
 ### Two migration trees (ADR 022 violation)
 
 The codebase still has `db/platform/migrations/` + `db/tenant/migrations/` (10+
-files each) plus a per-service `services/bigbrother/db/migrations/`. Under the
-silo model there is **one** tree per deployment. Target:
+files each). Post-ADR 025 fusion, the bigbrother migrations that used to live
+at `services/bigbrother/db/migrations/` were folded into the main tenant tree
+(now `db/tenant/migrations/013_bigbrother.up.sql` + `053_bigbrother_permissions.up.sql`).
+Under the silo model there is still **one** tree per deployment target:
 
 - Collapse `db/platform/` + `db/tenant/` into `db/migrations/` as a single sequence.
-- Move `services/bigbrother/db/migrations/` into the main tree (or make it clear
-  which deployments apply it).
 - Drop the `PLATFORM_TENANT_SLUG=platform` hack in compose envs.
 
 Migration pairs are currently well-maintained (no broken pairs detected). **Keep

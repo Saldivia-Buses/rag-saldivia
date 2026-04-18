@@ -145,7 +145,8 @@ Histrix. Typical flows:
   stream to stdout, pipe through SSH to the SDA workstation or your laptop.
   Never leave a dump file on the legacy server.
 - **Schema drift checks:** diff the Histrix schema against the columns
-  `services/ingest` expects. Record any drift as an ADR or a plan entry.
+  `services/app/internal/rag/ingest` + the migration-health invariants expect.
+  Record any drift as an ADR or a plan entry.
 
 Any time Histrix credentials are about to leave the user's hands (e.g. you're
 about to include them in a command), **pause and confirm**. This is the

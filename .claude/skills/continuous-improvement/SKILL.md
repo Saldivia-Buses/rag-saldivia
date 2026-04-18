@@ -208,7 +208,7 @@ measure progress objectively.
 |---|---|---|---|
 | Tenant-awareness residual (ADR 022) | `rg -c "tenant_id\|pkg/tenant\|TenantSlug" services/ pkg/` | **Delete on sight.** | **~2,480 hits** |
 | Dead `pkg/*` (0 importers) | `for p in pkg/*/; do n=$(basename $p); c=$(rg -l "pkg/$n" services/ pkg/ \| grep -v "/$n/" \| wc -l); echo "$n $c"; done \| awk '$2==0'` | **Delete.** | 3 confirmed (approval, featureflags, cache) |
-| Main.go boilerplate | diff `services/*/cmd/main.go` pairwise | **Extract `pkg/server.Bootstrap`.** | 14 services, ~300-400 LOC dup each |
+| Main.go boilerplate | diff `services/*/cmd/main.go` pairwise | **Extract `pkg/server.Bootstrap` — remaining: erp.** | Post-ADR 025: 2 main.go left (app, erp); erp fusion retires the last one |
 | `panic()` in request paths | `rg -n "panic\(" services/ -g '!*_test.go'` | **Replace with httperr.** | 2 confirmed |
 | Goroutines without shutdown | `rg -nB1 "go func\(" services/ -g '!*_test.go'` | **Add ctx + select.** | 6 confirmed |
 | Client-side fetching on auth routes | `rg -n 'useEffect.*fetch\|useQuery.*fetch' apps/web/src/app/\(core\)` | **Move to Server Component.** | — |
