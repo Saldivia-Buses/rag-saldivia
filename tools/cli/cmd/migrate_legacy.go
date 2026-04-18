@@ -371,6 +371,24 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 		migration.NewProductionOrderMigrator(mysqlDB, tenantID),
 	)
 
+	// Phase 4b: Tools (HERRAMIENTAS + HERRMOVS → erp_tools + erp_tool_movements).
+	// Pareto #4 of the Phase 1 §Data migration gap post-2.0.9 (~400 K rows
+	// combined). Despite the "herramientas" naming, HERRAMIENTAS is the
+	// serialized inventory tag ledger (389 K items received with per-unit
+	// barcode codes); HERRMOVS is the lending ledger (11.6 K check-out /
+	// return entries). HERRAMIENTAS must run first so the AfterTableHook
+	// can build the tools code index before HERRMOVS resolves its
+	// tool_code → erp_tools.id.
+	orch.RegisterMigrators(
+		migration.NewToolMigrator(mysqlDB, tenantID),
+	)
+	orch.AddAfterTableHook("HERRAMIENTAS", func(ctx context.Context, mapper *migration.Mapper) error {
+		return mapper.BuildCodeIndex(ctx, "tools", "erp_tools", "code")
+	})
+	orch.RegisterMigrators(
+		migration.NewToolMovementMigrator(mysqlDB, tenantID),
+	)
+
 	// Phase 5: HR (depends on entities)
 	orch.RegisterMigrators(
 		migration.NewEmployeeDetailMigrator(mysqlDB, tenantID),

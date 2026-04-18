@@ -1,21 +1,25 @@
-# Next session — Phase 1 §Data migration: Pareto #4 (HERRAMIENTAS cluster 237 K)
+# Next session — Phase 1 §Data migration: Pareto #5 (STKINSPR 180 K + friends)
 
-La sesión anterior (2.0.10) cerró Pareto #3 en un PR:
+La sesión anterior (2.0.10) cerró Pareto #3 y #4 en un PR:
 
 - **CTBREGIS** (604,579 filas live — el scrape estimaba 572,076) migrada
   vía `NewAccountingRegisterMigrator` → nueva tabla
   `erp_accounting_registers` (migración `071`). `account_id` resuelto vía
-  el code-index `accounting/erp_accounts/code` (91.2 % match — 551,110
-  filas; 8.8 % orphan mantiene `account_id NULL` y `account_code`
-  preservado). `reg_date` `NULL` para 8 filas zero-date. No es waiver:
-  la xml-form scrape confirmó 59 referencias vivas en libro_diario,
-  proveedores_loc, clientes_local, ordenpago, iva, bancos_local,
-  anulaciones, estadisticas — y `CTB_DETALLES.ctbregis_id` sigue siendo
-  FK viva del flow nuevo hacia el log legacy.
+  code-index accounting (91.2 % match; 8.8 % orphan con `account_id NULL`
+  + `account_code` preservado).
+- **HERRAMIENTAS** (389,253) + **HERRMOVS** (11,680) migradas vía
+  `NewToolMigrator` + `NewToolMovementMigrator` → nuevas tablas
+  `erp_tools` + `erp_tool_movements` (migración `072`). Discovery: pese
+  al naming, HERRAMIENTAS **no es catálogo de herramientas de taller**
+  sino **ledger de tags serializados de inventario** (1 fila = 1 unidad
+  física recibida con barcode único). HERRMOVS es ledger de préstamos
+  (empleados retiran / devuelven / rompen items). CONCHERR (enum 4
+  filas) inlineado como `concept_code SMALLINT`. Mantiene naming
+  "Herramientas" para parity con menú Histrix.
 
-Post-2.0.10 el gap Phase 1 §Data migration quedó en **307 tablas /
-≈ 1.47 M filas** (7.7 % del total Histrix). Las 107 tablas cubiertas son
-ya **72 %** del volumen total.
+Post-2.0.10 el gap Phase 1 §Data migration quedó en **305 tablas /
+≈ 1.07 M filas** (5.6 % del total Histrix). Las 109 tablas cubiertas
+son ya **74 %** del volumen total.
 
 Arrancás con PR de 2.0.10 **mergeable** al cerrar la sesión. Si no se
 mergea solo, cerrar el ciclo (ver §"Pre-work si 2.0.10 sigue abierto"
@@ -38,24 +42,24 @@ SDA reemplaza Histrix. El empleado abre SDA y:
 | Segment | Tablas | Filas |
 |---|---:|---:|
 | Histrix total | 675 | 18.94 M |
-| Cubiertas | 107 | ≈ 13.56 M (**72 %**) |
+| Cubiertas | 109 | ≈ 13.96 M (**74 %**) |
 | Waiver masivo (W-004/005/006) | 261 | 3.91 M |
-| **Gap remaining** | **307** | **≈ 1.47 M (7.7 %)** |
+| **Gap remaining** | **305** | **≈ 1.07 M (5.6 %)** |
 
 **Top uncovered post-2.0.10** (row volume):
 
 | Rank | Tabla | Rows (approx) | Cum % del gap |
 |---:|---|---:|---:|
-| 1 | **HERRAMIENTAS** | 225,355 | **15.4 %** |
-| 2 | STKINSPR | 180,412 | 27.7 % |
-| 3 | PRODUCTO_ATRIB_VALORES | 153,835 | 38.2 % |
-| 4 | PROD_CONTROL_HOMOLOG | 105,683 | 45.4 % |
-| 5 | STK_COSTO_HIST | 95,217 | 51.9 % |
-| 6 | BCS_IMPORTACION | 84,492 | 57.6 % |
-| 7 | EGX300EPE | 79,040 | 63.0 % |
-| 8 | REG_MOVIMIENTO_OBS | 72,737 | 67.9 % |
-| 9 | REG_CUENTA_CALIFICACION | 58,960 | 71.9 % |
-| 10 | TEL_LOG | 34,885 | 74.3 % |
+| 1 | **STKINSPR** | 180,412 | **16.9 %** |
+| 2 | PRODUCTO_ATRIB_VALORES | 153,835 | 31.3 % |
+| 3 | PROD_CONTROL_HOMOLOG | 105,683 | 41.2 % |
+| 4 | STK_COSTO_HIST | 95,217 | 50.1 % |
+| 5 | BCS_IMPORTACION | 84,492 | 58.0 % |
+| 6 | EGX300EPE | 79,040 | 65.4 % |
+| 7 | REG_MOVIMIENTO_OBS | 72,737 | 72.2 % |
+| 8 | REG_CUENTA_CALIFICACION | 58,960 | 77.8 % |
+| 9 | TEL_LOG | 34,885 | 81.0 % |
+| 10 | COTIZOPMOVIM | 28,626 | 83.7 % |
 
 Reproducer completo al final de `docs/parity/data-migration.md`.
 
@@ -77,72 +81,44 @@ ssh sistemas@srv-ia-01 "cd /opt/saldivia/repo && git pull origin main"
 # Verificar: git rev-parse origin/main == git rev-parse HEAD en workstation.
 ```
 
-Memoria: `feedback_version_tagging.md`. Incluir en release body la
-sección 2.0.10 (Pareto #3 CTBREGIS) con métricas.
+Memoria: `feedback_version_tagging.md`. Release body incluye ambas
+sections: Pareto #3 CTBREGIS + Pareto #4 HERRAMIENTAS/HERRMOVS.
 
-## Tarea principal — Pareto #4: HERRAMIENTAS + HERRMOVS (~237 K filas)
+## Tarea principal — Pareto #5: STKINSPR (180 K)
 
 **Skills primarios:** `htx-parity` + `migration-health` + `database` +
-`decisions` (nuevo dominio) + `backend-go`.
+`backend-go`.
 
 ### Contexto de negocio
 
-Cluster de herramientas de taller (workshop tools):
-- `HERRAMIENTAS` (225 K filas) — catálogo de herramientas (items,
-  características, estado).
-- `HERRMOVS` (11 K filas) — movimientos (préstamo/devolución, asignación
-  a empleado/coche, historial).
-
-El cluster es un **dominio SDA nuevo** — no existe `erp_tools_*`
-todavía. La pregunta clave es si se crea:
-- (A) **`erp_tools` + `erp_tool_movements`** — dominio dedicado.
-- (B) Se fuerza en `erp_stock` como categoría especial — probablemente
-  peor: "herramienta prestada a coche 134 por 3 días" no encaja en
-  stock movements.
-
-Requiere **ADR corto** antes del migrator (al estilo ADR 023/024 —
-nuevo dominio lateral). `decisions` skill.
+STKINSPR (180,412 filas) es probablemente **stock inspection** — algún
+tipo de control de calidad / inspección al recibir mercadería. Hay que
+leer XML-forms para confirmar.
 
 ### Arranque recomendado
 
 1. **XML-form inventory**:
    ```bash
-   grep -rlE "HERRAMIENTAS|HERRMOVS" .intranet-scrape/xml-forms/ | \
-     xargs -n1 dirname | sort -u
+   grep -rlE "STKINSPR\b" .intranet-scrape/xml-forms/ | head -20
    ```
-   Esperable: `taller/`, `herramientas/`, `coches/`. Leer
-   `herramientas*.xml` para ver qué dimensiones soporta la UI Histrix.
+   Áreas probables: `almacen/`, `recepcion/`, `calidad/`, `controlcalidad/`.
 
 2. **DB shape en Histrix live**:
    ```sql
-   DESCRIBE HERRAMIENTAS;
-   DESCRIBE HERRMOVS;
-   SELECT COUNT(*) FROM HERRAMIENTAS;
-   SELECT COUNT(*) FROM HERRMOVS;
-   -- FK discovery
-   SELECT DISTINCT tipomov FROM HERRMOVS LIMIT 20;
-   -- orphan check
-   SELECT COUNT(*) FROM HERRMOVS m LEFT JOIN HERRAMIENTAS h
-     ON h.id_herramienta = m.herramienta_id WHERE h.id_herramienta IS NULL;
+   DESCRIBE STKINSPR;
+   SELECT COUNT(*) FROM STKINSPR;
+   -- FKs (artcod? siscod? id_alguna_cosa?)
+   SELECT * FROM STKINSPR LIMIT 5;
    ```
 
-3. **Borrador de ADR `028_tools_domain.md`** — una página:
-   - Tables nuevas y rationale de dominio separado.
-   - FKs a `erp_entities` (empleados prestatarios) y/o
-     `erp_maintenance_assets` (vehículos que reciben herramientas).
-   - RLS + permisos (`erp.tools.read` / `erp.tools.write`).
+3. **Decisión de dominio**: casi seguro extiende `erp_stock` existente
+   (`erp_stock_inspections`?) — no requiere ADR nuevo. Migración `073`.
 
-4. **Migrator**: mismo patrón que CTBREGIS — reader en
-   `tools/cli/internal/legacy/stock.go` (o nuevo archivo), migrator en
-   `migrators_plan21b.go` bajo "Phase 4b — Tools". Migración `072` en
-   `db/tenant/migrations/`.
+### Tarea secundaria — PRODUCTO_ATRIB_VALORES (154 K)
 
-### Tarea secundaria (si Pareto #4 cierra con tiempo) — STKINSPR
-
-**STKINSPR** (180 K filas) — inspección de stock. Posible extensión de
-`erp_stock` existente o nueva tabla `erp_stock_inspections`. Ver
-`.intranet-scrape/xml-forms/stock/` primero. Menos ambigüedad de dominio
-que HERRAMIENTAS (probablemente fila suelta en el dominio stock).
+Atributos de productos — probablemente extension de `erp_articles` con
+key-value. Si cierra limpio junto con STKINSPR, +334 K filas en el PR
+(31 % del gap).
 
 ## Trampas conocidas (heredadas de 2.0.10)
 
@@ -150,6 +126,12 @@ que HERRAMIENTAS (probablemente fila suelta en el dominio stock).
   query `.sql`, regenerá, extraé SOLO los blocks nuevos, revertí con
   `git checkout services/erp/internal/repository/`, appendeá a mano.
   Memoria `feedback_sqlc_version_drift`.
+
+- **Live count vs scrape estimate** — el Pareto usa
+  `information_schema.table_rows` (estimate). CTBREGIS en 2.0.10
+  creció 5.7 % vs scrape; HERRAMIENTAS creció 73 %. Confirmá
+  COUNT(*) live antes de escribir la Phase 0 invariant en el commit.
+  Memoria `feedback_live_count_vs_scrape_estimate`.
 
 - **Phase 0 invariants** — religion. `rows_read = rows_written +
   rows_skipped + rows_duplicate` **y** NO completar con
@@ -162,7 +144,7 @@ que HERRAMIENTAS (probablemente fila suelta en el dominio stock).
   fresco (psql `:'var'`, cross-DB INSERT, LANGUAGE sql forward-ref).
   Memoria `feedback_migration_cold_start`.
 
-- **Numeración migration** — 2.0.10 dejó `071`. Next libre: **072**.
+- **Numeración migration** — 2.0.10 dejó `072`. Next libre: **073**.
 
 - **Histrix access requiere VPN activa en Windows**. Pattern
   docker+sshpass en `reference_histrix_access.md`. Passwords:
@@ -188,11 +170,11 @@ que HERRAMIENTAS (probablemente fila suelta en el dominio stock).
 
 ## Cierre esperado
 
-- **Mínimo** (HERRAMIENTAS solo): +225 K filas cubiertas, gap baja a
-  306 tablas / ≈ 1.24 M filas. PR con ADR 028 + migrator.
-- **Ideal** (HERRAMIENTAS + HERRMOVS + STKINSPR): +417 K filas
-  cubiertas, gap baja a 304 tablas / ≈ 1.05 M filas. Cumulative 79 %
-  covered de Histrix.
+- **Mínimo** (STKINSPR solo): +180 K filas cubiertas, gap baja a 304
+  tablas / ≈ 886 K filas.
+- **Ideal** (STKINSPR + PRODUCTO_ATRIB_VALORES + PROD_CONTROL_HOMOLOG):
+  +440 K filas cubiertas, gap baja a 302 tablas / ≈ 626 K filas
+  (3.3 % del total Histrix). Cumulative coverage ~77 %.
 
 Post-PR: `gh pr create --base main --head 2.0.11` y tras merge,
 `git pull` en la workstation para volver a cerrar drift + tag +

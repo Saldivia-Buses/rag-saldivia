@@ -1966,3 +1966,42 @@ type ErpAccountingRegister struct {
 	PhysicalUnits      pgtype.Numeric     `json:"physical_units"`
 	CreatedAt          pgtype.Timestamptz `json:"created_at"`
 }
+
+type ErpTool struct {
+	ID                pgtype.UUID        `json:"id"`
+	TenantID          string             `json:"tenant_id"`
+	LegacyID          int64              `json:"legacy_id"`
+	Code              string             `json:"code"`
+	ArticleCode       string             `json:"article_code"`
+	ArticleID         pgtype.UUID        `json:"article_id"`
+	InventoryCode     string             `json:"inventory_code"`
+	Name              string             `json:"name"`
+	Characteristic    string             `json:"characteristic"`
+	GroupCode         int16              `json:"group_code"`
+	ToolType          int16              `json:"tool_type"`
+	StatusCode        int32              `json:"status_code"`
+	PurchaseOrderNo   int32              `json:"purchase_order_no"`
+	PurchaseOrderDate pgtype.Date        `json:"purchase_order_date"`
+	DeliveryNoteDate  pgtype.Date        `json:"delivery_note_date"`
+	DeliveryNotePost  int32              `json:"delivery_note_post"`
+	DeliveryNoteNo    int32              `json:"delivery_note_no"`
+	SupplierCode      int32              `json:"supplier_code"`
+	PendingOc         pgtype.Numeric     `json:"pending_oc"`
+	Observation       string             `json:"observation"`
+	ManufactureNo     int32              `json:"manufacture_no"`
+	GeneratedAt       pgtype.Timestamptz `json:"generated_at"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpToolMovement struct {
+	ID           pgtype.UUID        `json:"id"`
+	TenantID     string             `json:"tenant_id"`
+	LegacyID     int64              `json:"legacy_id"`
+	ToolID       pgtype.UUID        `json:"tool_id"`
+	ToolCode     string             `json:"tool_code"`
+	UserCode     string             `json:"user_code"`
+	Quantity     int32              `json:"quantity"`
+	MovementDate pgtype.Date        `json:"movement_date"`
+	ConceptCode  int16              `json:"concept_code"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+}

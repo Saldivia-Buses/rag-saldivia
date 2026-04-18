@@ -2371,6 +2371,144 @@ func NewHomologationRevisionLineMigrator(db *sql.DB, tenantID string) *GenericMi
 }
 
 // ============================================================================
+// Phase 4b — Tools / serialized inventory (HERRAMIENTAS + HERRMOVS)
+// ============================================================================
+
+// NewToolMigrator migrates HERRAMIENTAS → erp_tools. Pareto #4 of the
+// Phase 1 §Data migration gap post-2.0.9 (389,253 rows live, ~15 % of
+// remaining uncovered row volume).
+//
+// Despite the "herramientas" name, the table is the serialized inventory
+// tag ledger — one row per physical item, each with a unique code stamped
+// on it. Live XML-form scrape shows it consumed across recepcion/,
+// almacen/, herramientas/, mantenimiento/, help_local/. Keeps Histrix
+// naming (erp_tools / erp_tool_movements) for operational parity.
+//
+// Resolution: article_id via the stock domain's default-subsystem lookup
+// (same pattern as HomologationRevisionLine). Rows whose artcod isn't in
+// the current catalog migrate with article_id NULL and article_code
+// preserved.
+//
+// Phase 0 invariant: rows_read = rows_written + rows_skipped + 0
+// duplicate. Skips: id_etiqueta == 0 (defensive — AI PK).
+func NewToolMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.ToolReader(db)
+	return &GenericMigrator{
+		reader: reader,
+		columns: []string{
+			"id", "tenant_id", "legacy_id", "code",
+			"article_code", "article_id", "inventory_code", "name",
+			"characteristic", "group_code", "tool_type", "status_code",
+			"purchase_order_no", "purchase_order_date",
+			"delivery_note_date", "delivery_note_post", "delivery_note_no",
+			"supplier_code", "pending_oc", "observation", "manufacture_no",
+			"generated_at",
+		},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_etiqueta")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			toolCode := strings.TrimSpace(row.String("id_herramienta"))
+
+			var articleID *uuid.UUID
+			artCode := strings.TrimSpace(row.String("artcod"))
+			if artCode != "" {
+				artLegacyID := int64(hashCode(articleCompositeCode(artCode, "")))
+				if resolved, rerr := mapper.ResolveOptional(ctx, "stock", "STK_ARTICULOS", artLegacyID); rerr == nil && resolved != uuid.Nil {
+					articleID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "tools", "HERRAMIENTAS", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			ocpDate := SafeDate(timeFromRow(row, "ocpfec"))
+			remDate := SafeDate(timeFromRow(row, "remfec"))
+			generated := SafeDate(timeFromRow(row, "generada"))
+
+			return []any{
+				id, tenantID, legacyID, toolCode,
+				artCode, articleID,
+				strings.TrimSpace(row.String("invcod")),
+				strings.TrimSpace(row.String("nomherr")),
+				strings.TrimSpace(row.String("caract")),
+				int16(row.Int("grucod")),
+				int16(row.Int("tipoherr")),
+				int32(row.Int("codest")),
+				int32(row.Int("ocpnro")),
+				ocpDate,
+				remDate,
+				int32(row.Int("remnpv")),
+				int32(row.Int("remnro")),
+				int32(row.Int("ctacod")),
+				ParseDecimal(row.Decimal("pendiente_oc")),
+				strings.TrimSpace(row.String("observacion")),
+				int32(row.Int("nrofab")),
+				generated,
+			}, nil
+		},
+	}
+}
+
+// NewToolMovementMigrator migrates HERRMOVS → erp_tool_movements
+// (11,680 rows live). Lending ledger: employees take out / return /
+// damage / loan tools. concept_code is the raw CONCHERR.movher code
+// (1=Devol. Rotura, 2=Devolucion, 3=A Cargo, 7=Prestamo) — the 4-row
+// lookup is inlined rather than migrated separately.
+//
+// Tool resolution: erp_tools code index (built via AfterTableHook on
+// HERRAMIENTAS). About 13 % of HERRMOVS rows (1,566 of 11,680) don't
+// match because HERRMOVS.id_herramienta sometimes references
+// MANT_EQUIPOS.numero_serie instead — those orphan movements migrate
+// with tool_id NULL and raw tool_code preserved (FICHADAS forensic
+// pattern).
+func NewToolMovementMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.ToolMovementReader(db)
+	return &GenericMigrator{
+		reader: reader,
+		columns: []string{
+			"id", "tenant_id", "legacy_id", "tool_id", "tool_code",
+			"user_code", "quantity", "movement_date", "concept_code",
+		},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_herrmovs")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			toolCode := strings.TrimSpace(row.String("id_herramienta"))
+			var toolID *uuid.UUID
+			if toolCode != "" {
+				if resolved, rerr := mapper.ResolveByCode("tools", "erp_tools", toolCode); rerr == nil && resolved != uuid.Nil {
+					toolID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "tools", "HERRMOVS", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			movDate := SafeDate(timeFromRow(row, "movfec"))
+
+			return []any{
+				id, tenantID, legacyID, toolID, toolCode,
+				strings.TrimSpace(row.String("usuario")),
+				int32(row.Int("cantidad")),
+				movDate,
+				int16(row.Int("movher")),
+			}, nil
+		},
+	}
+}
+
+// ============================================================================
 // Phase 3c — Accounting legacy line log (CTBREGIS)
 // ============================================================================
 
