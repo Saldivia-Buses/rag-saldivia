@@ -43,26 +43,6 @@ CREATE TABLE dead_events_replays (
 
 CREATE INDEX dead_events_replays_dead ON dead_events_replays (dead_event_id, replayed_at);
 
--- DLQ admin permissions (assigned to super_admin by default).
--- `permissions` + `role_permissions` live in the tenant DB
--- (db/tenant/migrations/001_auth_init.up.sql), so this block is a no-op
--- when the file is applied to the platform DB and effective when it is
--- applied to a tenant DB. Split-database silos (ADR 023) never see the
--- tenant tables here; shared-database deployments still get the seed.
-DO $$
-BEGIN
-    IF EXISTS (
-        SELECT 1 FROM information_schema.tables
-        WHERE table_schema = 'public' AND table_name = 'permissions'
-    ) THEN
-        INSERT INTO permissions (id, name, description, category) VALUES
-            ('admin.dlq.read',   'Ver dead events',       'Listar eventos muertos del DLQ',            'admin'),
-            ('admin.dlq.replay', 'Replay dead events',    'Re-publicar eventos muertos al subject original', 'admin'),
-            ('admin.dlq.drop',   'Drop dead events',      'Descartar eventos muertos definitivamente', 'admin')
-        ON CONFLICT (id) DO NOTHING;
-
-        INSERT INTO role_permissions (role_id, permission_id)
-        SELECT 'role-admin', id FROM permissions WHERE id LIKE 'admin.dlq.%'
-        ON CONFLICT DO NOTHING;
-    END IF;
-END $$;
+-- DLQ admin permissions are seeded in the tenant DB by
+-- db/tenant/migrations/064_dlq_admin_permissions.up.sql — keep this
+-- file pure platform DDL per ADR 023's split-database silo model.
