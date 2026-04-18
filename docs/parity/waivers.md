@@ -157,3 +157,61 @@ Phase 0 integrity checks for no benefit.
 **Revisit**: if a forensic need emerges, dump the `*_OLD` rows into
 `erp_legacy_archive` and query there — same shape as the HTXLOG
 archive path in W-004.
+
+## W-006 — zero-row uncovered Histrix tables (bulk waiver)
+
+**Scope**: 225 tables from `.intranet-scrape/db-tables.txt` that have
+no migrator/reader registered AND return `table_rows = 0` from
+`information_schema.tables` on the live Histrix DB (`saldivia` schema
+at `172.22.100.99`, query run 2026-04-18).
+
+The list is pinned in `docs/parity/data-migration.md` (top-of-repo
+reproducer regenerates it against the live DB).
+
+By prefix family, the largest chunks are:
+
+- 22× `STK_*` — abandoned stock subsystems (inspección detail,
+  sub-rubros, parámetros, insumos).
+- 17× `REG_*` — entity-extension tables never populated
+  (certificados, comisiones, contactos grupos, categorías).
+- 11× `GEN_*` — secondary catalogs never seeded beyond the 17 already
+  migrated.
+- 11× `CAJ_*` — treasury parametrization tables (numeradores, formas,
+  conceptos aux) never used on this tenant.
+- 9× `MANT_*` — maintenance subsystem tables (talleres, ajustes, tipos
+  equipo) never populated.
+- 8× `RH_*` — HR extended (cursos plan, docentes) never used.
+- 7× `oauth_*` — Sabre OAuth server tables (library leftover — never
+  configured).
+- 8× calendar/cards tables (`calendars`, `calendarobjects`,
+  `calendarsubscriptions`, `calendarchanges`, `addressbooks`,
+  `addressbookchanges`, `cards`, `principals`) — Sabre CalDAV/CardDAV
+  library leftover.
+- 4× `HtxMailgun*` + assorted lowercase tables (`users`, `groupmembers`,
+  `locks`, `tmp_mac`, `t_d_SwipeRecord`, `replicasql`) — third-party
+  integration leftovers that Histrix ships with but Saldivia never
+  activated.
+- Remaining 130+ — individual dead tables (`VUNIDADES`, `VSTOCK`,
+  various `TIPO*` and unsuffixed legacy variants like `CTBCONCE`,
+  `CTBCUENT`, `CPSMOVIM`, `CARCHE`, `BCSMOVIM`, `CCTMOVIM` —
+  confirming these are the dead-side of the schema reboot captured by
+  W-005 at finer granularity).
+
+**Why**: table_rows = 0 from MySQL's `information_schema` means the
+table is either truly empty or has never had a row (the statistic is
+updated on every write). A 0-row table has no data to migrate. If a
+table was intended to hold data but never got any, that's the feature
+never being used — the parity contract is "don't lose data", not "don't
+lose feature surface that no one ever used".
+
+**Blast radius**: zero row data to lose. Zero risk of corrupting an SDA
+table that a later feature might need: the table shape is still
+discoverable in `.intranet-scrape/db-schema.sql` if a future Phase 1
+feature resurrects one of these subsystems — at which point the cost is
+writing a migrator plus seed data, not data recovery.
+
+**Revisit**: if a later Phase 1 session needs one of these subsystems
+live (e.g. someone decides to activate Sabre calendar, or enable the
+fleet GPS tables), strike that entry from W-006 in the same PR and
+write the migrator + seed. Default answer for a PR that touches a
+W-006 table: either bring rows along with a migrator, or keep it waived.
