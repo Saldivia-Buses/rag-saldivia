@@ -7,6 +7,7 @@ tools:
     endpoint: GET /v1/bigbrother/devices
     protocol: http
     type: read
+    capability: bigbrother.read
     requires_confirmation: false
     description: "Lista dispositivos de la red filtrable por tipo (plc, workstation, server, switch, printer, camera) y estado (online, offline). ADVERTENCIA: output contiene IPs y datos internos de red."
     parameters:
@@ -27,6 +28,7 @@ tools:
     endpoint: GET /v1/bigbrother/devices/{id}
     protocol: http
     type: read
+    capability: bigbrother.read
     requires_confirmation: false
     description: "Detalle completo de un dispositivo: puertos, servicios, OS, hardware, software instalado, registros PLC."
     parameters:
@@ -42,6 +44,7 @@ tools:
     endpoint: GET /v1/bigbrother/devices/{id}/registers
     protocol: http
     type: read
+    capability: bigbrother.plc.read
     requires_confirmation: false
     description: "Lee registros PLC (Modbus/OPC-UA) de un dispositivo. Retorna nombre, direccion, valor actual, tipo de dato. Solo lectura."
     parameters:
@@ -57,6 +60,7 @@ tools:
     endpoint: POST /v1/bigbrother/devices/{id}/exec
     protocol: http
     type: action
+    capability: bigbrother.exec
     requires_confirmation: true
     description: "Ejecuta un comando predefinido en una computadora remota. Solo comandos de la allowlist (system_info, disk_usage, memory, processes, software, network, uptime). Output puede contener datos sensibles de la red interna."
     parameters:
@@ -75,5 +79,6 @@ tools:
     endpoint: GET /v1/bigbrother/stats
     protocol: http
     type: read
+    capability: bigbrother.read
     requires_confirmation: false
     description: "Resumen de la red: cantidad de dispositivos por tipo, cuantos online/offline, ultimo scan."

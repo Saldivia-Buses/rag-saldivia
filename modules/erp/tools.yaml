@@ -9,6 +9,7 @@ tools:
     endpoint: GET /v1/erp/entities
     protocol: http
     type: read
+    capability: erp.entities.read
     requires_confirmation: false
     description: "Buscar clientes, proveedores o empleados. Filtrar por tipo y texto de búsqueda."
     parameters:
@@ -29,6 +30,7 @@ tools:
     endpoint: GET /v1/erp/entities/{id}
     protocol: http
     type: read
+    capability: erp.entities.read
     requires_confirmation: false
     description: "Detalle completo de una entidad: datos, contactos, documentos, notas."
     parameters:
@@ -46,6 +48,7 @@ tools:
     endpoint: GET /v1/erp/accounting/entries
     protocol: http
     type: read
+    capability: erp.accounting.read
     requires_confirmation: false
     description: "Listar asientos contables con filtros de fecha y paginación."
     parameters:
@@ -63,6 +66,7 @@ tools:
     endpoint: GET /v1/erp/accounting/balance
     protocol: http
     type: read
+    capability: erp.accounting.read
     requires_confirmation: false
     description: "Balance de sumas y saldos — debe, haber y saldo por cuenta contable."
 
@@ -71,6 +75,7 @@ tools:
     endpoint: GET /v1/erp/accounting/accounts
     protocol: http
     type: read
+    capability: erp.accounting.read
     requires_confirmation: false
     description: "Plan de cuentas completo. Filtrable por activas/inactivas."
 
@@ -81,6 +86,7 @@ tools:
     endpoint: GET /v1/erp/treasury/movements
     protocol: http
     type: read
+    capability: erp.treasury.read
     requires_confirmation: false
     description: "Movimientos de tesorería: ingresos, egresos, depósitos, retiros, cheques, transferencias."
     parameters:
@@ -95,6 +101,7 @@ tools:
     endpoint: GET /v1/erp/treasury/balance
     protocol: http
     type: read
+    capability: erp.treasury.read
     requires_confirmation: false
     description: "Saldos bancarios actuales: ingresos, egresos y saldo por banco."
 
@@ -103,6 +110,7 @@ tools:
     endpoint: GET /v1/erp/treasury/checks
     protocol: http
     type: read
+    capability: erp.treasury.read
     requires_confirmation: false
     description: "Cheques en cartera: recibidos y emitidos con estado y vencimiento."
 
@@ -113,6 +121,7 @@ tools:
     endpoint: GET /v1/erp/invoicing/invoices
     protocol: http
     type: read
+    capability: erp.invoicing.read
     requires_confirmation: false
     description: "Comprobantes: facturas emitidas y recibidas con tipo, entidad, total y estado."
     parameters:
@@ -132,6 +141,7 @@ tools:
     endpoint: GET /v1/erp/stock/articles
     protocol: http
     type: read
+    capability: erp.stock.read
     requires_confirmation: false
     description: "Buscar artículos por código o nombre. Incluye tipo, costo promedio y estado."
     parameters:
@@ -149,6 +159,7 @@ tools:
     endpoint: GET /v1/erp/stock/levels
     protocol: http
     type: read
+    capability: erp.stock.read
     requires_confirmation: false
     description: "Niveles de stock actuales: cantidad, reservado y disponible por artículo y depósito."
 
@@ -159,6 +170,7 @@ tools:
     endpoint: GET /v1/erp/purchasing/orders
     protocol: http
     type: read
+    capability: erp.purchasing.read
     requires_confirmation: false
     description: "Órdenes de compra con proveedor, total y estado (borrador, aprobada, recibida, etc.)."
     parameters:
@@ -175,6 +187,7 @@ tools:
     endpoint: GET /v1/erp/sales/quotations
     protocol: http
     type: read
+    capability: erp.sales.read
     requires_confirmation: false
     description: "Cotizaciones de venta con cliente, total y estado."
     parameters:
@@ -191,6 +204,7 @@ tools:
     endpoint: GET /v1/erp/accounts/balances
     protocol: http
     type: read
+    capability: erp.accounts.read
     requires_confirmation: false
     description: "Saldos de cuentas corrientes: clientes que nos deben y proveedores a quienes debemos."
 
@@ -199,6 +213,7 @@ tools:
     endpoint: GET /v1/erp/accounts/overdue
     protocol: http
     type: read
+    capability: erp.accounts.read
     requires_confirmation: false
     description: "Facturas vencidas: entidad, número, vencimiento, monto y saldo pendiente."
 
@@ -209,6 +224,7 @@ tools:
     endpoint: GET /v1/erp/production/orders
     protocol: http
     type: read
+    capability: erp.production.read
     requires_confirmation: false
     description: "Órdenes de producción con producto, cantidad, prioridad y estado."
     parameters:
@@ -225,6 +241,7 @@ tools:
     endpoint: GET /v1/erp/analytics/dashboard/kpis
     protocol: http
     type: read
+    capability: authed
     requires_confirmation: false
     description: "KPIs consolidados del negocio: facturación mensual, gastos, saldo, cuentas por cobrar/pagar, OPs activas, stock bajo mínimo, headcount, ausencias, NCs abiertas."
 
@@ -233,6 +250,7 @@ tools:
     endpoint: GET /v1/erp/analytics/accounting/income-expense
     protocol: http
     type: read
+    capability: erp.accounting.read
     requires_confirmation: false
     description: "Reporte de ingresos vs egresos por período. Filtrable por rango de fechas."
     parameters:
@@ -250,6 +268,7 @@ tools:
     endpoint: GET /v1/erp/analytics/treasury/cash-flow
     protocol: http
     type: read
+    capability: erp.treasury.read
     requires_confirmation: false
     description: "Flujo de caja mensual: ingresos vs egresos de tesorería por período."
     parameters:
@@ -267,5 +286,6 @@ tools:
     endpoint: GET /v1/erp/analytics/stock/below-minimum
     protocol: http
     type: read
+    capability: erp.stock.read
     requires_confirmation: false
     description: "Artículos con stock por debajo del mínimo: código, nombre, stock mínimo, actual y déficit."

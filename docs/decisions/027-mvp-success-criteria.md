@@ -58,8 +58,25 @@ that justifies the waiver. The waiver ADR number goes in the item.
       `erp_communication_recipients`, `erp_sequences`, `erp_survey_questions`,
       `erp_unit_photos`, waiver `W-003`). Canonical check now runs green
       against `docs/parity/waivers.md` entries.
-- [ ] **Every agent tool declares a capability** and is rejected at dispatch
-      time when the user lacks the permission. Today: not implemented.
+- [x] **Every agent tool declares a capability** and is rejected at dispatch
+      time when the user lacks the permission. Shipped 2026-04-18 (2.0.7):
+      `Definition.Capability` + `ManifestTool.capability` land in
+      `services/app/internal/rag/agent/tools/`; loader skips (with ERROR log)
+      any tool missing a capability — fail-closed, the LLM never sees it.
+      `Executor.permitted` checks capability against `sdamw.HasPermission`
+      (admin bypass + wildcard match, shared with HTTP `RequirePermission`);
+      `"authed"` sentinel covers chat-wide reads (search_documents,
+      check_job_status, dashboard KPIs). Denials return
+      `Result{Status:"denied"}` to the LLM and write an `agent.tool.denied`
+      audit row; allowed dispatches write `agent.tool.dispatch`. Re-checked
+      on the confirmation path so a user who loses a perm between preview
+      and confirm cannot complete the write. All 28 YAML module tools
+      (erp/bigbrother/fleet) backfilled; 3 core tools backfilled in
+      `cmd/main.go`. Tests: `TestExecute_{Denies_,Admin_Bypasses,Authed_,
+      Unauth_,EmptyCapability_,Wildcard_}*`,
+      `TestExecuteConfirmed_Denies_WhenCapabilityMissing`,
+      `TestExecute_AuditLogger_Records`, `TestExecute_MultiToolIndependence`,
+      `TestLoadModuleTools_MissingCapability_Skipped` — all green.
 - [x] **Workstation SHA == `main` HEAD**. A drift-detect script runs and
       passes. Shipped 2026-04-18 (2.0.7): `make check-prod-drift` target
       compares `/opt/saldivia/repo` HEAD vs `origin/main` and checks that

@@ -6,6 +6,10 @@
 // by in-process backends set via SetSearchBackend / SetIngestBackend.
 // Tools that still target external services (notification, bigbrother, erp)
 // keep going over HTTP via Definition.Endpoint.
+//
+// Every Definition MUST carry a Capability — the RBAC string checked against
+// the user's JWT permissions before dispatch (ADR 027 Phase 0 item 4). Tools
+// legitimately open to any authenticated user declare Capability = "authed".
 package tools
 
 import (
@@ -19,8 +23,16 @@ import (
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
+	"github.com/Camionerou/rag-saldivia/pkg/audit"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	"github.com/Camionerou/rag-saldivia/pkg/tenant"
 )
+
+// CapabilityAuthed is the sentinel Capability value that means
+// "any authenticated user may call this tool". Any other non-empty string
+// is matched against the user's permissions via sdamw.HasPermission, with
+// the admin role bypassing the check.
+const CapabilityAuthed = "authed"
 
 // Result is the output of a tool execution.
 type Result struct {
@@ -38,6 +50,7 @@ type Definition struct {
 	Endpoint             string          `json:"endpoint"` // full URL (unused when an in-process backend handles the tool)
 	Method               string          `json:"method"`   // HTTP method
 	Type                 string          `json:"type"`     // "read" or "action"
+	Capability           string          `json:"capability"` // RBAC string checked at dispatch; CapabilityAuthed for any authed user
 	RequiresConfirmation bool            `json:"requires_confirmation"`
 	Description          string          `json:"description"`
 	Parameters           json.RawMessage `json:"parameters"` // JSON schema
@@ -58,10 +71,11 @@ type IngestBackend interface {
 // Inlined tools (search/ingest) go straight to the registered backend;
 // everything else falls through to HTTP.
 type Executor struct {
-	tools  map[string]Definition
-	client *http.Client
-	search SearchBackend
-	ingest IngestBackend
+	tools    map[string]Definition
+	client   *http.Client
+	search   SearchBackend
+	ingest   IngestBackend
+	auditLog audit.Logger
 }
 
 // NewExecutor creates a tool executor with the given tool definitions.
@@ -85,9 +99,20 @@ func (e *Executor) SetSearchBackend(s SearchBackend) { e.search = s }
 // SetIngestBackend wires the in-process ingest service for ingest tools.
 func (e *Executor) SetIngestBackend(i IngestBackend) { e.ingest = i }
 
+// SetAuditLogger wires an audit.Logger for tool dispatch / denial records.
+// Nil is tolerated — the executor simply skips audit writes. Production
+// wiring in services/app/cmd/main.go always sets a writer; tests that
+// don't care about audit leave it nil.
+func (e *Executor) SetAuditLogger(l audit.Logger) { e.auditLog = l }
+
 // Execute calls a tool by name with the given parameters and JWT.
 // If the tool requires confirmation, returns a pending_confirmation result
 // instead of executing. Call ExecuteConfirmed after user approves.
+//
+// The user's capability is checked before any work: a tool whose Capability
+// the user does not hold returns Result{Status:"denied"} to the LLM and
+// writes an audit entry. Each tool call is evaluated independently — the
+// caller (agent loop) continues with the rest of the turn's tool calls.
 func (e *Executor) Execute(ctx context.Context, jwt, toolName string, params json.RawMessage) (*Result, error) {
 	def, ok := e.tools[toolName]
 	if !ok {
@@ -96,6 +121,15 @@ func (e *Executor) Execute(ctx context.Context, jwt, toolName string, params jso
 			Error:  fmt.Sprintf("unknown tool: %q", toolName),
 		}, nil
 	}
+
+	if !e.permitted(ctx, def) {
+		e.auditDenial(ctx, def)
+		return &Result{
+			Status: "denied",
+			Error:  fmt.Sprintf("forbidden: tool %q requires capability %q", def.Name, def.Capability),
+		}, nil
+	}
+	e.auditDispatch(ctx, def, false)
 
 	if def.RequiresConfirmation {
 		return &Result{
@@ -115,6 +149,8 @@ func (e *Executor) Execute(ctx context.Context, jwt, toolName string, params jso
 // ExecuteConfirmed runs a tool that was previously pending confirmation.
 // The tool MUST have RequiresConfirmation=true — this prevents bypassing
 // the confirmation step by calling ExecuteConfirmed directly on any tool.
+// The capability is re-checked: a user who lost the permission between
+// Execute and ExecuteConfirmed cannot complete the write.
 func (e *Executor) ExecuteConfirmed(ctx context.Context, jwt, toolName string, params json.RawMessage) (*Result, error) {
 	def, ok := e.tools[toolName]
 	if !ok {
@@ -123,10 +159,78 @@ func (e *Executor) ExecuteConfirmed(ctx context.Context, jwt, toolName string, p
 	if !def.RequiresConfirmation {
 		return &Result{Status: "error", Error: fmt.Sprintf("tool %q does not require confirmation", toolName)}, nil
 	}
+
+	if !e.permitted(ctx, def) {
+		e.auditDenial(ctx, def)
+		return &Result{
+			Status: "denied",
+			Error:  fmt.Sprintf("forbidden: tool %q requires capability %q", def.Name, def.Capability),
+		}, nil
+	}
+	e.auditDispatch(ctx, def, true)
+
 	if r, handled := e.executeInProcess(ctx, toolName, params); handled {
 		return r, nil
 	}
 	return e.executeHTTP(ctx, jwt, def, params)
+}
+
+// permitted returns true when the caller identified by ctx is allowed to
+// dispatch the tool. The rules:
+//
+//   - Empty Capability → never allowed. Load-time validation should have
+//     skipped such a tool; this is the belt to the loader's suspenders.
+//   - Caller must have a user identity (JWT-populated UserID in ctx).
+//   - Capability == CapabilityAuthed → any authed user.
+//   - Otherwise → sdamw.HasPermission (admin bypass + wildcard match).
+func (e *Executor) permitted(ctx context.Context, def Definition) bool {
+	if def.Capability == "" {
+		return false
+	}
+	if sdamw.UserIDFromContext(ctx) == "" {
+		return false
+	}
+	if def.Capability == CapabilityAuthed {
+		return true
+	}
+	return sdamw.HasPermission(ctx, def.Capability)
+}
+
+func (e *Executor) auditDispatch(ctx context.Context, def Definition, confirmed bool) {
+	if e.auditLog == nil {
+		return
+	}
+	details := map[string]any{
+		"capability": def.Capability,
+		"tool_type":  def.Type,
+	}
+	if confirmed {
+		details["confirmed"] = true
+	}
+	e.auditLog.Write(ctx, e.entry(ctx, "agent.tool.dispatch", def.Name, details))
+}
+
+func (e *Executor) auditDenial(ctx context.Context, def Definition) {
+	if e.auditLog == nil {
+		return
+	}
+	details := map[string]any{
+		"capability": def.Capability,
+		"reason":     "capability_missing",
+		"tool_type":  def.Type,
+	}
+	e.auditLog.Write(ctx, e.entry(ctx, "agent.tool.denied", def.Name, details))
+}
+
+func (e *Executor) entry(ctx context.Context, action, resource string, details map[string]any) audit.Entry {
+	ti, _ := tenant.FromContext(ctx)
+	return audit.Entry{
+		TenantID: ti.ID,
+		UserID:   sdamw.UserIDFromContext(ctx),
+		Action:   action,
+		Resource: resource,
+		Details:  details,
+	}
 }
 
 // executeInProcess handles the subset of tools that have a registered backend.

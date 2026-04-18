@@ -162,7 +162,7 @@ func main() {
 
 	ingestSvc := wireIngest(ctx, app, r, tenantPool, nc, publicKey, blacklist, tenantSlug)
 	searchSvc := wireSearch(r, tenantPool, publicKey, blacklist)
-	wireAgent(r, nc, publicKey, blacklist, searchSvc, ingestSvc)
+	wireAgent(r, nc, tenantPool, publicKey, blacklist, searchSvc, ingestSvc)
 
 	wireNotification(ctx, app, r, tenantPool, platformPool, nc, publicKey, blacklist)
 	chatSvc := wireChat(r, tenantPool, publicKey, blacklist, tenantSlug)
@@ -568,7 +568,7 @@ func (b ingestBackend) ListJobs(ctx context.Context, userID string, limit int) (
 // the SearchBackend / IngestBackend wired here; module tools and cross-module
 // tools (notification, bigbrother, erp) still ride HTTP.
 func wireAgent(
-	r chi.Router, nc *nats.Conn,
+	r chi.Router, nc *nats.Conn, tenantPool *pgxpool.Pool,
 	publicKey ed25519.PublicKey, blacklist *security.TokenBlacklist,
 	searchSvc *searchservice.Search, ingestSvc *ingestservice.Ingest,
 ) {
@@ -585,14 +585,20 @@ func wireAgent(
 
 	// Core tools. Endpoint is a placeholder for the inlined ones — the
 	// executor dispatches to SearchBackend / IngestBackend instead.
+	// Capability is mandatory (ADR 027 Phase 0 item 4); "authed" means
+	// "any authed user" (search + job listing), ingest.write gates the
+	// upload action tool.
 	toolDefs := []agenttools.Definition{
 		{Name: "search_documents", Service: "search", Type: "read",
+			Capability:  agenttools.CapabilityAuthed,
 			Description: "Search through document trees to find relevant sections. Returns text with citations.",
 			Parameters:  json.RawMessage(`{"type":"object","required":["query"],"properties":{"query":{"type":"string","description":"the search query"},"collection_id":{"type":"string","description":"optional collection filter"},"max_nodes":{"type":"integer","description":"max tree nodes to select"}}}`)},
 		{Name: "create_ingest_job", Service: "ingest", Type: "action", RequiresConfirmation: true,
+			Capability:  "ingest.write",
 			Description: "Upload and process a new document into the knowledge base.",
 			Parameters:  json.RawMessage(`{"type":"object","required":["file_name","collection"],"properties":{"file_name":{"type":"string","description":"name of the file"},"collection":{"type":"string","description":"target collection"}}}`)},
 		{Name: "check_job_status", Service: "ingest", Type: "read",
+			Capability:  agenttools.CapabilityAuthed,
 			Description: "List document ingestion jobs and their statuses.",
 			Parameters:  json.RawMessage(`{"type":"object","properties":{"job_id":{"type":"string","description":"optional job ID filter"}}}`)},
 	}
@@ -615,6 +621,7 @@ func wireAgent(
 	executor := agenttools.NewExecutor(toolDefs)
 	executor.SetSearchBackend(searchBackend{svc: searchSvc})
 	executor.SetIngestBackend(ingestBackend{svc: ingestSvc})
+	executor.SetAuditLogger(audit.NewWriter(tenantPool))
 
 	schemas := make([]agentllm.ToolSchema, len(toolDefs))
 	for i, d := range toolDefs {

@@ -75,25 +75,33 @@ func UserEmailFromContext(ctx context.Context) string {
 func RequirePermission(permission string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			role := RoleFromContext(r.Context())
-
-			// Admin bypasses all permission checks
-			if role == "admin" {
+			if HasPermission(r.Context(), permission) {
 				next.ServeHTTP(w, r)
 				return
 			}
-
-			perms := PermissionsFromContext(r.Context())
-			for _, p := range perms {
-				if matchPermission(p, permission) {
-					next.ServeHTTP(w, r)
-					return
-				}
-			}
-
 			writeJSONError(w, http.StatusForbidden, "insufficient permissions")
 		})
 	}
+}
+
+// HasPermission returns true when the context's identity satisfies the given
+// permission. Admin role bypasses the check. Same wildcard semantics as
+// RequirePermission ("erp.accounting.*" satisfies "erp.accounting.read",
+// bare "*" satisfies everything).
+//
+// Non-HTTP callers (agent tool dispatcher, NATS consumers, background
+// agents) use this to share a single RBAC implementation with the HTTP
+// middleware.
+func HasPermission(ctx context.Context, permission string) bool {
+	if RoleFromContext(ctx) == "admin" {
+		return true
+	}
+	for _, p := range PermissionsFromContext(ctx) {
+		if matchPermission(p, permission) {
+			return true
+		}
+	}
+	return false
 }
 
 // RequireModule returns middleware that checks if the request's tenant has

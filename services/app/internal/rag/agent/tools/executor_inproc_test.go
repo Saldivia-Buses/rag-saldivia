@@ -36,13 +36,14 @@ func (f *fakeIngest) ListJobs(_ context.Context, userID string, limit int) (any,
 
 func TestExecute_SearchBackend_Hit(t *testing.T) {
 	t.Parallel()
-	defs := []Definition{{Name: "search_documents", Service: "search", Type: "read"}}
+	defs := []Definition{{Name: "search_documents", Service: "search", Type: "read", Capability: CapabilityAuthed}}
 	exec := NewExecutor(defs)
 
 	sb := &fakeSearch{ret: map[string]any{"query": "q", "selections": []any{}}}
 	exec.SetSearchBackend(sb)
 
-	got, err := exec.Execute(context.Background(), "tok", "search_documents",
+	ctx := sdamw.WithUserID(context.Background(), "user-1")
+	got, err := exec.Execute(ctx, "tok", "search_documents",
 		json.RawMessage(`{"query":"q","collection_id":"c","max_nodes":3}`))
 	if err != nil {
 		t.Fatalf("execute: %v", err)
@@ -62,11 +63,12 @@ func TestExecute_SearchBackend_Hit(t *testing.T) {
 
 func TestExecute_SearchBackend_Error(t *testing.T) {
 	t.Parallel()
-	defs := []Definition{{Name: "search_documents", Type: "read"}}
+	defs := []Definition{{Name: "search_documents", Type: "read", Capability: CapabilityAuthed}}
 	exec := NewExecutor(defs)
 	exec.SetSearchBackend(&fakeSearch{err: errors.New("boom")})
 
-	got, _ := exec.Execute(context.Background(), "tok", "search_documents",
+	ctx := sdamw.WithUserID(context.Background(), "user-1")
+	got, _ := exec.Execute(ctx, "tok", "search_documents",
 		json.RawMessage(`{"query":"q"}`))
 	if got.Status != "error" {
 		t.Fatalf("status = %q, want error", got.Status)
@@ -75,7 +77,7 @@ func TestExecute_SearchBackend_Error(t *testing.T) {
 
 func TestExecute_IngestBackend_Hit(t *testing.T) {
 	t.Parallel()
-	defs := []Definition{{Name: "check_job_status", Service: "ingest", Type: "read"}}
+	defs := []Definition{{Name: "check_job_status", Service: "ingest", Type: "read", Capability: CapabilityAuthed}}
 	exec := NewExecutor(defs)
 
 	ib := &fakeIngest{ret: []any{map[string]any{"id": "job-1", "status": "ready"}}}
