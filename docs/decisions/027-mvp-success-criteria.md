@@ -261,11 +261,15 @@ that justifies the waiver. The waiver ADR number goes in the item.
   today).
 - Identify the top-20 ERP write actions from Histrix audit logs for the
   Phase 2 chat-coverage item.
-- Wire the monolith `app` service into `deploy/docker-compose.prod.yml`.
-  Dev is wired (branch 2.0.7, `services/app/Dockerfile` +
-  `docker-compose.dev.yml` `app` service under profile `full`, running
-  on the workstation). Prod needs the secrets scaffolding modelled after
-  `services/erp` in `docker-compose.prod.yml` — `jwt_public_key` +
-  `jwt_private_key` + `db_platform_url` + `bb_kek` +
-  `service_account_key` + `alertmanager_webhook_token`, plus the
-  per-module NATS password envs.
+- Harden prod deploy leftovers the app-in-compose work surfaced:
+  (a) `REDIS_URL` in both `app` and `erp` is `redis:6379` host:port only, but prod
+  redis has `--requirepass`; Go clients don't pass a password. Either add
+  `REDIS_PASSWORD_FILE` reads at startup or switch REDIS_URL to a full
+  `redis://:pass@host:port` URL string the client parses.
+  (b) prod compose `healthcheck:` for `app` and `erp` uses `wget` but the runtime
+  base is `distroless/static-debian12` (no shell, no wget) — the healthcheck
+  never actually runs. Either add a `--healthcheck` self-probe to the Go
+  binaries or ship a tiny static probe alongside.
+  (c) `db_tenant_template_url` secret is mounted for erp and meant for app,
+  but both services read `POSTGRES_TENANT_URL` env directly — the secret
+  is dead weight unless plumbed through an init step.
