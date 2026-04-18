@@ -100,3 +100,32 @@ RETURNING id, tenant_id, chassis_number, internal_number, model, customer_id,
 -- name: UpdateUnitStatus :execrows
 UPDATE erp_units SET status = $3, delivered_at = CASE WHEN $3 = 'delivered' THEN CURRENT_DATE ELSE delivered_at END
 WHERE id = $1 AND tenant_id = $2;
+
+-- name: ListHomologations :many
+SELECT id, tenant_id, plano, expte, dispos, fecha_aprob, fecha_vto,
+       seats, seats_lower, weight_tare, weight_gross, vin,
+       commercial_code, commercial_desc, active, created_at
+FROM erp_homologations
+WHERE tenant_id = $1
+  AND (sqlc.arg(active_only)::BOOLEAN = false OR active = true)
+ORDER BY commercial_code, id
+LIMIT $2 OFFSET $3;
+
+-- name: ListHomologationRevisions :many
+SELECT id, tenant_id, homologation_id, date, notes, created_at
+FROM erp_homologation_revisions
+WHERE tenant_id = $1 AND homologation_id = $2
+ORDER BY date DESC, id
+LIMIT $3 OFFSET $4;
+
+-- name: ListHomologationRevisionLines :many
+SELECT id, tenant_id, revision_id, article_id, article_code, article_desc, article_unit,
+       process_1, process_2, process_3, process_4,
+       multiplier, quantity, replacement_cost, replacement_partial,
+       replacement_cost_desc, replacement_partial_desc,
+       account_code, account_name, partial_with_surcharge, region_percentage,
+       partial_clog, partial_surcharge_log, logistics_cost, created_at
+FROM erp_homologation_revision_lines
+WHERE tenant_id = $1 AND revision_id = $2
+ORDER BY process_1, process_2, process_3, process_4, article_code
+LIMIT $3 OFFSET $4;

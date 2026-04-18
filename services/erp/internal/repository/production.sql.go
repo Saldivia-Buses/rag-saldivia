@@ -713,3 +713,181 @@ func (q *Queries) UpdateUnitStatus(ctx context.Context, arg UpdateUnitStatusPara
 	}
 	return result.RowsAffected(), nil
 }
+
+const listHomologations = `-- name: ListHomologations :many
+SELECT id, tenant_id, plano, expte, dispos, fecha_aprob, fecha_vto,
+       seats, seats_lower, weight_tare, weight_gross, vin,
+       commercial_code, commercial_desc, active, created_at
+FROM erp_homologations
+WHERE tenant_id = $1
+  AND ($4::BOOLEAN = false OR active = true)
+ORDER BY commercial_code, id
+LIMIT $2 OFFSET $3
+`
+
+type ListHomologationsParams struct {
+	TenantID   string `json:"tenant_id"`
+	Limit      int32  `json:"limit"`
+	Offset     int32  `json:"offset"`
+	ActiveOnly bool   `json:"active_only"`
+}
+
+func (q *Queries) ListHomologations(ctx context.Context, arg ListHomologationsParams) ([]ErpHomologation, error) {
+	rows, err := q.db.Query(ctx, listHomologations,
+		arg.TenantID,
+		arg.Limit,
+		arg.Offset,
+		arg.ActiveOnly,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ErpHomologation{}
+	for rows.Next() {
+		var i ErpHomologation
+		if err := rows.Scan(
+			&i.ID,
+			&i.TenantID,
+			&i.Plano,
+			&i.Expte,
+			&i.Dispos,
+			&i.FechaAprob,
+			&i.FechaVto,
+			&i.Seats,
+			&i.SeatsLower,
+			&i.WeightTare,
+			&i.WeightGross,
+			&i.Vin,
+			&i.CommercialCode,
+			&i.CommercialDesc,
+			&i.Active,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listHomologationRevisions = `-- name: ListHomologationRevisions :many
+SELECT id, tenant_id, homologation_id, date, notes, created_at
+FROM erp_homologation_revisions
+WHERE tenant_id = $1 AND homologation_id = $2
+ORDER BY date DESC, id
+LIMIT $3 OFFSET $4
+`
+
+type ListHomologationRevisionsParams struct {
+	TenantID       string      `json:"tenant_id"`
+	HomologationID pgtype.UUID `json:"homologation_id"`
+	Limit          int32       `json:"limit"`
+	Offset         int32       `json:"offset"`
+}
+
+func (q *Queries) ListHomologationRevisions(ctx context.Context, arg ListHomologationRevisionsParams) ([]ErpHomologationRevision, error) {
+	rows, err := q.db.Query(ctx, listHomologationRevisions,
+		arg.TenantID,
+		arg.HomologationID,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ErpHomologationRevision{}
+	for rows.Next() {
+		var i ErpHomologationRevision
+		if err := rows.Scan(
+			&i.ID,
+			&i.TenantID,
+			&i.HomologationID,
+			&i.Date,
+			&i.Notes,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listHomologationRevisionLines = `-- name: ListHomologationRevisionLines :many
+SELECT id, tenant_id, revision_id, article_id, article_code, article_desc, article_unit,
+       process_1, process_2, process_3, process_4,
+       multiplier, quantity, replacement_cost, replacement_partial,
+       replacement_cost_desc, replacement_partial_desc,
+       account_code, account_name, partial_with_surcharge, region_percentage,
+       partial_clog, partial_surcharge_log, logistics_cost, created_at
+FROM erp_homologation_revision_lines
+WHERE tenant_id = $1 AND revision_id = $2
+ORDER BY process_1, process_2, process_3, process_4, article_code
+LIMIT $3 OFFSET $4
+`
+
+type ListHomologationRevisionLinesParams struct {
+	TenantID   string      `json:"tenant_id"`
+	RevisionID pgtype.UUID `json:"revision_id"`
+	Limit      int32       `json:"limit"`
+	Offset     int32       `json:"offset"`
+}
+
+func (q *Queries) ListHomologationRevisionLines(ctx context.Context, arg ListHomologationRevisionLinesParams) ([]ErpHomologationRevisionLine, error) {
+	rows, err := q.db.Query(ctx, listHomologationRevisionLines,
+		arg.TenantID,
+		arg.RevisionID,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ErpHomologationRevisionLine{}
+	for rows.Next() {
+		var i ErpHomologationRevisionLine
+		if err := rows.Scan(
+			&i.ID,
+			&i.TenantID,
+			&i.RevisionID,
+			&i.ArticleID,
+			&i.ArticleCode,
+			&i.ArticleDesc,
+			&i.ArticleUnit,
+			&i.Process1,
+			&i.Process2,
+			&i.Process3,
+			&i.Process4,
+			&i.Multiplier,
+			&i.Quantity,
+			&i.ReplacementCost,
+			&i.ReplacementPartial,
+			&i.ReplacementCostDesc,
+			&i.ReplacementPartialDesc,
+			&i.AccountCode,
+			&i.AccountName,
+			&i.PartialWithSurcharge,
+			&i.RegionPercentage,
+			&i.PartialClog,
+			&i.PartialSurchargeLog,
+			&i.LogisticsCost,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

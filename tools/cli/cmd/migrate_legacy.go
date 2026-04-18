@@ -483,6 +483,18 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 		migration.NewProductionInspectionDetailMigrator(mysqlDB, tenantID),
 	)
 
+	// Phase 11b: Homologations — vehicle model homologations + their cost/process
+	// revision history. STK_ARTICULO_PROCESO_HIST_DETALLE is 2.6 M rows (Pareto #1
+	// of the Phase 1 §Data migration gap, 42.7 % of uncovered row volume).
+	// Order: HOMOLOGMOD (parent) → STK_ARTICULO_PROCESO_HIST (revisions) →
+	// STK_ARTICULO_PROCESO_HIST_DETALLE (lines). Detail line resolves article_id
+	// through the erp_articles cache produced by NewArticleMigrator in Phase 4.
+	orch.RegisterMigrators(
+		migration.NewHomologationMigrator(mysqlDB, tenantID),
+		migration.NewHomologationRevisionMigrator(mysqlDB, tenantID),
+		migration.NewHomologationRevisionLineMigrator(mysqlDB, tenantID),
+	)
+
 	// Phase 12: Quality (ISO 9001)
 	orch.RegisterMigrators(
 		migration.NewNonconformityMigrator(mysqlDB, tenantID),

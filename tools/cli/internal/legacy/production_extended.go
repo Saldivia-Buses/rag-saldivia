@@ -176,3 +176,67 @@ func ProductionRequestReader(db *sql.DB) *GenericReader {
 			"inicio_usuario_id, inicio_hora, terminado_usuario_id, terminado_hora",
 	}
 }
+
+// ---------------------------------------------------------------------------
+// Homologations (HOMOLOGMOD) + process/cost revisions (STK_ARTICULO_PROCESO_HIST*)
+// ---------------------------------------------------------------------------
+
+// HomologationReader creates a reader for HOMOLOGMOD (vehicle model homologations).
+// Has auto-increment id_homologacion PK. 585 rows. Despite the "STK_" prefix on
+// the downstream cost-history tables, this is production-domain data — the UX
+// lives in .intranet-scrape/xml-forms/produccion/linea/ under the title
+// "HOMOLOGACION POR MODELO".
+// The shape we carry across is the identity + the columns the Phase 1 UX queries
+// most (plano, expte, fechaAprob, seats, weights, commercial code/desc, baja).
+// Extra Histrix columns (chassis plane/expte, VIN/INTI/industria filings, axle
+// weights, euro, capacidad_combustible, etc.) stay in Histrix for a follow-up
+// extension migration once a UI page needs them.
+func HomologationReader(db *sql.DB) *GenericReader {
+	return &GenericReader{
+		DB:         db,
+		Table:      "HOMOLOGMOD",
+		Target:     "erp_homologations",
+		DomainName: "production",
+		PKColumn:   "id_homologacion",
+		Columns: "id_homologacion, plano, expte, dispos, fechaAprob, fechaVto, " +
+			"asientos, asientos_plantabaja, tara, bruto, vin, " +
+			"codigo_comercial, desc_comercial, baja",
+	}
+}
+
+// HomologationRevisionReader creates a reader for STK_ARTICULO_PROCESO_HIST
+// (homologation process+cost snapshot, 1,173 rows). Parent of
+// STK_ARTICULO_PROCESO_HIST_DETALLE; child of HOMOLOGMOD via homologacion_id.
+// Each row is one dated revision of the cost structure for one homologation.
+func HomologationRevisionReader(db *sql.DB) *GenericReader {
+	return &GenericReader{
+		DB:         db,
+		Table:      "STK_ARTICULO_PROCESO_HIST",
+		Target:     "erp_homologation_revisions",
+		DomainName: "production",
+		PKColumn:   "id_artproceso_hist",
+		Columns:    "id_artproceso_hist, fecha, observaciones, homologacion_id, creation",
+	}
+}
+
+// HomologationRevisionLineReader creates a reader for
+// STK_ARTICULO_PROCESO_HIST_DETALLE (homologation revision detail lines,
+// 2,640,976 rows — #1 in the Phase 1 Pareto, 42.7 % of uncovered row volume).
+// Each row: one article × one cascaded process path × full cost breakdown for
+// one revision. FK artproceso_hist_id → STK_ARTICULO_PROCESO_HIST.
+func HomologationRevisionLineReader(db *sql.DB) *GenericReader {
+	return &GenericReader{
+		DB:         db,
+		Table:      "STK_ARTICULO_PROCESO_HIST_DETALLE",
+		Target:     "erp_homologation_revision_lines",
+		DomainName: "production",
+		PKColumn:   "id_artproceso_hist_detalle",
+		Columns: "id_artproceso_hist_detalle, artproceso_hist_id, " +
+			"proceso1, proceso2, proceso3, proceso4, " +
+			"artcod, artdes, artuni, multiplo, cantidad, " +
+			"costo_reposicion, parcial_reposicion, " +
+			"costo_reposicion_desc, parcial_reposicion_desc, " +
+			"ctbcod, ctbnom, parcial_con_recargo, porcentaje_region, " +
+			"parcial_clog, parcial_recargo_log, costo_logistico",
+	}
+}
