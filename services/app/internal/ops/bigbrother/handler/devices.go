@@ -11,7 +11,7 @@ import (
 	"github.com/nats-io/nats.go"
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
-	"github.com/Camionerou/rag-saldivia/pkg/httperr"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/httperr"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/services/app/internal/ops/bigbrother/remote"
 	"github.com/Camionerou/rag-saldivia/services/app/internal/ops/bigbrother/inventory"

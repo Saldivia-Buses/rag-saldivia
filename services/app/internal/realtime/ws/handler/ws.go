@@ -10,7 +10,7 @@ import (
 
 	"github.com/coder/websocket"
 
-	"github.com/Camionerou/rag-saldivia/pkg/httperr"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/httperr"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
 	"github.com/Camionerou/rag-saldivia/services/app/internal/realtime/ws/hub"

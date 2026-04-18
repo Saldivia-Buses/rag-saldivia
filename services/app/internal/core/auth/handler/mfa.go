@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/Camionerou/rag-saldivia/pkg/httperr"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/httperr"
 	"github.com/Camionerou/rag-saldivia/services/app/internal/core/auth/service"
 )
 

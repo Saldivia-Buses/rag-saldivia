@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Camionerou/rag-saldivia/pkg/httperr"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/httperr"
 	"github.com/Camionerou/rag-saldivia/services/app/internal/realtime/notification/service"
 )
 

@@ -8,7 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
-	"github.com/Camionerou/rag-saldivia/pkg/httperr"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/httperr"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/tenant"
 	"github.com/Camionerou/rag-saldivia/services/app/internal/rag/search/service"
