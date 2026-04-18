@@ -153,3 +153,24 @@ WHERE jl.tenant_id = $1 AND jl.account_id = $2 AND je.status = 'posted'
   AND (sqlc.arg(date_to)::DATE IS NULL OR jl.entry_date <= sqlc.arg(date_to)::DATE)
 ORDER BY jl.entry_date, je.number
 LIMIT $3 OFFSET $4;
+
+-- ─── Legacy accounting line log (Phase 1 §Data migration — Pareto #3) ──────
+
+-- name: ListAccountingRegisters :many
+-- Legacy CTBREGIS rows filtered by minuta or date range. The live libro
+-- diario UI (contabilidad/qry/libro_diario_qry.xml) joins through
+-- CTB_DETALLES.ctbregis_id; post-migration the same screen reads
+-- erp_accounting_registers via this query.
+SELECT id, tenant_id, legacy_id, subsystem_code, reg_date, voucher_date,
+       minuta_number, comprobante_type, comprobante_number,
+       account_code, account_id, entry_side, amount, reference, status,
+       cost_center_code, imputation_code,
+       legacy_cost_center_id, legacy_imputation_id, legacy_account_id,
+       post_number, entry_order, subdiary_code, physical_units, created_at
+FROM erp_accounting_registers
+WHERE tenant_id = $1
+  AND (sqlc.arg(date_from)::DATE IS NULL OR reg_date >= sqlc.arg(date_from)::DATE)
+  AND (sqlc.arg(date_to)::DATE IS NULL OR reg_date <= sqlc.arg(date_to)::DATE)
+  AND (sqlc.arg(minuta)::INTEGER = 0 OR minuta_number = sqlc.arg(minuta)::INTEGER)
+ORDER BY reg_date DESC NULLS LAST, minuta_number, entry_order
+LIMIT $2 OFFSET $3;

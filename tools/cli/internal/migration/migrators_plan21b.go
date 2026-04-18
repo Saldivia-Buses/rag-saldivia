@@ -2369,3 +2369,97 @@ func NewHomologationRevisionLineMigrator(db *sql.DB, tenantID string) *GenericMi
 		},
 	}
 }
+
+// ============================================================================
+// Phase 3c — Accounting legacy line log (CTBREGIS)
+// ============================================================================
+
+// NewAccountingRegisterMigrator migrates CTBREGIS → erp_accounting_registers.
+// Pareto #3 of the Phase 1 §Data migration gap post-2.0.9 (604 K rows live,
+// ~28 % of the remaining uncovered row volume).
+//
+// CTBREGIS is the pre-CTB_MOVIMIENTOS leaf-level debe/haber log — but it is
+// NOT dead weight: the live libro_diario_qry joins back through
+// CTB_DETALLES.ctbregis_id for legacy ctbcod, and the provider / client /
+// orden-de-pago / IVA / anulaciones modules still write to it directly.
+// 59 live xml-form references confirmed.
+//
+// Resolution strategy:
+//   - account_id is resolved via the accounting code index
+//     (BuildCodeIndex("accounting", "erp_accounts", "code")) already wired
+//     in Phase 3 setup. Rows whose ctbcod is not in the current plan de
+//     cuentas keep account_id NULL with account_code preserved — forensic
+//     preservation, same pattern as FICHADAS orphan tarjetas in 2.0.9.
+//   - reg_date uses SafeDate (NULL for 0000-00-00 — 122 rows live) rather
+//     than SafeDateRequired to avoid collapsing "unknown date" into the
+//     1970 epoch default.
+//   - Cost center, imputation, and other secondary references stay as raw
+//     SMALLINT/INT — no xml-form surfaces them yet, so resolving to UUID
+//     would be dead complexity.
+//
+// Phase 0 invariant: rows_read = rows_written + rows_skipped + 0 duplicate.
+// Skips: legacy_id == 0 (defensive, shouldn't happen — AI PK).
+func NewAccountingRegisterMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.AccountingRegisterReader(db)
+	return &GenericMigrator{
+		reader: reader,
+		columns: []string{
+			"id", "tenant_id", "legacy_id",
+			"subsystem_code", "reg_date", "voucher_date",
+			"minuta_number", "comprobante_type", "comprobante_number",
+			"account_code", "account_id", "entry_side",
+			"amount", "reference", "status",
+			"cost_center_code", "imputation_code",
+			"legacy_cost_center_id", "legacy_imputation_id",
+			"legacy_account_id",
+			"post_number", "entry_order", "subdiary_code",
+			"physical_units",
+		},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_ctbregis")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			accountCode := strings.TrimSpace(row.String("ctbcod"))
+			var accountID *uuid.UUID
+			if accountCode != "" {
+				if resolved, rerr := mapper.ResolveByCode("accounting", "erp_accounts", accountCode); rerr == nil && resolved != uuid.Nil {
+					accountID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "accounting", "CTBREGIS", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			regDate := SafeDate(timeFromRow(row, "regfec"))
+			voucherDate := SafeDate(timeFromRow(row, "regfco"))
+
+			return []any{
+				id, tenantID, legacyID,
+				strings.TrimSpace(row.String("siscod")),
+				regDate, voucherDate,
+				int32(row.Int("regmin")),
+				int16(row.Int("regtip")),
+				int32(row.Int("regnro")),
+				accountCode, accountID,
+				int16(row.Int("regdoh")),
+				ParseDecimal(row.Decimal("regimp")),
+				strings.TrimSpace(row.String("regref")),
+				strings.TrimSpace(row.String("regpoa")),
+				int16(row.Int("coscod")),
+				int16(row.Int("impcod")),
+				int32(row.Int("idcos")),
+				int32(row.Int("idimpu")),
+				int32(row.Int("regcta")),
+				int16(row.Int("regnpv")),
+				int16(row.Int("regord")),
+				int16(row.Int("regsub")),
+				ParseDecimal(row.Decimal("reguni")),
+			}, nil
+		},
+	}
+}

@@ -348,6 +348,17 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 		migration.NewCheckMigrator(mysqlDB, tenantID),
 	)
 
+	// Phase 3c: Legacy accounting line log (CTBREGIS → erp_accounting_registers).
+	// Pareto #3 of the Phase 1 §Data migration gap post-2.0.9 (~604 K rows
+	// live, ~28 % of remaining row volume). CTBREGIS is the pre-CTB_MOVIMIENTOS
+	// debe/haber log; still read and written by live Histrix UI (libro_diario,
+	// proveedores_loc, clientes_local, ordenpago, iva, anulaciones, etc.).
+	// Runs here so the accounting code index (from AddSetupHook above) is
+	// already loaded when each row resolves its ctbcod → erp_accounts.id.
+	orch.RegisterMigrators(
+		migration.NewAccountingRegisterMigrator(mysqlDB, tenantID),
+	)
+
 	// Phase 4: Operational (depends on entities + stock)
 	orch.RegisterMigrators(
 		migration.NewWarehouseMigrator(mysqlDB, tenantID),

@@ -12,23 +12,42 @@ joined with `information_schema.tables.table_rows` from the live Histrix
 DB at `172.22.100.99` (saldivia schema, read-only query via WireGuard +
 SSH tunnel).
 
-## Totals (2026-04-18, post-2.0.9 mid-PR)
+## Totals (2026-04-18, post-2.0.10 mid-PR)
 
 | Segment | Count | Rows |
 |---|---:|---:|
 | Histrix tables in `.intranet-scrape/db-tables.txt` | 675 | 18,940,293 |
-| Tables with a registered migrator/reader | 106 | ≈ 12,958,258 |
-| Tables uncovered (total) | 569 | — |
+| Tables with a registered migrator/reader | 107 | ≈ 13,562,837 |
+| Tables uncovered (total) | 568 | — |
 | &nbsp;&nbsp;— Histrix infra (HTX*, 31) — waived W-004 | 31 | 3,486,776 |
 | &nbsp;&nbsp;— `*_OLD` superseded (5) — waived W-005 | 5 | 423,678 |
 | &nbsp;&nbsp;— zero-row dead tables — waived W-006 | 225 | 0 |
-| &nbsp;&nbsp;— **business-data gap remaining** | **308** | **≈ 2,071,581** |
+| &nbsp;&nbsp;— **business-data gap remaining** | **307** | **≈ 1,467,002** |
 
-The 106 "covered" tables now account for ≈ **68 %** of all Histrix rows
-(up from 61 % post-2.0.8 and 47 % pre-2.0.8). After the three bulk
-waivers, **308 business tables with rows** remain to migrate or waive
-individually. Those 308 tables hold about 2.07 M rows — 11 % of
-Histrix's total data volume.
+The 107 "covered" tables now account for ≈ **72 %** of all Histrix rows
+(up from 68 % post-2.0.9, 61 % post-2.0.8 and 47 % pre-2.0.8). After the
+three bulk waivers, **307 business tables with rows** remain to migrate
+or waive individually. Those 307 tables hold about 1.47 M rows — 7.7 %
+of Histrix's total data volume.
+
+**2.0.10 delta** (Pareto #3):
+
+1. **CTBREGIS** (**604,579 rows live** — table still growing; original
+   `information_schema` estimate was 572,076) migrated via
+   `NewAccountingRegisterMigrator` → new table
+   `erp_accounting_registers` (migration `071`). CTBREGIS is the
+   pre-`CTB_MOVIMIENTOS` leaf-level debe/haber log; the scrape showed 59
+   live XML-form references (proveedores_loc, clientes_local, ordenpago,
+   iva, contabilidad, estadisticas, bancos_local, anulaciones) — and
+   the live `contabilidad/qry/libro_diario_qry.xml` still joins through
+   `CTB_DETALLES.ctbregis_id` to pull the legacy `ctbcod`. Not a waiver
+   candidate. Resolution: `account_id` resolved via the existing
+   `accounting` code index (91.2 % of rows — 551,110 — match a current
+   `erp_accounts.code`; the 8.8 % orphan / pre-plan codes migrate with
+   `account_id NULL` and `account_code` preserved for reconciliation).
+   `reg_date` uses `SafeDate` (NULL for the 8 zero-date rows).
+   Phase 0 invariant from live Histrix: `rows_read = 604,579 = rows_written
+   (604,579) + rows_skipped (0) + rows_duplicate (0)` on first run.
 
 **2.0.9 deltas** (one commit for both pieces):
 
@@ -79,7 +98,7 @@ Row volume in the uncovered bucket is extremely concentrated:
 |---:|---|---:|---:|
 | 1 | ~~STK_ARTICULO_PROCESO_HIST_DETALLE~~ — **migrated 2.0.8** | ~~2,640,976~~ | — |
 | 2 | ~~FICHADAS~~ — **migrated 2.0.9** | ~~1,464,575~~ | — |
-| 3 | CTBREGIS | 572,076 | 75.7 % |
+| 3 | ~~CTBREGIS~~ — **migrated 2.0.10** (604,579 live) | ~~572,076~~ | — |
 | 4 | HERRAMIENTAS | 225,355 | 79.3 % |
 | 5 | STKINSPR | 180,412 | 82.3 % |
 | 6 | PRODUCTO_ATRIB_VALORES | 153,835 | 84.7 % |
@@ -110,11 +129,12 @@ Row volume in the uncovered bucket is extremely concentrated:
 
 **Pre-2.0.8 Pareto:** top 10 covered 90.6 %, top 20 covered 95.8 % of
 the uncovered row volume. Ranks 1 (STK_ARTICULO_PROCESO_HIST_DETALLE,
-2.6 M rows) and 2 (FICHADAS + PERSONAL_TARJETA, 1.5 M rows) are now
-**migrated** (2.0.8 + 2.0.9), closing together about **66 %** of the
-original uncovered row volume. The remaining top-30 tail still
-concentrates the row volume: CTBREGIS (rank 3, 572 K) and
-HERRAMIENTAS (rank 4, 225 K) are the next-obvious Pareto candidates.
+2.6 M rows), 2 (FICHADAS + PERSONAL_TARJETA, 1.5 M rows) and 3
+(CTBREGIS, 605 K rows) are now **migrated** (2.0.8 + 2.0.9 + 2.0.10),
+closing together about **74 %** of the original uncovered row volume.
+HERRAMIENTAS (rank 4, 225 K) is the next-obvious Pareto candidate; it
+needs an ADR note on the target domain shape (new `erp_tools_*` or
+share with `erp_stock`?) before the migrator lands.
 
 ## Business domains to attack next
 
@@ -124,7 +144,7 @@ Aggregating the top-30 by the prefix convention:
 |---|---|---:|
 | Stock / inventory | STK_ARTICULO_PROCESO_HIST_DETALLE, STKINSPR, STK_COSTO_HIST, STK_COSTO_REPOSICION_HIST, STK_COSTOS, STK_ARTICULO_LOCACION, STK_BOM_ENPROCESO, STK_ATRIBUTO_VALORES | ≈ 2,995,135 |
 | HR / fichadas | RH_EVALUACION_RESPUESTAS (FICHADAS migrated 2.0.9) | 11,469 |
-| Accounting | CTBREGIS, BCS_IMPORTACION | 656,568 |
+| Accounting | BCS_IMPORTACION (CTBREGIS migrated 2.0.10) | 84,492 |
 | Tools / equipment | HERRAMIENTAS, HERRMOVS | 236,981 |
 | Product attrs | PRODUCTO_ATRIB_VALORES, PRODUCTO_ATRIBUTO_HOMOLOGACION | 171,393 |
 | Production controls | PROD_CONTROL_HOMOLOG, PROD_PATH_REGISTRO, CONTROLCALIDAD | 124,228 |
@@ -147,10 +167,12 @@ when touching any of these):
    PERSONAL_TARJETA → `erp_time_clock_events` + `erp_employee_cards`
    via Pareto #2). `RH_EVALUACION_RESPUESTAS` (11.5 K rows) is still
    open and can ride an upcoming HR-adjacent session.
-3. **CTBREGIS** (572 K rows) — accounting registros. `CTB_DETALLES` /
-   `CTB_MOVIMIENTOS` (new schema) is covered; CTBREGIS is the legacy
-   registro log. Likely a waiver if the data already rolled up into
-   CTB_MOVIMIENTOS, a migrator if it has its own audit queries.
+3. ~~**CTBREGIS** (572 K rows)~~ — **closed 2.0.10** (→
+   `erp_accounting_registers` via Pareto #3). Not a waiver: 59 live
+   XML-form references confirmed (libro_diario, proveedores_loc,
+   clientes_local, ordenpago, iva, bancos_local, anulaciones,
+   estadisticas). `CTB_DETALLES.ctbregis_id` remains a live FK from
+   the new accounting flow back to the legacy log.
 4. **HERRAMIENTAS + HERRMOVS** (237 K combined) — workshop tools catalog
    + movements. New SDA domain (`erp_tools_*` or share with
    `erp_stock`?). Needs ADR note before the migrator.

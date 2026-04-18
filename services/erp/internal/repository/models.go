@@ -1938,3 +1938,31 @@ type ErpTimeClockEvent struct {
 	LegacyID    int64              `json:"legacy_id"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 }
+
+type ErpAccountingRegister struct {
+	ID                 pgtype.UUID        `json:"id"`
+	TenantID           string             `json:"tenant_id"`
+	LegacyID           int64              `json:"legacy_id"`
+	SubsystemCode      string             `json:"subsystem_code"`
+	RegDate            pgtype.Date        `json:"reg_date"`
+	VoucherDate        pgtype.Date        `json:"voucher_date"`
+	MinutaNumber       int32              `json:"minuta_number"`
+	ComprobanteType    int16              `json:"comprobante_type"`
+	ComprobanteNumber  int32              `json:"comprobante_number"`
+	AccountCode        string             `json:"account_code"`
+	AccountID          pgtype.UUID        `json:"account_id"`
+	EntrySide          int16              `json:"entry_side"`
+	Amount             pgtype.Numeric     `json:"amount"`
+	Reference          string             `json:"reference"`
+	Status             string             `json:"status"`
+	CostCenterCode     int16              `json:"cost_center_code"`
+	ImputationCode     int16              `json:"imputation_code"`
+	LegacyCostCenterID int32              `json:"legacy_cost_center_id"`
+	LegacyImputationID int32              `json:"legacy_imputation_id"`
+	LegacyAccountID    int32              `json:"legacy_account_id"`
+	PostNumber         int16              `json:"post_number"`
+	EntryOrder         int16              `json:"entry_order"`
+	SubdiaryCode       int16              `json:"subdiary_code"`
+	PhysicalUnits      pgtype.Numeric     `json:"physical_units"`
+	CreatedAt          pgtype.Timestamptz `json:"created_at"`
+}

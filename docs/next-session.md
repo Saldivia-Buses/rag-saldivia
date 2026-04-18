@@ -1,19 +1,24 @@
-# Next session — Phase 1 §Data migration: Pareto #3 (CTBREGIS 572 K + HERRAMIENTAS cluster)
+# Next session — Phase 1 §Data migration: Pareto #4 (HERRAMIENTAS cluster 237 K)
 
-La sesión anterior (2.0.9) cerró Pareto #2 en un PR:
+La sesión anterior (2.0.10) cerró Pareto #3 en un PR:
 
-- **FICHADAS** (1,465,002 filas) + **PERSONAL_TARJETA** (1,403 filas)
-  migrados vía `NewTimeClockEventMigrator` + `NewEmployeeCardMigrator`
-  → tablas nuevas `erp_time_clock_events` + `erp_employee_cards`
-  (migración `070`). Resolución card+fecha → empleado vía el nuevo
-  `Mapper.BuildTarjetaIndex` / `ResolveByTarjetaAtDate` (date-versioned).
+- **CTBREGIS** (604,579 filas live — el scrape estimaba 572,076) migrada
+  vía `NewAccountingRegisterMigrator` → nueva tabla
+  `erp_accounting_registers` (migración `071`). `account_id` resuelto vía
+  el code-index `accounting/erp_accounts/code` (91.2 % match — 551,110
+  filas; 8.8 % orphan mantiene `account_id NULL` y `account_code`
+  preservado). `reg_date` `NULL` para 8 filas zero-date. No es waiver:
+  la xml-form scrape confirmó 59 referencias vivas en libro_diario,
+  proveedores_loc, clientes_local, ordenpago, iva, bancos_local,
+  anulaciones, estadisticas — y `CTB_DETALLES.ctbregis_id` sigue siendo
+  FK viva del flow nuevo hacia el log legacy.
 
-Post-2.0.9 el gap Phase 1 §Data migration quedó en **308 tablas /
-≈ 2.07 M filas** (11 % del total Histrix). Las 106 tablas cubiertas son
-ya **68 %** del volumen total.
+Post-2.0.10 el gap Phase 1 §Data migration quedó en **307 tablas /
+≈ 1.47 M filas** (7.7 % del total Histrix). Las 107 tablas cubiertas son
+ya **72 %** del volumen total.
 
-Arrancás con PR de 2.0.9 **mergeable** al cerrar la sesión. Si no se
-mergea solo, cerrar el ciclo (ver §"Pre-work si 2.0.9 sigue abierto"
+Arrancás con PR de 2.0.10 **mergeable** al cerrar la sesión. Si no se
+mergea solo, cerrar el ciclo (ver §"Pre-work si 2.0.10 sigue abierto"
 abajo).
 
 ## Final goal (ADR 026 — no se pierde de vista)
@@ -28,44 +33,44 @@ SDA reemplaza Histrix. El empleado abre SDA y:
 5. Detrás, agentes hoardean data: mail ingest, WhatsApp interno,
    tree-RAG con ACL por colección.
 
-## Estado Phase 1 §Data migration (post-2.0.9)
+## Estado Phase 1 §Data migration (post-2.0.10)
 
 | Segment | Tablas | Filas |
 |---|---:|---:|
 | Histrix total | 675 | 18.94 M |
-| Cubiertas | 106 | ≈ 12.96 M (**68 %**) |
+| Cubiertas | 107 | ≈ 13.56 M (**72 %**) |
 | Waiver masivo (W-004/005/006) | 261 | 3.91 M |
-| **Gap remaining** | **308** | **≈ 2.07 M (11 %)** |
+| **Gap remaining** | **307** | **≈ 1.47 M (7.7 %)** |
 
-**Top uncovered post-2.0.9** (row volume):
+**Top uncovered post-2.0.10** (row volume):
 
 | Rank | Tabla | Rows (approx) | Cum % del gap |
 |---:|---|---:|---:|
-| 1 | **CTBREGIS** | 572,076 | **27.7 %** |
-| 2 | HERRAMIENTAS | 225,355 | 38.6 % |
-| 3 | STKINSPR | 180,412 | 47.3 % |
-| 4 | PRODUCTO_ATRIB_VALORES | 153,835 | 54.7 % |
-| 5 | PROD_CONTROL_HOMOLOG | 105,683 | 59.8 % |
-| 6 | STK_COSTO_HIST | 95,217 | 64.4 % |
-| 7 | BCS_IMPORTACION | 84,492 | 68.5 % |
-| 8 | EGX300EPE | 79,040 | 72.3 % |
-| 9 | REG_MOVIMIENTO_OBS | 72,737 | 75.8 % |
-| 10 | REG_CUENTA_CALIFICACION | 58,960 | 78.7 % |
+| 1 | **HERRAMIENTAS** | 225,355 | **15.4 %** |
+| 2 | STKINSPR | 180,412 | 27.7 % |
+| 3 | PRODUCTO_ATRIB_VALORES | 153,835 | 38.2 % |
+| 4 | PROD_CONTROL_HOMOLOG | 105,683 | 45.4 % |
+| 5 | STK_COSTO_HIST | 95,217 | 51.9 % |
+| 6 | BCS_IMPORTACION | 84,492 | 57.6 % |
+| 7 | EGX300EPE | 79,040 | 63.0 % |
+| 8 | REG_MOVIMIENTO_OBS | 72,737 | 67.9 % |
+| 9 | REG_CUENTA_CALIFICACION | 58,960 | 71.9 % |
+| 10 | TEL_LOG | 34,885 | 74.3 % |
 
 Reproducer completo al final de `docs/parity/data-migration.md`.
 
-## Pre-work si 2.0.9 sigue abierto
+## Pre-work si 2.0.10 sigue abierto
 
-Antes de cortar 2.0.10:
+Antes de cortar 2.0.11:
 
 ```bash
-gh pr checks <NRO>          # tu PR 2.0.9
+gh pr checks <NRO>          # tu PR 2.0.10
 gh pr view <NRO> --json mergeable,state
 
 # Post-merge en main:
 git checkout main && git pull origin main
-git tag v2.0.9 && git push origin v2.0.9
-gh release create v2.0.9 --title "..." --notes-file <...>
+git tag v2.0.10 && git push origin v2.0.10
+gh release create v2.0.10 --title "..." --notes-file <...>
 
 # Workstation drift (srv-ia-01):
 ssh sistemas@srv-ia-01 "cd /opt/saldivia/repo && git pull origin main"
@@ -73,56 +78,73 @@ ssh sistemas@srv-ia-01 "cd /opt/saldivia/repo && git pull origin main"
 ```
 
 Memoria: `feedback_version_tagging.md`. Incluir en release body la
-sección 2.0.9 (Pareto #2 FICHADAS + PERSONAL_TARJETA) con métricas.
+sección 2.0.10 (Pareto #3 CTBREGIS) con métricas.
 
-## Tarea principal — Pareto #3: CTBREGIS (572 K filas)
+## Tarea principal — Pareto #4: HERRAMIENTAS + HERRMOVS (~237 K filas)
 
 **Skills primarios:** `htx-parity` + `migration-health` + `database` +
-(posiblemente) `backend-go`.
+`decisions` (nuevo dominio) + `backend-go`.
 
 ### Contexto de negocio
 
-- `CTBREGIS` (572,076 filas) es el **registro log** contable histórico
-  de Histrix. El flow operativo ya lo cubren `CTB_DETALLES` /
-  `CTB_MOVIMIENTOS` (nuevo schema) → `erp_journal_entries` +
-  `erp_journal_lines` (migradas desde 2.0.3).
-- La duda clave: **¿CTBREGIS tiene consumidores UI activos, o ya está
-  reemplazado por el flow nuevo?** Si es lo segundo → **waiver W-008**.
-  Si existe pantalla Histrix que lo consulta directamente → migrator.
+Cluster de herramientas de taller (workshop tools):
+- `HERRAMIENTAS` (225 K filas) — catálogo de herramientas (items,
+  características, estado).
+- `HERRMOVS` (11 K filas) — movimientos (préstamo/devolución, asignación
+  a empleado/coche, historial).
+
+El cluster es un **dominio SDA nuevo** — no existe `erp_tools_*`
+todavía. La pregunta clave es si se crea:
+- (A) **`erp_tools` + `erp_tool_movements`** — dominio dedicado.
+- (B) Se fuerza en `erp_stock` como categoría especial — probablemente
+  peor: "herramienta prestada a coche 134 por 3 días" no encaja en
+  stock movements.
+
+Requiere **ADR corto** antes del migrator (al estilo ADR 023/024 —
+nuevo dominio lateral). `decisions` skill.
 
 ### Arranque recomendado
 
-1. **Read XML-forms**: `grep -rl "CTBREGIS\b" .intranet-scrape/xml-forms/`
-   — ver qué pantallas lo usan. Si sólo aparece en pantallas del
-   conjunto `contabilidad/registros*` que ya tienen equivalente SDA en
-   journal entries, W-008.
-2. **Inspeccionar shape en Histrix live** (vía docker+sshpass):
-   ```sql
-   DESCRIBE CTBREGIS;
-   SELECT COUNT(*) FROM CTBREGIS;
-   -- comparar con CTB_MOVIMIENTOS (ya cubierto)
-   SELECT COUNT(*) FROM CTB_MOVIMIENTOS;
-   -- ¿son redundantes?
+1. **XML-form inventory**:
+   ```bash
+   grep -rlE "HERRAMIENTAS|HERRMOVS" .intranet-scrape/xml-forms/ | \
+     xargs -n1 dirname | sort -u
    ```
-3. **Decisión A vs B**:
-   - **A (migrator)**: si hay UI dedicada → nueva tabla
-     `erp_accounting_registers` + reader + migrator + migración 071.
-   - **B (waiver W-008)**: si flow real sigue vía journal entries →
-     waiver corto en `docs/parity/waivers.md` + strike en Pareto
-     `data-migration.md`.
+   Esperable: `taller/`, `herramientas/`, `coches/`. Leer
+   `herramientas*.xml` para ver qué dimensiones soporta la UI Histrix.
 
-### Tarea secundaria (si A cerró bien o B es trivial) — HERRAMIENTAS + HERRMOVS
+2. **DB shape en Histrix live**:
+   ```sql
+   DESCRIBE HERRAMIENTAS;
+   DESCRIBE HERRMOVS;
+   SELECT COUNT(*) FROM HERRAMIENTAS;
+   SELECT COUNT(*) FROM HERRMOVS;
+   -- FK discovery
+   SELECT DISTINCT tipomov FROM HERRMOVS LIMIT 20;
+   -- orphan check
+   SELECT COUNT(*) FROM HERRMOVS m LEFT JOIN HERRAMIENTAS h
+     ON h.id_herramienta = m.herramienta_id WHERE h.id_herramienta IS NULL;
+   ```
 
-**Cluster de herramientas** (~237 K filas combinadas):
-- `HERRAMIENTAS` (225 K) — catálogo de herramientas
-- `HERRMOVS` (11 K) — movimientos
+3. **Borrador de ADR `028_tools_domain.md`** — una página:
+   - Tables nuevas y rationale de dominio separado.
+   - FKs a `erp_entities` (empleados prestatarios) y/o
+     `erp_maintenance_assets` (vehículos que reciben herramientas).
+   - RLS + permisos (`erp.tools.read` / `erp.tools.write`).
 
-Nuevo dominio SDA: probablemente `erp_tools` o compartir con
-`erp_stock` extendido. Requiere **ADR note** antes del migrator (nuevo
-surface no trivial). Si la Pareto #3 cierra como waiver (20 min), hay
-tiempo de abrir el ADR + diseño de esquema.
+4. **Migrator**: mismo patrón que CTBREGIS — reader en
+   `tools/cli/internal/legacy/stock.go` (o nuevo archivo), migrator en
+   `migrators_plan21b.go` bajo "Phase 4b — Tools". Migración `072` en
+   `db/tenant/migrations/`.
 
-## Trampas conocidas (heredadas de 2.0.9)
+### Tarea secundaria (si Pareto #4 cierra con tiempo) — STKINSPR
+
+**STKINSPR** (180 K filas) — inspección de stock. Posible extensión de
+`erp_stock` existente o nueva tabla `erp_stock_inspections`. Ver
+`.intranet-scrape/xml-forms/stock/` primero. Menos ambigüedad de dominio
+que HERRAMIENTAS (probablemente fila suelta en el dominio stock).
+
+## Trampas conocidas (heredadas de 2.0.10)
 
 - **sqlc drift** — el pattern del hand-patch sigue vigente: editá la
   query `.sql`, regenerá, extraé SOLO los blocks nuevos, revertí con
@@ -134,22 +156,23 @@ tiempo de abrir el ADR + diseño de esquema.
   `rows_written=0` sobre `rows_read>0`. `migration-health` skill.
 
 - **Lint errcheck pre-existente** en `pkg/server/healthcheck*.go` (3
-  errores). Vienen desde 2.0.7 (`cb2f444c`), CI pasa sin ellos. No
-  bloquean; se puede ignorar o fix drive-by aparte.
+  errores desde 2.0.7, `cb2f444c`). CI pasa sin ellos. No bloquean.
 
 - **Cold-start migrations** — tres bugs latentes surface sólo en silo
   fresco (psql `:'var'`, cross-DB INSERT, LANGUAGE sql forward-ref).
   Memoria `feedback_migration_cold_start`.
 
-- **Numeración migration** — leer el último archivo en
-  `db/tenant/migrations/` (2.0.9 dejó 070). Next libre: **071**.
+- **Numeración migration** — 2.0.10 dejó `071`. Next libre: **072**.
 
 - **Histrix access requiere VPN activa en Windows**. Pattern
-  docker+sshpass en `reference_histrix_access.md`. El IP
-  `172.22.100.23` del workstation NO es accesible desde WSL sin el
-  mismo VPN; usá hostname `srv-ia-01` (resuelve vía DNS del VPN).
-  Passwords: workstation `sistemas/Saldivia01!`, Histrix
+  docker+sshpass en `reference_histrix_access.md`. Passwords:
+  workstation `sistemas/Saldivia01!`, Histrix
   `sistemas/SaldiviaAdmin02` + DB `root/m2450e`.
+
+- **Tailscale SSH re-auth** para la workstation — el session start
+  puede pedir re-auth via URL (`https://login.tailscale.com/a/...`).
+  No bloquea el trabajo de migración (MySQL queries van por WireGuard),
+  sólo el drift check post-merge.
 
 - **No hardcodear `tenant_id`** — ADR 022 silo.
 
@@ -160,29 +183,26 @@ tiempo de abrir el ADR + diseño de esquema.
 - **Phase 2+ (chat, prompts jerárquicos, tree-RAG, ACL)** —
   desbloqueado pero no es prioridad top-down mientras quede Phase 1
   gap abierto.
-- **Extensión columnas** — la shape 2.0.9 (FICHADAS con 9 columnas,
-  minimal) está bien para Phase 1; extender cuando una UI lo pida.
-- **Merge freeze / cutover runbook** — más adelante en Phase 1
-  §Cutover readiness.
+- **Extensión columnas** — shape mínima es OK; extender cuando una UI
+  lo pida.
 
 ## Cierre esperado
 
-- **Mínimo** (B, waiver W-008): CTBREGIS waived + strike en Pareto.
-  Gap baja a 307 tablas / ≈ 1.50 M filas. PR corto (1-2 h).
-- **Ideal** (A, migrator + bonus HERRAMIENTAS cluster): +798 K filas
-  cubiertas, gap baja a 305 tablas / ≈ 1.27 M filas. Pareto row 1
-  cierra ~28 %, row 2 cierra ~11 % = 39 % del gap restante en una
-  sesión.
+- **Mínimo** (HERRAMIENTAS solo): +225 K filas cubiertas, gap baja a
+  306 tablas / ≈ 1.24 M filas. PR con ADR 028 + migrator.
+- **Ideal** (HERRAMIENTAS + HERRMOVS + STKINSPR): +417 K filas
+  cubiertas, gap baja a 304 tablas / ≈ 1.05 M filas. Cumulative 79 %
+  covered de Histrix.
 
-Post-PR: `gh pr create --base main --head 2.0.10` y tras merge,
+Post-PR: `gh pr create --base main --head 2.0.11` y tras merge,
 `git pull` en la workstation para volver a cerrar drift + tag +
 release.
 
 ## Working branch
 
-Antes de código: cortar `2.0.10` desde `main` **post-merge de 2.0.9**
-y bumpear `CLAUDE.md` ("Working: 2.0.9" → "Working: 2.0.10") con
-`chore: bump working branch 2.0.9 → 2.0.10` (pattern `ce1aacf7`).
+Antes de código: cortar `2.0.11` desde `main` **post-merge de 2.0.10**
+y bumpear `CLAUDE.md` ("Working: 2.0.10" → "Working: 2.0.11") con
+`chore: bump working branch 2.0.10 → 2.0.11` (pattern `348f02f4`).
 
-Si 2.0.9 sigue abierto cuando arrancás, NO cortes 2.0.10 encima —
-primero cerrá el ciclo (ver §"Pre-work si 2.0.9 sigue abierto").
+Si 2.0.10 sigue abierto cuando arrancás, NO cortes 2.0.11 encima —
+primero cerrá el ciclo (ver §"Pre-work si 2.0.10 sigue abierto").

@@ -1021,3 +1021,81 @@ func (q *Queries) UpdateAccount(ctx context.Context, arg UpdateAccountParams) (E
 	)
 	return i, err
 }
+
+const listAccountingRegisters = `-- name: ListAccountingRegisters :many
+SELECT id, tenant_id, legacy_id, subsystem_code, reg_date, voucher_date,
+       minuta_number, comprobante_type, comprobante_number,
+       account_code, account_id, entry_side, amount, reference, status,
+       cost_center_code, imputation_code,
+       legacy_cost_center_id, legacy_imputation_id, legacy_account_id,
+       post_number, entry_order, subdiary_code, physical_units, created_at
+FROM erp_accounting_registers
+WHERE tenant_id = $1
+  AND ($4::DATE IS NULL OR reg_date >= $4::DATE)
+  AND ($5::DATE IS NULL OR reg_date <= $5::DATE)
+  AND ($6::INTEGER = 0 OR minuta_number = $6::INTEGER)
+ORDER BY reg_date DESC NULLS LAST, minuta_number, entry_order
+LIMIT $2 OFFSET $3
+`
+
+type ListAccountingRegistersParams struct {
+	TenantID string      `json:"tenant_id"`
+	Limit    int32       `json:"limit"`
+	Offset   int32       `json:"offset"`
+	DateFrom pgtype.Date `json:"date_from"`
+	DateTo   pgtype.Date `json:"date_to"`
+	Minuta   int32       `json:"minuta"`
+}
+
+func (q *Queries) ListAccountingRegisters(ctx context.Context, arg ListAccountingRegistersParams) ([]ErpAccountingRegister, error) {
+	rows, err := q.db.Query(ctx, listAccountingRegisters,
+		arg.TenantID,
+		arg.Limit,
+		arg.Offset,
+		arg.DateFrom,
+		arg.DateTo,
+		arg.Minuta,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ErpAccountingRegister{}
+	for rows.Next() {
+		var i ErpAccountingRegister
+		if err := rows.Scan(
+			&i.ID,
+			&i.TenantID,
+			&i.LegacyID,
+			&i.SubsystemCode,
+			&i.RegDate,
+			&i.VoucherDate,
+			&i.MinutaNumber,
+			&i.ComprobanteType,
+			&i.ComprobanteNumber,
+			&i.AccountCode,
+			&i.AccountID,
+			&i.EntrySide,
+			&i.Amount,
+			&i.Reference,
+			&i.Status,
+			&i.CostCenterCode,
+			&i.ImputationCode,
+			&i.LegacyCostCenterID,
+			&i.LegacyImputationID,
+			&i.LegacyAccountID,
+			&i.PostNumber,
+			&i.EntryOrder,
+			&i.SubdiaryCode,
+			&i.PhysicalUnits,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
