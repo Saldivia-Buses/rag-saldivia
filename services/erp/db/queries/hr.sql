@@ -165,3 +165,27 @@ FROM erp_training_attendees ta
 JOIN erp_entities e ON e.id = ta.entity_id
 WHERE ta.tenant_id = $1 AND ta.training_id = $2
 ORDER BY e.name;
+
+-- ─── Time clock (Phase 1 §Data migration — Pareto #2) ──────────────────────
+
+-- name: ListEmployeeCards :many
+-- Versioned card-to-employee assignments. The FICHADAS resolver picks the
+-- row with the largest effective_from <= event_date for each card.
+SELECT id, tenant_id, entity_id, card_code, effective_from, created_at
+FROM erp_employee_cards
+WHERE tenant_id = $1 AND entity_id = $2
+ORDER BY effective_from DESC;
+
+-- name: ListTimeClockEventsForEmployee :many
+-- Raw clock-punch stream for a single employee over a date range. Excludes
+-- rows flagged borrado in Histrix (deleted_flag != 0).
+SELECT id, tenant_id, entity_id, card_code, event_time, event_type,
+       terminal, marca, deleted_flag, insert_key, legacy_id
+FROM erp_time_clock_events
+WHERE tenant_id = $1 AND entity_id = $2
+  AND deleted_flag = 0
+  AND event_time IS NOT NULL
+  AND event_time >= $3
+  AND event_time <  $4
+ORDER BY event_time
+LIMIT $5 OFFSET $6;

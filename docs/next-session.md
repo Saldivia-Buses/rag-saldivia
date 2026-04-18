@@ -1,9 +1,20 @@
-# Next session — Phase 1 §Data migration: first migrator from the prioritized gap
+# Next session — Phase 1 §Data migration: Pareto #3 (CTBREGIS 572 K + HERRAMIENTAS cluster)
 
-Arrancás en `main` con `cb2f444c` ya desplegado en la workstation (el
-drift gate cerró verde empíricamente al final de la sesión 2.0.7).
-Commit tope: `cb2f444c 2.0.7 — Phase 0 closed (5/5) + Phase 1
-data-migration roadmap + prod hardening (#154)`.
+La sesión anterior (2.0.9) cerró Pareto #2 en un PR:
+
+- **FICHADAS** (1,465,002 filas) + **PERSONAL_TARJETA** (1,403 filas)
+  migrados vía `NewTimeClockEventMigrator` + `NewEmployeeCardMigrator`
+  → tablas nuevas `erp_time_clock_events` + `erp_employee_cards`
+  (migración `070`). Resolución card+fecha → empleado vía el nuevo
+  `Mapper.BuildTarjetaIndex` / `ResolveByTarjetaAtDate` (date-versioned).
+
+Post-2.0.9 el gap Phase 1 §Data migration quedó en **308 tablas /
+≈ 2.07 M filas** (11 % del total Histrix). Las 106 tablas cubiertas son
+ya **68 %** del volumen total.
+
+Arrancás con PR de 2.0.9 **mergeable** al cerrar la sesión. Si no se
+mergea solo, cerrar el ciclo (ver §"Pre-work si 2.0.9 sigue abierto"
+abajo).
 
 ## Final goal (ADR 026 — no se pierde de vista)
 
@@ -17,176 +28,161 @@ SDA reemplaza Histrix. El empleado abre SDA y:
 5. Detrás, agentes hoardean data: mail ingest, WhatsApp interno,
    tree-RAG con ACL por colección.
 
-La vara: `.intranet-scrape/` — 675 tablas + ~4,500 XML-forms.
-
-## Estado Phase 0 (ADR 027)
-
-| # | Item | Estado |
-|---|---|---|
-| 1 | Migration integrity | ✅ shipped (2.0.6) |
-| 2 | No-op migrators | ✅ shipped (2.0.6) |
-| 3 | Orphan tables | ✅ shipped (2.0.6) |
-| 4 | Tool capabilities | ✅ shipped (2.0.7) |
-| 5 | Workstation drift | ✅ shipped (2.0.7) — empíricamente `make check-prod-drift` = verde |
-
-**Phase 0 cerrado 5/5. Phase 2+ desbloqueado. Pero la prioridad top-down
-sigue siendo Phase 1 (parity before polish).**
-
-## Estado Phase 1 §Data migration (prioridad para esta sesión)
-
-Del diff realizado en 2.0.7 con row counts live:
+## Estado Phase 1 §Data migration (post-2.0.9)
 
 | Segment | Tablas | Filas |
 |---|---:|---:|
-| Histrix total | 675 | 18.9 M |
-| Cubiertas (migrator/reader registrado) | 100 | ~8.85 M (47 %) |
-| Waiver masivo (W-004 HTX*, W-005 `*_OLD`, W-006 0-filas) | 261 | 3.9 M infra/deads |
-| **Gap real a migrar/waiver uno-a-uno** | **314** | **6.18 M (33 %)** |
+| Histrix total | 675 | 18.94 M |
+| Cubiertas | 106 | ≈ 12.96 M (**68 %**) |
+| Waiver masivo (W-004/005/006) | 261 | 3.91 M |
+| **Gap remaining** | **308** | **≈ 2.07 M (11 %)** |
 
-**Pareto**: top 10 tablas uncovered = 90.6 % del row volume. Top 20 =
-95.8 %. Los 294 restantes tailean hacia miles-de-filas — muchos aún
-importan por contenido (nombres de entidades, HR, etc.) pero en
-volumen son ruido.
+**Top uncovered post-2.0.9** (row volume):
 
-Ranking completo vivo en `docs/parity/data-migration.md`. Regenerable
-con la receta al final de ese archivo (SSH+mysql via docker+sshpass —
-memoria en `reference_histrix_access.md`).
+| Rank | Tabla | Rows (approx) | Cum % del gap |
+|---:|---|---:|---:|
+| 1 | **CTBREGIS** | 572,076 | **27.7 %** |
+| 2 | HERRAMIENTAS | 225,355 | 38.6 % |
+| 3 | STKINSPR | 180,412 | 47.3 % |
+| 4 | PRODUCTO_ATRIB_VALORES | 153,835 | 54.7 % |
+| 5 | PROD_CONTROL_HOMOLOG | 105,683 | 59.8 % |
+| 6 | STK_COSTO_HIST | 95,217 | 64.4 % |
+| 7 | BCS_IMPORTACION | 84,492 | 68.5 % |
+| 8 | EGX300EPE | 79,040 | 72.3 % |
+| 9 | REG_MOVIMIENTO_OBS | 72,737 | 75.8 % |
+| 10 | REG_CUENTA_CALIFICACION | 58,960 | 78.7 % |
 
-## Tarea principal — primer migrator de la lista Pareto
+Reproducer completo al final de `docs/parity/data-migration.md`.
 
-**Skills primarios:** `htx-parity` + `migration-health` + `database`.
+## Pre-work si 2.0.9 sigue abierto
 
-### Opción A (recomendada) — `STK_ARTICULO_PROCESO_HIST_DETALLE` (2.6 M filas, 42.7 % del gap)
+Antes de cortar 2.0.10:
 
-Solo esta tabla cubre 42.7 % del row volume uncovered. Por eso entra primera.
+```bash
+gh pr checks <NRO>          # tu PR 2.0.9
+gh pr view <NRO> --json mergeable,state
 
-**Pre-work obligatorio (no saltar):**
+# Post-merge en main:
+git checkout main && git pull origin main
+git tag v2.0.9 && git push origin v2.0.9
+gh release create v2.0.9 --title "..." --notes-file <...>
 
-1. Leer `.intranet-scrape/xml-forms/stock/articulos*.xml` y cualquier
-   form que mencione `proceso_hist` o `historia` del artículo —
-   contrato de parity.
-2. Inspeccionar shape de la tabla en Histrix vivo:
+# Workstation drift (srv-ia-01):
+ssh sistemas@srv-ia-01 "cd /opt/saldivia/repo && git pull origin main"
+# Verificar: git rev-parse origin/main == git rev-parse HEAD en workstation.
+```
+
+Memoria: `feedback_version_tagging.md`. Incluir en release body la
+sección 2.0.9 (Pareto #2 FICHADAS + PERSONAL_TARJETA) con métricas.
+
+## Tarea principal — Pareto #3: CTBREGIS (572 K filas)
+
+**Skills primarios:** `htx-parity` + `migration-health` + `database` +
+(posiblemente) `backend-go`.
+
+### Contexto de negocio
+
+- `CTBREGIS` (572,076 filas) es el **registro log** contable histórico
+  de Histrix. El flow operativo ya lo cubren `CTB_DETALLES` /
+  `CTB_MOVIMIENTOS` (nuevo schema) → `erp_journal_entries` +
+  `erp_journal_lines` (migradas desde 2.0.3).
+- La duda clave: **¿CTBREGIS tiene consumidores UI activos, o ya está
+  reemplazado por el flow nuevo?** Si es lo segundo → **waiver W-008**.
+  Si existe pantalla Histrix que lo consulta directamente → migrator.
+
+### Arranque recomendado
+
+1. **Read XML-forms**: `grep -rl "CTBREGIS\b" .intranet-scrape/xml-forms/`
+   — ver qué pantallas lo usan. Si sólo aparece en pantallas del
+   conjunto `contabilidad/registros*` que ya tienen equivalente SDA en
+   journal entries, W-008.
+2. **Inspeccionar shape en Histrix live** (vía docker+sshpass):
    ```sql
-   DESCRIBE STK_ARTICULO_PROCESO_HIST_DETALLE;
-   SELECT * FROM STK_ARTICULO_PROCESO_HIST_DETALLE LIMIT 5;
+   DESCRIBE CTBREGIS;
+   SELECT COUNT(*) FROM CTBREGIS;
+   -- comparar con CTB_MOVIMIENTOS (ya cubierto)
+   SELECT COUNT(*) FROM CTB_MOVIMIENTOS;
+   -- ¿son redundantes?
    ```
-   (via el pattern docker+sshpass de `reference_histrix_access.md`).
-3. Buscar si ya existe tabla SDA target — `grep -r "stk_articulo_proceso\|article_process_hist\|erp_process" db/tenant/migrations/`.
-   Probablemente no; hay que crearla.
-4. Revisar la estructura padre en migración tree:
-   `STK_ARTICULOS` ya está migrada → `erp_articles`. El detalle
-   histórico es child-of. La FK más natural es `article_id UUID` con
-   `resolve_via erp_legacy_mapping`.
+3. **Decisión A vs B**:
+   - **A (migrator)**: si hay UI dedicada → nueva tabla
+     `erp_accounting_registers` + reader + migrator + migración 071.
+   - **B (waiver W-008)**: si flow real sigue vía journal entries →
+     waiver corto en `docs/parity/waivers.md` + strike en Pareto
+     `data-migration.md`.
 
-**Deliverables:**
+### Tarea secundaria (si A cerró bien o B es trivial) — HERRAMIENTAS + HERRMOVS
 
-1. Nueva migration `db/tenant/migrations/0NN_erp_article_process_history.up.sql` + down pair. Shape mínimo:
-   - `id UUID PK DEFAULT gen_random_uuid()`
-   - `tenant_id TEXT NOT NULL` (ADR 022 silo — se dejará al seed; revisar convención en tablas cercanas)
-   - FK al artículo (`article_id` → `erp_articles(id)`)
-   - columnas del detalle (estimar a partir del schema Histrix)
-   - `created_at/updated_at TIMESTAMPTZ`
-2. sqlc queries mínimas (al menos una read — Phase 0 "no dead-end writes" sigue vigente).
-3. Nuevo reader en `tools/cli/internal/legacy/stock_extended.go`:
-   - PKColumn (AI int), Columns list, filtros si aplica.
-4. Nuevo migrator en `tools/cli/internal/migration/migrators_*.go` —
-   probablemente reutiliza `GenericMigrator` + transformFn que resuelve
-   `article_id` via `mapper.Resolve(...)`.
-5. Registro en orchestrator (con dependency después de `STK_ARTICULOS`).
-6. Test dry-run contra Histrix vivo con `--only-table
-   STK_ARTICULO_PROCESO_HIST_DETALLE --limit 100 --prod` —
-   evidencia de que el Transform no devuelve nil universalmente (zero
-   `rows_written=0` completions) y que el invariant
-   `rows_read = rows_written + rows_skipped + rows_duplicate` cierra.
+**Cluster de herramientas** (~237 K filas combinadas):
+- `HERRAMIENTAS` (225 K) — catálogo de herramientas
+- `HERRMOVS` (11 K) — movimientos
 
-### Opción B (warmup) — W-001 fix: REMITOINT migrator + re-point REMDETAL
+Nuevo dominio SDA: probablemente `erp_tools` o compartir con
+`erp_stock` extendido. Requiere **ADR note** antes del migrator (nuevo
+surface no trivial). Si la Pareto #3 cierra como waiver (20 min), hay
+tiempo de abrir el ADR + diseño de esquema.
 
-Más chica (5,125 filas) pero cierra un waiver abierto. Buena para
-"primera vez escribiendo un migrator" si querés bajar riesgo antes
-de atacar 2.6 M filas.
+## Trampas conocidas (heredadas de 2.0.9)
 
-`docs/parity/waivers.md §W-001` tiene el root cause escrito:
-`REMDETAL.idRemito` apunta a `REMITOINT`, no `REMITO`. Hay que:
+- **sqlc drift** — el pattern del hand-patch sigue vigente: editá la
+  query `.sql`, regenerá, extraé SOLO los blocks nuevos, revertí con
+  `git checkout services/erp/internal/repository/`, appendeá a mano.
+  Memoria `feedback_sqlc_version_drift`.
 
-1. Escribir `NewInternalDeliveryNoteReader` en
-   `tools/cli/internal/legacy/invoicing.go` apuntando a `REMITOINT`.
-2. `BuildRemitoIntIndex` en la orchestrator hook file.
-3. Repointar `NewDeliveryNoteLineMigrator` al índice nuevo.
-4. Strike-through W-001 en `waivers.md` + agregar evidencia del dry-run.
+- **Phase 0 invariants** — religion. `rows_read = rows_written +
+  rows_skipped + rows_duplicate` **y** NO completar con
+  `rows_written=0` sobre `rows_read>0`. `migration-health` skill.
 
-Shippable en 1-2 horas. Ideal si querés warm-up + Opción A en sesión
-siguiente.
+- **Lint errcheck pre-existente** en `pkg/server/healthcheck*.go` (3
+  errores). Vienen desde 2.0.7 (`cb2f444c`), CI pasa sin ellos. No
+  bloquean; se puede ignorar o fix drive-by aparte.
 
-## Trampas conocidas
+- **Cold-start migrations** — tres bugs latentes surface sólo en silo
+  fresco (psql `:'var'`, cross-DB INSERT, LANGUAGE sql forward-ref).
+  Memoria `feedback_migration_cold_start`.
 
-- **Phase 0 invariants siguen siendo la religión.** Cualquier
-  migrator nuevo DEBE cumplir
-  `rows_read = rows_written + rows_skipped + rows_duplicate` **y**
-  NO completar con `rows_written=0` sobre `rows_read>0`. El skill
-  `migration-health` tiene las queries canónicas — corrérlas post-dry-run.
-- **FK resolution silenciosa.** El pattern `mapper.ResolveOptional` es
-  la fuente #1 de ghost rows: cuando devuelve `nil, nil` por FK no
-  encontrada, el migrator a veces emite `return nil, nil` que skippea
-  la fila sin incrementar `rows_skipped`. Auditar el Transform nuevo
-  contra `ghostrow_test.go`.
-- **Histrix access requiere VPN activa en Windows** (como el 2026-04-18).
-  SSH sí llega desde WSL (port 22 abierto), MySQL NO (bind-localhost).
-  El pattern de docker+sshpass está en
-  `~/.claude/projects/-home-enzo-rag-saldivia/memory/reference_histrix_access.md`.
-  Las creds están en `c:/Users/enzo/Downloads/Copia de DATOS SISTEMAS -
-  HARD.csv` + `reference_db_saldivia.md`.
-- **Numeración de migration**. Leer el último archivo en
-  `db/tenant/migrations/` antes de elegir número. NO reutilizar números
-  aunque parezcan libres.
-- **No regenerar sqlc masivo** (memoria: `feedback_sqlc_version_drift`).
-  Editar `models.go` quirúrgicamente si necesitás registrar un struct
-  nuevo; la CI tiene un check que diff-ea.
-- **No escribir `tenant_id` hardcoded**. ADR 022 silo: el valor viene
-  del seed por contenedor. Ver cómo lo hace `erp_articles` en
-  `db/tenant/migrations/018_erp_stock.up.sql`.
+- **Numeración migration** — leer el último archivo en
+  `db/tenant/migrations/` (2.0.9 dejó 070). Next libre: **071**.
 
-## Tarea secundaria (si cerraste la principal con tiempo)
+- **Histrix access requiere VPN activa en Windows**. Pattern
+  docker+sshpass en `reference_histrix_access.md`. El IP
+  `172.22.100.23` del workstation NO es accesible desde WSL sin el
+  mismo VPN; usá hostname `srv-ia-01` (resuelve vía DNS del VPN).
+  Passwords: workstation `sistemas/Saldivia01!`, Histrix
+  `sistemas/SaldiviaAdmin02` + DB `root/m2450e`.
 
-**Segundo migrator** — `FICHADAS` (1.5 M filas, 23.7 % del gap).
-
-`FICHADADIA` ya está cubierto (es el daily-rollup). `FICHADAS` es el
-raw-event stream (cada fichada individual). Skill: `htx-parity` +
-`migration-health`. Shape probable: parent HR existente + child rows
-con timestamp + tipo + estado.
-
-No atacar si la principal no cerró — separar commit/PR por migrator
-(una tabla por PR, más reviewable).
+- **No hardcodear `tenant_id`** — ADR 022 silo.
 
 ## Fuera de scope
 
-- **Phase 1 §UI parity** — sub-order de ADR 027 dice "Data migration
-  → UI parity". Las pages esperan hasta que haya data atrás.
+- **Phase 1 §UI parity** — sub-order ADR 027 dice "Data migration → UI
+  parity". Las pages esperan detrás del data.
 - **Phase 2+ (chat, prompts jerárquicos, tree-RAG, ACL)** —
   desbloqueado pero no es prioridad top-down mientras quede Phase 1
   gap abierto.
-- **Merge freeze / cutover runbook** — Phase 1 §Cutover readiness vive
-  más adelante; no mezclar.
+- **Extensión columnas** — la shape 2.0.9 (FICHADAS con 9 columnas,
+  minimal) está bien para Phase 1; extender cuando una UI lo pida.
+- **Merge freeze / cutover runbook** — más adelante en Phase 1
+  §Cutover readiness.
 
 ## Cierre esperado
 
-- **Mínimo** (Opción B, warmup): W-001 cerrado — REMITOINT migrator
-  shipped + REMDETAL re-pointed + 5,125 filas recuperadas + strike-
-  through en `waivers.md`.
-- **Ideal** (Opción A): primer migrator de la lista Pareto shipped —
-  `STK_ARTICULO_PROCESO_HIST_DETALLE` completo, 2.6 M filas migradas,
-  Phase 0 invariants verde post-run, tick parcial en Phase 1 §Data
-  migration row 1.
-- **Stretch**: lo anterior + `FICHADAS` (1.5 M filas). Con 2 tablas
-  de top-10 cerradas en una sesión, el gap baja de 6.18 M a ~2.12 M
-  (65 % de la parte uncovered-with-rows cerrada en una sesión).
+- **Mínimo** (B, waiver W-008): CTBREGIS waived + strike en Pareto.
+  Gap baja a 307 tablas / ≈ 1.50 M filas. PR corto (1-2 h).
+- **Ideal** (A, migrator + bonus HERRAMIENTAS cluster): +798 K filas
+  cubiertas, gap baja a 305 tablas / ≈ 1.27 M filas. Pareto row 1
+  cierra ~28 %, row 2 cierra ~11 % = 39 % del gap restante en una
+  sesión.
 
-Post-PR de cualquiera de los dos: `gh pr create --base main --head
-2.0.8` y tras merge, `git pull` en la workstation para volver a
-cerrar drift.
+Post-PR: `gh pr create --base main --head 2.0.10` y tras merge,
+`git pull` en la workstation para volver a cerrar drift + tag +
+release.
 
 ## Working branch
 
-Antes de arrancar código, cortar `2.0.8` desde `main` y bumpear
-`CLAUDE.md` ("Working: 2.0.7" → "Working: 2.0.8") con el commit
-`chore: bump working branch 2.0.7 → 2.0.8` — mismo pattern que
-`9277bbd8`.
+Antes de código: cortar `2.0.10` desde `main` **post-merge de 2.0.9**
+y bumpear `CLAUDE.md` ("Working: 2.0.9" → "Working: 2.0.10") con
+`chore: bump working branch 2.0.9 → 2.0.10` (pattern `ce1aacf7`).
+
+Si 2.0.9 sigue abierto cuando arrancás, NO cortes 2.0.10 encima —
+primero cerrá el ciclo (ver §"Pre-work si 2.0.9 sigue abierto").
