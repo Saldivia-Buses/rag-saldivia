@@ -31,11 +31,19 @@ that justifies the waiver. The waiver ADR number goes in the item.
 **Owners:** `migration-health` (integrity + orphan tables), `agent-tools` (tool perm), `deploy-ops` (prod drift).
 
 - [ ] **Migration integrity**: for every row in `erp_migration_table_progress`
-      for the latest prod run, `rows_read == rows_written + rows_skipped`.
-      Today: fails (214K ghost rows).
+      for the latest prod run,
+      `rows_read == rows_written + rows_skipped + rows_duplicate`.
+      Today: code fix shipped in 2.0.6 (`rows_duplicate` counter + invariant
+      reporter in `printReport`); prod re-run pending to confirm the canonical
+      ghost-row query returns zero.
 - [ ] **Migrators with `rows_written=0` and `rows_read>0`**: zero.
-      Today: fails (5 migrators, including FACDETAL → erp_invoice_lines =
-      198K skipped).
+      Today: 4 of 5 fixed in 2.0.6 (PreloadDomain + hook re-ordering so the
+      invoice / HR / legajo indexes build against a populated cache). The 5th
+      (REMDETAL → erp_invoice_lines, 5K rows) is waived as `W-001` in
+      `docs/parity/waivers.md` — REMDETAL's FK is to `REMITOINT`, not `REMITO`,
+      so fixing it requires a new migrator rather than a pipeline fix. Prod
+      re-run pending to confirm the canonical no-op query returns only the
+      waived row.
 - [ ] **Every migrated table has at least one sqlc query** (no dead-end
       writes). Today: fails (16 orphan tables per backend audit).
 - [ ] **Every agent tool declares a capability** and is rejected at dispatch
