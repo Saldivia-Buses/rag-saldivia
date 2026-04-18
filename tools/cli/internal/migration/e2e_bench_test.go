@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"github.com/shopspring/decimal"
 )
 
@@ -110,13 +109,6 @@ func (m *syntheticMigrator) Transform(ctx context.Context, row map[string]any, m
 		(*time.Time)(nil),
 		row["id_stkbomhist"].(int64),
 	}, nil
-}
-
-func seedRun(ctx context.Context, t *testing.T, pool interface {
-	Exec(ctx context.Context, sql string, args ...any) (pgx.Row, error)
-}) uuid.UUID {
-	t.Helper()
-	return uuid.New()
 }
 
 // runOne orchestrates a single end-to-end migration run of one synthetic

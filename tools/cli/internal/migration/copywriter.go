@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -28,13 +27,6 @@ type CopyWriter struct {
 // NewCopyWriter constructs a CopyWriter bound to a tenant.
 func NewCopyWriter(pool *pgxpool.Pool, tenantID string) *CopyWriter {
 	return &CopyWriter{pool: pool, tenantID: tenantID}
-}
-
-// txQuerier is the minimal surface we need from a pgx transaction to run COPY
-// and the follow-up INSERT ... SELECT. Only used internally.
-type txQuerier interface {
-	Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
-	CopyFrom(ctx context.Context, tableName pgx.Identifier, columnNames []string, rowSrc pgx.CopyFromSource) (int64, error)
 }
 
 // WriteBatch loads rows into `table` idempotently.
