@@ -1,3 +1,5 @@
--- 053_e2e_test_user.down.sql
-DELETE FROM user_roles WHERE user_id = 'u-e2e-test';
-DELETE FROM users WHERE id = 'u-e2e-test';
+-- 057_e2e_test_user.down.sql
+--
+-- NO-OP: matches the up-side (see 057_e2e_test_user.up.sql). The seed now
+-- lives in `deploy/scripts/seed.sh`; this migration no longer creates or
+-- owns any rows to roll back.

@@ -1,3 +1,5 @@
 -- 058_admin_user.down.sql
-DELETE FROM user_roles WHERE user_id = 'u-admin';
-DELETE FROM users WHERE id = 'u-admin';
+--
+-- NO-OP: matches the up-side (see 058_admin_user.up.sql). The seed now
+-- lives in `deploy/scripts/seed.sh`; this migration no longer creates or
+-- owns any rows to roll back.
