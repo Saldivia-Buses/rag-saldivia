@@ -30,20 +30,23 @@ that justifies the waiver. The waiver ADR number goes in the item.
 
 **Owners:** `migration-health` (integrity + orphan tables), `agent-tools` (tool perm), `deploy-ops` (prod drift).
 
-- [ ] **Migration integrity**: for every row in `erp_migration_table_progress`
+- [x] **Migration integrity**: for every row in `erp_migration_table_progress`
       for the latest prod run,
       `rows_read == rows_written + rows_skipped + rows_duplicate`.
-      Today: code fix shipped in 2.0.6 (`rows_duplicate` counter + invariant
-      reporter in `printReport`); prod re-run pending to confirm the canonical
-      ghost-row query returns zero.
-- [ ] **Migrators with `rows_written=0` and `rows_read>0`**: zero.
-      Today: 4 of 5 fixed in 2.0.6 (PreloadDomain + hook re-ordering so the
-      invoice / HR / legajo indexes build against a populated cache). The 5th
-      (REMDETAL → erp_invoice_lines, 5K rows) is waived as `W-001` in
-      `docs/parity/waivers.md` — REMDETAL's FK is to `REMITOINT`, not `REMITO`,
-      so fixing it requires a new migrator rather than a pipeline fix. Prod
-      re-run pending to confirm the canonical no-op query returns only the
-      waived row.
+      Shipped 2026-04-18 (2.0.6 commits `fee8ab14` + `dad0e7a6`): `rows_duplicate`
+      counter on `erp_migration_table_progress` + invariant reporter in
+      `printReport`. Empirical check — new run `0eb3af71` on saldivia_bench:
+      22 tables completed, canonical ghost-row query returns zero, invariant
+      holds table-by-table.
+- [x] **Migrators with `rows_written=0` and `rows_read>0`**: zero except waivers.
+      Shipped 2026-04-18 (2.0.6 commits `8522fb15` + `8ea0a790`): PreloadDomain
+      inside every `Build*Index`, `BuildRegMovimIndex` moved from `AddSetupHook`
+      to `AddAfterTableHook("IVACOMPRAS")`, and FICHADADIA's clock_in/out now
+      encode as `*time.Time` (not `*string`) for the TIMESTAMPTZ target. Empirical
+      recovery on run `0eb3af71`: FACDETAL 191,051 rows, FICHADADIA 932,665,
+      RHDESCUENTOS 16,809, RRHH_ADICIONALES 1,902 — **1,142,427 rows** previously
+      silently dropped. One no-op remains: REMDETAL (5K), waived as `W-001` in
+      `docs/parity/waivers.md` pending a REMITOINT migrator.
 - [ ] **Every migrated table has at least one sqlc query** (no dead-end
       writes). Today: fails (16 orphan tables per backend audit).
 - [ ] **Every agent tool declares a capability** and is rejected at dispatch
