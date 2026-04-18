@@ -16,6 +16,49 @@ Format per waiver:
 
 ---
 
+## W-002 — CLI-internal migration tables (no app-layer query)
+
+**Scope**: `erp_legacy_mapping`, `erp_migration_runs`,
+`erp_migration_table_progress`, `erp_migration_validation_issues`.
+
+**Why**: These four tables are bookkeeping for the `sda migrate-legacy` CLI
+(see `tools/cli/internal/migration/`). They are written by the CLI, read by
+the CLI (via `Mapper.Resolve*`, `Orchestrator.Resume`, pre-migration
+validators). No app service needs them — the "sqlc query" check assumes
+app-facing reads, which is the wrong shape for these.
+
+**Blast radius**: zero — the data is correctly read by the tool that
+owns it. If an admin dashboard wants to surface "last migration run
+status" it can lift the existing `erp_migration_table_progress` shape
+into a new sqlc query; until then, `docker exec ... psql` is fine.
+
+**Revisit**: if an admin UI for migration status enters scope.
+
+## W-003 — Phase 1 UI placeholder tables (empty, awaiting write + read)
+
+**Scope**: `erp_article_photos`, `erp_communication_recipients`,
+`erp_sequences`, `erp_survey_questions`, `erp_unit_photos`.
+
+**Why**: These tables exist in the tenant schema but have zero rows on
+the prod saldivia DB — no migrator writes them yet and no app handler
+reads them. The Phase 0 "no dead-end writes" check is satisfied by the
+absence of writes; queries become relevant in Phase 1 when the paired
+UI (stock article sheet, communications flow, auto-number sequences,
+survey engine, unit-card gallery) lands.
+
+**Blast radius**: zero — empty tables can't silently drop data.
+
+**Revisit**: when the matching Phase 1 XML-form area (see
+`.intranet-scrape/xml-forms/`) is implemented:
+- `articulos/` → erp_article_photos
+- `comunicaciones/` → erp_communication_recipients
+- admin UI for sequence counters → erp_sequences
+- `calidad/` surveys → erp_survey_questions
+- `produccion/` unit card → erp_unit_photos
+
+The paired PR adds the read queries (and write queries if the UI edits
+the rows), and strikes the row from this waiver.
+
 ## W-001 — REMDETAL (`erp_invoice_lines`) silent drop on fresh migration
 
 **Scope**: the `NewDeliveryNoteLineMigrator` in

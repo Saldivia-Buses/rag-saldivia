@@ -47,8 +47,17 @@ that justifies the waiver. The waiver ADR number goes in the item.
       RHDESCUENTOS 16,809, RRHH_ADICIONALES 1,902 — **1,142,427 rows** previously
       silently dropped. One no-op remains: REMDETAL (5K), waived as `W-001` in
       `docs/parity/waivers.md` pending a REMITOINT migrator.
-- [ ] **Every migrated table has at least one sqlc query** (no dead-end
-      writes). Today: fails (16 orphan tables per backend audit).
+- [x] **Every migrated table has at least one sqlc query** (no dead-end
+      writes). Shipped 2026-04-18 (2.0.6 commits to follow): added 5 read
+      queries for populated orphans (`erp_bom_history` 14.7M rows,
+      `erp_legacy_archive` 7.5M, `erp_training_attendees` 5.9K,
+      `erp_inspection_templates` 2K, `erp_medical_visits_log` 59). The
+      remaining 9 orphans are waived — 4 are CLI-internal bookkeeping
+      (`erp_legacy_mapping` + the three `erp_migration_*`, waiver `W-002`)
+      and 5 are empty Phase 1 UI placeholders (`erp_article_photos`,
+      `erp_communication_recipients`, `erp_sequences`, `erp_survey_questions`,
+      `erp_unit_photos`, waiver `W-003`). Canonical check now runs green
+      against `docs/parity/waivers.md` entries.
 - [ ] **Every agent tool declares a capability** and is rejected at dispatch
       time when the user lacks the permission. Today: not implemented.
 - [ ] **Workstation SHA == `main` HEAD**. A drift-detect script runs and

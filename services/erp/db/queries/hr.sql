@@ -155,3 +155,13 @@ SELECT
     ed.hire_date
 FROM erp_employee_details ed
 WHERE ed.tenant_id = $1 AND ed.entity_id = $2 AND ed.hire_date IS NOT NULL;
+
+-- name: ListTrainingAttendees :many
+-- Attendance roster for a specific training session. Training summary
+-- counts (attended / score average) belong upstream of this listing.
+SELECT ta.id, ta.tenant_id, ta.training_id, ta.entity_id, ta.result, ta.score,
+       e.name AS attendee_name, e.code AS attendee_code
+FROM erp_training_attendees ta
+JOIN erp_entities e ON e.id = ta.entity_id
+WHERE ta.tenant_id = $1 AND ta.training_id = $2
+ORDER BY e.name;

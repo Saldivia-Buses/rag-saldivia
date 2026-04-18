@@ -186,3 +186,16 @@ RETURNING *;
 UPDATE erp_quality_action_tasks
 SET completed = true, closed_date = now()::DATE, updated_at = now()
 WHERE id = $1 AND tenant_id = $2;
+
+-- name: ListInspectionTemplates :many
+-- Master list of inspection controls (migrated from Histrix PROD_CONTROLES).
+-- Returns actives by default; section_id filter narrows to a specific
+-- workshop area when used from the production-floor UI.
+SELECT id, tenant_id, section_id, step_id, vehicle_section_id, control_name, model_code,
+       control_type, sort_order, active, critical, actionable, show_in_tech_sheet,
+       default_inspector_id, enabled_user_id, observations, metadata, created_at, updated_at
+FROM erp_inspection_templates
+WHERE tenant_id = $1
+  AND (sqlc.arg(active_only)::BOOLEAN = false OR active = true)
+  AND (sqlc.arg(section_filter)::UUID IS NULL OR section_id = sqlc.arg(section_filter)::UUID)
+ORDER BY sort_order, control_name;
