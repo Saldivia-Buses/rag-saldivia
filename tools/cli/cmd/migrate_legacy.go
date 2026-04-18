@@ -374,9 +374,16 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 		migration.NewPurchaseInvoiceMigrator(mysqlDB, tenantID),
 	)
 
-	// Setup hook: build regmovim_id → invoice UUID index (FACDETAL needs it).
-	// Must run AFTER IVAVENTAS + IVACOMPRAS migration, BEFORE FACDETAL.
-	orch.AddSetupHook(func(ctx context.Context, mapper *migration.Mapper) error {
+	// After-table hook: build regmovim_id → invoice UUID index (FACDETAL needs it).
+	// Fires right after IVACOMPRAS (the second of IVAVENTAS/IVACOMPRAS), so both
+	// invoice masters are already cached in the mapper before FACDETAL runs.
+	//
+	// Previously registered via AddSetupHook — but setup hooks all fire together
+	// at the first migrator that needs one (NewJournalLineMigrator, much earlier
+	// in the phase order), which meant the regmovim index was built BEFORE the
+	// invoice masters existed. The index came out empty and every FACDETAL row
+	// (198K in prod saldivia) was silently skipped for missing parent invoice.
+	orch.AddAfterTableHook("IVACOMPRAS", func(ctx context.Context, mapper *migration.Mapper) error {
 		return mapper.BuildRegMovimIndex(ctx, mysqlDB)
 	})
 

@@ -809,9 +809,5 @@ func needsSetupHooks(m TableMigrator) bool {
 	case "erp_journal_lines", "erp_stock_movements", "erp_purchase_order_lines", "erp_production_orders":
 		return true
 	}
-	// FACDETAL (invoice lines) needs the regmovim index built after IVAVENTAS/IVACOMPRAS.
-	if m.LegacyTable() == "FACDETAL" {
-		return true
-	}
 	return false
 }

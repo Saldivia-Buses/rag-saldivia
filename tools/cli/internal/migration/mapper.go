@@ -127,6 +127,11 @@ func (m *Mapper) BuildNroCuentaIndex(ctx context.Context, mysqlDB *sql.DB) error
 	if m.dryRun {
 		return nil
 	}
+	// Resume-safe: cache may be empty if this invocation didn't freshly
+	// migrate REG_CUENTA. PreloadDomain rebuilds it from erp_legacy_mapping.
+	if err := m.PreloadDomain(ctx, "entity"); err != nil {
+		return fmt.Errorf("preload entity for nro_cuenta index: %w", err)
+	}
 	rows, err := mysqlDB.QueryContext(ctx,
 		`SELECT id_regcuenta, nro_cuenta FROM REG_CUENTA WHERE nro_cuenta > 0`)
 	if err != nil {
@@ -411,6 +416,14 @@ func (m *Mapper) GetEntryDate(entryID uuid.UUID) time.Time {
 // Used to link FACDETAL rows to their parent invoice (IVAVENTAS/IVACOMPRAS share regmovim_id).
 // Must be called after IVAVENTAS and IVACOMPRAS are migrated.
 func (m *Mapper) BuildRegMovimIndex(ctx context.Context, mysqlDB *sql.DB) error {
+	// Load invoice mappings from erp_legacy_mapping before looking them up.
+	// In a fresh run Map() has already populated the cache; in a resume or
+	// hook-replay the cache is empty and the lookup below would miss every
+	// row, producing a silently empty index and 100% skip on FACDETAL.
+	if err := m.PreloadDomain(ctx, "invoicing"); err != nil {
+		return fmt.Errorf("preload invoicing for regmovim index: %w", err)
+	}
+
 	m.mu.Lock()
 	m.regMovimIndex = make(map[int64]uuid.UUID)
 	m.mu.Unlock()
@@ -475,6 +488,13 @@ func (m *Mapper) BuildLegajoIndex(ctx context.Context, mysqlDB *sql.DB) error {
 	if m.dryRun {
 		return nil
 	}
+	// Load entity mappings from erp_legacy_mapping before looking them up.
+	// In a fresh run Map() has already populated the cache; in a resume or
+	// hook-replay the cache is empty and the lookup below would miss every
+	// row, silently dropping every HR migrator (FICHADADIA et al) to 0 writes.
+	if err := m.PreloadDomain(ctx, "entity"); err != nil {
+		return fmt.Errorf("preload entity for legajo index: %w", err)
+	}
 	rows, err := mysqlDB.QueryContext(ctx,
 		`SELECT IdPersona, legajo FROM PERSONAL WHERE legajo IS NOT NULL AND legajo > 0`)
 	if err != nil {
@@ -534,6 +554,13 @@ func (m *Mapper) ResolveByLegajo(legajo int64) (uuid.UUID, bool) {
 func (m *Mapper) BuildRemitoIndex(ctx context.Context, mysqlDB *sql.DB) error {
 	if m.dryRun {
 		return nil
+	}
+	// Same re-run safety as BuildLegajoIndex / BuildRegMovimIndex: make sure
+	// the invoicing cache is loaded from erp_legacy_mapping before we look up
+	// REMITO's UUIDs, so a hook replay on resume still builds a populated
+	// index instead of silently emitting zero mappings.
+	if err := m.PreloadDomain(ctx, "invoicing"); err != nil {
+		return fmt.Errorf("preload invoicing for remito index: %w", err)
 	}
 	// REMITO's schema varies across saldivia snapshots: some have the
 	// auto-increment idRemito column REMDETAL references, most don't. When
@@ -605,6 +632,24 @@ func (m *Mapper) ResolveByRemitoID(idRemito int64) (uuid.UUID, bool) {
 	defer m.mu.RUnlock()
 	id, ok := m.remitoByID[idRemito]
 	return id, ok
+}
+
+// cacheCount returns the number of (legacy_id → uuid) mappings the in-memory
+// cache holds for (domain, legacy_table). Used by tests to verify that
+// PreloadDomain populated the bucket — there is no production use.
+func (m *Mapper) cacheCount(domain, legacyTable string) int {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return len(m.cache[m.cacheKey(domain, legacyTable)])
+}
+
+// legajoIndexCount returns the size of the PERSONAL.legajo → entity UUID
+// index. Used by tests to confirm BuildLegajoIndex produced non-zero mappings;
+// not used in production code.
+func (m *Mapper) legajoIndexCount() int {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return len(m.legajoIndex)
 }
 
 // PreloadDomain loads all existing mappings for a domain into cache (for FK resolution performance).

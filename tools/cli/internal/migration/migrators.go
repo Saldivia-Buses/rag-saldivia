@@ -1116,7 +1116,8 @@ func NewPurchaseInvoiceMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 
 // NewInvoiceLineMigrator migrates FACDETAL (invoice lines, 194K rows) → erp_invoice_lines.
 // FK resolution: FACDETAL.regmovim_id links to IVAVENTAS/IVACOMPRAS.regmovim_id.
-// The regmovim→invoice index must be built before this migrator runs (setup hook).
+// The regmovim→invoice index is built via AddAfterTableHook("IVACOMPRAS") so both
+// IVAVENTAS and IVACOMPRAS mappings are populated before FACDETAL runs.
 func NewInvoiceLineMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 	reader := legacy.InvoiceLineReader(db)
 	return &GenericMigrator{
