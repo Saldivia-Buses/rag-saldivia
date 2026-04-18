@@ -1040,6 +1040,7 @@ type ErpMigrationTableProgress struct {
 	RowsRead      int32              `json:"rows_read"`
 	RowsWritten   int32              `json:"rows_written"`
 	RowsSkipped   int32              `json:"rows_skipped"`
+	RowsDuplicate int32              `json:"rows_duplicate"`
 	StartedAt     pgtype.Timestamptz `json:"started_at"`
 	CompletedAt   pgtype.Timestamptz `json:"completed_at"`
 	ErrorMessage  pgtype.Text        `json:"error_message"`

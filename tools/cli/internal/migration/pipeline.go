@@ -72,7 +72,7 @@ type pipelineBatch struct {
 // Checkpointing: when readers >1, last_legacy_key is meaningless (fragments
 // advance independently) so we only persist rows_* counters mid-run. Single-
 // reader runs keep the old resumeKey semantics.
-func (o *Orchestrator) runTablePipeline(ctx context.Context, runID, progressID uuid.UUID, m TableMigrator, resumeKey string, readSoFar, writtenSoFar, skippedSoFar int, writer Writer) (TableStats, error) {
+func (o *Orchestrator) runTablePipeline(ctx context.Context, runID, progressID uuid.UUID, m TableMigrator, resumeKey string, readSoFar, writtenSoFar, skippedSoFar, duplicateSoFar int, writer Writer) (TableStats, error) {
 	slog.Info("migrating table (pipeline)", "legacy", m.LegacyTable(), "sda", m.SDATable(), "resume_key", resumeKey)
 	start := time.Now()
 
@@ -83,7 +83,7 @@ func (o *Orchestrator) runTablePipeline(ctx context.Context, runID, progressID u
 		slog.Warn("mark in_progress failed", "progress_id", progressID, "err", err)
 	}
 
-	stats := TableStats{RowsRead: readSoFar, RowsWritten: writtenSoFar, RowsSkipped: skippedSoFar}
+	stats := TableStats{RowsRead: readSoFar, RowsWritten: writtenSoFar, RowsSkipped: skippedSoFar, RowsDuplicate: duplicateSoFar}
 	effectiveBatch := batchSizeFor(o.batchSize, len(m.Columns()))
 
 	ctx, cancel := context.WithCancel(ctx)
@@ -361,6 +361,13 @@ func (o *Orchestrator) runTablePipeline(ctx context.Context, runID, progressID u
 				return stats, err
 			}
 			stats.RowsWritten += written
+			// Writer uses INSERT ... ON CONFLICT DO NOTHING, so any row the
+			// unique constraint rejected is not counted in `written`. Track
+			// those as duplicates so rows_read = written + skipped + duplicate
+			// (Phase 0 bookkeeping invariant, ADR 027).
+			if dup := len(b.rows) - written; dup > 0 {
+				stats.RowsDuplicate += dup
+			}
 		}
 
 		if o.archiveSkipped && len(b.skippedRow) > 0 {
@@ -378,18 +385,18 @@ func (o *Orchestrator) runTablePipeline(ctx context.Context, runID, progressID u
 		if !multiReader && b.fragIdx == -1 {
 			if _, err := tx.Exec(ctx,
 				`UPDATE erp_migration_table_progress
-				 SET last_legacy_key = $1, rows_read = $2, rows_written = $3, rows_skipped = $4
-				 WHERE id = $5`,
-				b.nextKey, stats.RowsRead, stats.RowsWritten, stats.RowsSkipped, progressID,
+				 SET last_legacy_key = $1, rows_read = $2, rows_written = $3, rows_skipped = $4, rows_duplicate = $5
+				 WHERE id = $6`,
+				b.nextKey, stats.RowsRead, stats.RowsWritten, stats.RowsSkipped, stats.RowsDuplicate, progressID,
 			); err != nil {
 				slog.Error("failed to update progress checkpoint", "err", err)
 			}
 		} else {
 			if _, err := tx.Exec(ctx,
 				`UPDATE erp_migration_table_progress
-				 SET rows_read = $1, rows_written = $2, rows_skipped = $3
-				 WHERE id = $4`,
-				stats.RowsRead, stats.RowsWritten, stats.RowsSkipped, progressID,
+				 SET rows_read = $1, rows_written = $2, rows_skipped = $3, rows_duplicate = $4
+				 WHERE id = $5`,
+				stats.RowsRead, stats.RowsWritten, stats.RowsSkipped, stats.RowsDuplicate, progressID,
 			); err != nil {
 				slog.Error("failed to update progress counters", "err", err)
 			}
@@ -409,6 +416,7 @@ func (o *Orchestrator) runTablePipeline(ctx context.Context, runID, progressID u
 			"read", stats.RowsRead,
 			"written", stats.RowsWritten,
 			"skipped", stats.RowsSkipped,
+			"duplicate", stats.RowsDuplicate,
 			"rows/sec", int(rowsPerSec),
 			"elapsed", elapsed.Round(time.Millisecond),
 		)
@@ -423,9 +431,9 @@ func (o *Orchestrator) runTablePipeline(ctx context.Context, runID, progressID u
 	if _, err := o.pg.Exec(ctx,
 		`UPDATE erp_migration_table_progress
 		 SET status = 'completed', completed_at = now(),
-		     rows_read = $1, rows_written = $2, rows_skipped = $3
-		 WHERE id = $4`,
-		stats.RowsRead, stats.RowsWritten, stats.RowsSkipped, progressID,
+		     rows_read = $1, rows_written = $2, rows_skipped = $3, rows_duplicate = $4
+		 WHERE id = $5`,
+		stats.RowsRead, stats.RowsWritten, stats.RowsSkipped, stats.RowsDuplicate, progressID,
 	); err != nil {
 		slog.Warn("mark completed failed", "progress_id", progressID, "err", err)
 	}
@@ -435,6 +443,7 @@ func (o *Orchestrator) runTablePipeline(ctx context.Context, runID, progressID u
 		"read", stats.RowsRead,
 		"written", stats.RowsWritten,
 		"skipped", stats.RowsSkipped,
+		"duplicate", stats.RowsDuplicate,
 		"duration", time.Since(start).Round(time.Millisecond),
 	)
 	return stats, nil
@@ -446,9 +455,9 @@ func (o *Orchestrator) runTablePipeline(ctx context.Context, runID, progressID u
 func updateCheckpoint(ctx context.Context, pg *pgxpool.Pool, progressID uuid.UUID, nextKey string, s TableStats) error {
 	_, err := pg.Exec(ctx,
 		`UPDATE erp_migration_table_progress
-		 SET last_legacy_key = $1, rows_read = $2, rows_written = $3, rows_skipped = $4
-		 WHERE id = $5`,
-		nextKey, s.RowsRead, s.RowsWritten, s.RowsSkipped, progressID,
+		 SET last_legacy_key = $1, rows_read = $2, rows_written = $3, rows_skipped = $4, rows_duplicate = $5
+		 WHERE id = $6`,
+		nextKey, s.RowsRead, s.RowsWritten, s.RowsSkipped, s.RowsDuplicate, progressID,
 	)
 	return err
 }

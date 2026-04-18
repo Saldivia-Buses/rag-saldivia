@@ -1,6 +1,6 @@
 ---
 name: migration-health
-description: Use when touching the Histrix → SDA migration pipeline (tools/cli/internal/migration/*), running or validating a migration, or investigating row-count discrepancies in the migrated tenant DB. Owns Phase 0 of ADR 027 ("data integrity = religion") — enforces the `rows_read == rows_written + rows_skipped` invariant and the "zero `rows_written=0` migrators" invariant.
+description: Use when touching the Histrix → SDA migration pipeline (tools/cli/internal/migration/*), running or validating a migration, or investigating row-count discrepancies in the migrated tenant DB. Owns Phase 0 of ADR 027 ("data integrity = religion") — enforces the `rows_read == rows_written + rows_skipped + rows_duplicate` invariant and the "zero `rows_written=0` migrators" invariant.
 ---
 
 # migration-health
@@ -17,10 +17,21 @@ session:
 
 1. **Bookkeeping invariant.** For every row in
    `erp_migration_table_progress` (latest run):
-   `rows_read = rows_written + rows_skipped`.
-   Any row with `rows_read > rows_written + rows_skipped` is a **ghost
-   row** — data was read from Histrix, silently dropped somewhere in
-   the pipeline, and nothing noticed. Bugs of this kind are **blockers**.
+   `rows_read = rows_written + rows_skipped + rows_duplicate`.
+   The four columns are:
+   - `rows_read`: rows Histrix returned to the reader.
+   - `rows_written`: rows actually INSERT'd (tag.RowsAffected()).
+   - `rows_skipped`: rows the migrator's Transform returned nil for.
+   - `rows_duplicate`: rows INSERT ... ON CONFLICT DO NOTHING dropped —
+     either because a prior run already wrote them (idempotent re-runs)
+     or because the migrator's natural-key format collides across legacy
+     rows. Both are legitimate, but large `rows_duplicate` on a fresh
+     run is a red flag — see "Auditing duplicates" below.
+
+   Any row with `rows_read != rows_written + rows_skipped + rows_duplicate`
+   is a **ghost row** — data was read from Histrix, silently dropped
+   somewhere in the pipeline, and nothing noticed. Bugs of this kind
+   are **blockers**.
 
 2. **No-op completion invariant.** No row in
    `erp_migration_table_progress` has `rows_read > 0 AND rows_written = 0
@@ -53,15 +64,36 @@ deploy-postgres-1 psql -U sda -d sda_tenant_saldivia_bench`).
 ### Ghost rows (bookkeeping invariant)
 
 ```sql
-SELECT domain, legacy_table, sda_table, rows_read, rows_written, rows_skipped,
-       (rows_read - rows_written - rows_skipped) AS unaccounted, status
+SELECT domain, legacy_table, sda_table, rows_read, rows_written, rows_skipped, rows_duplicate,
+       (rows_read - rows_written - rows_skipped - rows_duplicate) AS unaccounted, status
 FROM erp_migration_table_progress
 WHERE run_id = (SELECT id FROM erp_migration_runs ORDER BY started_at DESC LIMIT 1)
-  AND (rows_read - rows_written - rows_skipped) <> 0
+  AND (rows_read - rows_written - rows_skipped - rows_duplicate) <> 0
 ORDER BY unaccounted DESC;
 ```
 
 Expected: zero rows. Any row returned is a bug.
+
+### Auditing duplicates
+
+`rows_duplicate > 0` is not automatically bad — it's expected on an idempotent
+re-run (ON CONFLICT DO NOTHING drops already-written rows). But large
+`rows_duplicate` on a **first** run of a table points to a natural-key
+collision in the migrator's Transform (e.g. FACREMIT's `number = REM-{puesto}-
+{numero}` collides across different ctacod). Investigate:
+
+```sql
+SELECT domain, legacy_table, sda_table, rows_read, rows_written, rows_duplicate,
+       ROUND(100.0 * rows_duplicate / NULLIF(rows_read, 0), 1) AS dup_pct
+FROM erp_migration_table_progress
+WHERE run_id = (SELECT id FROM erp_migration_runs ORDER BY started_at DESC LIMIT 1)
+  AND rows_duplicate > 0
+ORDER BY rows_duplicate DESC;
+```
+
+Any row with dup_pct > ~5% on a fresh run is a legitimate data-loss risk:
+two legacy rows collapsed to one SDA row. Fix by extending the natural key
+(e.g. include ctacod / direction / date in the unique identifier).
 
 ### No-op completions (silent skippers)
 

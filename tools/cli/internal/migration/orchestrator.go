@@ -367,7 +367,7 @@ func (o *Orchestrator) Resume(ctx context.Context, resumeRunID string) error {
 
 	// Load pending/failed tables
 	rows, err := o.pg.Query(ctx,
-		`SELECT id, domain, legacy_table, sda_table, last_legacy_key, rows_read, rows_written, rows_skipped
+		`SELECT id, domain, legacy_table, sda_table, last_legacy_key, rows_read, rows_written, rows_skipped, rows_duplicate
 		 FROM erp_migration_table_progress
 		 WHERE run_id = $1 AND status IN ('pending', 'in_progress', 'failed')
 		 ORDER BY id`,
@@ -379,19 +379,20 @@ func (o *Orchestrator) Resume(ctx context.Context, resumeRunID string) error {
 	defer rows.Close()
 
 	type pendingTable struct {
-		ID           uuid.UUID
-		Domain       string
-		LegacyTable  string
-		SDATable     string
-		LastKey      string
-		RowsRead     int
-		RowsWritten  int
-		RowsSkipped  int
+		ID            uuid.UUID
+		Domain        string
+		LegacyTable   string
+		SDATable      string
+		LastKey       string
+		RowsRead      int
+		RowsWritten   int
+		RowsSkipped   int
+		RowsDuplicate int
 	}
 	var pending []pendingTable
 	for rows.Next() {
 		var t pendingTable
-		if err := rows.Scan(&t.ID, &t.Domain, &t.LegacyTable, &t.SDATable, &t.LastKey, &t.RowsRead, &t.RowsWritten, &t.RowsSkipped); err != nil {
+		if err := rows.Scan(&t.ID, &t.Domain, &t.LegacyTable, &t.SDATable, &t.LastKey, &t.RowsRead, &t.RowsWritten, &t.RowsSkipped, &t.RowsDuplicate); err != nil {
 			return fmt.Errorf("scan pending: %w", err)
 		}
 		pending = append(pending, t)
@@ -448,7 +449,7 @@ func (o *Orchestrator) Resume(ctx context.Context, resumeRunID string) error {
 			slog.Warn("could not preload domain", "domain", t.Domain, "err", err)
 		}
 
-		s, err := o.runTableResume(ctx, runID, t.ID, migrator, t.LastKey, t.RowsRead, t.RowsWritten, t.RowsSkipped)
+		s, err := o.runTableResume(ctx, runID, t.ID, migrator, t.LastKey, t.RowsRead, t.RowsWritten, t.RowsSkipped, t.RowsDuplicate)
 		if err != nil {
 			o.failRun(ctx, runID, err)
 			return fmt.Errorf("resume %s: %w", t.LegacyTable, err)
@@ -482,10 +483,21 @@ func (o *Orchestrator) Resume(ctx context.Context, resumeRunID string) error {
 }
 
 // TableStats tracks per-table migration statistics.
+//
+// The integrity invariant (ADR 027 Phase 0) is:
+//
+//	RowsRead == RowsWritten + RowsSkipped + RowsDuplicate
+//
+// RowsWritten counts tag.RowsAffected() after INSERT ... ON CONFLICT DO NOTHING
+// — strictly newly-inserted rows. RowsDuplicate captures the rows the writer
+// attempted to insert but the unique constraint rejected (idempotent re-run
+// landings or natural-key collisions). Without this counter those rows were
+// silently dropped from the bookkeeping, producing "ghost rows" in prod.
 type TableStats struct {
-	RowsRead    int `json:"rows_read"`
-	RowsWritten int `json:"rows_written"`
-	RowsSkipped int `json:"rows_skipped"`
+	RowsRead      int `json:"rows_read"`
+	RowsWritten   int `json:"rows_written"`
+	RowsSkipped   int `json:"rows_skipped"`
+	RowsDuplicate int `json:"rows_duplicate"`
 }
 
 // DefaultBatchSize is the base batch size for MySQL reads and PG writes. The
@@ -525,12 +537,12 @@ func (o *Orchestrator) runTable(ctx context.Context, runID uuid.UUID, m TableMig
 		if err != nil {
 			return TableStats{}, fmt.Errorf("get progress id: %w", err)
 		}
-		return o.runTablePipeline(ctx, runID, progressID, m, "", 0, 0, 0, o.fastWriter)
+		return o.runTablePipeline(ctx, runID, progressID, m, "", 0, 0, 0, 0, o.fastWriter)
 	}
-	return o.runTableResume(ctx, runID, uuid.Nil, m, "", 0, 0, 0)
+	return o.runTableResume(ctx, runID, uuid.Nil, m, "", 0, 0, 0, 0)
 }
 
-func (o *Orchestrator) runTableResume(ctx context.Context, runID, progressID uuid.UUID, m TableMigrator, resumeKey string, readSoFar, writtenSoFar, skippedSoFar int) (TableStats, error) {
+func (o *Orchestrator) runTableResume(ctx context.Context, runID, progressID uuid.UUID, m TableMigrator, resumeKey string, readSoFar, writtenSoFar, skippedSoFar, duplicateSoFar int) (TableStats, error) {
 	slog.Info("migrating table", "legacy", m.LegacyTable(), "sda", m.SDATable(), "resume_key", resumeKey)
 	start := time.Now()
 
@@ -554,7 +566,7 @@ func (o *Orchestrator) runTableResume(ctx context.Context, runID, progressID uui
 		slog.Warn("mark in_progress failed", "progress_id", progressID, "err", err)
 	}
 
-	stats := TableStats{RowsRead: readSoFar, RowsWritten: writtenSoFar, RowsSkipped: skippedSoFar}
+	stats := TableStats{RowsRead: readSoFar, RowsWritten: writtenSoFar, RowsSkipped: skippedSoFar, RowsDuplicate: duplicateSoFar}
 	reader := m.Reader()
 	lastKey := resumeKey
 	effectiveBatch := batchSizeFor(o.batchSize, len(m.Columns()))
@@ -620,6 +632,12 @@ func (o *Orchestrator) runTableResume(ctx context.Context, runID, progressID uui
 				return stats, err
 			}
 			stats.RowsWritten += written
+			// INSERT ... ON CONFLICT DO NOTHING hides dedup'd rows from
+			// tag.RowsAffected(); account for them so the Phase 0 invariant
+			// rows_read = written + skipped + duplicate holds.
+			if dup := len(insertRows) - written; dup > 0 {
+				stats.RowsDuplicate += dup
+			}
 		}
 
 		lastKey = nextKey
@@ -627,9 +645,9 @@ func (o *Orchestrator) runTableResume(ctx context.Context, runID, progressID uui
 		// Update progress checkpoint within same transaction
 		if _, err := tx.Exec(ctx,
 			`UPDATE erp_migration_table_progress
-			 SET last_legacy_key = $1, rows_read = $2, rows_written = $3, rows_skipped = $4
-			 WHERE id = $5`,
-			lastKey, stats.RowsRead, stats.RowsWritten, stats.RowsSkipped, progressID,
+			 SET last_legacy_key = $1, rows_read = $2, rows_written = $3, rows_skipped = $4, rows_duplicate = $5
+			 WHERE id = $6`,
+			lastKey, stats.RowsRead, stats.RowsWritten, stats.RowsSkipped, stats.RowsDuplicate, progressID,
 		); err != nil {
 			slog.Error("failed to update progress checkpoint", "err", err)
 		}
@@ -647,6 +665,7 @@ func (o *Orchestrator) runTableResume(ctx context.Context, runID, progressID uui
 			"read", stats.RowsRead,
 			"written", stats.RowsWritten,
 			"skipped", stats.RowsSkipped,
+			"duplicate", stats.RowsDuplicate,
 			"rows/sec", int(rowsPerSec),
 			"elapsed", elapsed.Round(time.Millisecond),
 		)
@@ -656,9 +675,9 @@ func (o *Orchestrator) runTableResume(ctx context.Context, runID, progressID uui
 	if _, err := o.pg.Exec(ctx,
 		`UPDATE erp_migration_table_progress
 		 SET status = 'completed', completed_at = now(),
-		     rows_read = $1, rows_written = $2, rows_skipped = $3
-		 WHERE id = $4`,
-		stats.RowsRead, stats.RowsWritten, stats.RowsSkipped, progressID,
+		     rows_read = $1, rows_written = $2, rows_skipped = $3, rows_duplicate = $4
+		 WHERE id = $5`,
+		stats.RowsRead, stats.RowsWritten, stats.RowsSkipped, stats.RowsDuplicate, progressID,
 	); err != nil {
 		slog.Warn("mark completed failed", "progress_id", progressID, "err", err)
 	}
@@ -668,6 +687,7 @@ func (o *Orchestrator) runTableResume(ctx context.Context, runID, progressID uui
 		"read", stats.RowsRead,
 		"written", stats.RowsWritten,
 		"skipped", stats.RowsSkipped,
+		"duplicate", stats.RowsDuplicate,
 		"duration", time.Since(start).Round(time.Millisecond),
 	)
 	return stats, nil
@@ -770,22 +790,31 @@ func printReport(stats map[string]TableStats, dryRun bool, totalDuration time.Du
 		mode = "DRY-RUN"
 	}
 	fmt.Printf("\n=== %s REPORT ===\n", mode)
-	totalRead, totalWritten, totalSkipped := 0, 0, 0
+	totalRead, totalWritten, totalSkipped, totalDuplicate := 0, 0, 0, 0
 	for table, s := range stats {
 		label := "written"
 		if dryRun {
 			label = "would_write"
 		}
-		fmt.Printf("  %-30s read=%-8d %s=%-8d skipped=%-6d\n", table, s.RowsRead, label, s.RowsWritten, s.RowsSkipped)
+		fmt.Printf("  %-30s read=%-8d %s=%-8d skipped=%-6d duplicate=%-6d\n",
+			table, s.RowsRead, label, s.RowsWritten, s.RowsSkipped, s.RowsDuplicate)
 		totalRead += s.RowsRead
 		totalWritten += s.RowsWritten
 		totalSkipped += s.RowsSkipped
+		totalDuplicate += s.RowsDuplicate
 	}
 	label := "written"
 	if dryRun {
 		label = "would_write"
 	}
-	fmt.Printf("\n  TOTAL: read=%d %s=%d skipped=%d\n", totalRead, label, totalWritten, totalSkipped)
+	fmt.Printf("\n  TOTAL: read=%d %s=%d skipped=%d duplicate=%d\n",
+		totalRead, label, totalWritten, totalSkipped, totalDuplicate)
+	// Phase 0 invariant: every row read is accounted for. `unaccounted > 0`
+	// means there is a ghost-row bug somewhere upstream — the reader saw
+	// rows the writer never claimed to persist, skip, or dedup.
+	if unaccounted := totalRead - totalWritten - totalSkipped - totalDuplicate; unaccounted != 0 {
+		fmt.Printf("  INVARIANT VIOLATION: read - written - skipped - duplicate = %d (expected 0)\n", unaccounted)
+	}
 	fmt.Printf("  DURATION: %s\n", totalDuration.Round(time.Millisecond))
 	if totalDuration.Seconds() > 0 {
 		fmt.Printf("  THROUGHPUT: %.0f rows/sec read, %.0f rows/sec written\n",
