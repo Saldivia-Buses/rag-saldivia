@@ -227,3 +227,23 @@ FROM (
     WHERE tenant_id = $1 AND receipt_type = $2
     FOR UPDATE
 ) sub;
+
+-- ─── Bank-statement imports (Phase 1 §Data migration — post-Pareto tail) ───
+
+-- name: ListBankImports :many
+-- Bank-import staging rows (BCS_IMPORTACION migrated). Filter by
+-- account number + date range + processed state. Mirrors the
+-- bancos_local/bcs_importacion_qry.xml view.
+SELECT id, tenant_id, legacy_id, movement_date, concept_name, movement_no,
+       amount, debit, credit, balance,
+       movement_code, treasury_movement_id, treasury_legacy_id,
+       imported_at, account_number, account_entity_id,
+       processed, comments, internal_no, branch, created_at
+FROM erp_bank_imports
+WHERE tenant_id = $1
+  AND (sqlc.arg(account_filter)::INTEGER = 0 OR account_number = sqlc.arg(account_filter)::INTEGER)
+  AND (sqlc.arg(processed_filter)::INTEGER = -1 OR processed = sqlc.arg(processed_filter)::INTEGER)
+  AND (sqlc.arg(date_from)::DATE IS NULL OR movement_date >= sqlc.arg(date_from)::DATE)
+  AND (sqlc.arg(date_to)::DATE IS NULL OR movement_date <= sqlc.arg(date_to)::DATE)
+ORDER BY movement_date DESC NULLS LAST, legacy_id DESC
+LIMIT $2 OFFSET $3;

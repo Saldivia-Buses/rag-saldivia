@@ -456,6 +456,15 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 		migration.NewDeliveryNoteLineMigrator(mysqlDB, tenantID),
 	)
 
+	// Phase 6c: Bank-statement imports (BCS_IMPORTACION → erp_bank_imports,
+	// ~92 K rows live). Rank 1 of the remaining post-Pareto-#8 long tail.
+	// Depends on BuildRegMovimIndex (Phase 6 AfterTableHook on IVACOMPRAS,
+	// already fired above) + BuildNroCuentaIndex (Phase 2 hook). No new
+	// indexes needed.
+	orch.RegisterMigrators(
+		migration.NewBankImportMigrator(mysqlDB, tenantID),
+	)
+
 	// Phase 7: Treasury movements — cash + bank + cash counts (depends on treasury catalogs)
 	orch.RegisterMigrators(
 		migration.NewCashMovementMigrator(mysqlDB, tenantID),

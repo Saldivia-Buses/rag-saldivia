@@ -2,6 +2,26 @@ package legacy
 
 import "database/sql"
 
+// BankImportReader — BCS_IMPORTACION (91,959 rows live, scrape 84,492).
+// Bank-statement import staging: rows arrive from supplier CSV/XLS
+// dumps of bank movements and sit here until concil screens match them
+// against internal REG_MOVIMIENTOS. Live UI: bancos_local/
+// bcs_importacion_qry.xml + surrounding bcsmovim_* forms. Pareto rank 1
+// of the remaining long tail post-Pareto #8.
+func BankImportReader(db *sql.DB) *GenericReader {
+	return &GenericReader{
+		DB:         db,
+		Table:      "BCS_IMPORTACION",
+		Target:     "erp_bank_imports",
+		DomainName: "treasury",
+		PKColumn:   "id_importacion",
+		Columns: "id_importacion, fecha_movimiento, nombre_concepto, " +
+			"nro_movimiento, importe, debito, credito, saldo, " +
+			"cod_movimiento, regmovim_id, importado, nro_cuenta, " +
+			"procesado, comentarios, nro_interno, sucursal",
+	}
+}
+
 // BankAccountReader creates a reader for CAR_BANCOS.
 func BankAccountReader(db *sql.DB) *GenericReader {
 	return &GenericReader{

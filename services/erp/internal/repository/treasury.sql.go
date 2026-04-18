@@ -1454,3 +1454,62 @@ func (q *Queries) VoidReceipt(ctx context.Context, arg VoidReceiptParams) (int64
 	}
 	return result.RowsAffected(), nil
 }
+
+const listBankImports = `-- name: ListBankImports :many
+SELECT id, tenant_id, legacy_id, movement_date, concept_name, movement_no,
+       amount, debit, credit, balance,
+       movement_code, treasury_movement_id, treasury_legacy_id,
+       imported_at, account_number, account_entity_id,
+       processed, comments, internal_no, branch, created_at
+FROM erp_bank_imports
+WHERE tenant_id = $1
+  AND ($4::INTEGER = 0 OR account_number = $4::INTEGER)
+  AND ($5::INTEGER = -1 OR processed = $5::INTEGER)
+  AND ($6::DATE IS NULL OR movement_date >= $6::DATE)
+  AND ($7::DATE IS NULL OR movement_date <= $7::DATE)
+ORDER BY movement_date DESC NULLS LAST, legacy_id DESC
+LIMIT $2 OFFSET $3
+`
+
+type ListBankImportsParams struct {
+	TenantID        string      `json:"tenant_id"`
+	Limit           int32       `json:"limit"`
+	Offset          int32       `json:"offset"`
+	AccountFilter   int32       `json:"account_filter"`
+	ProcessedFilter int32       `json:"processed_filter"`
+	DateFrom        pgtype.Date `json:"date_from"`
+	DateTo          pgtype.Date `json:"date_to"`
+}
+
+// Bank-import staging rows (BCS_IMPORTACION migrated).
+func (q *Queries) ListBankImports(ctx context.Context, arg ListBankImportsParams) ([]ErpBankImport, error) {
+	rows, err := q.db.Query(ctx, listBankImports,
+		arg.TenantID, arg.Limit, arg.Offset,
+		arg.AccountFilter, arg.ProcessedFilter,
+		arg.DateFrom, arg.DateTo,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ErpBankImport{}
+	for rows.Next() {
+		var i ErpBankImport
+		if err := rows.Scan(
+			&i.ID, &i.TenantID, &i.LegacyID, &i.MovementDate,
+			&i.ConceptName, &i.MovementNo, &i.Amount, &i.Debit,
+			&i.Credit, &i.Balance, &i.MovementCode,
+			&i.TreasuryMovementID, &i.TreasuryLegacyID,
+			&i.ImportedAt, &i.AccountNumber, &i.AccountEntityID,
+			&i.Processed, &i.Comments, &i.InternalNo, &i.Branch,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

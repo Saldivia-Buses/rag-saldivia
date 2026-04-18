@@ -2371,6 +2371,90 @@ func NewHomologationRevisionLineMigrator(db *sql.DB, tenantID string) *GenericMi
 }
 
 // ============================================================================
+// Phase 6c — Bank statement imports (BCS_IMPORTACION)
+// ============================================================================
+
+// NewBankImportMigrator — BCS_IMPORTACION → erp_bank_imports
+// (91,959 rows live, scrape 84,492). Bank-statement import staging;
+// each row is one line from a CSV/XLS dump of bank movements awaiting
+// reconciliation against internal REG_MOVIMIENTOS.
+//
+// FK resolution:
+//   - treasury_movement_id via BuildRegMovimIndex (Phase 6 hook) —
+//     looks up the regmovim_id in the preloaded index populated from
+//     IVACOMPRAS. Nullable because BCS_IMPORTACION includes rows
+//     where the bank line hasn't been matched yet (processed=2).
+//   - account_entity_id via the nro_cuenta index (Phase 2 hook) —
+//     straight ResolveByNroCuenta lookup.
+//
+// Both indexes are populated much earlier in the run so this migrator
+// just consumes them.
+func NewBankImportMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.BankImportReader(db)
+	return &GenericMigrator{
+		reader: reader,
+		columns: []string{
+			"id", "tenant_id", "legacy_id",
+			"movement_date", "concept_name", "movement_no",
+			"amount", "debit", "credit", "balance",
+			"movement_code", "treasury_movement_id", "treasury_legacy_id",
+			"imported_at", "account_number", "account_entity_id",
+			"processed", "comments", "internal_no", "branch",
+		},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_importacion")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			regMovimID := row.Int64("regmovim_id")
+			var treasuryID *uuid.UUID
+			if regMovimID > 0 {
+				if resolved, ok := mapper.ResolveRegMovim(regMovimID); ok && resolved != uuid.Nil {
+					treasuryID = &resolved
+				}
+			}
+
+			nroCuenta := row.Int64("nro_cuenta")
+			var accountEntityID *uuid.UUID
+			if nroCuenta > 0 {
+				if resolved, tag := mapper.ResolveEntityFlexible(ctx, nroCuenta); resolved != uuid.Nil && tag != "unknown" {
+					accountEntityID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "treasury", "BCS_IMPORTACION", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			movDate := SafeDate(timeFromRow(row, "fecha_movimiento"))
+			importedAt := SafeDate(timeFromRow(row, "importado"))
+
+			return []any{
+				id, tenantID, legacyID,
+				movDate,
+				strings.TrimSpace(row.String("nombre_concepto")),
+				int32(row.Int("nro_movimiento")),
+				ParseDecimal(row.Decimal("importe")),
+				ParseDecimal(row.Decimal("debito")),
+				ParseDecimal(row.Decimal("credito")),
+				ParseDecimal(row.Decimal("saldo")),
+				strings.TrimSpace(row.String("cod_movimiento")),
+				treasuryID, int32(regMovimID),
+				importedAt,
+				int32(nroCuenta), accountEntityID,
+				int32(row.Int("procesado")),
+				strings.TrimSpace(row.String("comentarios")),
+				int32(row.Int("nro_interno")),
+				strings.TrimSpace(row.String("sucursal")),
+			}, nil
+		},
+	}
+}
+
+// ============================================================================
 // Phase 11d — Production inspection × homologation cross-reference
 // ============================================================================
 

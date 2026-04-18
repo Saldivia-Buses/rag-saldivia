@@ -14,9 +14,11 @@ La sesión anterior (2.0.10) cerró Paretos #3, #4, #5, #6, #7, #8 y #18 en un P
   growth) + **STK_COSTO_HIST** (103,799 live) → `erp_production_
   inspection_homologations` + `erp_article_cost_history` (075).
   Cierra Pareto #7 y #8.
+- **BCS_IMPORTACION** (91,959 live) → `erp_bank_imports` (076).
+  Cierra rank #9 del Pareto original — import bancario staging.
 
-**5 commits, +2,108,007 filas migradas, 7 ranks del Pareto cerrados en
-un PR. Cobertura total post-PR: ~80 %.**
+**6 commits, +2,199,966 filas migradas, 8 ranks del Pareto cerrados
+en un PR. Cobertura total post-PR: ~80 %.**
 
 Post-2.0.10 el gap quedó en **296 tablas**, ~200 K filas scrape-anchored
 (~1 % del total Histrix). Las 118 tablas cubiertas son ~80 % del
@@ -54,20 +56,20 @@ SDA reemplaza Histrix. El empleado abre SDA y:
 
 | Rank | Tabla | Rows (scrape) |
 |---:|---|---:|
-| 1 | **BCS_IMPORTACION** | 84,492 |
-| 2 | EGX300EPE | 79,040 |
-| 3 | REG_MOVIMIENTO_OBS | 72,737 |
-| 4 | REG_CUENTA_CALIFICACION | 58,960 |
-| 5 | TEL_LOG | 34,885 |
-| 6 | COTIZOPMOVIM | 28,626 |
-| 7 | STK_COSTO_REPOSICION_HIST | 28,515 |
-| 8 | CARCHEHI | 26,882 |
-| 9 | ACCESORIOS_COCHE | 19,671 |
-| 10 | EGX_300 | 15,702 |
+| 1 | **EGX300EPE** | 79,040 |
+| 2 | REG_MOVIMIENTO_OBS | 72,737 |
+| 3 | REG_CUENTA_CALIFICACION | 58,960 |
+| 4 | TEL_LOG | 34,885 |
+| 5 | COTIZOPMOVIM | 28,626 |
+| 6 | STK_COSTO_REPOSICION_HIST | 28,515 |
+| 7 | CARCHEHI | 26,882 |
+| 8 | ACCESORIOS_COCHE | 19,671 |
+| 9 | EGX_300 | 15,702 |
+| 10 | RECLAMOPAGOS | 15,463 |
 
-Estos 10 suman ~450 K filas scraped (~200-400 K live estimate). El
-resto son 286 tablas con <15 K filas cada una — candidatas para bulk
-waiver o cierre rápido con migrator genérico.
+Estos 10 suman ~380 K filas scraped (~250-500 K live estimate). El
+resto son 285 tablas con <15 K filas cada una — candidatas para bulk
+waiver W-007 o cierre rápido con migrator genérico.
 
 Reproducer completo al final de `docs/parity/data-migration.md`.
 
@@ -172,7 +174,7 @@ eligible para bulk waiver W-007.
   fresco (psql `:'var'`, cross-DB INSERT, LANGUAGE sql forward-ref).
   Memoria `feedback_migration_cold_start`.
 
-- **Numeración migration** — 2.0.10 dejó `075`. Next libre: **076**.
+- **Numeración migration** — 2.0.10 dejó `076`. Next libre: **077**.
 
 - **Histrix access requiere VPN activa en Windows**. Pattern
   docker+sshpass en `reference_histrix_access.md`. Passwords:

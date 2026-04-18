@@ -17,12 +17,12 @@ SSH tunnel).
 | Segment | Count | Rows |
 |---|---:|---:|
 | Histrix tables in `.intranet-scrape/db-tables.txt` | 675 | 18,940,293 |
-| Tables with a registered migrator/reader | 118 | ≈ 15,066,265 (live) |
-| Tables uncovered (total) | 557 | — |
+| Tables with a registered migrator/reader | 119 | ≈ 15,158,224 (live) |
+| Tables uncovered (total) | 556 | — |
 | &nbsp;&nbsp;— Histrix infra (HTX*, 31) — waived W-004 | 31 | 3,486,776 |
 | &nbsp;&nbsp;— `*_OLD` superseded (5) — waived W-005 | 5 | 423,678 |
 | &nbsp;&nbsp;— zero-row dead tables — waived W-006 | 225 | 0 |
-| &nbsp;&nbsp;— **business-data gap remaining** | **296** | **≈ 200 K** (scrape) |
+| &nbsp;&nbsp;— **business-data gap remaining** | **295** | **≈ 115 K** (scrape) |
 
 The 118 "covered" tables now account for **~80 %** of all Histrix rows
 by live COUNT(*) — up from 68 % post-2.0.9, 61 % post-2.0.8 and 47 %
@@ -52,6 +52,19 @@ remaining coverage.
    `reg_date` uses `SafeDate` (NULL for the 8 zero-date rows).
    Phase 0 invariant from live Histrix: `rows_read = 604,579 = rows_written
    (604,579) + rows_skipped (0) + rows_duplicate (0)` on first run.
+
+6. **Pareto tail #1 — BCS_IMPORTACION (91,959 rows live, scrape
+   84,492)** migrated via `NewBankImportMigrator` → new table
+   `erp_bank_imports` (migration `076`). Bank-statement import
+   staging: rows arrive from CSV/XLS dumps of bank account movements
+   and sit here until concil screens match them against internal
+   REG_MOVIMIENTOS. Live UI lives in `bancos_local/` (bcs_importacion_qry,
+   bcsmovim_*). FK resolution: `treasury_movement_id` via
+   ResolveRegMovim (Phase 6 index, populated from IVAVENTAS+IVACOMPRAS
+   AfterTableHook) — nullable because unmatched rows sit with
+   treasury_legacy_id=0 / processed=2. `account_entity_id` via the
+   nro_cuenta index (Phase 2 REG_CUENTA hook). No new permissions
+   (reuses erp.treasury.*). Phase 0 invariant: 91,959 = 91,959 + 0 + 0.
 
 5. **Pareto #7 + #8 — PROD_CONTROL_HOMOLOG (403,028 rows live, scrape
    105,683) + STK_COSTO_HIST (103,799 rows live, scrape 95,217)**
@@ -190,7 +203,7 @@ Row volume in the uncovered bucket is extremely concentrated:
 | 6 | ~~PRODUCTO_ATRIB_VALORES~~ — **migrated 2.0.10** (353,936 live) | ~~153,835~~ | — |
 | 7 | ~~PROD_CONTROL_HOMOLOG~~ — **migrated 2.0.10** (403,028 live, +282 %) | ~~105,683~~ | — |
 | 8 | ~~STK_COSTO_HIST~~ — **migrated 2.0.10** (103,799 live) | ~~95,217~~ | — |
-| 9 | BCS_IMPORTACION | 84,492 | 89.4 % |
+| 9 | ~~BCS_IMPORTACION~~ — **migrated 2.0.10** (91,959 live) | ~~84,492~~ | — |
 | 10 | EGX300EPE | 79,040 | 90.6 % |
 | 11 | REG_MOVIMIENTO_OBS | 72,737 | 91.8 % |
 | 12 | REG_CUENTA_CALIFICACION | 58,960 | 92.8 % |
@@ -229,7 +242,7 @@ Aggregating the top-30 by the prefix convention:
 |---|---|---:|
 | Stock / inventory | STK_ARTICULO_PROCESO_HIST_DETALLE, STKINSPR, STK_COSTO_HIST, STK_COSTO_REPOSICION_HIST, STK_COSTOS, STK_ARTICULO_LOCACION, STK_BOM_ENPROCESO, STK_ATRIBUTO_VALORES | ≈ 2,995,135 |
 | HR / fichadas | RH_EVALUACION_RESPUESTAS (FICHADAS migrated 2.0.9) | 11,469 |
-| Accounting | BCS_IMPORTACION (CTBREGIS migrated 2.0.10) | 84,492 |
+| Accounting | (CTBREGIS + BCS_IMPORTACION migrated 2.0.10) | — |
 | Tools / equipment | (HERRAMIENTAS + HERRMOVS migrated 2.0.10) | — |
 | Product attrs | PRODUCTO_ATRIB_VALORES, PRODUCTO_ATRIBUTO_HOMOLOGACION | 171,393 |
 | Production controls | PROD_CONTROL_HOMOLOG, PROD_PATH_REGISTRO, CONTROLCALIDAD | 124,228 |

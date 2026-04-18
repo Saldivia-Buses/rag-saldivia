@@ -2136,3 +2136,27 @@ type ErpArticleCostHistory struct {
 	PeriodCode  string             `json:"period_code"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 }
+
+type ErpBankImport struct {
+	ID                  pgtype.UUID        `json:"id"`
+	TenantID            string             `json:"tenant_id"`
+	LegacyID            int64              `json:"legacy_id"`
+	MovementDate        pgtype.Date        `json:"movement_date"`
+	ConceptName         string             `json:"concept_name"`
+	MovementNo          int32              `json:"movement_no"`
+	Amount              pgtype.Numeric     `json:"amount"`
+	Debit               pgtype.Numeric     `json:"debit"`
+	Credit              pgtype.Numeric     `json:"credit"`
+	Balance             pgtype.Numeric     `json:"balance"`
+	MovementCode        string             `json:"movement_code"`
+	TreasuryMovementID  pgtype.UUID        `json:"treasury_movement_id"`
+	TreasuryLegacyID    int32              `json:"treasury_legacy_id"`
+	ImportedAt          pgtype.Timestamptz `json:"imported_at"`
+	AccountNumber       int32              `json:"account_number"`
+	AccountEntityID     pgtype.UUID        `json:"account_entity_id"`
+	Processed           int32              `json:"processed"`
+	Comments            string             `json:"comments"`
+	InternalNo          int32              `json:"internal_no"`
+	Branch              string             `json:"branch"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+}
