@@ -15,7 +15,7 @@ import (
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
 	notify "github.com/Camionerou/rag-saldivia/services/app/internal/events/gen/notify"
 	"github.com/Camionerou/rag-saldivia/services/app/internal/outbox"
-	"github.com/Camionerou/rag-saldivia/pkg/spine"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/spine"
 	"github.com/Camionerou/rag-saldivia/services/app/internal/realtime/chat/repository"
 )
 

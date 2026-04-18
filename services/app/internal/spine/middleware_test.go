@@ -9,7 +9,7 @@ import (
 	"github.com/nats-io/nats.go"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/Camionerou/rag-saldivia/pkg/spine"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/spine"
 )
 
 func TestSubjectSlug(t *testing.T) {

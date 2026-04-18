@@ -4,7 +4,7 @@
 package ingest
 
 import (
-	"github.com/Camionerou/rag-saldivia/pkg/spine"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/spine"
 )
 
 // IngestCompletedSchemaVersion is the current schema version for ingest.completed.

@@ -4,7 +4,7 @@
 package notify
 
 import (
-	"github.com/Camionerou/rag-saldivia/pkg/spine"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/spine"
 )
 
 // AuthLoginSuccessSchemaVersion is the current schema version for auth.login_success.

@@ -4,7 +4,7 @@
 package platform
 
 import (
-	"github.com/Camionerou/rag-saldivia/pkg/spine"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/spine"
 )
 
 // PlatformLifecycleSchemaVersion is the current schema version for platform.lifecycle.

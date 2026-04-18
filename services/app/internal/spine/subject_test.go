@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Camionerou/rag-saldivia/pkg/spine"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/spine"
 )
 
 func TestBuildSubject_SubstitutesPlaceholders(t *testing.T) {

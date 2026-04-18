@@ -18,7 +18,7 @@ import (
 
 	ingestevt "github.com/Camionerou/rag-saldivia/services/app/internal/events/gen/ingest"
 	"github.com/Camionerou/rag-saldivia/services/app/internal/outbox"
-	"github.com/Camionerou/rag-saldivia/pkg/spine"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/spine"
 	"github.com/Camionerou/rag-saldivia/services/app/internal/rag/ingest/repository"
 )
 
