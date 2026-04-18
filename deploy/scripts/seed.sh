@@ -17,9 +17,13 @@ log "seeding platform db..."
 # DEV ONLY — production must use secrets manager for connection strings
 psql "$PLATFORM_DB_URL" -v ON_ERROR_STOP=1 --quiet <<'SQL'
 -- Dev tenant (matches docker-compose dev config)
+-- Dev tenant. ID == slug on purpose — main.go defaults both TENANT_ID and
+-- TENANT_SLUG to "dev" (per docker-compose.dev.yml env-common), and the
+-- aggregator's upsert into tenant_health_scores uses TENANT_ID directly as
+-- tenants(id). A distinct 'dev-tenant-id' would break that FK.
 INSERT INTO tenants (id, slug, name, plan_id, postgres_url, redis_url, settings)
 VALUES (
-    'dev-tenant-id',
+    'dev',
     'dev',
     'Dev Tenant',
     'business',
@@ -31,10 +35,10 @@ VALUES (
 -- Enable core modules for dev tenant
 INSERT INTO tenant_modules (tenant_id, module_id, config, enabled_by)
 VALUES
-    ('dev-tenant-id', 'chat', '{}', 'seed'),
-    ('dev-tenant-id', 'auth', '{}', 'seed'),
-    ('dev-tenant-id', 'notifications', '{}', 'seed'),
-    ('dev-tenant-id', 'docs', '{}', 'seed')
+    ('dev', 'chat', '{}', 'seed'),
+    ('dev', 'auth', '{}', 'seed'),
+    ('dev', 'notifications', '{}', 'seed'),
+    ('dev', 'docs', '{}', 'seed')
 ON CONFLICT DO NOTHING;
 
 -- Global feature flag for dev
