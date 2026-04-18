@@ -6,7 +6,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Camionerou/rag-saldivia/pkg/guardrails"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/guardrails"
 )
 
 type mockClassifier struct {

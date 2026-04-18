@@ -33,7 +33,7 @@ import (
 	"github.com/Camionerou/rag-saldivia/pkg/config"
 	"github.com/Camionerou/rag-saldivia/pkg/crypto"
 	"github.com/Camionerou/rag-saldivia/pkg/database"
-	"github.com/Camionerou/rag-saldivia/pkg/guardrails"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/guardrails"
 	"github.com/Camionerou/rag-saldivia/pkg/health"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	agentllm "github.com/Camionerou/rag-saldivia/pkg/llm"
