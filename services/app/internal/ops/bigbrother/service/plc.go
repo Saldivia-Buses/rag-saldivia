@@ -11,11 +11,11 @@ import (
 	"github.com/nats-io/nats.go"
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
-	"github.com/Camionerou/rag-saldivia/pkg/plc"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/ops/bigbrother/plc"
 )
 
 // PLCService handles PLC register operations with safety enforcement.
-// Uses pkg/plc for protocol and pkg/approval for two-person rule.
+// Uses the plc subpackage for protocol and pkg/approval for two-person rule.
 type PLCService struct {
 	db         *pgxpool.Pool
 	nc         *nats.Conn
@@ -112,7 +112,7 @@ func (s *PLCService) WriteRegister(ctx context.Context, req WriteRegisterRequest
 		return nil, fmt.Errorf("get register: %w", err)
 	}
 
-	// Safety validation via pkg/plc
+	// Safety validation via the plc subpackage
 	if err := plc.ValidateWrite(tier, req.Value, minVal, maxVal); err != nil {
 		return &WriteRegisterResult{Status: "rejected", Message: err.Error()}, nil
 	}
@@ -135,7 +135,7 @@ func (s *PLCService) WriteRegister(ctx context.Context, req WriteRegisterRequest
 		return nil, fmt.Errorf("audit failed, write aborted: %w", err)
 	}
 
-	// TODO: actual PLC write via pkg/plc Modbus/OPC-UA client
+	// TODO: actual PLC write via the plc subpackage (Modbus/OPC-UA)
 	// For now, update the register value in DB
 	_, err = s.db.Exec(ctx,
 		`UPDATE bb_plc_registers SET last_value = $1, last_value_numeric = $2, last_read = now()
@@ -233,7 +233,7 @@ func (s *PLCService) ApproveWrite(ctx context.Context, requestID, approverID, ip
 		return nil, fmt.Errorf("audit failed, approval aborted: %w", err)
 	}
 
-	// TODO: actual PLC write via pkg/plc
+	// TODO: actual PLC write via the plc subpackage
 	slog.Info("critical PLC write approved and executed",
 		"request_id", requestID,
 		"device_id", deviceID,

@@ -8,11 +8,11 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
-	"github.com/Camionerou/rag-saldivia/pkg/remote"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/ops/bigbrother/remote"
 )
 
 // RemoteService handles remote command execution with allowlist enforcement.
-// Uses pkg/remote for transport, adds policy (allowlist, audit, sanitization).
+// Uses the internal/ops/bigbrother/remote subpackage for transport, adds policy (allowlist, audit, sanitization).
 type RemoteService struct {
 	db         *pgxpool.Pool
 	credSvc    *CredentialService

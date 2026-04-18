@@ -13,7 +13,7 @@ import (
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
 	"github.com/Camionerou/rag-saldivia/pkg/httperr"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
-	"github.com/Camionerou/rag-saldivia/pkg/remote"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/ops/bigbrother/remote"
 	"github.com/Camionerou/rag-saldivia/services/app/internal/ops/bigbrother/inventory"
 	"github.com/Camionerou/rag-saldivia/services/app/internal/ops/bigbrother/scanner"
 	"github.com/Camionerou/rag-saldivia/services/app/internal/ops/bigbrother/service"
