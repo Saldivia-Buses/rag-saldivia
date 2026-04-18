@@ -8,7 +8,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Camionerou/rag-saldivia/pkg/storage"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/rag/ingest/storage"
 )
 
 func newTestStore(t *testing.T) *storage.S3Store {

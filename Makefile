@@ -144,7 +144,7 @@ test-workstation-e2e: ## Run only E2E smoke against workstation
 	@bash scripts/test-workstation.sh e2e
 
 test-storage: ## Run storage tests (requires MinIO running)
-	cd $(ROOT_DIR)/pkg && go test ./storage/... -v -count=1
+	cd $(ROOT_DIR)/services/app && go test ./internal/rag/ingest/storage/... -v -count=1
 
 test-guardrails: ## Run guardrails tests
 	cd $(ROOT_DIR)/pkg && go test ./guardrails/... -v -count=1

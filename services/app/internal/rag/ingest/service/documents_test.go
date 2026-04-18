@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/Camionerou/rag-saldivia/pkg/storage"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/rag/ingest/storage"
 )
 
 // documents_test.go — unit tests for DocumentService and helpers in documents.go.

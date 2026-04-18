@@ -36,7 +36,7 @@ fi
 # Test put/get via Go test
 if command -v go &> /dev/null; then
     cd "$(dirname "$0")/../.." # repo root
-    if go test ./pkg/storage/... -count=1 -run TestPutGetDelete > /dev/null 2>&1; then
+    if (cd services/app && go test ./internal/rag/ingest/storage/...) -count=1 -run TestPutGetDelete > /dev/null 2>&1; then
         pass "Storage put/get/delete works"
     else
         fail "Storage test failed"

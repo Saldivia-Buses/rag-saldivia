@@ -17,7 +17,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
 
-	"github.com/Camionerou/rag-saldivia/pkg/storage"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/rag/ingest/storage"
 	"github.com/Camionerou/rag-saldivia/services/app/internal/rag/ingest/repository"
 )
 
