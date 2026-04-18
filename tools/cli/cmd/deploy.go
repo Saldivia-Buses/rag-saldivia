@@ -28,7 +28,7 @@ func init() {
 
 var validServices = map[string]bool{
 	"auth": true, "ws": true, "chat": true, "agent": true,
-	"search": true, "astro": true, "notification": true,
+	"search": true, "notification": true,
 	"platform": true, "ingest": true, "feedback": true,
 	"traces": true, "web": true,
 }

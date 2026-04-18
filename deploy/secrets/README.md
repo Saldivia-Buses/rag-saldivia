@@ -8,37 +8,33 @@ inside containers.
 
 | File | Used by | Content |
 |---|---|---|
-| `jwt-private.pem` | auth only | Ed25519 private key (PEM) |
-| `jwt-public.pem` | all Go services | Ed25519 public key (PEM) |
-| `db-platform-url` | platform, feedback, traces | PostgreSQL connection URL |
-| `db-tenant-template-url` | auth, chat, search, ingest, notification | PostgreSQL connection URL template |
+| `jwt-private.pem` | app (auth module signs) | Ed25519 private key (PEM) |
+| `jwt-public.pem` | app + erp | Ed25519 public key (PEM) |
+| `db-platform-url` | app (platform + feedback + traces + healthwatch modules) | PostgreSQL connection URL |
+| `db-tenant-template-url` | app (auth + chat + search + ingest + notification modules) | PostgreSQL connection URL template |
 | `redis-password` | redis | Password string |
-| `encryption-master-key` | auth | 32-byte AES-256 key (base64) |
+| `encryption-master-key` | app (auth module) | 32-byte AES-256 key (base64) |
 
 ## NATS per-service credentials
 
 NATS uses per-service auth (not a shared token). Each service connects
 with its own username/password defined in `deploy/nats/nats-server.conf`.
-Passwords are provided as environment variables to the NATS container:
+Passwords are provided as environment variables to the NATS container.
+
+Post ADR 025 the monolith collapses the 10 pre-fusion Go services into a
+single `app` user; only three credentials remain:
 
 | Variable | NATS user | Service |
 |---|---|---|
-| `AUTH_NATS_PASS` | auth | Auth Service |
-| `CHAT_NATS_PASS` | chat | Chat Service |
-| `WS_NATS_PASS` | ws | WebSocket Hub |
-| `NOTIF_NATS_PASS` | notification | Notification Service |
-| `INGEST_NATS_PASS` | ingest | Ingest Service |
-| `FEEDBACK_NATS_PASS` | feedback | Feedback Service |
-| `AGENT_NATS_PASS` | agent | Agent Service |
-| `TRACES_NATS_PASS` | traces | Traces Service |
-| `PLATFORM_NATS_PASS` | platform | Platform Service |
-| `EXTRACTOR_NATS_PASS` | extractor | Extractor Service |
+| `APP_NATS_PASS` | app | The consolidated Go monolith (core + ops + rag + realtime) |
+| `ERP_NATS_PASS` | erp | ERP (still a standalone service) |
+| `EXTRACTOR_NATS_PASS` | extractor | Python OCR / vision pipeline |
 
 Provide these via a `.env` file or export them before running
 `docker compose up`. Generate random passwords:
 
 ```bash
-for svc in AUTH CHAT WS NOTIF INGEST FEEDBACK AGENT TRACES PLATFORM EXTRACTOR; do
+for svc in APP ERP EXTRACTOR; do
   echo "${svc}_NATS_PASS=$(openssl rand -base64 24)"
 done > .env.nats
 ```

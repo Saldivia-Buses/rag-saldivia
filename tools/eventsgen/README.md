@@ -1,7 +1,7 @@
 # eventsgen
 
 Dev tool that generates Go, TypeScript, and Markdown from CUE specs in
-`pkg/events/spec/`. Part of Plan 26 (spine).
+`services/app/internal/events/spec/`. Part of Plan 26 (spine).
 
 ## Usage
 
@@ -13,7 +13,7 @@ make events-validate  # CI guard — fails if artifacts are out of sync
 
 ## How it works
 
-1. Reads every `.cue` file in `pkg/events/spec/` (one file per family).
+1. Reads every `.cue` file in `services/app/internal/events/spec/` (one file per family).
 2. Uses `cuelang.org/go/cue/load` to build the merged CUE instance.
 3. Uses `cuelang.org/go/cue/parser` per file to determine which Types
    belong to which family (filename = family).
@@ -25,11 +25,11 @@ make events-validate  # CI guard — fails if artifacts are out of sync
 
 ## Adding a new event
 
-Edit the relevant `pkg/events/spec/<family>.cue`, then:
+Edit the relevant `services/app/internal/events/spec/<family>.cue`, then:
 
 ```bash
 make events-gen
-git add pkg/events/spec pkg/events/gen apps/web/src/lib/events/gen docs/events
+git add services/app/internal/events/spec services/app/internal/events/gen apps/web/src/lib/events/gen docs/events
 ```
 
 For breaking changes, see the checklist in `docs/conventions/cue.md`.
@@ -38,7 +38,7 @@ For breaking changes, see the checklist in `docs/conventions/cue.md`.
 
 | Flag | Default | Purpose |
 |------|---------|---------|
-| `-spec` | `pkg/events/spec` | CUE source directory |
-| `-out-go` | `pkg/events/gen` | Go packages (subdirectory per family) |
+| `-spec` | `services/app/internal/events/spec` | CUE source directory |
+| `-out-go` | `services/app/internal/events/gen` | Go packages (subdirectory per family) |
 | `-out-ts` | `apps/web/src/lib/events/gen` | TS modules |
 | `-out-docs` | `docs/events` | Markdown catalog |

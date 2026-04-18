@@ -27,17 +27,24 @@ ensure_tracking() {
     psql "$db_url" --quiet -v ON_ERROR_STOP=1 -c "CREATE TABLE IF NOT EXISTS schema_migrations (filename TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT now())" < /dev/null
 }
 
-# Apply a migration if not already applied
+# Apply a migration if not already applied. psql's :'var' client-side
+# substitution does not expand reliably under `-c` (confirmed against
+# psql 16 inside the all-in-one image — the colon was forwarded verbatim
+# and the server raised a syntax error). Shell-interpolate the filename
+# into a SQL literal instead; migration filenames are globbed from
+# db/*/migrations/*.up.sql so we own the value, but defend anyway by
+# escaping single quotes.
 apply_migration() {
     local db_url="$1"
     local file="$2"
     local filename
     filename=$(basename "$file")
+    local sql_filename="${filename//\'/\'\'}"
 
-    # Check if already applied (use psql -v to avoid SQL injection)
     local applied
-    applied=$(psql "$db_url" -t -v "mig_file=$filename" \
-        -c "SELECT 1 FROM schema_migrations WHERE filename = :'mig_file'" < /dev/null 2>/dev/null | tr -d ' ')
+    applied=$(psql "$db_url" -tA \
+        -c "SELECT 1 FROM schema_migrations WHERE filename = '$sql_filename'" \
+        < /dev/null 2>/dev/null)
 
     if [ "$applied" = "1" ]; then
         return 0
@@ -45,12 +52,11 @@ apply_migration() {
 
     log "applying $filename → $(echo "$db_url" | sed 's|.*@||; s|?.*||')"
 
-    # Apply migration inside a transaction
     psql "$db_url" -v ON_ERROR_STOP=1 --quiet --single-transaction -f "$file" < /dev/null
 
-    # Record as applied
-    psql "$db_url" --quiet -v "mig_file=$filename" \
-        -c "INSERT INTO schema_migrations (filename) VALUES (:'mig_file') ON CONFLICT DO NOTHING" < /dev/null
+    psql "$db_url" --quiet \
+        -c "INSERT INTO schema_migrations (filename) VALUES ('$sql_filename') ON CONFLICT DO NOTHING" \
+        < /dev/null
 }
 
 # ── Platform DB ──────────────────────────────────────────────────────────

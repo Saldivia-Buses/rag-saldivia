@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # install-cue.sh — install CUE binary with SHA256 verification.
 #
-# CUE is the schema language for pkg/events/spec (Plan 26). The Go eventsgen
+# CUE is the schema language for services/app/internal/events/spec (Plan 26). The Go eventsgen
 # tool embeds cuelang.org/go as a library, but a local `cue` binary is useful
 # for editor tooling, `cue vet`, and interactive debugging.
 #

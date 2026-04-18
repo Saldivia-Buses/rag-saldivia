@@ -17,12 +17,12 @@ GO_SERVICES := $(shell ls -d $(SERVICES_DIR)/*/go.mod 2>/dev/null | xargs -I{} d
 GIT_SHA := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 BUILD_TIME := $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 LDFLAGS_BASE := -s -w \
-	-X github.com/Camionerou/rag-saldivia/pkg/build.GitSHA=$(GIT_SHA) \
-	-X github.com/Camionerou/rag-saldivia/pkg/build.BuildTime=$(BUILD_TIME)
+	-X github.com/Camionerou/rag-saldivia/pkg/server.GitSHA=$(GIT_SHA) \
+	-X github.com/Camionerou/rag-saldivia/pkg/server.BuildTime=$(BUILD_TIME)
 
 export GOBIN
 
-.PHONY: help dev stop test lint build proto migrate deploy new-service clean versions
+.PHONY: help dev stop test lint build migrate deploy new-service clean versions
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -46,22 +46,15 @@ dev-services: ## Start all Go services on host (requires infra running)
 		REDIS_URL=localhost:6379 NATS_URL=nats://localhost:4222 TENANT_SLUG=dev \
 		JWT_PUBLIC_KEY=LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUNvd0JRWURLMlZ3QXlFQVpMSmkrZmtPbitKUllNQmc4VkVBTkh2bXRzZUxQK3JmRFdFUStZL3ZIU0E9Ci0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLQo= \
 		JWT_PRIVATE_KEY=LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1DNENBUUF3QlFZREsyVndCQ0lFSUZvSXFxYU1BcjVjYnZFSE9Rc2g0cnVQTUUzeCtRSkVlVDByNnkxQ2tjMmgKLS0tLS1FTkQgUFJJVkFURSBLRVktLS0tLQo="; \
-	env $$ENV_COMMON AUTH_PORT=8001 nohup go run ./services/auth/cmd/... > /tmp/sda-auth.log 2>&1 & \
-	env $$ENV_COMMON WS_PORT=8002 WS_ALLOWED_ORIGINS="http://localhost:3000" nohup go run ./services/ws/cmd/... > /tmp/sda-ws.log 2>&1 & \
-	env $$ENV_COMMON CHAT_PORT=8003 nohup go run ./services/chat/cmd/... > /tmp/sda-chat.log 2>&1 & \
-	env $$ENV_COMMON AGENT_PORT=8004 SEARCH_SERVICE_URL=http://localhost:8010 INGEST_SERVICE_URL=http://localhost:8007 NOTIFICATION_SERVICE_URL=http://localhost:8005 ASTRO_SERVICE_URL=http://localhost:8011 nohup go run ./services/agent/cmd/... > /tmp/sda-agent.log 2>&1 & \
-	env $$ENV_COMMON NOTIFICATION_PORT=8005 SMTP_HOST=localhost SMTP_PORT=1025 SMTP_FROM=noreply@sda.local nohup go run ./services/notification/cmd/... > /tmp/sda-notification.log 2>&1 & \
-	env $$ENV_COMMON PLATFORM_PORT=8006 nohup go run ./services/platform/cmd/... > /tmp/sda-platform.log 2>&1 & \
-	env $$ENV_COMMON INGEST_PORT=8007 INGEST_STAGING_DIR=/tmp/ingest-staging nohup go run ./services/ingest/cmd/... > /tmp/sda-ingest.log 2>&1 & \
-	env $$ENV_COMMON FEEDBACK_PORT=8008 nohup go run ./services/feedback/cmd/... > /tmp/sda-feedback.log 2>&1 & \
-	env $$ENV_COMMON TRACES_PORT=8009 nohup go run ./services/traces/cmd/... > /tmp/sda-traces.log 2>&1 & \
-	env $$ENV_COMMON SEARCH_PORT=8010 SEARCH_GRPC_PORT=50051 nohup go run ./services/search/cmd/... > /tmp/sda-search.log 2>&1 & \
 	env $$ENV_COMMON ERP_PORT=8013 nohup go run ./services/erp/cmd/... > /tmp/sda-erp.log 2>&1 & \
+	env $$ENV_COMMON APP_PORT=8020 TENANT_ID=dev SCAN_MODE=passive PROMETHEUS_URL=http://localhost:9090 DOCKER_PROXY_URL=http://localhost:2375 PLATFORM_TENANT_SLUG=platform INGEST_STAGING_DIR=/tmp/ingest-staging SMTP_HOST=localhost SMTP_PORT=1025 SMTP_FROM=noreply@sda.local WS_ALLOWED_ORIGINS="http://localhost:3000" NOTIFICATION_SERVICE_URL=http://localhost:8020 BIGBROTHER_SERVICE_URL=http://localhost:8020 ERP_SERVICE_URL=http://localhost:8013 nohup go run ./services/app/cmd > /tmp/sda-app.log 2>&1 & \
 	echo "All services starting. Logs in /tmp/sda-*.log" && echo "Run 'make status' to check."
 
-dev-frontend: ## Start Next.js frontend
-	@cd apps/web && NEXT_PUBLIC_API_URL=http://localhost NEXT_PUBLIC_TENANT_SLUG=dev nohup bun run dev > /tmp/sda-frontend.log 2>&1 &
-	@echo "Frontend starting on :3000. Log: /tmp/sda-frontend.log"
+dev-frontend: ## Start Next.js frontend in dev/HMR mode (LOCAL laptop @ localhost only — remote IP access fails to hydrate)
+	@cd apps/web && NEXT_PUBLIC_API_URL= NEXT_PUBLIC_TENANT_SLUG=dev nohup bun run dev > /tmp/sda-frontend.log 2>&1 &
+	@echo "Frontend (dev mode) starting on :3000. Log: /tmp/sda-frontend.log"
+	@echo "NOTE: dev mode does not hydrate over remote IP. Workstation/test envs"
+	@echo "      use the Docker 'web' service via docker compose (see deploy.yml)."
 
 dev-all: ## Start everything: infra + services + frontend
 	@$(MAKE) dev &
@@ -85,49 +78,27 @@ stop: ## Stop all services (Docker + Go + frontend)
 
 # ── Build ────────────────────────────────────────────────────────────────
 
-build: ## Build all Go services (including astro with CGO)
+build: ## Build all Go services
 	@for svc in $(GO_SERVICES); do \
 		echo "Building $$svc..."; \
 		ver=$$(cat $(SERVICES_DIR)/$$svc/VERSION 2>/dev/null | tr -d '[:space:]' || echo "dev"); \
-		if [ "$$svc" = "astro" ]; then \
-			cd $(SERVICES_DIR)/$$svc && CGO_ENABLED=1 \
-				CGO_LDFLAGS="-L$(SERVICES_DIR)/astro -lm" \
-				go build \
-				-ldflags '$(LDFLAGS_BASE) -X github.com/Camionerou/rag-saldivia/pkg/build.Version='"$$ver" \
-				-o $(GOBIN)/$$svc ./cmd/... || exit 1; \
-		elif [ "$$svc" = "bigbrother" ]; then \
-			cd $(SERVICES_DIR)/$$svc && go build \
-				-ldflags '$(LDFLAGS_BASE) -X github.com/Camionerou/rag-saldivia/pkg/build.Version='"$$ver" \
-				-o $(GOBIN)/$$svc ./cmd/ || exit 1; \
-			cd $(SERVICES_DIR)/$$svc && go build \
-				-o $(GOBIN)/$$svc-healthcheck ./cmd/healthcheck/ || exit 1; \
-		else \
-			cd $(SERVICES_DIR)/$$svc && go build \
-				-ldflags '$(LDFLAGS_BASE) -X github.com/Camionerou/rag-saldivia/pkg/build.Version='"$$ver" \
-				-o $(GOBIN)/$$svc ./cmd/... || exit 1; \
-		fi; \
+		cd $(SERVICES_DIR)/$$svc && go build \
+			-ldflags '$(LDFLAGS_BASE) -X github.com/Camionerou/rag-saldivia/pkg/server.Version='"$$ver" \
+			-o $(GOBIN)/$$svc ./cmd || exit 1; \
 	done
 	@echo "All services built → $(GOBIN)/ (sha: $(GIT_SHA))"
-
-build-astro: ## Build astro service (requires CGO for Swiss Ephemeris)
-	@ver=$$(cat $(SERVICES_DIR)/astro/VERSION 2>/dev/null | tr -d '[:space:]' || echo "dev"); \
-	cd $(SERVICES_DIR)/astro && CGO_ENABLED=1 \
-		CGO_LDFLAGS="-L$(SERVICES_DIR)/astro -lm" \
-		go build \
-		-ldflags '$(LDFLAGS_BASE) -X github.com/Camionerou/rag-saldivia/pkg/build.Version='"$$ver" \
-		-o $(GOBIN)/astro ./cmd/...
 
 build-%: ## Build a specific service (e.g., make build-auth)
 	@ver=$$(cat $(SERVICES_DIR)/$*/VERSION 2>/dev/null | tr -d '[:space:]' || echo "dev"); \
 	cd $(SERVICES_DIR)/$* && go build \
-		-ldflags '$(LDFLAGS_BASE) -X github.com/Camionerou/rag-saldivia/pkg/build.Version='"$$ver" \
-		-o $(GOBIN)/$* ./cmd/...
+		-ldflags '$(LDFLAGS_BASE) -X github.com/Camionerou/rag-saldivia/pkg/server.Version='"$$ver" \
+		-o $(GOBIN)/$* ./cmd
 
 # ── Testing ──────────────────────────────────────────────────────────────
 
-test: ## Run all Go tests (excludes astro — requires CGO; use make test-astro)
+test: ## Run all Go tests
 	go test ./pkg/... -count=1
-	@for svc in agent auth bigbrother chat erp feedback ingest notification platform search traces ws; do \
+	@for svc in app erp; do \
 		echo "▸ testing services/$$svc"; \
 		(cd services/$$svc && go test ./... -count=1) || exit 1; \
 	done
@@ -136,29 +107,14 @@ test: ## Run all Go tests (excludes astro — requires CGO; use make test-astro)
 		(cd tools/$$tool && go test ./... -count=1) || exit 1; \
 	done
 
-test-astro: ## Run astro tests (requires CGO + EPHE_PATH)
-	cd $(SERVICES_DIR)/astro && CGO_ENABLED=1 \
-		CGO_LDFLAGS="-L$(SERVICES_DIR)/astro -lm" \
-		go test ./... -count=1 -v
-
 test-%: ## Run tests for a specific service (e.g., make test-auth)
 	cd $(SERVICES_DIR)/$* && go test ./... -count=1 -v
 
-test-coverage: ## Run tests with coverage report (excludes astro — requires CGO)
+test-coverage: ## Run tests with coverage report
 	go test \
 		github.com/Camionerou/rag-saldivia/pkg/... \
-		github.com/Camionerou/rag-saldivia/services/agent/... \
-		github.com/Camionerou/rag-saldivia/services/auth/... \
-		github.com/Camionerou/rag-saldivia/services/bigbrother/... \
-		github.com/Camionerou/rag-saldivia/services/chat/... \
+		github.com/Camionerou/rag-saldivia/services/app/... \
 		github.com/Camionerou/rag-saldivia/services/erp/... \
-		github.com/Camionerou/rag-saldivia/services/feedback/... \
-		github.com/Camionerou/rag-saldivia/services/ingest/... \
-		github.com/Camionerou/rag-saldivia/services/notification/... \
-		github.com/Camionerou/rag-saldivia/services/platform/... \
-		github.com/Camionerou/rag-saldivia/services/search/... \
-		github.com/Camionerou/rag-saldivia/services/traces/... \
-		github.com/Camionerou/rag-saldivia/services/ws/... \
 		github.com/Camionerou/rag-saldivia/tools/cli/... \
 		github.com/Camionerou/rag-saldivia/tools/mcp/... \
 		github.com/Camionerou/rag-saldivia/tools/pkg/... \
@@ -166,20 +122,10 @@ test-coverage: ## Run tests with coverage report (excludes astro — requires CG
 	go tool cover -html=coverage.out -o cover.html
 	@echo "Coverage report → cover.html"
 
-test-integration: ## Run integration tests (requires Docker; excludes astro)
+test-integration: ## Run integration tests (requires Docker)
 	go test \
-		github.com/Camionerou/rag-saldivia/services/agent/... \
-		github.com/Camionerou/rag-saldivia/services/auth/... \
-		github.com/Camionerou/rag-saldivia/services/bigbrother/... \
-		github.com/Camionerou/rag-saldivia/services/chat/... \
+		github.com/Camionerou/rag-saldivia/services/app/... \
 		github.com/Camionerou/rag-saldivia/services/erp/... \
-		github.com/Camionerou/rag-saldivia/services/feedback/... \
-		github.com/Camionerou/rag-saldivia/services/ingest/... \
-		github.com/Camionerou/rag-saldivia/services/notification/... \
-		github.com/Camionerou/rag-saldivia/services/platform/... \
-		github.com/Camionerou/rag-saldivia/services/search/... \
-		github.com/Camionerou/rag-saldivia/services/traces/... \
-		github.com/Camionerou/rag-saldivia/services/ws/... \
 		-tags=integration -count=1 -v
 
 test-frontend: ## Run frontend tests
@@ -188,14 +134,20 @@ test-frontend: ## Run frontend tests
 test-e2e: ## Run E2E tests (Playwright)
 	cd apps/web && bunx playwright test
 
+test-workstation: ## Run smoke tests (API + E2E) against the workstation
+	@bash scripts/test-workstation.sh
+
+test-workstation-api: ## Run only API smoke against workstation
+	@bash scripts/test-workstation.sh api
+
+test-workstation-e2e: ## Run only E2E smoke against workstation
+	@bash scripts/test-workstation.sh e2e
+
 test-storage: ## Run storage tests (requires MinIO running)
-	cd $(ROOT_DIR)/pkg && go test ./storage/... -v -count=1
+	cd $(ROOT_DIR)/services/app && go test ./internal/rag/ingest/storage/... -v -count=1
 
 test-guardrails: ## Run guardrails tests
-	cd $(ROOT_DIR)/pkg && go test ./guardrails/... -v -count=1
-
-test-search: ## Run search service tests
-	cd $(SERVICES_DIR)/search && go test ./... -v -count=1
+	cd $(ROOT_DIR)/services/app && go test ./internal/guardrails/... -v -count=1
 
 test-extractor: ## Run extractor tests (Python, no GPU needed)
 	cd $(SERVICES_DIR)/extractor && .venv/bin/python -m pytest tests/ -v
@@ -226,12 +178,6 @@ lint-frontend: ## Lint frontend code
 
 # ── Code Generation ─────────────────────────────────────────────────────
 
-proto: ## Generate gRPC code from proto files
-	@echo "Generating protobuf code..."
-	cd proto && buf lint && buf generate
-	cd gen/go && go mod tidy
-	@echo "Generated → gen/go/"
-
 sqlc: ## Generate Go code from SQL queries (all services)
 	@for svc in $(GO_SERVICES); do \
 		if [ -f "$(SERVICES_DIR)/$$svc/db/sqlc.yaml" ]; then \
@@ -245,19 +191,19 @@ sqlc-%: ## Generate sqlc for a specific service
 
 # ── Events codegen (Plan 26 spine) ───────────────────────────────────────
 
-events-gen: ## Regenerate Go/TS/Markdown from pkg/events/spec/*.cue
+events-gen: ## Regenerate Go/TS/Markdown from services/app/internal/events/spec/*.cue
 	@cd $(ROOT_DIR)/tools/eventsgen && go run . \
-		-spec $(ROOT_DIR)/pkg/events/spec \
-		-out-go $(ROOT_DIR)/pkg/events/gen \
+		-spec $(ROOT_DIR)/services/app/internal/events/spec \
+		-out-go $(ROOT_DIR)/services/app/internal/events/gen \
 		-out-ts $(ROOT_DIR)/apps/web/src/lib/events/gen \
 		-out-docs $(ROOT_DIR)/docs/events
 
 events-validate: ## Verify generated events match spec (used by CI)
 	@tmpdir=$$(mktemp -d); \
 	cd $(ROOT_DIR)/tools/eventsgen && go run . \
-		-spec $(ROOT_DIR)/pkg/events/spec \
+		-spec $(ROOT_DIR)/services/app/internal/events/spec \
 		-out-go $$tmpdir/go -out-ts $$tmpdir/ts -out-docs $$tmpdir/docs; \
-	diff -r $$tmpdir/go $(ROOT_DIR)/pkg/events/gen >/dev/null || { echo "pkg/events/gen out of date — run 'make events-gen'"; rm -rf $$tmpdir; exit 1; }; \
+	diff -r $$tmpdir/go $(ROOT_DIR)/services/app/internal/events/gen >/dev/null || { echo "services/app/internal/events/gen out of date — run 'make events-gen'"; rm -rf $$tmpdir; exit 1; }; \
 	diff -r $$tmpdir/ts $(ROOT_DIR)/apps/web/src/lib/events/gen --exclude=envelope.ts >/dev/null || { echo "apps/web/src/lib/events/gen out of date"; rm -rf $$tmpdir; exit 1; }; \
 	diff -r $$tmpdir/docs $(ROOT_DIR)/docs/events --exclude=README.md >/dev/null || { echo "docs/events out of date"; rm -rf $$tmpdir; exit 1; }; \
 	rm -rf $$tmpdir; \
@@ -308,11 +254,7 @@ versions: ## Show running vs expected service versions
 	printf "%-20s %-10s %-10s %-22s %s\n" "SERVICE" "VERSION" "GIT SHA" "BUILD TIME" "STATUS"; \
 	echo "────────────────────────────────────────────────────────────────────────────────"; \
 	for entry in \
-		"8001:auth" "8002:ws" "8003:chat" "8004:agent" \
-		"8005:notification" "8006:platform" "8007:ingest" \
-		"8008:feedback" "8009:traces" "8010:search" \
-		"8011:astro" "8012:bigbrother" "8013:erp" \
-		"8014:healthwatch"; do \
+		"8013:erp" "8020:app"; do \
 		port=$$(echo $$entry | cut -d: -f1); \
 		name=$$(echo $$entry | cut -d: -f2); \
 		info=$$(curl -sf --max-time 2 http://localhost:$$port/v1/info 2>/dev/null || echo ""); \
@@ -373,19 +315,8 @@ status: ## Full system status — infra, services, frontend, GPU
 	@echo ""
 	@echo "── Go Services ─────────────────────────────────────────────"
 	@for entry in \
-		"8001:sda-auth" \
-		"8002:sda-ws" \
-		"8003:sda-chat" \
-		"8004:sda-agent" \
-		"8005:sda-notification" \
-		"8006:sda-platform" \
-		"8007:sda-ingest" \
-		"8008:sda-feedback" \
-		"8009:sda-traces" \
-		"8010:sda-search" \
-		"8011:sda-astro" \
-		"8012:sda-bigbrother" \
-		"8013:sda-erp"; do \
+		"8013:sda-erp" \
+		"8020:sda-app"; do \
 		port=$$(echo $$entry | cut -d: -f1); \
 		name=$$(echo $$entry | cut -d: -f2); \
 		code=$$(curl -s --max-time 1 -o /dev/null -w "%{http_code}" http://localhost:$$port/health 2>/dev/null); \

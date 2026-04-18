@@ -1,22 +1,9 @@
 go 1.25.0
 
 use (
-	./gen/go
 	./pkg
-	./services/agent
-	./services/astro
-	./services/auth
-	./services/bigbrother
-	./services/chat
+	./services/app
 	./services/erp
-	./services/feedback
-	./services/healthwatch
-	./services/ingest
-	./services/notification
-	./services/platform
-	./services/search
-	./services/traces
-	./services/ws
 	./tools/cli
 	./tools/eventsgen
 	./tools/mcp

@@ -42,6 +42,46 @@ func init() {
 	migrateLegacyCmd.Flags().String("resume-run-id", "", "UUID of the run to resume")
 	migrateLegacyCmd.Flags().StringSlice("skip-dry-run-for", nil, "Tenants allowed to skip dry-run requirement")
 	migrateLegacyCmd.Flags().Bool("validate-only", false, "Run post-migration validation without migrating")
+	migrateLegacyCmd.Flags().Int("batch-size", migration.DefaultBatchSize,
+		"Rows per batch. Auto-clamped per table to stay under PG's 65535 bind-param limit.")
+
+	// Fast-path flags. Default ("insert") preserves existing behaviour: the
+	// legacy multi-value INSERT writer and the sequential table runner.
+	//
+	//   --writer=copy              → COPY + staging + read/write pipeline
+	//   --writer=parallel-copy     → parallel COPY workers + pipeline
+	//   --copy-workers=N           → worker count for parallel-copy (default 4)
+	//
+	// Empirical speedups on a local pg16 + 100K-row bom_history batch:
+	//   INSERT baseline            1.00x (36K rows/sec)
+	//   COPY + pipeline            1.80x (77K rows/sec)
+	//   ParallelCopy×8 + pipeline  1.98x (85K rows/sec)
+	//
+	// Writer-only (no pipeline, no read latency), parallel COPY hits 2.90x.
+	migrateLegacyCmd.Flags().String("writer", "insert", "Write strategy: insert | copy | parallel-copy")
+	migrateLegacyCmd.Flags().Int("copy-workers", 4, "Parallel COPY workers when --writer=parallel-copy")
+
+	// --archive: after the normal migration, scan every legacy MySQL table
+	// not already owned by a first-class migrator (and not HTX/sabredav/asterisk
+	// system noise) and park its rows in erp_legacy_archive as JSONB. Gives
+	// the "no silent data loss" guarantee.
+	migrateLegacyCmd.Flags().Bool("archive", false, "Archive every non-migrated, non-HTX legacy table into erp_legacy_archive as JSONB")
+	migrateLegacyCmd.Flags().Bool("archive-only", false, "Skip the structured migration; only run the universal JSONB archive over non-migrated tables")
+
+	// --archive-skips: whenever a migrator transform rejects a row (returns
+	// nil because of a zero PK, missing FK that no ghost covered, etc.) the
+	// pipeline writes that raw legacy row to erp_legacy_archive in the same
+	// tx as the batch. Combined with --archive this achieves truly zero
+	// silent data loss: every row from MySQL either lands in a structured
+	// SDA table or in the archive.
+	migrateLegacyCmd.Flags().Bool("archive-skips", false, "Archive rows the transform rejected into erp_legacy_archive (requires pipeline writer)")
+
+	// Transform fan-out: when the writer can't keep the CPU busy (workstation
+	// sat at 5% CPU with 24 writer workers), split the per-row Transform loop
+	// across N goroutines. Keeps the structure single-reader so MySQL load is
+	// unchanged; parallelises the CPU-bound transform step only.
+	migrateLegacyCmd.Flags().Int("transform-workers", 1, "Parallel goroutines per batch for the Transform step (0/1 = sequential)")
+	migrateLegacyCmd.Flags().Int("read-workers", 1, "Parallel MySQL readers per table via PK range partitioning (GenericReader-backed tables only; disables per-table resume when >1)")
 
 	if err := migrateLegacyCmd.MarkFlagRequired("tenant"); err != nil {
 		panic(err)
@@ -83,7 +123,15 @@ func runMigrateLegacy(cmd *cobra.Command, args []string) error {
 	defer func() { _ = mysqlDB.Close() }()
 
 	slog.Info("connecting to PostgreSQL", "dsn", maskDSN(pgDSN))
-	pgPool, err := pgxpool.New(ctx, pgDSN)
+	pgCfg, err := pgxpool.ParseConfig(pgDSN)
+	if err != nil {
+		return fmt.Errorf("parse pg dsn: %w", err)
+	}
+	// Bulk import can fan out up to parallel-copy workers plus pipeline
+	// overhead. Default pgxpool cap of 4 serializes the whole rig.
+	pgCfg.MaxConns = 48
+	pgCfg.MinConns = 8
+	pgPool, err := pgxpool.NewWithConfig(ctx, pgCfg)
 	if err != nil {
 		return fmt.Errorf("pg connect: %w", err)
 	}
@@ -107,9 +155,72 @@ func runMigrateLegacy(cmd *cobra.Command, args []string) error {
 
 	// --- Build orchestrator ---
 	orch := migration.NewOrchestrator(mysqlDB, pgPool, tenantSlug)
+	if bs, _ := cmd.Flags().GetInt("batch-size"); bs > 0 {
+		orch.SetBatchSize(bs)
+	}
+
+	// Fast-path writer selection. Pipeline+COPY are opt-in so existing
+	// operator muscle memory keeps working.
+	switch mode, _ := cmd.Flags().GetString("writer"); mode {
+	case "copy":
+		orch.UseCopyWriter()
+		slog.Info("using COPY writer + pipeline")
+	case "parallel-copy":
+		workers, _ := cmd.Flags().GetInt("copy-workers")
+		orch.UseParallelCopyWriter(workers)
+		slog.Info("using parallel COPY writer + pipeline", "workers", workers)
+	case "insert", "":
+		// default — no change
+	default:
+		return fmt.Errorf("unknown --writer=%q (want insert|copy|parallel-copy)", mode)
+	}
+	if archiveSkips, _ := cmd.Flags().GetBool("archive-skips"); archiveSkips {
+		orch.EnableSkipArchive()
+		slog.Info("archiving skipped rows into erp_legacy_archive")
+	}
+	if tw, _ := cmd.Flags().GetInt("transform-workers"); tw > 1 {
+		orch.SetTransformWorkers(tw)
+		slog.Info("parallel transform enabled", "workers", tw)
+	}
+	if rw, _ := cmd.Flags().GetInt("read-workers"); rw > 1 {
+		orch.SetReadWorkers(rw)
+		slog.Info("multi-reader enabled", "workers", rw)
+	}
+
+	// Seed dry-run flag before initialising fallback so EnsureUnassignedWarehouse
+	// uses the deterministic path instead of hitting PG.
+	orch.GetMapper().SetDryRun(dryRun)
+
+	// Fallback warehouse for STK_MOVIMIENTOS rows with stkdeposito_id=0 or
+	// orphaned depot FKs. Must exist before the stock phase runs; called here
+	// so both prod and dry-run (and resume) share the same code path.
+	if err := orch.GetMapper().EnsureUnassignedWarehouse(ctx, pgPool); err != nil {
+		return fmt.Errorf("init unassigned warehouse: %w", err)
+	}
+	// Fallback entity for rows whose ctacod/prvcod doesn't resolve in either
+	// id_regcuenta or nro_cuenta. Required by RETACUMU, MOVDEMERITO, IVA*,
+	// anything that carries the ambiguous Histrix entity code.
+	if err := orch.GetMapper().EnsureUnknownEntity(ctx, pgPool); err != nil {
+		return fmt.Errorf("init unknown entity: %w", err)
+	}
 
 	// Register all migrators in FK dependency order
 	registerMigrators(orch, mysqlDB, tenantSlug)
+
+	// --- Archive-only fast path ---
+	// Skips the entire structured migration and goes straight to the
+	// universal JSONB archive. Useful when the structured migration is
+	// already complete (e.g. after a successful --resume) and you just
+	// want to ship the non-modeled legacy tables.
+	if archiveOnly, _ := cmd.Flags().GetBool("archive-only"); archiveOnly {
+		fmt.Println("Archive-only mode: skipping structured migration, running universal archive...")
+		covered := migration.CoveredLegacyTables(orch)
+		if err := migration.ArchiveAll(ctx, mysqlDB, pgPool, tenantSlug, covered); err != nil {
+			return fmt.Errorf("archive-only: %w", err)
+		}
+		fmt.Println("Archive-only done.")
+		return nil
+	}
 
 	// --- Pre-validation (dry-run only) ---
 	var dryRunID uuid.UUID
@@ -171,6 +282,17 @@ func runMigrateLegacy(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	// --- Universal archive (opt-in, prod only) ---
+	if !dryRun {
+		if archive, _ := cmd.Flags().GetBool("archive"); archive {
+			fmt.Println("\nArchiving every non-migrated, non-HTX legacy table → erp_legacy_archive ...")
+			covered := migration.CoveredLegacyTables(orch)
+			if err := migration.ArchiveAll(ctx, mysqlDB, pgPool, tenantSlug, covered); err != nil {
+				slog.Warn("archive phase had issues", "err", err)
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -184,6 +306,19 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 		migration.NewEntityMigrator(mysqlDB, tenantID),
 		migration.NewEmployeeMigrator(mysqlDB, tenantID),
 	)
+
+	// After-table hook: PERSONAL.legajo → entity UUID index.
+	// Consumed by HR tables (FICHADADIA, RRHH_DESCUENTOS, RRHH_ADICIONALES) and
+	// production inspections (legajo_realizo / legajo_personal in PROD_CONTROL_MOVIM).
+	orch.AddAfterTableHook("PERSONAL", func(ctx context.Context, mapper *migration.Mapper) error {
+		return mapper.BuildLegajoIndex(ctx, mysqlDB)
+	})
+
+	// After-table hook: REG_CUENTA.nro_cuenta → entity UUID index.
+	// Consumed by RETACUMU / MOVDEMERITO / IVA* (ctacod ambiguity fallback).
+	orch.AddAfterTableHook("REG_CUENTA", func(ctx context.Context, mapper *migration.Mapper) error {
+		return mapper.BuildNroCuentaIndex(ctx, mysqlDB)
+	})
 
 	// Phase 3: Financial (depends on entities + catalogs)
 	orch.RegisterMigrators(
@@ -239,17 +374,33 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 		migration.NewPurchaseInvoiceMigrator(mysqlDB, tenantID),
 	)
 
-	// Setup hook: build regmovim_id → invoice UUID index (FACDETAL needs it).
-	// Must run AFTER IVAVENTAS + IVACOMPRAS migration, BEFORE FACDETAL.
-	orch.AddSetupHook(func(ctx context.Context, mapper *migration.Mapper) error {
+	// After-table hook: build regmovim_id → invoice UUID index (FACDETAL needs it).
+	// Fires right after IVACOMPRAS (the second of IVAVENTAS/IVACOMPRAS), so both
+	// invoice masters are already cached in the mapper before FACDETAL runs.
+	//
+	// Previously registered via AddSetupHook — but setup hooks all fire together
+	// at the first migrator that needs one (NewJournalLineMigrator, much earlier
+	// in the phase order), which meant the regmovim index was built BEFORE the
+	// invoice masters existed. The index came out empty and every FACDETAL row
+	// (198K in prod saldivia) was silently skipped for missing parent invoice.
+	orch.AddAfterTableHook("IVACOMPRAS", func(ctx context.Context, mapper *migration.Mapper) error {
 		return mapper.BuildRegMovimIndex(ctx, mysqlDB)
 	})
 
-	// Phase 6b: Invoice lines + delivery notes (depends on invoice headers)
+	// Phase 6b: Invoice lines + delivery notes (depends on invoice headers).
+	// REMITO must run before REMDETAL so the remito index is built in-between.
 	orch.RegisterMigrators(
 		migration.NewInvoiceLineMigrator(mysqlDB, tenantID),
 		migration.NewDeliveryNoteMigrator(mysqlDB, tenantID),
 		migration.NewDeliveryNoteAltMigrator(mysqlDB, tenantID),
+	)
+
+	// After-table hook: REMITO.idRemito → REMITO UUID index (consumed by REMDETAL).
+	orch.AddAfterTableHook("REMITO", func(ctx context.Context, mapper *migration.Mapper) error {
+		return mapper.BuildRemitoIndex(ctx, mysqlDB)
+	})
+
+	orch.RegisterMigrators(
 		migration.NewDeliveryNoteLineMigrator(mysqlDB, tenantID),
 	)
 
@@ -269,6 +420,15 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 	// Phase 8: Current Accounts (depends on entities + treasury movements)
 	orch.RegisterMigrators(
 		migration.NewAccountMovementMigrator(mysqlDB, tenantID),
+	)
+	// CCTIMPUT references REG_MOVIMIENTOS legacy IDs that sometimes point at
+	// records Histrix deleted. Before running the payment-allocation migrator,
+	// seed ghost account_movements so orphan regmovim0_id / regmovim_id values
+	// resolve instead of dropping the allocation.
+	orch.AddAfterTableHook("REG_MOVIMIENTOS", func(ctx context.Context, mapper *migration.Mapper) error {
+		return migration.RescueCCTIMPUTOrphanMovements(ctx, mysqlDB, orch.PGPool(), tenantID, mapper)
+	})
+	orch.RegisterMigrators(
 		migration.NewPaymentAllocationMigrator(mysqlDB, tenantID),
 	)
 
@@ -279,6 +439,16 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 		migration.NewWithholding1598Migrator(mysqlDB, tenantID),
 		migration.NewWithholdingIIBBMigrator(mysqlDB, tenantID),
 	)
+
+	// Before the BOM history phase: seed ghost articles for orphan pieza_ids
+	// so the 2.5M+ rows whose STKPIEZA parent no longer exists can still land
+	// in SDA. See rescue.go for rationale + empirical numbers.
+	orch.AddAfterTableHook("STKPIEZA", func(ctx context.Context, mapper *migration.Mapper) error {
+		if err := migration.RescueBOMOrphanParents(ctx, mysqlDB, orch.PGPool(), tenantID, mapper); err != nil {
+			return fmt.Errorf("rescue BOM orphan parents: %w", err)
+		}
+		return migration.RescueBOMOrphanChildren(ctx, mysqlDB, orch.PGPool(), tenantID, mapper)
+	})
 
 	// Phase 9: Stock extended — BOM, stock levels, price lists
 	orch.RegisterMigrators(
@@ -346,6 +516,14 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 	orch.RegisterMigrators(
 		migration.NewLegacyUserMigrator(mysqlDB, tenantID),
 	)
+
+	// After users land: rescue the 23 HTXPROFILES → roles, 188 user_roles
+	// assignments, and decorate each role with its legacy HTXPROFILE_AUTH menu
+	// list as metadata. Keeps migrated users logged in with their original
+	// Histrix authority instead of landing as role-less ghosts.
+	orch.AddAfterTableHook("HTXUSERS", func(ctx context.Context, mapper *migration.Mapper) error {
+		return migration.RescueLegacyAuthAll(ctx, mysqlDB, orch.PGPool(), tenantID, mapper)
+	})
 }
 
 func containsStr(slice []string, item string) bool {

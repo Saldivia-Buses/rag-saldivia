@@ -22,21 +22,13 @@
         },
         "options": [
           { "text": "All", "value": "$__all", "selected": true },
-          { "text": "sda-auth", "value": "sda-auth", "selected": false },
-          { "text": "sda-ws", "value": "sda-ws", "selected": false },
-          { "text": "sda-chat", "value": "sda-chat", "selected": false },
-          { "text": "sda-agent", "value": "sda-agent", "selected": false },
-          { "text": "sda-search", "value": "sda-search", "selected": false },
-          { "text": "sda-astro", "value": "sda-astro", "selected": false },
-          { "text": "sda-notification", "value": "sda-notification", "selected": false },
-          { "text": "sda-platform", "value": "sda-platform", "selected": false },
-          { "text": "sda-ingest", "value": "sda-ingest", "selected": false },
-          { "text": "sda-feedback", "value": "sda-feedback", "selected": false },
-          { "text": "sda-traces", "value": "sda-traces", "selected": false }
+          { "text": "sda-app", "value": "sda-app", "selected": false },
+          { "text": "sda-erp", "value": "sda-erp", "selected": false },
+          { "text": "sda-extractor", "value": "sda-extractor", "selected": false }
         ],
         "includeAll": true,
         "multi": true,
-        "query": "sda-auth,sda-ws,sda-chat,sda-agent,sda-search,sda-astro,sda-notification,sda-platform,sda-ingest,sda-feedback,sda-traces"
+        "query": "sda-app,sda-erp,sda-extractor"
       }
     ]
   },

@@ -255,11 +255,12 @@ func NewFiscalYearMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				return nil, nil
 			}
 
-			cerrado := row.Int("cerrado")
+			// Histrix `cerrado=1` does not carry the result_account_id the new
+			// fiscal-close workflow requires. Always import as 'open' — the
+			// 10 legacy-closed ejercicios can be formally closed via the UI
+			// after assigning their result account.
+			_ = row.Int("cerrado")
 			status := "open"
-			if cerrado == 1 {
-				status = "closed"
-			}
 
 			// Parse year from nombre_ejercicio or comienza date
 			year := 0
@@ -308,7 +309,10 @@ func NewJournalEntryMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				}
 			}
 
-			number := fmt.Sprintf("AS-%d", row.Int64("nro_minuta"))
+			// Use id_movimiento (the PK) to guarantee uniqueness. nro_minuta
+			// repeats across Histrix fiscal years and would drop ~200K rows
+			// to the tenant_id+number UNIQUE constraint.
+			number := fmt.Sprintf("AS-%d-%d", row.Int64("nro_minuta"), legacyID)
 			date := SafeDateRequired(timeFromRow(row, "fecha_movimiento"))
 
 			usuario := row.NullString("usuario_modificacion")
@@ -516,11 +520,16 @@ func NewArticleMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 		columns:     []string{"id", "tenant_id", "code", "name", "article_type", "min_stock", "max_stock", "reorder_point", "last_cost", "avg_cost", "active"},
 		conflictCol: "",
 		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
-			code := row.String("id_stkarticulo")
-			if code == "" {
+			rawCode := row.String("id_stkarticulo")
+			if rawCode == "" {
 				return nil, nil
 			}
-			// Use a hash of the code as pseudo legacy ID for mapping
+			// STK_ARTICULOS PK is composite (id_stkarticulo, subsistema_id).
+			// Same id may appear under multiple subsystems — preserve them as
+			// distinct articles by namespacing the code and hash for any subsystem
+			// other than "01" (the dominant one).
+			subsistema := row.String("subsistema_id")
+			code := articleCompositeCode(rawCode, subsistema)
 			legacyID := int64(hashCode(code))
 
 			baja := row.Int("baja_articulo")
@@ -571,40 +580,80 @@ func NewStockMovementMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 
 			// Resolve article FK by code hash
 			artCode := row.String("stkarticulo_id")
-			artLegacyID := int64(hashCode(artCode))
+			artLegacyID := int64(hashCode(articleCompositeCode(artCode, row.String("subsistema_id"))))
 			articleID, err := mapper.Resolve(ctx, "stock", "STK_ARTICULOS", artLegacyID)
 			if err != nil {
 				return nil, nil // skip if article not found
 			}
 
+			// Warehouse FK — fall back to the UNASSIGNED warehouse when the legacy
+			// row has stkdeposito_id = 0 (allowed in Histrix) or points to a depot
+			// that no longer exists. Prefix notes with [legacy:unassigned_warehouse]
+			// so the rows can be filtered and reassigned from an admin UI later.
 			warehouseLegacyID := row.Int64("stkdeposito_id")
-			warehouseID, err := mapper.Resolve(ctx, "stock", "STK_DEPOSITOS", warehouseLegacyID)
-			if err != nil {
-				return nil, nil // skip if warehouse not found
+			unassigned := false
+			var warehouseID uuid.UUID
+			if warehouseLegacyID > 0 {
+				resolved, err := mapper.Resolve(ctx, "stock", "STK_DEPOSITOS", warehouseLegacyID)
+				if err != nil {
+					fallbackID := mapper.UnassignedWarehouseID()
+					if fallbackID == uuid.Nil {
+						return nil, nil // fallback not initialised — skip row
+					}
+					warehouseID = fallbackID
+					unassigned = true
+				} else {
+					warehouseID = resolved
+				}
+			} else {
+				fallbackID := mapper.UnassignedWarehouseID()
+				if fallbackID == uuid.Nil {
+					return nil, nil
+				}
+				warehouseID = fallbackID
+				unassigned = true
 			}
 
-			// Movement type — positive quantity = in, negative = out
+			// Movement type — positive quantity = in, negative = out.
+			// Zero-quantity legacy rows (173K on saldivia) represent adjustment
+			// events without a numeric delta: depot reclassification, corrections,
+			// stock counts that confirmed 0 movement. Post-migration 061 relaxed
+			// the CHECK from (> 0) to (>= 0) so we can preserve them — flagged in
+			// notes for operator review.
 			quantity := ParseDecimal(row.Decimal("cantidad"))
 			movType := "in"
 			if quantity.IsNegative() {
 				movType = "out"
 				quantity = quantity.Abs()
 			}
-
-			if quantity.IsZero() {
-				return nil, nil // skip zero-quantity movements
-			}
+			zeroQty := quantity.IsZero()
 
 			id, err := mapper.Map(ctx, nil, "stock", "STK_MOVIMIENTOS", legacyID, nil)
 			if err != nil {
 				id = uuid.New()
 			}
 
+			notes := row.String("referencia")
+			if unassigned {
+				if notes != "" {
+					notes = "[legacy:unassigned_warehouse] " + notes
+				} else {
+					notes = "[legacy:unassigned_warehouse]"
+				}
+			}
+			if zeroQty {
+				if notes != "" {
+					notes = "[legacy:zero_qty] " + notes
+				} else {
+					notes = "[legacy:zero_qty]"
+				}
+			}
+
 			return []any{
 				id, tenantID, articleID, warehouseID, movType, quantity,
 				ParseDecimal(row.Decimal("precio_costo")),
 				LegacyUserID,
-				row.String("referencia"),
+				notes,
 				SafeDateRequired(timeFromRow(row, "fecha_movimiento")),
 			}, nil
 		},
@@ -626,9 +675,9 @@ func NewPurchaseOrderMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 			}
 
 			supplierLegacyID := row.Int64("regcuenta_id")
-			supplierID, err := mapper.Resolve(ctx, "entity", "REG_CUENTA", supplierLegacyID)
-			if err != nil {
-				return nil, nil // skip if supplier not found
+			supplierID, _ := mapper.ResolveEntityFlexible(ctx, supplierLegacyID)
+			if supplierID == uuid.Nil {
+				return nil, nil // UNKNOWN hook missing — archive-skips will keep it
 			}
 
 			// estado: ''=draft, 1=approved, 2=received
@@ -682,7 +731,7 @@ func NewPurchaseOrderLineMigrator(db *sql.DB, tenantID string) *GenericMigrator 
 			}
 
 			artCode := row.String("stkarticulo_id")
-			artLegacyID := int64(hashCode(artCode))
+			artLegacyID := int64(hashCode(articleCompositeCode(artCode, row.String("subsistema_id"))))
 			articleID, err := mapper.Resolve(ctx, "stock", "STK_ARTICULOS", artLegacyID)
 			if err != nil {
 				return nil, nil
@@ -722,8 +771,8 @@ func NewQuotationMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 			}
 
 			customerLegacyID := row.Int64("ctacod")
-			customerID, err := mapper.Resolve(ctx, "entity", "REG_CUENTA", customerLegacyID)
-			if err != nil {
+			customerID, _ := mapper.ResolveEntityFlexible(ctx, customerLegacyID)
+			if customerID == uuid.Nil {
 				return nil, nil
 			}
 
@@ -800,7 +849,7 @@ func NewProductionOrderMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 			if artCode == "" {
 				return nil, nil // skip production orders with no articles
 			}
-			artLegacyID := int64(hashCode(artCode))
+			artLegacyID := int64(hashCode(articleCompositeCode(artCode, row.String("subsistema_id"))))
 			productID, err := mapper.ResolveOptional(ctx, "stock", "STK_ARTICULOS", artLegacyID)
 			if err != nil || productID == uuid.Nil {
 				return nil, nil // skip if article not migrated
@@ -849,7 +898,12 @@ func NewEmployeeDetailMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				return nil, nil // skip if entity not migrated
 			}
 
-			id := uuid.New()
+			// Map PERSONAL→EmployeeDetail idempotently (separate domain so it does
+			// not collide with the entity UUID for the same IdPersona).
+			id, err := mapper.Map(ctx, nil, "hr", "PERSONAL_DETAIL", legacyID, nil)
+			if err != nil {
+				return nil, fmt.Errorf("map PERSONAL_DETAIL %d: %w", legacyID, err)
+			}
 
 			// Schedule type
 			scheduleType := "full_time"
@@ -962,17 +1016,16 @@ func NewSalesInvoiceMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 			codlet := row.String("codlet")
 			invoiceType := MapInvoiceType(codcom, codlet)
 
-			// Entity FK: ctacod → REG_CUENTA
+			// Entity FK: ctacod → REG_CUENTA. ctacod is ambiguous — use the
+			// flex resolver with UNKNOWN fallback instead of dropping rows.
 			entityLegacyID := row.Int64("ctacod")
+			resolvedEnt, _ := mapper.ResolveEntityFlexible(ctx, entityLegacyID)
 			var entityID *uuid.UUID
-			if entityLegacyID > 0 {
-				resolved, err := mapper.ResolveOptional(ctx, "entity", "REG_CUENTA", entityLegacyID)
-				if err == nil && resolved != uuid.Nil {
-					entityID = &resolved
-				}
+			if resolvedEnt != uuid.Nil {
+				entityID = &resolvedEnt
 			}
-			if entityID == nil || *entityID == uuid.Nil {
-				return nil, nil // entity_id is NOT NULL — skip unresolvable
+			if entityID == nil {
+				return nil, nil // fallback missing — let it drop cleanly
 			}
 
 			// Number: LETTER-PV-NUMERO (e.g., A-0001-00012345)
@@ -1022,17 +1075,15 @@ func NewPurchaseInvoiceMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 			codlet := row.String("codlet")
 			invoiceType := MapInvoiceType(codcom, codlet)
 
-			// Entity FK: ctacod → REG_CUENTA
+			// Entity FK: ctacod → REG_CUENTA (flex + UNKNOWN fallback, same as sales).
 			entityLegacyID := row.Int64("ctacod")
+			resolvedEnt, _ := mapper.ResolveEntityFlexible(ctx, entityLegacyID)
 			var entityID *uuid.UUID
-			if entityLegacyID > 0 {
-				resolved, err := mapper.ResolveOptional(ctx, "entity", "REG_CUENTA", entityLegacyID)
-				if err == nil && resolved != uuid.Nil {
-					entityID = &resolved
-				}
+			if resolvedEnt != uuid.Nil {
+				entityID = &resolvedEnt
 			}
-			if entityID == nil || *entityID == uuid.Nil {
-				return nil, nil // entity_id is NOT NULL — skip unresolvable
+			if entityID == nil {
+				return nil, nil
 			}
 
 			number := fmt.Sprintf("%s-%04d-%08d", codlet, row.Int64("nronpv"), row.Int64("nrocom"))
@@ -1065,7 +1116,8 @@ func NewPurchaseInvoiceMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 
 // NewInvoiceLineMigrator migrates FACDETAL (invoice lines, 194K rows) → erp_invoice_lines.
 // FK resolution: FACDETAL.regmovim_id links to IVAVENTAS/IVACOMPRAS.regmovim_id.
-// The regmovim→invoice index must be built before this migrator runs (setup hook).
+// The regmovim→invoice index is built via AddAfterTableHook("IVACOMPRAS") so both
+// IVAVENTAS and IVACOMPRAS mappings are populated before FACDETAL runs.
 func NewInvoiceLineMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 	reader := legacy.InvoiceLineReader(db)
 	return &GenericMigrator{
@@ -1095,7 +1147,7 @@ func NewInvoiceLineMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 			var articleID *uuid.UUID
 			artCode := row.String("artcod")
 			if artCode != "" {
-				artLegacyID := int64(hashCode(artCode))
+				artLegacyID := int64(hashCode(articleCompositeCode(artCode, row.String("subsistema_id"))))
 				resolved, err := mapper.ResolveOptional(ctx, "stock", "STK_ARTICULOS", artLegacyID)
 				if err == nil && resolved != uuid.Nil {
 					articleID = &resolved
@@ -1152,13 +1204,14 @@ func NewDeliveryNoteMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				legacyID = 1
 			}
 
-			// Entity FK: ctacod → REG_CUENTA
-			var entityID *uuid.UUID
-			if ctacod > 0 {
-				resolved, err := mapper.ResolveOptional(ctx, "entity", "REG_CUENTA", ctacod)
-				if err == nil && resolved != uuid.Nil {
-					entityID = &resolved
-				}
+			// Entity FK with flex + UNKNOWN fallback so NOT NULL never fails.
+			resolvedEnt, _ := mapper.ResolveEntityFlexible(ctx, ctacod)
+			entityID := &resolvedEnt
+			if resolvedEnt == uuid.Nil {
+				entityID = nil
+			}
+			if entityID == nil {
+				return nil, nil // UNKNOWN hook missing — archive-skips will catch it
 			}
 
 			number := fmt.Sprintf("REM-%d-%d", remnpv, remnro)
@@ -1206,14 +1259,15 @@ func NewDeliveryNoteAltMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				legacyID = 1
 			}
 
-			// Entity FK
+			// Entity FK with flex + UNKNOWN fallback.
 			ctacod := row.Int64("ctacod")
-			var entityID *uuid.UUID
-			if ctacod > 0 {
-				resolved, err := mapper.ResolveOptional(ctx, "entity", "REG_CUENTA", ctacod)
-				if err == nil && resolved != uuid.Nil {
-					entityID = &resolved
-				}
+			resolvedEnt, _ := mapper.ResolveEntityFlexible(ctx, ctacod)
+			entityID := &resolvedEnt
+			if resolvedEnt == uuid.Nil {
+				entityID = nil
+			}
+			if entityID == nil {
+				return nil, nil
 			}
 
 			number := fmt.Sprintf("REMITO-%d-%d", puesto, numero)
@@ -1258,21 +1312,12 @@ func NewDeliveryNoteLineMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				return nil, nil
 			}
 
-			// idRemito is the FK to REMITO. Since REMITO has composite PK,
-			// idRemito may be a reference number. Try resolving via REMITO mapping.
-			// If not found, skip the line.
+			// idRemito is the physical auto-inc PK in REMITO; REMITO's logical PK is
+			// composite (numero, puesto) and is hashed as legacy_id by the REMITO
+			// migrator. BuildRemitoIndex resolves idRemito → UUID via that hash.
 			remitoID := row.Int64("idRemito")
-			if remitoID == 0 {
-				return nil, nil
-			}
-			// Try to resolve — REMITO uses hash-based IDs, so we can't resolve by int directly.
-			// Skip this line if we can't find the parent (orphan).
-			// Note: for REMITO, the legacy_id in the mapper is hash("REMITO:numero:puesto"),
-			// which we don't know here. Skip FK resolution for now.
-			// TODO: build REMITO idRemito→UUID index if needed.
 			var invoiceID *uuid.UUID
-			resolved, err := mapper.ResolveOptional(ctx, "invoicing", "REMDETAL_PARENT", remitoID)
-			if err == nil && resolved != uuid.Nil {
+			if resolved, ok := mapper.ResolveByRemitoID(remitoID); ok {
 				invoiceID = &resolved
 			}
 			if invoiceID == nil {
@@ -1283,7 +1328,7 @@ func NewDeliveryNoteLineMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 			var articleID *uuid.UUID
 			artCode := row.String("artcod")
 			if artCode != "" {
-				artLegacyID := int64(hashCode(artCode))
+				artLegacyID := int64(hashCode(articleCompositeCode(artCode, row.String("subsistema_id"))))
 				resolved, err := mapper.ResolveOptional(ctx, "stock", "STK_ARTICULOS", artLegacyID)
 				if err == nil && resolved != uuid.Nil {
 					articleID = &resolved
@@ -1429,6 +1474,9 @@ func NewTaxEntryPurchasesMigrator(db *sql.DB, tenantID string) *GenericMigrator 
 
 // NewWithholdingGainsMigrator migrates RETGANAN (gains withholding, 9.8K rows) → erp_withholdings.
 // Columns: id_retganan=PK, ctacod=entity, ganfec=date, ganpor=rate%, ganbru=base, gantot=total.
+// ctacod is ambiguous in Histrix (sometimes id_regcuenta, sometimes nro_cuenta)
+// — ResolveEntityFlexible tries both and falls back to the "UNKNOWN" entity
+// seeded by EnsureUnknownEntity rather than dropping the row.
 func NewWithholdingGainsMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 	reader := legacy.WithholdingGainsReader(db)
 	return &GenericMigrator{
@@ -1441,14 +1489,11 @@ func NewWithholdingGainsMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				return nil, nil
 			}
 
-			// Entity FK
 			entityLegacyID := row.Int64("ctacod")
+			resolved, _ := mapper.ResolveEntityFlexible(ctx, entityLegacyID)
 			var entityID *uuid.UUID
-			if entityLegacyID > 0 {
-				resolved, err := mapper.ResolveOptional(ctx, "entity", "REG_CUENTA", entityLegacyID)
-				if err == nil && resolved != uuid.Nil {
-					entityID = &resolved
-				}
+			if resolved != uuid.Nil {
+				entityID = &resolved
 			}
 
 			id, err := mapper.Map(ctx, nil, "invoicing", "RETGANAN", legacyID, nil)
@@ -1466,7 +1511,7 @@ func NewWithholdingGainsMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				ParseDecimal(row.Decimal("ganbru")),
 				ParseDecimal(row.Decimal("gantot")),
 				row.NullString("gannro"),
-				SafeDate(timeFromRow(row, "ganfec")),
+				SafeDateRequired(timeFromRow(row, "ganfec")),
 			}, nil
 		},
 	}
@@ -1486,14 +1531,11 @@ func NewWithholdingIVAMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				return nil, nil
 			}
 
-			// Entity FK
 			entityLegacyID := row.Int64("ctacod")
+			resolved, _ := mapper.ResolveEntityFlexible(ctx, entityLegacyID)
 			var entityID *uuid.UUID
-			if entityLegacyID > 0 {
-				resolved, err := mapper.ResolveOptional(ctx, "entity", "REG_CUENTA", entityLegacyID)
-				if err == nil && resolved != uuid.Nil {
-					entityID = &resolved
-				}
+			if resolved != uuid.Nil {
+				entityID = &resolved
 			}
 
 			id, err := mapper.Map(ctx, nil, "invoicing", "RETIVA", legacyID, nil)
@@ -1511,7 +1553,7 @@ func NewWithholdingIVAMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				ParseDecimal(row.Decimal("ivabru")),
 				ParseDecimal(row.Decimal("ivatot")),
 				row.NullString("ivanro"),
-				SafeDate(timeFromRow(row, "ivafec")),
+				SafeDateRequired(timeFromRow(row, "ivafec")),
 			}, nil
 		},
 	}
@@ -1531,14 +1573,11 @@ func NewWithholding1598Migrator(db *sql.DB, tenantID string) *GenericMigrator {
 				return nil, nil
 			}
 
-			// Entity FK
 			entityLegacyID := row.Int64("ctacod")
+			resolved, _ := mapper.ResolveEntityFlexible(ctx, entityLegacyID)
 			var entityID *uuid.UUID
-			if entityLegacyID > 0 {
-				resolved, err := mapper.ResolveOptional(ctx, "entity", "REG_CUENTA", entityLegacyID)
-				if err == nil && resolved != uuid.Nil {
-					entityID = &resolved
-				}
+			if resolved != uuid.Nil {
+				entityID = &resolved
 			}
 
 			id, err := mapper.Map(ctx, nil, "invoicing", "RET1598", legacyID, nil)
@@ -1556,7 +1595,7 @@ func NewWithholding1598Migrator(db *sql.DB, tenantID string) *GenericMigrator {
 				ParseDecimal(row.Decimal("totimpon")),
 				ParseDecimal(row.Decimal("totret")),
 				row.NullString("nroret"),
-				SafeDate(timeFromRow(row, "fecret")),
+				SafeDateRequired(timeFromRow(row, "fecret")),
 			}, nil
 		},
 	}
@@ -1605,15 +1644,56 @@ func timeFromRow(row legacy.LegacyRow, col string) time.Time {
 	}
 }
 
-// hashCode generates a stable int64 hash from a string code using FNV-1a 64-bit.
-// Used for STK_ARTICULOS where PK is varchar, not int.
-// FNV-1a has much better collision resistance than DJB hash.
-func hashCode(s string) uint64 {
+// combineDateTime builds a TIMESTAMPTZ-safe *time.Time from a DATE and a
+// TIME-of-day string (e.g. "08:30:00"). Returns nil when either input is
+// empty or unparseable — the COPY writer encodes nil as NULL, which is
+// what every nullable timestamptz column in erp_* expects.
+//
+// Histrix stores clock-in / clock-out as MySQL TIME columns (plain
+// HH:MM:SS strings) and attendance date as a separate DATE. Target schema
+// is TIMESTAMPTZ. Passing the raw *string through pgx' binary COPY path
+// fails with "cannot find encode plan ... *string into binary format for
+// timestamptz (OID 1184)" — time.Time is the only accepted Go type.
+func combineDateTime(date time.Time, timeStr string) *time.Time {
+	if date.IsZero() || timeStr == "" {
+		return nil
+	}
+	// MySQL's driver hands us "HH:MM:SS" for TIME columns. Accept a few
+	// common shapes just in case.
+	for _, layout := range []string{"15:04:05", "15:04", "2006-01-02 15:04:05"} {
+		t, err := time.Parse(layout, timeStr)
+		if err != nil {
+			continue
+		}
+		combined := time.Date(date.Year(), date.Month(), date.Day(),
+			t.Hour(), t.Minute(), t.Second(), 0, time.UTC)
+		return &combined
+	}
+	return nil
+}
+
+// hashCode generates a stable non-negative int64 hash from a string code using
+// FNV-1a 64-bit, clearing the sign bit. Used for tables where the PK is varchar
+// (e.g. STK_ARTICULOS) or composite, so they can be stored as int64 legacy_id in
+// erp_legacy_mapping without bit-63 overflow collisions.
+func hashCode(s string) int64 {
 	h := fnv.New64a()
 	h.Write([]byte(s))
-	v := h.Sum64()
+	v := h.Sum64() & 0x7FFFFFFFFFFFFFFF // clear sign bit — guarantees positive int64
 	if v == 0 {
 		v = 1
 	}
-	return v
+	return int64(v)
+}
+
+// articleCompositeCode namespaces an article code by its subsystem so rows
+// that share id_stkarticulo across different subsistema_id values in
+// STK_ARTICULOS (the legacy PK is composite) remain distinct after migration.
+// Subsystem "01" is the dominant one and is treated as the default (no prefix)
+// so existing FKs referencing id_stkarticulo keep resolving via hashCode(code).
+func articleCompositeCode(rawCode, subsistema string) string {
+	if subsistema == "" || subsistema == "01" {
+		return rawCode
+	}
+	return "SS" + subsistema + "|" + rawCode
 }

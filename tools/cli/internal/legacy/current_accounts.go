@@ -86,7 +86,7 @@ func PaymentAllocationLineReader(db *sql.DB) *GenericReader {
 	return &GenericReader{
 		DB:         db,
 		Table:      "CCTIMPUT",
-		Target:     "erp_payment_allocation_lines",
+		Target:     "erp_payment_allocations",
 		DomainName: "current_account",
 		PKColumn:   "id_cctimput",
 		Columns: "id_cctimput, concod, ctacod, movcta, movfec, movicc, movife, movimp, " +

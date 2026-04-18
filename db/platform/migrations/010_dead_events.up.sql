@@ -43,13 +43,6 @@ CREATE TABLE dead_events_replays (
 
 CREATE INDEX dead_events_replays_dead ON dead_events_replays (dead_event_id, replayed_at);
 
--- DLQ admin permissions (assigned to super_admin by default).
-INSERT INTO permissions (id, name, description, category) VALUES
-    ('admin.dlq.read',   'Ver dead events',       'Listar eventos muertos del DLQ',            'admin'),
-    ('admin.dlq.replay', 'Replay dead events',    'Re-publicar eventos muertos al subject original', 'admin'),
-    ('admin.dlq.drop',   'Drop dead events',      'Descartar eventos muertos definitivamente', 'admin')
-ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO role_permissions (role_id, permission_id)
-SELECT 'role-admin', id FROM permissions WHERE id LIKE 'admin.dlq.%'
-ON CONFLICT DO NOTHING;
+-- DLQ admin permissions are seeded in the tenant DB by
+-- db/tenant/migrations/064_dlq_admin_permissions.up.sql — keep this
+-- file pure platform DDL per ADR 023's split-database silo model.

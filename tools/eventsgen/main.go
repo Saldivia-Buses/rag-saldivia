@@ -1,10 +1,10 @@
-// Command eventsgen reads event specs from CUE files in pkg/events/spec and
+// Command eventsgen reads event specs from CUE files in services/app/internal/events/spec and
 // emits typed Go structs, TypeScript interfaces, and Markdown documentation.
 //
 // Usage:
 //
-//	eventsgen -spec ./pkg/events/spec \
-//	          -out-go ./pkg/events/gen \
+//	eventsgen -spec ./services/app/internal/events/spec \
+//	          -out-go ./services/app/internal/events/gen \
 //	          -out-ts ./apps/web/src/lib/events/gen \
 //	          -out-docs ./docs/events
 //
@@ -70,8 +70,8 @@ type Field struct {
 // ----- main -----
 
 func main() {
-	specDir := flag.String("spec", "pkg/events/spec", "CUE spec directory")
-	outGo := flag.String("out-go", "pkg/events/gen", "Go output directory")
+	specDir := flag.String("spec", "services/app/internal/events/spec", "CUE spec directory")
+	outGo := flag.String("out-go", "services/app/internal/events/gen", "Go output directory")
 	outTS := flag.String("out-ts", "apps/web/src/lib/events/gen", "TypeScript output directory")
 	outDocs := flag.String("out-docs", "docs/events", "Markdown output directory")
 	flag.Parse()

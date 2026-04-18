@@ -20,9 +20,13 @@ deploy/.env
 
 # --- Claude Code harness state (per-machine, not repo-shared) ---
 .claude/projects/
+.claude/scheduled_tasks.lock
 
 # --- Stray root-level Go build artifacts ---
 /cmd
+# Tool binaries (built on-demand via go run / go install)
+tools/eventsgen/eventsgen
+tools/mcp/mcp
 
 # --- Generated configs (from .tmpl templates via gen-config.sh) ---
 deploy/traefik/traefik.prod.yml
@@ -54,7 +58,6 @@ out/
 *.tsbuildinfo
 .turbo/
 **/.turbo/
-bun.lock
 
 # --- Docker ---
 docker-compose.override.yml
@@ -112,3 +115,7 @@ _archive/
 apps/web/.firecrawl/
 config/.env.saldivia
 config/.env.*
+firecrawl/
+.firecrawl/
+.claude/settings.local.json
+deploy/frontdoor/frontdoor

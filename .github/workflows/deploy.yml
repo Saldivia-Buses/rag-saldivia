@@ -36,27 +36,36 @@ jobs:
           done
           echo "Migrations applied"
 
-      - name: Build & start services
+      - name: Stop legacy host frontend (if any)
+        run: |
+          pkill -f 'next-server' 2>/dev/null || true
+          pkill -f 'bun.*dev' 2>/dev/null || true
+
+      - name: Build & start services (Go + frontend in Docker)
         run: |
           export GIT_SHA=$(git rev-parse --short HEAD)
           export BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)
           docker compose -f deploy/docker-compose.dev.yml --profile full up --build -d
 
-      - name: Start frontend
+      - name: Restart Traefik then web (so Traefik sees web's create event)
         run: |
-          pkill -f 'next-server' 2>/dev/null || true
-          sleep 2
-          export PATH=$HOME/.bun/bin:$PATH
-          cd apps/web
-          bun install --frozen-lockfile 2>/dev/null || bun install
-          rm -rf .next
-          NEXT_PUBLIC_API_URL=http://localhost NEXT_PUBLIC_TENANT_SLUG=dev \
-            nohup bun run dev --hostname 0.0.0.0 > /tmp/sda-frontend.log 2>&1 &
-          sleep 10
+          docker compose -f deploy/docker-compose.dev.yml restart traefik
+          sleep 5
+          docker compose -f deploy/docker-compose.dev.yml restart web
 
-      - name: Wait for health
+      - name: Wait for health + diagnostics
         run: |
-          sleep 10
-          docker ps --format "table {{.Names}}\t{{.Status}}" | sort
-          echo "---"
-          curl -sI http://localhost:3000 | head -2
+          for i in 1 2 3 4 5 6; do
+            sleep 10
+            STATUS=$(docker inspect deploy-web-1 --format '{{.State.Health.Status}}' 2>/dev/null || echo "?")
+            echo "[$((i*10))s] web health: $STATUS"
+            [ "$STATUS" = "healthy" ] && break
+          done
+          echo "--- web healthcheck logs ---"
+          docker inspect deploy-web-1 --format '{{json .State.Health}}' | python3 -m json.tool || true
+          echo "--- web app logs ---"
+          docker logs deploy-web-1 --tail 10 2>&1 || true
+          echo "--- exec node check inside container ---"
+          docker exec deploy-web-1 node -e "require('http').get('http://localhost:3000/', (r) => { console.log('status:', r.statusCode); process.exit(0); }).on('error', (e) => { console.log('err:', e.message); process.exit(1); })" || true
+          echo "--- traefik routers ---"
+          curl -s http://localhost:8080/api/http/routers | python3 -c 'import json,sys; print(*sorted([r["name"] for r in json.load(sys.stdin) if "@docker" in r["name"]]),sep="\n")'

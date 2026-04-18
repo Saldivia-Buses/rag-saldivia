@@ -1,7 +1,7 @@
 # ADR 018: Astro service uses CGO (Swiss Ephemeris)
 
 **Date:** 2026-04-06
-**Status:** Accepted
+**Status:** Superseded 2026-04-17 — astro service removed entirely from scope. Product pivot: Saldivia RAG for bus company, no astrology.
 **Plan:** 11, 12
 
 ## Decision

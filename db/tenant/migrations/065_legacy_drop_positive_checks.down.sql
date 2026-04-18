@@ -1,0 +1,6 @@
+-- Reverse of 065 is impossible to do generically — the originals were
+-- scattered across many migrations with per-table context. Rolling back
+-- requires replaying the affected up migrations individually.
+--
+-- If you really need the old checks: drop 065's effect at your own risk and
+-- re-run the specific up migrations that added the original constraints.

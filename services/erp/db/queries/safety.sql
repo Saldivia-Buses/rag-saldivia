@@ -158,3 +158,16 @@ FROM erp_work_accidents
 WHERE tenant_id = $1
   AND incident_date >= sqlc.arg(date_from)::DATE
   AND incident_date <= sqlc.arg(date_to)::DATE;
+
+-- name: ListMedicalVisits :many
+-- Daily medical consultation log — migrated from Histrix PARTE_MEDICO_DIARIO.
+-- Free-form visits where entity_id may be NULL (legacy data carries the
+-- patient name as text). Filter by date range for the safety dashboard.
+SELECT id, tenant_id, entity_id, visit_date, visit_time, operator_username,
+       patient_name, symptoms, prescription, metadata, created_at, updated_at
+FROM erp_medical_visits_log
+WHERE tenant_id = $1
+  AND (sqlc.arg(date_from)::DATE IS NULL OR visit_date >= sqlc.arg(date_from)::DATE)
+  AND (sqlc.arg(date_to)::DATE IS NULL OR visit_date <= sqlc.arg(date_to)::DATE)
+ORDER BY visit_date DESC, visit_time DESC NULLS LAST
+LIMIT $2 OFFSET $3;

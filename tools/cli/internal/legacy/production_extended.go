@@ -42,11 +42,13 @@ func VehicleReader(db *sql.DB) *GenericReader {
 // seccion_id = production section, tipo_control = control type,
 // critico = critical flag, accionable = can trigger actions,
 // legajo_defecto = default employee, aviso_produccion = production alert flag.
+// Target is erp_inspection_templates (NOT erp_production_inspections) — this table
+// is the master catalog of inspection DEFINITIONS. Events live in PROD_CONTROL_MOVIM.
 func ProductionInspectionReader(db *sql.DB) *GenericReader {
 	return &GenericReader{
 		DB:         db,
 		Table:      "PROD_CONTROLES",
-		Target:     "erp_production_inspections",
+		Target:     "erp_inspection_templates",
 		DomainName: "production",
 		PKColumn:   "id_prodcontrol",
 		Columns: "id_prodcontrol, seccion_id, nombre_control, seccion_coche_id, " +

@@ -94,8 +94,8 @@ describe("module guard logic", () => {
   });
 
   it("handles a single-module list correctly", () => {
-    const single: EnabledModule[] = [{ id: "astro", name: "Astro", category: "intelligence" }];
-    expect(hasModule(single, "astro")).toBe(true);
+    const single: EnabledModule[] = [{ id: "solo", name: "Solo", category: "intelligence" }];
+    expect(hasModule(single, "solo")).toBe(true);
     expect(hasModule(single, "fleet")).toBe(false);
   });
 
@@ -181,7 +181,6 @@ describe("MODULE_REGISTRY", () => {
 
   it("known modules are present", () => {
     expect("fleet" in MODULE_REGISTRY || "produccion" in MODULE_REGISTRY).toBe(true);
-    expect("astro" in MODULE_REGISTRY).toBe(true);
     expect("feedback" in MODULE_REGISTRY).toBe(true);
   });
 });

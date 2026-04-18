@@ -1,5 +1,5 @@
 -- 010_dead_events.down.sql
-DELETE FROM role_permissions WHERE permission_id LIKE 'admin.dlq.%';
-DELETE FROM permissions WHERE id LIKE 'admin.dlq.%';
+-- Permission rows are rolled back by the matching tenant migration
+-- (064_dlq_admin_permissions.down.sql).
 DROP TABLE IF EXISTS dead_events_replays;
 DROP TABLE IF EXISTS dead_events;

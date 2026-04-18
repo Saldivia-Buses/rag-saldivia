@@ -137,12 +137,14 @@ func RiskExposureReader(db *sql.DB) *GenericReader {
 // MedicalLeaveReader creates a reader for PARTE_MEDICO_DIARIO (daily medical reports).
 // Has auto-increment id PK. 59 rows.
 // sintomatologia = symptoms, prescripcion = prescription/treatment,
-// nombre = patient name (denormalized), usuario = recording user.
+// nombre = patient name (free text, no FK), usuario = recording user (free text).
+// Target is erp_medical_visits_log (NOT erp_medical_leaves) — this table has no FK
+// to employees so we use a standalone visits-log table instead of formal leaves.
 func MedicalLeaveReader(db *sql.DB) *GenericReader {
 	return &GenericReader{
 		DB:         db,
 		Table:      "PARTE_MEDICO_DIARIO",
-		Target:     "erp_medical_leaves",
+		Target:     "erp_medical_visits_log",
 		DomainName: "safety",
 		PKColumn:   "id",
 		Columns:    "id, fecha, sintomatologia, prescripcion, hora, usuario, nombre",

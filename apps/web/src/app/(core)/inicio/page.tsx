@@ -2,19 +2,15 @@
 
 import Link from "next/link";
 import { MODULE_REGISTRY, type ModuleManifest } from "@/lib/modules/registry";
-import { useEnabledModules } from "@/lib/modules/hooks";
 import { useAuthStore } from "@/lib/auth/store";
 import {
   ArrowRight,
   MessageSquare,
   Database,
-  Sparkles,
 } from "lucide-react";
 
-const CORE_MODULE_IDS = ["chat", "rag", "notifications", "ingest"];
-
 const MODULE_CATEGORIES: { title: string; description: string; range: [number, number] }[] = [
-  { title: "Operaciones", description: "Producción, calidad e ingeniería", range: [30, 39] },
+  { title: "Operaciones", description: "Producción, calidad e ingeniería", range: [20, 39] },
   { title: "Soporte", description: "Compras, administración y recursos", range: [40, 49] },
   { title: "Inteligencia", description: "IA y análisis avanzado", range: [90, 99] },
 ];
@@ -104,11 +100,12 @@ function CategorySection({
 export default function InicioPage() {
   const user = useAuthStore((s) => s.user);
 
-  const { data: enabledModules } = useEnabledModules();
-  const enabledIds = new Set(enabledModules?.map((m) => m.id) ?? []);
-  const allModules = Object.values(MODULE_REGISTRY)
-    .filter((m) => !CORE_MODULE_IDS.includes(m.id) && (enabledIds.size === 0 || enabledIds.has(m.id)))
-    .sort((a, b) => a.nav.position - b.nav.position);
+  // Show every module from the static registry — no backend dependency, no
+  // hydration flicker. Per-tenant gating moves into module pages themselves
+  // when a finer-grained mechanism is in place.
+  const allModules = Object.values(MODULE_REGISTRY).sort(
+    (a, b) => a.nav.position - b.nav.position,
+  );
 
   const firstName = user?.name?.split(" ")[0] ?? "Usuario";
 
@@ -126,7 +123,7 @@ export default function InicioPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid gap-3 sm:grid-cols-3 mb-10">
+        <div className="grid gap-3 sm:grid-cols-2 mb-10">
           <QuickAction
             href="/chat"
             icon={MessageSquare}
@@ -138,12 +135,6 @@ export default function InicioPage() {
             icon={Database}
             label="Colecciones"
             sublabel="Bases de conocimiento"
-          />
-          <QuickAction
-            href="/astro"
-            icon={Sparkles}
-            label="Astro"
-            sublabel="Análisis inteligente"
           />
         </div>
 

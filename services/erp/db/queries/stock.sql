@@ -96,3 +96,17 @@ RETURNING id, tenant_id, parent_id, child_id, quantity, unit_id, sort_order, not
 
 -- name: DeleteBOMEntry :exec
 DELETE FROM erp_bom WHERE id = $1 AND tenant_id = $2;
+
+-- name: ListBOMHistory :many
+-- Historical BOM entries migrated from Histrix STK_BOM_HIST (14.7M rows on
+-- saldivia_bench). Filter by parent article so the UI can render the
+-- evolution of a single assembly's bill of materials without pulling the
+-- entire history table.
+SELECT h.id, h.tenant_id, h.parent_id, h.child_id, h.quantity, h.unit_id,
+       h.version, h.effective_date, h.replaced_date, h.legacy_id, h.created_at,
+       c.code AS child_code, c.name AS child_name
+FROM erp_bom_history h
+JOIN erp_articles c ON c.id = h.child_id
+WHERE h.tenant_id = $1 AND h.parent_id = $2
+ORDER BY h.effective_date DESC, h.version DESC
+LIMIT $3 OFFSET $4;

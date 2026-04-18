@@ -1,0 +1,7 @@
+#!/command/execlineb -P
+with-contenv
+foreground { install -d -o sda -g sda -m 0750 /data/minio }
+s6-setuidgid sda
+/usr/local/bin/minio server /data/minio
+  --address 127.0.0.1:9000
+  --console-address 127.0.0.1:9001

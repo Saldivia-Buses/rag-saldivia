@@ -1,0 +1,8 @@
+#!/command/execlineb -P
+with-contenv
+export PORT 3000
+export HOSTNAME 127.0.0.1
+export NEXT_TELEMETRY_DISABLED 1
+cd /opt/sda/web
+s6-setuidgid sda
+/usr/bin/node server.js

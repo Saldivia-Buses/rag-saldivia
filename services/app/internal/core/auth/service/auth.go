@@ -1,0 +1,639 @@
+// Package service implements the auth business logic.
+package service
+
+import (
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"errors"
+	"fmt"
+	"log/slog"
+	"strings"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"golang.org/x/crypto/bcrypt"
+
+	"github.com/Camionerou/rag-saldivia/pkg/audit"
+	authnotify "github.com/Camionerou/rag-saldivia/services/app/internal/events/gen/notify"
+	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/outbox"
+	"github.com/Camionerou/rag-saldivia/pkg/security"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/spine"
+	"github.com/Camionerou/rag-saldivia/services/app/internal/core/auth/repository"
+)
+
+var (
+	ErrInvalidCredentials  = errors.New("invalid email or password")
+	ErrAccountLocked       = errors.New("account is locked")
+	ErrInvalidRefreshToken = errors.New("invalid or expired refresh token")
+	ErrUserNotFound        = errors.New("user not found")
+	ErrInvalidMFACode      = errors.New("invalid MFA code")
+	ErrMFARequired         = errors.New("MFA verification required")
+	ErrValidation          = errors.New("validation error")
+)
+
+const (
+	bcryptCost              = 12
+	maxFailedLogins         = 5  // temporary lockout threshold (15 min)
+	permanentLockoutLogins  = 20 // permanent lockout threshold (admin reset required)
+)
+
+// dummyHash is used for timing-safe responses when the user doesn't exist.
+// Prevents enumeration via response timing differences.
+var dummyHash, _ = bcrypt.GenerateFromPassword([]byte("dummy-password-for-timing"), bcryptCost)
+
+// Auth handles authentication operations for a single tenant.
+type Auth struct {
+	db            *pgxpool.Pool
+	repo          *repository.Queries
+	jwtCfg        sdajwt.Config
+	auditor       *audit.Writer
+	blacklist     *security.TokenBlacklist
+	encryptionKey []byte // AES-256 key for MFA secret encryption (nil = plaintext)
+	tenant        struct {
+		ID   string
+		Slug string
+	}
+}
+
+// NewAuth creates an auth service for a specific tenant. Event publishing is
+// handled via the transactional outbox (pkg/outbox) inside Login.
+func NewAuth(db *pgxpool.Pool, jwtCfg sdajwt.Config, tenantID, tenantSlug string) *Auth {
+	a := &Auth{db: db, repo: repository.New(db), jwtCfg: jwtCfg, auditor: audit.NewWriter(db)}
+	a.tenant.ID = tenantID
+	a.tenant.Slug = tenantSlug
+	return a
+}
+
+// SetBlacklist injects the token blacklist for logout/revocation.
+func (a *Auth) SetBlacklist(bl *security.TokenBlacklist) {
+	a.blacklist = bl
+}
+
+// LoginRequest holds the login input.
+type LoginRequest struct {
+	Email     string
+	Password  string
+	IP        string
+	UserAgent string
+}
+
+// TokenPair holds access + refresh tokens.
+type TokenPair struct {
+	AccessToken      string    `json:"access_token"`
+	RefreshToken     string    `json:"refresh_token"`
+	ExpiresIn        int       `json:"expires_in"`      // seconds
+	RefreshExpiresAt time.Time `json:"-"`                // used by handler for cookie, not serialized
+	MFARequired      bool      `json:"mfa_required,omitempty"` // true when MFA pending
+	MFAToken         string    `json:"mfa_token,omitempty"`    // temp JWT for MFA verification
+}
+
+// UpdateProfileRequest holds allowed profile updates.
+type UpdateProfileRequest struct {
+	Name string
+}
+
+// UserListItem represents a user in the list response.
+type UserListItem struct {
+	ID        string    `json:"id"`
+	Email     string    `json:"email"`
+	Name      string    `json:"name"`
+	Role      string    `json:"role"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+// UserInfo holds the current user's profile data.
+type UserInfo struct {
+	ID         string `json:"id"`
+	Email      string `json:"email"`
+	Name       string `json:"name"`
+	Role       string `json:"role"`
+	TenantID   string `json:"tenant_id"`
+	TenantSlug string `json:"tenant_slug"`
+}
+
+// Login authenticates a user and returns a token pair.
+func (a *Auth) Login(ctx context.Context, req LoginRequest) (*TokenPair, error) {
+	// Normalize email
+	email := strings.ToLower(strings.TrimSpace(req.Email))
+
+	row, err := a.repo.GetUserByEmail(ctx, email)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// Timing-safe: run bcrypt even when user doesn't exist
+			// to prevent enumeration via response time
+			_ = bcrypt.CompareHashAndPassword(dummyHash, []byte(req.Password))
+			return nil, ErrInvalidCredentials
+		}
+		return nil, fmt.Errorf("query user: %w", err)
+	}
+
+	userID := row.ID
+	name := row.Name
+	passwordHash := row.PasswordHash
+	isActive := row.IsActive
+
+	// Disabled and locked accounts return the same error as invalid credentials
+	// to prevent information leakage about account state
+	if !isActive {
+		_ = bcrypt.CompareHashAndPassword(dummyHash, []byte(req.Password))
+		return nil, ErrInvalidCredentials
+	}
+
+	if row.LockedUntil.Valid && time.Now().Before(row.LockedUntil.Time) {
+		return nil, ErrAccountLocked
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(req.Password)); err != nil {
+		a.recordFailedLogin(ctx, userID)
+		a.auditor.Write(ctx, audit.Entry{
+			UserID: userID, Action: "user.login_failed", Resource: email,
+			IP: req.IP, UserAgent: req.UserAgent,
+		})
+		return nil, ErrInvalidCredentials
+	}
+
+	// Success — reset failed logins, record login
+	a.recordSuccessfulLogin(ctx, userID, req.IP)
+
+	// Check MFA
+	mfaRequired, err := a.CheckMFARequired(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("check MFA: %w", err)
+	}
+	if mfaRequired {
+		// Return a short-lived MFA token instead of real tokens.
+		// The user must complete MFA verification to get access/refresh tokens.
+		mfaClaims := sdajwt.Claims{
+			UserID:   userID,
+			Email:    email,
+			Name:     name,
+			TenantID: a.tenant.ID,
+			Slug:     a.tenant.Slug,
+			Role:     "mfa_pending", // not a real role — signals MFA is pending
+		}
+		mfaClaims.ID = uuid.New().String()
+		mfaCfg := a.jwtCfg
+		mfaCfg.AccessExpiry = 5 * time.Minute // short-lived
+		mfaToken, err := sdajwt.CreateAccess(mfaCfg, mfaClaims)
+		if err != nil {
+			return nil, fmt.Errorf("create MFA token: %w", err)
+		}
+		return &TokenPair{MFARequired: true, MFAToken: mfaToken}, nil
+	}
+
+	// Get primary role
+	role, err := a.getPrimaryRole(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("get role: %w", err)
+	}
+
+	// Load permissions for RBAC
+	permissions, err := a.getPermissions(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("get permissions: %w", err)
+	}
+
+	// Create tokens with separate JTIs
+	accessClaims := sdajwt.Claims{
+		UserID:      userID,
+		Email:       email,
+		Name:        name,
+		TenantID:    a.tenant.ID,
+		Slug:        a.tenant.Slug,
+		Role:        role,
+		Permissions: permissions,
+	}
+	accessClaims.ID = uuid.New().String()
+
+	refreshClaims := accessClaims // copy
+	refreshClaims.ID = uuid.New().String()
+
+	accessToken, err := sdajwt.CreateAccess(a.jwtCfg, accessClaims)
+	if err != nil {
+		return nil, fmt.Errorf("create access token: %w", err)
+	}
+
+	refreshToken, err := sdajwt.CreateRefresh(a.jwtCfg, refreshClaims)
+	if err != nil {
+		return nil, fmt.Errorf("create refresh token: %w", err)
+	}
+
+	// Token rotation + login event in a single tx. If the commit fails,
+	// neither the new refresh token nor the outbox event are persisted.
+	refreshHash := hashToken(refreshToken)
+
+	tx, err := a.db.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("begin login tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	txRepo := a.repo.WithTx(tx)
+
+	if err := txRepo.RevokeUserRefreshTokens(ctx, userID); err != nil {
+		slog.Warn("failed to revoke old refresh tokens", "error", err, "user_id", userID)
+	}
+
+	err = txRepo.StoreRefreshToken(ctx, repository.StoreRefreshTokenParams{
+		UserID:    userID,
+		TokenHash: refreshHash,
+		ExpiresAt: pgtype.Timestamptz{Time: time.Now().Add(a.jwtCfg.RefreshExpiry), Valid: true},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("store refresh token: %w", err)
+	}
+
+	// Login event via outbox — uses savepoint so a failure doesn't abort
+	// the token rotation tx.
+	env, envErr := spine.New(a.tenant.Slug, authnotify.AuthLoginSuccessType,
+		authnotify.AuthLoginSuccessSchemaVersion,
+		authnotify.AuthLoginSuccessPayload{
+			UserID:    userID,
+			Email:     email,
+			IPAddress: req.IP,
+			UserAgent: req.UserAgent,
+		})
+	if envErr == nil {
+		subject, _ := spine.BuildSubject(authnotify.AuthLoginSuccessSubject,
+			map[string]string{"slug": a.tenant.Slug})
+		if _, spErr := tx.Exec(ctx, "SAVEPOINT outbox_sp"); spErr == nil {
+			if pubErr := outbox.PublishTx(ctx, tx, subject, env); pubErr != nil {
+				slog.Warn("outbox enqueue failed, rolling back savepoint", "error", pubErr)
+				_, _ = tx.Exec(ctx, "ROLLBACK TO SAVEPOINT outbox_sp")
+			}
+		}
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("commit login tx: %w", err)
+	}
+
+	// Audit log (non-transactional, non-critical — errors logged, not returned)
+	a.auditor.Write(ctx, audit.Entry{
+		UserID: userID, Action: "user.login", Resource: email,
+		IP: req.IP, UserAgent: req.UserAgent,
+	})
+
+	return &TokenPair{
+		AccessToken:      accessToken,
+		RefreshToken:     refreshToken,
+		ExpiresIn:        int(a.jwtCfg.AccessExpiry.Seconds()),
+		RefreshExpiresAt: time.Now().Add(a.jwtCfg.RefreshExpiry),
+	}, nil
+}
+
+// CompleteMFALogin verifies the TOTP code and issues real tokens.
+// Called after the user passes the MFA challenge.
+func (a *Auth) CompleteMFALogin(ctx context.Context, mfaToken, code string) (*TokenPair, error) {
+	// Verify the MFA temp token
+	claims, err := sdajwt.Verify(a.jwtCfg.PublicKey, mfaToken)
+	if err != nil {
+		return nil, ErrInvalidRefreshToken
+	}
+	if claims.Role != "mfa_pending" {
+		return nil, ErrInvalidRefreshToken
+	}
+
+	// Prevent MFA token replay: check if JTI was already used
+	if claims.ID != "" {
+		var used bool
+		_ = a.db.QueryRow(ctx,
+			`SELECT EXISTS(SELECT 1 FROM refresh_tokens WHERE token_hash = $1)`,
+			"mfa:"+claims.ID,
+		).Scan(&used)
+		if used {
+			return nil, ErrInvalidRefreshToken
+		}
+		// Mark JTI as used (store in refresh_tokens with immediate revocation)
+		_, _ = a.db.Exec(ctx,
+			`INSERT INTO refresh_tokens (user_id, token_hash, expires_at, revoked_at)
+			 VALUES ($1, $2, $3, now())`,
+			claims.UserID, "mfa:"+claims.ID, claims.ExpiresAt.Time,
+		)
+	}
+
+	// Verify TOTP code
+	if err := a.VerifyMFA(ctx, claims.UserID, code); err != nil {
+		return nil, err
+	}
+
+	// Issue real tokens (same as post-password login)
+	role, err := a.getPrimaryRole(ctx, claims.UserID)
+	if err != nil {
+		return nil, fmt.Errorf("get role: %w", err)
+	}
+	permissions, err := a.getPermissions(ctx, claims.UserID)
+	if err != nil {
+		return nil, fmt.Errorf("get permissions: %w", err)
+	}
+
+	accessClaims := sdajwt.Claims{
+		UserID:      claims.UserID,
+		Email:       claims.Email,
+		Name:        claims.Name,
+		TenantID:    a.tenant.ID,
+		Slug:        a.tenant.Slug,
+		Role:        role,
+		Permissions: permissions,
+	}
+	accessClaims.ID = uuid.New().String()
+	refreshClaims := accessClaims
+	refreshClaims.ID = uuid.New().String()
+
+	accessToken, err := sdajwt.CreateAccess(a.jwtCfg, accessClaims)
+	if err != nil {
+		return nil, fmt.Errorf("create access token: %w", err)
+	}
+	refreshToken, err := sdajwt.CreateRefresh(a.jwtCfg, refreshClaims)
+	if err != nil {
+		return nil, fmt.Errorf("create refresh token: %w", err)
+	}
+
+	refreshHash := hashToken(refreshToken)
+	err = a.repo.StoreRefreshToken(ctx, repository.StoreRefreshTokenParams{
+		UserID:    claims.UserID,
+		TokenHash: refreshHash,
+		ExpiresAt: pgtype.Timestamptz{Time: time.Now().Add(a.jwtCfg.RefreshExpiry), Valid: true},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("store refresh token: %w", err)
+	}
+
+	a.auditor.Write(ctx, audit.Entry{
+		UserID: claims.UserID, Action: "user.login", Resource: claims.Email,
+		Details: map[string]any{"mfa": true},
+	})
+
+	return &TokenPair{
+		AccessToken:      accessToken,
+		RefreshToken:     refreshToken,
+		ExpiresIn:        int(a.jwtCfg.AccessExpiry.Seconds()),
+		RefreshExpiresAt: time.Now().Add(a.jwtCfg.RefreshExpiry),
+	}, nil
+}
+
+// Refresh validates a refresh token and returns a new token pair (rotation).
+func (a *Auth) Refresh(ctx context.Context, refreshToken string) (*TokenPair, error) {
+	// Verify the JWT signature and expiry
+	claims, err := sdajwt.Verify(a.jwtCfg.PublicKey, refreshToken)
+	if err != nil {
+		return nil, ErrInvalidRefreshToken
+	}
+
+	// Verify the token hash exists in DB and is not revoked
+	tokenHash := hashToken(refreshToken)
+	exists, err := a.repo.ValidateRefreshToken(ctx, repository.ValidateRefreshTokenParams{
+		TokenHash: tokenHash,
+		UserID:    claims.UserID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("query refresh token: %w", err)
+	}
+	if !exists {
+		return nil, ErrInvalidRefreshToken
+	}
+
+	// Revoke the old refresh token (rotation — each token is single-use)
+	_ = a.repo.RevokeRefreshToken(ctx, tokenHash)
+
+	// Re-fetch user data to get current role (may have changed since login)
+	userRow, err := a.repo.GetUserForRefresh(ctx, claims.UserID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrInvalidRefreshToken
+		}
+		return nil, fmt.Errorf("query user for refresh: %w", err)
+	}
+	if !userRow.IsActive {
+		return nil, ErrInvalidRefreshToken
+	}
+
+	name := userRow.Name
+	email := userRow.Email
+
+	role, err := a.getPrimaryRole(ctx, claims.UserID)
+	if err != nil {
+		return nil, fmt.Errorf("get role for refresh: %w", err)
+	}
+
+	// Load permissions for RBAC
+	permissions, err := a.getPermissions(ctx, claims.UserID)
+	if err != nil {
+		return nil, fmt.Errorf("get permissions for refresh: %w", err)
+	}
+
+	// Issue new token pair
+	newAccessClaims := sdajwt.Claims{
+		UserID:      claims.UserID,
+		Email:       email,
+		Name:        name,
+		TenantID:    a.tenant.ID,
+		Slug:        a.tenant.Slug,
+		Role:        role,
+		Permissions: permissions,
+	}
+	newAccessClaims.ID = uuid.New().String()
+
+	newRefreshClaims := newAccessClaims
+	newRefreshClaims.ID = uuid.New().String()
+
+	accessToken, err := sdajwt.CreateAccess(a.jwtCfg, newAccessClaims)
+	if err != nil {
+		return nil, fmt.Errorf("create access token: %w", err)
+	}
+
+	newRefresh, err := sdajwt.CreateRefresh(a.jwtCfg, newRefreshClaims)
+	if err != nil {
+		return nil, fmt.Errorf("create refresh token: %w", err)
+	}
+
+	// Store new refresh token
+	newHash := hashToken(newRefresh)
+	refreshExpiry := time.Now().Add(a.jwtCfg.RefreshExpiry)
+	err = a.repo.StoreRefreshToken(ctx, repository.StoreRefreshTokenParams{
+		UserID:    claims.UserID,
+		TokenHash: newHash,
+		ExpiresAt: pgtype.Timestamptz{Time: refreshExpiry, Valid: true},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("store refresh token: %w", err)
+	}
+
+	a.auditor.Write(ctx, audit.Entry{
+		UserID: claims.UserID, Action: "user.refresh",
+	})
+
+	return &TokenPair{
+		AccessToken:      accessToken,
+		RefreshToken:     newRefresh,
+		ExpiresIn:        int(a.jwtCfg.AccessExpiry.Seconds()),
+		RefreshExpiresAt: refreshExpiry,
+	}, nil
+}
+
+// Logout revokes the refresh token AND blacklists the access token JTI.
+// accessJTI is the JWT ID from the access token (claims.ID).
+// accessExpiry is when the access token expires (for blacklist TTL).
+func (a *Auth) Logout(ctx context.Context, refreshToken, accessJTI string, accessExpiry time.Time) error {
+	tokenHash := hashToken(refreshToken)
+
+	uid := ""
+	if ownerID, err := a.repo.GetRefreshTokenOwner(ctx, tokenHash); err == nil {
+		uid = ownerID
+	}
+
+	if err := a.repo.RevokeRefreshTokenByHash(ctx, tokenHash); err != nil {
+		return fmt.Errorf("revoke refresh token: %w", err)
+	}
+
+	// Blacklist the access token so it's rejected immediately
+	if a.blacklist != nil && accessJTI != "" {
+		if err := a.blacklist.Revoke(ctx, accessJTI, accessExpiry); err != nil {
+			slog.Error("blacklist access token failed", "error", err, "jti", accessJTI)
+			// non-fatal: refresh token is already revoked
+		}
+	}
+
+	a.auditor.Write(ctx, audit.Entry{
+		UserID: uid, Action: "user.logout",
+	})
+	return nil
+}
+
+// Me returns profile info for the authenticated user.
+func (a *Auth) Me(ctx context.Context, userID string) (*UserInfo, error) {
+	userRow, err := a.repo.GetActiveUserById(ctx, userID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrUserNotFound
+		}
+		return nil, fmt.Errorf("query user: %w", err)
+	}
+
+	role, err := a.getPrimaryRole(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("get role: %w", err)
+	}
+
+	return &UserInfo{
+		ID:         userID,
+		Email:      userRow.Email,
+		Name:       userRow.Name,
+		Role:       role,
+		TenantID:   a.tenant.ID,
+		TenantSlug: a.tenant.Slug,
+	}, nil
+}
+
+// UpdateProfile updates the authenticated user's profile.
+func (a *Auth) UpdateProfile(ctx context.Context, userID string, req UpdateProfileRequest) (*UserInfo, error) {
+	name := strings.TrimSpace(req.Name)
+	if name == "" {
+		return nil, fmt.Errorf("%w: name is required", ErrValidation)
+	}
+	if len(name) > 200 {
+		return nil, fmt.Errorf("%w: name too long", ErrValidation)
+	}
+
+	rowsAffected, err := a.repo.UpdateUserName(ctx, repository.UpdateUserNameParams{
+		ID:   userID,
+		Name: name,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("update profile: %w", err)
+	}
+	if rowsAffected == 0 {
+		return nil, ErrUserNotFound
+	}
+
+	a.auditor.Write(ctx, audit.Entry{
+		UserID: userID, Action: "user.profile_updated",
+		Details: map[string]any{"name": name},
+	})
+
+	return a.Me(ctx, userID)
+}
+
+// ListUsers returns all active users for the current tenant (paginated).
+func (a *Auth) ListUsers(ctx context.Context, limit, offset int32) ([]UserListItem, error) {
+	rows, err := a.repo.ListActiveUsers(ctx, repository.ListActiveUsersParams{
+		Limit:  limit,
+		Offset: offset,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("list users: %w", err)
+	}
+
+	users := make([]UserListItem, len(rows))
+	for i, row := range rows {
+		users[i] = UserListItem{
+			ID:        row.ID,
+			Email:     row.Email,
+			Name:      row.Name,
+			Role:      row.Role,
+			CreatedAt: row.CreatedAt.Time,
+		}
+	}
+	return users, nil
+}
+
+// HashPassword hashes a password with bcrypt.
+func HashPassword(password string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcryptCost)
+	if err != nil {
+		return "", fmt.Errorf("hash password: %w", err)
+	}
+	return string(hash), nil
+}
+
+// hashToken creates a SHA-256 hex digest of a token.
+func hashToken(token string) string {
+	h := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(h[:])
+}
+
+func (a *Auth) recordFailedLogin(ctx context.Context, userID string) {
+	err := a.repo.RecordFailedLogin(ctx, repository.RecordFailedLoginParams{
+		ID:               userID,
+		MaxFailed:        int32(maxFailedLogins),
+		PermanentLockout: int32(permanentLockoutLogins),
+	})
+	if err != nil {
+		slog.Error("failed to record failed login", "error", err, "user_id", userID)
+	}
+}
+
+func (a *Auth) recordSuccessfulLogin(ctx context.Context, userID, ip string) {
+	err := a.repo.RecordSuccessfulLogin(ctx, repository.RecordSuccessfulLoginParams{
+		ID:          userID,
+		LastLoginIp: pgtype.Text{String: ip, Valid: ip != ""},
+	})
+	if err != nil {
+		slog.Error("failed to record successful login", "error", err, "user_id", userID)
+	}
+}
+
+func (a *Auth) getPrimaryRole(ctx context.Context, userID string) (string, error) {
+	role, err := a.repo.GetPrimaryRole(ctx, userID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return "user", nil // no role assigned, default
+		}
+		return "", fmt.Errorf("query role for user %s: %w", userID, err)
+	}
+	return role, nil
+}
+
+func (a *Auth) getPermissions(ctx context.Context, userID string) ([]string, error) {
+	perms, err := a.repo.GetPermissions(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("query permissions for user %s: %w", userID, err)
+	}
+	return perms, nil
+}
+
+

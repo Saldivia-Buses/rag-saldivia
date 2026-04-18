@@ -37,11 +37,11 @@ export function getTenantSlug(): string {
 
 /**
  * Returns the base URL for API requests.
- * In dev: proxied through Next.js or direct to Traefik.
- * In prod: same origin (Cloudflare Tunnel → Traefik).
+ * Same-origin by default — frontend and API are fronted by the same Traefik,
+ * so relative URLs (`/v1/...`) resolve to the page's origin. In SSR, an empty
+ * base just produces a relative path that the server-side fetch can handle.
  */
 export function getApiBaseUrl(): string {
-  if (typeof window === "undefined") return process.env.NEXT_PUBLIC_API_URL ?? "";
   return process.env.NEXT_PUBLIC_API_URL ?? "";
 }
 

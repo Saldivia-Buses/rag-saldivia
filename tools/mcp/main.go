@@ -368,8 +368,9 @@ func handleRAGQuery(id any, argsRaw json.RawMessage) jsonRPCResponse {
 		return errorResponse(id, -32602, "invalid arguments for rag_query")
 	}
 
-	// Call search service directly
-	searchURL := envOrDefault("SEARCH_SERVICE_URL", "http://localhost:8010")
+	// Call /v1/search on the consolidated app binary (ADR 025 rag fusion).
+	// Override with SEARCH_SERVICE_URL when pointing at a remote workstation.
+	searchURL := envOrDefault("SEARCH_SERVICE_URL", "http://localhost:8020")
 
 	payload := map[string]string{"collection": args.Collection, "query": args.Query}
 	bodyBytes, err := json.Marshal(payload)

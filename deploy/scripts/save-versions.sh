@@ -12,20 +12,8 @@ set -euo pipefail
 
 # Service name → port mapping (must match docker-compose)
 declare -A SERVICES=(
-  [auth]=8001
-  [ws]=8002
-  [chat]=8003
-  [agent]=8004
-  [notification]=8005
-  [platform]=8006
-  [ingest]=8007
-  [feedback]=8008
-  [traces]=8009
-  [search]=8010
-  [astro]=8011
-  [bigbrother]=8012
   [erp]=8013
-  [healthwatch]=8014
+  [app]=8020
 )
 
 HOST="localhost"

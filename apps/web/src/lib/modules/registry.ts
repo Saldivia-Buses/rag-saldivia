@@ -21,7 +21,6 @@ import {
   MessageSquare,
   FileText,
   Database,
-  Star,
   BusFront,
   type LucideIcon,
 } from "lucide-react";
@@ -200,11 +199,6 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
   },
 
   // ── Inteligencia ─────────────────────────────────────────
-  astro: {
-    id: "astro",
-    nav: { label: "Astro", icon: Star, path: "/astro", position: 90 },
-    routes: ["/astro"],
-  },
   feedback: {
     id: "feedback",
     nav: { label: "Calidad IA", icon: MessageSquare, path: "/feedback", position: 91 },

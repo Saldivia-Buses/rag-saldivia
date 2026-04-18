@@ -1,9 +1,0 @@
-- [Plan 34 SSO audit](project_plan34_sso_audit.md) -- 2 critical (SAML state bypass, cert not persisted), 3 high. NOT APTO.
-- [PR 53 Feedback audit](project_pr53_feedback_audit.md) -- 2 critical (NATS no auth, LIMIT concat), 3 high. NOT APTO.
-- [Hardening PR audit](project_hardening_audit.md) -- 2 critical (MFA token reuse, NATS auth disconnect), 3 high. NOT APTO.
-- [Plan 06 audit](project_plan06_audit.md) -- 2 critical (search no tenant isolation, traces NATS trust), 5 high. NOT APTO for Plan 06.
-- [PR 85 blacklist audit](project_pr85_blacklist_audit.md) -- 1 critical (dead code, nothing wired), 3 high. NOT APTO.
-- [Plan 08 post-hardening audit](project_plan08_audit.md) -- 0 critical, 3 high, 6 medium. First APTO verdict. Controlled production OK.
-- [Plan 15 BigBrother audit](project_plan15_bigbrother_audit.md) -- All 15 fixes verified, 3 new LOW only. APPROVE.
-- [Plan 23 Phase 3 AI gates audit](project_plan23_phase3_audit.md) -- 0 critical, 2 high (scoring bypass via code fences, mutable action tags). APTO with conditions.
-- [Plan 23 Phase 4 HealthWatch audit](project_plan23_phase4_audit.md) -- 1 critical (/send no RBAC), 3 high (blacklist fail-open, token not masked, wrong Traefik network). NOT APTO.

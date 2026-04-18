@@ -86,7 +86,8 @@ services:
       - sda-observability
 
   # ── Alertmanager (alert routing) ──────────────────────────────────────
-  # Connects to sda-backend (external) to reach notification:8005 webhook.
+  # Connects to sda-backend (external) to reach the app:8020 webhook
+  # (notification module, post ADR 025 — formerly notification:8005).
   # Auth token mounted from shared secrets directory (DS3).
   alertmanager:
     image: prom/alertmanager:v0.27.0

@@ -1,0 +1,6 @@
+#!/command/execlineb -P
+with-contenv
+s6-setuidgid postgres
+/usr/lib/postgresql/16/bin/postgres
+  -D /data/postgres
+  -c config_file=/data/postgres/postgresql.conf
