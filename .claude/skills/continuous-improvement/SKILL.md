@@ -1,36 +1,63 @@
 ---
 name: continuous-improvement
-description: Use at the start of any session that is not locked into a specific task, or whenever there is slack time. Each session picks one area of the codebase and iterates on it — correctness, simplicity, performance, clarity, test coverage, doc coherence, dead code, design. Karpathy-style auto-research: if an improvement exists and is worth the cost, it ships. No "we'll get to it later".
+description: Default mode when no task is set — walks ADR 027 top-down, picks the first un-ticked un-blocked item, ships. Phase 0 gates always win over any Phase 2+ work. Karpathy-style auto-research within the phase ordering.
 ---
 
 # continuous-improvement
 
-Scope: the whole codebase, one area per session.
+Scope: the whole codebase, one item per session, picked against ADR 027.
 
 ## The operating mode
 
-This project runs on continuous improvement. **Every session is a chance to make
-one area better.** When the user does not anchor the session to a specific task,
-you pick an area, evaluate it, and ship improvements.
+This project runs on continuous improvement **against a fixed checklist**
+(ADR 027). Every session:
 
-You are not here to maintain the status quo. You are here to iterate it.
+1. Read **ADR 027** (`docs/decisions/027-mvp-success-criteria.md`) top-down.
+2. Find the first un-ticked item whose dependencies are ticked (Phase 0 gates
+   always first; Phase N+1 only if Phase N is green or the item is waived).
+3. Ship it. Tick the ADR in the same PR.
 
-### Primary bias: consolidation
+You are not here to maintain the status quo. You are here to iterate the
+codebase toward the ADR 026 north star (SDA replaces Histrix + the AI layer
+that follows).
 
-The codebase is over-engineered for a one-dev, vertical-scale box (see CLAUDE.md
-principle 0). So this skill's default axis is **reduce**, not "add polish":
+## The hard rule — phase precedence
 
-- **Delete** before refactor — if code isn't reachable, reachable rarely, or
-  dead-ended, it goes.
-- **Inline** before abstract — a package with 1–2 importers is almost always
-  worse than inlining its code into the caller.
-- **Merge** before split — adjacent services (same domain, same data) that talk
-  over HTTP/gRPC on the same kernel should be one service, not two.
-- **Question** before accept — every surviving piece of complexity must earn its
-  keep this session, not because "it used to be needed".
+| When | Do |
+|---|---|
+| A Phase 0 gate is failing (ghost rows, tool perms, prod drift) | **That's the task.** No Phase 2+ work ships. |
+| A Phase 1 parity item is failing AND Phase 0 is green | Take a Phase 1 item. |
+| Phase 1 is complete (or every remaining item is waived) | Phase 2 is open. |
+| All earlier phases are green or waived | Pick from the next phase. |
 
-A session that ends with `−800 LOC, same behavior, same tests green` beats a
-session that ships a new feature.
+**"I found a nice refactor" does not override this.** The ADR 027 walk is
+the source of truth for what to work on; personal preference is not.
+
+### Primary bias inside a phase: parity first, consolidation second
+
+Within whatever phase is currently active:
+
+- **Phase 0 work:** correctness + integrity. Find the root cause, fix it,
+  add the check that catches it next time. See `systematic-debugging` and
+  `migration-health`.
+- **Phase 1 work:** replicate a Histrix capability. Start by reading the
+  relevant XML-form in `.intranet-scrape/`. See `htx-parity`.
+- **Phase 2+ work:** build the SDA-differential capability. The skills
+  `agent-tools`, `prompt-layers`, `background-agents` each own a slice
+  of this.
+
+Within any phase's work, **consolidation remains a first-class axis**:
+
+- **Delete** before refactor — if code isn't reachable, it goes.
+- **Inline** before abstract — a package with 1–2 importers is usually
+  worse than inlining.
+- **Merge** before split — adjacent services (same domain, same data)
+  over HTTP on the same kernel should be one service, not two.
+- **Question** before accept — every surviving piece of complexity must
+  earn its keep this session.
+
+A session that ends with `−800 LOC + Phase 1 tick + same tests green`
+beats a session that adds a feature without reducing or ticks nothing.
 
 ## The loop
 
@@ -60,20 +87,32 @@ Claude Code supports two primitives for running this on autopilot:
 Use them for off-hours iteration; keep the bar (`impact/cost ≥ 3×`) the same.
 A scheduled session that ships nothing is a successful session.
 
-## Picking an area
+## Picking work
 
-Rotate. Don't keep grinding the same hotspot. Signals to pick:
+**Default: walk ADR 027 top-down.** That's the primary picker.
 
-- **Hotspot file** (from `git log --since="3 months ago" --name-only --pretty=format: | sort | uniq -c | sort -rn | head -20`) — high churn, high risk.
-- **Skipped area** — no commits in 60+ days; may have silently rotted.
-- **User complaint** — anything they recently said was annoying, slow, confusing.
-- **Invariant proximity** — code near the 7 hard invariants deserves more scrutiny.
-- **Test-gap signal** — low coverage, missing integration test for a hot path.
-- **Friction you hit** — if a dev command was slow or a flow was tangled this session,
-  that area is the pick.
+Secondary signals apply only as tie-breakers **within** a phase, or when
+ADR 027 items in the active phase are all blocked on external input
+(rare but possible):
 
-On any new session without a user task: call `get_overview` + `get_risk` first,
-scan recent commits (`git log --oneline -20`), and pick.
+- **Hotspot file** — `git log --since="3 months ago" --name-only --pretty=format: | sort | uniq -c | sort -rn | head -20`
+- **Skipped area** — no commits in 60+ days; silent rot risk.
+- **User complaint** — anything recently flagged as annoying / slow.
+- **Friction you hit** — a slow dev command or tangled flow surfaced
+  during the current session.
+- **Test-gap signal** — missing integration test for a Phase 0 / Phase 1
+  path.
+
+On any new session without a user task:
+
+1. `git log --oneline -20` — what just shipped.
+2. Read ADR 027 + project_vision memory — where we are.
+3. `grep "\[ \]" docs/decisions/027-*.md` — remaining items.
+4. Pick the first un-ticked item whose dependencies (earlier phase)
+   are all ticked or waived.
+5. If the chosen item is hard-blocked on external input (e.g. a cutover
+   date), record the block and move to the next un-blocked item
+   **in the same phase**. Don't jump phases.
 
 ## Axes of improvement
 

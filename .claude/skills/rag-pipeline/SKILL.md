@@ -1,82 +1,145 @@
 ---
 name: rag-pipeline
-description: Use when working on the RAG stack — services/ingest, services/search, services/agent, services/extractor, the crossdoc decompose/synth flow, Milvus or embedding code, or the smart ingestion CLI. Covers the tree-search retrieval model, the crossdoc 4-phase pipeline, the tier-based smart ingest, and how the three services talk to each other via NATS + gRPC.
+description: Use when working on the RAG stack — services/app/internal/rag/{ingest,search,agent}/, services/extractor/ (Python), tree-search retrieval, crossdoc decompose/synth flow, ingest tier pipeline. After ADR 025 the three Go services live in-process inside the app monolith; after ADR 026 the RAG layer answers to Phase 2 (hierarchical prompts + per-collection ACL + memory integration).
 ---
 
 # rag-pipeline
 
-Scope: `services/ingest/`, `services/search/`, `services/agent/`, `services/extractor/`,
-`scripts/smart_ingest.py`, any hook or component named `useCrossdoc*`.
+Scope: `services/app/internal/rag/{ingest,search,agent}/`,
+`services/extractor/` (Python sidecar), `scripts/smart_ingest.py`,
+`apps/web/src/hooks/useCrossdoc*.ts`, the streaming path through
+`services/app/internal/realtime/ws/`.
 
 ## Core decisions (read before changing anything)
 
-Two ADRs govern this area — read them if you are about to deviate:
+- **ADR 016 — tree-RAG (no vectors)**: retrieval is tree-based. A new
+  cosine-similarity lookup is a re-read-ADR-016 event.
+- **ADR 025 — consolidation shape**: `ingest`, `search`, `agent` are no
+  longer separate binaries. They are in-process packages under
+  `services/app/internal/rag/`. `agent → search` and `agent → ingest`
+  are Go function calls, not HTTP/gRPC. `pkg/grpc` was fully deleted
+  in the realtime fusion; there is no proto layer to regenerate.
+- **ADR 026 — SDA replaces Histrix**: RAG ingests Histrix-migrated
+  data, emails, WhatsApp, and uploaded files. Per-collection ACL
+  (Phase 2) is non-negotiable — engineering does not see purchasing
+  trees unless they have the role.
+- **ADR 027 — phased success criteria**: the Phase 2 "Chat as UI" and
+  "Hierarchical prompts" items gate a lot of the product. Changes
+  here should tick one of those.
 
-- `docs/decisions/016-tree-rag-no-vectors.md` — why retrieval is tree-based, not
-  flat vector similarity.
-- `docs/decisions/020-shared-pkg-traces-cache.md` — shared tracing / cache layer.
+## Layout inside the monolith
 
-## Services
+```
+services/app/
+└── internal/
+    ├── rag/
+    │   ├── ingest/          upload → extractor → chunk → tree → events
+    │   ├── search/          tree-search retrieval; in-process only
+    │   └── agent/           LLM-facing; tool dispatch; streaming
+    └── realtime/ws/         WS hub; fans NATS events to the browser
+```
 
-| Service | Responsibility |
-|---|---|
-| `extractor` | Python; takes a document (PDF, DOCX, …) → structured text + metadata |
-| `ingest` | Go; orchestrates extraction, chunks, stores, publishes events |
-| `search` | Go; tree-search retrieval, exposes gRPC on `:50051` and REST on `:8010` |
-| `agent` | Go; LLM-facing; calls `search`, composes answers, streams via WS hub |
+`services/extractor/` stays standalone — it's Python, CPU-only, runs
+SGLang HTTP calls for OCR (PaddleOCR-VL) and vision (Qwen).
 
-Data flow: `upload → ingest → extractor → ingest (chunk + store) → NATS event →
-agent reacts → search → LLM → WS stream`.
+## Data flow
+
+```
+upload
+  → ingest handler (apps/web fetch)
+  → ingest service
+      → extractor (NATS request/reply or HTTP to Python sidecar)
+      → chunker (tree builder)
+      → Postgres (metadata + tree), MinIO (raw + artifacts)
+      → NATS: tenant.{slug}.ingest.completed
+  → agent query (chat)
+      → agent.handler.Query
+      → search.Service.Search (in-process)
+      → LLM (SGLang / OpenAI-compatible)
+      → WS hub stream (tokens + tool calls + final)
+```
 
 ## Tree-search retrieval (not flat vectors)
 
-Documents are stored as a tree of nodes (sections → paragraphs → chunks). Retrieval:
+Documents are trees of nodes: document → section → paragraph → chunk.
+Retrieval flow:
 
-1. Query decomposition (crossdoc, below) into sub-queries.
-2. Tree traversal with learned relevance — not k-NN over a single embedding.
-3. Reranker over candidate nodes.
-4. Top-N nodes returned with provenance to the agent.
+1. Decompose the user query into sub-queries (crossdoc, below).
+2. Tree traversal with learned relevance — not k-NN over a single
+   embedding.
+3. BM25 on leaves as a hybrid signal.
+4. Rerank over candidate nodes.
+5. Top-N returned with provenance (the tree path IS the citation).
 
-If you are about to add a cosine-similarity vector lookup, **stop** and re-read
-ADR 016.
+### Why this matches current RAG literature
 
-### Why this matches 2026 RAG literature
+Aligns with "hierarchical agentic RAG" (A-RAG, GraphRAG). Principles
+that still apply when extending retrieval:
 
-The tree-search approach aligns with what current research calls "hierarchical
-agentic RAG" (see: A-RAG paper on arXiv, GraphRAG). Parent nodes hold context,
-child nodes hold density; the model navigates instead of flat similarity. When
-extending retrieval, the principles that still apply:
+- **Hybrid signals** — combine tree relevance with BM25 on leaves.
+- **Contextual chunking** — chunks carry ancestor titles/summaries.
+- **Reranking is mandatory** — never hand the agent raw retrieval.
+- **Metadata filtering first** — tenant, collection, doc_id, date,
+  owner — before any scoring.
+- **Provenance is structural** — tree path is the citation.
 
-- **Hybrid signals** — combine tree relevance with BM25 scoring on leaves; don't rely
-  on a single metric.
-- **Contextual chunking** — chunks carry their ancestor titles/summaries so they
-  stand alone when surfaced.
-- **Reranking is mandatory** — never hand the agent raw retrieval output; rerank.
-- **Metadata filtering first** — tenant, doc_id, date, owner — before any scoring.
-- **Provenance is structural** — the tree path *is* the citation. Never return a
-  chunk without its ancestry.
+### Per-collection ACL (Phase 2 — not yet implemented)
+
+Collections are the access-control unit. Every tree node belongs to
+exactly one collection. Retrieval filters collections by the user's
+role **before** scoring, not after. A cross-area denial test lives in
+`services/app/internal/rag/search/service/acl_test.go` (to be added
+when this lands).
+
+When you work on this, read ADR 026 §Phase 2 and ADR 027 §Phase 2
+"Tree-RAG with ACL". Expect an ADR 028 (or similar) formalising the
+collection model when the first implementation ships.
 
 ## Crossdoc: 4-phase pipeline
 
-Implemented client-side in React (`apps/web/src/hooks/useCrossdoc*.ts`) and
-server-side in `agent`:
+Implemented both client-side (`apps/web/src/hooks/useCrossdoc*.ts`)
+and server-side (`services/app/internal/rag/agent/`).
 
 1. **Decompose** — break the question into ≤ N sub-questions.
-2. **Retrieve** — run `search` per sub-question in parallel.
+2. **Retrieve** — run search per sub-question in parallel.
 3. **Synthesize** — combine evidence into an answer.
 4. **Follow-up** — up to K retries if the answer is ungrounded.
 
-Settings (exposed in the UI `SaldiviaSection`):
-`queryMode`, `maxSubQueries`, `synthesisModel`, `followUpRetries`, `showDecomposition`,
-`vdbTopK`, `rerankerTopK`.
+Settings exposed in the UI:
+`queryMode`, `maxSubQueries`, `synthesisModel`, `followUpRetries`,
+`showDecomposition`, `vdbTopK`, `rerankerTopK`.
 
-Any change to the algorithm has to stay coherent across the hook and the server —
-they share the same 4 phases. If you change one without the other, streaming will
-misalign.
+Any algorithm change must stay coherent across the hook and the
+server — they share the same 4 phases. Desyncs → misaligned streaming.
+
+## Hierarchical prompts (Phase 2 — not yet implemented)
+
+The agent assembles context in layers before the user message:
+
+```
+system.md          (company-wide: jargon, org shape, policies)
+ → area.md         (per-area: ingeniería.md, compras.md, ...)
+  → user.md        (editable by the employee)
+   → memories      (global + per-user, curated)
+    → recent chat  (conversation so far)
+     → user query  (this message)
+```
+
+Token budgets are enforced per layer so layers don't starve each
+other. See the `prompt-layers` skill for the architecture and token
+budget tables.
+
+## Memory integration (Phase 2 — not yet implemented)
+
+Memories are ranked alongside tree results in retrieval. Memory
+tables (global + per-user) are written by a background curator
+agent — see `background-agents` skill. From the RAG side the contract
+is: memories participate in retrieval like any other node, filtered
+by the same ACL, surfaced with their source (user / global).
 
 ## Smart ingest (`scripts/smart_ingest.py`)
 
-Tier system — classifies documents by estimated page count and routes them:
+Tier system — classifies by estimated page count:
 
 | Tier | Pages | Strategy |
 |---|---|---|
@@ -85,33 +148,50 @@ Tier system — classifies documents by estimated page count and routes them:
 | medium | 21–100 | batched, adaptive timeout |
 | large | > 100 | streamed, checkpointed, resumable |
 
-Features: deadlock detection, resume on failure, adaptive timeout per tier.
-Do not rewrite the tier logic without measurements — it was tuned on real docs.
+Features: deadlock detection, resume on failure, adaptive timeout
+per tier. Tuning was done on real docs; do not rewrite without
+measurements.
 
 ## Storage
 
-- Postgres: metadata, tree structure, ingestion state.
-- MinIO: raw documents + extracted artifacts.
-- Redis: ephemeral ingestion locks, reranker cache.
-- Milvus (if enabled): legacy/experimental vector store — do not add new callers.
-
-## gRPC boundary
-
-- `search` exposes gRPC on `:50051` for `agent`. REST is for debugging and admin.
-- Protos live in `pkg/grpc/proto/`. Regenerate with `make proto`.
-- Streaming search results (the agent needs them live) uses server-streaming RPC.
+- **Postgres**: metadata, tree structure, ingestion state, memories.
+- **MinIO**: raw documents + extracted artifacts (the raw file is
+  the source of truth; we re-extract on demand).
+- **Redis**: ephemeral ingestion locks, reranker cache.
+- **Milvus**: legacy/experimental — do not add new callers. If a
+  cosine use-case appears, justify it in an ADR first.
 
 ## Events
+
+Published via outbox (at-least-once):
 
 - `tenant.{slug}.ingest.document.created|completed|failed`
 - `tenant.{slug}.ingest.chunk.created`
 - `tenant.{slug}.agent.answer.streaming|completed`
 
-WebSocket hub fans these out to the UI.
+The WS hub (`services/app/internal/realtime/ws/`) fans these to the
+browser. Ingest submission that publishes direct (not via outbox) is a
+**bug** to fix — see ADR 027 Phase 0.
 
 ## Don't
 
-- Don't add a new vector store.
+- Don't add a new vector store. Read ADR 016.
 - Don't bypass `ingest` to write chunks directly.
-- Don't change the crossdoc phase count — it is load-bearing across hook + server.
-- Don't log document contents at INFO — use DEBUG with tenant+doc ID only.
+- Don't re-introduce gRPC between rag sub-modules. They are
+  in-process Go calls post-ADR 025.
+- Don't change the crossdoc phase count — load-bearing across hook +
+  server.
+- Don't log document contents at INFO. DEBUG with tenant + doc_id
+  only.
+- Don't skip the collection ACL filter in new retrieval paths once
+  ACL lands (currently a TODO — but new code must not foreclose it).
+
+## Before touching RAG code
+
+1. `git log --oneline -5 -- services/app/internal/rag/`
+2. Read ADR 016 + ADR 025 + ADR 026 §Phase 2.
+3. If the change concerns ingest from Histrix data: consult
+   `.intranet-scrape/` and `htx-parity` skill first.
+4. If the change concerns prompts/memories: read `prompt-layers`.
+5. If the change concerns a new tool or tool-callable flow: read
+   `agent-tools`.
