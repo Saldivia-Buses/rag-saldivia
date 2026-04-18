@@ -38,15 +38,17 @@ that justifies the waiver. The waiver ADR number goes in the item.
       `printReport`. Empirical check — new run `0eb3af71` on saldivia_bench:
       22 tables completed, canonical ghost-row query returns zero, invariant
       holds table-by-table.
-- [x] **Migrators with `rows_written=0` and `rows_read>0`**: zero except waivers.
+- [x] **Migrators with `rows_written=0` and `rows_read>0`**: zero.
       Shipped 2026-04-18 (2.0.6 commits `8522fb15` + `8ea0a790`): PreloadDomain
       inside every `Build*Index`, `BuildRegMovimIndex` moved from `AddSetupHook`
       to `AddAfterTableHook("IVACOMPRAS")`, and FICHADADIA's clock_in/out now
       encode as `*time.Time` (not `*string`) for the TIMESTAMPTZ target. Empirical
       recovery on run `0eb3af71`: FACDETAL 191,051 rows, FICHADADIA 932,665,
       RHDESCUENTOS 16,809, RRHH_ADICIONALES 1,902 — **1,142,427 rows** previously
-      silently dropped. One no-op remains: REMDETAL (5K), waived as `W-001` in
-      `docs/parity/waivers.md` pending a REMITOINT migrator.
+      silently dropped. The last no-op (REMDETAL, 5,125 rows, tracked as
+      `W-001`) closed 2026-04-18 (2.0.8): `NewInternalDeliveryNoteMigrator` +
+      `BuildRemitoIntIndex` wire REMITOINT as REMDETAL's real parent — live
+      SQL against Histrix confirmed 5,125/5,125 REMDETAL rows join cleanly.
 - [x] **Every migrated table has at least one sqlc query** (no dead-end
       writes). Shipped 2026-04-18 (2.0.6 commits to follow): added 5 read
       queries for populated orphans (`erp_bom_history` 14.7M rows,

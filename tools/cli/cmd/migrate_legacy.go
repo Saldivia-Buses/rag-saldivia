@@ -388,16 +388,23 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 	})
 
 	// Phase 6b: Invoice lines + delivery notes (depends on invoice headers).
-	// REMITO must run before REMDETAL so the remito index is built in-between.
+	// REMITO + REMITOINT must run before REMDETAL so both indexes are built in-between.
 	orch.RegisterMigrators(
 		migration.NewInvoiceLineMigrator(mysqlDB, tenantID),
 		migration.NewDeliveryNoteMigrator(mysqlDB, tenantID),
 		migration.NewDeliveryNoteAltMigrator(mysqlDB, tenantID),
+		migration.NewInternalDeliveryNoteMigrator(mysqlDB, tenantID),
 	)
 
 	// After-table hook: REMITO.idRemito → REMITO UUID index (consumed by REMDETAL).
 	orch.AddAfterTableHook("REMITO", func(ctx context.Context, mapper *migration.Mapper) error {
 		return mapper.BuildRemitoIndex(ctx, mysqlDB)
+	})
+
+	// After-table hook: REMITOINT.idRemito → REMITOINT UUID index (consumed by REMDETAL).
+	// Closes W-001: REMDETAL.idRemito references REMITOINT (not REMITO) on saldivia.
+	orch.AddAfterTableHook("REMITOINT", func(ctx context.Context, mapper *migration.Mapper) error {
+		return mapper.BuildRemitoIntIndex(ctx)
 	})
 
 	orch.RegisterMigrators(

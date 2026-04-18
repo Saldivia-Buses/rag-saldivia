@@ -12,22 +12,28 @@ joined with `information_schema.tables.table_rows` from the live Histrix
 DB at `172.22.100.99` (saldivia schema, read-only query via WireGuard +
 SSH tunnel).
 
-## Totals (2026-04-18)
+## Totals (2026-04-18, post-2.0.8)
 
 | Segment | Count | Rows |
 |---|---:|---:|
 | Histrix tables in `.intranet-scrape/db-tables.txt` | 675 | 18,940,293 |
-| Tables with a registered migrator/reader | 100 | ≈ 8,850,131 |
-| Tables uncovered (total) | 575 | — |
+| Tables with a registered migrator/reader | 101 | ≈ 8,850,877 |
+| Tables uncovered (total) | 574 | — |
 | &nbsp;&nbsp;— Histrix infra (HTX*, 31) — waived W-004 | 31 | 3,486,776 |
 | &nbsp;&nbsp;— `*_OLD` superseded (5) — waived W-005 | 5 | 423,678 |
 | &nbsp;&nbsp;— zero-row dead tables — waived W-006 | 225 | 0 |
-| &nbsp;&nbsp;— **business-data gap remaining** | **314** | **6,179,708** |
+| &nbsp;&nbsp;— **business-data gap remaining** | **313** | **6,178,962** |
 
-The 100 "covered" tables account for ≈ **47 %** of all Histrix rows.
-After the three bulk waivers, **314 business tables with rows** remain
-to migrate or waive individually. Those 314 tables hold 6.2 M rows — 33
+The 101 "covered" tables account for ≈ **47 %** of all Histrix rows.
+After the three bulk waivers, **313 business tables with rows** remain
+to migrate or waive individually. Those 313 tables hold 6.18 M rows — 33
 % of Histrix's total data volume.
+
+**2.0.8 delta**: REMITOINT (746 rows) moved from gap → covered via
+`NewInternalDeliveryNoteMigrator`; closing W-001 also unblocks 5,125
+REMDETAL rows that were silently archive-skipped (those were already
+counted inside the "covered" bucket — REMDETAL has had a migrator since
+Phase 6b, it just never resolved its parent FK until now).
 
 ## The Pareto finding
 
@@ -127,7 +133,7 @@ too long to paste inline and changes as work lands.
 
 | ID | Scope | Count | Rows |
 |---|---|---:|---:|
-| W-001 | REMDETAL → erp_invoice_lines silent drop | 1 | 5,125 |
+| ~~W-001~~ | ~~REMDETAL → erp_invoice_lines silent drop~~ — **closed 2.0.8** | — | — |
 | W-002 | CLI-internal migration tables | 4 | — |
 | W-003 | Phase 1 UI placeholder tables | 5 | 0 |
 | W-004 | Histrix intranet infrastructure tables (HTX*) | 31 | 3,486,776 |

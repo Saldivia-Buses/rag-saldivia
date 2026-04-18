@@ -1298,8 +1298,63 @@ func NewDeliveryNoteAltMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 	}
 }
 
+// NewInternalDeliveryNoteMigrator migrates REMITOINT (remitos internos, 746 rows) → erp_invoices.
+// REMITOINT is the real parent of REMDETAL.idRemito on saldivia — not REMITO,
+// whose saldivia schema has no idRemito column. Closing this gap (W-001) lets
+// the 5,125 REMDETAL rows land instead of being archive-skipped.
+// Internal transfers have no external entity; we use the UNKNOWN-LEGACY entity
+// seeded by EnsureUnknownEntity so the NOT NULL entity_id FK holds.
+func NewInternalDeliveryNoteMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.InternalDeliveryNoteReader(db)
+	return &GenericMigrator{
+		reader:      reader,
+		columns:     []string{"id", "tenant_id", "number", "date", "due_date", "invoice_type", "direction", "entity_id", "currency_id", "subtotal", "tax_amount", "total", "afip_cae", "afip_cae_due", "status", "user_id"},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("idRemito")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			entity := mapper.UnknownEntityID()
+			if entity == uuid.Nil {
+				return nil, nil // EnsureUnknownEntity hook missing — archive-skips will catch it
+			}
+
+			number := fmt.Sprintf("REMITOINT-%d", legacyID)
+
+			id, err := mapper.Map(ctx, nil, "invoicing", "REMITOINT", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID,
+				number,
+				SafeDateRequired(timeFromRow(row, "fecha")),
+				(*time.Time)(nil),
+				"delivery_note",
+				"issued",
+				entity,
+				(*uuid.UUID)(nil),
+				ParseDecimal("0"),
+				ParseDecimal("0"),
+				ParseDecimal("0"),
+				(*string)(nil),
+				(*time.Time)(nil),
+				"posted",
+				LegacyUserID,
+			}, nil
+		},
+	}
+}
+
 // NewDeliveryNoteLineMigrator migrates REMDETAL (delivery note lines, 5K rows) → erp_invoice_lines.
-// PK: idRemdet. Links to REMITO via idRemito.
+// PK: idRemdet. REMDETAL.idRemito references REMITOINT.idRemito on saldivia
+// (the Histrix comment claiming it's an FK to REMITO is wrong — REMITO's
+// saldivia snapshot has no idRemito column). Parent resolution tries the
+// REMITOINT index first (W-001 fix) and falls back to the REMITO index for
+// snapshots where REMITO does carry idRemito.
 func NewDeliveryNoteLineMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 	reader := legacy.DeliveryNoteLineReader(db)
 	return &GenericMigrator{
@@ -1312,12 +1367,11 @@ func NewDeliveryNoteLineMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 				return nil, nil
 			}
 
-			// idRemito is the physical auto-inc PK in REMITO; REMITO's logical PK is
-			// composite (numero, puesto) and is hashed as legacy_id by the REMITO
-			// migrator. BuildRemitoIndex resolves idRemito → UUID via that hash.
 			remitoID := row.Int64("idRemito")
 			var invoiceID *uuid.UUID
-			if resolved, ok := mapper.ResolveByRemitoID(remitoID); ok {
+			if resolved, ok := mapper.ResolveByRemitoIntID(remitoID); ok {
+				invoiceID = &resolved
+			} else if resolved, ok := mapper.ResolveByRemitoID(remitoID); ok {
 				invoiceID = &resolved
 			}
 			if invoiceID == nil {

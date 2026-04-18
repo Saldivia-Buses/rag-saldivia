@@ -59,33 +59,47 @@ survey engine, unit-card gallery) lands.
 The paired PR adds the read queries (and write queries if the UI edits
 the rows), and strikes the row from this waiver.
 
-## W-001 — REMDETAL (`erp_invoice_lines`) silent drop on fresh migration
+## ~~W-001~~ — REMDETAL (`erp_invoice_lines`) silent drop on fresh migration
 
-**Scope**: the `NewDeliveryNoteLineMigrator` in
-`tools/cli/internal/migration/migrators.go`. 5,125 legacy rows.
+**Status**: ✅ **Closed 2026-04-18** (2.0.8). Resolution shipped the exact
+path the waiver documented: `NewInternalDeliveryNoteMigrator` writes
+REMITOINT → `erp_invoices` (`tools/cli/internal/migration/migrators.go`),
+`BuildRemitoIntIndex` populates the REMITOINT.idRemito → UUID index
+(`tools/cli/internal/migration/mapper.go`), and
+`NewDeliveryNoteLineMigrator` now resolves REMDETAL parents via
+`ResolveByRemitoIntID` (with `ResolveByRemitoID` as defensive fallback
+for snapshots where REMITO does carry idRemito).
 
-**Why**: REMDETAL's `idRemito` column is documented in code as "FK to REMITO"
-but the MySQL schema (`.intranet-scrape/db-schema.sql:15503-15510`) shows
-REMITO has PK `(numero, puesto)` with no `idRemito` column at all. The
-actual parent is `REMITOINT` (the "remitos internos" table at line 15520,
-PK `idRemito`), which today has no migrator. `BuildRemitoIndex` correctly
-detects REMITO lacks idRemito and no-ops — but then every REMDETAL row
-fails to resolve its parent and is skipped. The 5K rows go through the
-archive-skips path (when `--archive-skips` is on) or are dropped otherwise.
+**Evidence** (direct SQL against live Histrix, 2026-04-18):
+- REMITO_has_idRemito = 0 → original root cause confirmed.
+- REMITOINT = 746 rows → new parent migrator target.
+- REMDETAL = 5,125 rows, every single one joins cleanly against
+  REMITOINT.idRemito (orphans_from_REMITOINT = 0).
+- Post-fix Phase 0 invariant: `rows_read = rows_written + rows_skipped
+  + rows_duplicate` holds with 5,125 = 5,125 + 0 + 0 on a fresh run.
+
+**Original scope (kept for history)**: the `NewDeliveryNoteLineMigrator`
+in `tools/cli/internal/migration/migrators.go`. 5,125 legacy rows.
+
+**Why** (original): REMDETAL's `idRemito` column is documented in code
+as "FK to REMITO" but the MySQL schema
+(`.intranet-scrape/db-schema.sql:15503-15510`) shows REMITO has PK
+`(numero, puesto)` with no `idRemito` column at all. The actual parent
+is `REMITOINT` (the "remitos internos" table at line 15520, PK
+`idRemito`), which had no migrator until this fix. `BuildRemitoIndex`
+correctly detected REMITO lacks idRemito and no-opped — but then every
+REMDETAL row failed to resolve its parent and was skipped. The 5K rows
+went through the archive-skips path (when `--archive-skips` was on) or
+were dropped otherwise.
 
 The operational context is that REMDETAL lines cover internal workshop
 material issuance (piezas entregadas al taller). They are referenced by
 warehouse ops for reconciling depot outflows against production consumption.
 
-**Blast radius**: 5,125 historical delivery-note lines. No live feature in
-SDA reads them yet (the warehouse reconciliation UI is Phase 1 work that
-hasn't landed). The archive keeps the raw data for forensic queries.
-
-**Revisit**: when the warehouse reconciliation page enters Phase 1 scope
-(`stock` domain, `almacen/*` XML-forms). The fix is to add a
-`NewInternalDeliveryNoteMigrator` for REMITOINT, wire a
-`BuildRemitoIntIndex`, and repoint `NewDeliveryNoteLineMigrator` at the
-new index. Tracked in ADR 027 as a Phase 1 data-migration follow-up.
+**Blast radius** (original): 5,125 historical delivery-note lines + 746
+parent REMITOINT rows now both land on a fresh migration. The Phase 1
+warehouse reconciliation UI (`stock` domain, `almacen/*` XML-forms) gets
+a full dataset to read from when it lands.
 
 ## W-004 — Histrix intranet infrastructure tables (HTX*)
 
