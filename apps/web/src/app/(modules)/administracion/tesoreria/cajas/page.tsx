@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { erpKeys } from "@/lib/erp/queries";
@@ -54,7 +55,11 @@ export default function CajasPage() {
               )}
               {registers.map((r) => (
                 <TableRow key={r.id}>
-                  <TableCell className="text-sm font-medium">{r.name}</TableCell>
+                  <TableCell className="text-sm font-medium">
+                    <Link href={`/administracion/tesoreria/cajas/${r.id}`} className="hover:underline">
+                      {r.name}
+                    </Link>
+                  </TableCell>
                   <TableCell>
                     <Badge variant={r.active ? "secondary" : "outline"}>
                       {r.active ? "Activa" : "Inactiva"}
