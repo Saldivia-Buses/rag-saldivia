@@ -16,11 +16,17 @@ export const erpKeys = {
   stockArticles: (params?: Record<string, string>) =>
     [...erpKeys.all, "stock", "articles", params] as const,
   stockLevels: () => [...erpKeys.all, "stock", "levels"] as const,
+  articleBOM: (articleId: string) =>
+    [...erpKeys.all, "stock", "articles", articleId, "bom"] as const,
   warehouses: () => [...erpKeys.all, "stock", "warehouses"] as const,
   purchaseOrders: (status?: string) =>
     [...erpKeys.all, "purchasing", "orders", { status }] as const,
+  purchaseOrder: (id: string) =>
+    [...erpKeys.all, "purchasing", "orders", id] as const,
   quotations: (status?: string) =>
     [...erpKeys.all, "sales", "quotations", { status }] as const,
+  quotation: (id: string) =>
+    [...erpKeys.all, "sales", "quotations", id] as const,
   invoices: (params?: Record<string, string>) =>
     [...erpKeys.all, "invoicing", "invoices", params] as const,
   invoice: (id: string) =>
@@ -42,6 +48,8 @@ export const erpKeys = {
     [...erpKeys.all, "stock", "article-costs", params] as const,
   bankReconciliations: () =>
     [...erpKeys.all, "treasury", "reconciliations"] as const,
+  bankReconciliation: (id: string) =>
+    [...erpKeys.all, "treasury", "reconciliations", id] as const,
   warehouses2: () => [...erpKeys.all, "stock", "warehouses", "v2"] as const,
   cashCounts: (params?: Record<string, string>) =>
     [...erpKeys.all, "treasury", "cash-counts", params] as const,
@@ -56,6 +64,8 @@ export const erpKeys = {
   cashRegisters: () =>
     [...erpKeys.all, "treasury", "cash-registers"] as const,
   priceLists: () => [...erpKeys.all, "sales", "price-lists"] as const,
+  priceList: (id: string) =>
+    [...erpKeys.all, "sales", "price-lists", id] as const,
   supplierScorecards: (params?: Record<string, string>) =>
     [...erpKeys.all, "quality", "scorecards", params] as const,
   // 2.0.17
@@ -78,6 +88,8 @@ export const erpKeys = {
     [...erpKeys.all, "tools", "list", params] as const,
   maintenanceAssets: () =>
     [...erpKeys.all, "maintenance", "assets"] as const,
+  maintenancePlans: (assetId: string) =>
+    [...erpKeys.all, "maintenance", "assets", assetId, "plans"] as const,
   treasuryMovements: () =>
     [...erpKeys.all, "treasury", "movements"] as const,
   treasuryBalance: () =>

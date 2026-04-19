@@ -10,15 +10,55 @@ Unit of work is the **cluster** — one Histrix area/form group maps to
 one SDA route. A cluster is "covered" when the SDA page delivers the
 same operational surface as the Histrix form(s) it replaces.
 
-## Totals (2026-04-19, post-2.0.17)
+## Totals (2026-04-19, post-2.0.18)
 
 | Segment | Count |
 |---|---:|
 | Histrix XML-forms in `.intranet-scrape/xml-forms/` | ~4,500 files |
 | Histrix top-level forms (area/form groups) | 434 |
-| SDA `page.tsx` routes shipped | 99 |
-| **SDA pages explicitly tracked as XML-form parity** | **33** (this file) |
+| SDA `page.tsx` routes shipped | 110 |
+| **SDA pages explicitly tracked as XML-form parity** | **41** (this file) |
 | XML-form waivers (§UI) | **1** (W-009, see `waivers.md`) |
+
+## 2.0.18 clusters (8)
+
+The §UI parity surface opened a new route shape in 2.0.18: the first
+eight explicit detail (`[id]`) routes under the main modules. All
+eight use backend endpoints that were already mounted — the session
+was frontend-first except where the bundled-detail service layer
+needed a small extension (price list + quotation options).
+
+A new top-level module also entered the registry: `/ventas` (position
+39), with its first sub-route `/ventas/cotizaciones`.
+
+| Cluster | Route | Endpoint | Tier |
+|---|---|---|---|
+| Reconciliación → statement lines | `/administracion/tesoreria/reconciliaciones/[id]` | `GET /v1/erp/treasury/reconciliations/{id}` | C (new page) |
+| Orden de compra → líneas | `/compras/ordenes/[id]` | `GET /v1/erp/purchasing/orders/{id}` | C (new page) |
+| Factura → líneas | `/administracion/facturacion/[id]` | `GET /v1/erp/invoicing/invoices/{id}` | C (new page) |
+| Lista de precios → items | `/compras/listas-precios/[id]` | `GET /v1/erp/sales/price-lists/{id}` | C (new handler + page) |
+| Cotizaciones list | `/ventas/cotizaciones` | `GET /v1/erp/sales/quotations` | A + /ventas module opened |
+| Cotización → lines + options | `/ventas/cotizaciones/[id]` | `GET /v1/erp/sales/quotations/{id}` (extended) | C (service extended + new page) |
+| Equipo → planes de mantenimiento | `/mantenimiento/equipos/[id]` | `GET /v1/erp/maintenance/assets/{id}/plans` | C (new page) |
+| Artículo → lista de materiales (BOM) | `/administracion/almacen/articulos/[id]` | `GET /v1/erp/stock/articles/{id}/bom` | C (new page) |
+
+Note — Cluster #4 needed a surgical backend add (`GetPriceList` sqlc
+query + service + handler) because the detail was unbundled from the
+existing list endpoint. `sqlc generate` drifts 14 files under v1.30.0
+vs the pinned output, so the generated-code counterpart was
+hand-written following the `GetQuotation` shape (see commit 0861ac04).
+
+Cluster #6 extended `QuotationDetail` to bundle section options
+(`ListQuotationOptions`) alongside lines so the detail page renders
+everything in one round-trip.
+
+Clusters #7 (maintenance plans) and #8 (article BOM) do not have a
+backing `GetAsset` / `GetArticle` detail endpoint yet — the detail
+pages reuse the list query cache for metadata, which keeps the
+backend surface minimal while the UX still shows header fields on
+deep-link (via the cached list fetch).
+
+
 
 ## 2.0.17 clusters (12)
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -122,7 +123,11 @@ export default function AlmacenPage() {
                 <TableBody>
                   {articles.map((a) => (
                     <TableRow key={a.id}>
-                      <TableCell className="font-mono text-sm">{a.code}</TableCell>
+                      <TableCell className="font-mono text-sm">
+                        <Link href={`/administracion/almacen/articulos/${a.id}`} className="hover:underline">
+                          {a.code}
+                        </Link>
+                      </TableCell>
                       <TableCell className="text-sm">{a.name}</TableCell>
                       <TableCell><Badge variant="secondary">{a.article_type}</Badge></TableCell>
                       <TableCell className="text-right font-mono text-sm">{fmtMoney(a.avg_cost)}</TableCell>

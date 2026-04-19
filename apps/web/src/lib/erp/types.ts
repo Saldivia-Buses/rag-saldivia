@@ -240,10 +240,62 @@ export interface BankReconciliation {
   statement_balance: number | null;
   book_balance: number | null;
   status: string;
+  user_id?: string;
   confirmed_at: string | null;
   created_at: string;
   bank_name: string;
   account_number: string;
+}
+
+export interface BankStatementLine {
+  id: string;
+  tenant_id: string;
+  reconciliation_id: string;
+  date: string | null;
+  description: string;
+  amount: number | null;
+  reference: string;
+  matched: boolean;
+  movement_id: string | null;
+  created_at: string;
+}
+
+export interface ReconciliationDetail {
+  reconciliation: BankReconciliation;
+  lines: BankStatementLine[];
+}
+
+export interface PurchaseOrder {
+  id: string;
+  tenant_id: string;
+  number: string;
+  date: string | null;
+  supplier_id: string | null;
+  status: string;
+  currency_id: string | null;
+  total: number | null;
+  notes: string;
+  user_id: string;
+  created_at: string;
+  supplier_name?: string;
+}
+
+export interface PurchaseOrderLine {
+  id: string;
+  tenant_id: string;
+  order_id: string;
+  article_id: string | null;
+  quantity: number | null;
+  unit_price: number | null;
+  received_qty: number | null;
+  sort_order: number;
+  article_code: string;
+  article_name: string;
+}
+
+export interface PurchaseOrderDetail {
+  order: PurchaseOrder;
+  lines: PurchaseOrderLine[];
 }
 
 export interface Warehouse {
@@ -346,6 +398,115 @@ export interface PriceList {
   valid_from: string | null;
   valid_until: string | null;
   active: boolean;
+}
+
+export interface PriceListItem {
+  id: string;
+  tenant_id: string;
+  price_list_id: string;
+  article_id: string | null;
+  description: string | null;
+  price: number | null;
+  article_code: string | null;
+  article_name: string | null;
+}
+
+export interface PriceListDetail {
+  price_list: PriceList;
+  items: PriceListItem[];
+}
+
+export interface Quotation {
+  id: string;
+  tenant_id: string;
+  number: string;
+  date: string | null;
+  customer_id: string | null;
+  status: string;
+  currency_id: string | null;
+  total: number | null;
+  valid_until: string | null;
+  notes: string;
+  user_id: string;
+  created_at: string;
+  customer_name?: string;
+}
+
+export interface QuotationLine {
+  id: string;
+  tenant_id: string;
+  quotation_id: string;
+  article_id: string | null;
+  description: string;
+  quantity: number | null;
+  unit_price: number | null;
+  sort_order: number;
+  metadata?: string | null;
+}
+
+export interface QuotationOption {
+  id: string;
+  tenant_id: string;
+  legacy_id: number;
+  quotation_id: string;
+  quotation_legacy_id: number;
+  section_legacy_id: number;
+  description: string;
+  created_at: string;
+}
+
+export interface QuotationDetail {
+  quotation: Quotation;
+  lines: QuotationLine[];
+  options: QuotationOption[];
+}
+
+export interface MaintenanceAsset {
+  id: string;
+  tenant_id: string;
+  code: string;
+  name: string;
+  asset_type: string;
+  unit_id: string | null;
+  location: string;
+  active: boolean;
+  created_at: string;
+}
+
+export interface MaintenancePlan {
+  id: string;
+  tenant_id: string;
+  asset_id: string;
+  name: string;
+  frequency_days: number | null;
+  frequency_km: number | null;
+  frequency_hours: number | null;
+  last_done: string | null;
+  next_due: string | null;
+  active: boolean;
+}
+
+export interface StockArticle {
+  id: string;
+  code: string;
+  name: string;
+  article_type: string;
+  min_stock: number;
+  avg_cost: number;
+  active: boolean;
+}
+
+export interface BOMEntry {
+  id: string;
+  tenant_id: string;
+  parent_id: string;
+  child_id: string;
+  quantity: number | null;
+  unit_id: string | null;
+  sort_order: number;
+  notes: string;
+  child_code: string;
+  child_name: string;
 }
 
 export interface SupplierScorecard {
@@ -565,9 +726,39 @@ export interface Invoice {
   date: string;
   invoice_type: string;
   direction: string;
-  entity_name: string;
+  entity_name?: string;
+  entity_id?: string;
+  currency_id?: string | null;
+  subtotal?: number | null;
+  tax_amount?: number | null;
   total: number;
+  due_date?: string | null;
+  order_id?: string | null;
+  journal_entry_id?: string | null;
+  afip_cae?: string | null;
+  afip_cae_due?: string | null;
+  user_id?: string;
+  created_at?: string;
   status: string;
+}
+
+export interface InvoiceLine {
+  id: string;
+  tenant_id: string;
+  invoice_id: string;
+  article_id: string | null;
+  description: string;
+  quantity: number | null;
+  unit_price: number | null;
+  tax_rate: number | null;
+  tax_amount: number | null;
+  line_total: number | null;
+  sort_order: number;
+}
+
+export interface InvoiceDetail {
+  invoice: Invoice;
+  lines: InvoiceLine[];
 }
 
 export interface Withholding {

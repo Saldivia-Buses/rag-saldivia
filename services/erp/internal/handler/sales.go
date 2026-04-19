@@ -24,6 +24,7 @@ type SalesService interface {
 	CreateOrder(ctx context.Context, tenantID, number string, date pgtype.Date, orderType string, customerID, quotationID pgtype.UUID, total pgtype.Numeric, notes, userID, ip string) (repository.ErpOrder, error)
 	UpdateOrderStatus(ctx context.Context, id pgtype.UUID, tenantID, status, userID, ip string) error
 	ListPriceLists(ctx context.Context, tenantID string) ([]repository.ErpPriceList, error)
+	GetPriceList(ctx context.Context, id pgtype.UUID, tenantID string) (*service.PriceListDetail, error)
 }
 
 type Sales struct{ svc SalesService }
@@ -38,6 +39,7 @@ func (h *Sales) Routes(authWrite func(http.Handler) http.Handler) chi.Router {
 		r.Get("/quotations/{id}", h.GetQuotation)
 		r.Get("/orders", h.ListOrders)
 		r.Get("/price-lists", h.ListPriceLists)
+		r.Get("/price-lists/{id}", h.GetPriceList)
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(authWrite)
@@ -199,4 +201,20 @@ func (h *Sales) ListPriceLists(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"price_lists": lists})
+}
+
+func (h *Sales) GetPriceList(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	id, err := parseUUID(chi.URLParam(r, "id"))
+	if err != nil {
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
+		return
+	}
+	detail, err := h.svc.GetPriceList(r.Context(), id, slug)
+	if err != nil {
+		erperrors.WriteError(w, r, erperrors.NotFound("price_list"))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(detail)
 }

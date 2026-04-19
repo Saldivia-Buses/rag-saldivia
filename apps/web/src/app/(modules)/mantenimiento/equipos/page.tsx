@@ -1,11 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { api } from "@/lib/api/client";
 import { erpKeys } from "@/lib/erp/queries";
 import { permissionErrorToast } from "@/lib/erp/permission-messages";
+import type { MaintenanceAsset } from "@/lib/erp/types";
 import { ErrorState } from "@/components/erp/error-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,8 +30,8 @@ export default function EquiposPage() {
   const queryClient = useQueryClient();
 
   const { data: assets = [], isLoading, error } = useQuery({
-    queryKey: [...erpKeys.all, "maintenance", "assets"] as const,
-    queryFn: () => api.get<{ assets: any[] }>("/v1/erp/maintenance/assets"),
+    queryKey: erpKeys.maintenanceAssets(),
+    queryFn: () => api.get<{ assets: MaintenanceAsset[] }>("/v1/erp/maintenance/assets"),
     select: (d) => d.assets,
   });
 
@@ -38,7 +40,7 @@ export default function EquiposPage() {
       api.post("/v1/erp/maintenance/assets", data),
     onSuccess: () => {
       toast.success("Equipo creado exitosamente");
-      queryClient.invalidateQueries({ queryKey: [...erpKeys.all, "maintenance", "assets"] });
+      queryClient.invalidateQueries({ queryKey: erpKeys.maintenanceAssets() });
       setCreateOpen(false);
     },
     onError: permissionErrorToast,
@@ -69,9 +71,13 @@ export default function EquiposPage() {
               <TableHead className="w-24 text-center">Estado</TableHead>
             </TableRow></TableHeader>
             <TableBody>
-              {assets.map((a: any) => (
+              {assets.map((a) => (
                 <TableRow key={a.id}>
-                  <TableCell className="font-mono text-sm">{a.code}</TableCell>
+                  <TableCell className="font-mono text-sm">
+                    <Link href={`/mantenimiento/equipos/${a.id}`} className="hover:underline">
+                      {a.code}
+                    </Link>
+                  </TableCell>
                   <TableCell className="text-sm font-medium">{a.name}</TableCell>
                   <TableCell><Badge variant="secondary">{typeLabel[a.asset_type] || a.asset_type}</Badge></TableCell>
                   <TableCell className="text-sm text-muted-foreground">{a.location || "\u2014"}</TableCell>

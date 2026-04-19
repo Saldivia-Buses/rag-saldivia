@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { erpKeys } from "@/lib/erp/queries";
@@ -57,7 +58,11 @@ export default function ListasPreciosPage() {
               )}
               {lists.map((l) => (
                 <TableRow key={l.id}>
-                  <TableCell className="text-sm font-medium">{l.name}</TableCell>
+                  <TableCell className="text-sm font-medium">
+                    <Link href={`/compras/listas-precios/${l.id}`} className="hover:underline">
+                      {l.name}
+                    </Link>
+                  </TableCell>
                   <TableCell className="text-sm">
                     {l.valid_from ? fmtDateShort(l.valid_from) : "—"}
                   </TableCell>
