@@ -778,6 +778,60 @@ func (q *Queries) ListBankAccounts(ctx context.Context, arg ListBankAccountsPara
 	return items, nil
 }
 
+const getBankAccount = `-- name: GetBankAccount :one
+SELECT id, tenant_id, bank_name, branch, account_number, cbu, alias,
+       currency_id, account_id, active, created_at
+FROM erp_bank_accounts WHERE id = $1 AND tenant_id = $2
+`
+
+type GetBankAccountParams struct {
+	ID       pgtype.UUID `json:"id"`
+	TenantID string      `json:"tenant_id"`
+}
+
+func (q *Queries) GetBankAccount(ctx context.Context, arg GetBankAccountParams) (ErpBankAccount, error) {
+	row := q.db.QueryRow(ctx, getBankAccount, arg.ID, arg.TenantID)
+	var i ErpBankAccount
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.BankName,
+		&i.Branch,
+		&i.AccountNumber,
+		&i.Cbu,
+		&i.Alias,
+		&i.CurrencyID,
+		&i.AccountID,
+		&i.Active,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getCashRegister = `-- name: GetCashRegister :one
+SELECT id, tenant_id, name, account_id, active, created_at
+FROM erp_cash_registers WHERE id = $1 AND tenant_id = $2
+`
+
+type GetCashRegisterParams struct {
+	ID       pgtype.UUID `json:"id"`
+	TenantID string      `json:"tenant_id"`
+}
+
+func (q *Queries) GetCashRegister(ctx context.Context, arg GetCashRegisterParams) (ErpCashRegister, error) {
+	row := q.db.QueryRow(ctx, getCashRegister, arg.ID, arg.TenantID)
+	var i ErpCashRegister
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.Name,
+		&i.AccountID,
+		&i.Active,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const listCashCounts = `-- name: ListCashCounts :many
 SELECT id, tenant_id, cash_register_id, date, expected, counted, difference, user_id, notes, created_at
 FROM erp_cash_counts WHERE tenant_id = $1 ORDER BY date DESC LIMIT $2 OFFSET $3

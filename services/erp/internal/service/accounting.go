@@ -69,6 +69,11 @@ func (s *Accounting) ListCostCenters(ctx context.Context, tenantID string, activ
 	})
 }
 
+// GetCostCenter returns a single cost center by id.
+func (s *Accounting) GetCostCenter(ctx context.Context, id pgtype.UUID, tenantID string) (repository.ErpCostCenter, error) {
+	return s.repo.GetCostCenter(ctx, repository.GetCostCenterParams{ID: id, TenantID: tenantID})
+}
+
 // CreateCostCenter creates a new cost center.
 func (s *Accounting) CreateCostCenter(ctx context.Context, tenantID, code, name string, parentID pgtype.UUID, userID, ip string) (repository.ErpCostCenter, error) {
 	cc, err := s.repo.CreateCostCenter(ctx, repository.CreateCostCenterParams{

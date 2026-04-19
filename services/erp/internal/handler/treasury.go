@@ -20,8 +20,10 @@ import (
 // TreasuryService is the interface the Treasury handler depends on.
 type TreasuryService interface {
 	ListBankAccounts(ctx context.Context, tenantID string, activeOnly bool) ([]repository.ErpBankAccount, error)
+	GetBankAccount(ctx context.Context, id pgtype.UUID, tenantID string) (repository.ErpBankAccount, error)
 	CreateBankAccount(ctx context.Context, p repository.CreateBankAccountParams, userID, ip string) (repository.ErpBankAccount, error)
 	ListCashRegisters(ctx context.Context, tenantID string) ([]repository.ErpCashRegister, error)
+	GetCashRegister(ctx context.Context, id pgtype.UUID, tenantID string) (repository.ErpCashRegister, error)
 	CreateCashRegister(ctx context.Context, tenantID, name string, accountID pgtype.UUID, userID, ip string) (repository.ErpCashRegister, error)
 	ListMovements(ctx context.Context, tenantID string, dateFrom, dateTo pgtype.Date, typeFilter string, limit, offset int) ([]repository.ListTreasuryMovementsRow, error)
 	CreateMovement(ctx context.Context, req service.CreateTreasuryMovementRequest) (repository.CreateTreasuryMovementRow, error)
@@ -56,7 +58,9 @@ func (h *Treasury) Routes(authWrite func(http.Handler) http.Handler) chi.Router 
 	r.Group(func(r chi.Router) {
 		r.Use(sdamw.RequirePermission("erp.treasury.read"))
 		r.Get("/bank-accounts", h.ListBankAccounts)
+		r.Get("/bank-accounts/{id}", h.GetBankAccount)
 		r.Get("/cash-registers", h.ListCashRegisters)
+		r.Get("/cash-registers/{id}", h.GetCashRegister)
 		r.Get("/movements", h.ListMovements)
 		r.Get("/checks", h.ListChecks)
 		r.Get("/balance", h.GetBalance)
@@ -133,6 +137,21 @@ func (h *Treasury) ListBankAccounts(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]any{"bank_accounts": accounts})
 }
 
+func (h *Treasury) GetBankAccount(w http.ResponseWriter, r *http.Request) {
+	id, err := parseUUID(chi.URLParam(r, "id"))
+	if err != nil {
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
+		return
+	}
+	ba, err := h.svc.GetBankAccount(r.Context(), id, tenantSlug(r))
+	if err != nil {
+		erperrors.WriteError(w, r, erperrors.NotFound("bank account"))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(ba)
+}
+
 func (h *Treasury) CreateBankAccount(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	r.Body = http.MaxBytesReader(w, r.Body, 16<<10)
@@ -175,6 +194,21 @@ func (h *Treasury) ListCashRegisters(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"cash_registers": regs})
+}
+
+func (h *Treasury) GetCashRegister(w http.ResponseWriter, r *http.Request) {
+	id, err := parseUUID(chi.URLParam(r, "id"))
+	if err != nil {
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
+		return
+	}
+	cr, err := h.svc.GetCashRegister(r.Context(), id, tenantSlug(r))
+	if err != nil {
+		erperrors.WriteError(w, r, erperrors.NotFound("cash register"))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(cr)
 }
 
 func (h *Treasury) CreateCashRegister(w http.ResponseWriter, r *http.Request) {

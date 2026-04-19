@@ -35,6 +35,10 @@ func (s *Treasury) ListBankAccounts(ctx context.Context, tenantID string, active
 	return s.repo.ListBankAccounts(ctx, repository.ListBankAccountsParams{TenantID: tenantID, ActiveOnly: activeOnly})
 }
 
+func (s *Treasury) GetBankAccount(ctx context.Context, id pgtype.UUID, tenantID string) (repository.ErpBankAccount, error) {
+	return s.repo.GetBankAccount(ctx, repository.GetBankAccountParams{ID: id, TenantID: tenantID})
+}
+
 func (s *Treasury) CreateBankAccount(ctx context.Context, p repository.CreateBankAccountParams, userID, ip string) (repository.ErpBankAccount, error) {
 	ba, err := s.repo.CreateBankAccount(ctx, p)
 	if err != nil {
@@ -49,6 +53,10 @@ func (s *Treasury) CreateBankAccount(ctx context.Context, p repository.CreateBan
 
 func (s *Treasury) ListCashRegisters(ctx context.Context, tenantID string) ([]repository.ErpCashRegister, error) {
 	return s.repo.ListCashRegisters(ctx, tenantID)
+}
+
+func (s *Treasury) GetCashRegister(ctx context.Context, id pgtype.UUID, tenantID string) (repository.ErpCashRegister, error) {
+	return s.repo.GetCashRegister(ctx, repository.GetCashRegisterParams{ID: id, TenantID: tenantID})
 }
 
 func (s *Treasury) CreateCashRegister(ctx context.Context, tenantID, name string, accountID pgtype.UUID, userID, ip string) (repository.ErpCashRegister, error) {

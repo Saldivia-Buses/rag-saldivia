@@ -654,6 +654,30 @@ func (q *Queries) ListAccounts(ctx context.Context, arg ListAccountsParams) ([]E
 	return items, nil
 }
 
+const getCostCenter = `-- name: GetCostCenter :one
+SELECT id, tenant_id, code, name, parent_id, active
+FROM erp_cost_centers WHERE id = $1 AND tenant_id = $2
+`
+
+type GetCostCenterParams struct {
+	ID       pgtype.UUID `json:"id"`
+	TenantID string      `json:"tenant_id"`
+}
+
+func (q *Queries) GetCostCenter(ctx context.Context, arg GetCostCenterParams) (ErpCostCenter, error) {
+	row := q.db.QueryRow(ctx, getCostCenter, arg.ID, arg.TenantID)
+	var i ErpCostCenter
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.Code,
+		&i.Name,
+		&i.ParentID,
+		&i.Active,
+	)
+	return i, err
+}
+
 const listCostCenters = `-- name: ListCostCenters :many
 SELECT id, tenant_id, code, name, parent_id, active
 FROM erp_cost_centers
