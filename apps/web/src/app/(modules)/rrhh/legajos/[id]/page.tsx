@@ -138,19 +138,17 @@ export default function EmployeeDetailPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Nombre</TableHead>
-                        <TableHead className="w-[160px]">Rol</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead className="w-[160px]">Teléfono</TableHead>
+                        <TableHead className="w-[140px]">Tipo</TableHead>
+                        <TableHead className="w-[180px]">Etiqueta</TableHead>
+                        <TableHead>Valor</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {contacts.map((c) => (
                         <TableRow key={c.id}>
-                          <TableCell className="text-sm font-medium">{c.name}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">{c.role ?? "—"}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">{c.email ?? "—"}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">{c.phone ?? "—"}</TableCell>
+                          <TableCell className="text-sm">{c.type}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground">{c.label || "—"}</TableCell>
+                          <TableCell className="text-sm">{c.value}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -168,7 +166,7 @@ export default function EmployeeDetailPage() {
                       <div className="text-xs text-muted-foreground">
                         {fmtDate(n.created_at)} · {n.user_id}
                       </div>
-                      <p className="mt-1 text-sm whitespace-pre-wrap">{n.note}</p>
+                      <p className="mt-1 text-sm whitespace-pre-wrap">{n.body}</p>
                     </div>
                   ))}
                 </div>

@@ -2,20 +2,27 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { erpKeys } from "@/lib/erp/queries";
 import { fmtDate } from "@/lib/erp/format";
-import type { EntityDetail, SupplierDemerit } from "@/lib/erp/types";
+import type { EntityContact, EntityDetail, SupplierDemerit } from "@/lib/erp/types";
 import { ErrorState } from "@/components/erp/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
+const CONTACT_TYPES = ["phone", "email", "address", "bank_account"] as const;
+type ContactType = (typeof CONTACT_TYPES)[number];
 
 export default function SupplierDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params.id;
+  const qc = useQueryClient();
 
   const { data, isLoading, error } = useQuery({
     queryKey: erpKeys.entity(id),
@@ -74,33 +81,39 @@ export default function SupplierDetailPage() {
               <Metric label="Puntos" value={String(totalPoints)} />
             </div>
 
-            {contacts.length > 0 && (
-              <>
-                <h2 className="mb-3 text-sm font-medium text-muted-foreground">Contactos ({contacts.length})</h2>
-                <div className="mb-6 overflow-hidden rounded-xl border border-border/40 bg-card">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Nombre</TableHead>
-                        <TableHead className="w-[160px]">Rol</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead className="w-[160px]">Teléfono</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {contacts.map((c) => (
-                        <TableRow key={c.id}>
-                          <TableCell className="text-sm font-medium">{c.name}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">{c.role ?? "—"}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">{c.email ?? "—"}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">{c.phone ?? "—"}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </>
-            )}
+            <h2 className="mb-3 text-sm font-medium text-muted-foreground">Contactos ({contacts.length})</h2>
+            <div className="mb-4 overflow-hidden rounded-xl border border-border/40 bg-card">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[140px]">Tipo</TableHead>
+                    <TableHead className="w-[180px]">Etiqueta</TableHead>
+                    <TableHead>Valor</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {contacts.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={3} className="h-16 text-center text-sm text-muted-foreground">
+                        Sin contactos registrados.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {contacts.map((c) => (
+                    <TableRow key={c.id}>
+                      <TableCell className="text-sm">{labelForType(c.type)}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{c.label || "—"}</TableCell>
+                      <TableCell className="text-sm">{c.value}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            <AddContactForm
+              entityId={id}
+              onSuccess={() => qc.invalidateQueries({ queryKey: erpKeys.entity(id) })}
+            />
 
             <h2 className="mb-3 text-sm font-medium text-muted-foreground">
               Demeritos ({demerits.length})
@@ -152,7 +165,7 @@ export default function SupplierDetailPage() {
                       <div className="text-xs text-muted-foreground">
                         {fmtDate(n.created_at)} · {n.user_id}
                       </div>
-                      <p className="mt-1 text-sm whitespace-pre-wrap">{n.note}</p>
+                      <p className="mt-1 text-sm whitespace-pre-wrap">{n.body}</p>
                     </div>
                   ))}
                 </div>
@@ -162,6 +175,83 @@ export default function SupplierDetailPage() {
         )}
       </div>
     </div>
+  );
+}
+
+function labelForType(type: string) {
+  switch (type) {
+    case "phone":
+      return "Teléfono";
+    case "email":
+      return "Email";
+    case "address":
+      return "Dirección";
+    case "bank_account":
+      return "Cuenta bancaria";
+    default:
+      return type;
+  }
+}
+
+function AddContactForm({ entityId, onSuccess }: { entityId: string; onSuccess: () => void }) {
+  const [type, setType] = useState<ContactType>("phone");
+  const [label, setLabel] = useState("");
+  const [value, setValue] = useState("");
+
+  const mutation = useMutation({
+    mutationFn: (body: { type: string; label: string; value: string }) =>
+      api.post<EntityContact>(`/v1/erp/entities/${entityId}/contacts`, body),
+    onSuccess: () => {
+      setLabel("");
+      setValue("");
+      onSuccess();
+    },
+  });
+
+  return (
+    <form
+      className="mb-6 rounded-xl border border-border/40 bg-card p-4"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!value.trim()) return;
+        mutation.mutate({ type, label: label.trim(), value: value.trim() });
+      }}
+    >
+      <h3 className="mb-3 text-sm font-medium">Agregar contacto</h3>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-[140px_180px_1fr_auto]">
+        <select
+          className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+          value={type}
+          onChange={(e) => setType(e.target.value as ContactType)}
+          disabled={mutation.isPending}
+        >
+          {CONTACT_TYPES.map((t) => (
+            <option key={t} value={t}>
+              {labelForType(t)}
+            </option>
+          ))}
+        </select>
+        <Input
+          placeholder="Etiqueta (opcional)"
+          value={label}
+          onChange={(e) => setLabel(e.target.value)}
+          disabled={mutation.isPending}
+        />
+        <Input
+          placeholder="Valor"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          disabled={mutation.isPending}
+          required
+        />
+        <Button type="submit" disabled={mutation.isPending || !value.trim()}>
+          {mutation.isPending ? "Guardando…" : "Agregar"}
+        </Button>
+      </div>
+      {mutation.isError && (
+        <p className="mt-2 text-xs text-destructive">Error al guardar contacto.</p>
+      )}
+    </form>
   );
 }
 
