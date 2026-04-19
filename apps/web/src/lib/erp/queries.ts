@@ -3,6 +3,10 @@ export const erpKeys = {
   catalogs: (type?: string) => [...erpKeys.all, "catalogs", { type }] as const,
   entities: (type?: string, search?: string) =>
     [...erpKeys.all, "entities", { type, search }] as const,
+  entity: (id: string) =>
+    [...erpKeys.all, "entities", id] as const,
+  supplierDemerits: (supplierId: string) =>
+    [...erpKeys.all, "purchasing", "suppliers", supplierId, "demerits"] as const,
   creditRatings: (params?: Record<string, string>) =>
     [...erpKeys.all, "entities", "credit-ratings", params] as const,
   accounts: () => [...erpKeys.all, "accounts"] as const,
@@ -27,6 +31,10 @@ export const erpKeys = {
     [...erpKeys.all, "sales", "quotations", { status }] as const,
   quotation: (id: string) =>
     [...erpKeys.all, "sales", "quotations", id] as const,
+  salesOrders: (status?: string) =>
+    [...erpKeys.all, "sales", "orders", { status }] as const,
+  salesOrder: (id: string) =>
+    [...erpKeys.all, "sales", "orders", id] as const,
   invoices: (params?: Record<string, string>) =>
     [...erpKeys.all, "invoicing", "invoices", params] as const,
   invoice: (id: string) =>
@@ -36,6 +44,10 @@ export const erpKeys = {
     [...erpKeys.all, "invoicing", "invoice-notes", params] as const,
   qualityAudits: (params?: Record<string, string>) =>
     [...erpKeys.all, "quality", "audits", params] as const,
+  qcInspections: (status?: string) =>
+    [...erpKeys.all, "purchasing", "inspections", { status }] as const,
+  qcInspection: (id: string) =>
+    [...erpKeys.all, "purchasing", "inspections", id] as const,
   controlledDocuments: (params?: Record<string, string>) =>
     [...erpKeys.all, "quality", "documents", params] as const,
   actionPlans: (params?: Record<string, string>) =>
@@ -102,6 +114,8 @@ export const erpKeys = {
     [...erpKeys.all, "treasury", "check-history", params] as const,
   receipts: (type?: string) =>
     [...erpKeys.all, "treasury", "receipts", { type }] as const,
+  receipt: (id: string) =>
+    [...erpKeys.all, "treasury", "receipts", id] as const,
   accountBalances: () =>
     [...erpKeys.all, "accounts", "balances"] as const,
   accountOverdue: () =>
@@ -112,9 +126,15 @@ export const erpKeys = {
     [...erpKeys.all, "accounts", "complaints", params] as const,
   productionOrders: (status?: string) =>
     [...erpKeys.all, "production", "orders", { status }] as const,
+  productionOrder: (id: string) =>
+    [...erpKeys.all, "production", "orders", id] as const,
   employees: () => [...erpKeys.all, "hr", "employees"] as const,
   workOrders: (status?: string) =>
     [...erpKeys.all, "maintenance", "work-orders", { status }] as const,
+  workOrder: (id: string) =>
+    [...erpKeys.all, "maintenance", "work-orders", id] as const,
+  fuelLogs: (assetId?: string) =>
+    [...erpKeys.all, "maintenance", "fuel-logs", { assetId }] as const,
   analytics: (domain: string, report: string, params?: Record<string, string>) =>
     [...erpKeys.all, "analytics", domain, report, params] as const,
   dashboardKPIs: () => [...erpKeys.all, "analytics", "dashboard", "kpis"] as const,

@@ -49,6 +49,13 @@ func (m *mockSalesService) ListOrders(_ context.Context, _, _, _ string, _, _ in
 	return m.orders, m.err
 }
 
+func (m *mockSalesService) GetOrder(_ context.Context, _ pgtype.UUID, _ string) (repository.ErpOrder, error) {
+	if m.err != nil {
+		return repository.ErpOrder{}, m.err
+	}
+	return m.order, nil
+}
+
 func (m *mockSalesService) CreateOrder(_ context.Context, _, _ string, _ pgtype.Date, _ string, _, _ pgtype.UUID, _ pgtype.Numeric, _, _, _ string) (repository.ErpOrder, error) {
 	if m.err != nil {
 		return repository.ErpOrder{}, m.err

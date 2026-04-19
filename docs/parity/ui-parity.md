@@ -10,15 +10,51 @@ Unit of work is the **cluster** — one Histrix area/form group maps to
 one SDA route. A cluster is "covered" when the SDA page delivers the
 same operational surface as the Histrix form(s) it replaces.
 
-## Totals (2026-04-19, post-2.0.18)
+## Totals (2026-04-19, post-2.0.19)
 
 | Segment | Count |
 |---|---:|
 | Histrix XML-forms in `.intranet-scrape/xml-forms/` | ~4,500 files |
 | Histrix top-level forms (area/form groups) | 434 |
-| SDA `page.tsx` routes shipped | 110 |
-| **SDA pages explicitly tracked as XML-form parity** | **41** (this file) |
+| SDA `page.tsx` routes shipped | 118 |
+| **SDA pages explicitly tracked as XML-form parity** | **48** (this file) |
 | XML-form waivers (§UI) | **1** (W-009, see `waivers.md`) |
+
+## 2.0.19 clusters (7)
+
+Seven more `[id]` + list clusters following the 2.0.18 pattern. Most
+used backend endpoints already mounted (receipt, work order, inspection,
+production order detail, supplier detail via `GetEntity`). Two needed
+surgical backend adds: sales orders `GetOrder` (service method + handler
+mount + mock) and a list-page bug fix in `/calidad/inspecciones` that
+was querying the wrong endpoint.
+
+| Cluster | Route | Endpoint | Tier |
+|---|---|---|---|
+| Recibo → payments + imputaciones | `/administracion/tesoreria/recibos/[id]` | `GET /v1/erp/treasury/receipts/{id}` | C (new page) |
+| Orden de trabajo → repuestos | `/mantenimiento/ordenes-trabajo/[id]` | `GET /v1/erp/maintenance/work-orders/{id}` | C (new page) |
+| Inspección → detail (+ list fix) | `/calidad/inspecciones/[id]` | `GET /v1/erp/purchasing/inspections/{id}` | C (new page + bug fix) |
+| Combustible list | `/mantenimiento/combustible` | `GET /v1/erp/maintenance/fuel-logs` | A (new module subnav) |
+| Órdenes de venta list + detail | `/ventas/ordenes` + `[id]` | `GET /v1/erp/sales/orders` + `/orders/{id}` | C (new handler + pages) |
+| Orden de producción → materiales + pasos + inspecciones | `/produccion/ordenes/[id]` | `GET /v1/erp/production/orders/{id}` | C (new page) |
+| Proveedor → contactos + demeritos + notas | `/compras/proveedores/[id]` | `GET /v1/erp/entities/{id}` + `/purchasing/suppliers/{id}/demerits` | C (new page) |
+
+Notes:
+- The **inspections list** was querying `/v1/erp/quality/audits` instead
+  of `/v1/erp/purchasing/inspections` — a pre-existing bug. The page now
+  shows actual receiving inspections (article, accepted/rejected qty)
+  and is no longer a duplicate of `/calidad/auditorias`.
+- **Sales orders** are header-only in the current schema (no
+  `erp_order_lines` table) — the detail links back to the origin
+  cotización so the line items are visible there.
+- Cluster #7 (supplier detail) wires `inspection_id` on demeritos into
+  the new `/calidad/inspecciones/[id]` route — the two clusters from
+  this session compound into a receiving-inspection drill-down flow.
+- Cluster #4 pivoted from the planned "accounting entries list" after
+  verifying it's already consumed in the `/administracion/contable`
+  Diario tab (with side-panel detail).
+
+
 
 ## 2.0.18 clusters (8)
 

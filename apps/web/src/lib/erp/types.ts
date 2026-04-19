@@ -486,6 +486,214 @@ export interface MaintenancePlan {
   active: boolean;
 }
 
+export interface WorkOrder {
+  id: string;
+  tenant_id: string;
+  number: string;
+  asset_id: string | null;
+  plan_id?: string | null;
+  date: string | null;
+  work_type: string;
+  description: string;
+  assigned_to: string | null;
+  status: string;
+  priority: string;
+  completed_at: string | null;
+  user_id: string;
+  notes: string;
+  created_at: string;
+  asset_code?: string;
+  asset_name?: string;
+}
+
+export interface WorkOrderPart {
+  id: string;
+  tenant_id: string;
+  work_order_id: string;
+  article_id: string;
+  quantity: number | null;
+  article_code: string;
+  article_name: string;
+}
+
+export interface WorkOrderDetail {
+  order: WorkOrder;
+  parts: WorkOrderPart[];
+}
+
+export interface QCInspection {
+  id: string;
+  tenant_id: string;
+  receipt_id: string | null;
+  receipt_line_id?: string | null;
+  article_id: string | null;
+  quantity: number | null;
+  accepted_qty: number | null;
+  rejected_qty: number | null;
+  status: string;
+  inspector_id: string;
+  notes?: string;
+  completed_at?: string | null;
+  created_at: string;
+  article_code?: string;
+  article_name?: string;
+  receipt_number?: string;
+}
+
+export interface Entity {
+  id: string;
+  tenant_id: string;
+  type: string;
+  code: string;
+  name: string;
+  tax_id_hash?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  active: boolean;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface EntityContact {
+  id: string;
+  tenant_id: string;
+  entity_id: string;
+  name: string;
+  role?: string;
+  email?: string | null;
+  phone?: string | null;
+  primary: boolean;
+}
+
+export interface EntityNote {
+  id: string;
+  tenant_id: string;
+  entity_id: string;
+  user_id: string;
+  note: string;
+  created_at: string;
+}
+
+export interface EntityDocument {
+  id: string;
+  tenant_id: string;
+  entity_id: string;
+  doc_type: string;
+  filename: string;
+  created_at: string;
+}
+
+export interface EntityDetail {
+  entity: Entity;
+  contacts: EntityContact[];
+  documents: EntityDocument[];
+  notes: EntityNote[];
+  relations: unknown[];
+}
+
+export interface SupplierDemerit {
+  id: string;
+  tenant_id: string;
+  supplier_id: string;
+  inspection_id: string | null;
+  points: number;
+  reason: string;
+  created_at: string;
+}
+
+export interface SalesOrder {
+  id: string;
+  tenant_id: string;
+  number: string;
+  date: string | null;
+  order_type: string;
+  customer_id: string | null;
+  quotation_id: string | null;
+  status: string;
+  total: number | null;
+  user_id: string;
+  notes: string;
+  created_at: string;
+  customer_name?: string | null;
+}
+
+export interface ProductionOrder {
+  id: string;
+  tenant_id: string;
+  number: string;
+  date: string | null;
+  product_id: string | null;
+  center_id: string | null;
+  quantity: number | null;
+  status: string;
+  priority: number;
+  order_id: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  user_id: string;
+  notes: string;
+  created_at: string;
+  product_code?: string;
+  product_name?: string;
+}
+
+export interface ProductionMaterial {
+  id: string;
+  tenant_id: string;
+  order_id: string;
+  article_id: string;
+  required_qty: number | null;
+  consumed_qty: number | null;
+  warehouse_id: string | null;
+  article_code: string;
+  article_name: string;
+}
+
+export interface ProductionStep {
+  id: string;
+  tenant_id: string;
+  order_id: string;
+  step_name: string;
+  sort_order: number;
+  status: string;
+  assigned_to: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  notes: string;
+}
+
+export interface ProductionInspection {
+  id: string;
+  tenant_id: string;
+  order_id: string;
+  step_id: string | null;
+  inspector_id: string;
+  result: string;
+  observations: string;
+  created_at: string;
+}
+
+export interface ProductionOrderDetail {
+  order: ProductionOrder;
+  materials: ProductionMaterial[];
+  steps: ProductionStep[];
+  inspections: ProductionInspection[];
+}
+
+export interface FuelLog {
+  id: string;
+  tenant_id: string;
+  asset_id: string | null;
+  date: string | null;
+  liters: number | null;
+  km_reading: number | null;
+  cost: number | null;
+  user_id: string;
+  created_at: string;
+  asset_code?: string;
+  asset_name?: string;
+}
+
 export interface StockArticle {
   id: string;
   code: string;
@@ -786,9 +994,42 @@ export interface Receipt {
   number: string;
   date: string;
   receipt_type: string;
+  entity_id?: string;
   entity_name: string;
   total: number;
+  journal_entry_id?: string | null;
+  user_id?: string;
+  notes?: string;
   status: string;
+  created_at?: string;
+}
+
+export interface ReceiptPayment {
+  id: string;
+  tenant_id: string;
+  receipt_id: string;
+  payment_method: string;
+  amount: number | null;
+  treasury_movement_id: string | null;
+  check_id: string | null;
+  bank_account_id: string | null;
+  notes: string;
+}
+
+export interface ReceiptAllocation {
+  id: string;
+  tenant_id: string;
+  receipt_id: string;
+  invoice_id: string;
+  amount: number | null;
+  invoice_number: string;
+  invoice_total: number | null;
+}
+
+export interface ReceiptDetail {
+  receipt: Receipt;
+  payments: ReceiptPayment[];
+  allocations: ReceiptAllocation[];
 }
 
 export interface TaxBookEntry {
@@ -801,15 +1042,6 @@ export interface TaxBookEntry {
   direction: string;
 }
 
-export interface QCInspection {
-  id: string;
-  receipt_number: string;
-  article_name: string;
-  quantity: number;
-  accepted_qty: number;
-  rejected_qty: number;
-  status: string;
-}
 
 // Current Accounts
 export interface EntityBalance {

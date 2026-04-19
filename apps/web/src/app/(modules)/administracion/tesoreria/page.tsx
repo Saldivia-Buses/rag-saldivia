@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -266,7 +267,11 @@ export default function TesoreriaPage() {
                 <TableBody>
                   {receipts.map((r) => (
                     <TableRow key={r.id}>
-                      <TableCell className="font-mono text-sm">{r.number}</TableCell>
+                      <TableCell className="font-mono text-sm">
+                        <Link href={`/administracion/tesoreria/recibos/${r.id}`} className="hover:underline">
+                          {r.number}
+                        </Link>
+                      </TableCell>
                       <TableCell className="text-sm text-muted-foreground">{fmtDateShort(r.date)}</TableCell>
                       <TableCell><Badge variant="secondary">{r.receipt_type === "collection" ? "Cobro" : "Pago"}</Badge></TableCell>
                       <TableCell className="text-sm">{r.entity_name}</TableCell>

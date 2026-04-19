@@ -149,6 +149,10 @@ func (s *Sales) ListOrders(ctx context.Context, tenantID, status, orderType stri
 	})
 }
 
+func (s *Sales) GetOrder(ctx context.Context, id pgtype.UUID, tenantID string) (repository.ErpOrder, error) {
+	return s.repo.GetOrder(ctx, repository.GetOrderParams{ID: id, TenantID: tenantID})
+}
+
 func (s *Sales) CreateOrder(ctx context.Context, tenantID, number string, date pgtype.Date, orderType string, customerID, quotationID pgtype.UUID, total pgtype.Numeric, notes, userID, ip string) (repository.ErpOrder, error) {
 	o, err := s.repo.CreateOrder(ctx, repository.CreateOrderParams{
 		TenantID: tenantID, Number: number, Date: date, OrderType: orderType,
