@@ -60,6 +60,19 @@ func (m *mockAdminService) CreateSurvey(_ context.Context, _, _, _, _, _ string)
 	return m.survey, nil
 }
 
+func (m *mockAdminService) ListProductSections(_ context.Context, _ string) ([]repository.ErpProductSection, error) {
+	return nil, m.err
+}
+func (m *mockAdminService) ListProducts(_ context.Context, _ string, _, _ int) ([]repository.ErpProduct, error) {
+	return nil, m.err
+}
+func (m *mockAdminService) ListProductAttributes(_ context.Context, _ string, _ bool) ([]repository.ErpProductAttribute, error) {
+	return nil, m.err
+}
+func (m *mockAdminService) ListTools(_ context.Context, _ string, _ int32, _ string, _, _ int) ([]repository.ErpTool, error) {
+	return nil, m.err
+}
+
 // --- helpers ---
 
 func setupAdminRouter(mock AdminService) *chi.Mux {

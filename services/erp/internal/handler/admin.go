@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -22,6 +23,10 @@ type AdminService interface {
 	CreateCalendarEvent(ctx context.Context, p repository.CreateCalendarEventParams, ip string) (repository.ErpCalendarEvent, error)
 	ListSurveys(ctx context.Context, tenantID string, limit, offset int) ([]repository.ErpSurvey, error)
 	CreateSurvey(ctx context.Context, tenantID, title, description, userID, ip string) (repository.ErpSurvey, error)
+	ListProductSections(ctx context.Context, tenantID string) ([]repository.ErpProductSection, error)
+	ListProducts(ctx context.Context, tenantID string, limit, offset int) ([]repository.ErpProduct, error)
+	ListProductAttributes(ctx context.Context, tenantID string, activeOnly bool) ([]repository.ErpProductAttribute, error)
+	ListTools(ctx context.Context, tenantID string, statusFilter int32, articleFilter string, limit, offset int) ([]repository.ErpTool, error)
 }
 
 type Admin struct{ svc AdminService }
@@ -35,6 +40,10 @@ func (h *Admin) Routes(authWrite func(http.Handler) http.Handler) chi.Router {
 		r.Get("/communications", h.ListCommunications)
 		r.Get("/calendar", h.ListCalendarEvents)
 		r.Get("/surveys", h.ListSurveys)
+		r.Get("/product-sections", h.ListProductSectionsH)
+		r.Get("/products", h.ListProductsH)
+		r.Get("/product-attributes", h.ListProductAttributesH)
+		r.Get("/tools", h.ListToolsH)
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(authWrite)
@@ -151,4 +160,44 @@ func (h *Admin) CreateSurvey(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	_ = json.NewEncoder(w).Encode(sv)
+}
+
+// ─── 2.0.17 catalog read handlers ───────────────────────────────────────
+
+func (h *Admin) ListProductSectionsH(w http.ResponseWriter, r *http.Request) {
+	sections, err := h.svc.ListProductSections(r.Context(), tenantSlug(r))
+	if err != nil { erperrors.WriteError(w, r, erperrors.Internal(err)); return }
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{"sections": sections})
+}
+
+func (h *Admin) ListProductsH(w http.ResponseWriter, r *http.Request) {
+	p := pagination.Parse(r)
+	products, err := h.svc.ListProducts(r.Context(), tenantSlug(r), p.Limit(), p.Offset())
+	if err != nil { erperrors.WriteError(w, r, erperrors.Internal(err)); return }
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{"products": products})
+}
+
+func (h *Admin) ListProductAttributesH(w http.ResponseWriter, r *http.Request) {
+	activeOnly := r.URL.Query().Get("active") != "false"
+	attrs, err := h.svc.ListProductAttributes(r.Context(), tenantSlug(r), activeOnly)
+	if err != nil { erperrors.WriteError(w, r, erperrors.Internal(err)); return }
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{"attributes": attrs})
+}
+
+func (h *Admin) ListToolsH(w http.ResponseWriter, r *http.Request) {
+	p := pagination.Parse(r)
+	q := r.URL.Query()
+	status := int32(-1)
+	if s := q.Get("status"); s != "" {
+		var v int32
+		_, _ = fmt.Sscanf(s, "%d", &v)
+		status = v
+	}
+	tools, err := h.svc.ListTools(r.Context(), tenantSlug(r), status, q.Get("article_code"), p.Limit(), p.Offset())
+	if err != nil { erperrors.WriteError(w, r, erperrors.Internal(err)); return }
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{"tools": tools})
 }
