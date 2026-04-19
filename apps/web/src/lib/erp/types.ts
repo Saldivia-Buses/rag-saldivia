@@ -265,6 +265,39 @@ export interface ReconciliationDetail {
   lines: BankStatementLine[];
 }
 
+export interface PurchaseOrder {
+  id: string;
+  tenant_id: string;
+  number: string;
+  date: string | null;
+  supplier_id: string | null;
+  status: string;
+  currency_id: string | null;
+  total: number | null;
+  notes: string;
+  user_id: string;
+  created_at: string;
+  supplier_name?: string;
+}
+
+export interface PurchaseOrderLine {
+  id: string;
+  tenant_id: string;
+  order_id: string;
+  article_id: string | null;
+  quantity: number | null;
+  unit_price: number | null;
+  received_qty: number | null;
+  sort_order: number;
+  article_code: string;
+  article_name: string;
+}
+
+export interface PurchaseOrderDetail {
+  order: PurchaseOrder;
+  lines: PurchaseOrderLine[];
+}
+
 export interface Warehouse {
   id: string;
   tenant_id: string;

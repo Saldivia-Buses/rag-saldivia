@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { erpKeys } from "@/lib/erp/queries";
 import { fmtMoney, fmtDateShort } from "@/lib/erp/format";
+import type { PurchaseOrder } from "@/lib/erp/types";
 import { ErrorState } from "@/components/erp/error-state";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,7 +22,7 @@ const statusBadge: Record<string, { label: string; variant: "default" | "seconda
 export default function ComprasOrdenesPage() {
   const { data: orders = [], isLoading, error } = useQuery({
     queryKey: erpKeys.purchaseOrders(),
-    queryFn: () => api.get<{ orders: any[] }>("/v1/erp/purchasing/orders?page_size=50"),
+    queryFn: () => api.get<{ orders: PurchaseOrder[] }>("/v1/erp/purchasing/orders?page_size=50"),
     select: (d) => d.orders,
   });
 
@@ -42,11 +44,15 @@ export default function ComprasOrdenesPage() {
               <TableHead className="w-28">Estado</TableHead>
             </TableRow></TableHeader>
             <TableBody>
-              {orders.map((o: any) => {
+              {orders.map((o) => {
                 const s = statusBadge[o.status] || statusBadge.draft;
                 return (
                   <TableRow key={o.id}>
-                    <TableCell className="font-mono text-sm">{o.number}</TableCell>
+                    <TableCell className="font-mono text-sm">
+                      <Link href={`/compras/ordenes/${o.id}`} className="hover:underline">
+                        {o.number}
+                      </Link>
+                    </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{fmtDateShort(o.date)}</TableCell>
                     <TableCell className="text-sm">{o.supplier_name}</TableCell>
                     <TableCell className="text-right font-mono text-sm">{fmtMoney(o.total)}</TableCell>
