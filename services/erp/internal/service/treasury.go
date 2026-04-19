@@ -190,9 +190,9 @@ func (s *Treasury) GetBalance(ctx context.Context, tenantID string) ([]repositor
 	return s.repo.GetTreasuryBalance(ctx, tenantID)
 }
 
-func (s *Treasury) ListCashCounts(ctx context.Context, tenantID string, limit, offset int) ([]repository.ErpCashCount, error) {
+func (s *Treasury) ListCashCounts(ctx context.Context, tenantID string, cashRegisterID pgtype.UUID, limit, offset int) ([]repository.ErpCashCount, error) {
 	return s.repo.ListCashCounts(ctx, repository.ListCashCountsParams{
-		TenantID: tenantID, Limit: int32(limit), Offset: int32(offset),
+		TenantID: tenantID, CashRegisterID: cashRegisterID, Limit: int32(limit), Offset: int32(offset),
 	})
 }
 

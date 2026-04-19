@@ -834,17 +834,21 @@ func (q *Queries) GetCashRegister(ctx context.Context, arg GetCashRegisterParams
 
 const listCashCounts = `-- name: ListCashCounts :many
 SELECT id, tenant_id, cash_register_id, date, expected, counted, difference, user_id, notes, created_at
-FROM erp_cash_counts WHERE tenant_id = $1 ORDER BY date DESC LIMIT $2 OFFSET $3
+FROM erp_cash_counts
+WHERE tenant_id = $1
+  AND ($2::UUID IS NULL OR cash_register_id = $2::UUID)
+ORDER BY date DESC LIMIT $3 OFFSET $4
 `
 
 type ListCashCountsParams struct {
-	TenantID string `json:"tenant_id"`
-	Limit    int32  `json:"limit"`
-	Offset   int32  `json:"offset"`
+	TenantID       string      `json:"tenant_id"`
+	CashRegisterID pgtype.UUID `json:"cash_register_id"`
+	Limit          int32       `json:"limit"`
+	Offset         int32       `json:"offset"`
 }
 
 func (q *Queries) ListCashCounts(ctx context.Context, arg ListCashCountsParams) ([]ErpCashCount, error) {
-	rows, err := q.db.Query(ctx, listCashCounts, arg.TenantID, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listCashCounts, arg.TenantID, arg.CashRegisterID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

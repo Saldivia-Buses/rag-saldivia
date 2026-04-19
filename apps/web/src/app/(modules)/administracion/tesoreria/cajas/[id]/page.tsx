@@ -24,10 +24,12 @@ export default function CashRegisterDetailPage() {
   });
 
   const countsQ = useQuery({
-    queryKey: erpKeys.cashCounts({ page_size: "200" }),
+    queryKey: erpKeys.cashCounts({ cash_register_id: id, page_size: "200" }),
     queryFn: () =>
-      api.get<{ cash_counts: CashCount[] }>("/v1/erp/treasury/cash-counts?page_size=200"),
-    select: (d) => d.cash_counts.filter((c) => c.cash_register_id === id),
+      api.get<{ cash_counts: CashCount[] }>(
+        `/v1/erp/treasury/cash-counts?cash_register_id=${id}&page_size=200`,
+      ),
+    select: (d) => d.cash_counts,
     enabled: !!id,
   });
 

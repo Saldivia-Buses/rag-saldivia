@@ -31,7 +31,7 @@ type TreasuryService interface {
 	CreateCheck(ctx context.Context, p repository.CreateCheckParams, userID, ip string) (repository.ErpCheck, error)
 	UpdateCheckStatus(ctx context.Context, id pgtype.UUID, tenantID, newStatus, userID, ip string) error
 	GetBalance(ctx context.Context, tenantID string) ([]repository.GetTreasuryBalanceRow, error)
-	ListCashCounts(ctx context.Context, tenantID string, limit, offset int) ([]repository.ErpCashCount, error)
+	ListCashCounts(ctx context.Context, tenantID string, cashRegisterID pgtype.UUID, limit, offset int) ([]repository.ErpCashCount, error)
 	CreateCashCount(ctx context.Context, p repository.CreateCashCountParams, ip string) (repository.ErpCashCount, error)
 	ListReceipts(ctx context.Context, tenantID, typeFilter string, dateFrom, dateTo pgtype.Date, limit, offset int) ([]repository.ListReceiptsRow, error)
 	GetReceipt(ctx context.Context, tenantID string, id pgtype.UUID) (*service.ReceiptDetail, error)
@@ -395,7 +395,16 @@ func (h *Treasury) GetBalance(w http.ResponseWriter, r *http.Request) {
 func (h *Treasury) ListCashCounts(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	p := pagination.Parse(r)
-	counts, err := h.svc.ListCashCounts(r.Context(), slug, p.Limit(), p.Offset())
+	var cashRegisterID pgtype.UUID
+	if s := r.URL.Query().Get("cash_register_id"); s != "" {
+		id, err := parseUUID(s)
+		if err != nil {
+			erperrors.WriteError(w, r, erperrors.InvalidID("cash_register_id"))
+			return
+		}
+		cashRegisterID = id
+	}
+	counts, err := h.svc.ListCashCounts(r.Context(), slug, cashRegisterID, p.Limit(), p.Offset())
 	if err != nil {
 		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return

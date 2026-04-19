@@ -93,7 +93,7 @@ func (m *mockTreasuryService) UpdateCheckStatus(_ context.Context, _ pgtype.UUID
 func (m *mockTreasuryService) GetBalance(_ context.Context, _ string) ([]repository.GetTreasuryBalanceRow, error) {
 	return m.balances, m.err
 }
-func (m *mockTreasuryService) ListCashCounts(_ context.Context, _ string, _, _ int) ([]repository.ErpCashCount, error) {
+func (m *mockTreasuryService) ListCashCounts(_ context.Context, _ string, _ pgtype.UUID, _, _ int) ([]repository.ErpCashCount, error) {
 	return m.cashCounts, m.err
 }
 func (m *mockTreasuryService) CreateCashCount(_ context.Context, _ repository.CreateCashCountParams, _ string) (repository.ErpCashCount, error) {
