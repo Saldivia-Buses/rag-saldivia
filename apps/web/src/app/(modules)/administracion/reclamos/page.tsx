@@ -6,9 +6,10 @@ import { toast } from "sonner";
 import { api } from "@/lib/api/client";
 import { erpKeys } from "@/lib/erp/queries";
 import { fmtDateShort } from "@/lib/erp/format";
-import type { PaymentComplaint } from "@/lib/erp/types";
+import type { EntitySearchResult, PaymentComplaint } from "@/lib/erp/types";
 import { permissionErrorToast } from "@/lib/erp/permission-messages";
 import { ErrorState } from "@/components/erp/error-state";
+import { EntityPicker } from "@/components/erp/entity-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -18,7 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircleIcon, CheckCircle2Icon, PlusIcon } from "lucide-react";
+import { AlertCircleIcon, CheckCircle2Icon, PlusIcon, SearchIcon } from "lucide-react";
 
 type StatusTab = "pending" | "done" | "all";
 
@@ -32,8 +33,9 @@ export default function ReclamosPage() {
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<StatusTab>("pending");
   const [createOpen, setCreateOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [newDate, setNewDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [newCtacod, setNewCtacod] = useState("");
+  const [newEntity, setNewEntity] = useState<EntitySearchResult | null>(null);
   const [newObservation, setNewObservation] = useState("");
 
   const statusParam = tabToStatus[tab];
@@ -48,13 +50,17 @@ export default function ReclamosPage() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: { date: string; entity_legacy_code: number; observation: string }) =>
-      api.post<{ complaint: PaymentComplaint }>("/v1/erp/accounts/complaints", data),
+    mutationFn: (data: {
+      date: string;
+      entity_id: string;
+      entity_legacy_code: number;
+      observation: string;
+    }) => api.post<{ complaint: PaymentComplaint }>("/v1/erp/accounts/complaints", data),
     onSuccess: () => {
       toast.success("Reclamo creado");
       queryClient.invalidateQueries({ queryKey: erpKeys.paymentComplaints() });
       setCreateOpen(false);
-      setNewCtacod("");
+      setNewEntity(null);
       setNewObservation("");
     },
     onError: permissionErrorToast,
@@ -72,18 +78,19 @@ export default function ReclamosPage() {
 
   function submitCreate(e: React.FormEvent) {
     e.preventDefault();
-    const code = parseInt(newCtacod, 10);
-    if (!newCtacod || Number.isNaN(code) || code <= 0) {
-      toast.error("Ingresá un código de proveedor válido");
+    if (!newEntity) {
+      toast.error("Seleccioná un proveedor");
       return;
     }
     if (!newObservation.trim()) {
       toast.error("La observación no puede estar vacía");
       return;
     }
+    const code = parseInt(newEntity.code, 10);
     createMutation.mutate({
       date: newDate,
-      entity_legacy_code: code,
+      entity_id: newEntity.id,
+      entity_legacy_code: Number.isNaN(code) ? 0 : code,
       observation: newObservation.trim(),
     });
   }
@@ -98,13 +105,19 @@ export default function ReclamosPage() {
           <div>
             <h1 className="text-xl font-semibold tracking-tight">Reclamos de pagos</h1>
             <p className="mt-0.5 text-sm text-muted-foreground">
-              Reclamos recibidos de proveedores por pagos pendientes — marcar como "cumplido" cuando se resuelven.
+              Reclamos recibidos de proveedores por pagos pendientes — marcar como &ldquo;cumplido&rdquo; cuando se resuelven.
             </p>
           </div>
           <Button size="sm" onClick={() => setCreateOpen(true)}>
             <PlusIcon className="mr-1.5 size-3.5" />
             Nuevo reclamo
           </Button>
+          <EntityPicker
+            type="supplier"
+            open={pickerOpen}
+            onOpenChange={setPickerOpen}
+            onSelect={setNewEntity}
+          />
           <Dialog open={createOpen} onOpenChange={(v) => !v && setCreateOpen(false)}>
             <DialogContent>
               <DialogHeader>
@@ -122,19 +135,28 @@ export default function ReclamosPage() {
                   />
                 </div>
                 <div className="grid gap-1.5">
-                  <Label htmlFor="rec-ctacod">Código de proveedor</Label>
-                  <Input
-                    id="rec-ctacod"
-                    type="number"
-                    inputMode="numeric"
-                    value={newCtacod}
-                    onChange={(e) => setNewCtacod(e.target.value)}
-                    placeholder="ctacod (ej. 42)"
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Código legacy del proveedor. Selector de entidad llega en un PR posterior.
-                  </p>
+                  <Label>Proveedor</Label>
+                  {newEntity ? (
+                    <div className="flex items-center justify-between gap-2 rounded-md border border-border/60 bg-muted/30 px-3 py-2">
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-medium">{newEntity.name}</div>
+                        <div className="font-mono text-xs text-muted-foreground">cod. {newEntity.code}</div>
+                      </div>
+                      <Button type="button" size="sm" variant="ghost" onClick={() => setPickerOpen(true)}>
+                        Cambiar
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="justify-start text-muted-foreground"
+                      onClick={() => setPickerOpen(true)}
+                    >
+                      <SearchIcon className="mr-2 size-3.5" />
+                      Seleccionar proveedor…
+                    </Button>
+                  )}
                 </div>
                 <div className="grid gap-1.5">
                   <Label htmlFor="rec-obs">Observación</Label>

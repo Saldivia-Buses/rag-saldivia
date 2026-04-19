@@ -161,6 +161,17 @@ export interface OverdueInvoice {
   balance: number;
 }
 
+// Entity search (picker) — subset of ListEntitiesRow used by UI pickers.
+export interface EntitySearchResult {
+  id: string;
+  type: string;
+  code: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  active: boolean;
+}
+
 // Payment Complaints (RECLAMOPAGOS parity — Phase 1 §UI)
 export interface PaymentComplaint {
   id: string;
