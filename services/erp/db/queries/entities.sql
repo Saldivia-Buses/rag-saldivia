@@ -90,11 +90,15 @@ ORDER BY created_at;
 -- ─── Credit ratings (REG_CUENTA_CALIFICACION migrated — 2.0.11) ───
 
 -- name: ListEntityCreditRatings :many
--- Entity credit rating history for a single entity. Mirrors the
--- proveedores_loc/clientes_local calificacion view — orders newest-first.
-SELECT id, tenant_id, legacy_id, entity_id, entity_legacy_id,
-       rating, rated_at, reference, created_at
-FROM erp_entity_credit_ratings
-WHERE tenant_id = $1 AND entity_id = $2
-ORDER BY rated_at DESC NULLS LAST, legacy_id DESC
-LIMIT $3 OFFSET $4;
+-- Entity credit rating history. Optional filter by entity or rating
+-- letter (A / B / C / X / '-'). Mirrors compras/calificacion_prov.xml.
+SELECT r.id, r.tenant_id, r.legacy_id, r.entity_id, r.entity_legacy_id,
+       r.rating, r.rated_at, r.reference, r.created_at,
+       e.name AS entity_name, e.type AS entity_type
+FROM erp_entity_credit_ratings r
+LEFT JOIN erp_entities e ON e.id = r.entity_id AND e.tenant_id = r.tenant_id
+WHERE r.tenant_id = $1
+  AND (sqlc.arg(entity_filter)::UUID IS NULL OR r.entity_id = sqlc.arg(entity_filter)::UUID)
+  AND (sqlc.arg(rating_filter)::TEXT = '' OR r.rating = sqlc.arg(rating_filter)::TEXT)
+ORDER BY r.rated_at DESC NULLS LAST, r.legacy_id DESC
+LIMIT $2 OFFSET $3;

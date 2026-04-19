@@ -83,6 +83,21 @@ export interface BankBalance {
   balance: number;
 }
 
+// Entity credit ratings (REG_CUENTA_CALIFICACION parity — Phase 1 §UI)
+export interface EntityCreditRating {
+  id: string;
+  tenant_id: string;
+  legacy_id: number;
+  entity_id: string | null;
+  entity_legacy_id: number;
+  rating: string; // A | B | C | X | '-'
+  rated_at: string | null;
+  reference: string;
+  created_at: string;
+  entity_name: string | null;
+  entity_type: string | null;
+}
+
 // Archived cheque history (CARCHEHI parity — Phase 1 §UI)
 export interface CheckHistoryEntry {
   id: string;

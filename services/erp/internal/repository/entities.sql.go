@@ -614,36 +614,57 @@ func (q *Queries) UpdateEntity(ctx context.Context, arg UpdateEntityParams) (Upd
 }
 
 const listEntityCreditRatings = `-- name: ListEntityCreditRatings :many
-SELECT id, tenant_id, legacy_id, entity_id, entity_legacy_id,
-       rating, rated_at, reference, created_at
-FROM erp_entity_credit_ratings
-WHERE tenant_id = $1 AND entity_id = $2
-ORDER BY rated_at DESC NULLS LAST, legacy_id DESC
-LIMIT $3 OFFSET $4
+SELECT r.id, r.tenant_id, r.legacy_id, r.entity_id, r.entity_legacy_id,
+       r.rating, r.rated_at, r.reference, r.created_at,
+       e.name AS entity_name, e.type AS entity_type
+FROM erp_entity_credit_ratings r
+LEFT JOIN erp_entities e ON e.id = r.entity_id AND e.tenant_id = r.tenant_id
+WHERE r.tenant_id = $1
+  AND ($4::UUID IS NULL OR r.entity_id = $4::UUID)
+  AND ($5::TEXT = '' OR r.rating = $5::TEXT)
+ORDER BY r.rated_at DESC NULLS LAST, r.legacy_id DESC
+LIMIT $2 OFFSET $3
 `
 
 type ListEntityCreditRatingsParams struct {
-	TenantID string      `json:"tenant_id"`
-	EntityID pgtype.UUID `json:"entity_id"`
-	Limit    int32       `json:"limit"`
-	Offset   int32       `json:"offset"`
+	TenantID      string      `json:"tenant_id"`
+	Limit         int32       `json:"limit"`
+	Offset        int32       `json:"offset"`
+	EntityFilter  pgtype.UUID `json:"entity_filter"`
+	RatingFilter  string      `json:"rating_filter"`
 }
 
-// Entity credit rating history for a single entity.
-func (q *Queries) ListEntityCreditRatings(ctx context.Context, arg ListEntityCreditRatingsParams) ([]ErpEntityCreditRating, error) {
+type ListEntityCreditRatingsRow struct {
+	ID             pgtype.UUID        `json:"id"`
+	TenantID       string             `json:"tenant_id"`
+	LegacyID       int64              `json:"legacy_id"`
+	EntityID       pgtype.UUID        `json:"entity_id"`
+	EntityLegacyID int32              `json:"entity_legacy_id"`
+	Rating         string             `json:"rating"`
+	RatedAt        pgtype.Timestamptz `json:"rated_at"`
+	Reference      string             `json:"reference"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	EntityName     pgtype.Text        `json:"entity_name"`
+	EntityType     pgtype.Text        `json:"entity_type"`
+}
+
+// Entity credit rating history. Optional filter by entity / rating.
+func (q *Queries) ListEntityCreditRatings(ctx context.Context, arg ListEntityCreditRatingsParams) ([]ListEntityCreditRatingsRow, error) {
 	rows, err := q.db.Query(ctx, listEntityCreditRatings,
-		arg.TenantID, arg.EntityID, arg.Limit, arg.Offset,
+		arg.TenantID, arg.Limit, arg.Offset,
+		arg.EntityFilter, arg.RatingFilter,
 	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ErpEntityCreditRating{}
+	items := []ListEntityCreditRatingsRow{}
 	for rows.Next() {
-		var i ErpEntityCreditRating
+		var i ListEntityCreditRatingsRow
 		if err := rows.Scan(
 			&i.ID, &i.TenantID, &i.LegacyID, &i.EntityID, &i.EntityLegacyID,
 			&i.Rating, &i.RatedAt, &i.Reference, &i.CreatedAt,
+			&i.EntityName, &i.EntityType,
 		); err != nil {
 			return nil, err
 		}

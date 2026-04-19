@@ -64,6 +64,39 @@ operational surface the three XML-forms describe.
   matching the `SUM(saldo_movimiento)` group-by of
   `reclamopagos_ing.xml`.
 
+### Cluster: Calificaciones de cuentas (2.0.14)
+
+**SDA page:** `apps/web/src/app/(modules)/compras/calificaciones/page.tsx`
+→ `/compras/calificaciones` (Compras → Calificaciones).
+
+**Covers Histrix XML-forms:**
+- `compras/calificacion_prov.xml` — "Proveedores aprobados", qry that
+  computes each proveedor's rating from MOVDEMERITO + OCPRECIB. SDA
+  serves the **persisted rating-event history** (one row per rating
+  change) instead of recomputing on the fly — the migrated
+  REG_CUENTA_CALIFICACION already holds the outputs.
+
+**Data dependency:** `erp_entity_credit_ratings` (migration `077`,
+shipped in 2.0.11; REG_CUENTA_CALIFICACION → 136,064 rows live).
+
+**Backend endpoints added (scoped under `/v1/erp/entities`):**
+- `GET /credit-ratings?entity_id=&rating=&page=&page_size=`
+
+Permission: `erp.entities.read`. Read-only. The sqlc query was
+generalized from the original single-entity shape to accept an
+optional entity filter + optional rating filter, and LEFT JOINs
+`erp_entities` so each row ships with entity_name + entity_type.
+
+**Notable gaps vs Histrix:**
+- The Histrix form RECOMPUTES the rating on render from
+  MOVDEMERITO. The SDA page shows the persisted history only — if the
+  business ever wants a live recompute view, that's a new query
+  against MOVDEMERITO-era tables (not migrated at this point; Grupo A
+  rank 1 only ships the rating history).
+- Rating-change trigger: the Histrix form doesn't write ratings
+  directly — they're an output of the demeritos / recibos flow. SDA
+  will grow a write path when that flow enters scope.
+
 ### Cluster: Cheques históricos (2.0.14)
 
 **SDA page:** `apps/web/src/app/(modules)/administracion/tesoreria/cartera-historica/page.tsx`

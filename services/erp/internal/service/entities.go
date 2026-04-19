@@ -292,6 +292,18 @@ func (s *Entities) AddNote(ctx context.Context, tenantID string, entityID pgtype
 	return n, nil
 }
 
+// ListCreditRatings returns entity credit rating history with optional
+// entity + rating filters. Parity: compras/calificacion_prov.xml.
+func (s *Entities) ListCreditRatings(ctx context.Context, tenantID string, entityFilter pgtype.UUID, ratingFilter string, limit, offset int) ([]repository.ListEntityCreditRatingsRow, error) {
+	return s.repo.ListEntityCreditRatings(ctx, repository.ListEntityCreditRatingsParams{
+		TenantID:     tenantID,
+		Limit:        int32(limit),
+		Offset:       int32(offset),
+		EntityFilter: entityFilter,
+		RatingFilter: ratingFilter,
+	})
+}
+
 // AddDocument registers a document for an entity.
 func (s *Entities) AddDocument(ctx context.Context, tenantID string, entityID pgtype.UUID, name, docType, fileKey, userID, ip string) (repository.ErpEntityDocument, error) {
 	d, err := s.repo.CreateEntityDocument(ctx, repository.CreateEntityDocumentParams{
