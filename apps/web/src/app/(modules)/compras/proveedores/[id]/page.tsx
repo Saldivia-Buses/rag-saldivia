@@ -8,7 +8,8 @@ import { ArrowLeft } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { erpKeys } from "@/lib/erp/queries";
 import { fmtDate } from "@/lib/erp/format";
-import type { EntityContact, EntityDetail, SupplierDemerit } from "@/lib/erp/types";
+import type { EntityContact, EntityDetail, EntityNote, SupplierDemerit } from "@/lib/erp/types";
+import { Textarea } from "@/components/ui/textarea";
 import { ErrorState } from "@/components/erp/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -156,21 +157,27 @@ export default function SupplierDetailPage() {
               </Table>
             </div>
 
-            {notes.length > 0 && (
-              <>
-                <h2 className="mb-3 text-sm font-medium text-muted-foreground">Notas ({notes.length})</h2>
-                <div className="space-y-2">
-                  {notes.map((n) => (
-                    <div key={n.id} className="rounded-lg border border-border/40 bg-card px-4 py-3">
-                      <div className="text-xs text-muted-foreground">
-                        {fmtDate(n.created_at)} · {n.user_id}
-                      </div>
-                      <p className="mt-1 text-sm whitespace-pre-wrap">{n.body}</p>
+            <h2 className="mb-3 text-sm font-medium text-muted-foreground">Notas ({notes.length})</h2>
+            {notes.length > 0 ? (
+              <div className="mb-4 space-y-2">
+                {notes.map((n) => (
+                  <div key={n.id} className="rounded-lg border border-border/40 bg-card px-4 py-3">
+                    <div className="text-xs text-muted-foreground">
+                      {fmtDate(n.created_at)} · {n.user_id}
+                      {n.type && n.type !== "note" ? ` · ${n.type}` : ""}
                     </div>
-                  ))}
-                </div>
-              </>
+                    <p className="mt-1 text-sm whitespace-pre-wrap">{n.body}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="mb-4 text-sm text-muted-foreground">Sin notas registradas.</p>
             )}
+
+            <AddNoteForm
+              entityId={id}
+              onSuccess={() => qc.invalidateQueries({ queryKey: erpKeys.entity(id) })}
+            />
           </>
         )}
       </div>
@@ -251,6 +258,50 @@ function AddContactForm({ entityId, onSuccess }: { entityId: string; onSuccess: 
       {mutation.isError && (
         <p className="mt-2 text-xs text-destructive">Error al guardar contacto.</p>
       )}
+    </form>
+  );
+}
+
+function AddNoteForm({ entityId, onSuccess }: { entityId: string; onSuccess: () => void }) {
+  const [body, setBody] = useState("");
+
+  const mutation = useMutation({
+    mutationFn: (payload: { type: string; body: string }) =>
+      api.post<EntityNote>(`/v1/erp/entities/${entityId}/notes`, payload),
+    onSuccess: () => {
+      setBody("");
+      onSuccess();
+    },
+  });
+
+  return (
+    <form
+      className="mb-6 rounded-xl border border-border/40 bg-card p-4"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!body.trim()) return;
+        mutation.mutate({ type: "note", body: body.trim() });
+      }}
+    >
+      <h3 className="mb-3 text-sm font-medium">Agregar nota</h3>
+      <Textarea
+        placeholder="Escribí la nota…"
+        value={body}
+        onChange={(e) => setBody(e.target.value)}
+        disabled={mutation.isPending}
+        rows={3}
+        required
+      />
+      <div className="mt-3 flex items-center justify-between">
+        {mutation.isError ? (
+          <p className="text-xs text-destructive">Error al guardar nota.</p>
+        ) : (
+          <span />
+        )}
+        <Button type="submit" disabled={mutation.isPending || !body.trim()}>
+          {mutation.isPending ? "Guardando…" : "Agregar nota"}
+        </Button>
+      </div>
     </form>
   );
 }
