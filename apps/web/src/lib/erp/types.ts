@@ -540,6 +540,22 @@ export interface QCInspection {
   receipt_number?: string;
 }
 
+export interface SalesOrder {
+  id: string;
+  tenant_id: string;
+  number: string;
+  date: string | null;
+  order_type: string;
+  customer_id: string | null;
+  quotation_id: string | null;
+  status: string;
+  total: number | null;
+  user_id: string;
+  notes: string;
+  created_at: string;
+  customer_name?: string | null;
+}
+
 export interface FuelLog {
   id: string;
   tenant_id: string;

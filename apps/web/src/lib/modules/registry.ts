@@ -169,9 +169,11 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
     routes: [
       "/ventas",
       "/ventas/cotizaciones",
+      "/ventas/ordenes",
     ],
     subnav: [
       { path: "/ventas/cotizaciones", label: "Cotizaciones" },
+      { path: "/ventas/ordenes", label: "Órdenes de venta" },
     ],
   },
   compras: {

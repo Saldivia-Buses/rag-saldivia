@@ -21,6 +21,7 @@ type SalesService interface {
 	GetQuotation(ctx context.Context, id pgtype.UUID, tenantID string) (*service.QuotationDetail, error)
 	CreateQuotation(ctx context.Context, req service.CreateQuotationRequest) (*service.QuotationDetail, error)
 	ListOrders(ctx context.Context, tenantID, status, orderType string, limit, offset int) ([]repository.ListOrdersRow, error)
+	GetOrder(ctx context.Context, id pgtype.UUID, tenantID string) (repository.ErpOrder, error)
 	CreateOrder(ctx context.Context, tenantID, number string, date pgtype.Date, orderType string, customerID, quotationID pgtype.UUID, total pgtype.Numeric, notes, userID, ip string) (repository.ErpOrder, error)
 	UpdateOrderStatus(ctx context.Context, id pgtype.UUID, tenantID, status, userID, ip string) error
 	ListPriceLists(ctx context.Context, tenantID string) ([]repository.ErpPriceList, error)
@@ -38,6 +39,7 @@ func (h *Sales) Routes(authWrite func(http.Handler) http.Handler) chi.Router {
 		r.Get("/quotations", h.ListQuotations)
 		r.Get("/quotations/{id}", h.GetQuotation)
 		r.Get("/orders", h.ListOrders)
+		r.Get("/orders/{id}", h.GetOrder)
 		r.Get("/price-lists", h.ListPriceLists)
 		r.Get("/price-lists/{id}", h.GetPriceList)
 	})
@@ -142,6 +144,22 @@ func (h *Sales) ListOrders(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"orders": orders})
+}
+
+func (h *Sales) GetOrder(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	id, err := parseUUID(chi.URLParam(r, "id"))
+	if err != nil {
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
+		return
+	}
+	order, err := h.svc.GetOrder(r.Context(), id, slug)
+	if err != nil {
+		erperrors.WriteError(w, r, erperrors.NotFound("order"))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(order)
 }
 
 func (h *Sales) CreateOrder(w http.ResponseWriter, r *http.Request) {
