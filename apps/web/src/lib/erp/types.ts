@@ -1071,6 +1071,40 @@ export interface EntitySearchResult {
   active: boolean;
 }
 
+// Employee list row (erp_employee_details + erp_entities — Phase 1 §UI)
+export interface EmployeeListRow {
+  id: string;
+  tenant_id: string;
+  entity_id: string;
+  department_id: string | null;
+  position: string;
+  hire_date: string | null;
+  termination_date: string | null;
+  schedule_type: string;
+  created_at: string;
+  entity_name: string;
+  entity_code: string;
+}
+
+// Employee detail (erp_employee_details — Phase 1 §UI).
+// Note: GET /v1/erp/hr/employees/{id} takes entity_id as the URL param.
+export interface EmployeeDetail {
+  id: string;
+  tenant_id: string;
+  entity_id: string;
+  department_id: string | null;
+  position: string;
+  hire_date: string | null;
+  termination_date: string | null;
+  union_id: string | null;
+  health_plan_id: string | null;
+  schedule_type: string;
+  category_id: string | null;
+  metadata: unknown;
+  created_at: string;
+  updated_at: string;
+}
+
 // Payment Complaints (RECLAMOPAGOS parity — Phase 1 §UI)
 export interface PaymentComplaint {
   id: string;
