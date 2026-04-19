@@ -36,6 +36,10 @@ export const erpKeys = {
     [...erpKeys.all, "invoicing", "invoice-notes", params] as const,
   qualityAudits: (params?: Record<string, string>) =>
     [...erpKeys.all, "quality", "audits", params] as const,
+  qcInspections: (status?: string) =>
+    [...erpKeys.all, "purchasing", "inspections", { status }] as const,
+  qcInspection: (id: string) =>
+    [...erpKeys.all, "purchasing", "inspections", id] as const,
   controlledDocuments: (params?: Record<string, string>) =>
     [...erpKeys.all, "quality", "documents", params] as const,
   actionPlans: (params?: Record<string, string>) =>

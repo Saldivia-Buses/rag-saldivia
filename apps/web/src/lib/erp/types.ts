@@ -521,6 +521,25 @@ export interface WorkOrderDetail {
   parts: WorkOrderPart[];
 }
 
+export interface QCInspection {
+  id: string;
+  tenant_id: string;
+  receipt_id: string | null;
+  receipt_line_id?: string | null;
+  article_id: string | null;
+  quantity: number | null;
+  accepted_qty: number | null;
+  rejected_qty: number | null;
+  status: string;
+  inspector_id: string;
+  notes?: string;
+  completed_at?: string | null;
+  created_at: string;
+  article_code?: string;
+  article_name?: string;
+  receipt_number?: string;
+}
+
 export interface StockArticle {
   id: string;
   code: string;
@@ -869,15 +888,6 @@ export interface TaxBookEntry {
   direction: string;
 }
 
-export interface QCInspection {
-  id: string;
-  receipt_number: string;
-  article_name: string;
-  quantity: number;
-  accepted_qty: number;
-  rejected_qty: number;
-  status: string;
-}
 
 // Current Accounts
 export interface EntityBalance {
