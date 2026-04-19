@@ -86,3 +86,15 @@ SELECT id, tenant_id, from_id, to_id, type, metadata, created_at
 FROM erp_entity_relations
 WHERE (from_id = $1 OR to_id = $1) AND tenant_id = $2
 ORDER BY created_at;
+
+-- ─── Credit ratings (REG_CUENTA_CALIFICACION migrated — 2.0.11) ───
+
+-- name: ListEntityCreditRatings :many
+-- Entity credit rating history for a single entity. Mirrors the
+-- proveedores_loc/clientes_local calificacion view — orders newest-first.
+SELECT id, tenant_id, legacy_id, entity_id, entity_legacy_id,
+       rating, rated_at, reference, created_at
+FROM erp_entity_credit_ratings
+WHERE tenant_id = $1 AND entity_id = $2
+ORDER BY rated_at DESC NULLS LAST, legacy_id DESC
+LIMIT $3 OFFSET $4;

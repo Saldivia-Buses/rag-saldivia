@@ -229,3 +229,93 @@ live (e.g. someone decides to activate Sabre calendar, or enable the
 fleet GPS tables), strike that entry from W-006 in the same PR and
 write the migrator + seed. Default answer for a PR that touches a
 W-006 table: either bring rows along with a migrator, or keep it waived.
+
+## W-007 — sub-15 K-row long tail (bulk waiver)
+
+**Scope**: every table in `.intranet-scrape/db-tables.txt` with
+`table_rows < 15000` from `information_schema.tables` on the live
+Histrix DB (`saldivia` schema at `172.22.100.99`, query run
+2026-04-19) that is NOT already covered by:
+
+  (a) one of the waivers above (W-004 HTX infra, W-005 `*_OLD`,
+      W-006 zero-row);
+  (b) a registered migrator / reader under
+      `tools/cli/internal/migration/` or `tools/cli/internal/legacy/`;
+  (c) the Pareto-tail migrators landing in 2.0.11 (migrations `077`,
+      `078`, `079`).
+
+The exact list is regenerable from the reproducer at the bottom of
+`docs/parity/data-migration.md` — it naturally shrinks as later
+sessions promote individual tables out of the tail.
+
+Rough shape (post-2.0.11): **~285 tables, ≤ 200 K live rows
+combined**. Each individual table contributes less than 0.1 % of the
+remaining Histrix row volume. Mean live count per waived table is
+sub-500.
+
+**Why**: row volume in the remaining uncovered gap is **extremely**
+long-tail. Post-Grupo A (237 K), Grupo B (176 K), and W-008 industrial
+telemetry (~130 K), the residue is ≤ 200 K rows spread across ~285
+tables. Writing a bespoke migrator per table would take ~50+ sessions
+at the current shape-audit + reader + migrator + sqlc pattern.
+Collectively these tables are <1 % of the Histrix row budget; the
+ROI on individual migrators is negative relative to shipping the
+Phase 1 UI parity surfaces that actually consume the already-migrated
+data.
+
+**Blast radius**: the data is preserved in the read-only Histrix DB
+— no deletion, no drift. If a Phase 1 UI surface resurrects one of
+the waived tables, the escape hatch is "strike the table from W-007
+and write its migrator in the same PR". The contract stays: default
+is waive, specific-form ask lifts it.
+
+**Revisit**: on every new Phase 1 UI PR, check the waived-table list
+for names the form reads. The default — "if the form reads a W-007
+table, close the waiver for that table before landing the form" —
+is enforced by the `htx-parity` skill at form time.
+
+## W-008 — industrial & telephony telemetry (EGX300EPE, EGX_300, TEL_LOG)
+
+**Scope**: three legacy Histrix tables that back *monitoring*
+dashboards, not operational business flows:
+
+- `EGX300EPE` (79,376 rows live) — Schneider PowerLogic EGX300
+  per-panel electrical readings (potencia activa / reactiva / aparente,
+  demanda, intensidad por fase). Histrix form:
+  `xml-forms/it/egx300epe.xml` ("Tableros electricos"), view-only
+  consulta paginar=300.
+- `EGX_300` (15,992 rows live) — older-shape EGX300 historic
+  readings (3-phase intensity only, no PK). Histrix forms:
+  `xml-forms/it/egx300.xml`, `egx_300_xfase.xml`, `egx_300_naves.xml`,
+  all view-only.
+- `TEL_LOG` (34,885 rows live) — Asterisk / VoIP call detail
+  records (fecha, extension, numero, duracion). Histrix forms:
+  `xml-forms/tel/tel_log_qry.xml` ("CONSULTA DE LLAMADAS",
+  autoupdate=180s) and `tel/tel_promedio_llamadas_qry.xml`.
+
+Combined: ~130 K rows across three tables that feed three IT /
+telephony dashboards under `xml-forms/it/` and `xml-forms/tel/`.
+
+**Why**: these are sensor / log streams from equipment outside the
+ERP, not data the ERP owns. EGX300 rows come from a physical
+Schneider power meter feeding a CSV ingester; TEL_LOG is the Asterisk
+call log. Keeping them inside the SDA tenant DB as static rows mis-
+represents the architecture — the correct Phase 3 answer is a
+proper time-series / log sink (InfluxDB / Loki / similar) fed by the
+background agents that ADR 027 Phase 3 covers, not a PostgreSQL
+`erp_power_meter_readings` that silently freezes in time at cutover.
+
+The Histrix consulta forms are viewer-only and cover the past — not
+decision-driving, not write-back paths. Employees who need real-time
+monitoring already use dedicated tools (Grafana, Schneider's own
+front-end); the Histrix views were a convenience surface, not a
+system of record.
+
+**Blast radius**: zero. The raw rows remain in the read-only Histrix
+DB. A future Phase 3 background-agent for industrial telemetry can
+re-read them directly from MySQL and push into the right sink.
+
+**Revisit**: when a Phase 3 industrial-monitoring agent enters scope
+and we pick the time-series sink. At that point the correct move is
+to write the ingester (read EGX/TEL_LOG every N seconds → sink), not
+to migrate the historic rows into Postgres.

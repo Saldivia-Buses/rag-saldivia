@@ -53,3 +53,37 @@ RETURNING id, tenant_id, payment_id, invoice_id, amount, created_at;
 -- name: UpdateMovementBalance :execrows
 UPDATE erp_account_movements SET balance = balance - $3
 WHERE id = $1 AND tenant_id = $2 AND balance >= $3;
+
+-- ─── Invoice notes (REG_MOVIMIENTO_OBS migrated — 2.0.11) ───
+
+-- name: ListInvoiceNotes :many
+-- Free-text notes attached to REG_MOVIMIENTOS (now erp_invoices).
+-- Filter by invoice_id or by tenant-wide date range. Mirrors
+-- proveedores_loc/cliente observaciones.
+SELECT id, tenant_id, legacy_id, observation_date, observation_time,
+       observation, invoice_id, invoice_legacy_id,
+       login, contact_legacy_id, source_table, system_code,
+       movement_date, account_code, concept_code,
+       movement_voucher_class, movement_no, created_at
+FROM erp_invoice_notes
+WHERE tenant_id = $1
+  AND (sqlc.arg(invoice_filter)::UUID IS NULL OR invoice_id = sqlc.arg(invoice_filter)::UUID)
+  AND (sqlc.arg(date_from)::DATE IS NULL OR observation_date >= sqlc.arg(date_from)::DATE)
+  AND (sqlc.arg(date_to)::DATE IS NULL OR observation_date <= sqlc.arg(date_to)::DATE)
+ORDER BY observation_date DESC NULLS LAST, legacy_id DESC
+LIMIT $2 OFFSET $3;
+
+-- ─── Payment complaints (RECLAMOPAGOS migrated — 2.0.11) ───
+
+-- name: ListPaymentComplaints :many
+-- Supplier-payment reclamation log. Filter by pending/done status or
+-- entity. Mirrors the reclamos/reclamopagos.xml "abm-mini" view.
+SELECT id, tenant_id, legacy_id, complaint_date,
+       entity_legacy_code, entity_id,
+       observation, status_flag, login, created_at
+FROM erp_payment_complaints
+WHERE tenant_id = $1
+  AND (sqlc.arg(status_filter)::SMALLINT = -1 OR status_flag = sqlc.arg(status_filter)::SMALLINT)
+  AND (sqlc.arg(entity_filter)::UUID IS NULL OR entity_id = sqlc.arg(entity_filter)::UUID)
+ORDER BY complaint_date DESC NULLS LAST, legacy_id DESC
+LIMIT $2 OFFSET $3;

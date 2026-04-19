@@ -107,6 +107,28 @@ func BankMovementReader(db *sql.DB) *GenericReader {
 	}
 }
 
+// CheckHistoryReader — CARCHEHI (28,763 rows live, scrape 26,882).
+// Archived-check history, sister of CARCHEQU (which backs erp_checks).
+// Composite PK (carint, siscod, succod). 36 raw columns; reader pulls
+// the 25 columns the migrator actually consumes. FK ctacod resolves via
+// ResolveEntityFlexible (id_regcuenta → nro_cuenta fallback). Targets
+// erp_check_history. Pareto tail Grupo A rank 3 (post-2.0.10).
+func CheckHistoryReader(db *sql.DB) *CompositeKeyReader {
+	return &CompositeKeyReader{
+		DB:         db,
+		Table:      "CARCHEHI",
+		Target:     "erp_check_history",
+		DomainName: "treasury",
+		PKColumns:  []string{"carint", "siscod", "succod"},
+		Columns: "carint, siscod, succod, cartip, carnro, carbco, carimp, " +
+			"carfec, caracr, cardev, caralt, caring, fecha_emision, " +
+			"cardes, carobv, carref, carcui, carmar, acreditado, " +
+			"ctacod, movnro, regmin, movnpv, cartera_id, " +
+			"concod, opecod, opecla, carpla, carpag, carrec, carccb, " +
+			"ccbcod, procod, circod, bcsnro, cajpla",
+	}
+}
+
 // CashCountReader creates a reader for CAJ_PUESTO_ARQUEOS (cash register counts/reconciliation).
 // ~14 rows. PK is id_cajpuestoarqueo (auto_increment).
 // Maps to erp_cash_counts for cash register balancing records.

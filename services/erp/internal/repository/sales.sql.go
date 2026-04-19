@@ -597,3 +597,47 @@ func (q *Queries) UpdateQuotationStatus(ctx context.Context, arg UpdateQuotation
 	}
 	return result.RowsAffected(), nil
 }
+
+const listQuotationOptions = `-- name: ListQuotationOptions :many
+SELECT id, tenant_id, legacy_id,
+       quotation_id, quotation_legacy_id,
+       section_legacy_id, description, created_at
+FROM erp_quotation_section_items
+WHERE tenant_id = $1 AND quotation_id = $2
+ORDER BY section_legacy_id, legacy_id
+LIMIT $3 OFFSET $4
+`
+
+type ListQuotationOptionsParams struct {
+	TenantID    string      `json:"tenant_id"`
+	QuotationID pgtype.UUID `json:"quotation_id"`
+	Limit       int32       `json:"limit"`
+	Offset      int32       `json:"offset"`
+}
+
+// Free-text option lines per quotation section.
+func (q *Queries) ListQuotationOptions(ctx context.Context, arg ListQuotationOptionsParams) ([]ErpQuotationSectionItem, error) {
+	rows, err := q.db.Query(ctx, listQuotationOptions,
+		arg.TenantID, arg.QuotationID, arg.Limit, arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ErpQuotationSectionItem{}
+	for rows.Next() {
+		var i ErpQuotationSectionItem
+		if err := rows.Scan(
+			&i.ID, &i.TenantID, &i.LegacyID,
+			&i.QuotationID, &i.QuotationLegacyID,
+			&i.SectionLegacyID, &i.Description, &i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

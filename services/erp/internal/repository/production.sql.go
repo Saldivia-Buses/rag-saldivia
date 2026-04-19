@@ -935,3 +935,71 @@ func (q *Queries) ListProductionInspectionHomologations(ctx context.Context, arg
 	}
 	return items, nil
 }
+
+const listUnitAccessories = `-- name: ListUnitAccessories :many
+SELECT id, tenant_id, legacy_id,
+       unit_id, unit_legacy_id,
+       article_code, article_id, article_description,
+       accessory_date,
+       quotation_id, quotation_legacy_id,
+       order_id, order_legacy_id,
+       status, additional_price, quantity,
+       approved_at, unit_price,
+       product_section_id, product_section_legacy_id,
+       observations, show_on_fv, show_on_ft,
+       accessory_state_legacy_id, created_at
+FROM erp_unit_accessories
+WHERE tenant_id = $1
+  AND ($4::UUID IS NULL OR unit_id = $4::UUID)
+  AND ($5::UUID IS NULL OR order_id = $5::UUID)
+  AND ($6::DATE IS NULL OR accessory_date >= $6::DATE)
+  AND ($7::DATE IS NULL OR accessory_date <= $7::DATE)
+ORDER BY accessory_date DESC NULLS LAST, legacy_id DESC
+LIMIT $2 OFFSET $3
+`
+
+type ListUnitAccessoriesParams struct {
+	TenantID    string      `json:"tenant_id"`
+	Limit       int32       `json:"limit"`
+	Offset      int32       `json:"offset"`
+	UnitFilter  pgtype.UUID `json:"unit_filter"`
+	OrderFilter pgtype.UUID `json:"order_filter"`
+	DateFrom    pgtype.Date `json:"date_from"`
+	DateTo      pgtype.Date `json:"date_to"`
+}
+
+// Per-unit accessory lines.
+func (q *Queries) ListUnitAccessories(ctx context.Context, arg ListUnitAccessoriesParams) ([]ErpUnitAccessory, error) {
+	rows, err := q.db.Query(ctx, listUnitAccessories,
+		arg.TenantID, arg.Limit, arg.Offset,
+		arg.UnitFilter, arg.OrderFilter, arg.DateFrom, arg.DateTo,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ErpUnitAccessory{}
+	for rows.Next() {
+		var i ErpUnitAccessory
+		if err := rows.Scan(
+			&i.ID, &i.TenantID, &i.LegacyID,
+			&i.UnitID, &i.UnitLegacyID,
+			&i.ArticleCode, &i.ArticleID, &i.ArticleDescription,
+			&i.AccessoryDate,
+			&i.QuotationID, &i.QuotationLegacyID,
+			&i.OrderID, &i.OrderLegacyID,
+			&i.Status, &i.AdditionalPrice, &i.Quantity,
+			&i.ApprovedAt, &i.UnitPrice,
+			&i.ProductSectionID, &i.ProductSectionLegacyID,
+			&i.Observations, &i.ShowOnFv, &i.ShowOnFt,
+			&i.AccessoryStateLegacyID, &i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

@@ -371,3 +371,105 @@ func (q *Queries) UpdateMovementBalance(ctx context.Context, arg UpdateMovementB
 	}
 	return result.RowsAffected(), nil
 }
+
+const listInvoiceNotes = `-- name: ListInvoiceNotes :many
+SELECT id, tenant_id, legacy_id, observation_date, observation_time,
+       observation, invoice_id, invoice_legacy_id,
+       login, contact_legacy_id, source_table, system_code,
+       movement_date, account_code, concept_code,
+       movement_voucher_class, movement_no, created_at
+FROM erp_invoice_notes
+WHERE tenant_id = $1
+  AND ($4::UUID IS NULL OR invoice_id = $4::UUID)
+  AND ($5::DATE IS NULL OR observation_date >= $5::DATE)
+  AND ($6::DATE IS NULL OR observation_date <= $6::DATE)
+ORDER BY observation_date DESC NULLS LAST, legacy_id DESC
+LIMIT $2 OFFSET $3
+`
+
+type ListInvoiceNotesParams struct {
+	TenantID      string      `json:"tenant_id"`
+	Limit         int32       `json:"limit"`
+	Offset        int32       `json:"offset"`
+	InvoiceFilter pgtype.UUID `json:"invoice_filter"`
+	DateFrom      pgtype.Date `json:"date_from"`
+	DateTo        pgtype.Date `json:"date_to"`
+}
+
+// Free-text notes attached to REG_MOVIMIENTOS (now erp_invoices).
+func (q *Queries) ListInvoiceNotes(ctx context.Context, arg ListInvoiceNotesParams) ([]ErpInvoiceNote, error) {
+	rows, err := q.db.Query(ctx, listInvoiceNotes,
+		arg.TenantID, arg.Limit, arg.Offset,
+		arg.InvoiceFilter, arg.DateFrom, arg.DateTo,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ErpInvoiceNote{}
+	for rows.Next() {
+		var i ErpInvoiceNote
+		if err := rows.Scan(
+			&i.ID, &i.TenantID, &i.LegacyID, &i.ObservationDate, &i.ObservationTime,
+			&i.Observation, &i.InvoiceID, &i.InvoiceLegacyID,
+			&i.Login, &i.ContactLegacyID, &i.SourceTable, &i.SystemCode,
+			&i.MovementDate, &i.AccountCode, &i.ConceptCode,
+			&i.MovementVoucherClass, &i.MovementNo, &i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listPaymentComplaints = `-- name: ListPaymentComplaints :many
+SELECT id, tenant_id, legacy_id, complaint_date,
+       entity_legacy_code, entity_id,
+       observation, status_flag, login, created_at
+FROM erp_payment_complaints
+WHERE tenant_id = $1
+  AND ($4::SMALLINT = -1 OR status_flag = $4::SMALLINT)
+  AND ($5::UUID IS NULL OR entity_id = $5::UUID)
+ORDER BY complaint_date DESC NULLS LAST, legacy_id DESC
+LIMIT $2 OFFSET $3
+`
+
+type ListPaymentComplaintsParams struct {
+	TenantID     string      `json:"tenant_id"`
+	Limit        int32       `json:"limit"`
+	Offset       int32       `json:"offset"`
+	StatusFilter int16       `json:"status_filter"`
+	EntityFilter pgtype.UUID `json:"entity_filter"`
+}
+
+// Supplier-payment reclamation log.
+func (q *Queries) ListPaymentComplaints(ctx context.Context, arg ListPaymentComplaintsParams) ([]ErpPaymentComplaint, error) {
+	rows, err := q.db.Query(ctx, listPaymentComplaints,
+		arg.TenantID, arg.Limit, arg.Offset,
+		arg.StatusFilter, arg.EntityFilter,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ErpPaymentComplaint{}
+	for rows.Next() {
+		var i ErpPaymentComplaint
+		if err := rows.Scan(
+			&i.ID, &i.TenantID, &i.LegacyID, &i.ComplaintDate,
+			&i.EntityLegacyCode, &i.EntityID,
+			&i.Observation, &i.StatusFlag, &i.Login, &i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

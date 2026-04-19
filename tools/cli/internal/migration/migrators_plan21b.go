@@ -3189,3 +3189,506 @@ func NewAccountingRegisterMigrator(db *sql.DB, tenantID string) *GenericMigrator
 		},
 	}
 }
+
+// ============================================================================
+// Phase 8c — Pareto tail Grupo A (REG_CUENTA_CALIFICACION +
+// REG_MOVIMIENTO_OBS + CARCHEHI) — 2.0.11
+// ============================================================================
+
+// NewEntityCreditRatingMigrator — REG_CUENTA_CALIFICACION →
+// erp_entity_credit_ratings (136,064 rows live; scrape 58,960, +131 %).
+// Customer / supplier credit rating history. regcuenta_id points at
+// REG_CUENTA(id_regcuenta), which is the entity domain cache populated
+// by NewEntityMigrator, so the resolve is a straight ResolveOptional.
+// Rows whose FK misses the cache fall back to the unknown-entity
+// sentinel via ResolveEntityFlexible — no data loss.
+func NewEntityCreditRatingMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.EntityCreditRatingReader(db)
+	return &GenericMigrator{
+		reader: reader,
+		columns: []string{
+			"id", "tenant_id", "legacy_id",
+			"entity_id", "entity_legacy_id",
+			"rating", "rated_at", "reference",
+		},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_regcalificacion")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			regcuentaID := row.Int64("regcuenta_id")
+			var entityID *uuid.UUID
+			if regcuentaID > 0 {
+				if resolved, tag := mapper.ResolveEntityFlexible(ctx, regcuentaID); resolved != uuid.Nil && tag != "unknown" {
+					entityID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "current_account", "REG_CUENTA_CALIFICACION", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			ratedAt := SafeDate(timeFromRow(row, "fecha_calificacion"))
+
+			return []any{
+				id, tenantID, legacyID,
+				entityID, int32(regcuentaID),
+				strings.TrimSpace(row.String("calificacion")),
+				ratedAt,
+				strings.TrimSpace(row.String("referencia_calificacion")),
+			}, nil
+		},
+	}
+}
+
+// NewInvoiceNoteMigrator — REG_MOVIMIENTO_OBS → erp_invoice_notes
+// (72,737 rows live). Free-text notes attached to REG_MOVIMIENTOS.
+// regmovim_id resolves via ResolveRegMovim (Phase 6 BuildRegMovimIndex).
+// Rows with zero regmovim_id or that miss the index land with
+// invoice_id NULL and invoice_legacy_id preserved — the note is still
+// useful for audit even when the parent is missing. Zero-dates in
+// fec_observacion / movfec pass through as NULL.
+func NewInvoiceNoteMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.InvoiceNoteReader(db)
+	return &GenericMigrator{
+		reader: reader,
+		columns: []string{
+			"id", "tenant_id", "legacy_id",
+			"observation_date", "observation_time",
+			"observation",
+			"invoice_id", "invoice_legacy_id",
+			"login", "contact_legacy_id", "source_table",
+			"system_code", "movement_date",
+			"account_code", "concept_code",
+			"movement_voucher_class", "movement_no",
+		},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_regmovimientoobs")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			regMovimID := row.Int64("regmovim_id")
+			var invoiceID *uuid.UUID
+			if regMovimID > 0 {
+				if resolved, ok := mapper.ResolveRegMovim(regMovimID); ok && resolved != uuid.Nil {
+					invoiceID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "current_account", "REG_MOVIMIENTO_OBS", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			obsDate := SafeDate(timeFromRow(row, "fec_observacion"))
+			movDate := SafeDate(timeFromRow(row, "movfec"))
+
+			var obsTime any
+			if t := strings.TrimSpace(row.String("hora_observacion")); t != "" && t != "00:00:00" {
+				obsTime = t
+			}
+
+			return []any{
+				id, tenantID, legacyID,
+				obsDate, obsTime,
+				row.String("observacion"),
+				invoiceID, int32(regMovimID),
+				strings.TrimSpace(row.String("login")),
+				int32(row.Int64("gencontacto_id")),
+				strings.TrimSpace(row.String("tabla_origen")),
+				strings.TrimSpace(row.String("siscod")),
+				movDate,
+				int32(row.Int("ctacod")),
+				int32(row.Int("concod")),
+				int32(row.Int("movnpv")),
+				int32(row.Int64("movnro")),
+			}, nil
+		},
+	}
+}
+
+// NewCheckHistoryMigrator — CARCHEHI → erp_check_history (28,763 rows
+// live). Archived-check history (sister of CARCHEQU / erp_checks).
+// Composite PK (carint, siscod, succod) hashed into legacy_id. ctacod
+// resolves via ResolveEntityFlexible (id_regcuenta then nro_cuenta).
+// movnro+regmin is a composite pointer at REG_MOVIMIENTOS that we
+// preserve raw — no resolver uses that composite today. All the zero-
+// date columns (carfec, caralt, caring, plus the nullable caracr /
+// cardev) round-trip as NULL.
+func NewCheckHistoryMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.CheckHistoryReader(db)
+	return &GenericMigrator{
+		reader: reader,
+		columns: []string{
+			"id", "tenant_id", "legacy_id",
+			"legacy_carint", "legacy_siscod", "legacy_succod",
+			"check_type", "number", "bank_name", "amount",
+			"operation_date", "credited_at", "returned_at",
+			"altered_at", "deposited_at", "issue_date",
+			"description", "observation", "reference",
+			"owner_ident", "owner_mark", "accredited",
+			"entity_legacy_code", "entity_id",
+			"movement_no", "movement_register", "movement_voucher_class",
+			"portfolio_id", "branch", "system_code",
+			"concept_code", "operator_code", "operator_class",
+			"plan_id", "pay_no", "received_no", "check_counter",
+			"account_balance_ref", "process_code", "circuit_code",
+			"bcs_no", "cash_plan",
+		},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			carint := row.Int64("carint")
+			siscod := strings.TrimSpace(row.String("siscod"))
+			succod := row.Int64("succod")
+
+			if carint == 0 && siscod == "" && succod == 0 {
+				return nil, nil
+			}
+
+			compositeKey := fmt.Sprintf("CARCHEHI:%d:%s:%d", carint, siscod, succod)
+			legacyID := hashCode(compositeKey)
+
+			ctacod := row.Int64("ctacod")
+			var entityID *uuid.UUID
+			if ctacod > 0 {
+				if resolved, tag := mapper.ResolveEntityFlexible(ctx, ctacod); resolved != uuid.Nil && tag != "unknown" {
+					entityID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "treasury", "CARCHEHI", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID, legacyID,
+				int32(carint), siscod, int32(succod),
+				int16(row.Int("cartip")),
+				strings.TrimSpace(row.String("carnro")),
+				strings.TrimSpace(row.String("carbco")),
+				ParseDecimal(row.Decimal("carimp")),
+				SafeDate(timeFromRow(row, "carfec")),
+				SafeDate(timeFromRow(row, "caracr")),
+				SafeDate(timeFromRow(row, "cardev")),
+				SafeDate(timeFromRow(row, "caralt")),
+				SafeDate(timeFromRow(row, "caring")),
+				SafeDate(timeFromRow(row, "fecha_emision")),
+				strings.TrimSpace(row.String("cardes")),
+				strings.TrimSpace(row.String("carobv")),
+				strings.TrimSpace(row.String("carref")),
+				strings.TrimSpace(row.String("carcui")),
+				strings.TrimSpace(row.String("carmar")),
+				int16(row.Int("acreditado")),
+				int32(ctacod), entityID,
+				int32(row.Int64("movnro")),
+				int32(row.Int("regmin")),
+				int32(row.Int("movnpv")),
+				int32(row.Int64("cartera_id")),
+				int32(succod),
+				siscod,
+				int32(row.Int("concod")),
+				int32(row.Int("opecod")),
+				strings.TrimSpace(row.String("opecla")),
+				int32(row.Int("carpla")),
+				int32(row.Int("carpag")),
+				int32(row.Int("carrec")),
+				int32(row.Int("carccb")),
+				int32(row.Int("ccbcod")),
+				int32(row.Int("procod")),
+				int32(row.Int("circod")),
+				int32(row.Int64("bcsnro")),
+				int32(row.Int("cajpla")),
+			}, nil
+		},
+	}
+}
+
+// ============================================================================
+// Phase 11e — Pareto tail Grupo B (STK_COSTO_REPOSICION_HIST +
+// ACCESORIOS_COCHE + COTIZOPMOVIM) — 2.0.11
+// ============================================================================
+
+// NewArticleReplacementCostHistoryMigrator — STK_COSTO_REPOSICION_HIST
+// → erp_article_replacement_cost_history (109,123 rows live, scrape
+// 28,515 — +282 %). Rolling log of supplier replacement-cost changes.
+// Parent STK_COSTO_REPOSICION is currently surfaced only as metadata
+// JSON on erp_articles; we preserve `costoreposicion_id` raw here so
+// the history is directly queryable. `regcuenta_id` resolves via
+// ResolveEntityFlexible (supplier entity); `moneda_id` via the
+// catalog-domain GEN_MONEDAS cache. `incoterm_id` is a 3-char code
+// with no first-class catalog in SDA today — preserved raw as TEXT.
+func NewArticleReplacementCostHistoryMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.ArticleReplacementCostHistoryReader(db)
+	return &GenericMigrator{
+		reader: reader,
+		columns: []string{
+			"id", "tenant_id", "legacy_id",
+			"replacement_cost_legacy_id",
+			"supplier_entity_id", "supplier_legacy_id",
+			"currency_id", "currency_legacy_id",
+			"exchange_rate", "supplier_cost",
+			"origin", "incoterm",
+			"import_expenses", "local_freight",
+			"modified_at",
+			"discount_1", "discount_2",
+		},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_costoreposicion_hist")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			regcuentaID := row.Int64("regcuenta_id")
+			var supplierID *uuid.UUID
+			if regcuentaID > 0 {
+				if resolved, tag := mapper.ResolveEntityFlexible(ctx, regcuentaID); resolved != uuid.Nil && tag != "unknown" {
+					supplierID = &resolved
+				}
+			}
+
+			monedaID := row.Int64("moneda_id")
+			var currencyID *uuid.UUID
+			if monedaID > 0 {
+				if resolved, rerr := mapper.ResolveOptional(ctx, "currency", "GEN_MONEDAS", monedaID); rerr == nil && resolved != uuid.Nil {
+					currencyID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "stock", "STK_COSTO_REPOSICION_HIST", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID, legacyID,
+				int32(row.Int64("costoreposicion_id")),
+				supplierID, int32(regcuentaID),
+				currencyID, int32(monedaID),
+				ParseDecimal(row.Decimal("cotizacion")),
+				ParseDecimal(row.Decimal("costo_proveedor")),
+				strings.TrimSpace(row.String("origen")),
+				strings.TrimSpace(row.String("incoterm_id")),
+				ParseDecimal(row.Decimal("gasto_importacion")),
+				ParseDecimal(row.Decimal("flete_local_ars")),
+				SafeDate(timeFromRow(row, "modificado")),
+				ParseDecimal(row.Decimal("descuento_1")),
+				ParseDecimal(row.Decimal("descuento_2")),
+			}, nil
+		},
+	}
+}
+
+// NewUnitAccessoryMigrator — ACCESORIOS_COCHE → erp_unit_accessories
+// (37,909 rows live, scrape 19,671 — +93 %). Per-unit accessory lines
+// bridging vehicle unit × article × order × quotation × product
+// section. Five FK resolvers, all via existing indexes:
+//   - nrofab → production.CHASIS
+//   - artcod → stock.STK_ARTICULOS via hashCode(articleCompositeCode)
+//   - cotizacion_id → sales.COTIZACION
+//   - ficha_id → sales.PEDCOTIZ
+//   - prdseccion_id → productos.PRODUCTO_SECCION
+// `fc_estado_acc_id` is an accessory-state legacy code with no SDA
+// catalog yet — preserved as raw int for later enrichment.
+func NewUnitAccessoryMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.UnitAccessoryReader(db)
+	return &GenericMigrator{
+		reader: reader,
+		columns: []string{
+			"id", "tenant_id", "legacy_id",
+			"unit_id", "unit_legacy_id",
+			"article_code", "article_id", "article_description",
+			"accessory_date",
+			"quotation_id", "quotation_legacy_id",
+			"order_id", "order_legacy_id",
+			"status", "additional_price", "quantity",
+			"approved_at", "unit_price",
+			"product_section_id", "product_section_legacy_id",
+			"observations", "show_on_fv", "show_on_ft",
+			"accessory_state_legacy_id",
+		},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_accesorio")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			nrofab := row.Int64("nrofab")
+			var unitID *uuid.UUID
+			if nrofab > 0 {
+				if resolved, rerr := mapper.ResolveOptional(ctx, "production", "CHASIS", nrofab); rerr == nil && resolved != uuid.Nil {
+					unitID = &resolved
+				}
+			}
+
+			artcod := strings.TrimSpace(row.String("artcod"))
+			var articleID *uuid.UUID
+			if artcod != "" {
+				artLegacyID := hashCode(articleCompositeCode(artcod, ""))
+				if resolved, rerr := mapper.ResolveOptional(ctx, "stock", "STK_ARTICULOS", artLegacyID); rerr == nil && resolved != uuid.Nil {
+					articleID = &resolved
+				}
+			}
+
+			cotizacionID := row.Int64("cotizacion_id")
+			var quotationID *uuid.UUID
+			if cotizacionID > 0 {
+				if resolved, rerr := mapper.ResolveOptional(ctx, "sales", "COTIZACION", cotizacionID); rerr == nil && resolved != uuid.Nil {
+					quotationID = &resolved
+				}
+			}
+
+			fichaID := row.Int64("ficha_id")
+			var orderID *uuid.UUID
+			if fichaID > 0 {
+				if resolved, rerr := mapper.ResolveOptional(ctx, "sales", "PEDCOTIZ", fichaID); rerr == nil && resolved != uuid.Nil {
+					orderID = &resolved
+				}
+			}
+
+			prdseccionID := row.Int64("prdseccion_id")
+			var productSectionID *uuid.UUID
+			if prdseccionID > 0 {
+				if resolved, rerr := mapper.ResolveOptional(ctx, "productos", "PRODUCTO_SECCION", prdseccionID); rerr == nil && resolved != uuid.Nil {
+					productSectionID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "production", "ACCESORIOS_COCHE", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			var additionalPrice any
+			if raw := row.Decimal("precio_adicional"); raw != "" {
+				additionalPrice = ParseDecimal(raw)
+			}
+
+			return []any{
+				id, tenantID, legacyID,
+				unitID, int32(nrofab),
+				artcod, articleID, row.String("artdes"),
+				SafeDate(timeFromRow(row, "fecha")),
+				quotationID, int32(cotizacionID),
+				orderID, int32(fichaID),
+				int32(row.Int("estado")),
+				additionalPrice,
+				int32(row.Int("cantidad")),
+				SafeDate(timeFromRow(row, "aprobado")),
+				ParseDecimal(row.Decimal("precio_unitario")),
+				productSectionID, int32(prdseccionID),
+				row.String("observaciones"),
+				int16(row.Int("muestra_fv")),
+				int16(row.Int("muestra_ft")),
+				int32(row.Int64("fc_estado_acc_id")),
+			}, nil
+		},
+	}
+}
+
+// NewQuotationOptionMigrator — COTIZOPMOVIM → erp_quotation_section_items
+// (28,573 rows live, scrape 28,626). "OPCIONES POR COTIZACION" —
+// free-text option lines per quotation section. 4-column source: FK
+// idCotiz + idSeccion discriminator + descripcion + idMovim PK.
+// quotation_id resolves via sales.COTIZACION. idSeccion is preserved
+// raw: the section numbering is a COTIZACION-local ordinal, not an
+// FK to an independent table.
+func NewQuotationOptionMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.QuotationOptionReader(db)
+	return &GenericMigrator{
+		reader: reader,
+		columns: []string{
+			"id", "tenant_id", "legacy_id",
+			"quotation_id", "quotation_legacy_id",
+			"section_legacy_id",
+			"description",
+		},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("idMovim")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			cotizacionID := row.Int64("idCotiz")
+			var quotationID *uuid.UUID
+			if cotizacionID > 0 {
+				if resolved, rerr := mapper.ResolveOptional(ctx, "sales", "COTIZACION", cotizacionID); rerr == nil && resolved != uuid.Nil {
+					quotationID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "sales", "COTIZOPMOVIM", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID, legacyID,
+				quotationID, int32(cotizacionID),
+				int32(row.Int64("idSeccion")),
+				strings.TrimSpace(row.String("descripcion")),
+			}, nil
+		},
+	}
+}
+
+// ============================================================================
+// Phase 8d — Payment complaints (RECLAMOPAGOS) — 2.0.11
+// ============================================================================
+
+// NewPaymentComplaintMigrator — RECLAMOPAGOS → erp_payment_complaints
+// (15,463 rows live). Supplier-payment reclamation log. ctacod
+// resolves via ResolveEntityFlexible (REG_CUENTA / nro_cuenta
+// indexes populated by Phase 2). Unresolved ctacod falls back to
+// NULL entity_id with the raw code preserved in entity_legacy_code
+// — the complaint is still useful on its own (observacion, date,
+// login, marca).
+func NewPaymentComplaintMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.PaymentComplaintReader(db)
+	return &GenericMigrator{
+		reader: reader,
+		columns: []string{
+			"id", "tenant_id", "legacy_id",
+			"complaint_date",
+			"entity_legacy_code", "entity_id",
+			"observation", "status_flag", "login",
+		},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("idReclamo")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			ctacod := row.Int64("ctacod")
+			var entityID *uuid.UUID
+			if ctacod > 0 {
+				if resolved, tag := mapper.ResolveEntityFlexible(ctx, ctacod); resolved != uuid.Nil && tag != "unknown" {
+					entityID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "current_account", "RECLAMOPAGOS", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID, legacyID,
+				SafeDate(timeFromRow(row, "fecha")),
+				int32(ctacod), entityID,
+				row.String("observacion"),
+				int16(row.Int("marca")),
+				strings.TrimSpace(row.String("login")),
+			}, nil
+		},
+	}
+}

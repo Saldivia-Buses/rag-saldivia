@@ -501,6 +501,27 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 		migration.NewWithholdingIIBBMigrator(mysqlDB, tenantID),
 	)
 
+	// Phase 8c: Pareto tail Grupo A (2.0.11) — REG_CUENTA_CALIFICACION +
+	// REG_MOVIMIENTO_OBS + CARCHEHI (~237 K rows combined). All three
+	// resolve against indexes built earlier:
+	//   - EntityCreditRating → ResolveEntityFlexible (id_regcuenta cache,
+	//     nro_cuenta fallback) — both populated by Phase 2 hooks.
+	//   - InvoiceNote → ResolveRegMovim (Phase 6 IVACOMPRAS hook).
+	//   - CheckHistory → ResolveEntityFlexible via ctacod.
+	// No new hooks needed; indexes are ready by this phase.
+	orch.RegisterMigrators(
+		migration.NewEntityCreditRatingMigrator(mysqlDB, tenantID),
+		migration.NewInvoiceNoteMigrator(mysqlDB, tenantID),
+		migration.NewCheckHistoryMigrator(mysqlDB, tenantID),
+	)
+
+	// Phase 8d: Payment complaints (RECLAMOPAGOS → erp_payment_complaints,
+	// 15 K rows live). Pareto #20 of the post-2.0.10 gap. ctacod resolves
+	// via ResolveEntityFlexible — same shape as CheckHistory above.
+	orch.RegisterMigrators(
+		migration.NewPaymentComplaintMigrator(mysqlDB, tenantID),
+	)
+
 	// Before the BOM history phase: seed ghost articles for orphan pieza_ids
 	// so the 2.5M+ rows whose STKPIEZA parent no longer exists can still land
 	// in SDA. See rescue.go for rationale + empirical numbers.
@@ -571,6 +592,18 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 	// (Phase 11b) caches being populated. 0 orphans confirmed live.
 	orch.RegisterMigrators(
 		migration.NewProductionInspectionHomologationMigrator(mysqlDB, tenantID),
+	)
+
+	// Phase 11e: Pareto tail Grupo B (2.0.11) — STK_COSTO_REPOSICION_HIST +
+	// ACCESORIOS_COCHE + COTIZOPMOVIM (~176 K rows combined). Placed
+	// here because ACCESORIOS_COCHE needs all of CHASIS (Phase 11),
+	// PEDCOTIZ (Phase 11), COTIZACION (earlier), STK_ARTICULOS (Phase 4)
+	// and PRODUCTO_SECCION (Phase 11c) caches to be populated. Pure
+	// consumer — no new hooks.
+	orch.RegisterMigrators(
+		migration.NewArticleReplacementCostHistoryMigrator(mysqlDB, tenantID),
+		migration.NewUnitAccessoryMigrator(mysqlDB, tenantID),
+		migration.NewQuotationOptionMigrator(mysqlDB, tenantID),
 	)
 
 	// Phase 12: Quality (ISO 9001)

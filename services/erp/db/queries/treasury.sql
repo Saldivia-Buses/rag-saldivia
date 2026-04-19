@@ -247,3 +247,31 @@ WHERE tenant_id = $1
   AND (sqlc.arg(date_to)::DATE IS NULL OR movement_date <= sqlc.arg(date_to)::DATE)
 ORDER BY movement_date DESC NULLS LAST, legacy_id DESC
 LIMIT $2 OFFSET $3;
+
+-- ─── Check history (CARCHEHI migrated — 2.0.11) ───
+
+-- name: ListCheckHistory :many
+-- Archived cheque history (CARCHEHI), sister of erp_checks.
+-- Filter by entity or date range. Ordered by operation_date DESC for the
+-- bancos_local/qry/* history views.
+SELECT id, tenant_id, legacy_id,
+       legacy_carint, legacy_siscod, legacy_succod,
+       check_type, number, bank_name, amount,
+       operation_date, credited_at, returned_at,
+       altered_at, deposited_at, issue_date,
+       description, observation, reference,
+       owner_ident, owner_mark, accredited,
+       entity_legacy_code, entity_id,
+       movement_no, movement_register, movement_voucher_class,
+       portfolio_id, branch, system_code,
+       concept_code, operator_code, operator_class,
+       plan_id, pay_no, received_no, check_counter,
+       account_balance_ref, process_code, circuit_code,
+       bcs_no, cash_plan, created_at
+FROM erp_check_history
+WHERE tenant_id = $1
+  AND (sqlc.arg(entity_filter)::UUID IS NULL OR entity_id = sqlc.arg(entity_filter)::UUID)
+  AND (sqlc.arg(date_from)::DATE IS NULL OR operation_date >= sqlc.arg(date_from)::DATE)
+  AND (sqlc.arg(date_to)::DATE IS NULL OR operation_date <= sqlc.arg(date_to)::DATE)
+ORDER BY operation_date DESC NULLS LAST, legacy_id DESC
+LIMIT $2 OFFSET $3;
