@@ -41,6 +41,8 @@ type QualityService interface {
 	ListActionTasks(ctx context.Context, tenantID string, planID pgtype.UUID) ([]repository.ListActionTasksRow, error)
 	CreateActionTask(ctx context.Context, p repository.CreateActionTaskParams, userID, ip string) (repository.ErpQualityActionTask, error)
 	CompleteActionTask(ctx context.Context, id pgtype.UUID, tenantID, userID, ip string) error
+	// Indicators
+	ListIndicators(ctx context.Context, tenantID, periodFrom, periodTo string) ([]repository.ErpQualityIndicator, error)
 }
 
 type Quality struct{ svc QualityService }
@@ -61,6 +63,7 @@ func (h *Quality) Routes(authWrite func(http.Handler) http.Handler) chi.Router {
 		r.Get("/action-plans", h.ListActionPlans)
 		r.Get("/action-plans/{id}", h.GetActionPlan)
 		r.Get("/action-plans/{id}/tasks", h.ListActionTasks)
+		r.Get("/indicators", h.ListIndicators)
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(authWrite)
@@ -536,4 +539,28 @@ func numericFromFloat(f float64) pgtype.Numeric {
 	var n pgtype.Numeric
 	_ = n.Scan(fmt.Sprintf("%.2f", f))
 	return n
+}
+
+// ListIndicators returns quality KPI rows in a period range.
+// Query params: period_from, period_to (both TEXT — e.g. '2025-01').
+// When omitted, defaults cover the full migrated range.
+func (h *Quality) ListIndicators(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	periodFrom := q.Get("period_from")
+	if periodFrom == "" {
+		periodFrom = "0000-00"
+	}
+	periodTo := q.Get("period_to")
+	if periodTo == "" {
+		periodTo = "9999-99"
+	}
+
+	indicators, err := h.svc.ListIndicators(r.Context(), tenantSlug(r), periodFrom, periodTo)
+	if err != nil {
+		erperrors.WriteError(w, r, erperrors.Internal(err))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{"indicators": indicators})
 }

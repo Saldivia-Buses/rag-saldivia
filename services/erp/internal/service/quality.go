@@ -184,3 +184,13 @@ func (s *Quality) CompleteActionTask(ctx context.Context, id pgtype.UUID, tenant
 	s.audit.Write(ctx, audit.Entry{TenantID: tenantID, UserID: userID, Action: "erp.action_task.completed", Resource: uuidStr(id), IP: ip})
 	return nil
 }
+
+// ListIndicators returns quality indicators scoped by period range.
+// Period is stored as TEXT (e.g. '2025-04') — callers pass strings.
+func (s *Quality) ListIndicators(ctx context.Context, tenantID, periodFrom, periodTo string) ([]repository.ErpQualityIndicator, error) {
+	return s.repo.ListQualityIndicators(ctx, repository.ListQualityIndicatorsParams{
+		TenantID:   tenantID,
+		PeriodFrom: periodFrom,
+		PeriodTo:   periodTo,
+	})
+}
