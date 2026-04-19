@@ -160,3 +160,17 @@ export interface OverdueInvoice {
   amount: number;
   balance: number;
 }
+
+// Payment Complaints (RECLAMOPAGOS parity — Phase 1 §UI)
+export interface PaymentComplaint {
+  id: string;
+  tenant_id: string;
+  legacy_id: number;
+  complaint_date: string | null;
+  entity_legacy_code: number;
+  entity_id: string | null;
+  observation: string;
+  status_flag: number; // 0 = pendiente, 1 = cumplida
+  login: string;
+  created_at: string;
+}

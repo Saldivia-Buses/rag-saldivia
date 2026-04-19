@@ -473,3 +473,84 @@ func (q *Queries) ListPaymentComplaints(ctx context.Context, arg ListPaymentComp
 	}
 	return items, nil
 }
+
+const createPaymentComplaint = `-- name: CreatePaymentComplaint :one
+INSERT INTO erp_payment_complaints (
+    tenant_id, complaint_date, entity_id, entity_legacy_code,
+    observation, status_flag, login
+)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+RETURNING id, tenant_id, legacy_id, complaint_date,
+          entity_legacy_code, entity_id, observation,
+          status_flag, login, created_at
+`
+
+type CreatePaymentComplaintParams struct {
+	TenantID         string      `json:"tenant_id"`
+	ComplaintDate    pgtype.Date `json:"complaint_date"`
+	EntityID         pgtype.UUID `json:"entity_id"`
+	EntityLegacyCode int32       `json:"entity_legacy_code"`
+	Observation      string      `json:"observation"`
+	StatusFlag       int16       `json:"status_flag"`
+	Login            string      `json:"login"`
+}
+
+// Create a new supplier-payment complaint.
+func (q *Queries) CreatePaymentComplaint(ctx context.Context, arg CreatePaymentComplaintParams) (ErpPaymentComplaint, error) {
+	row := q.db.QueryRow(ctx, createPaymentComplaint,
+		arg.TenantID, arg.ComplaintDate, arg.EntityID, arg.EntityLegacyCode,
+		arg.Observation, arg.StatusFlag, arg.Login,
+	)
+	var i ErpPaymentComplaint
+	err := row.Scan(
+		&i.ID, &i.TenantID, &i.LegacyID, &i.ComplaintDate,
+		&i.EntityLegacyCode, &i.EntityID, &i.Observation,
+		&i.StatusFlag, &i.Login, &i.CreatedAt,
+	)
+	return i, err
+}
+
+const updatePaymentComplaintStatus = `-- name: UpdatePaymentComplaintStatus :execrows
+UPDATE erp_payment_complaints
+   SET status_flag = $3
+ WHERE id = $1 AND tenant_id = $2
+`
+
+type UpdatePaymentComplaintStatusParams struct {
+	ID         pgtype.UUID `json:"id"`
+	TenantID   string      `json:"tenant_id"`
+	StatusFlag int16       `json:"status_flag"`
+}
+
+// Flip the marca flag (0=pendiente ↔ 1=cumplida) on a single complaint.
+func (q *Queries) UpdatePaymentComplaintStatus(ctx context.Context, arg UpdatePaymentComplaintStatusParams) (int64, error) {
+	result, err := q.db.Exec(ctx, updatePaymentComplaintStatus, arg.ID, arg.TenantID, arg.StatusFlag)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const getPaymentComplaint = `-- name: GetPaymentComplaint :one
+SELECT id, tenant_id, legacy_id, complaint_date,
+       entity_legacy_code, entity_id, observation,
+       status_flag, login, created_at
+  FROM erp_payment_complaints
+ WHERE id = $1 AND tenant_id = $2
+`
+
+type GetPaymentComplaintParams struct {
+	ID       pgtype.UUID `json:"id"`
+	TenantID string      `json:"tenant_id"`
+}
+
+func (q *Queries) GetPaymentComplaint(ctx context.Context, arg GetPaymentComplaintParams) (ErpPaymentComplaint, error) {
+	row := q.db.QueryRow(ctx, getPaymentComplaint, arg.ID, arg.TenantID)
+	var i ErpPaymentComplaint
+	err := row.Scan(
+		&i.ID, &i.TenantID, &i.LegacyID, &i.ComplaintDate,
+		&i.EntityLegacyCode, &i.EntityID, &i.Observation,
+		&i.StatusFlag, &i.Login, &i.CreatedAt,
+	)
+	return i, err
+}
