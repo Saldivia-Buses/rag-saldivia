@@ -83,6 +83,153 @@ export interface BankBalance {
   balance: number;
 }
 
+// ─── 2.0.17 §UI parity clusters ─────────────────────────────────────────
+
+export interface ChassisBrand {
+  id: string;
+  tenant_id: string;
+  code: string;
+  name: string;
+  active: boolean;
+}
+
+export interface ChassisModel {
+  id: string;
+  tenant_id: string;
+  brand_id: string | null;
+  model_code: string;
+  description: string;
+  traction: string;
+  engine_location: string;
+  active: boolean;
+}
+
+export interface RiskAgent {
+  id: string;
+  tenant_id: string;
+  name: string;
+  risk_type: string;
+  active: boolean;
+  created_at: string;
+}
+
+export interface RiskExposure {
+  id: string;
+  tenant_id: string;
+  entity_id: string | null;
+  agent_id: string | null;
+  level: string;
+  hours_per_day: number | null;
+  mitigation: string;
+  created_at: string;
+}
+
+export interface Attendance {
+  id: string;
+  tenant_id: string;
+  entity_id: string | null;
+  date: string | null;
+  clock_in: string | null;
+  clock_out: string | null;
+  hours: number | null;
+  source: string;
+}
+
+export interface Communication {
+  id: string;
+  tenant_id: string;
+  subject: string;
+  body: string;
+  sender_id: string;
+  priority: string;
+  created_at: string;
+}
+
+export interface CalendarEvent {
+  id: string;
+  tenant_id: string;
+  title: string;
+  description: string;
+  start_at: string | null;
+  end_at: string | null;
+  all_day: boolean;
+  entity_id: string | null;
+}
+
+export interface Survey {
+  id: string;
+  tenant_id: string;
+  title: string;
+  description: string;
+  status: string;
+  user_id: string;
+  created_at: string;
+}
+
+export interface ProductSection {
+  id: string;
+  tenant_id: string;
+  legacy_id: number;
+  name: string;
+  sort_order: number;
+  rubro_id: number;
+  active: boolean;
+  created_at: string;
+}
+
+export interface Product {
+  id: string;
+  tenant_id: string;
+  legacy_id: number;
+  description: string;
+  supplier_entity_id: string | null;
+  supplier_code: number;
+  created_at: string;
+}
+
+export interface ProductAttribute {
+  id: string;
+  tenant_id: string;
+  legacy_id: number;
+  name: string;
+  attribute_type: string;
+  section_id: string | null;
+  section_legacy_id: number;
+  article_code: string;
+  active: boolean;
+  sort_order: number;
+}
+
+export interface Tool {
+  id: string;
+  tenant_id: string;
+  legacy_id: number;
+  code: string;
+  article_code: string;
+  article_id: string | null;
+  inventory_code: string;
+  name: string;
+  status: string;
+  observation: string;
+  purchase_order_date: string | null;
+  delivery_date: string | null;
+  supplier_code: string;
+  supplier_entity_id: string | null;
+  created_at: string;
+}
+
+export interface MaintenanceAsset {
+  id: string;
+  tenant_id: string;
+  code: string;
+  name: string;
+  asset_type: string;
+  unit_id: string | null;
+  location: string;
+  active: boolean;
+  created_at: string;
+}
+
 // ─── 2.0.16 §UI parity clusters ─────────────────────────────────────────
 
 export interface BankReconciliation {
