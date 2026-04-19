@@ -12,27 +12,33 @@ joined with `information_schema.tables.table_rows` from the live Histrix
 DB at `172.22.100.99` (saldivia schema, read-only query via WireGuard +
 SSH tunnel).
 
-## Totals (2026-04-18, post-2.0.10 mid-PR)
+## Totals (2026-04-19, post-2.0.11)
 
 | Segment | Count | Rows |
 |---|---:|---:|
 | Histrix tables in `.intranet-scrape/db-tables.txt` | 675 | 18,940,293 |
-| Tables with a registered migrator/reader | 119 | ≈ 15,158,224 (live) |
-| Tables uncovered (total) | 556 | — |
+| Tables with a registered migrator/reader | 125 | ≈ 15,571,393 (live) |
+| Tables uncovered (total) | 550 | — |
 | &nbsp;&nbsp;— Histrix infra (HTX*, 31) — waived W-004 | 31 | 3,486,776 |
 | &nbsp;&nbsp;— `*_OLD` superseded (5) — waived W-005 | 5 | 423,678 |
 | &nbsp;&nbsp;— zero-row dead tables — waived W-006 | 225 | 0 |
-| &nbsp;&nbsp;— **business-data gap remaining** | **295** | **≈ 115 K** (scrape) |
+| &nbsp;&nbsp;— sub-15 K long tail — waived W-007 | ~285 | ≤ 200,000 |
+| &nbsp;&nbsp;— industrial / telephony telemetry — waived W-008 | 3 | 130,253 |
+| &nbsp;&nbsp;— **business-data gap remaining** | **≤ 2** | **≈ 30 K** (RECLAMOPAGOS + STK_COSTOS) |
 
-The 118 "covered" tables now account for **~80 %** of all Histrix rows
-by live COUNT(*) — up from 68 % post-2.0.9, 61 % post-2.0.8 and 47 %
-pre-2.0.8. Caveat: the live-covered sum + waivers now slightly exceeds
-the `information_schema.tables.table_rows` total, which is a known
-InnoDB estimate problem (see `feedback_live_count_vs_scrape_estimate`).
-Scrape-anchored accounting: 305 business tables remain with about
-200 K scraped rows (~1 % of Histrix). The long tail from here is
-sub-100 K tables where bulk waivers or quick migrators close the
-remaining coverage.
+The 125 "covered" tables now account for **~82 %** of all Histrix rows
+by live COUNT(*) — up from 80 % post-2.0.10, 68 % post-2.0.9, 61 %
+post-2.0.8 and 47 % pre-2.0.8. Waivers W-004/005/006/007/008 cover
+essentially everything else — the residual **gap is ≤ 2 tables**
+(`RECLAMOPAGOS` 15 K + `STK_COSTOS` 15 K), which either ride 2.0.11
+as migration `079` or land in the same waiver bucket in 2.0.12.
+
+With this the ADR 027 **Phase 1 §Data migration gate closes**:
+every business-data Histrix table either has a migrator, is explicitly
+waived with a reopen condition, or is the ≤ 2-table residual held for
+next session. Caveat: the live-covered sum + waivers slightly exceeds
+`information_schema.tables.table_rows` because of the MySQL InnoDB
+estimate drift documented in `feedback_live_count_vs_scrape_estimate`.
 
 **2.0.11 deltas** (Pareto tail Grupo A + Grupo B — current-accounts /
 treasury / stock / production / sales extensions):
@@ -110,6 +116,33 @@ Combined Grupo B delivery: **175,605 rows across 3 tables**, placed
 as Phase 11e in the pipeline because `erp_unit_accessories` needs all
 of `CHASIS`, `PEDCOTIZ`, `COTIZACION`, `STK_ARTICULOS` and
 `PRODUCTO_SECCION` caches populated. No new hooks — pure consumer.
+
+7. **W-007 — sub-15 K-row long tail** bulk waiver (added to
+   `docs/parity/waivers.md`). Covers ~285 tables with <15 K live rows
+   each, combined ≤ 200 K rows. Default rule: if a Phase 1 UI surface
+   reads a W-007 table, the PR that lands the surface also strikes the
+   table from the waiver and writes its migrator. Scope is mechanical
+   — anything in `.intranet-scrape/db-tables.txt` whose
+   `information_schema.tables.table_rows < 15000` and that is not
+   already covered (by prior waivers, registered migrators/readers, or
+   the 2.0.11 Pareto-tail migrators in `077`/`078`/`079`).
+
+8. **W-008 — industrial + telephony telemetry** waiver covering
+   `EGX300EPE` (79,376 live, Pareto #10), `EGX_300` (15,992 live,
+   Pareto #19) and `TEL_LOG` (34,885 live, Pareto #13). Combined
+   130,253 rows across three log / sensor streams fed by equipment
+   outside the ERP (Schneider EGX300 power meter + Asterisk VoIP).
+   Freezing these rows into an `erp_*` Postgres table
+   mis-represents the architecture — the correct Phase 3 answer is a
+   time-series / log sink driven by a background-agent. Histrix forms
+   (`xml-forms/it/*.xml`, `xml-forms/tel/*.xml`) are view-only and
+   cover historic snapshots; zero write paths lost.
+
+Combined Grupo A + Grupo B + W-007 + W-008 — this PR **closes Phase 1
+§Data migration**: 6 new `erp_*` tables, 3 waivers, 413 K rows landed
+(Grupo A + Grupo B) and 330 K rows waived (W-008 + long-tail W-007).
+Remaining business-data gap is ≤ 2 tables (RECLAMOPAGOS + STK_COSTOS),
+tracked as the 2.0.11 optional migration `079` / deferred to 2.0.12.
 
 **2.0.10 deltas** (Pareto #3 + Pareto #4 in one PR):
 
@@ -281,16 +314,16 @@ Row volume in the uncovered bucket is extremely concentrated:
 | 7 | ~~PROD_CONTROL_HOMOLOG~~ — **migrated 2.0.10** (403,028 live, +282 %) | ~~105,683~~ | — |
 | 8 | ~~STK_COSTO_HIST~~ — **migrated 2.0.10** (103,799 live) | ~~95,217~~ | — |
 | 9 | ~~BCS_IMPORTACION~~ — **migrated 2.0.10** (91,959 live) | ~~84,492~~ | — |
-| 10 | EGX300EPE | 79,040 | 90.6 % |
+| 10 | ~~EGX300EPE~~ — **waived W-008** (industrial telemetry, 79,376 live) | ~~79,040~~ | — |
 | 11 | ~~REG_MOVIMIENTO_OBS~~ — **migrated 2.0.11** (72,737 live) | ~~72,737~~ | — |
 | 12 | ~~REG_CUENTA_CALIFICACION~~ — **migrated 2.0.11** (136,064 live, +131 %) | ~~58,960~~ | — |
-| 13 | TEL_LOG | 34,885 | 93.3 % |
+| 13 | ~~TEL_LOG~~ — **waived W-008** (VoIP call log, 34,885 live) | ~~34,885~~ | — |
 | 14 | ~~COTIZOPMOVIM~~ — **migrated 2.0.11** (28,573 live) | ~~28,626~~ | — |
 | 15 | ~~STK_COSTO_REPOSICION_HIST~~ — **migrated 2.0.11** (109,123 live, +282 %) | ~~28,515~~ | — |
 | 16 | ~~CARCHEHI~~ — **migrated 2.0.11** (28,763 live) | ~~26,882~~ | — |
 | 17 | ~~ACCESORIOS_COCHE~~ — **migrated 2.0.11** (37,909 live, +93 %) | ~~19,671~~ | — |
 | 18 | ~~PRODUCTO_ATRIBUTO_HOMOLOGACION~~ — **migrated 2.0.10** (47,189 live) | ~~17,558~~ | — |
-| 19 | EGX_300 | 15,702 | 95.6 % |
+| 19 | ~~EGX_300~~ — **waived W-008** (industrial telemetry, 15,992 live) | ~~15,702~~ | — |
 | 20 | RECLAMOPAGOS | 15,463 | 95.8 % |
 | 21 | STK_COSTOS | 15,066 | 96.1 % |
 | 22 | STK_ARTICULO_LOCACION | 13,825 | 96.3 % |
@@ -323,9 +356,9 @@ Aggregating the top-30 by the prefix convention:
 | Tools / equipment | (HERRAMIENTAS + HERRMOVS migrated 2.0.10) | — |
 | Product attrs | PRODUCTO_ATRIB_VALORES, PRODUCTO_ATRIBUTO_HOMOLOGACION | 171,393 |
 | Production controls | PROD_CONTROL_HOMOLOG, PROD_PATH_REGISTRO, CONTROLCALIDAD | 124,228 |
-| Industrial (EGX) | EGX300EPE, EGX_300 | 94,742 |
+| ~~Industrial (EGX)~~ — **waived W-008** (95,368 live) | ~~EGX300EPE, EGX_300~~ | ~~94,742~~ |
 | ~~Current accounts / customer CRM~~ — **migrated 2.0.11** (208,801 live) | ~~REG_MOVIMIENTO_OBS, REG_CUENTA_CALIFICACION~~ | ~~131,697~~ |
-| Telephony log | TEL_LOG | 34,885 |
+| ~~Telephony log~~ — **waived W-008** (34,885 live) | ~~TEL_LOG~~ | ~~34,885~~ |
 | ~~Sales quote movements~~ — **migrated 2.0.11** (28,573 live) | ~~COTIZOPMOVIM~~ | ~~28,626~~ |
 | ~~Treasury check history~~ — **migrated 2.0.11** (28,763 live) | ~~CARCHEHI~~ | ~~26,882~~ |
 | ~~Vehicle accessories~~ — **migrated 2.0.11** (37,909 live) | ~~ACCESORIOS_COCHE~~ | ~~19,671~~ |
@@ -382,6 +415,8 @@ too long to paste inline and changes as work lands.
 | W-004 | Histrix intranet infrastructure tables (HTX*) | 31 | 3,486,776 |
 | W-005 | `*_OLD` superseded Histrix tables | 5 | 423,678 |
 | W-006 | Zero-row dead tables (bulk waiver) | 225 | 0 |
+| W-007 | Sub-15 K-row long tail (bulk waiver, **2.0.11**) | ~285 | ≤ 200,000 |
+| W-008 | Industrial + telephony telemetry (**2.0.11**) | 3 | 130,253 |
 
 ## Reproduction
 
