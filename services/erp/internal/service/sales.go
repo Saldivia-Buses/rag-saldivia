@@ -30,8 +30,9 @@ func (s *Sales) ListQuotations(ctx context.Context, tenantID, status string, lim
 }
 
 type QuotationDetail struct {
-	Quotation repository.ErpQuotation          `json:"quotation"`
-	Lines     []repository.ErpQuotationLine    `json:"lines"`
+	Quotation repository.ErpQuotation              `json:"quotation"`
+	Lines     []repository.ErpQuotationLine        `json:"lines"`
+	Options   []repository.ErpQuotationSectionItem `json:"options"`
 }
 
 func (s *Sales) GetQuotation(ctx context.Context, id pgtype.UUID, tenantID string) (*QuotationDetail, error) {
@@ -45,7 +46,13 @@ func (s *Sales) GetQuotation(ctx context.Context, id pgtype.UUID, tenantID strin
 	if err != nil {
 		return nil, fmt.Errorf("list lines: %w", err)
 	}
-	return &QuotationDetail{Quotation: q, Lines: lines}, nil
+	options, err := s.repo.ListQuotationOptions(ctx, repository.ListQuotationOptionsParams{
+		TenantID: tenantID, QuotationID: id, Limit: 1000, Offset: 0,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("list options: %w", err)
+	}
+	return &QuotationDetail{Quotation: q, Lines: lines, Options: options}, nil
 }
 
 type CreateQuotationRequest struct {

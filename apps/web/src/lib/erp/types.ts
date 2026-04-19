@@ -444,9 +444,21 @@ export interface QuotationLine {
   metadata?: string | null;
 }
 
+export interface QuotationOption {
+  id: string;
+  tenant_id: string;
+  legacy_id: number;
+  quotation_id: string;
+  quotation_legacy_id: number;
+  section_legacy_id: number;
+  description: string;
+  created_at: string;
+}
+
 export interface QuotationDetail {
   quotation: Quotation;
   lines: QuotationLine[];
+  options: QuotationOption[];
 }
 
 export interface SupplierScorecard {

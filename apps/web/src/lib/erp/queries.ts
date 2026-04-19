@@ -23,6 +23,8 @@ export const erpKeys = {
     [...erpKeys.all, "purchasing", "orders", id] as const,
   quotations: (status?: string) =>
     [...erpKeys.all, "sales", "quotations", { status }] as const,
+  quotation: (id: string) =>
+    [...erpKeys.all, "sales", "quotations", id] as const,
   invoices: (params?: Record<string, string>) =>
     [...erpKeys.all, "invoicing", "invoices", params] as const,
   invoice: (id: string) =>
