@@ -167,7 +167,10 @@ export interface StockMovement {
 export interface ArticleCost {
   id: string;
   tenant_id: string;
+  legacy_id: number;
+  article_code: string;
   article_id: string;
+  subsystem_code: string;
   cost: number;
   percentage_1: number | null;
   percentage_2: number | null;
@@ -182,6 +185,8 @@ export interface ArticleCost {
   movement_date: string | null;
   recalc_flag: number;
   created_at: string;
+  article_name: string | null;
+  supplier_name: string | null;
 }
 
 // Invoice notes (REG_MOVIMIENTO_OBS parity — Phase 1 §UI)

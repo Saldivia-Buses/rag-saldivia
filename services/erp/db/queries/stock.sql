@@ -114,19 +114,25 @@ LIMIT $3 OFFSET $4;
 -- ─── Per-supplier article costs (Phase 1 §Data migration — Pareto #5) ──────
 
 -- name: ListArticleCosts :many
--- Per-supplier cost ledger for a single article. The migrated STKINSPR
--- rows carry one entry per (article, supplier) pair with the last update
--- date; this query lets the UI "costos" screens replace the Histrix
--- stock/costos/ views 1:1.
-SELECT id, tenant_id, legacy_id, article_code, article_id, subsystem_code,
-       cost, percentage_1, percentage_2, percentage_3,
-       supplier_article_code, supplier_code, supplier_entity_id,
-       invoice_date, last_update_date,
-       movement_no, movement_post, movement_date, recalc_flag, created_at
-FROM erp_article_costs
-WHERE tenant_id = $1 AND article_id = $2
-ORDER BY last_update_date DESC NULLS LAST, supplier_code
-LIMIT $3 OFFSET $4;
+-- Per-supplier cost ledger. Optional filters by article and/or
+-- supplier_code. LEFT JOINs erp_articles + erp_entities so the UI
+-- ships article name + supplier name alongside each row.
+-- Parity: Histrix stock/costos/ views.
+SELECT ac.id, ac.tenant_id, ac.legacy_id, ac.article_code, ac.article_id,
+       ac.subsystem_code, ac.cost, ac.percentage_1, ac.percentage_2,
+       ac.percentage_3, ac.supplier_article_code, ac.supplier_code,
+       ac.supplier_entity_id, ac.invoice_date, ac.last_update_date,
+       ac.movement_no, ac.movement_post, ac.movement_date, ac.recalc_flag,
+       ac.created_at,
+       a.name AS article_name, e.name AS supplier_name
+FROM erp_article_costs ac
+LEFT JOIN erp_articles a ON a.id = ac.article_id AND a.tenant_id = ac.tenant_id
+LEFT JOIN erp_entities e ON e.id = ac.supplier_entity_id AND e.tenant_id = ac.tenant_id
+WHERE ac.tenant_id = $1
+  AND (sqlc.arg(article_filter)::UUID IS NULL OR ac.article_id = sqlc.arg(article_filter)::UUID)
+  AND (sqlc.arg(supplier_filter)::TEXT = '' OR ac.supplier_code = sqlc.arg(supplier_filter)::TEXT)
+ORDER BY ac.last_update_date DESC NULLS LAST, ac.supplier_code
+LIMIT $2 OFFSET $3;
 
 -- name: ListArticleCostHistory :many
 -- Monthly cost history snapshots per article (STK_COSTO_HIST migrated).

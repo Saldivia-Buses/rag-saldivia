@@ -26,6 +26,7 @@ type StockService interface {
 	ListMovements(ctx context.Context, tenantID string, articleID pgtype.UUID, limit, offset int) ([]repository.ListStockMovementsRow, error)
 	CreateMovement(ctx context.Context, req service.CreateMovementRequest) (repository.ErpStockMovement, error)
 	ListBOM(ctx context.Context, tenantID string, parentID pgtype.UUID) ([]repository.ListBOMRow, error)
+	ListArticleCosts(ctx context.Context, tenantID string, articleFilter pgtype.UUID, supplierFilter string, limit, offset int) ([]repository.ListArticleCostsRow, error)
 }
 
 // Stock handles stock & warehouse endpoints.
@@ -44,6 +45,7 @@ func (h *Stock) Routes(authWrite func(http.Handler) http.Handler) chi.Router {
 		r.Get("/levels", h.GetStockLevels)
 		r.Get("/movements", h.ListMovements)
 		r.Get("/articles/{id}/bom", h.ListBOM)
+		r.Get("/article-costs", h.ListArticleCosts)
 	})
 
 	r.Group(func(r chi.Router) {
@@ -257,6 +259,26 @@ func (h *Stock) ListBOM(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"bom": bom})
+}
+
+// ListArticleCosts returns the per-supplier cost ledger with optional
+// article_id / supplier_code filters. Parity: Histrix stock/costos/.
+func (h *Stock) ListArticleCosts(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	p := pagination.Parse(r)
+	q := r.URL.Query()
+
+	articleFilter := optUUID(ptrStr(q.Get("article_id")))
+	supplierFilter := q.Get("supplier_code")
+
+	costs, err := h.svc.ListArticleCosts(r.Context(), slug, articleFilter, supplierFilter, p.Limit(), p.Offset())
+	if err != nil {
+		erperrors.WriteError(w, r, erperrors.Internal(err))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{"costs": costs})
 }
 
 // optUUID parses an optional UUID string pointer into pgtype.UUID.
