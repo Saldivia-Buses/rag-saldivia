@@ -2299,3 +2299,16 @@ type ErpQuotationSectionItem struct {
 	Description       string             `json:"description"`
 	CreatedAt         pgtype.Timestamptz `json:"created_at"`
 }
+
+type ErpPaymentComplaint struct {
+	ID               pgtype.UUID        `json:"id"`
+	TenantID         string             `json:"tenant_id"`
+	LegacyID         int64              `json:"legacy_id"`
+	ComplaintDate    pgtype.Date        `json:"complaint_date"`
+	EntityLegacyCode int32              `json:"entity_legacy_code"`
+	EntityID         pgtype.UUID        `json:"entity_id"`
+	Observation      string             `json:"observation"`
+	StatusFlag       int16              `json:"status_flag"`
+	Login            string             `json:"login"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+}

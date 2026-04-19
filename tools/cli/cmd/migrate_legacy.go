@@ -515,6 +515,13 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 		migration.NewCheckHistoryMigrator(mysqlDB, tenantID),
 	)
 
+	// Phase 8d: Payment complaints (RECLAMOPAGOS → erp_payment_complaints,
+	// 15 K rows live). Pareto #20 of the post-2.0.10 gap. ctacod resolves
+	// via ResolveEntityFlexible — same shape as CheckHistory above.
+	orch.RegisterMigrators(
+		migration.NewPaymentComplaintMigrator(mysqlDB, tenantID),
+	)
+
 	// Before the BOM history phase: seed ghost articles for orphan pieza_ids
 	// so the 2.5M+ rows whose STKPIEZA parent no longer exists can still land
 	// in SDA. See rescue.go for rationale + empirical numbers.

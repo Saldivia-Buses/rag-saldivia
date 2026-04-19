@@ -425,3 +425,51 @@ func (q *Queries) ListInvoiceNotes(ctx context.Context, arg ListInvoiceNotesPara
 	}
 	return items, nil
 }
+
+const listPaymentComplaints = `-- name: ListPaymentComplaints :many
+SELECT id, tenant_id, legacy_id, complaint_date,
+       entity_legacy_code, entity_id,
+       observation, status_flag, login, created_at
+FROM erp_payment_complaints
+WHERE tenant_id = $1
+  AND ($4::SMALLINT = -1 OR status_flag = $4::SMALLINT)
+  AND ($5::UUID IS NULL OR entity_id = $5::UUID)
+ORDER BY complaint_date DESC NULLS LAST, legacy_id DESC
+LIMIT $2 OFFSET $3
+`
+
+type ListPaymentComplaintsParams struct {
+	TenantID     string      `json:"tenant_id"`
+	Limit        int32       `json:"limit"`
+	Offset       int32       `json:"offset"`
+	StatusFilter int16       `json:"status_filter"`
+	EntityFilter pgtype.UUID `json:"entity_filter"`
+}
+
+// Supplier-payment reclamation log.
+func (q *Queries) ListPaymentComplaints(ctx context.Context, arg ListPaymentComplaintsParams) ([]ErpPaymentComplaint, error) {
+	rows, err := q.db.Query(ctx, listPaymentComplaints,
+		arg.TenantID, arg.Limit, arg.Offset,
+		arg.StatusFilter, arg.EntityFilter,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ErpPaymentComplaint{}
+	for rows.Next() {
+		var i ErpPaymentComplaint
+		if err := rows.Scan(
+			&i.ID, &i.TenantID, &i.LegacyID, &i.ComplaintDate,
+			&i.EntityLegacyCode, &i.EntityID,
+			&i.Observation, &i.StatusFlag, &i.Login, &i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

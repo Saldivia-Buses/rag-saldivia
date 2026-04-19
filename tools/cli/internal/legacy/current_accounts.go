@@ -127,3 +127,19 @@ func InvoiceNoteReader(db *sql.DB) *GenericReader {
 			"siscod, movfec, ctacod, concod, movnpv, movnro",
 	}
 }
+
+// PaymentComplaintReader — RECLAMOPAGOS (15,463 rows live, scrape
+// 15,463). Supplier-payment complaint / reclamation log. Simple
+// 6-column source: idReclamo AI PK + fecha + ctacod + observacion
+// longtext + marca flag (0=pendiente, 1=cumplida) + login. Pareto
+// #20 of the post-2.0.10 gap. Targets erp_payment_complaints.
+func PaymentComplaintReader(db *sql.DB) *GenericReader {
+	return &GenericReader{
+		DB:         db,
+		Table:      "RECLAMOPAGOS",
+		Target:     "erp_payment_complaints",
+		DomainName: "current_account",
+		PKColumn:   "idReclamo",
+		Columns:    "idReclamo, fecha, ctacod, observacion, marca, login",
+	}
+}

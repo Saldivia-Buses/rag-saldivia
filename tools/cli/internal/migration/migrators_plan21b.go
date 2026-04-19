@@ -3639,3 +3639,56 @@ func NewQuotationOptionMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 		},
 	}
 }
+
+// ============================================================================
+// Phase 8d — Payment complaints (RECLAMOPAGOS) — 2.0.11
+// ============================================================================
+
+// NewPaymentComplaintMigrator — RECLAMOPAGOS → erp_payment_complaints
+// (15,463 rows live). Supplier-payment reclamation log. ctacod
+// resolves via ResolveEntityFlexible (REG_CUENTA / nro_cuenta
+// indexes populated by Phase 2). Unresolved ctacod falls back to
+// NULL entity_id with the raw code preserved in entity_legacy_code
+// — the complaint is still useful on its own (observacion, date,
+// login, marca).
+func NewPaymentComplaintMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.PaymentComplaintReader(db)
+	return &GenericMigrator{
+		reader: reader,
+		columns: []string{
+			"id", "tenant_id", "legacy_id",
+			"complaint_date",
+			"entity_legacy_code", "entity_id",
+			"observation", "status_flag", "login",
+		},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("idReclamo")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			ctacod := row.Int64("ctacod")
+			var entityID *uuid.UUID
+			if ctacod > 0 {
+				if resolved, tag := mapper.ResolveEntityFlexible(ctx, ctacod); resolved != uuid.Nil && tag != "unknown" {
+					entityID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "current_account", "RECLAMOPAGOS", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID, legacyID,
+				SafeDate(timeFromRow(row, "fecha")),
+				int32(ctacod), entityID,
+				row.String("observacion"),
+				int16(row.Int("marca")),
+				strings.TrimSpace(row.String("login")),
+			}, nil
+		},
+	}
+}

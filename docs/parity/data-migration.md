@@ -17,16 +17,16 @@ SSH tunnel).
 | Segment | Count | Rows |
 |---|---:|---:|
 | Histrix tables in `.intranet-scrape/db-tables.txt` | 675 | 18,940,293 |
-| Tables with a registered migrator/reader | 125 | ≈ 15,571,393 (live) |
-| Tables uncovered (total) | 550 | — |
+| Tables with a registered migrator/reader | 126 | ≈ 15,586,856 (live) |
+| Tables uncovered (total) | 549 | — |
 | &nbsp;&nbsp;— Histrix infra (HTX*, 31) — waived W-004 | 31 | 3,486,776 |
 | &nbsp;&nbsp;— `*_OLD` superseded (5) — waived W-005 | 5 | 423,678 |
 | &nbsp;&nbsp;— zero-row dead tables — waived W-006 | 225 | 0 |
 | &nbsp;&nbsp;— sub-15 K long tail — waived W-007 | ~285 | ≤ 200,000 |
 | &nbsp;&nbsp;— industrial / telephony telemetry — waived W-008 | 3 | 130,253 |
-| &nbsp;&nbsp;— **business-data gap remaining** | **≤ 2** | **≈ 30 K** (RECLAMOPAGOS + STK_COSTOS) |
+| &nbsp;&nbsp;— **business-data gap remaining** | **1** | **≈ 15 K** (STK_COSTOS) |
 
-The 125 "covered" tables now account for **~82 %** of all Histrix rows
+The 126 "covered" tables now account for **~82 %** of all Histrix rows
 by live COUNT(*) — up from 80 % post-2.0.10, 68 % post-2.0.9, 61 %
 post-2.0.8 and 47 % pre-2.0.8. Waivers W-004/005/006/007/008 cover
 essentially everything else — the residual **gap is ≤ 2 tables**
@@ -143,6 +143,19 @@ Combined Grupo A + Grupo B + W-007 + W-008 — this PR **closes Phase 1
 (Grupo A + Grupo B) and 330 K rows waived (W-008 + long-tail W-007).
 Remaining business-data gap is ≤ 2 tables (RECLAMOPAGOS + STK_COSTOS),
 tracked as the 2.0.11 optional migration `079` / deferred to 2.0.12.
+
+9. **Pareto #20 — RECLAMOPAGOS (15,463 rows live, scrape 15,463)**
+   migrated via `NewPaymentComplaintMigrator` → new table
+   `erp_payment_complaints` (migration `079`). Supplier-payment
+   reclamation log. 6-col source (idReclamo AI, fecha, ctacod,
+   observacion longtext, marca flag 0/1, login). `entity_id`
+   resolves via `ResolveEntityFlexible` on `ctacod`. Live Histrix
+   forms: `xml-forms/reclamos/reclamopagos.xml` (abm-mini) plus
+   `_ing` / `_ingmov` entry flows.
+
+With `079` shipped the residual business-data gap drops from **≤ 2**
+tables to **1** (STK_COSTOS, 15,066 live) — deferred to 2.0.12 either
+as a migrator or as an inclusion in W-007 with a threshold bump.
 
 **2.0.10 deltas** (Pareto #3 + Pareto #4 in one PR):
 
@@ -324,7 +337,7 @@ Row volume in the uncovered bucket is extremely concentrated:
 | 17 | ~~ACCESORIOS_COCHE~~ — **migrated 2.0.11** (37,909 live, +93 %) | ~~19,671~~ | — |
 | 18 | ~~PRODUCTO_ATRIBUTO_HOMOLOGACION~~ — **migrated 2.0.10** (47,189 live) | ~~17,558~~ | — |
 | 19 | ~~EGX_300~~ — **waived W-008** (industrial telemetry, 15,992 live) | ~~15,702~~ | — |
-| 20 | RECLAMOPAGOS | 15,463 | 95.8 % |
+| 20 | ~~RECLAMOPAGOS~~ — **migrated 2.0.11** (15,463 live) | ~~15,463~~ | — |
 | 21 | STK_COSTOS | 15,066 | 96.1 % |
 | 22 | STK_ARTICULO_LOCACION | 13,825 | 96.3 % |
 | 23 | STK_BOM_ENPROCESO | 12,706 | 96.5 % |
@@ -362,7 +375,7 @@ Aggregating the top-30 by the prefix convention:
 | ~~Sales quote movements~~ — **migrated 2.0.11** (28,573 live) | ~~COTIZOPMOVIM~~ | ~~28,626~~ |
 | ~~Treasury check history~~ — **migrated 2.0.11** (28,763 live) | ~~CARCHEHI~~ | ~~26,882~~ |
 | ~~Vehicle accessories~~ — **migrated 2.0.11** (37,909 live) | ~~ACCESORIOS_COCHE~~ | ~~19,671~~ |
-| Customer claims | RECLAMOPAGOS | 15,463 |
+| ~~Customer claims~~ — **migrated 2.0.11** (15,463 live) | ~~RECLAMOPAGOS~~ | ~~15,463~~ |
 | Calendar | CALENDAR | 10,951 |
 | IT backups | ITBACKUPS | 10,792 |
 

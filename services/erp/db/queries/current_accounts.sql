@@ -72,3 +72,18 @@ WHERE tenant_id = $1
   AND (sqlc.arg(date_to)::DATE IS NULL OR observation_date <= sqlc.arg(date_to)::DATE)
 ORDER BY observation_date DESC NULLS LAST, legacy_id DESC
 LIMIT $2 OFFSET $3;
+
+-- ─── Payment complaints (RECLAMOPAGOS migrated — 2.0.11) ───
+
+-- name: ListPaymentComplaints :many
+-- Supplier-payment reclamation log. Filter by pending/done status or
+-- entity. Mirrors the reclamos/reclamopagos.xml "abm-mini" view.
+SELECT id, tenant_id, legacy_id, complaint_date,
+       entity_legacy_code, entity_id,
+       observation, status_flag, login, created_at
+FROM erp_payment_complaints
+WHERE tenant_id = $1
+  AND (sqlc.arg(status_filter)::SMALLINT = -1 OR status_flag = sqlc.arg(status_filter)::SMALLINT)
+  AND (sqlc.arg(entity_filter)::UUID IS NULL OR entity_id = sqlc.arg(entity_filter)::UUID)
+ORDER BY complaint_date DESC NULLS LAST, legacy_id DESC
+LIMIT $2 OFFSET $3;
