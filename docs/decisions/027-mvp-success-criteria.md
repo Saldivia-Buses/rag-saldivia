@@ -101,13 +101,21 @@ that justifies the waiver. The waiver ADR number goes in the item.
 
 **Owners:** `migration-health` (integrity, replay), `htx-parity` (table coverage), `backend-go` (archive read endpoint).
 
-- [ ] Every legacy Histrix table in `.intranet-scrape/db-tables.txt` is
+- [x] Every legacy Histrix table in `.intranet-scrape/db-tables.txt` is
       either migrated into an `erp_*` SDA table, or has a waiver ADR
-      stating it's dead data.
+      stating it's dead data. **Closed 2026-04-19 in 2.0.12:** 127 tables
+      covered, W-004/005/006/007/008 cover 549 more, zero business-data
+      gap. Living inventory: `docs/parity/data-migration.md`.
 - [ ] Full migration run reports `status=completed` **with zero ghost
-      rows** and zero `rows_written=0` migrators.
+      rows** and zero `rows_written=0` migrators. *Pending next live
+      cutover rehearsal against the saldivia tenant — the Phase 0 invariant
+      `rows_read == rows_written + rows_skipped + rows_duplicate` is
+      already enforced in code (see `ghostrow_test.go`).*
 - [ ] Replay mode: a migrator run against current Histrix data produces
-      no new SDA rows (idempotent quiescence).
+      no new SDA rows (idempotent quiescence). *Pending live rehearsal —
+      idempotency is guaranteed by the `UNIQUE (tenant_id, legacy_id)`
+      constraint + `erp_legacy_mapping` cache, but "zero new rows on
+      replay" only proves out on a real second pass.*
 - [ ] `erp_legacy_archive` contents are accessible via a read endpoint;
       any forensic check against archive data is a SQL query, not a JSONB
       dig.
