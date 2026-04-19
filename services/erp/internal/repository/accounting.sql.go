@@ -807,11 +807,16 @@ func (q *Queries) ListFiscalYears(ctx context.Context, tenantID string) ([]ListF
 const listJournalEntries = `-- name: ListJournalEntries :many
 SELECT id, tenant_id, number, date, fiscal_year_id, concept, entry_type,
        reference_type, reference_id, user_id, status, created_at
-FROM erp_journal_entries
+FROM erp_journal_entries e
 WHERE tenant_id = $1
   AND ($4::DATE IS NULL OR date >= $4::DATE)
   AND ($5::DATE IS NULL OR date <= $5::DATE)
   AND ($6::TEXT = '' OR status = $6::TEXT)
+  AND ($7::UUID IS NULL OR EXISTS (
+        SELECT 1 FROM erp_journal_lines l
+        WHERE l.entry_id = e.id
+          AND l.cost_center_id = $7::UUID
+      ))
 ORDER BY date DESC, number DESC
 LIMIT $2 OFFSET $3
 `
@@ -823,6 +828,7 @@ type ListJournalEntriesParams struct {
 	DateFrom     pgtype.Date `json:"date_from"`
 	DateTo       pgtype.Date `json:"date_to"`
 	StatusFilter string      `json:"status_filter"`
+	CostCenterID pgtype.UUID `json:"cost_center_id"`
 }
 
 type ListJournalEntriesRow struct {
@@ -848,6 +854,7 @@ func (q *Queries) ListJournalEntries(ctx context.Context, arg ListJournalEntries
 		arg.DateFrom,
 		arg.DateTo,
 		arg.StatusFilter,
+		arg.CostCenterID,
 	)
 	if err != nil {
 		return nil, err
