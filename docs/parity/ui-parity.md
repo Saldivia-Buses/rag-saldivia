@@ -10,14 +10,14 @@ Unit of work is the **cluster** — one Histrix area/form group maps to
 one SDA route. A cluster is "covered" when the SDA page delivers the
 same operational surface as the Histrix form(s) it replaces.
 
-## Totals (2026-04-19, post-2.0.13)
+## Totals (2026-04-19, post-2.0.14)
 
 | Segment | Count |
 |---|---:|
 | Histrix XML-forms in `.intranet-scrape/xml-forms/` | ~4,500 files |
 | Histrix top-level forms (area/form groups) | 434 |
-| SDA `page.tsx` routes shipped | 68 |
-| **SDA pages explicitly tracked as XML-form parity** | **2** (this file) |
+| SDA `page.tsx` routes shipped | 71 |
+| **SDA pages explicitly tracked as XML-form parity** | **5** (this file) |
 | XML-form waivers (§UI) | **1** (W-009, see `waivers.md`) |
 
 The 67 existing SDA pages cover the ERP admin surface structurally
@@ -63,6 +63,39 @@ operational surface the three XML-forms describe.
   and renders the supplier's open balance next to each complaint row,
   matching the `SUM(saldo_movimiento)` group-by of
   `reclamopagos_ing.xml`.
+
+### Cluster: Cheques históricos (2.0.14)
+
+**SDA page:** `apps/web/src/app/(modules)/administracion/tesoreria/cartera-historica/page.tsx`
+→ `/administracion/tesoreria/cartera-historica` (Administración →
+Cheques históricos).
+
+**Covers Histrix XML-forms:**
+- `cheques/carchehi.xml` — "CARTERA DE CHEQUES HISTORICA". Query view
+  with filters (carint, carnro, carfec, caring, carimp, ctanom) and
+  columns fecha / nro interno / nro cheque / banco / importe / tipo /
+  emisión / acreditación / proveedor.
+- `cheques/carchehi_abm.xml` — write form (not covered here; the
+  archive is read-only from SDA's perspective — historical cheques are
+  migrated out of the active cartera and stay frozen).
+
+**Data dependency:** `erp_check_history` (migration `078`, shipped in
+2.0.11; CARCHEHI → 29,006 rows live).
+
+**Backend endpoints added (scoped under `/v1/erp/treasury`):**
+- `GET /check-history?entity_id=&date_from=&date_to=&page=&page_size=`
+
+Permission: `erp.treasury.read`. Read-only; no write path.
+
+**Notable gaps vs Histrix:**
+- Entity picker: the Histrix form links back to CCTCUENT / CCTMOVIM
+  for proveedor lookup. The SDA page surfaces `entity_legacy_code` but
+  does not yet resolve it to `entity_name` (would need the same client-
+  side join we use in reclamos — follow-up).
+- The `O.Pago` / `Recibo` / `Minuta` columns link into CCTMOVIM in
+  Histrix. The SDA page shows `movement_no` / `pay_no` / `received_no`
+  as raw numbers; drill-down to the receipt / payment record lives in
+  the wider treasury cluster.
 
 ### Cluster: Importaciones bancarias (2.0.13)
 

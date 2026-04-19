@@ -44,6 +44,7 @@ type TreasuryService interface {
 	ConfirmReconciliation(ctx context.Context, tenantID string, reconID pgtype.UUID, userID, ip string) error
 	ListBankImports(ctx context.Context, tenantID string, accountFilter, processedFilter int32, dateFrom, dateTo pgtype.Date, limit, offset int) ([]repository.ErpBankImport, error)
 	UpdateBankImportProcessed(ctx context.Context, req service.UpdateBankImportRequest) error
+	ListCheckHistory(ctx context.Context, tenantID string, entityFilter pgtype.UUID, dateFrom, dateTo pgtype.Date, limit, offset int) ([]repository.ErpCheckHistory, error)
 }
 
 type Treasury struct{ svc TreasuryService }
@@ -110,6 +111,12 @@ func (h *Treasury) Routes(authWrite func(http.Handler) http.Handler) chi.Router 
 		r.Use(authWrite)
 		r.Use(sdamw.RequirePermission("erp.treasury.write"))
 		r.Patch("/imports/{id}", h.UpdateBankImportProcessedH)
+	})
+
+	// Check history (CARCHEHI parity)
+	r.Group(func(r chi.Router) {
+		r.Use(sdamw.RequirePermission("erp.treasury.read"))
+		r.Get("/check-history", h.ListCheckHistoryH)
 	})
 
 	return r
@@ -679,6 +686,28 @@ func (h *Treasury) ListBankImportsH(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"imports": imports})
+}
+
+// ListCheckHistoryH lists historical cheque rows (CARCHEHI).
+// Query params: entity_id, date_from, date_to, page, page_size.
+func (h *Treasury) ListCheckHistoryH(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	p := pagination.Parse(r)
+	q := r.URL.Query()
+
+	entityFilter := optUUID(ptrStr(q.Get("entity_id")))
+
+	history, err := h.svc.ListCheckHistory(r.Context(), slug,
+		entityFilter,
+		pgDate(q.Get("date_from")), pgDate(q.Get("date_to")),
+		p.Limit(), p.Offset())
+	if err != nil {
+		erperrors.WriteError(w, r, erperrors.Internal(err))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{"history": history})
 }
 
 // UpdateBankImportProcessedH toggles the processed flag on a bank-import row.

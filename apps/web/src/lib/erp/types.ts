@@ -83,6 +83,34 @@ export interface BankBalance {
   balance: number;
 }
 
+// Archived cheque history (CARCHEHI parity — Phase 1 §UI)
+export interface CheckHistoryEntry {
+  id: string;
+  tenant_id: string;
+  legacy_id: number;
+  legacy_carint: number;
+  check_type: number;
+  number: string;
+  bank_name: string;
+  amount: number;
+  operation_date: string | null;
+  credited_at: string | null;
+  returned_at: string | null;
+  issue_date: string | null;
+  description: string;
+  observation: string;
+  reference: string;
+  owner_ident: string;
+  accredited: number;
+  entity_legacy_code: number;
+  entity_id: string | null;
+  movement_no: number;
+  pay_no: number;
+  received_no: number;
+  branch: number;
+  created_at: string;
+}
+
 // Bank-import staging rows (BCS_IMPORTACION parity — Phase 1 §UI)
 export interface BankImport {
   id: string;
