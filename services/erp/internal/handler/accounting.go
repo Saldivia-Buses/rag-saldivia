@@ -20,6 +20,7 @@ type AccountingService interface {
 	ListAccounts(ctx context.Context, tenantID string, activeOnly bool) ([]repository.ErpAccount, error)
 	CreateAccount(ctx context.Context, tenantID, code, name string, parentID pgtype.UUID, accountType string, isDetail bool, costCenterID pgtype.UUID, userID, ip string) (repository.ErpAccount, error)
 	ListCostCenters(ctx context.Context, tenantID string, activeOnly bool) ([]repository.ErpCostCenter, error)
+	GetCostCenter(ctx context.Context, id pgtype.UUID, tenantID string) (repository.ErpCostCenter, error)
 	CreateCostCenter(ctx context.Context, tenantID, code, name string, parentID pgtype.UUID, userID, ip string) (repository.ErpCostCenter, error)
 	ListFiscalYears(ctx context.Context, tenantID string) ([]repository.ListFiscalYearsRow, error)
 	CreateFiscalYear(ctx context.Context, tenantID string, year int, startDate, endDate, userID, ip string) (repository.CreateFiscalYearRow, error)
@@ -46,6 +47,7 @@ func (h *Accounting) Routes(authWrite func(http.Handler) http.Handler) chi.Route
 		r.Use(sdamw.RequirePermission("erp.accounting.read"))
 		r.Get("/accounts", h.ListAccounts)
 		r.Get("/cost-centers", h.ListCostCenters)
+		r.Get("/cost-centers/{id}", h.GetCostCenter)
 		r.Get("/fiscal-years", h.ListFiscalYears)
 		r.Get("/entries", h.ListEntries)
 		r.Get("/entries/{id}", h.GetEntry)
@@ -134,6 +136,21 @@ func (h *Accounting) ListCostCenters(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"cost_centers": centers})
+}
+
+func (h *Accounting) GetCostCenter(w http.ResponseWriter, r *http.Request) {
+	id, err := parseUUID(chi.URLParam(r, "id"))
+	if err != nil {
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
+		return
+	}
+	cc, err := h.svc.GetCostCenter(r.Context(), id, tenantSlug(r))
+	if err != nil {
+		erperrors.WriteError(w, r, erperrors.NotFound("cost center"))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(cc)
 }
 
 func (h *Accounting) CreateCostCenter(w http.ResponseWriter, r *http.Request) {

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -321,7 +322,11 @@ export default function ContablePage() {
                 <TableBody>
                   {costCenters.map((cc) => (
                     <TableRow key={cc.id}>
-                      <TableCell className="font-mono text-sm">{cc.code}</TableCell>
+                      <TableCell className="font-mono text-sm">
+                        <Link href={`/administracion/contable/centros-costo/${cc.id}`} className="hover:underline">
+                          {cc.code}
+                        </Link>
+                      </TableCell>
                       <TableCell className="text-sm">{cc.name}</TableCell>
                       <TableCell className="text-center"><Badge variant={cc.active ? "default" : "secondary"}>{cc.active ? "Activo" : "Inactivo"}</Badge></TableCell>
                     </TableRow>

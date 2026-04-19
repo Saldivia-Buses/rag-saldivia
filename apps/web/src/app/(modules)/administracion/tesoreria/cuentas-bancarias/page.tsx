@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { erpKeys } from "@/lib/erp/queries";
@@ -58,7 +59,11 @@ export default function CuentasBancariasPage() {
               )}
               {accounts.map((a) => (
                 <TableRow key={a.id}>
-                  <TableCell className="text-sm font-medium">{a.bank_name}</TableCell>
+                  <TableCell className="text-sm font-medium">
+                    <Link href={`/administracion/tesoreria/cuentas-bancarias/${a.id}`} className="hover:underline">
+                      {a.bank_name}
+                    </Link>
+                  </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{a.branch || "—"}</TableCell>
                   <TableCell className="font-mono text-sm">{a.account_number}</TableCell>
                   <TableCell className="font-mono text-xs">{a.cbu || "—"}</TableCell>

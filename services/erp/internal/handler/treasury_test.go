@@ -42,6 +42,12 @@ type mockTreasuryService struct {
 func (m *mockTreasuryService) ListBankAccounts(_ context.Context, _ string, _ bool) ([]repository.ErpBankAccount, error) {
 	return m.bankAccounts, m.err
 }
+func (m *mockTreasuryService) GetBankAccount(_ context.Context, _ pgtype.UUID, _ string) (repository.ErpBankAccount, error) {
+	if m.err != nil {
+		return repository.ErpBankAccount{}, m.err
+	}
+	return m.bankAccount, nil
+}
 func (m *mockTreasuryService) CreateBankAccount(_ context.Context, _ repository.CreateBankAccountParams, _, _ string) (repository.ErpBankAccount, error) {
 	if m.err != nil {
 		return repository.ErpBankAccount{}, m.err
@@ -50,6 +56,12 @@ func (m *mockTreasuryService) CreateBankAccount(_ context.Context, _ repository.
 }
 func (m *mockTreasuryService) ListCashRegisters(_ context.Context, _ string) ([]repository.ErpCashRegister, error) {
 	return m.cashRegisters, m.err
+}
+func (m *mockTreasuryService) GetCashRegister(_ context.Context, _ pgtype.UUID, _ string) (repository.ErpCashRegister, error) {
+	if m.err != nil {
+		return repository.ErpCashRegister{}, m.err
+	}
+	return m.cashRegister, nil
 }
 func (m *mockTreasuryService) CreateCashRegister(_ context.Context, _, _ string, _ pgtype.UUID, _, _ string) (repository.ErpCashRegister, error) {
 	if m.err != nil {
