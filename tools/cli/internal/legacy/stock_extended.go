@@ -215,3 +215,22 @@ func PriceListItemReader(db *sql.DB) *GenericReader {
 			"dto_porcentaje, dto_fechadesde, dto_fechahasta, dto_cantidad, modificado",
 	}
 }
+
+// ArticleReplacementCostHistoryReader — STK_COSTO_REPOSICION_HIST
+// (109,123 rows live, scrape 28,515 — +282 %). Rolling log of supplier
+// replacement-cost changes. Parent `STK_COSTO_REPOSICION` is currently
+// surfaced only as metadata on erp_articles; this reader exports the
+// historical rows into their own erp_article_replacement_cost_history
+// surface. Pareto tail Grupo B rank 1 (post-2.0.10).
+func ArticleReplacementCostHistoryReader(db *sql.DB) *GenericReader {
+	return &GenericReader{
+		DB:         db,
+		Table:      "STK_COSTO_REPOSICION_HIST",
+		Target:     "erp_article_replacement_cost_history",
+		DomainName: "stock",
+		PKColumn:   "id_costoreposicion_hist",
+		Columns: "id_costoreposicion_hist, costoreposicion_id, regcuenta_id, " +
+			"moneda_id, cotizacion, costo_proveedor, origen, incoterm_id, " +
+			"gasto_importacion, flete_local_ars, modificado, descuento_1, descuento_2",
+	}
+}

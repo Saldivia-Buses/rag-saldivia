@@ -2239,3 +2239,63 @@ type ErpCheckHistory struct {
 	CashPlan             int32              `json:"cash_plan"`
 	CreatedAt            pgtype.Timestamptz `json:"created_at"`
 }
+
+type ErpArticleReplacementCostHistory struct {
+	ID                      pgtype.UUID        `json:"id"`
+	TenantID                string             `json:"tenant_id"`
+	LegacyID                int64              `json:"legacy_id"`
+	ReplacementCostLegacyID int32              `json:"replacement_cost_legacy_id"`
+	SupplierEntityID        pgtype.UUID        `json:"supplier_entity_id"`
+	SupplierLegacyID        int32              `json:"supplier_legacy_id"`
+	CurrencyID              pgtype.UUID        `json:"currency_id"`
+	CurrencyLegacyID        int32              `json:"currency_legacy_id"`
+	ExchangeRate            pgtype.Numeric     `json:"exchange_rate"`
+	SupplierCost            pgtype.Numeric     `json:"supplier_cost"`
+	Origin                  string             `json:"origin"`
+	Incoterm                string             `json:"incoterm"`
+	ImportExpenses          pgtype.Numeric     `json:"import_expenses"`
+	LocalFreight            pgtype.Numeric     `json:"local_freight"`
+	ModifiedAt              pgtype.Timestamptz `json:"modified_at"`
+	Discount1               pgtype.Numeric     `json:"discount_1"`
+	Discount2               pgtype.Numeric     `json:"discount_2"`
+	CreatedAt               pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpUnitAccessory struct {
+	ID                     pgtype.UUID        `json:"id"`
+	TenantID               string             `json:"tenant_id"`
+	LegacyID               int64              `json:"legacy_id"`
+	UnitID                 pgtype.UUID        `json:"unit_id"`
+	UnitLegacyID           int32              `json:"unit_legacy_id"`
+	ArticleCode            string             `json:"article_code"`
+	ArticleID              pgtype.UUID        `json:"article_id"`
+	ArticleDescription     string             `json:"article_description"`
+	AccessoryDate          pgtype.Date        `json:"accessory_date"`
+	QuotationID            pgtype.UUID        `json:"quotation_id"`
+	QuotationLegacyID      int32              `json:"quotation_legacy_id"`
+	OrderID                pgtype.UUID        `json:"order_id"`
+	OrderLegacyID          int32              `json:"order_legacy_id"`
+	Status                 int32              `json:"status"`
+	AdditionalPrice        pgtype.Numeric     `json:"additional_price"`
+	Quantity               int32              `json:"quantity"`
+	ApprovedAt             pgtype.Date        `json:"approved_at"`
+	UnitPrice              pgtype.Numeric     `json:"unit_price"`
+	ProductSectionID       pgtype.UUID        `json:"product_section_id"`
+	ProductSectionLegacyID int32              `json:"product_section_legacy_id"`
+	Observations           string             `json:"observations"`
+	ShowOnFv               int16              `json:"show_on_fv"`
+	ShowOnFt               int16              `json:"show_on_ft"`
+	AccessoryStateLegacyID int32              `json:"accessory_state_legacy_id"`
+	CreatedAt              pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpQuotationSectionItem struct {
+	ID                pgtype.UUID        `json:"id"`
+	TenantID          string             `json:"tenant_id"`
+	LegacyID          int64              `json:"legacy_id"`
+	QuotationID       pgtype.UUID        `json:"quotation_id"`
+	QuotationLegacyID int32              `json:"quotation_legacy_id"`
+	SectionLegacyID   int32              `json:"section_legacy_id"`
+	Description       string             `json:"description"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
+}

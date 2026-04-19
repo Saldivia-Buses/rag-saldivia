@@ -804,3 +804,61 @@ func (q *Queries) ListArticleCostHistory(ctx context.Context, arg ListArticleCos
 	}
 	return items, nil
 }
+
+const listArticleReplacementCostHistory = `-- name: ListArticleReplacementCostHistory :many
+SELECT id, tenant_id, legacy_id, replacement_cost_legacy_id,
+       supplier_entity_id, supplier_legacy_id,
+       currency_id, currency_legacy_id,
+       exchange_rate, supplier_cost,
+       origin, incoterm,
+       import_expenses, local_freight,
+       modified_at, discount_1, discount_2, created_at
+FROM erp_article_replacement_cost_history
+WHERE tenant_id = $1
+  AND ($4::UUID IS NULL OR supplier_entity_id = $4::UUID)
+  AND ($5::TIMESTAMPTZ IS NULL OR modified_at >= $5::TIMESTAMPTZ)
+  AND ($6::TIMESTAMPTZ IS NULL OR modified_at <= $6::TIMESTAMPTZ)
+ORDER BY modified_at DESC NULLS LAST, legacy_id DESC
+LIMIT $2 OFFSET $3
+`
+
+type ListArticleReplacementCostHistoryParams struct {
+	TenantID        string             `json:"tenant_id"`
+	Limit           int32              `json:"limit"`
+	Offset          int32              `json:"offset"`
+	SupplierFilter  pgtype.UUID        `json:"supplier_filter"`
+	DateFrom        pgtype.Timestamptz `json:"date_from"`
+	DateTo          pgtype.Timestamptz `json:"date_to"`
+}
+
+// Rolling log of supplier replacement-cost changes.
+func (q *Queries) ListArticleReplacementCostHistory(ctx context.Context, arg ListArticleReplacementCostHistoryParams) ([]ErpArticleReplacementCostHistory, error) {
+	rows, err := q.db.Query(ctx, listArticleReplacementCostHistory,
+		arg.TenantID, arg.Limit, arg.Offset,
+		arg.SupplierFilter, arg.DateFrom, arg.DateTo,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ErpArticleReplacementCostHistory{}
+	for rows.Next() {
+		var i ErpArticleReplacementCostHistory
+		if err := rows.Scan(
+			&i.ID, &i.TenantID, &i.LegacyID, &i.ReplacementCostLegacyID,
+			&i.SupplierEntityID, &i.SupplierLegacyID,
+			&i.CurrencyID, &i.CurrencyLegacyID,
+			&i.ExchangeRate, &i.SupplierCost,
+			&i.Origin, &i.Incoterm,
+			&i.ImportExpenses, &i.LocalFreight,
+			&i.ModifiedAt, &i.Discount1, &i.Discount2, &i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

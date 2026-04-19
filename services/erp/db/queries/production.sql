@@ -142,3 +142,28 @@ FROM erp_production_inspection_homologations
 WHERE tenant_id = $1 AND inspection_id = $2
 ORDER BY homologation_legacy_id
 LIMIT $3 OFFSET $4;
+
+-- ─── Unit accessories (ACCESORIOS_COCHE migrated — 2.0.11) ───
+
+-- name: ListUnitAccessories :many
+-- Per-unit accessory lines. Filter by unit, order or date range.
+-- Mirrors the vehicle-order accessory views in Histrix.
+SELECT id, tenant_id, legacy_id,
+       unit_id, unit_legacy_id,
+       article_code, article_id, article_description,
+       accessory_date,
+       quotation_id, quotation_legacy_id,
+       order_id, order_legacy_id,
+       status, additional_price, quantity,
+       approved_at, unit_price,
+       product_section_id, product_section_legacy_id,
+       observations, show_on_fv, show_on_ft,
+       accessory_state_legacy_id, created_at
+FROM erp_unit_accessories
+WHERE tenant_id = $1
+  AND (sqlc.arg(unit_filter)::UUID IS NULL OR unit_id = sqlc.arg(unit_filter)::UUID)
+  AND (sqlc.arg(order_filter)::UUID IS NULL OR order_id = sqlc.arg(order_filter)::UUID)
+  AND (sqlc.arg(date_from)::DATE IS NULL OR accessory_date >= sqlc.arg(date_from)::DATE)
+  AND (sqlc.arg(date_to)::DATE IS NULL OR accessory_date <= sqlc.arg(date_to)::DATE)
+ORDER BY accessory_date DESC NULLS LAST, legacy_id DESC
+LIMIT $2 OFFSET $3;

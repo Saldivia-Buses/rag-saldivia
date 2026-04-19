@@ -587,6 +587,18 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 		migration.NewProductionInspectionHomologationMigrator(mysqlDB, tenantID),
 	)
 
+	// Phase 11e: Pareto tail Grupo B (2.0.11) — STK_COSTO_REPOSICION_HIST +
+	// ACCESORIOS_COCHE + COTIZOPMOVIM (~176 K rows combined). Placed
+	// here because ACCESORIOS_COCHE needs all of CHASIS (Phase 11),
+	// PEDCOTIZ (Phase 11), COTIZACION (earlier), STK_ARTICULOS (Phase 4)
+	// and PRODUCTO_SECCION (Phase 11c) caches to be populated. Pure
+	// consumer — no new hooks.
+	orch.RegisterMigrators(
+		migration.NewArticleReplacementCostHistoryMigrator(mysqlDB, tenantID),
+		migration.NewUnitAccessoryMigrator(mysqlDB, tenantID),
+		migration.NewQuotationOptionMigrator(mysqlDB, tenantID),
+	)
+
 	// Phase 12: Quality (ISO 9001)
 	orch.RegisterMigrators(
 		migration.NewNonconformityMigrator(mysqlDB, tenantID),

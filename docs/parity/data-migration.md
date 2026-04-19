@@ -34,7 +34,8 @@ Scrape-anchored accounting: 305 business tables remain with about
 sub-100 K tables where bulk waivers or quick migrators close the
 remaining coverage.
 
-**2.0.11 deltas** (Pareto tail Grupo A — current-accounts / treasury):
+**2.0.11 deltas** (Pareto tail Grupo A + Grupo B — current-accounts /
+treasury / stock / production / sales extensions):
 
 1. **Pareto #11 — REG_MOVIMIENTO_OBS (72,737 rows live, scrape 72,737)**
    migrated via `NewInvoiceNoteMigrator` → new table `erp_invoice_notes`
@@ -70,6 +71,45 @@ remaining coverage.
 Combined Grupo A delivery: **237,564 rows across 3 tables**, all three
 resolving against indexes already built by prior phases (entity cache,
 nro_cuenta index, `BuildRegMovimIndex`). No new after-table hooks.
+
+4. **Pareto #15 — STK_COSTO_REPOSICION_HIST (109,123 rows live, scrape
+   28,515 — +282 %)** migrated via
+   `NewArticleReplacementCostHistoryMigrator` → new table
+   `erp_article_replacement_cost_history` (migration `078`). Rolling
+   log of supplier replacement-cost changes; sister of
+   `erp_article_cost_history` (075) but with currency + origin +
+   incoterm + import-expense breakdown. Parent `STK_COSTO_REPOSICION`
+   is currently surfaced only as JSON metadata on `erp_articles` —
+   `replacement_cost_legacy_id` preserves the link raw. `supplier_entity_id`
+   via `ResolveEntityFlexible` on `regcuenta_id`; `currency_id` via
+   the catalog `GEN_MONEDAS` cache; `incoterm_id` retained as a 3-char
+   code since no SDA incoterm catalog exists yet.
+
+5. **Pareto #17 — ACCESORIOS_COCHE (37,909 rows live, scrape 19,671 —
+   +93 %)** migrated via `NewUnitAccessoryMigrator` → new table
+   `erp_unit_accessories` (migration `078`). Per-unit accessory lines
+   bridging vehicle unit × article × order × quotation × product
+   section — five FK resolvers all against caches already built:
+   `unit_id` via `CHASIS` (production), `article_id` via
+   `STK_ARTICULOS` default-subsystem (stock), `quotation_id` via
+   `COTIZACION` (sales), `order_id` via `PEDCOTIZ` (sales),
+   `product_section_id` via `PRODUCTO_SECCION` (productos). Preserves
+   the `artdes` + `observaciones` longtexts verbatim and keeps
+   `fc_estado_acc_id` raw for later accessory-state catalog work.
+
+6. **Pareto #14 — COTIZOPMOVIM (28,573 rows live, scrape 28,626)**
+   migrated via `NewQuotationOptionMigrator` → new table
+   `erp_quotation_section_items` (migration `078`). "OPCIONES POR
+   COTIZACION" — free-text option lines per quotation section.
+   4-column source collapses to a simple shape: `quotation_id` via
+   `COTIZACION` (sales), `section_legacy_id` preserved raw since
+   idSeccion is a COTIZACION-local ordinal, not an FK to any other
+   table.
+
+Combined Grupo B delivery: **175,605 rows across 3 tables**, placed
+as Phase 11e in the pipeline because `erp_unit_accessories` needs all
+of `CHASIS`, `PEDCOTIZ`, `COTIZACION`, `STK_ARTICULOS` and
+`PRODUCTO_SECCION` caches populated. No new hooks — pure consumer.
 
 **2.0.10 deltas** (Pareto #3 + Pareto #4 in one PR):
 
@@ -245,10 +285,10 @@ Row volume in the uncovered bucket is extremely concentrated:
 | 11 | ~~REG_MOVIMIENTO_OBS~~ — **migrated 2.0.11** (72,737 live) | ~~72,737~~ | — |
 | 12 | ~~REG_CUENTA_CALIFICACION~~ — **migrated 2.0.11** (136,064 live, +131 %) | ~~58,960~~ | — |
 | 13 | TEL_LOG | 34,885 | 93.3 % |
-| 14 | COTIZOPMOVIM | 28,626 | 93.8 % |
-| 15 | STK_COSTO_REPOSICION_HIST | 28,515 | 94.3 % |
+| 14 | ~~COTIZOPMOVIM~~ — **migrated 2.0.11** (28,573 live) | ~~28,626~~ | — |
+| 15 | ~~STK_COSTO_REPOSICION_HIST~~ — **migrated 2.0.11** (109,123 live, +282 %) | ~~28,515~~ | — |
 | 16 | ~~CARCHEHI~~ — **migrated 2.0.11** (28,763 live) | ~~26,882~~ | — |
-| 17 | ACCESORIOS_COCHE | 19,671 | 95.0 % |
+| 17 | ~~ACCESORIOS_COCHE~~ — **migrated 2.0.11** (37,909 live, +93 %) | ~~19,671~~ | — |
 | 18 | ~~PRODUCTO_ATRIBUTO_HOMOLOGACION~~ — **migrated 2.0.10** (47,189 live) | ~~17,558~~ | — |
 | 19 | EGX_300 | 15,702 | 95.6 % |
 | 20 | RECLAMOPAGOS | 15,463 | 95.8 % |
@@ -286,9 +326,9 @@ Aggregating the top-30 by the prefix convention:
 | Industrial (EGX) | EGX300EPE, EGX_300 | 94,742 |
 | ~~Current accounts / customer CRM~~ — **migrated 2.0.11** (208,801 live) | ~~REG_MOVIMIENTO_OBS, REG_CUENTA_CALIFICACION~~ | ~~131,697~~ |
 | Telephony log | TEL_LOG | 34,885 |
-| Sales quote movements | COTIZOPMOVIM | 28,626 |
+| ~~Sales quote movements~~ — **migrated 2.0.11** (28,573 live) | ~~COTIZOPMOVIM~~ | ~~28,626~~ |
 | ~~Treasury check history~~ — **migrated 2.0.11** (28,763 live) | ~~CARCHEHI~~ | ~~26,882~~ |
-| Vehicle accessories | ACCESORIOS_COCHE | 19,671 |
+| ~~Vehicle accessories~~ — **migrated 2.0.11** (37,909 live) | ~~ACCESORIOS_COCHE~~ | ~~19,671~~ |
 | Customer claims | RECLAMOPAGOS | 15,463 |
 | Calendar | CALENDAR | 10,951 |
 | IT backups | ITBACKUPS | 10,792 |

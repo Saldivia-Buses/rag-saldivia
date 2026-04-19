@@ -138,3 +138,23 @@ FROM erp_article_cost_history
 WHERE tenant_id = $1 AND article_id = $2
 ORDER BY year DESC, month DESC
 LIMIT $3 OFFSET $4;
+
+-- ─── Article replacement cost history (STK_COSTO_REPOSICION_HIST migrated — 2.0.11) ───
+
+-- name: ListArticleReplacementCostHistory :many
+-- Rolling log of supplier replacement-cost changes. Filter by supplier
+-- entity or modified-at range. Feeds the stock cost-evolution views.
+SELECT id, tenant_id, legacy_id, replacement_cost_legacy_id,
+       supplier_entity_id, supplier_legacy_id,
+       currency_id, currency_legacy_id,
+       exchange_rate, supplier_cost,
+       origin, incoterm,
+       import_expenses, local_freight,
+       modified_at, discount_1, discount_2, created_at
+FROM erp_article_replacement_cost_history
+WHERE tenant_id = $1
+  AND (sqlc.arg(supplier_filter)::UUID IS NULL OR supplier_entity_id = sqlc.arg(supplier_filter)::UUID)
+  AND (sqlc.arg(date_from)::TIMESTAMPTZ IS NULL OR modified_at >= sqlc.arg(date_from)::TIMESTAMPTZ)
+  AND (sqlc.arg(date_to)::TIMESTAMPTZ IS NULL OR modified_at <= sqlc.arg(date_to)::TIMESTAMPTZ)
+ORDER BY modified_at DESC NULLS LAST, legacy_id DESC
+LIMIT $2 OFFSET $3;

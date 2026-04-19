@@ -3408,3 +3408,234 @@ func NewCheckHistoryMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 		},
 	}
 }
+
+// ============================================================================
+// Phase 11e — Pareto tail Grupo B (STK_COSTO_REPOSICION_HIST +
+// ACCESORIOS_COCHE + COTIZOPMOVIM) — 2.0.11
+// ============================================================================
+
+// NewArticleReplacementCostHistoryMigrator — STK_COSTO_REPOSICION_HIST
+// → erp_article_replacement_cost_history (109,123 rows live, scrape
+// 28,515 — +282 %). Rolling log of supplier replacement-cost changes.
+// Parent STK_COSTO_REPOSICION is currently surfaced only as metadata
+// JSON on erp_articles; we preserve `costoreposicion_id` raw here so
+// the history is directly queryable. `regcuenta_id` resolves via
+// ResolveEntityFlexible (supplier entity); `moneda_id` via the
+// catalog-domain GEN_MONEDAS cache. `incoterm_id` is a 3-char code
+// with no first-class catalog in SDA today — preserved raw as TEXT.
+func NewArticleReplacementCostHistoryMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.ArticleReplacementCostHistoryReader(db)
+	return &GenericMigrator{
+		reader: reader,
+		columns: []string{
+			"id", "tenant_id", "legacy_id",
+			"replacement_cost_legacy_id",
+			"supplier_entity_id", "supplier_legacy_id",
+			"currency_id", "currency_legacy_id",
+			"exchange_rate", "supplier_cost",
+			"origin", "incoterm",
+			"import_expenses", "local_freight",
+			"modified_at",
+			"discount_1", "discount_2",
+		},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_costoreposicion_hist")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			regcuentaID := row.Int64("regcuenta_id")
+			var supplierID *uuid.UUID
+			if regcuentaID > 0 {
+				if resolved, tag := mapper.ResolveEntityFlexible(ctx, regcuentaID); resolved != uuid.Nil && tag != "unknown" {
+					supplierID = &resolved
+				}
+			}
+
+			monedaID := row.Int64("moneda_id")
+			var currencyID *uuid.UUID
+			if monedaID > 0 {
+				if resolved, rerr := mapper.ResolveOptional(ctx, "currency", "GEN_MONEDAS", monedaID); rerr == nil && resolved != uuid.Nil {
+					currencyID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "stock", "STK_COSTO_REPOSICION_HIST", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID, legacyID,
+				int32(row.Int64("costoreposicion_id")),
+				supplierID, int32(regcuentaID),
+				currencyID, int32(monedaID),
+				ParseDecimal(row.Decimal("cotizacion")),
+				ParseDecimal(row.Decimal("costo_proveedor")),
+				strings.TrimSpace(row.String("origen")),
+				strings.TrimSpace(row.String("incoterm_id")),
+				ParseDecimal(row.Decimal("gasto_importacion")),
+				ParseDecimal(row.Decimal("flete_local_ars")),
+				SafeDate(timeFromRow(row, "modificado")),
+				ParseDecimal(row.Decimal("descuento_1")),
+				ParseDecimal(row.Decimal("descuento_2")),
+			}, nil
+		},
+	}
+}
+
+// NewUnitAccessoryMigrator — ACCESORIOS_COCHE → erp_unit_accessories
+// (37,909 rows live, scrape 19,671 — +93 %). Per-unit accessory lines
+// bridging vehicle unit × article × order × quotation × product
+// section. Five FK resolvers, all via existing indexes:
+//   - nrofab → production.CHASIS
+//   - artcod → stock.STK_ARTICULOS via hashCode(articleCompositeCode)
+//   - cotizacion_id → sales.COTIZACION
+//   - ficha_id → sales.PEDCOTIZ
+//   - prdseccion_id → productos.PRODUCTO_SECCION
+// `fc_estado_acc_id` is an accessory-state legacy code with no SDA
+// catalog yet — preserved as raw int for later enrichment.
+func NewUnitAccessoryMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.UnitAccessoryReader(db)
+	return &GenericMigrator{
+		reader: reader,
+		columns: []string{
+			"id", "tenant_id", "legacy_id",
+			"unit_id", "unit_legacy_id",
+			"article_code", "article_id", "article_description",
+			"accessory_date",
+			"quotation_id", "quotation_legacy_id",
+			"order_id", "order_legacy_id",
+			"status", "additional_price", "quantity",
+			"approved_at", "unit_price",
+			"product_section_id", "product_section_legacy_id",
+			"observations", "show_on_fv", "show_on_ft",
+			"accessory_state_legacy_id",
+		},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_accesorio")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			nrofab := row.Int64("nrofab")
+			var unitID *uuid.UUID
+			if nrofab > 0 {
+				if resolved, rerr := mapper.ResolveOptional(ctx, "production", "CHASIS", nrofab); rerr == nil && resolved != uuid.Nil {
+					unitID = &resolved
+				}
+			}
+
+			artcod := strings.TrimSpace(row.String("artcod"))
+			var articleID *uuid.UUID
+			if artcod != "" {
+				artLegacyID := hashCode(articleCompositeCode(artcod, ""))
+				if resolved, rerr := mapper.ResolveOptional(ctx, "stock", "STK_ARTICULOS", artLegacyID); rerr == nil && resolved != uuid.Nil {
+					articleID = &resolved
+				}
+			}
+
+			cotizacionID := row.Int64("cotizacion_id")
+			var quotationID *uuid.UUID
+			if cotizacionID > 0 {
+				if resolved, rerr := mapper.ResolveOptional(ctx, "sales", "COTIZACION", cotizacionID); rerr == nil && resolved != uuid.Nil {
+					quotationID = &resolved
+				}
+			}
+
+			fichaID := row.Int64("ficha_id")
+			var orderID *uuid.UUID
+			if fichaID > 0 {
+				if resolved, rerr := mapper.ResolveOptional(ctx, "sales", "PEDCOTIZ", fichaID); rerr == nil && resolved != uuid.Nil {
+					orderID = &resolved
+				}
+			}
+
+			prdseccionID := row.Int64("prdseccion_id")
+			var productSectionID *uuid.UUID
+			if prdseccionID > 0 {
+				if resolved, rerr := mapper.ResolveOptional(ctx, "productos", "PRODUCTO_SECCION", prdseccionID); rerr == nil && resolved != uuid.Nil {
+					productSectionID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "production", "ACCESORIOS_COCHE", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			var additionalPrice any
+			if raw := row.Decimal("precio_adicional"); raw != "" {
+				additionalPrice = ParseDecimal(raw)
+			}
+
+			return []any{
+				id, tenantID, legacyID,
+				unitID, int32(nrofab),
+				artcod, articleID, row.String("artdes"),
+				SafeDate(timeFromRow(row, "fecha")),
+				quotationID, int32(cotizacionID),
+				orderID, int32(fichaID),
+				int32(row.Int("estado")),
+				additionalPrice,
+				int32(row.Int("cantidad")),
+				SafeDate(timeFromRow(row, "aprobado")),
+				ParseDecimal(row.Decimal("precio_unitario")),
+				productSectionID, int32(prdseccionID),
+				row.String("observaciones"),
+				int16(row.Int("muestra_fv")),
+				int16(row.Int("muestra_ft")),
+				int32(row.Int64("fc_estado_acc_id")),
+			}, nil
+		},
+	}
+}
+
+// NewQuotationOptionMigrator — COTIZOPMOVIM → erp_quotation_section_items
+// (28,573 rows live, scrape 28,626). "OPCIONES POR COTIZACION" —
+// free-text option lines per quotation section. 4-column source: FK
+// idCotiz + idSeccion discriminator + descripcion + idMovim PK.
+// quotation_id resolves via sales.COTIZACION. idSeccion is preserved
+// raw: the section numbering is a COTIZACION-local ordinal, not an
+// FK to an independent table.
+func NewQuotationOptionMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.QuotationOptionReader(db)
+	return &GenericMigrator{
+		reader: reader,
+		columns: []string{
+			"id", "tenant_id", "legacy_id",
+			"quotation_id", "quotation_legacy_id",
+			"section_legacy_id",
+			"description",
+		},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("idMovim")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			cotizacionID := row.Int64("idCotiz")
+			var quotationID *uuid.UUID
+			if cotizacionID > 0 {
+				if resolved, rerr := mapper.ResolveOptional(ctx, "sales", "COTIZACION", cotizacionID); rerr == nil && resolved != uuid.Nil {
+					quotationID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "sales", "COTIZOPMOVIM", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID, legacyID,
+				quotationID, int32(cotizacionID),
+				int32(row.Int64("idSeccion")),
+				strings.TrimSpace(row.String("descripcion")),
+			}, nil
+		},
+	}
+}

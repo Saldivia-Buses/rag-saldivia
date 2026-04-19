@@ -257,3 +257,23 @@ func HomologationRevisionLineReader(db *sql.DB) *GenericReader {
 			"parcial_clog, parcial_recargo_log, costo_logistico",
 	}
 }
+
+// UnitAccessoryReader — ACCESORIOS_COCHE (37,909 rows live, scrape
+// 19,671 — +93 %). Per-unit accessory lines: article + qty + price for
+// a vehicle unit (nrofab), an order (ficha_id → PEDCOTIZ) and a
+// quotation (cotizacion_id → COTIZACION). Multi-domain join with
+// longtext artdes + observaciones. Pareto tail Grupo B rank 2
+// (post-2.0.10).
+func UnitAccessoryReader(db *sql.DB) *GenericReader {
+	return &GenericReader{
+		DB:         db,
+		Table:      "ACCESORIOS_COCHE",
+		Target:     "erp_unit_accessories",
+		DomainName: "production",
+		PKColumn:   "id_accesorio",
+		Columns: "id_accesorio, nrofab, artcod, artdes, fecha, " +
+			"cotizacion_id, estado, ficha_id, precio_adicional, cantidad, " +
+			"aprobado, precio_unitario, prdseccion_id, observaciones, " +
+			"muestra_fv, muestra_ft, fc_estado_acc_id",
+	}
+}

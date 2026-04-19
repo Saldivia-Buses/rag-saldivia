@@ -80,3 +80,16 @@ ORDER BY a.code, pli.description;
 INSERT INTO erp_price_list_items (tenant_id, price_list_id, article_id, description, price)
 VALUES ($1, $2, $3, $4, $5)
 RETURNING id, tenant_id, price_list_id, article_id, description, price;
+
+-- ─── Quotation option lines (COTIZOPMOVIM migrated — 2.0.11) ───
+
+-- name: ListQuotationOptions :many
+-- Free-text option lines per quotation section. Returns all lines for a
+-- given quotation ordered by section + legacy id.
+SELECT id, tenant_id, legacy_id,
+       quotation_id, quotation_legacy_id,
+       section_legacy_id, description, created_at
+FROM erp_quotation_section_items
+WHERE tenant_id = $1 AND quotation_id = $2
+ORDER BY section_legacy_id, legacy_id
+LIMIT $3 OFFSET $4;
