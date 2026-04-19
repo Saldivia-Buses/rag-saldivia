@@ -786,9 +786,42 @@ export interface Receipt {
   number: string;
   date: string;
   receipt_type: string;
+  entity_id?: string;
   entity_name: string;
   total: number;
+  journal_entry_id?: string | null;
+  user_id?: string;
+  notes?: string;
   status: string;
+  created_at?: string;
+}
+
+export interface ReceiptPayment {
+  id: string;
+  tenant_id: string;
+  receipt_id: string;
+  payment_method: string;
+  amount: number | null;
+  treasury_movement_id: string | null;
+  check_id: string | null;
+  bank_account_id: string | null;
+  notes: string;
+}
+
+export interface ReceiptAllocation {
+  id: string;
+  tenant_id: string;
+  receipt_id: string;
+  invoice_id: string;
+  amount: number | null;
+  invoice_number: string;
+  invoice_total: number | null;
+}
+
+export interface ReceiptDetail {
+  receipt: Receipt;
+  payments: ReceiptPayment[];
+  allocations: ReceiptAllocation[];
 }
 
 export interface TaxBookEntry {

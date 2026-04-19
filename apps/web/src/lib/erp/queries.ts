@@ -102,6 +102,8 @@ export const erpKeys = {
     [...erpKeys.all, "treasury", "check-history", params] as const,
   receipts: (type?: string) =>
     [...erpKeys.all, "treasury", "receipts", { type }] as const,
+  receipt: (id: string) =>
+    [...erpKeys.all, "treasury", "receipts", id] as const,
   accountBalances: () =>
     [...erpKeys.all, "accounts", "balances"] as const,
   accountOverdue: () =>
