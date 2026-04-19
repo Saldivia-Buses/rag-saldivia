@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { erpKeys } from "@/lib/erp/queries";
@@ -59,7 +60,11 @@ export default function VehiculosClientesPage() {
               )}
               {vehicles.map((v) => (
                 <TableRow key={v.id}>
-                  <TableCell className="font-mono text-sm">{v.plate || "—"}</TableCell>
+                  <TableCell className="font-mono text-sm">
+                    <Link href={`/mantenimiento/taller/vehiculos/${v.id}`} className="hover:underline">
+                      {v.plate || v.id.slice(0, 8)}
+                    </Link>
+                  </TableCell>
                   <TableCell className="font-mono text-xs">
                     {v.internal_number != null ? v.internal_number : "—"}
                   </TableCell>
