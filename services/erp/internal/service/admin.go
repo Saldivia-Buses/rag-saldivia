@@ -73,3 +73,31 @@ func (s *Admin) CreateSurvey(ctx context.Context, tenantID, title, description, 
 	s.audit.Write(ctx, audit.Entry{TenantID: tenantID, UserID: userID, Action: "erp.survey.created", Resource: uuidStr(sv.ID), IP: ip})
 	return sv, nil
 }
+
+// ─── 2.0.17: read-only catalogs pending dedicated services ──────────────
+
+func (s *Admin) ListProductSections(ctx context.Context, tenantID string) ([]repository.ErpProductSection, error) {
+	return s.repo.ListProductSections(ctx, tenantID)
+}
+
+func (s *Admin) ListProducts(ctx context.Context, tenantID string, limit, offset int) ([]repository.ErpProduct, error) {
+	return s.repo.ListProducts(ctx, repository.ListProductsParams{
+		TenantID: tenantID, Limit: int32(limit), Offset: int32(offset),
+	})
+}
+
+func (s *Admin) ListProductAttributes(ctx context.Context, tenantID string, activeOnly bool) ([]repository.ErpProductAttribute, error) {
+	return s.repo.ListProductAttributes(ctx, repository.ListProductAttributesParams{
+		TenantID: tenantID, ActiveOnly: activeOnly,
+	})
+}
+
+func (s *Admin) ListTools(ctx context.Context, tenantID string, statusFilter int32, articleFilter string, limit, offset int) ([]repository.ErpTool, error) {
+	return s.repo.ListTools(ctx, repository.ListToolsParams{
+		TenantID:      tenantID,
+		Limit:         int32(limit),
+		Offset:        int32(offset),
+		StatusFilter:  statusFilter,
+		ArticleFilter: articleFilter,
+	})
+}

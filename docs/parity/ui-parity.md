@@ -10,15 +10,41 @@ Unit of work is the **cluster** — one Histrix area/form group maps to
 one SDA route. A cluster is "covered" when the SDA page delivers the
 same operational surface as the Histrix form(s) it replaces.
 
-## Totals (2026-04-19, post-2.0.16)
+## Totals (2026-04-19, post-2.0.17)
 
 | Segment | Count |
 |---|---:|
 | Histrix XML-forms in `.intranet-scrape/xml-forms/` | ~4,500 files |
 | Histrix top-level forms (area/form groups) | 434 |
-| SDA `page.tsx` routes shipped | 87 |
-| **SDA pages explicitly tracked as XML-form parity** | **21** (this file) |
+| SDA `page.tsx` routes shipped | 99 |
+| **SDA pages explicitly tracked as XML-form parity** | **33** (this file) |
 | XML-form waivers (§UI) | **1** (W-009, see `waivers.md`) |
+
+## 2.0.17 clusters (12)
+
+Shipped as a single PR. All read-only list views on top of backend
+endpoints that either already existed (Tier A, 8) or got a thin
+wrapper added to the `Admin` handler (Tier B, 4 — products × 3 +
+tools).
+
+| Cluster | Route | Endpoint | Tier |
+|---|---|---|---|
+| Marcas de chasis | `/ingenieria/producto/chasis-marcas` | `GET /v1/erp/manufacturing/chassis-brands` | A |
+| Modelos de chasis | `/ingenieria/producto/chasis-modelos` | `GET /v1/erp/manufacturing/chassis-models` | A |
+| Agentes de riesgo | `/seguridad/agentes-riesgo` | `GET /v1/erp/safety/risk-agents` | A |
+| Exposiciones de riesgo | `/seguridad/exposiciones-riesgo` | `GET /v1/erp/safety/risk-exposures` | A |
+| Asistencia | `/rrhh/asistencia` | `GET /v1/erp/hr/attendance` | A |
+| Comunicaciones | `/administracion/comunicaciones` | `GET /v1/erp/admin/communications` | A |
+| Calendario | `/administracion/calendario` | `GET /v1/erp/admin/calendar` | A |
+| Encuestas | `/administracion/encuestas` | `GET /v1/erp/admin/surveys` | A |
+| Secciones de producto | `/ingenieria/producto/secciones` | `GET /v1/erp/admin/product-sections` | B (new) |
+| Catálogo de productos | `/ingenieria/producto/productos` | `GET /v1/erp/admin/products` | B (new) |
+| Atributos de producto | `/ingenieria/producto/atributos` | `GET /v1/erp/admin/product-attributes` | B (new) |
+| Herramientas | `/administracion/almacen/herramientas` | `GET /v1/erp/admin/tools` | B (new) |
+
+The Tier B endpoints are bolted onto the existing `Admin` handler as
+a pragmatic shortcut — clean-up into dedicated `Products` / `Tools`
+services can land in a later refactor session if the shape grows.
 
 ## 2.0.16 clusters (10)
 

@@ -58,6 +58,26 @@ export const erpKeys = {
   priceLists: () => [...erpKeys.all, "sales", "price-lists"] as const,
   supplierScorecards: (params?: Record<string, string>) =>
     [...erpKeys.all, "quality", "scorecards", params] as const,
+  // 2.0.17
+  chassisBrands: () => [...erpKeys.all, "manufacturing", "chassis-brands"] as const,
+  chassisModels: () => [...erpKeys.all, "manufacturing", "chassis-models"] as const,
+  riskAgents: () => [...erpKeys.all, "safety", "risk-agents"] as const,
+  riskExposures: () => [...erpKeys.all, "safety", "risk-exposures"] as const,
+  attendance: (params?: Record<string, string>) =>
+    [...erpKeys.all, "hr", "attendance", params] as const,
+  communications: () => [...erpKeys.all, "admin", "communications"] as const,
+  calendar: (params?: Record<string, string>) =>
+    [...erpKeys.all, "admin", "calendar", params] as const,
+  surveys: () => [...erpKeys.all, "admin", "surveys"] as const,
+  productSections: () => [...erpKeys.all, "products", "sections"] as const,
+  products: (params?: Record<string, string>) =>
+    [...erpKeys.all, "products", "list", params] as const,
+  productAttributes: (activeOnly?: boolean) =>
+    [...erpKeys.all, "products", "attributes", { activeOnly }] as const,
+  tools: (params?: Record<string, string>) =>
+    [...erpKeys.all, "tools", "list", params] as const,
+  maintenanceAssets: () =>
+    [...erpKeys.all, "maintenance", "assets"] as const,
   treasuryMovements: () =>
     [...erpKeys.all, "treasury", "movements"] as const,
   treasuryBalance: () =>
