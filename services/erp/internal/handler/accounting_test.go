@@ -50,6 +50,16 @@ func (m *mockAccountingService) ListCostCenters(_ context.Context, _ string, _ b
 	return m.costCenters, m.err
 }
 
+func (m *mockAccountingService) GetCostCenter(_ context.Context, _ pgtype.UUID, _ string) (repository.ErpCostCenter, error) {
+	if m.err != nil {
+		return repository.ErpCostCenter{}, m.err
+	}
+	if len(m.costCenters) > 0 {
+		return m.costCenters[0], nil
+	}
+	return repository.ErpCostCenter{}, nil
+}
+
 func (m *mockAccountingService) CreateCostCenter(_ context.Context, _, _, _ string, _ pgtype.UUID, _, _ string) (repository.ErpCostCenter, error) {
 	if m.err != nil {
 		return repository.ErpCostCenter{}, m.err
