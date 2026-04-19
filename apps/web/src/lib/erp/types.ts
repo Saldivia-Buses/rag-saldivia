@@ -556,6 +556,69 @@ export interface SalesOrder {
   customer_name?: string | null;
 }
 
+export interface ProductionOrder {
+  id: string;
+  tenant_id: string;
+  number: string;
+  date: string | null;
+  product_id: string | null;
+  center_id: string | null;
+  quantity: number | null;
+  status: string;
+  priority: number;
+  order_id: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  user_id: string;
+  notes: string;
+  created_at: string;
+  product_code?: string;
+  product_name?: string;
+}
+
+export interface ProductionMaterial {
+  id: string;
+  tenant_id: string;
+  order_id: string;
+  article_id: string;
+  required_qty: number | null;
+  consumed_qty: number | null;
+  warehouse_id: string | null;
+  article_code: string;
+  article_name: string;
+}
+
+export interface ProductionStep {
+  id: string;
+  tenant_id: string;
+  order_id: string;
+  step_name: string;
+  sort_order: number;
+  status: string;
+  assigned_to: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  notes: string;
+}
+
+export interface ProductionInspection {
+  id: string;
+  tenant_id: string;
+  order_id: string;
+  step_id: string | null;
+  inspector_id: string;
+  result: string;
+  observations: string;
+  created_at: string;
+}
+
+export interface ProductionOrderDetail {
+  order: ProductionOrder;
+  materials: ProductionMaterial[];
+  steps: ProductionStep[];
+  inspections: ProductionInspection[];
+}
+
 export interface FuelLog {
   id: string;
   tenant_id: string;

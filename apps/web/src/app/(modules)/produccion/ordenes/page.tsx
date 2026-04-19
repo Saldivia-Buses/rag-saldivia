@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { erpKeys } from "@/lib/erp/queries";
-import { fmtDateShort } from "@/lib/erp/format";
+import { fmtDateShort, fmtNumber } from "@/lib/erp/format";
+import type { ProductionOrder } from "@/lib/erp/types";
 import { ErrorState } from "@/components/erp/error-state";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,7 +21,7 @@ const statusBadge: Record<string, { label: string; variant: "default" | "seconda
 export default function ProduccionOrdenesPage() {
   const { data: orders = [], isLoading, error } = useQuery({
     queryKey: erpKeys.productionOrders(),
-    queryFn: () => api.get<{ orders: any[] }>("/v1/erp/production/orders?page_size=50"),
+    queryFn: () => api.get<{ orders: ProductionOrder[] }>("/v1/erp/production/orders?page_size=50"),
     select: (d) => d.orders,
   });
 
@@ -43,14 +45,18 @@ export default function ProduccionOrdenesPage() {
               <TableHead className="w-32">Estado</TableHead>
             </TableRow></TableHeader>
             <TableBody>
-              {orders.map((o: any) => {
+              {orders.map((o) => {
                 const s = statusBadge[o.status] || statusBadge.planned;
                 return (
                   <TableRow key={o.id}>
-                    <TableCell className="font-mono text-sm">{o.number}</TableCell>
+                    <TableCell className="font-mono text-sm">
+                      <Link href={`/produccion/ordenes/${o.id}`} className="hover:underline">
+                        {o.number}
+                      </Link>
+                    </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{fmtDateShort(o.date)}</TableCell>
-                    <TableCell className="text-sm">{o.product_name || o.product_code}</TableCell>
-                    <TableCell className="text-right font-mono text-sm">{o.quantity}</TableCell>
+                    <TableCell className="text-sm">{o.product_name || o.product_code || "—"}</TableCell>
+                    <TableCell className="text-right font-mono text-sm">{fmtNumber(o.quantity)}</TableCell>
                     <TableCell><Badge variant={s.variant}>{s.label}</Badge></TableCell>
                   </TableRow>
                 );

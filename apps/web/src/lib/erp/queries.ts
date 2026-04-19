@@ -122,6 +122,8 @@ export const erpKeys = {
     [...erpKeys.all, "accounts", "complaints", params] as const,
   productionOrders: (status?: string) =>
     [...erpKeys.all, "production", "orders", { status }] as const,
+  productionOrder: (id: string) =>
+    [...erpKeys.all, "production", "orders", id] as const,
   employees: () => [...erpKeys.all, "hr", "employees"] as const,
   workOrders: (status?: string) =>
     [...erpKeys.all, "maintenance", "work-orders", { status }] as const,
