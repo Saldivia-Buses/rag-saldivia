@@ -181,6 +181,23 @@ func ProductionRequestReader(db *sql.DB) *GenericReader {
 // Homologations (HOMOLOGMOD) + process/cost revisions (STK_ARTICULO_PROCESO_HIST*)
 // ---------------------------------------------------------------------------
 
+// ProductionInspectionHomologationReader — PROD_CONTROL_HOMOLOG
+// (403,028 rows live, scrape estimate 105,683 — +282 %). Pareto #7.
+// 3-column join table linking production inspection templates
+// (PROD_CONTROLES → erp_production_inspections, Phase 7/8) to vehicle
+// homologations (HOMOLOGMOD → erp_homologations, 2.0.8). Live Histrix
+// orphan check confirmed 0 orphans on both FKs.
+func ProductionInspectionHomologationReader(db *sql.DB) *GenericReader {
+	return &GenericReader{
+		DB:         db,
+		Table:      "PROD_CONTROL_HOMOLOG",
+		Target:     "erp_production_inspection_homologations",
+		DomainName: "production",
+		PKColumn:   "id_controlhomolog",
+		Columns:    "id_controlhomolog, prodcontrol_id, homologacion_id",
+	}
+}
+
 // HomologationReader creates a reader for HOMOLOGMOD (vehicle model homologations).
 // Has auto-increment id_homologacion PK. 585 rows. Despite the "STK_" prefix on
 // the downstream cost-history tables, this is production-domain data — the UX

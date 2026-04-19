@@ -348,6 +348,17 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 		migration.NewCheckMigrator(mysqlDB, tenantID),
 	)
 
+	// Phase 3c: Legacy accounting line log (CTBREGIS → erp_accounting_registers).
+	// Pareto #3 of the Phase 1 §Data migration gap post-2.0.9 (~604 K rows
+	// live, ~28 % of remaining row volume). CTBREGIS is the pre-CTB_MOVIMIENTOS
+	// debe/haber log; still read and written by live Histrix UI (libro_diario,
+	// proveedores_loc, clientes_local, ordenpago, iva, anulaciones, etc.).
+	// Runs here so the accounting code index (from AddSetupHook above) is
+	// already loaded when each row resolves its ctbcod → erp_accounts.id.
+	orch.RegisterMigrators(
+		migration.NewAccountingRegisterMigrator(mysqlDB, tenantID),
+	)
+
 	// Phase 4: Operational (depends on entities + stock)
 	orch.RegisterMigrators(
 		migration.NewWarehouseMigrator(mysqlDB, tenantID),
@@ -358,6 +369,40 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 		migration.NewQuotationMigrator(mysqlDB, tenantID),
 		migration.NewProductionCenterMigrator(mysqlDB, tenantID),
 		migration.NewProductionOrderMigrator(mysqlDB, tenantID),
+	)
+
+	// Phase 4b: Tools (HERRAMIENTAS + HERRMOVS → erp_tools + erp_tool_movements).
+	// Pareto #4 of the Phase 1 §Data migration gap post-2.0.9 (~400 K rows
+	// combined). Despite the "herramientas" naming, HERRAMIENTAS is the
+	// serialized inventory tag ledger (389 K items received with per-unit
+	// barcode codes); HERRMOVS is the lending ledger (11.6 K check-out /
+	// return entries). HERRAMIENTAS must run first so the AfterTableHook
+	// can build the tools code index before HERRMOVS resolves its
+	// tool_code → erp_tools.id.
+	orch.RegisterMigrators(
+		migration.NewToolMigrator(mysqlDB, tenantID),
+	)
+	orch.AddAfterTableHook("HERRAMIENTAS", func(ctx context.Context, mapper *migration.Mapper) error {
+		return mapper.BuildCodeIndex(ctx, "tools", "erp_tools", "code")
+	})
+	orch.RegisterMigrators(
+		migration.NewToolMovementMigrator(mysqlDB, tenantID),
+	)
+
+	// Phase 4c: Per-supplier article cost ledger (STKINSPR → erp_article_costs).
+	// Pareto #5 of the Phase 1 §Data migration gap post-2.0.10 (~190 K rows).
+	// Depends on both the stock article index (built by NewArticleMigrator above
+	// in Phase 4) and the entity / nro_cuenta index (built by Phase 2's REG_CUENTA
+	// + AddAfterTableHook("REG_CUENTA", BuildNroCuentaIndex)). No new hooks needed.
+	orch.RegisterMigrators(
+		migration.NewArticleSupplierCostMigrator(mysqlDB, tenantID),
+	)
+
+	// Phase 4e: Article cost history (STK_COSTO_HIST → erp_article_cost_history).
+	// Pareto #8 (~104 K rows). Composite natural PK (article_code, year, month)
+	// preserved via hashCode. Depends on the stock article index from Phase 4.
+	orch.RegisterMigrators(
+		migration.NewArticleCostHistoryMigrator(mysqlDB, tenantID),
 	)
 
 	// Phase 5: HR (depends on entities)
@@ -409,6 +454,15 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 
 	orch.RegisterMigrators(
 		migration.NewDeliveryNoteLineMigrator(mysqlDB, tenantID),
+	)
+
+	// Phase 6c: Bank-statement imports (BCS_IMPORTACION → erp_bank_imports,
+	// ~92 K rows live). Rank 1 of the remaining post-Pareto-#8 long tail.
+	// Depends on BuildRegMovimIndex (Phase 6 AfterTableHook on IVACOMPRAS,
+	// already fired above) + BuildNroCuentaIndex (Phase 2 hook). No new
+	// indexes needed.
+	orch.RegisterMigrators(
+		migration.NewBankImportMigrator(mysqlDB, tenantID),
 	)
 
 	// Phase 7: Treasury movements — cash + bank + cash counts (depends on treasury catalogs)
@@ -493,6 +547,30 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 		migration.NewHomologationMigrator(mysqlDB, tenantID),
 		migration.NewHomologationRevisionMigrator(mysqlDB, tenantID),
 		migration.NewHomologationRevisionLineMigrator(mysqlDB, tenantID),
+	)
+
+	// Phase 11c: Products domain (PRODUCTO_* cluster). Pareto #6 of the
+	// Phase 1 §Data migration gap (PRODUCTO_ATRIB_VALORES, 354 K rows) plus
+	// Pareto #18 (PRODUCTO_ATRIBUTO_HOMOLOGACION, 47 K rows, needs the
+	// Phase 11b HOMOLOGMOD cache). Order: sections → products →
+	// attributes → options → values → atrib_homologations, each parent
+	// before children so ResolveOptional finds the mapped UUID.
+	orch.RegisterMigrators(
+		migration.NewProductSectionMigrator(mysqlDB, tenantID),
+		migration.NewProductMigrator(mysqlDB, tenantID),
+		migration.NewProductAttributeMigrator(mysqlDB, tenantID),
+		migration.NewProductAttributeOptionMigrator(mysqlDB, tenantID),
+		migration.NewProductAttributeValueMigrator(mysqlDB, tenantID),
+		migration.NewProductAttributeHomologationMigrator(mysqlDB, tenantID),
+	)
+
+	// Phase 11d: Production inspection × homologation cross-reference
+	// (PROD_CONTROL_HOMOLOG → erp_production_inspection_homologations).
+	// Pareto #7 (~403 K rows live — scrape was 106 K, +282 % growth).
+	// Depends on both PROD_CONTROLES (Phase 7/8) and HOMOLOGMOD
+	// (Phase 11b) caches being populated. 0 orphans confirmed live.
+	orch.RegisterMigrators(
+		migration.NewProductionInspectionHomologationMigrator(mysqlDB, tenantID),
 	)
 
 	// Phase 12: Quality (ISO 9001)

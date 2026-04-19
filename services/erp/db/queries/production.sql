@@ -129,3 +129,16 @@ FROM erp_homologation_revision_lines
 WHERE tenant_id = $1 AND revision_id = $2
 ORDER BY process_1, process_2, process_3, process_4, article_code
 LIMIT $3 OFFSET $4;
+
+-- name: ListProductionInspectionHomologations :many
+-- Production inspection templates × homologated vehicle models
+-- (PROD_CONTROL_HOMOLOG migrated). Pareto #7. The UI at
+-- controlcalidad/prod_control_homolog.xml iterates homologations for
+-- a single inspection; this backs that view post-cutover.
+SELECT id, tenant_id, legacy_id,
+       inspection_id, inspection_legacy_id,
+       homologation_id, homologation_legacy_id, created_at
+FROM erp_production_inspection_homologations
+WHERE tenant_id = $1 AND inspection_id = $2
+ORDER BY homologation_legacy_id
+LIMIT $3 OFFSET $4;

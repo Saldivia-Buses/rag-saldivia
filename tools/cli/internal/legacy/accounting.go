@@ -64,3 +64,31 @@ func JournalLineReader(db *sql.DB) *GenericReader {
 		Columns:    "id_detalle, movimiento_id, cuenta_id, ctbcentro_id, doh, CAST(importe AS DECIMAL(16,2)) as importe, referencia, orden",
 	}
 }
+
+// AccountingRegisterReader creates a reader for CTBREGIS (legacy accounting
+// line log, 604,579 rows as of 2026-04-18 — Pareto #3 of the Phase 1 §Data
+// migration gap post-2.0.9, ~28 % of the remaining uncovered row volume).
+//
+// CTBREGIS is the leaf-level debe/haber line under the old (pre-CTB_MOVIMIENTOS)
+// accounting schema. It is still read and written by the live Histrix UI:
+// contabilidad/qry/libro_diario_qry.xml joins through CTB_DETALLES.ctbregis_id
+// to pull the legacy ctbcod; proveedores_loc + clientes_local + ordenpago +
+// iva + estadisticas + anulaciones all reference CTBREGIS directly. Not a
+// waiver candidate.
+//
+// Shape: id_ctbregis INT AI PRI, siscod, regfec (zero-date for 122 rows),
+// regmin (minuta), regtip, regnro, ctbcod VARCHAR(12), regdoh TINYINT
+// (1=debe/2=haber), regimp DECIMAL(13,2), regref, regfco, regpoa VARCHAR(1),
+// plus cost-center / imputation / order metadata.
+func AccountingRegisterReader(db *sql.DB) *GenericReader {
+	return &GenericReader{
+		DB:         db,
+		Table:      "CTBREGIS",
+		Target:     "erp_accounting_registers",
+		DomainName: "accounting",
+		PKColumn:   "id_ctbregis",
+		Columns: "id_ctbregis, siscod, regfec, regfco, regmin, regtip, regnro, " +
+			"ctbcod, regdoh, regimp, regref, regpoa, coscod, impcod, " +
+			"idcos, idimpu, regcta, regnpv, regord, regsub, reguni",
+	}
+}

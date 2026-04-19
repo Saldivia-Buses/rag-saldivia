@@ -12,23 +12,141 @@ joined with `information_schema.tables.table_rows` from the live Histrix
 DB at `172.22.100.99` (saldivia schema, read-only query via WireGuard +
 SSH tunnel).
 
-## Totals (2026-04-18, post-2.0.9 mid-PR)
+## Totals (2026-04-18, post-2.0.10 mid-PR)
 
 | Segment | Count | Rows |
 |---|---:|---:|
 | Histrix tables in `.intranet-scrape/db-tables.txt` | 675 | 18,940,293 |
-| Tables with a registered migrator/reader | 106 | ≈ 12,958,258 |
-| Tables uncovered (total) | 569 | — |
+| Tables with a registered migrator/reader | 119 | ≈ 15,158,224 (live) |
+| Tables uncovered (total) | 556 | — |
 | &nbsp;&nbsp;— Histrix infra (HTX*, 31) — waived W-004 | 31 | 3,486,776 |
 | &nbsp;&nbsp;— `*_OLD` superseded (5) — waived W-005 | 5 | 423,678 |
 | &nbsp;&nbsp;— zero-row dead tables — waived W-006 | 225 | 0 |
-| &nbsp;&nbsp;— **business-data gap remaining** | **308** | **≈ 2,071,581** |
+| &nbsp;&nbsp;— **business-data gap remaining** | **295** | **≈ 115 K** (scrape) |
 
-The 106 "covered" tables now account for ≈ **68 %** of all Histrix rows
-(up from 61 % post-2.0.8 and 47 % pre-2.0.8). After the three bulk
-waivers, **308 business tables with rows** remain to migrate or waive
-individually. Those 308 tables hold about 2.07 M rows — 11 % of
-Histrix's total data volume.
+The 118 "covered" tables now account for **~80 %** of all Histrix rows
+by live COUNT(*) — up from 68 % post-2.0.9, 61 % post-2.0.8 and 47 %
+pre-2.0.8. Caveat: the live-covered sum + waivers now slightly exceeds
+the `information_schema.tables.table_rows` total, which is a known
+InnoDB estimate problem (see `feedback_live_count_vs_scrape_estimate`).
+Scrape-anchored accounting: 305 business tables remain with about
+200 K scraped rows (~1 % of Histrix). The long tail from here is
+sub-100 K tables where bulk waivers or quick migrators close the
+remaining coverage.
+
+**2.0.10 deltas** (Pareto #3 + Pareto #4 in one PR):
+
+1. **Pareto #3 — CTBREGIS** (**604,579 rows live** — table still growing;
+   original `information_schema` estimate was 572,076) migrated via
+   `NewAccountingRegisterMigrator` → new table
+   `erp_accounting_registers` (migration `071`). CTBREGIS is the
+   pre-`CTB_MOVIMIENTOS` leaf-level debe/haber log; the scrape showed 59
+   live XML-form references (proveedores_loc, clientes_local, ordenpago,
+   iva, contabilidad, estadisticas, bancos_local, anulaciones) — and
+   the live `contabilidad/qry/libro_diario_qry.xml` still joins through
+   `CTB_DETALLES.ctbregis_id` to pull the legacy `ctbcod`. Not a waiver
+   candidate. Resolution: `account_id` resolved via the existing
+   `accounting` code index (91.2 % of rows — 551,110 — match a current
+   `erp_accounts.code`; the 8.8 % orphan / pre-plan codes migrate with
+   `account_id NULL` and `account_code` preserved for reconciliation).
+   `reg_date` uses `SafeDate` (NULL for the 8 zero-date rows).
+   Phase 0 invariant from live Histrix: `rows_read = 604,579 = rows_written
+   (604,579) + rows_skipped (0) + rows_duplicate (0)` on first run.
+
+6. **Pareto tail #1 — BCS_IMPORTACION (91,959 rows live, scrape
+   84,492)** migrated via `NewBankImportMigrator` → new table
+   `erp_bank_imports` (migration `076`). Bank-statement import
+   staging: rows arrive from CSV/XLS dumps of bank account movements
+   and sit here until concil screens match them against internal
+   REG_MOVIMIENTOS. Live UI lives in `bancos_local/` (bcs_importacion_qry,
+   bcsmovim_*). FK resolution: `treasury_movement_id` via
+   ResolveRegMovim (Phase 6 index, populated from IVAVENTAS+IVACOMPRAS
+   AfterTableHook) — nullable because unmatched rows sit with
+   treasury_legacy_id=0 / processed=2. `account_entity_id` via the
+   nro_cuenta index (Phase 2 REG_CUENTA hook). No new permissions
+   (reuses erp.treasury.*). Phase 0 invariant: 91,959 = 91,959 + 0 + 0.
+
+5. **Pareto #7 + #8 — PROD_CONTROL_HOMOLOG (403,028 rows live, scrape
+   105,683) + STK_COSTO_HIST (103,799 rows live, scrape 95,217)**
+   migrated via `NewProductionInspectionHomologationMigrator` +
+   `NewArticleCostHistoryMigrator` → new tables
+   `erp_production_inspection_homologations` +
+   `erp_article_cost_history` (migration `075`). Two simple join /
+   history tables. PROD_CONTROL_HOMOLOG is the inspection-template ×
+   homologation cross-reference used by `controlcalidad/
+   prod_control_homolog.xml` (live UI); 0 orphans on both FKs. Live
+   count was +282 % vs scrape — largest growth delta observed this
+   cycle. STK_COSTO_HIST is monthly cost snapshots per article, already
+   consumed as JSONB metadata on `erp_articles` by the metadata
+   enricher; this migration adds the native relational shape for
+   structured history queries. Composite natural PK
+   (articulo_id, anio, mes) hashed into legacy_id for idempotency.
+   Phase 0 invariant: 403,028 + 103,799 = 506,827 rows all migrated,
+   0 skipped, 0 duplicate.
+
+4. **Pareto #6 (+ #18) — PRODUCTO_* cluster (405,805 rows live — original
+   scrape estimate was 172 K for the two Pareto ranks combined; live
+   count +136 %)** migrated as a 6-table bundle: `erp_products` (4,108),
+   `erp_product_sections` (10), `erp_product_attributes` (415),
+   `erp_product_attribute_options` (147), `erp_product_attribute_values`
+   (**353,936 rows — Pareto #6**), `erp_product_attribute_homologations`
+   (**47,189 rows — Pareto #18**). Migration `074`. The PRODUCTO_* tables
+   are the chassis/unit catalog: PRODUCTOS holds 4 K master product codes
+   (each bus model), PRODUCTO_ATRIB_VALORES is the per-product attribute
+   key-value store the UI renders in producto/producto_atributos_valores.xml.
+   The existing `articleProductAttributes` metadata-enricher still runs
+   in parallel and attaches attribute data as JSONB on `erp_articles`;
+   this migration ALSO materializes the full relational shape so the
+   native Histrix screens (producto/ing/producto_atributos_valores_ins,
+   producto/producto_atributos_homologacion_qry, ventas/
+   ficha_venta_seccion_qry) can map 1:1 post-cutover. Resolution strategy
+   preserves FKs with orphan tolerance: 89 % of values resolve
+   product_id, 11 % migrate with NULL (producto_id not in PRODUCTOS);
+   100 % resolve attribute_id (zero orphan); homologation_id resolves
+   against erp_homologations from 2.0.8. Phase 0 invariant across the
+   cluster: `rows_read = 405,805 = rows_written (405,805) + rows_skipped
+   (0) + rows_duplicate (0)` on first run.
+
+3. **Pareto #5 — STKINSPR (189,863 rows live — scraped 180,412)**
+   migrated via `NewArticleSupplierCostMigrator` → new table
+   `erp_article_costs` (migration `073`). Despite the opaque STKINSPR
+   name (probably "STock INSumo PRecios"), the table is the per-supplier
+   cost ledger: one row per (artcod, ctacod) snapshot, maintained by the
+   invoice-import triggers + periodic recalc runs. Live XML-form scrape
+   confirmed 40 references across stock/costos/, costos/, remitos/
+   factura_stkinspr_ingmov, estadisticas/evolutivo_costo. Resolution:
+   article_id via stock default-subsystem lookup; supplier_entity_id via
+   ResolveEntityFlexible(ctacod) (id_regcuenta → nro_cuenta index → NULL).
+   Sister table STK_COSTO_HIST (Pareto #8, 95 K rows) is the cost
+   *history* and is the next obvious accounting-adjacent candidate; both
+   tables ride the same erp_articles FK. No new permissions (reuses
+   erp.stock.*). Phase 0 invariant: `rows_read = 189,863 = rows_written
+   (189,863) + rows_skipped (0) + rows_duplicate (0)` on first run.
+
+2. **Pareto #4 — HERRAMIENTAS (389,253 rows live) + HERRMOVS (11,680
+   rows live)** migrated via `NewToolMigrator` + `NewToolMovementMigrator`
+   → new tables `erp_tools` + `erp_tool_movements` (migration `072`).
+   Despite the "herramientas" name HERRAMIENTAS is actually the
+   **serialized inventory tag ledger** — one row per physical item
+   received (barcode per item), not a workshop-tool catalog. Live XML-form
+   scrape confirmed 53 references across `recepcion/`, `almacen/`,
+   `herramientas/`, `mantenimiento/`, `help_local/`. HERRMOVS is the
+   lending ledger — employees check out / return / damage items.
+   CONCHERR (4 rows: Devol. Rotura / Devolucion / A Cargo / Prestamo) is
+   inlined as `concept_code SMALLINT` rather than migrated as a separate
+   lookup table. Naming decision: kept `erp_tools` / `erp_tool_movements`
+   for operational parity with the Histrix "Herramientas" menu users
+   navigate — the domain comment in the migration carries the
+   "serialized inventory, not workshop tools" caveat.
+   Resolution: `article_id` via the stock default-subsystem lookup (same
+   pattern as HomologationRevisionLine); `tool_id` for HERRMOVS via a
+   new `tools` code index built AfterTableHook("HERRAMIENTAS"). Orphan
+   HERRMOVS rows (1,566 of 11,680 — 13 %, reference MANT_EQUIPOS
+   numero_serie instead of HERRAMIENTAS.id_herramienta in the mixed-use
+   lending flow) migrate with `tool_id NULL` and raw `tool_code`
+   preserved.
+   Phase 0 invariant: `rows_read = 400,933 = rows_written (400,933) +
+   rows_skipped (0) + rows_duplicate (0)` across both tables.
 
 **2.0.9 deltas** (one commit for both pieces):
 
@@ -79,13 +197,13 @@ Row volume in the uncovered bucket is extremely concentrated:
 |---:|---|---:|---:|
 | 1 | ~~STK_ARTICULO_PROCESO_HIST_DETALLE~~ — **migrated 2.0.8** | ~~2,640,976~~ | — |
 | 2 | ~~FICHADAS~~ — **migrated 2.0.9** | ~~1,464,575~~ | — |
-| 3 | CTBREGIS | 572,076 | 75.7 % |
-| 4 | HERRAMIENTAS | 225,355 | 79.3 % |
-| 5 | STKINSPR | 180,412 | 82.3 % |
-| 6 | PRODUCTO_ATRIB_VALORES | 153,835 | 84.7 % |
-| 7 | PROD_CONTROL_HOMOLOG | 105,683 | 86.5 % |
-| 8 | STK_COSTO_HIST | 95,217 | 88.0 % |
-| 9 | BCS_IMPORTACION | 84,492 | 89.4 % |
+| 3 | ~~CTBREGIS~~ — **migrated 2.0.10** (604,579 live) | ~~572,076~~ | — |
+| 4 | ~~HERRAMIENTAS~~ — **migrated 2.0.10** (389,253 live) | ~~225,355~~ | — |
+| 5 | ~~STKINSPR~~ — **migrated 2.0.10** (189,863 live) | ~~180,412~~ | — |
+| 6 | ~~PRODUCTO_ATRIB_VALORES~~ — **migrated 2.0.10** (353,936 live) | ~~153,835~~ | — |
+| 7 | ~~PROD_CONTROL_HOMOLOG~~ — **migrated 2.0.10** (403,028 live, +282 %) | ~~105,683~~ | — |
+| 8 | ~~STK_COSTO_HIST~~ — **migrated 2.0.10** (103,799 live) | ~~95,217~~ | — |
+| 9 | ~~BCS_IMPORTACION~~ — **migrated 2.0.10** (91,959 live) | ~~84,492~~ | — |
 | 10 | EGX300EPE | 79,040 | 90.6 % |
 | 11 | REG_MOVIMIENTO_OBS | 72,737 | 91.8 % |
 | 12 | REG_CUENTA_CALIFICACION | 58,960 | 92.8 % |
@@ -94,13 +212,13 @@ Row volume in the uncovered bucket is extremely concentrated:
 | 15 | STK_COSTO_REPOSICION_HIST | 28,515 | 94.3 % |
 | 16 | CARCHEHI | 26,882 | 94.7 % |
 | 17 | ACCESORIOS_COCHE | 19,671 | 95.0 % |
-| 18 | PRODUCTO_ATRIBUTO_HOMOLOGACION | 17,558 | 95.3 % |
+| 18 | ~~PRODUCTO_ATRIBUTO_HOMOLOGACION~~ — **migrated 2.0.10** (47,189 live) | ~~17,558~~ | — |
 | 19 | EGX_300 | 15,702 | 95.6 % |
 | 20 | RECLAMOPAGOS | 15,463 | 95.8 % |
 | 21 | STK_COSTOS | 15,066 | 96.1 % |
 | 22 | STK_ARTICULO_LOCACION | 13,825 | 96.3 % |
 | 23 | STK_BOM_ENPROCESO | 12,706 | 96.5 % |
-| 24 | HERRMOVS | 11,626 | 96.7 % |
+| 24 | ~~HERRMOVS~~ — **migrated 2.0.10** (11,680 live) | ~~11,626~~ | — |
 | 25 | RH_EVALUACION_RESPUESTAS | 11,469 | 96.9 % |
 | 26 | CALENDAR | 10,951 | 97.0 % |
 | 27 | PROD_PATH_REGISTRO | 10,792 | 97.2 % |
@@ -109,12 +227,12 @@ Row volume in the uncovered bucket is extremely concentrated:
 | 30 | CONTROLCALIDAD | 7,753 | 97.5 % |
 
 **Pre-2.0.8 Pareto:** top 10 covered 90.6 %, top 20 covered 95.8 % of
-the uncovered row volume. Ranks 1 (STK_ARTICULO_PROCESO_HIST_DETALLE,
-2.6 M rows) and 2 (FICHADAS + PERSONAL_TARJETA, 1.5 M rows) are now
-**migrated** (2.0.8 + 2.0.9), closing together about **66 %** of the
-original uncovered row volume. The remaining top-30 tail still
-concentrates the row volume: CTBREGIS (rank 3, 572 K) and
-HERRAMIENTAS (rank 4, 225 K) are the next-obvious Pareto candidates.
+the uncovered row volume. Ranks 1, 2, 3, 4, 5 AND 6+18 (PRODUCTO_* full
+cluster — 406 K rows) are now **migrated** (2.0.8 + 2.0.9 + 2.0.10),
+closing together about **92 %** of the original uncovered row volume.
+Next obvious candidate: PROD_CONTROL_HOMOLOG (rank 7 original / rank 2
+of remaining gap, 106 K rows — production control homologation,
+probably an `erp_homologations` extension).
 
 ## Business domains to attack next
 
@@ -124,8 +242,8 @@ Aggregating the top-30 by the prefix convention:
 |---|---|---:|
 | Stock / inventory | STK_ARTICULO_PROCESO_HIST_DETALLE, STKINSPR, STK_COSTO_HIST, STK_COSTO_REPOSICION_HIST, STK_COSTOS, STK_ARTICULO_LOCACION, STK_BOM_ENPROCESO, STK_ATRIBUTO_VALORES | ≈ 2,995,135 |
 | HR / fichadas | RH_EVALUACION_RESPUESTAS (FICHADAS migrated 2.0.9) | 11,469 |
-| Accounting | CTBREGIS, BCS_IMPORTACION | 656,568 |
-| Tools / equipment | HERRAMIENTAS, HERRMOVS | 236,981 |
+| Accounting | (CTBREGIS + BCS_IMPORTACION migrated 2.0.10) | — |
+| Tools / equipment | (HERRAMIENTAS + HERRMOVS migrated 2.0.10) | — |
 | Product attrs | PRODUCTO_ATRIB_VALORES, PRODUCTO_ATRIBUTO_HOMOLOGACION | 171,393 |
 | Production controls | PROD_CONTROL_HOMOLOG, PROD_PATH_REGISTRO, CONTROLCALIDAD | 124,228 |
 | Industrial (EGX) | EGX300EPE, EGX_300 | 94,742 |
@@ -147,16 +265,29 @@ when touching any of these):
    PERSONAL_TARJETA → `erp_time_clock_events` + `erp_employee_cards`
    via Pareto #2). `RH_EVALUACION_RESPUESTAS` (11.5 K rows) is still
    open and can ride an upcoming HR-adjacent session.
-3. **CTBREGIS** (572 K rows) — accounting registros. `CTB_DETALLES` /
-   `CTB_MOVIMIENTOS` (new schema) is covered; CTBREGIS is the legacy
-   registro log. Likely a waiver if the data already rolled up into
-   CTB_MOVIMIENTOS, a migrator if it has its own audit queries.
-4. **HERRAMIENTAS + HERRMOVS** (237 K combined) — workshop tools catalog
-   + movements. New SDA domain (`erp_tools_*` or share with
-   `erp_stock`?). Needs ADR note before the migrator.
-5. **STKINSPR + STK_COSTO_*** (320 K combined) — stock pricing history.
-   Likely attached to the Phase 1 pricing UI; read
-   `.intranet-scrape/xml-forms/stock/precios*.xml` first.
+3. ~~**CTBREGIS** (572 K rows)~~ — **closed 2.0.10** (→
+   `erp_accounting_registers` via Pareto #3). Not a waiver: 59 live
+   XML-form references confirmed (libro_diario, proveedores_loc,
+   clientes_local, ordenpago, iva, bancos_local, anulaciones,
+   estadisticas). `CTB_DETALLES.ctbregis_id` remains a live FK from
+   the new accounting flow back to the legacy log.
+4. ~~**HERRAMIENTAS + HERRMOVS** (237 K scraped / 401 K live)~~ —
+   **closed 2.0.10** (→ `erp_tools` + `erp_tool_movements` via
+   Pareto #4). Discovery: HERRAMIENTAS is not a workshop-tools catalog;
+   it is the serialized inventory tag ledger (one row per physical item
+   received, barcode-per-unit). HERRMOVS is the lending ledger.
+   Kept the Histrix "Herramientas" naming for operational menu parity.
+5. ~~**STKINSPR** (180 K scraped / 190 K live)~~ — **closed 2.0.10**
+   (→ `erp_article_costs` via Pareto #5). Discovery: STKINSPR is the
+   per-supplier article cost ledger, NOT stock inspection. Sister
+   STK_COSTO_HIST (95 K) is the history table and remains a candidate.
+6. ~~**PRODUCTO_* cluster** (172 K scraped ranks 6+18 / 406 K live)~~ —
+   **closed 2.0.10** (→ 6 new erp_product_* tables via the Pareto #6+#18
+   bundle). PRODUCTOS + sections + attributes + options + values +
+   attribute-homolog in one cluster. PRODUCTO_ATRIB_VALORES live count
+   was 354 K vs 154 K scrape — +130 % growth. Both the native relational
+   shape and the existing metadata-enricher JSONB on erp_articles
+   coexist.
 
 ## Business-data tables with rows but without coverage
 

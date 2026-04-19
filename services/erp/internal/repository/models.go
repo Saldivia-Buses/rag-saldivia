@@ -1938,3 +1938,225 @@ type ErpTimeClockEvent struct {
 	LegacyID    int64              `json:"legacy_id"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 }
+
+type ErpAccountingRegister struct {
+	ID                 pgtype.UUID        `json:"id"`
+	TenantID           string             `json:"tenant_id"`
+	LegacyID           int64              `json:"legacy_id"`
+	SubsystemCode      string             `json:"subsystem_code"`
+	RegDate            pgtype.Date        `json:"reg_date"`
+	VoucherDate        pgtype.Date        `json:"voucher_date"`
+	MinutaNumber       int32              `json:"minuta_number"`
+	ComprobanteType    int16              `json:"comprobante_type"`
+	ComprobanteNumber  int32              `json:"comprobante_number"`
+	AccountCode        string             `json:"account_code"`
+	AccountID          pgtype.UUID        `json:"account_id"`
+	EntrySide          int16              `json:"entry_side"`
+	Amount             pgtype.Numeric     `json:"amount"`
+	Reference          string             `json:"reference"`
+	Status             string             `json:"status"`
+	CostCenterCode     int16              `json:"cost_center_code"`
+	ImputationCode     int16              `json:"imputation_code"`
+	LegacyCostCenterID int32              `json:"legacy_cost_center_id"`
+	LegacyImputationID int32              `json:"legacy_imputation_id"`
+	LegacyAccountID    int32              `json:"legacy_account_id"`
+	PostNumber         int16              `json:"post_number"`
+	EntryOrder         int16              `json:"entry_order"`
+	SubdiaryCode       int16              `json:"subdiary_code"`
+	PhysicalUnits      pgtype.Numeric     `json:"physical_units"`
+	CreatedAt          pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpTool struct {
+	ID                pgtype.UUID        `json:"id"`
+	TenantID          string             `json:"tenant_id"`
+	LegacyID          int64              `json:"legacy_id"`
+	Code              string             `json:"code"`
+	ArticleCode       string             `json:"article_code"`
+	ArticleID         pgtype.UUID        `json:"article_id"`
+	InventoryCode     string             `json:"inventory_code"`
+	Name              string             `json:"name"`
+	Characteristic    string             `json:"characteristic"`
+	GroupCode         int16              `json:"group_code"`
+	ToolType          int16              `json:"tool_type"`
+	StatusCode        int32              `json:"status_code"`
+	PurchaseOrderNo   int32              `json:"purchase_order_no"`
+	PurchaseOrderDate pgtype.Date        `json:"purchase_order_date"`
+	DeliveryNoteDate  pgtype.Date        `json:"delivery_note_date"`
+	DeliveryNotePost  int32              `json:"delivery_note_post"`
+	DeliveryNoteNo    int32              `json:"delivery_note_no"`
+	SupplierCode      int32              `json:"supplier_code"`
+	PendingOc         pgtype.Numeric     `json:"pending_oc"`
+	Observation       string             `json:"observation"`
+	ManufactureNo     int32              `json:"manufacture_no"`
+	GeneratedAt       pgtype.Timestamptz `json:"generated_at"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpToolMovement struct {
+	ID           pgtype.UUID        `json:"id"`
+	TenantID     string             `json:"tenant_id"`
+	LegacyID     int64              `json:"legacy_id"`
+	ToolID       pgtype.UUID        `json:"tool_id"`
+	ToolCode     string             `json:"tool_code"`
+	UserCode     string             `json:"user_code"`
+	Quantity     int32              `json:"quantity"`
+	MovementDate pgtype.Date        `json:"movement_date"`
+	ConceptCode  int16              `json:"concept_code"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpArticleCost struct {
+	ID                  pgtype.UUID        `json:"id"`
+	TenantID            string             `json:"tenant_id"`
+	LegacyID            int64              `json:"legacy_id"`
+	ArticleCode         string             `json:"article_code"`
+	ArticleID           pgtype.UUID        `json:"article_id"`
+	SubsystemCode       string             `json:"subsystem_code"`
+	Cost                pgtype.Numeric     `json:"cost"`
+	Percentage1         pgtype.Numeric     `json:"percentage_1"`
+	Percentage2         pgtype.Numeric     `json:"percentage_2"`
+	Percentage3         pgtype.Numeric     `json:"percentage_3"`
+	SupplierArticleCode string             `json:"supplier_article_code"`
+	SupplierCode        int32              `json:"supplier_code"`
+	SupplierEntityID    pgtype.UUID        `json:"supplier_entity_id"`
+	InvoiceDate         pgtype.Date        `json:"invoice_date"`
+	LastUpdateDate      pgtype.Date        `json:"last_update_date"`
+	MovementNo          int32              `json:"movement_no"`
+	MovementPost        int32              `json:"movement_post"`
+	MovementDate        pgtype.Date        `json:"movement_date"`
+	RecalcFlag          int32              `json:"recalc_flag"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpProductSection struct {
+	ID        pgtype.UUID        `json:"id"`
+	TenantID  string             `json:"tenant_id"`
+	LegacyID  int64              `json:"legacy_id"`
+	Name      string             `json:"name"`
+	SortOrder int32              `json:"sort_order"`
+	RubroID   int32              `json:"rubro_id"`
+	Active    bool               `json:"active"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpProduct struct {
+	ID               pgtype.UUID        `json:"id"`
+	TenantID         string             `json:"tenant_id"`
+	LegacyID         int64              `json:"legacy_id"`
+	Description      string             `json:"description"`
+	SupplierEntityID pgtype.UUID        `json:"supplier_entity_id"`
+	SupplierCode     int32              `json:"supplier_code"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpProductAttribute struct {
+	ID                     pgtype.UUID        `json:"id"`
+	TenantID               string             `json:"tenant_id"`
+	LegacyID               int64              `json:"legacy_id"`
+	Name                   string             `json:"name"`
+	AttributeType          string             `json:"attribute_type"`
+	SectionID              pgtype.UUID        `json:"section_id"`
+	SectionLegacyID        int32              `json:"section_legacy_id"`
+	ArticleCode            string             `json:"article_code"`
+	HelperXML              string             `json:"helper_xml"`
+	HelperDir              string             `json:"helper_dir"`
+	Parameters             string             `json:"parameters"`
+	SortOrder              int32              `json:"sort_order"`
+	Active                 bool               `json:"active"`
+	PrintLabel             bool               `json:"print_label"`
+	PrintValue             bool               `json:"print_value"`
+	ActiveInQuote          bool               `json:"active_in_quote"`
+	ActiveInTechSheet      bool               `json:"active_in_tech_sheet"`
+	QuoteDescription       string             `json:"quote_description"`
+	DefineBeforeSectionID  int32              `json:"define_before_section_id"`
+	StandardAdditional     int16              `json:"standard_additional"`
+	Code                   string             `json:"code"`
+	PrintSectionID         string             `json:"print_section_id"`
+	CreatedAt              pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpProductAttributeOption struct {
+	ID                pgtype.UUID        `json:"id"`
+	TenantID          string             `json:"tenant_id"`
+	LegacyID          int64              `json:"legacy_id"`
+	AttributeID       pgtype.UUID        `json:"attribute_id"`
+	AttributeLegacyID int32              `json:"attribute_legacy_id"`
+	OptionName        string             `json:"option_name"`
+	OptionValue       string             `json:"option_value"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpProductAttributeValue struct {
+	ID                pgtype.UUID        `json:"id"`
+	TenantID          string             `json:"tenant_id"`
+	LegacyID          int64              `json:"legacy_id"`
+	ProductID         pgtype.UUID        `json:"product_id"`
+	ProductLegacyID   int32              `json:"product_legacy_id"`
+	AttributeID       pgtype.UUID        `json:"attribute_id"`
+	AttributeLegacyID int32              `json:"attribute_legacy_id"`
+	Value             string             `json:"value"`
+	Quantity          int32              `json:"quantity"`
+	QuoteLegacyID     int32              `json:"quote_legacy_id"`
+	RecordedAt        pgtype.Timestamptz `json:"recorded_at"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpProductAttributeHomologation struct {
+	ID                   pgtype.UUID        `json:"id"`
+	TenantID             string             `json:"tenant_id"`
+	LegacyID             int64              `json:"legacy_id"`
+	AttributeID          pgtype.UUID        `json:"attribute_id"`
+	AttributeLegacyID    int32              `json:"attribute_legacy_id"`
+	HomologationID       pgtype.UUID        `json:"homologation_id"`
+	HomologationLegacyID int32              `json:"homologation_legacy_id"`
+	CreatedAt            pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpProductionInspectionHomologation struct {
+	ID                   pgtype.UUID        `json:"id"`
+	TenantID             string             `json:"tenant_id"`
+	LegacyID             int64              `json:"legacy_id"`
+	InspectionID         pgtype.UUID        `json:"inspection_id"`
+	InspectionLegacyID   int32              `json:"inspection_legacy_id"`
+	HomologationID       pgtype.UUID        `json:"homologation_id"`
+	HomologationLegacyID int32              `json:"homologation_legacy_id"`
+	CreatedAt            pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpArticleCostHistory struct {
+	ID          pgtype.UUID        `json:"id"`
+	TenantID    string             `json:"tenant_id"`
+	LegacyID    int64              `json:"legacy_id"`
+	ArticleCode string             `json:"article_code"`
+	ArticleID   pgtype.UUID        `json:"article_id"`
+	Year        int32              `json:"year"`
+	Month       int16              `json:"month"`
+	Cost        pgtype.Numeric     `json:"cost"`
+	PeriodCode  string             `json:"period_code"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpBankImport struct {
+	ID                  pgtype.UUID        `json:"id"`
+	TenantID            string             `json:"tenant_id"`
+	LegacyID            int64              `json:"legacy_id"`
+	MovementDate        pgtype.Date        `json:"movement_date"`
+	ConceptName         string             `json:"concept_name"`
+	MovementNo          int32              `json:"movement_no"`
+	Amount              pgtype.Numeric     `json:"amount"`
+	Debit               pgtype.Numeric     `json:"debit"`
+	Credit              pgtype.Numeric     `json:"credit"`
+	Balance             pgtype.Numeric     `json:"balance"`
+	MovementCode        string             `json:"movement_code"`
+	TreasuryMovementID  pgtype.UUID        `json:"treasury_movement_id"`
+	TreasuryLegacyID    int32              `json:"treasury_legacy_id"`
+	ImportedAt          pgtype.Timestamptz `json:"imported_at"`
+	AccountNumber       int32              `json:"account_number"`
+	AccountEntityID     pgtype.UUID        `json:"account_entity_id"`
+	Processed           int32              `json:"processed"`
+	Comments            string             `json:"comments"`
+	InternalNo          int32              `json:"internal_no"`
+	Branch              string             `json:"branch"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+}

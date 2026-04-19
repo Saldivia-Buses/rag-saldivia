@@ -110,3 +110,31 @@ JOIN erp_articles c ON c.id = h.child_id
 WHERE h.tenant_id = $1 AND h.parent_id = $2
 ORDER BY h.effective_date DESC, h.version DESC
 LIMIT $3 OFFSET $4;
+
+-- ─── Per-supplier article costs (Phase 1 §Data migration — Pareto #5) ──────
+
+-- name: ListArticleCosts :many
+-- Per-supplier cost ledger for a single article. The migrated STKINSPR
+-- rows carry one entry per (article, supplier) pair with the last update
+-- date; this query lets the UI "costos" screens replace the Histrix
+-- stock/costos/ views 1:1.
+SELECT id, tenant_id, legacy_id, article_code, article_id, subsystem_code,
+       cost, percentage_1, percentage_2, percentage_3,
+       supplier_article_code, supplier_code, supplier_entity_id,
+       invoice_date, last_update_date,
+       movement_no, movement_post, movement_date, recalc_flag, created_at
+FROM erp_article_costs
+WHERE tenant_id = $1 AND article_id = $2
+ORDER BY last_update_date DESC NULLS LAST, supplier_code
+LIMIT $3 OFFSET $4;
+
+-- name: ListArticleCostHistory :many
+-- Monthly cost history snapshots per article (STK_COSTO_HIST migrated).
+-- Most-recent period first. Backs the evolucion_costos / evolutivo_costo
+-- screens 1:1 post-cutover.
+SELECT id, tenant_id, legacy_id, article_code, article_id,
+       year, month, cost, period_code, created_at
+FROM erp_article_cost_history
+WHERE tenant_id = $1 AND article_id = $2
+ORDER BY year DESC, month DESC
+LIMIT $3 OFFSET $4;

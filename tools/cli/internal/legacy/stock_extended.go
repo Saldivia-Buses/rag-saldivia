@@ -11,6 +11,52 @@ import (
 // BOM — Bill of Materials (STKPIEZA)
 // ---------------------------------------------------------------------------
 
+// ArticleCostHistoryReader — STK_COSTO_HIST (103,799 rows live, scrape
+// 95,217). Monthly cost snapshots per article. Composite PK
+// (articulo_id, anio_hist, mes_hist) — no AI PK. Already consumed as
+// JSONB metadata on erp_articles by the metadata enricher's
+// articleCostHistory spec; this reader materializes the native
+// relational shape so structured history reports can read it without
+// parsing JSON. Pareto #8 of the post-2.0.10 gap.
+func ArticleCostHistoryReader(db *sql.DB) *CompositeKeyReader {
+	return &CompositeKeyReader{
+		DB:         db,
+		Table:      "STK_COSTO_HIST",
+		Target:     "erp_article_cost_history",
+		DomainName: "stock",
+		PKColumns:  []string{"articulo_id", "anio_hist", "mes_hist"},
+		Columns:    "articulo_id, anio_hist, mes_hist, costo_hist, periodo_hist",
+	}
+}
+
+// ArticleSupplierCostReader creates a reader for STKINSPR (189,863 rows
+// live — Pareto #5 of the Phase 1 §Data migration gap post-2.0.10,
+// ~17 % of uncovered row volume).
+//
+// Despite the STKINSPR name (probably "STock INSumo PRecios" historically),
+// the table is a per-supplier cost ledger: one row per (artcod, ctacod)
+// cost snapshot. XML-form scrape shows it consumed across stock/costos/,
+// costos/, estadisticas/evolutivo_costo, evolucion_costos, evolucion_inc_costos,
+// remitos/factura_stkinspr_ingmov (invoice-driven insert path). Maintained
+// by invoice-import triggers plus periodic re-cost runs (the recalc flag).
+//
+// Single-subsystem in live data (siscod='01' in 100 % of rows), 7,431
+// distinct artcod × 860 distinct ctacod (but only 190 K actual pairs, so
+// sparsely populated). fecfac is ~empty (99.9 % zero) and preserved as
+// NULLABLE DATE; fecult is the business "as-of" timestamp and is
+// populated on 99.99 % of rows.
+func ArticleSupplierCostReader(db *sql.DB) *GenericReader {
+	return &GenericReader{
+		DB:         db,
+		Table:      "STKINSPR",
+		Target:     "erp_article_costs",
+		DomainName: "stock",
+		PKColumn:   "idCosto",
+		Columns: "idCosto, artcod, siscod, artcos, artpor__1, artpor__2, artpor__3, " +
+			"artpro, ctacod, fecfac, fecult, movnro, movnpv, movfec, recalc",
+	}
+}
+
 // BOMReader creates a reader for STKPIEZA (bill of materials / pieces).
 // Has auto-increment id_pieza PK. 36K rows.
 // articulo_hijo = child article code, idPadre = parent article code.
