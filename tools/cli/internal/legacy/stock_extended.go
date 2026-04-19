@@ -234,3 +234,32 @@ func ArticleReplacementCostHistoryReader(db *sql.DB) *GenericReader {
 			"gasto_importacion, flete_local_ars, modificado, descuento_1, descuento_2",
 	}
 }
+
+// StockCostMovementReader — STK_COSTOS (15,066 rows live). Priced
+// stock-movement ledger: one row per stock movement with computed
+// cost/sale/avg prices and the full domain-FK fan-out (article,
+// entity, deposit, sector, family, rubro, list, concept, unit,
+// reference invoice/movement/order/cash). Feeds 15 live XML-forms:
+// presup/* (budget), estadisticas/evolutivo_costo (cost chart),
+// costos/qry/aumento_costo4, produccion/linea/presup_cons_exp,
+// stock_local/stkinmov_ingresos. Closes the 2.0.11 residual — gap
+// drops to zero business-data tables. Pareto #21 (post-2.0.10).
+func StockCostMovementReader(db *sql.DB) *GenericReader {
+	return &GenericReader{
+		DB:         db,
+		Table:      "STK_COSTOS",
+		Target:     "erp_stock_cost_movements",
+		DomainName: "stock",
+		PKColumn:   "id_stkmovimiento",
+		Columns: "id_stkmovimiento, stkarticulo_id, regcuenta_id, " +
+			"stkdeposito_id, stksector_id, stkfamilia_id, stkrubro_id, " +
+			"stklista_id, fecha_movimiento, alta_movimiento, stkconcepto_id, " +
+			"puesto_movimiento, numero_movimiento, orden_movimiento, unidad_id, " +
+			"cantidad, precio_costo, precio_venta, precio_total, precio_promedio, " +
+			"referencia, regmovimiento_id, cpsmovimiento_id, cpsdetalle_id, " +
+			"ordendetalle_id, regdetalle_id, cajmovimiento_id, subsistema_id, " +
+			"barcode, ctacod, facfec, movbon, movcps, movpen, movpes, movuso, " +
+			"movven, nrocha, ocpnro, opecla, titcod, opecod, regmin, succod, " +
+			"tipuni, pedido_id, descripcion, user_id",
+	}
+}

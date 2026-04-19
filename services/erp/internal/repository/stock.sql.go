@@ -862,3 +862,90 @@ func (q *Queries) ListArticleReplacementCostHistory(ctx context.Context, arg Lis
 	}
 	return items, nil
 }
+
+const listStockCostMovements = `-- name: ListStockCostMovements :many
+SELECT id, tenant_id, legacy_id,
+       article_code, article_id,
+       entity_legacy_id, entity_id, account_legacy_code,
+       deposit_legacy_id, sector_legacy_id, family_legacy_id,
+       rubro_legacy_id, list_legacy_id, concept_legacy_id,
+       unit_legacy_id, subsystem_code,
+       movement_date, registered_date, invoice_date,
+       station, movement_no, movement_order,
+       reference, barcode, description,
+       title_code, operator_class, operator_code,
+       register_min, branch_code, unit_type,
+       quantity, cost_price, sale_price, total_price, average_price,
+       bonus_pct, purchase_amount, pending_amount,
+       peso_amount, usage_amount, sale_ref,
+       chassis_no, order_cps_no,
+       invoice_id, invoice_legacy_id, invoice_line_legacy_id,
+       cps_movement_legacy_id, cps_detail_legacy_id,
+       order_detail_legacy_id, cash_movement_legacy_id,
+       order_legacy_id, user_legacy_id, created_at
+FROM erp_stock_cost_movements
+WHERE tenant_id = $1
+  AND ($4::UUID IS NULL OR article_id = $4::UUID)
+  AND ($5::UUID IS NULL OR entity_id = $5::UUID)
+  AND ($6::INTEGER = 0 OR deposit_legacy_id = $6::INTEGER)
+  AND ($7::DATE IS NULL OR movement_date >= $7::DATE)
+  AND ($8::DATE IS NULL OR movement_date <= $8::DATE)
+ORDER BY movement_date DESC NULLS LAST, legacy_id DESC
+LIMIT $2 OFFSET $3
+`
+
+type ListStockCostMovementsParams struct {
+	TenantID      string      `json:"tenant_id"`
+	Limit         int32       `json:"limit"`
+	Offset        int32       `json:"offset"`
+	ArticleFilter pgtype.UUID `json:"article_filter"`
+	EntityFilter  pgtype.UUID `json:"entity_filter"`
+	DepositFilter int32       `json:"deposit_filter"`
+	DateFrom      pgtype.Date `json:"date_from"`
+	DateTo        pgtype.Date `json:"date_to"`
+}
+
+// Priced stock-movement ledger.
+func (q *Queries) ListStockCostMovements(ctx context.Context, arg ListStockCostMovementsParams) ([]ErpStockCostMovement, error) {
+	rows, err := q.db.Query(ctx, listStockCostMovements,
+		arg.TenantID, arg.Limit, arg.Offset,
+		arg.ArticleFilter, arg.EntityFilter, arg.DepositFilter,
+		arg.DateFrom, arg.DateTo,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ErpStockCostMovement{}
+	for rows.Next() {
+		var i ErpStockCostMovement
+		if err := rows.Scan(
+			&i.ID, &i.TenantID, &i.LegacyID,
+			&i.ArticleCode, &i.ArticleID,
+			&i.EntityLegacyID, &i.EntityID, &i.AccountLegacyCode,
+			&i.DepositLegacyID, &i.SectorLegacyID, &i.FamilyLegacyID,
+			&i.RubroLegacyID, &i.ListLegacyID, &i.ConceptLegacyID,
+			&i.UnitLegacyID, &i.SubsystemCode,
+			&i.MovementDate, &i.RegisteredDate, &i.InvoiceDate,
+			&i.Station, &i.MovementNo, &i.MovementOrder,
+			&i.Reference, &i.Barcode, &i.Description,
+			&i.TitleCode, &i.OperatorClass, &i.OperatorCode,
+			&i.RegisterMin, &i.BranchCode, &i.UnitType,
+			&i.Quantity, &i.CostPrice, &i.SalePrice, &i.TotalPrice, &i.AveragePrice,
+			&i.BonusPct, &i.PurchaseAmount, &i.PendingAmount,
+			&i.PesoAmount, &i.UsageAmount, &i.SaleRef,
+			&i.ChassisNo, &i.OrderCpsNo,
+			&i.InvoiceID, &i.InvoiceLegacyID, &i.InvoiceLineLegacyID,
+			&i.CpsMovementLegacyID, &i.CpsDetailLegacyID,
+			&i.OrderDetailLegacyID, &i.CashMovementLegacyID,
+			&i.OrderLegacyID, &i.UserLegacyID, &i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

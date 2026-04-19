@@ -12,33 +12,31 @@ joined with `information_schema.tables.table_rows` from the live Histrix
 DB at `172.22.100.99` (saldivia schema, read-only query via WireGuard +
 SSH tunnel).
 
-## Totals (2026-04-19, post-2.0.11)
+## Totals (2026-04-19, post-2.0.12 Phase 1 §Data migration residual close)
 
 | Segment | Count | Rows |
 |---|---:|---:|
 | Histrix tables in `.intranet-scrape/db-tables.txt` | 675 | 18,940,293 |
-| Tables with a registered migrator/reader | 126 | ≈ 15,586,856 (live) |
-| Tables uncovered (total) | 549 | — |
+| Tables with a registered migrator/reader | 127 | ≈ 15,601,922 (live) |
+| Tables uncovered (total) | 548 | — |
 | &nbsp;&nbsp;— Histrix infra (HTX*, 31) — waived W-004 | 31 | 3,486,776 |
 | &nbsp;&nbsp;— `*_OLD` superseded (5) — waived W-005 | 5 | 423,678 |
 | &nbsp;&nbsp;— zero-row dead tables — waived W-006 | 225 | 0 |
 | &nbsp;&nbsp;— sub-15 K long tail — waived W-007 | ~285 | ≤ 200,000 |
 | &nbsp;&nbsp;— industrial / telephony telemetry — waived W-008 | 3 | 130,253 |
-| &nbsp;&nbsp;— **business-data gap remaining** | **1** | **≈ 15 K** (STK_COSTOS) |
+| &nbsp;&nbsp;— **business-data gap remaining** | **0** | — |
 
-The 126 "covered" tables now account for **~82 %** of all Histrix rows
-by live COUNT(*) — up from 80 % post-2.0.10, 68 % post-2.0.9, 61 %
-post-2.0.8 and 47 % pre-2.0.8. Waivers W-004/005/006/007/008 cover
-essentially everything else — the residual **gap is ≤ 2 tables**
-(`RECLAMOPAGOS` 15 K + `STK_COSTOS` 15 K), which either ride 2.0.11
-as migration `079` or land in the same waiver bucket in 2.0.12.
+With migration `080` (STK_COSTOS → `erp_stock_cost_movements`) shipped,
+the **business-data gap drops to ZERO**. Every legacy Histrix table is
+now either migrated or explicitly waived. The 127 "covered" tables
+account for **~82 %** of all Histrix rows by live COUNT(*). Waivers
+W-004/005/006/007/008 cover everything else. Caveat: the live-covered
+sum + waivers slightly exceeds `information_schema.tables.table_rows`
+because of the MySQL InnoDB estimate drift documented in
+`feedback_live_count_vs_scrape_estimate`.
 
-With this the ADR 027 **Phase 1 §Data migration gate closes**:
-every business-data Histrix table either has a migrator, is explicitly
-waived with a reopen condition, or is the ≤ 2-table residual held for
-next session. Caveat: the live-covered sum + waivers slightly exceeds
-`information_schema.tables.table_rows` because of the MySQL InnoDB
-estimate drift documented in `feedback_live_count_vs_scrape_estimate`.
+ADR 027 **Phase 1 §Data migration gate is now fully ticked** — see
+`docs/decisions/027-*.md`.
 
 **2.0.11 deltas** (Pareto tail Grupo A + Grupo B — current-accounts /
 treasury / stock / production / sales extensions):
@@ -156,6 +154,29 @@ tracked as the 2.0.11 optional migration `079` / deferred to 2.0.12.
 With `079` shipped the residual business-data gap drops from **≤ 2**
 tables to **1** (STK_COSTOS, 15,066 live) — deferred to 2.0.12 either
 as a migrator or as an inclusion in W-007 with a threshold bump.
+
+**2.0.12 deltas** (Phase 1 §Data migration residual close):
+
+10. **Pareto #21 — STK_COSTOS (15,066 rows live, scrape 15,066)**
+    migrated via `NewStockCostMovementMigrator` → new table
+    `erp_stock_cost_movements` (migration `080`). Priced stock-movement
+    ledger: one row per stock movement with computed cost / sale /
+    total / average prices and the full domain-FK fan-out (article,
+    entity, deposit, sector, family, rubro, list, concept, unit, plus
+    cross-references to invoice / cps / order / cash). 15 live
+    XML-forms consume it: `presup/*` (budget/presupuesto views),
+    `estadisticas/evolutivo_costo` (cost evolution chart), `costos/qry/
+    aumento_costo4`, `produccion/linea/presup_cons_exp`, `stock_local/
+    stkinmov_ingresos`, plus the `VISTA_STK_COSTOS` derived view.
+    Resolved FKs: `article_id` via STK_ARTICULOS default-subsystem;
+    `entity_id` via `ResolveEntityFlexible` on `regcuenta_id`;
+    `invoice_id` via `ResolveRegMovim`. The ~40 other columns
+    (secondary stock catalogs, cps/order/cash refs, peso/cantidad/
+    bonification amounts) preserved raw.
+
+With `080` shipped the **business-data gap drops to 0**. Every legacy
+Histrix table is now either migrated or explicitly waived — ADR 027
+Phase 1 §Data migration is fully ticked.
 
 **2.0.10 deltas** (Pareto #3 + Pareto #4 in one PR):
 
@@ -338,7 +359,7 @@ Row volume in the uncovered bucket is extremely concentrated:
 | 18 | ~~PRODUCTO_ATRIBUTO_HOMOLOGACION~~ — **migrated 2.0.10** (47,189 live) | ~~17,558~~ | — |
 | 19 | ~~EGX_300~~ — **waived W-008** (industrial telemetry, 15,992 live) | ~~15,702~~ | — |
 | 20 | ~~RECLAMOPAGOS~~ — **migrated 2.0.11** (15,463 live) | ~~15,463~~ | — |
-| 21 | STK_COSTOS | 15,066 | 96.1 % |
+| 21 | ~~STK_COSTOS~~ — **migrated 2.0.12** (15,066 live) | ~~15,066~~ | — |
 | 22 | STK_ARTICULO_LOCACION | 13,825 | 96.3 % |
 | 23 | STK_BOM_ENPROCESO | 12,706 | 96.5 % |
 | 24 | ~~HERRMOVS~~ — **migrated 2.0.10** (11,680 live) | ~~11,626~~ | — |

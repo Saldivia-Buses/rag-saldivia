@@ -3692,3 +3692,133 @@ func NewPaymentComplaintMigrator(db *sql.DB, tenantID string) *GenericMigrator {
 		},
 	}
 }
+
+// ============================================================================
+// Phase 4f — Stock cost movements (STK_COSTOS) — 2.0.12
+// ============================================================================
+
+// NewStockCostMovementMigrator — STK_COSTOS → erp_stock_cost_movements
+// (15,066 rows live). Closes the 2.0.11 residual. Priced stock-movement
+// ledger with ~50 source columns. Resolves:
+//   - stkarticulo_id → stock.STK_ARTICULOS via hashCode + default sub
+//   - regcuenta_id   → entity via ResolveEntityFlexible
+//   - regmovimiento_id → invoice via ResolveRegMovim (Phase 6 hook)
+// All the secondary catalogs (deposito / sector / familia / rubro /
+// lista / concepto / unidad / subsistema) are preserved raw — those
+// are stock sub-catalogs not yet first-class in SDA. The cross-domain
+// reference ids (cps*, ordendetalle, regdetalle, cajmovimiento,
+// pedido, user) also ride raw.
+func NewStockCostMovementMigrator(db *sql.DB, tenantID string) *GenericMigrator {
+	reader := legacy.StockCostMovementReader(db)
+	return &GenericMigrator{
+		reader: reader,
+		columns: []string{
+			"id", "tenant_id", "legacy_id",
+			"article_code", "article_id",
+			"entity_legacy_id", "entity_id", "account_legacy_code",
+			"deposit_legacy_id", "sector_legacy_id", "family_legacy_id",
+			"rubro_legacy_id", "list_legacy_id", "concept_legacy_id",
+			"unit_legacy_id", "subsystem_code",
+			"movement_date", "registered_date", "invoice_date",
+			"station", "movement_no", "movement_order",
+			"reference", "barcode", "description",
+			"title_code", "operator_class", "operator_code",
+			"register_min", "branch_code", "unit_type",
+			"quantity", "cost_price", "sale_price", "total_price", "average_price",
+			"bonus_pct", "purchase_amount", "pending_amount",
+			"peso_amount", "usage_amount", "sale_ref",
+			"chassis_no", "order_cps_no",
+			"invoice_id", "invoice_legacy_id", "invoice_line_legacy_id",
+			"cps_movement_legacy_id", "cps_detail_legacy_id",
+			"order_detail_legacy_id", "cash_movement_legacy_id",
+			"order_legacy_id", "user_legacy_id",
+		},
+		conflictCol: "",
+		transformFn: func(ctx context.Context, row legacy.LegacyRow, mapper *Mapper) ([]any, error) {
+			legacyID := row.Int64("id_stkmovimiento")
+			if legacyID == 0 {
+				return nil, nil
+			}
+
+			artCode := strings.TrimSpace(row.String("stkarticulo_id"))
+			var articleID *uuid.UUID
+			if artCode != "" {
+				artLegacyID := hashCode(articleCompositeCode(artCode, ""))
+				if resolved, rerr := mapper.ResolveOptional(ctx, "stock", "STK_ARTICULOS", artLegacyID); rerr == nil && resolved != uuid.Nil {
+					articleID = &resolved
+				}
+			}
+
+			regcuentaID := row.Int64("regcuenta_id")
+			var entityID *uuid.UUID
+			if regcuentaID > 0 {
+				if resolved, tag := mapper.ResolveEntityFlexible(ctx, regcuentaID); resolved != uuid.Nil && tag != "unknown" {
+					entityID = &resolved
+				}
+			}
+
+			regMovimID := row.Int64("regmovimiento_id")
+			var invoiceID *uuid.UUID
+			if regMovimID > 0 {
+				if resolved, ok := mapper.ResolveRegMovim(regMovimID); ok && resolved != uuid.Nil {
+					invoiceID = &resolved
+				}
+			}
+
+			id, err := mapper.Map(ctx, nil, "stock", "STK_COSTOS", legacyID, nil)
+			if err != nil {
+				id = uuid.New()
+			}
+
+			return []any{
+				id, tenantID, legacyID,
+				artCode, articleID,
+				int32(regcuentaID), entityID, int32(row.Int64("ctacod")),
+				int32(row.Int64("stkdeposito_id")),
+				int32(row.Int64("stksector_id")),
+				int32(row.Int64("stkfamilia_id")),
+				int32(row.Int64("stkrubro_id")),
+				int32(row.Int64("stklista_id")),
+				int32(row.Int64("stkconcepto_id")),
+				int32(row.Int64("unidad_id")),
+				strings.TrimSpace(row.String("subsistema_id")),
+				SafeDate(timeFromRow(row, "fecha_movimiento")),
+				SafeDate(timeFromRow(row, "alta_movimiento")),
+				SafeDate(timeFromRow(row, "facfec")),
+				int32(row.Int("puesto_movimiento")),
+				int32(row.Int64("numero_movimiento")),
+				int32(row.Int64("orden_movimiento")),
+				strings.TrimSpace(row.String("referencia")),
+				strings.TrimSpace(row.String("barcode")),
+				strings.TrimSpace(row.String("descripcion")),
+				strings.TrimSpace(row.String("titcod")),
+				strings.TrimSpace(row.String("opecla")),
+				int32(row.Int("opecod")),
+				int32(row.Int("regmin")),
+				int32(row.Int("succod")),
+				int16(row.Int("tipuni")),
+				ParseDecimal(row.Decimal("cantidad")),
+				ParseDecimal(row.Decimal("precio_costo")),
+				ParseDecimal(row.Decimal("precio_venta")),
+				ParseDecimal(row.Decimal("precio_total")),
+				ParseDecimal(row.Decimal("precio_promedio")),
+				ParseDecimal(row.Decimal("movbon")),
+				ParseDecimal(row.Decimal("movcps")),
+				ParseDecimal(row.Decimal("movpen")),
+				ParseDecimal(row.Decimal("movpes")),
+				ParseDecimal(row.Decimal("movuso")),
+				int32(row.Int64("movven")),
+				int32(row.Int64("nrocha")),
+				int32(row.Int64("ocpnro")),
+				invoiceID, int32(regMovimID),
+				int32(row.Int64("regdetalle_id")),
+				int32(row.Int64("cpsmovimiento_id")),
+				int32(row.Int64("cpsdetalle_id")),
+				int32(row.Int64("ordendetalle_id")),
+				int32(row.Int64("cajmovimiento_id")),
+				int32(row.Int64("pedido_id")),
+				int32(row.Int64("user_id")),
+			}, nil
+		},
+	}
+}
