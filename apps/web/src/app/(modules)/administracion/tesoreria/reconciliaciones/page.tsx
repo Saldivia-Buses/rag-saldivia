@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { erpKeys } from "@/lib/erp/queries";
@@ -69,7 +70,14 @@ export default function ReconciliacionesPage() {
               )}
               {recons.map((r) => (
                 <TableRow key={r.id}>
-                  <TableCell className="font-mono text-sm">{r.period}</TableCell>
+                  <TableCell className="font-mono text-sm">
+                    <Link
+                      href={`/administracion/tesoreria/reconciliaciones/${r.id}`}
+                      className="hover:underline"
+                    >
+                      {r.period}
+                    </Link>
+                  </TableCell>
                   <TableCell className="text-sm">{r.bank_name}</TableCell>
                   <TableCell className="font-mono text-xs">{r.account_number}</TableCell>
                   <TableCell className="text-right font-mono text-sm">{fmtMoney(r.statement_balance)}</TableCell>

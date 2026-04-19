@@ -240,10 +240,29 @@ export interface BankReconciliation {
   statement_balance: number | null;
   book_balance: number | null;
   status: string;
+  user_id?: string;
   confirmed_at: string | null;
   created_at: string;
   bank_name: string;
   account_number: string;
+}
+
+export interface BankStatementLine {
+  id: string;
+  tenant_id: string;
+  reconciliation_id: string;
+  date: string | null;
+  description: string;
+  amount: number | null;
+  reference: string;
+  matched: boolean;
+  movement_id: string | null;
+  created_at: string;
+}
+
+export interface ReconciliationDetail {
+  reconciliation: BankReconciliation;
+  lines: BankStatementLine[];
 }
 
 export interface Warehouse {
