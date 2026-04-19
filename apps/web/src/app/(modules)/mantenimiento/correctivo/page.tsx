@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -7,6 +8,7 @@ import { api } from "@/lib/api/client";
 import { erpKeys } from "@/lib/erp/queries";
 import { fmtDateShort } from "@/lib/erp/format";
 import { permissionErrorToast } from "@/lib/erp/permission-messages";
+import type { WorkOrder, MaintenanceAsset } from "@/lib/erp/types";
 import { ErrorState } from "@/components/erp/error-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,13 +35,13 @@ export default function CorrectivoPage() {
   const { data: workOrders = [], isLoading, error } = useQuery({
     queryKey: [...erpKeys.workOrders("corrective")] as const,
     queryFn: () =>
-      api.get<{ work_orders: any[] }>("/v1/erp/maintenance/work-orders?work_type=corrective&page_size=100"),
+      api.get<{ work_orders: WorkOrder[] }>("/v1/erp/maintenance/work-orders?work_type=corrective&page_size=100"),
     select: (d) => d.work_orders,
   });
 
   const { data: assets = [] } = useQuery({
-    queryKey: [...erpKeys.all, "maintenance", "assets"] as const,
-    queryFn: () => api.get<{ assets: any[] }>("/v1/erp/maintenance/assets"),
+    queryKey: erpKeys.maintenanceAssets(),
+    queryFn: () => api.get<{ assets: MaintenanceAsset[] }>("/v1/erp/maintenance/assets"),
     select: (d) => d.assets,
   });
 
@@ -81,11 +83,15 @@ export default function CorrectivoPage() {
               <TableHead className="w-28">Estado</TableHead>
             </TableRow></TableHeader>
             <TableBody>
-              {workOrders.map((wo: any) => {
+              {workOrders.map((wo) => {
                 const s = statusBadge[wo.status] || statusBadge.open;
                 return (
                   <TableRow key={wo.id}>
-                    <TableCell className="font-mono text-sm">{wo.number}</TableCell>
+                    <TableCell className="font-mono text-sm">
+                      <Link href={`/mantenimiento/ordenes-trabajo/${wo.id}`} className="hover:underline">
+                        {wo.number}
+                      </Link>
+                    </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{fmtDateShort(wo.date)}</TableCell>
                     <TableCell className="text-sm">{wo.asset_name || "\u2014"}</TableCell>
                     <TableCell className="text-sm truncate max-w-64 text-muted-foreground">
@@ -126,7 +132,7 @@ function CreateWorkOrderForm({
   isPending,
   onClose,
 }: {
-  assets: any[];
+  assets: MaintenanceAsset[];
   onSubmit: (data: { number: string; asset_id: string; description?: string; assigned_to?: string }) => void;
   isPending: boolean;
   onClose: () => void;
@@ -156,7 +162,7 @@ function CreateWorkOrderForm({
               <SelectValue placeholder="Seleccionar..." />
             </SelectTrigger>
             <SelectContent>
-              {assets.map((a: any) => (
+              {assets.map((a) => (
                 <SelectItem key={a.id} value={a.id}>{a.code} — {a.name}</SelectItem>
               ))}
             </SelectContent>

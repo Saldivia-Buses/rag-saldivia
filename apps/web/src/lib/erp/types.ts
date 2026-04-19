@@ -486,6 +486,41 @@ export interface MaintenancePlan {
   active: boolean;
 }
 
+export interface WorkOrder {
+  id: string;
+  tenant_id: string;
+  number: string;
+  asset_id: string | null;
+  plan_id?: string | null;
+  date: string | null;
+  work_type: string;
+  description: string;
+  assigned_to: string | null;
+  status: string;
+  priority: string;
+  completed_at: string | null;
+  user_id: string;
+  notes: string;
+  created_at: string;
+  asset_code?: string;
+  asset_name?: string;
+}
+
+export interface WorkOrderPart {
+  id: string;
+  tenant_id: string;
+  work_order_id: string;
+  article_id: string;
+  quantity: number | null;
+  article_code: string;
+  article_name: string;
+}
+
+export interface WorkOrderDetail {
+  order: WorkOrder;
+  parts: WorkOrderPart[];
+}
+
 export interface StockArticle {
   id: string;
   code: string;
