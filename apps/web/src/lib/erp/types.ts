@@ -617,9 +617,39 @@ export interface Invoice {
   date: string;
   invoice_type: string;
   direction: string;
-  entity_name: string;
+  entity_name?: string;
+  entity_id?: string;
+  currency_id?: string | null;
+  subtotal?: number | null;
+  tax_amount?: number | null;
   total: number;
+  due_date?: string | null;
+  order_id?: string | null;
+  journal_entry_id?: string | null;
+  afip_cae?: string | null;
+  afip_cae_due?: string | null;
+  user_id?: string;
+  created_at?: string;
   status: string;
+}
+
+export interface InvoiceLine {
+  id: string;
+  tenant_id: string;
+  invoice_id: string;
+  article_id: string | null;
+  description: string;
+  quantity: number | null;
+  unit_price: number | null;
+  tax_rate: number | null;
+  tax_amount: number | null;
+  line_total: number | null;
+  sort_order: number;
+}
+
+export interface InvoiceDetail {
+  invoice: Invoice;
+  lines: InvoiceLine[];
 }
 
 export interface Withholding {

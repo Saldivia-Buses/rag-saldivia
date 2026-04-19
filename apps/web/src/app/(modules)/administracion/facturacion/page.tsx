@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -124,7 +125,11 @@ export default function FacturacionPage() {
                     const s = statusBadge[inv.status] || statusBadge.draft;
                     return (
                       <TableRow key={inv.id}>
-                        <TableCell className="font-mono text-sm">{inv.number}</TableCell>
+                        <TableCell className="font-mono text-sm">
+                          <Link href={`/administracion/facturacion/${inv.id}`} className="hover:underline">
+                            {inv.number}
+                          </Link>
+                        </TableCell>
                         <TableCell className="text-sm text-muted-foreground">{fmtDateShort(inv.date)}</TableCell>
                         <TableCell><Badge variant="secondary">{typeLabel[inv.invoice_type] || inv.invoice_type}</Badge></TableCell>
                         <TableCell className="text-sm">{inv.entity_name}</TableCell>
