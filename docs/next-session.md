@@ -6,14 +6,18 @@ detail pages nuevas filtran client-side, lo que no escala), sumar los
 paths — el siguiente gran eje Phase 1 ahora que §UI parity read-only
 se está agotando.
 
-Target realista: **6-9 clusters**. Mix esperado:
-- 2-3 filter endpoints (reconciliations by bank_account, cash-counts
+Target: **12 clusters**. Mix esperado:
+- 3 filter endpoints (reconciliations by bank_account, cash-counts
   by cash_register, entries by cost_center) + consumidor frontend
   enriquecido.
-- 2-3 nuevos `[id]` (herramienta, supplier scorecard, chasis modelo
-  con nomenclature-fix) con backend lift tipo GetPriceList.
-- 1-2 scouts de write path (create/update en un cluster pequeño
-  — ej. notas de entidad, rating de crédito) con audit + NATS.
+- 5 nuevos `[id]` (herramienta, supplier scorecard, chasis modelo
+  con nomenclature-fix, GetArticle direct, GetAsset direct) con
+  backend lift tipo GetPriceList. Los dos últimos cierran la deuda
+  de 2.0.18 #7/#8.
+- 2 empty modules con backend listo (`/compras/abastecimiento`,
+  `/compras/comex`) — pickup rápido.
+- 2 scouts de write path (notas de entidad, rating de crédito)
+  con audit + NATS.
 
 ## Cierre 2.0.20 (6 clusters + backend lift)
 
@@ -77,7 +81,15 @@ Verificar antes de shipear:
 2. **GetTool / GetChassisModel / GetScorecard**: confirmar la tabla
    (sólo lista o hay schema para detail con related rows), y dónde
    vive la list page de cada uno en `apps/web/src/app/`.
-3. **Write path scout** — elegir UN cluster pequeño que ya tenga
+3. **GetArticle / GetAsset direct endpoints**: revisar cómo
+   `products/[id]` y `assets/[id]` hoy hitean list cache; confirmar
+   que el schema soporta fetch por PK y que el handler actual no
+   está reusable con minor patch.
+4. **Empty modules abastecimiento / comex**: confirmar que el
+   backend expone `ListSupplies` / `ListComex` (o nombre
+   equivalente), y listar los campos para diseñar columna
+   + filtros.
+5. **Write path scout** — elegir UN cluster pequeño que ya tenga
    list + detail y añada write. Candidatos:
    - Entity credit rating (`/compras/calificacion-proveedores`):
      POST nuevo rating. Form simple (rating + referencia + fecha).
@@ -88,7 +100,7 @@ Verificar antes de shipear:
 
 ### Batches propuestos
 
-**Batch 1 — Filter endpoints + detail enrichment** (2-3 clusters):
+**Batch 1 — Filter endpoints + detail enrichment** (3 clusters):
 
 1. `ListReconciliations?bank_account_id=` — consumir en
    cuenta-bancaria detail para reemplazar filter client-side.
@@ -96,7 +108,7 @@ Verificar antes de shipear:
 3. `ListEntries?cost_center_id=` — consumir en centro-costo
    detail para mostrar asientos imputados al CC.
 
-**Batch 2 — Nuevos `[id]` con backend lift** (2-3 clusters):
+**Batch 2 — Nuevos `[id]` con backend lift** (5 clusters):
 
 4. Herramienta detail — GetTool + historial de uso (si hay
    movement table relacionada).
@@ -104,19 +116,33 @@ Verificar antes de shipear:
    del proveedor.
 6. Chasis modelo detail — primero resolver nomenclature (renombrar
    uno de los dos para que match), luego GetChassisModel + BOM.
+7. GetArticle direct endpoint + consumidor — cierra deuda 2.0.18
+   cluster #8 (hoy usa list cache).
+8. GetAsset direct endpoint + consumidor — cierra deuda 2.0.18
+   cluster #7 (hoy usa list cache).
 
-**Batch 3 — Write path scout** (1-2 clusters):
+**Batch 3 — Empty modules con backend listo** (2 clusters):
 
-7. Add note from entity detail (proveedor o cliente) — textarea +
-   POST + audit + NATS event.
-8. Create credit rating desde calificacion-proveedores — form
-   simple + POST + audit.
+9. `/compras/abastecimiento` — backend ya expone endpoints; pegar
+   página list + filtros.
+10. `/compras/comex` — backend ya expone endpoints; pegar página
+    list + filtros.
+
+**Batch 4 — Write path scout** (2 clusters):
+
+11. Add note from entity detail (proveedor o cliente) — textarea +
+    POST + audit + NATS event.
+12. Create credit rating desde calificacion-proveedores — form
+    simple + POST + audit.
 
 ### Cierre esperado
 
-- ≥ 6 clusters nuevos → total ≥ 60.
+- 12 clusters nuevos → total ≥ 66.
 - Los 3 filter endpoints de 2.0.20 cerrados (detail pages sin
   filter client-side).
+- Deuda 2.0.18 (#7/#8) cerrada via GetAsset / GetArticle direct.
+- Empty modules `/compras/abastecimiento` + `/compras/comex`
+  vacíos cerrados.
 - Primer write path post-2.0.11 shipeado (aunque sea uno chico).
 - Phase 0 gates verdes.
 
@@ -126,10 +152,8 @@ Verificar antes de shipear:
 |---:|---|---|
 | 1 | **Write paths masivos** en clusters read-only | Expansión post-scout: create/update en reclamos, importaciones, calificaciones. Entity pickers, validación, NATS + audit estandarizado. |
 | 2 | **Reports** (Phase 1 §Reports parity) | Libro IVA, mayor contable, tax-book. Eje separado de §UI parity. |
-| 3 | **Empty modules con backend listo** | `/compras/abastecimiento`, `/compras/comex`. |
-| 4 | **Seamless-day cutover test** | Phase 1 gating final. |
-| 5 | **Admin Tier B refactor** | Deuda de 2.0.17 — products/tools a handlers dedicados. |
-| 6 | **GetAsset / GetArticle direct endpoints** | Backend refactor menor — elimina deuda de clusters 2.0.18 #7/#8. |
+| 3 | **Seamless-day cutover test** | Phase 1 gating final. |
+| 4 | **Admin Tier B refactor** | Deuda de 2.0.17 — products/tools a handlers dedicados. |
 
 ## Trampas heredadas (mismas que 2.0.18/19/20)
 
