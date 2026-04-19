@@ -83,6 +83,138 @@ export interface BankBalance {
   balance: number;
 }
 
+// ─── 2.0.16 §UI parity clusters ─────────────────────────────────────────
+
+export interface BankReconciliation {
+  id: string;
+  tenant_id: string;
+  bank_account_id: string;
+  period: string;
+  statement_balance: number | null;
+  book_balance: number | null;
+  status: string;
+  confirmed_at: string | null;
+  created_at: string;
+  bank_name: string;
+  account_number: string;
+}
+
+export interface Warehouse {
+  id: string;
+  tenant_id: string;
+  code: string;
+  name: string;
+  location: string;
+  active: boolean;
+}
+
+export interface CashCount {
+  id: string;
+  tenant_id: string;
+  cash_register_id: string;
+  date: string | null;
+  expected: number | null;
+  counted: number | null;
+  difference: number | null;
+  user_id: string;
+  notes: string;
+  created_at: string;
+}
+
+export interface CustomerVehicle {
+  id: string;
+  tenant_id: string;
+  owner_id: string | null;
+  driver_id: string | null;
+  manufacturing_unit_id: string | null;
+  plate: string;
+  chassis_serial: string;
+  body_serial: string;
+  internal_number: number | null;
+  brand: string;
+  model_year: number | null;
+  seating_capacity: number;
+  fuel_type: string;
+  color: string;
+  purchase_date: string | null;
+  purchase_price: number | null;
+  warranty_months: number;
+  destination: string;
+  observations: string;
+  active: boolean;
+}
+
+export interface VehicleIncident {
+  id: string;
+  tenant_id: string;
+  vehicle_id: string | null;
+  incident_type_id: string | null;
+  incident_date: string | null;
+  location: string;
+  responsible: string;
+  notes: string;
+  status: string;
+  resolved_at: string | null;
+  created_at: string;
+  updated_at: string;
+  incident_type_name: string | null;
+}
+
+export interface ProductionCenter {
+  id: string;
+  tenant_id: string;
+  code: string;
+  name: string;
+  active: boolean;
+}
+
+export interface BankAccount {
+  id: string;
+  tenant_id: string;
+  bank_name: string;
+  branch: string;
+  account_number: string;
+  cbu: string | null;
+  alias: string | null;
+  currency_id: string | null;
+  account_id: string | null;
+  active: boolean;
+  created_at: string;
+}
+
+export interface CashRegister {
+  id: string;
+  tenant_id: string;
+  name: string;
+  account_id: string | null;
+  active: boolean;
+  created_at: string;
+}
+
+export interface PriceList {
+  id: string;
+  tenant_id: string;
+  name: string;
+  currency_id: string | null;
+  valid_from: string | null;
+  valid_until: string | null;
+  active: boolean;
+}
+
+export interface SupplierScorecard {
+  id: string;
+  tenant_id: string;
+  supplier_id: string;
+  period: string;
+  total_receipts: number;
+  accepted_qty: number | null;
+  rejected_qty: number | null;
+  total_demerits: number;
+  quality_score: number | null;
+  created_at: string;
+  supplier_name: string;
+}
+
 // Quality audits (erp_audits — Phase 1 §UI)
 export interface QualityAudit {
   id: string;

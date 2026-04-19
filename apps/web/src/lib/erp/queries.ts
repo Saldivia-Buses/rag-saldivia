@@ -40,6 +40,24 @@ export const erpKeys = {
     [...erpKeys.all, "stock", "movements", params] as const,
   articleCosts: (params?: Record<string, string>) =>
     [...erpKeys.all, "stock", "article-costs", params] as const,
+  bankReconciliations: () =>
+    [...erpKeys.all, "treasury", "reconciliations"] as const,
+  warehouses2: () => [...erpKeys.all, "stock", "warehouses", "v2"] as const,
+  cashCounts: (params?: Record<string, string>) =>
+    [...erpKeys.all, "treasury", "cash-counts", params] as const,
+  customerVehicles: (params?: Record<string, string>) =>
+    [...erpKeys.all, "workshop", "vehicles", params] as const,
+  vehicleIncidents: (params?: Record<string, string>) =>
+    [...erpKeys.all, "workshop", "incidents", params] as const,
+  productionCenters: () =>
+    [...erpKeys.all, "production", "centers"] as const,
+  bankAccountsCatalog: () =>
+    [...erpKeys.all, "treasury", "bank-accounts", "catalog"] as const,
+  cashRegisters: () =>
+    [...erpKeys.all, "treasury", "cash-registers"] as const,
+  priceLists: () => [...erpKeys.all, "sales", "price-lists"] as const,
+  supplierScorecards: (params?: Record<string, string>) =>
+    [...erpKeys.all, "quality", "scorecards", params] as const,
   treasuryMovements: () =>
     [...erpKeys.all, "treasury", "movements"] as const,
   treasuryBalance: () =>
