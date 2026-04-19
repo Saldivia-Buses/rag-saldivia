@@ -1,29 +1,30 @@
-# Next session — 2.0.13: close reclamos gaps + second §UI parity cluster
+# Next session — 2.0.18: más §UI parity con Tier A agotándose
 
-**Goal**: ship 1 more Phase 1 §UI parity cluster + polish the reclamos
-cluster to match Histrix feature depth. Expected close: 3-4 commits,
-one PR, standard cycle cadence.
+**Goal**: seguir maximizando §UI parity. Los candidatos Tier A (handlers
+mounted sin página) están casi agotados — el grueso del ciclo va a ser
+Tier B (queries con handler nuevo) + primeros Tier C (generalizaciones
+de queries con filter obligatorio o nuevas sub-pages `[id]` de detalle).
 
-## Cierre ciclo 2.0.12 — completado 2026-04-19
+Target realista: **8–12 clusters**. El upper bound depende de cuántas
+queries Tier B solid queden y cuánto esfuerzo requiere el primer batch
+de `[id]` routes.
 
-- PR #159 squash-merged como `0905b673` en main.
-- Tag `v2.0.12` pushed, GitHub release publicada.
-- Workstation `srv-ia-01` sincronizada en `0905b673`.
-- Todos los tests + build + type-check verdes.
+## Cierre sesión anterior (6 ciclos en una sola sesión)
 
-Logros:
+| Ciclo | Clusters nuevos | Tag | PR |
+|---|---:|---|---:|
+| 2.0.12 | 1 | v2.0.12 | pre-sesión |
+| 2.0.13 | 1 | v2.0.13 | #160 |
+| 2.0.14 | 3 | v2.0.14 | #161 |
+| 2.0.15 | 6 | v2.0.15 | #162 |
+| 2.0.16 | 10 | v2.0.16 | #163 |
+| 2.0.17 | 12 | v2.0.17 | #164 |
 
-- **ADR 027 §Data migration ✅ fully ticked**. Migration `080` cerró
-  STK_COSTOS → `erp_stock_cost_movements` (15,066 rows). Business-data
-  gap: 1 → **0**. El item ADR 027 "Every legacy Histrix table …
-  migrated or waived" quedó `[x]`.
-- **Primer §UI parity cluster shipped**: `/administracion/reclamos`
-  covers 3 XML-forms (`reclamos/reclamopagos*.xml`) consuming
-  `erp_payment_complaints`. Endpoints GET/POST/PATCH bajo
-  `/v1/erp/accounts/complaints`, scoped a `erp.accounts.read/write`,
-  con NATS + strict audit.
-- Nuevo doc `docs/parity/ui-parity.md` — living log de XML-form → SDA
-  page coverage. First entry: el cluster reclamos.
+Totales post-2.0.17: **33 §UI parity clusters tracked** en
+`docs/parity/ui-parity.md`, 99 `page.tsx` routes shipped, 1 waiver
+(W-009 bulk CSV/XLS import).
+
+Workstation `srv-ia-01` sincronizada en `6d953e0c`.
 
 ## Final goal (ADR 026 — no se pierde de vista)
 
@@ -34,210 +35,179 @@ SDA reemplaza Histrix. El empleado abre SDA y:
 3. Dashboard personal + rutinas personales.
 4. Agentes background: mail, WhatsApp, tree-RAG con ACL.
 
-## Estado post-2.0.12
+## Estado post-2.0.17
 
-| Dimensión | Antes | Después | Nota |
-|---|---:|---:|---|
-| Covered tables (live) | 126 | **127** | ~82% de filas Histrix |
-| Business-data gap | 1 | **0** | Todo migrated or waived |
-| Waivers activos | 5 | 5 | W-004/005/006/007/008 |
-| SDA pages XML-parity tracked | 0 | **1** | reclamos |
-| ADR 027 §Data migration items | 0/4 `[x]` | 1/4 `[x]` | 3 pendientes dependen de cutover live + archive read endpoint |
-| ADR 027 §UI parity items | 0/4 `[x]` | 0/4 `[x]` | Primer cluster NO tickea el item global — necesita todas las XML-forms cubiertas |
+- **§UI parity**: 33 clusters explícitos. Aún faltan centenares de
+  XML-forms sin cobertura — no se ha rozado el bulk de
+  `.intranet-scrape/xml-forms/` (~4,500 files).
+- **Backend surface**: la gran mayoría de sqlc `List*` queries con
+  tenant+pagination están mounted. El pozo de Tier A barato ya es
+  superficial.
+- **Arquitectura ERP handler**: los 4 endpoints Tier B de 2.0.17 viven
+  bajo `/v1/erp/admin/` (product-sections, products, product-attributes,
+  tools) como shortcut. Hay que decidir en un refactor dedicado si
+  splitear a `Products` / `Tools` services propios.
 
-## Plan de trabajo 2.0.13
-
-Recomendación: dos ejes en una sola cycle — cerrar el cluster reclamos
-al nivel Histrix + abrir un segundo cluster. Esto demuestra que la
-iteración dentro de un cluster es barata (agrega depth sin más tablas
-DB).
+## Plan de trabajo 2.0.18
 
 ### Pre-work
 
 ```bash
-git checkout -b 2.0.13 main
-sed -i 's/Working:\*\* `2.0.12`/Working:\*\* `2.0.13`/' CLAUDE.md
-git commit -am "chore: bump working branch 2.0.12 → 2.0.13
+git checkout -b 2.0.18 main
+sed -i 's/Working:\*\* `2.0.17`/Working:\*\* `2.0.18`/' CLAUDE.md
+git commit -am "chore: bump working branch 2.0.17 → 2.0.18
 
-[resumen 2.0.12 + plan 2.0.13]
+[resumen 2.0.17 + plan 2.0.18]
 
 Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ```
 
-### Commit 1 — Reclamos: entity picker
+### Investigación inicial (agente Explore)
 
-**Scope:** reemplazar el input numérico `ctacod` por un picker modal
-contra `/v1/erp/entities?type=supplier&search=<q>`. El backend ya
-existe (services/erp/internal/handler/entities.go). Pattern conocido:
+Antes de decidir scope, dispatch un agente paralelo con:
 
-- Modal dialog con search input debounced + table de resultados
-  (nombre + ctacod + CUIT).
-- Al seleccionar: carga `entity_id` (UUID) + `entity_legacy_code`
-  (ctacod) en el form — el backend ya acepta ambos en el mismo
-  request body (ver handler `CreateComplaint`).
-- Component candidate path: `apps/web/src/components/erp/entity-picker.tsx`
-  (reusable — habrá muchos clusters que lo necesiten).
+1. **Re-mapear Tier A residual**: después de 2.0.17 hay que recontar
+   los endpoints `GET` mounted sin page. El de 2.0.17 encontró ~16,
+   pero cubrimos 8 — los restantes pueden ser casi todos dropdown-only
+   (nc-origins, hr/departments, catalogs/types, …). Lo que queda real:
+   - `/v1/erp/accounting/ledger` (requiere account_id — Tier C)
+   - `/v1/erp/invoicing/tax-book` (requiere period — Tier C)
+   - `/v1/erp/maintenance/assets` (YA consumido en `mantenimiento/equipos/page.tsx`)
+   - `/v1/erp/purchasing/suppliers/{id}/demerits` (detail — requiere `[id]` page)
+2. **Re-mapear Tier B viable**: el agente de 2.0.17 listó 13 Tier B,
+   descartamos 7 como duplicados (ListInspections, ListInvoiceNotes,
+   ListCalendarEvents, ListWorkOrders, ListFuelLogs, ListEntries /
+   ListJournalEntries, ListReceipts mounted vía `ListReceipts`).
+   Quedan viables: **ListMaintenanceAssets wrapper for dedicated
+   catalog page (si no ya cubierta), ListCatalogTypes (thin, skippable),
+   y el resto probablemente Tier C.**
+3. **Tier C worth unlocking**: candidatos con filter obligatorio pero
+   fácil de generalizar:
+   - `ListTreasuryMovements` — ya mounted en service, pero ¿la page
+     existe? Treasury page (`/administracion/tesoreria/page.tsx`) ya
+     consume movements. Skip.
+   - `ListStatementLines` — requiere `reconciliation_id`. Natural
+     `[id]` route bajo reconciliaciones.
+   - `ListPriceListItems` — requiere `price_list_id`. Natural `[id]`
+     bajo `/compras/listas-precios/[id]/items`.
+   - `ListQuotationLines` — requiere `quotation_id`. Abre `/ventas`
+     módulo (hoy vacío).
+   - `ListPurchaseOrderLines` — requiere `order_id`. Sub-page de
+     purchase orders.
+   - `ListInvoiceLines` — requiere `invoice_id`. Sub-page de invoice
+     detail (ya hay invoice list en `/administracion/facturacion`).
+   - `ListMaintenancePlans` — requiere `asset_id`. Sub-page bajo
+     `/mantenimiento/equipos/[id]/planes`.
+   - `ListWorkOrderParts` — requiere `work_order_id`. Sub-page bajo
+     work order detail.
 
-**Touched files (expected):**
-- `apps/web/src/components/erp/entity-picker.tsx` (nuevo)
-- `apps/web/src/app/(modules)/administracion/reclamos/page.tsx` (wire-up)
-- `apps/web/src/lib/erp/queries.ts` (add `entitiesSearch` key)
-- `apps/web/src/lib/erp/types.ts` (add `EntitySearchResult` if needed)
+### Batches propuestos
 
-**Reuso futuro:** mismo componente va a servir para bcs_importacion
-(cluster del siguiente commit) y cualquier cluster que necesite
-seleccionar cliente/proveedor.
+**Batch 1 — Primera fila de detail sub-pages** (abrir patrón `[id]`):
 
-### Commit 2 — Reclamos: saldo aggregate per proveedor
+1. **Reconciliación → líneas de extracto**
+   `/administracion/tesoreria/reconciliaciones/[id]/page.tsx` — lista
+   StatementLines + match status. Trae el entity picker para
+   selección de cuenta bancaria (ya hay).
+2. **Lista de precios → items**
+   `/compras/listas-precios/[id]/page.tsx` — lista PriceListItems con
+   article_code + description + price.
+3. **Order de compra → líneas**
+   `/compras/ordenes/[id]/page.tsx` — lista PurchaseOrderLines con
+   article, qty, unit_price, total.
+4. **Factura → líneas + tax entries**
+   `/administracion/facturacion/[id]/page.tsx` — lista InvoiceLines +
+   la lista ya-mounted TaxEntries.
 
-**Scope:** incorporar el saldo total del proveedor junto a cada fila
-del reclamo, replicando lo que `reclamopagos_ing.xml` hace con el
-`sum(REG_MOVIMIENTOS.saldo_movimiento)` agrupado por `regcuenta_id`.
+Cada uno es un `[id]/page.tsx` nuevo + probablemente un link desde la
+página list correspondiente al detail. El shape se repite, pero
+estandarizar el pattern `[id]` abre un segundo eje de coverage.
 
-El endpoint `/v1/erp/accounts/balances` ya existe y devuelve
-`{entity_name, entity_type, direction, open_balance}` por entidad.
+**Batch 2 — Módulo `/ventas` desde cero (si queda tiempo)**:
 
-**Opciones de wire-up (elegir antes de codear):**
+5. **Cotizaciones list** `/ventas/cotizaciones` — consume
+   GET /v1/erp/sales/quotations (ya mounted).
+6. **Cotización → líneas + options**
+   `/ventas/cotizaciones/[id]/page.tsx` — abre QuotationLines +
+   QuotationOptions.
+7. **Recetas de producción** (si queda) —
+   `/produccion/recetas` sobre `ListProductionOrderRecipes` si
+   existe sin handler.
 
-1. **Cliente-side join** — fetch `balances` + `complaints` por
-   separado, matchearlos en el render por `entity_legacy_code` o
-   `entity_id`. Más simple, un ida y vuelta menos al backend. Si el
-   set de proveedores es chico (y lo es, ~100s en total) el match
-   es O(n·m) pero tolerable.
-2. **Nuevo endpoint `/complaints/with-balance`** — `ListComplaints`
-   LEFT JOIN de `erp_payment_complaints` con la agregación de
-   `erp_account_movements.balance`. Más clean SQL, un single roundtrip,
-   pero agrega superficie backend a mantener.
+**Batch 3 — Refactor shortcut de 2.0.17**:
 
-Decision: empezar por (1) — el volumen no justifica un endpoint nuevo
-y el match client-side es 20 LOC.
-
-**Touched files:**
-- `apps/web/src/app/(modules)/administracion/reclamos/page.tsx`
-  (agregar query a balances + render columna "Saldo")
-
-### Commit 3 — Segundo cluster §UI parity: `bancos_local/bcs_importacion`
-
-**Target data:** `erp_bank_imports` (migración `076`, 2.0.10, 91,959
-rows live). Reconciliación de extractos bancarios importados desde
-CSV/XLS vs REG_MOVIMIENTOS.
-
-**Histrix XML-forms a cubrir (3):**
-
-- `bancos_local/bcs_importacion_qry.xml` — vista principal (list +
-  filters: account, processed state, date range).
-- `bancos_local/bcsmovim_importacion_auto_ins.xml` — ingesta de archivo
-  (bulk insert desde CSV). Puede quedar out-of-scope de este PR si
-  requiere file-upload infra; alternativa: waiver con pointer a un
-  futuro cluster de ingesta.
-- `bancos_local/bcsmovim_importacion_auto_mov_ins.xml` — conciliación
-  fila-por-fila. Es el 90% del valor — toggle `processed` + link a
-  REG_MOVIMIENTOS match.
-
-**Backend status:** `sda list ListBankImports` ya existe
-(`services/erp/db/queries/treasury.sql`). **Hay que agregar:**
-
-- `UpdateBankImportProcessed` — toggle `processed` flag + set
-  `treasury_movement_id` if match elegido.
-- (Opcional) `MatchBankImportToMovement` — transaction que marca
-  ambos lados.
-
-**Frontend:**
-
-- `apps/web/src/app/(modules)/administracion/tesoreria/importaciones/page.tsx`
-  (nuevo route — bajo `tesoreria` en vez de crear su propio módulo).
-- Table con filters (account dropdown, date range, processed state
-  tabs) + toggle fila.
-- Registry entry: agregar `/administracion/tesoreria/importaciones` a
-  `administracion` subnav o como sub-path de `/tesoreria`.
-
-**Touched files (expected):**
-- `services/erp/db/queries/treasury.sql` + hand-patch
-- `services/erp/internal/service/treasury.go` — nuevo service methods
-- `services/erp/internal/handler/treasury.go` — nuevo endpoints
-- `services/erp/cmd/main.go` — si cambian routes
-- `apps/web/src/app/(modules)/administracion/tesoreria/importaciones/page.tsx`
-- `apps/web/src/lib/erp/queries.ts` + `types.ts`
-- `apps/web/src/lib/modules/registry.ts`
-- `docs/parity/ui-parity.md` — agregar cluster
+8. **Split Admin's Tier B endpoints**: mover product-sections /
+   products / product-attributes / tools a services/handlers
+   dedicados (`/v1/erp/products/*`, `/v1/erp/tools/*`). Los 4 pages
+   frontend ya existen; sólo cambia el URL y el mount point. Es un
+   refactor trivial pero limpia deuda de 2.0.17.
 
 ### Cierre esperado
 
-Post-2.0.13:
+Post-2.0.18:
 
-- Reclamos UI: feature-complete vs Histrix (picker + saldo).
-- Segundo cluster §UI parity live (bcs_importacion) con 1-2 XML-forms
-  cubiertas directamente; el tercer form (file-upload) waived o
-  diferido.
-- `ui-parity.md`: 2 clusters tracked, 4-5 XML-forms → SDA pages.
+- ≥ 8 clusters nuevos trackados en ui-parity.md → total ≥ 41.
+- Pattern `[id]/page.tsx` abierto en al menos 3 módulos
+  (tesorería, compras, facturación).
+- Opcional: refactor de Admin → Products/Tools dedicado.
 - Phase 0 gates verdes.
 
-## Candidatos para clusters futuros (lookahead — NO esta sesión)
+## Candidatos para sesiones futuras (lookahead — NO 2.0.18)
 
-Ordenados por tamaño de data migrada + valor de negocio:
+Ordenados por importancia para cerrar Phase 1:
 
-| Orden | Cluster | XML-forms | Data backing | Notas |
-|---:|---|---:|---|---|
-| 1 | **bcs_importacion** | 3 | erp_bank_imports (92 K) | Plan 2.0.13 |
-| 2 | **carchehi** (check history) | 3 | erp_check_history (29 K) | Treasury |
-| 3 | **reclamos + calificación** sub-view en proveedores | 1 | erp_entity_credit_ratings (136 K) | Embebe calificación dentro de proveedores/[id] |
-| 4 | **evolutivo_costo + presup** (budget/chart) | 15 | erp_stock_cost_movements (15 K) | Big cluster, requiere chart lib |
-| 5 | **invoice notes** | ~5 forms | erp_invoice_notes (73 K) | Sub-view en facturas |
+| Orden | Tema | Notas |
+|---:|---|---|
+| 1 | **Write paths en clusters read-only existentes** | Create/update en reclamos, importaciones, carchehi (partial), calificaciones, notas. Cada uno requiere audit + NATS + entity pickers. |
+| 2 | **Módulos vacíos con backend listo** | `/ventas` está vacío; `/compras/abastecimiento`, `/compras/comex` sub-features; `/rrhh/legajos` detalle. |
+| 3 | **Reports (Phase 1 §Reports parity)** | ADR 027 Phase 1 §Reports es un eje separado de §UI parity. Libro IVA, mayor contable, tax-book necesitan UI + filters + export. |
+| 4 | **Cutover seamless-day test** | Phase 1 gating final — una persona trabaja un día completo en SDA sin abrir Histrix. Gap discovery. |
+| 5 | **Write paths para crear/editar catálogos** | bodegas, cajas, centros-producción, bank-accounts, cash-registers — hoy todos read-only. |
 
 ## Trampas heredadas
 
-- **Dialog asChild** — en este codebase el componente Dialog **NO**
-  acepta `asChild` en DialogTrigger. Pattern correcto: `<Button
-  onClick={() => setOpen(true)}>` fuera del Dialog, y el Dialog recibe
-  `open={open} onOpenChange={(v) => !v && setOpen(false)}`. Ver
-  `apps/web/src/app/(modules)/administracion/reclamos/page.tsx` como
-  referencia — así lo usé en 2.0.12.
-- **Textarea existe** — `apps/web/src/components/ui/textarea.tsx` ya
-  está. No crear uno nuevo.
-- **sqlc drift** — editar `.sql` + hand-patch `.sql.go`/`models.go`
-  quirúrgicamente. Memoria `feedback_sqlc_version_drift`.
-- **Phase 0 invariants** — cualquier nuevo endpoint escritura debe
-  declarar capability + permission check + strict audit antes de
-  commit + NATS event post-commit. Ver el shape de
-  `CreateComplaint` en `services/erp/internal/service/current_accounts.go`.
-- **Pre-existing lint noise** — `pkg/server/healthcheck.go` + test
-  tienen 3 errcheck warnings que vienen de main. No son de este
-  scope — ignorar a menos que se toque ese archivo.
-- **Tailscale SSH re-auth** — workstation a veces pide re-auth en
-  `https://login.tailscale.com/a/...`. No bloquea MySQL que va por
-  WireGuard.
+- **Agents hallucinate**: ambos agentes paralelos de 2.0.17
+  mintieron sobre varios handlers ("ya mounted" cuando no lo
+  estaban, y viceversa). Siempre verificar con grep antes de
+  construir. Pattern: el agente dice `maintenance.go:42` pero puede
+  estar apuntando a un route diferente — confirmar con
+  `r.Get(".*endpoint"` específico.
+- **Nested git repos**: `apps/web/.git` es un repo separado (leftover
+  de setup). `cd apps/web` + `git stash` NO afecta el repo outer.
+  Para comandos git del repo principal, usar `git -C /home/enzo/rag-saldivia`.
+- **cwd persiste entre Bash calls**: si un comando hace `cd apps/web`,
+  los siguientes Bash siguen ahí. Volver con `cd /home/enzo/rag-saldivia`
+  o usar rutas absolutas.
+- **Registry `FileText` warning**: `src/lib/modules/registry.ts:22`
+  tiene `'FileText' is defined but never used` — lint warning
+  pre-existente desde main. No bloquea, ignorable.
+- **Admin handler bloat**: los 4 endpoints Tier B bolted en 2.0.17
+  acumulan `Products` y `Tools` fuera de su domain natural. Si no
+  se splitean en 2.0.18, anotar en ADR como deuda explícita.
 
-## Fuera de scope
+## Fuera de scope 2.0.18
 
-- **ADR 027 §Data migration items restantes (3/4)** — dependen de
-  cutover rehearsal live o del `erp_legacy_archive` read endpoint.
-  Ambas son tareas ops / backend-go de sesión dedicada, no shipping
-  §UI parity.
-- **Phase 2+ (chat, prompts jerárquicos, tree-RAG, ACL)** —
-  desbloqueado pero sigue detrás de Phase 1 §UI parity en el
-  orden top-down.
-- **File upload para bcs_importacion_auto_ins** — requiere infra
-  de ingest/upload que no existe todavía. Waivable (o diferido a una
-  sesión posterior con shape más grande).
-- **ADR 027 §UI parity row 1 tick** — tickear "Every XML-form has SDA
-  equivalent or waiver" solo va a pasar cuando estén todos los
-  ~4,500 forms cubiertos o waived. Por ahora, **cada cluster agrega
-  una fila a `ui-parity.md`** y no toca el checkbox global.
+- **Phase 2+** (chat agent, prompts jerárquicos, tree-RAG, ACL): sigue
+  detrás de Phase 1 §UI parity en el orden top-down.
+- **ADR 027 §UI parity row 1 tick**: cerrar "Every XML-form has SDA
+  equivalent or waiver" requiere cubrir ~4,500 forms. No en este
+  ciclo. Cada cluster sigue agregando filas a `ui-parity.md`.
+- **W-009 file-upload** (bulk CSV/XLS bank import): sigue waived.
+- **Refactor de Admin Tier B endpoints**: opcional en Batch 3, puede
+  diferirse a un ciclo dedicado.
 
 ## Post-PR cierre ciclo
 
 ```bash
-gh pr create --base main --head 2.0.13 --title "..." --body "..."
+gh pr create --base main --head 2.0.18 --title "..." --body "..."
 # Post-merge:
 git checkout main && git pull origin main
-git tag v2.0.13 && git push origin v2.0.13
-gh release create v2.0.13 --title "..." --notes "..."
+git tag v2.0.18 && git push origin v2.0.18
+gh release create v2.0.18 --title "..." --notes "..."
 ssh sistemas@srv-ia-01 "cd /opt/saldivia/repo && git pull origin main"
 ```
 
-Memoria `feedback_version_tagging.md`. Release body incluye:
-
-- Resumen de los dos bloques (reclamos depth + bcs_importacion
-  cluster).
-- Estado post: N clusters en ui-parity.md.
-- Link al PR + cualquier gap documentado.
+Release body incluye:
+- Tabla de clusters shipped (shape idéntico a 2.0.16 / 2.0.17).
+- ADR 027 deltas (clusters tracked, endpoints nuevos).
+- Link al PR.
