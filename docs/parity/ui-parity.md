@@ -10,15 +10,50 @@ Unit of work is the **cluster** — one Histrix area/form group maps to
 one SDA route. A cluster is "covered" when the SDA page delivers the
 same operational surface as the Histrix form(s) it replaces.
 
-## Totals (2026-04-19, post-2.0.19)
+## Totals (2026-04-19, post-2.0.20)
 
 | Segment | Count |
 |---|---:|
 | Histrix XML-forms in `.intranet-scrape/xml-forms/` | ~4,500 files |
 | Histrix top-level forms (area/form groups) | 434 |
-| SDA `page.tsx` routes shipped | 118 |
-| **SDA pages explicitly tracked as XML-form parity** | **48** (this file) |
+| SDA `page.tsx` routes shipped | 124 |
+| **SDA pages explicitly tracked as XML-form parity** | **54** (this file) |
 | XML-form waivers (§UI) | **1** (W-009, see `waivers.md`) |
+
+## 2.0.20 clusters (6)
+
+Six more `[id]` detail routes. Three closed the entity-symmetry gap
+left by 2.0.19 (proveedor shipped; now cliente + empleado + vehículo
+taller). Three opened previously-orphaned list pages that had no
+Get-by-id endpoint: a small backend lift (~140 LOC) added three `GetX
+:one` queries + service methods + chi routes, unlocking bank account,
+cash register, and cost center detail.
+
+| Cluster | Route | Endpoint | Tier |
+|---|---|---|---|
+| Cliente → contactos + documentos + notas | `/administracion/clientes/[id]` | `GET /v1/erp/entities/{id}` | C (new page) |
+| Legajo → puesto + asistencia + contactos | `/rrhh/legajos/[id]` | `GET /v1/erp/hr/employees/{id}` + `/attendance?entity_id=` | C (new page + typed list) |
+| Vehículo taller → ficha + incidentes | `/mantenimiento/taller/vehiculos/[id]` | `GET /v1/erp/workshop/vehicles/{id}` + `/incidents?vehicle_id=` | C (new page) |
+| Cuenta bancaria → metadata + reconciliaciones | `/administracion/tesoreria/cuentas-bancarias/[id]` | `GET /v1/erp/treasury/bank-accounts/{id}` | C (new handler + page) |
+| Caja → metadata + arqueos | `/administracion/tesoreria/cajas/[id]` | `GET /v1/erp/treasury/cash-registers/{id}` | C (new handler + page) |
+| Centro de costo → metadata + parent | `/administracion/contable/centros-costo/[id]` | `GET /v1/erp/accounting/cost-centers/{id}` | C (new handler + page) |
+
+Notes:
+- **Entity symmetry** is now complete across proveedor / cliente /
+  empleado — all three consume `GetEntity` for the base ficha and
+  layer role-specific data on top (demeritos for supplier, asistencia
+  for employee, contactos/notas for customer). The `{id}` URL param
+  for the HR detail is `entity_id` (not employee row id) — matches
+  the Go handler convention.
+- **Backend lift** for cuentas-bancarias / cajas / centros-costo
+  followed the `GetPriceList` shape (sqlc-generated-style code added
+  manually per the MEMORY note on sqlc regen drift). Mock updates
+  for the 3 new service methods kept the handler tests green.
+- **Reconciliaciones by bank account** and **arqueos by caja** are
+  filtered client-side from the full list; a `ListReconciliations`
+  and `ListCashCounts` filter by `bank_account_id` / `cash_register_id`
+  is the follow-up. Cost-center journal-entries filter is the other
+  deferred piece — tracked for the next session.
 
 ## 2.0.19 clusters (7)
 
