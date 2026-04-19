@@ -10,15 +10,34 @@ Unit of work is the **cluster** — one Histrix area/form group maps to
 one SDA route. A cluster is "covered" when the SDA page delivers the
 same operational surface as the Histrix form(s) it replaces.
 
-## Totals (2026-04-19, post-2.0.15)
+## Totals (2026-04-19, post-2.0.16)
 
 | Segment | Count |
 |---|---:|
 | Histrix XML-forms in `.intranet-scrape/xml-forms/` | ~4,500 files |
 | Histrix top-level forms (area/form groups) | 434 |
-| SDA `page.tsx` routes shipped | 77 |
-| **SDA pages explicitly tracked as XML-form parity** | **11** (this file) |
+| SDA `page.tsx` routes shipped | 87 |
+| **SDA pages explicitly tracked as XML-form parity** | **21** (this file) |
 | XML-form waivers (§UI) | **1** (W-009, see `waivers.md`) |
+
+## 2.0.16 clusters (10)
+
+Shipped as a single PR; routes + XML-form anchors only (deep per-cluster
+notes omitted — each is a read-only list view on top of a handler that
+either already existed or got a thin new wrapper).
+
+| Cluster | Route | Endpoint | Tier |
+|---|---|---|---|
+| Reconciliaciones bancarias | `/administracion/tesoreria/reconciliaciones` | `GET /v1/erp/treasury/reconciliations` | A |
+| Bodegas / almacenes | `/administracion/almacen/bodegas` | `GET /v1/erp/stock/warehouses` | A |
+| Recuentos de caja | `/administracion/tesoreria/recuentos` | `GET /v1/erp/treasury/cash-counts` | A |
+| Vehículos de clientes | `/mantenimiento/taller/vehiculos` | `GET /v1/erp/workshop/vehicles` | A |
+| Incidentes vehiculares | `/mantenimiento/taller/incidentes` | `GET /v1/erp/workshop/incidents` | A |
+| Centros de producción | `/produccion/centros` | `GET /v1/erp/production/centers` | A |
+| Cuentas bancarias | `/administracion/tesoreria/cuentas-bancarias` | `GET /v1/erp/treasury/bank-accounts` | A |
+| Cajas | `/administracion/tesoreria/cajas` | `GET /v1/erp/treasury/cash-registers` | A |
+| Listas de precios | `/compras/listas-precios` | `GET /v1/erp/sales/price-lists` | A |
+| Scorecards de proveedores | `/calidad/scorecards` | `GET /v1/erp/quality/supplier-scorecards` | B (new) |
 
 The 67 existing SDA pages cover the ERP admin surface structurally
 (clientes, proveedores, tesorería, facturación, contable, compras,

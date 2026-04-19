@@ -194,3 +194,13 @@ func (s *Quality) ListIndicators(ctx context.Context, tenantID, periodFrom, peri
 		PeriodTo:   periodTo,
 	})
 }
+
+// ListSupplierScorecards returns supplier-quality scorecards per
+// (supplier, período). JOINs erp_entities for supplier_name.
+func (s *Quality) ListSupplierScorecards(ctx context.Context, tenantID string, limit, offset int) ([]repository.ListSupplierScorecardsRow, error) {
+	return s.repo.ListSupplierScorecards(ctx, repository.ListSupplierScorecardsParams{
+		TenantID: tenantID,
+		Limit:    int32(limit),
+		Offset:   int32(offset),
+	})
+}
