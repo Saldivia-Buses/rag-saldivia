@@ -1158,6 +1158,51 @@ func (q *Queries) ListSupplierScorecards(ctx context.Context, arg ListSupplierSc
 	return items, nil
 }
 
+const getSupplierScorecard = `-- name: GetSupplierScorecard :one
+SELECT sc.id, sc.tenant_id, sc.supplier_id, sc.period, sc.total_receipts, sc.accepted_qty, sc.rejected_qty, sc.total_demerits, sc.quality_score, sc.created_at, e.name AS supplier_name
+FROM erp_supplier_scorecards sc
+JOIN erp_entities e ON e.id = sc.supplier_id AND e.tenant_id = sc.tenant_id
+WHERE sc.id = $1 AND sc.tenant_id = $2
+`
+
+type GetSupplierScorecardParams struct {
+	ID       pgtype.UUID `json:"id"`
+	TenantID string      `json:"tenant_id"`
+}
+
+type GetSupplierScorecardRow struct {
+	ID            pgtype.UUID        `json:"id"`
+	TenantID      string             `json:"tenant_id"`
+	SupplierID    pgtype.UUID        `json:"supplier_id"`
+	Period        string             `json:"period"`
+	TotalReceipts int32              `json:"total_receipts"`
+	AcceptedQty   pgtype.Numeric     `json:"accepted_qty"`
+	RejectedQty   pgtype.Numeric     `json:"rejected_qty"`
+	TotalDemerits int32              `json:"total_demerits"`
+	QualityScore  pgtype.Numeric     `json:"quality_score"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	SupplierName  string             `json:"supplier_name"`
+}
+
+func (q *Queries) GetSupplierScorecard(ctx context.Context, arg GetSupplierScorecardParams) (GetSupplierScorecardRow, error) {
+	row := q.db.QueryRow(ctx, getSupplierScorecard, arg.ID, arg.TenantID)
+	var i GetSupplierScorecardRow
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.SupplierID,
+		&i.Period,
+		&i.TotalReceipts,
+		&i.AcceptedQty,
+		&i.RejectedQty,
+		&i.TotalDemerits,
+		&i.QualityScore,
+		&i.CreatedAt,
+		&i.SupplierName,
+	)
+	return i, err
+}
+
 const updateActionPlanStatus = `-- name: UpdateActionPlanStatus :execrows
 UPDATE erp_quality_action_plans
 SET status = $3, closed_date = CASE WHEN $3 IN ('closed','cancelled') THEN now()::DATE ELSE closed_date END, updated_at = now()

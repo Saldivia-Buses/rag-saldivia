@@ -77,6 +77,12 @@ WHERE sc.tenant_id = $1
 ORDER BY sc.period DESC, sc.quality_score ASC
 LIMIT $2 OFFSET $3;
 
+-- name: GetSupplierScorecard :one
+SELECT sc.*, e.name AS supplier_name
+FROM erp_supplier_scorecards sc
+JOIN erp_entities e ON e.id = sc.supplier_id AND e.tenant_id = sc.tenant_id
+WHERE sc.id = $1 AND sc.tenant_id = $2;
+
 -- name: UpsertSupplierScorecard :one
 INSERT INTO erp_supplier_scorecards (tenant_id, supplier_id, period, total_receipts, accepted_qty, rejected_qty, total_demerits, quality_score)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
