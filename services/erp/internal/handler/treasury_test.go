@@ -138,6 +138,12 @@ func (m *mockTreasuryService) MatchManual(_ context.Context, _ string, _, _, _ p
 func (m *mockTreasuryService) ConfirmReconciliation(_ context.Context, _ string, _ pgtype.UUID, _, _ string) error {
 	return m.err
 }
+func (m *mockTreasuryService) ListBankImports(_ context.Context, _ string, _, _ int32, _, _ pgtype.Date, _, _ int) ([]repository.ErpBankImport, error) {
+	return nil, m.err
+}
+func (m *mockTreasuryService) UpdateBankImportProcessed(_ context.Context, _ service.UpdateBankImportRequest) error {
+	return m.err
+}
 
 // --- helpers ---
 

@@ -319,3 +319,41 @@ re-read them directly from MySQL and push into the right sink.
 and we pick the time-series sink. At that point the correct move is
 to write the ingester (read EGX/TEL_LOG every N seconds → sink), not
 to migrate the historic rows into Postgres.
+
+## W-009 — bcs_importacion_auto_ins bulk CSV/XLS ingest (§UI)
+
+**Scope**: `bancos_local/bcsmovim_importacion_auto_ins.xml` — the
+Histrix form that accepts a bank extract file (CSV / XLS) and bulk-
+inserts one row per line into `BCS_IMPORTACION` (now
+`erp_bank_imports`). Paired read-only qry + per-row toggle forms
+(`bcs_importacion_qry.xml` and `bcsmovim_importacion_auto_mov_ins.xml`)
+are **covered** by `/administracion/tesoreria/importaciones` in 2.0.13
+— see `docs/parity/ui-parity.md`.
+
+**Why**: SDA does not yet have a file-upload + server-side parser
+pipeline. Histrix's implementation expects a CSV or proprietary XLS
+layout per bank (format varies — Supervielle, Santander, Galicia
+layouts all differ) and runs a PHP parser to map columns onto
+`BCS_IMPORTACION` fields. Reproducing that would require: (a)
+file-upload infra (MinIO bucket + pre-signed URLs, or direct
+multipart/form-data into the Go service); (b) a per-bank format
+registry with parsers; (c) error-row surfacing UI. That's a dedicated
+cluster, not part of the XML-form replacement for the read/toggle
+surface.
+
+Meanwhile, the staging table (`erp_bank_imports`, 91,959 rows live) is
+already populated through the existing Histrix ingester — which still
+runs against the same `saldivia` DB, feeding rows that SDA now reads
+and toggles via the covered forms.
+
+**Blast radius**: zero for operators during Phase 1 — the existing
+Histrix ingester keeps running, and the SDA page consumes its output.
+No data loss: the rows still land in MySQL first and are mirrored into
+`erp_bank_imports` by the migrator on each sync.
+
+**Revisit**: when a file-ingest cluster enters scope (likely alongside
+Phase 3 mail / document-ingestion agents, or an explicit "bank-import
+UI" Phase 1 session). At that point the right move is to stand up the
+upload surface + parser registry once and cover every per-bank layout,
+not to port Histrix's one-off PHP handler. Strike this waiver in the
+same PR that ships the first bank parser.

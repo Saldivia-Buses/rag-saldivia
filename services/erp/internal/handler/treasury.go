@@ -42,6 +42,8 @@ type TreasuryService interface {
 	AutoMatch(ctx context.Context, tenantID string, reconID pgtype.UUID) (*service.AutoMatchResult, error)
 	MatchManual(ctx context.Context, tenantID string, reconID, lineID, movementID pgtype.UUID) error
 	ConfirmReconciliation(ctx context.Context, tenantID string, reconID pgtype.UUID, userID, ip string) error
+	ListBankImports(ctx context.Context, tenantID string, accountFilter, processedFilter int32, dateFrom, dateTo pgtype.Date, limit, offset int) ([]repository.ErpBankImport, error)
+	UpdateBankImportProcessed(ctx context.Context, req service.UpdateBankImportRequest) error
 }
 
 type Treasury struct{ svc TreasuryService }
@@ -97,6 +99,17 @@ func (h *Treasury) Routes(authWrite func(http.Handler) http.Handler) chi.Router 
 		r.Post("/reconciliations/{id}/auto-match", h.AutoMatch)
 		r.Patch("/reconciliations/{id}/lines/{lineId}/match", h.MatchManual)
 		r.Post("/reconciliations/{id}/confirm", h.ConfirmReconciliation)
+	})
+
+	// Bank imports (BCS_IMPORTACION parity)
+	r.Group(func(r chi.Router) {
+		r.Use(sdamw.RequirePermission("erp.treasury.read"))
+		r.Get("/imports", h.ListBankImportsH)
+	})
+	r.Group(func(r chi.Router) {
+		r.Use(authWrite)
+		r.Use(sdamw.RequirePermission("erp.treasury.write"))
+		r.Patch("/imports/{id}", h.UpdateBankImportProcessedH)
 	})
 
 	return r
@@ -637,6 +650,75 @@ func pgNumericH(s string) pgtype.Numeric {
 func parseFloat(s string) float64 {
 	v, _ := strconv.ParseFloat(s, 64)
 	return v
+}
+
+// ListBankImportsH lists bank-import staging rows.
+// Query params: account (int32, 0=all), processed (int32, -1=all / 0=pending /
+// 1=done / 2=cancelled), date_from, date_to, page, page_size.
+func (h *Treasury) ListBankImportsH(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	p := pagination.Parse(r)
+	q := r.URL.Query()
+
+	account, _ := strconv.Atoi(q.Get("account"))
+	processed := -1
+	if s := q.Get("processed"); s != "" {
+		if v, err := strconv.Atoi(s); err == nil {
+			processed = v
+		}
+	}
+
+	imports, err := h.svc.ListBankImports(r.Context(), slug,
+		int32(account), int32(processed),
+		pgDate(q.Get("date_from")), pgDate(q.Get("date_to")),
+		p.Limit(), p.Offset())
+	if err != nil {
+		erperrors.WriteError(w, r, erperrors.Internal(err))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{"imports": imports})
+}
+
+// UpdateBankImportProcessedH toggles the processed flag on a bank-import row.
+// Body: {processed: 0|1|2, treasury_movement_id: "<uuid>" (optional)}.
+func (h *Treasury) UpdateBankImportProcessedH(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	id, err := parseUUID(chi.URLParam(r, "id"))
+	if err != nil {
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
+		return
+	}
+
+	r.Body = http.MaxBytesReader(w, r.Body, 2<<10)
+	var body struct {
+		Processed          int32  `json:"processed"`
+		TreasuryMovementID string `json:"treasury_movement_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		erperrors.WriteError(w, r, erperrors.InvalidInput("invalid body"))
+		return
+	}
+	if body.Processed < 0 || body.Processed > 2 {
+		erperrors.WriteError(w, r, erperrors.InvalidInput(
+			"processed must be 0 (pending), 1 (processed) or 2 (cancelled)"))
+		return
+	}
+
+	if err := h.svc.UpdateBankImportProcessed(r.Context(), service.UpdateBankImportRequest{
+		ID:                 id,
+		TenantID:           slug,
+		Processed:          body.Processed,
+		TreasuryMovementID: optUUID(&body.TreasuryMovementID),
+		UserID:             r.Header.Get("X-User-ID"),
+		IP:                 r.RemoteAddr,
+	}); err != nil {
+		erperrors.WriteError(w, r, erperrors.Internal(err))
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func pgTextOpt(s *string) pgtype.Text {

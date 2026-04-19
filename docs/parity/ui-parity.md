@@ -10,14 +10,15 @@ Unit of work is the **cluster** — one Histrix area/form group maps to
 one SDA route. A cluster is "covered" when the SDA page delivers the
 same operational surface as the Histrix form(s) it replaces.
 
-## Totals (2026-04-19, post-2.0.12)
+## Totals (2026-04-19, post-2.0.13)
 
 | Segment | Count |
 |---|---:|
 | Histrix XML-forms in `.intranet-scrape/xml-forms/` | ~4,500 files |
 | Histrix top-level forms (area/form groups) | 434 |
-| SDA `page.tsx` routes shipped | 67 |
-| **SDA pages explicitly tracked as XML-form parity** | **1** (this file) |
+| SDA `page.tsx` routes shipped | 68 |
+| **SDA pages explicitly tracked as XML-form parity** | **2** (this file) |
+| XML-form waivers (§UI) | **1** (W-009, see `waivers.md`) |
 
 The 67 existing SDA pages cover the ERP admin surface structurally
 (clientes, proveedores, tesorería, facturación, contable, compras,
@@ -49,18 +50,59 @@ Permissions: `erp.accounts.read` for list, `erp.accounts.write` for
 create / status toggle. Every write publishes an `erp_payment_complaints`
 NATS event and a strict audit log entry (`erp.payment_complaints.*`).
 
+**Status vs Histrix (post-2.0.13):** parity-complete for the
+operational surface the three XML-forms describe.
+
+- Entity picker: shipped in 2.0.13 —
+  `apps/web/src/components/erp/entity-picker.tsx` wraps
+  `GET /v1/erp/entities?type=supplier&search=…` in a debounced modal
+  and feeds `entity_id` + `entity_legacy_code` into the complaint
+  create body. Reusable across clusters.
+- Saldo aggregate: shipped in 2.0.13 — the reclamos page now runs a
+  second query against `/v1/erp/accounts/balances?direction=payable`
+  and renders the supplier's open balance next to each complaint row,
+  matching the `SUM(saldo_movimiento)` group-by of
+  `reclamopagos_ing.xml`.
+
+### Cluster: Importaciones bancarias (2.0.13)
+
+**SDA page:** `apps/web/src/app/(modules)/administracion/tesoreria/importaciones/page.tsx`
+→ `/administracion/tesoreria/importaciones` (Administración →
+Importaciones bancarias).
+
+**Covers Histrix XML-forms:**
+- `bancos_local/bcs_importacion_qry.xml` (query view — filters by
+  account, date range, processed state; shows fecha / concepto /
+  número / débito / crédito / saldo).
+- `bancos_local/bcsmovim_importacion_auto_mov_ins.xml` (per-row
+  processed toggle — maps to the "Marcar procesado" / "Reabrir"
+  action). Partial coverage: the UI toggles `processed` without
+  forcing a `treasury_movement_id` link; the full match flow still
+  goes through Histrix.
+- `bancos_local/bcsmovim_importacion_auto_ins.xml` — **waived**
+  (`W-009`, see `docs/parity/waivers.md`). Bulk CSV/XLS ingest
+  requires file-upload infra; the staging table is still populated
+  via the existing Histrix pipeline.
+
+**Data dependency:** `erp_bank_imports` (migration `076`, shipped in
+2.0.10; BCS_IMPORTACION → 91,959 rows live).
+
+**Backend endpoints added (scoped under `/v1/erp/treasury`):**
+- `GET   /imports?account=&processed=&date_from=&date_to=&page=&page_size=`
+- `PATCH /imports/{id}` (body: `{processed: 0|1|2,
+  treasury_movement_id?: "<uuid>"}`)
+
+Permissions: `erp.treasury.read` for list, `erp.treasury.write` for
+toggle. The write publishes an `erp_bank_imports` NATS event and a
+strict audit entry (`erp.bank_imports.processed_changed`).
+
 **Notable gaps vs Histrix:**
-- Entity picker: Histrix uses a modal `ayuda_ex` popup against
-  `CCTCUENT` / `REG_CUENTA`. The SDA page currently takes the raw
-  `ctacod` number in the create form and stores it as
-  `entity_legacy_code`. An entity-UUID resolver is a follow-up —
-  the backend accepts `entity_id` already, so dropping in a picker
-  is additive.
-- Saldo aggregate: `reclamopagos_ing.xml` joins REG_MOVIMIENTOS and
-  sums `saldo_movimiento` per proveedor so the operator sees the
-  outstanding balance alongside each complaint. Not included in the
-  first cut — will land when `GET /accounts/balances` is wired into
-  the reclamos view (same endpoint that feeds `/cuentas`).
+- Treasury-movement picker: Histrix's `auto_mov_ins` form binds
+  `regmovim_id` (movement id) alongside `procesado=1` via a linked
+  `bcsmovim_conci_bcsmov_ins.xml` helper. The SDA page does not yet
+  include a treasury-movement picker, so toggling "procesado" leaves
+  `treasury_movement_id` NULL. Full matching ships in a later cluster
+  along with a reconciliation picker.
 
 ## How to tick an XML-form here
 

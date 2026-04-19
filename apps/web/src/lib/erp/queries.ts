@@ -30,6 +30,8 @@ export const erpKeys = {
     [...erpKeys.all, "treasury", "balance"] as const,
   bankAccounts: () => [...erpKeys.all, "treasury", "bank-accounts"] as const,
   checks: () => [...erpKeys.all, "treasury", "checks"] as const,
+  bankImports: (params?: Record<string, string>) =>
+    [...erpKeys.all, "treasury", "imports", params] as const,
   receipts: (type?: string) =>
     [...erpKeys.all, "treasury", "receipts", { type }] as const,
   accountBalances: () =>

@@ -83,6 +83,31 @@ export interface BankBalance {
   balance: number;
 }
 
+// Bank-import staging rows (BCS_IMPORTACION parity — Phase 1 §UI)
+export interface BankImport {
+  id: string;
+  tenant_id: string;
+  legacy_id: number;
+  movement_date: string | null;
+  concept_name: string;
+  movement_no: number;
+  amount: number;
+  debit: number;
+  credit: number;
+  balance: number;
+  movement_code: string;
+  treasury_movement_id: string | null;
+  treasury_legacy_id: number;
+  imported_at: string | null;
+  account_number: number;
+  account_entity_id: string | null;
+  processed: number; // 0 = pendiente, 1 = procesado, 2 = anulado
+  comments: string;
+  internal_no: number;
+  branch: string;
+  created_at: string;
+}
+
 // Invoicing
 export interface Invoice {
   id: string;
