@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -148,7 +149,11 @@ export default function ClientesPage() {
             <TableBody>
               {entities.map((e) => (
                 <TableRow key={e.id}>
-                  <TableCell className="font-mono text-sm">{e.code}</TableCell>
+                  <TableCell className="font-mono text-sm">
+                    <Link href={`/administracion/clientes/${e.id}`} className="hover:underline">
+                      {e.code}
+                    </Link>
+                  </TableCell>
                   <TableCell className="text-sm font-medium">{e.name}</TableCell>
                   <TableCell className="font-mono text-sm text-muted-foreground">{e.tax_id ?? "—"}</TableCell>
                   <TableCell className="text-sm text-muted-foreground truncate max-w-48">{e.email ?? "—"}</TableCell>
