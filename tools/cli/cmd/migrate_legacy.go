@@ -522,6 +522,14 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 		migration.NewPaymentComplaintMigrator(mysqlDB, tenantID),
 	)
 
+	// Phase 4f: Stock cost movements (STK_COSTOS → erp_stock_cost_movements,
+	// 15 K rows live). Pareto #21. Closes the 2.0.11 residual — business
+	// data gap drops to ZERO tables post-080. Resolves article / entity /
+	// invoice via existing caches; the rest of the ~50 cols ride raw.
+	orch.RegisterMigrators(
+		migration.NewStockCostMovementMigrator(mysqlDB, tenantID),
+	)
+
 	// Before the BOM history phase: seed ghost articles for orphan pieza_ids
 	// so the 2.5M+ rows whose STKPIEZA parent no longer exists can still land
 	// in SDA. See rescue.go for rationale + empirical numbers.

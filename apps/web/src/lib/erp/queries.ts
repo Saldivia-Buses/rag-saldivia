@@ -38,6 +38,8 @@ export const erpKeys = {
     [...erpKeys.all, "accounts", "overdue"] as const,
   accountStatement: (entityId?: string) =>
     [...erpKeys.all, "accounts", "statement", { entityId }] as const,
+  paymentComplaints: (params?: Record<string, string>) =>
+    [...erpKeys.all, "accounts", "complaints", params] as const,
   productionOrders: (status?: string) =>
     [...erpKeys.all, "production", "orders", { status }] as const,
   employees: () => [...erpKeys.all, "hr", "employees"] as const,

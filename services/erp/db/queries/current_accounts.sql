@@ -87,3 +87,28 @@ WHERE tenant_id = $1
   AND (sqlc.arg(entity_filter)::UUID IS NULL OR entity_id = sqlc.arg(entity_filter)::UUID)
 ORDER BY complaint_date DESC NULLS LAST, legacy_id DESC
 LIMIT $2 OFFSET $3;
+
+-- name: CreatePaymentComplaint :one
+-- Create a new supplier-payment complaint. entity_id resolves at the
+-- caller (frontend picks the entity UUID).
+INSERT INTO erp_payment_complaints (
+    tenant_id, complaint_date, entity_id, entity_legacy_code,
+    observation, status_flag, login
+)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+RETURNING id, tenant_id, legacy_id, complaint_date,
+          entity_legacy_code, entity_id, observation,
+          status_flag, login, created_at;
+
+-- name: UpdatePaymentComplaintStatus :execrows
+-- Flip the marca flag (0=pendiente ↔ 1=cumplida) on a single complaint.
+UPDATE erp_payment_complaints
+   SET status_flag = $3
+ WHERE id = $1 AND tenant_id = $2;
+
+-- name: GetPaymentComplaint :one
+SELECT id, tenant_id, legacy_id, complaint_date,
+       entity_legacy_code, entity_id, observation,
+       status_flag, login, created_at
+  FROM erp_payment_complaints
+ WHERE id = $1 AND tenant_id = $2;

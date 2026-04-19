@@ -108,3 +108,91 @@ func (s *CurrentAccounts) Allocate(ctx context.Context, req AllocateRequest) err
 	})
 	return nil
 }
+
+// ─── Payment complaints (RECLAMOPAGOS → erp_payment_complaints) ───
+
+// ListComplaints returns complaints filtered by status (-1 = any, 0 = pending,
+// 1 = done) and optional entity. Orders newest-first.
+func (s *CurrentAccounts) ListComplaints(ctx context.Context, tenantID string, statusFilter int16, entityID pgtype.UUID, limit, offset int) ([]repository.ErpPaymentComplaint, error) {
+	return s.repo.ListPaymentComplaints(ctx, repository.ListPaymentComplaintsParams{
+		TenantID:     tenantID,
+		Limit:        int32(limit),
+		Offset:       int32(offset),
+		StatusFilter: statusFilter,
+		EntityFilter: entityID,
+	})
+}
+
+// CreateComplaintRequest carries the fields a caller needs to file a new
+// supplier-payment reclamation.
+type CreateComplaintRequest struct {
+	TenantID         string
+	ComplaintDate    pgtype.Date
+	EntityID         pgtype.UUID
+	EntityLegacyCode int32
+	Observation      string
+	Login            string
+	UserID           string
+	IP               string
+}
+
+// CreateComplaint files a new complaint. status_flag defaults to 0 (pendiente).
+func (s *CurrentAccounts) CreateComplaint(ctx context.Context, req CreateComplaintRequest) (repository.ErpPaymentComplaint, error) {
+	complaint, err := s.repo.CreatePaymentComplaint(ctx, repository.CreatePaymentComplaintParams{
+		TenantID:         req.TenantID,
+		ComplaintDate:    req.ComplaintDate,
+		EntityID:         req.EntityID,
+		EntityLegacyCode: req.EntityLegacyCode,
+		Observation:      req.Observation,
+		StatusFlag:       0,
+		Login:            req.Login,
+	})
+	if err != nil {
+		return repository.ErpPaymentComplaint{}, fmt.Errorf("create complaint: %w", err)
+	}
+	if err := s.audit.WriteStrict(ctx, audit.Entry{
+		TenantID: req.TenantID, UserID: req.UserID,
+		Action: "erp.payment_complaints.created", Resource: uuidStr(complaint.ID),
+		Details: map[string]any{"entity_id": uuidStr(req.EntityID), "observation": req.Observation},
+		IP:      req.IP,
+	}); err != nil {
+		return complaint, fmt.Errorf("audit failed: %w", err)
+	}
+	s.publisher.Broadcast(req.TenantID, "erp_payment_complaints", map[string]any{
+		"action": "created", "id": uuidStr(complaint.ID),
+	})
+	return complaint, nil
+}
+
+// UpdateComplaintStatusRequest flips the marca flag on a single complaint.
+type UpdateComplaintStatusRequest struct {
+	TenantID string
+	ID       pgtype.UUID
+	Status   int16
+	UserID   string
+	IP       string
+}
+
+// UpdateComplaintStatus toggles pendiente ↔ cumplida.
+func (s *CurrentAccounts) UpdateComplaintStatus(ctx context.Context, req UpdateComplaintStatusRequest) error {
+	rows, err := s.repo.UpdatePaymentComplaintStatus(ctx, repository.UpdatePaymentComplaintStatusParams{
+		ID: req.ID, TenantID: req.TenantID, StatusFlag: req.Status,
+	})
+	if err != nil {
+		return fmt.Errorf("update complaint status: %w", err)
+	}
+	if rows == 0 {
+		return fmt.Errorf("complaint not found")
+	}
+	if err := s.audit.WriteStrict(ctx, audit.Entry{
+		TenantID: req.TenantID, UserID: req.UserID,
+		Action: "erp.payment_complaints.status_changed", Resource: uuidStr(req.ID),
+		Details: map[string]any{"status_flag": req.Status}, IP: req.IP,
+	}); err != nil {
+		return fmt.Errorf("audit failed: %w", err)
+	}
+	s.publisher.Broadcast(req.TenantID, "erp_payment_complaints", map[string]any{
+		"action": "status_changed", "id": uuidStr(req.ID), "status_flag": req.Status,
+	})
+	return nil
+}

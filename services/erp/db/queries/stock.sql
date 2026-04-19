@@ -158,3 +158,38 @@ WHERE tenant_id = $1
   AND (sqlc.arg(date_to)::TIMESTAMPTZ IS NULL OR modified_at <= sqlc.arg(date_to)::TIMESTAMPTZ)
 ORDER BY modified_at DESC NULLS LAST, legacy_id DESC
 LIMIT $2 OFFSET $3;
+
+-- ─── Stock cost movements (STK_COSTOS migrated — 2.0.12) ───
+
+-- name: ListStockCostMovements :many
+-- Priced stock-movement ledger. Filters by article, entity, deposit,
+-- or date range. Feeds presup/* + estadisticas/evolutivo_costo +
+-- stock_local/stkinmov_ingresos views.
+SELECT id, tenant_id, legacy_id,
+       article_code, article_id,
+       entity_legacy_id, entity_id, account_legacy_code,
+       deposit_legacy_id, sector_legacy_id, family_legacy_id,
+       rubro_legacy_id, list_legacy_id, concept_legacy_id,
+       unit_legacy_id, subsystem_code,
+       movement_date, registered_date, invoice_date,
+       station, movement_no, movement_order,
+       reference, barcode, description,
+       title_code, operator_class, operator_code,
+       register_min, branch_code, unit_type,
+       quantity, cost_price, sale_price, total_price, average_price,
+       bonus_pct, purchase_amount, pending_amount,
+       peso_amount, usage_amount, sale_ref,
+       chassis_no, order_cps_no,
+       invoice_id, invoice_legacy_id, invoice_line_legacy_id,
+       cps_movement_legacy_id, cps_detail_legacy_id,
+       order_detail_legacy_id, cash_movement_legacy_id,
+       order_legacy_id, user_legacy_id, created_at
+FROM erp_stock_cost_movements
+WHERE tenant_id = $1
+  AND (sqlc.arg(article_filter)::UUID IS NULL OR article_id = sqlc.arg(article_filter)::UUID)
+  AND (sqlc.arg(entity_filter)::UUID IS NULL OR entity_id = sqlc.arg(entity_filter)::UUID)
+  AND (sqlc.arg(deposit_filter)::INTEGER = 0 OR deposit_legacy_id = sqlc.arg(deposit_filter)::INTEGER)
+  AND (sqlc.arg(date_from)::DATE IS NULL OR movement_date >= sqlc.arg(date_from)::DATE)
+  AND (sqlc.arg(date_to)::DATE IS NULL OR movement_date <= sqlc.arg(date_to)::DATE)
+ORDER BY movement_date DESC NULLS LAST, legacy_id DESC
+LIMIT $2 OFFSET $3;

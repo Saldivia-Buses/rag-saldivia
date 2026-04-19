@@ -2312,3 +2312,60 @@ type ErpPaymentComplaint struct {
 	Login            string             `json:"login"`
 	CreatedAt        pgtype.Timestamptz `json:"created_at"`
 }
+
+type ErpStockCostMovement struct {
+	ID                   pgtype.UUID        `json:"id"`
+	TenantID             string             `json:"tenant_id"`
+	LegacyID             int64              `json:"legacy_id"`
+	ArticleCode          string             `json:"article_code"`
+	ArticleID            pgtype.UUID        `json:"article_id"`
+	EntityLegacyID       int32              `json:"entity_legacy_id"`
+	EntityID             pgtype.UUID        `json:"entity_id"`
+	AccountLegacyCode    int32              `json:"account_legacy_code"`
+	DepositLegacyID      int32              `json:"deposit_legacy_id"`
+	SectorLegacyID       int32              `json:"sector_legacy_id"`
+	FamilyLegacyID       int32              `json:"family_legacy_id"`
+	RubroLegacyID        int32              `json:"rubro_legacy_id"`
+	ListLegacyID         int32              `json:"list_legacy_id"`
+	ConceptLegacyID      int32              `json:"concept_legacy_id"`
+	UnitLegacyID         int32              `json:"unit_legacy_id"`
+	SubsystemCode        string             `json:"subsystem_code"`
+	MovementDate         pgtype.Date        `json:"movement_date"`
+	RegisteredDate       pgtype.Date        `json:"registered_date"`
+	InvoiceDate          pgtype.Date        `json:"invoice_date"`
+	Station              int32              `json:"station"`
+	MovementNo           int32              `json:"movement_no"`
+	MovementOrder        int32              `json:"movement_order"`
+	Reference            string             `json:"reference"`
+	Barcode              string             `json:"barcode"`
+	Description          string             `json:"description"`
+	TitleCode            string             `json:"title_code"`
+	OperatorClass        string             `json:"operator_class"`
+	OperatorCode         int32              `json:"operator_code"`
+	RegisterMin          int32              `json:"register_min"`
+	BranchCode           int32              `json:"branch_code"`
+	UnitType             int16              `json:"unit_type"`
+	Quantity             pgtype.Numeric     `json:"quantity"`
+	CostPrice            pgtype.Numeric     `json:"cost_price"`
+	SalePrice            pgtype.Numeric     `json:"sale_price"`
+	TotalPrice           pgtype.Numeric     `json:"total_price"`
+	AveragePrice         pgtype.Numeric     `json:"average_price"`
+	BonusPct             pgtype.Numeric     `json:"bonus_pct"`
+	PurchaseAmount       pgtype.Numeric     `json:"purchase_amount"`
+	PendingAmount        pgtype.Numeric     `json:"pending_amount"`
+	PesoAmount           pgtype.Numeric     `json:"peso_amount"`
+	UsageAmount          pgtype.Numeric     `json:"usage_amount"`
+	SaleRef              int32              `json:"sale_ref"`
+	ChassisNo            int32              `json:"chassis_no"`
+	OrderCpsNo           int32              `json:"order_cps_no"`
+	InvoiceID            pgtype.UUID        `json:"invoice_id"`
+	InvoiceLegacyID      int32              `json:"invoice_legacy_id"`
+	InvoiceLineLegacyID  int32              `json:"invoice_line_legacy_id"`
+	CpsMovementLegacyID  int32              `json:"cps_movement_legacy_id"`
+	CpsDetailLegacyID    int32              `json:"cps_detail_legacy_id"`
+	OrderDetailLegacyID  int32              `json:"order_detail_legacy_id"`
+	CashMovementLegacyID int32              `json:"cash_movement_legacy_id"`
+	OrderLegacyID        int32              `json:"order_legacy_id"`
+	UserLegacyID         int32              `json:"user_legacy_id"`
+	CreatedAt            pgtype.Timestamptz `json:"created_at"`
+}
