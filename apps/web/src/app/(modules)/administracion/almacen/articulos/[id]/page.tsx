@@ -17,23 +17,24 @@ export default function ArticleDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params.id;
 
-  const { data: articles = [] } = useQuery({
-    queryKey: erpKeys.stockArticles(),
-    queryFn: () => api.get<{ articles: StockArticle[] }>("/v1/erp/stock/articles?page_size=500"),
-    select: (d) => d.articles,
+  const { data: article, isLoading: articleLoading, error: articleError } = useQuery({
+    queryKey: erpKeys.stockArticle(id),
+    queryFn: () => api.get<StockArticle>(`/v1/erp/stock/articles/${id}`),
+    enabled: !!id,
   });
 
-  const { data: bom = [], isLoading, error } = useQuery({
+  const { data: bom = [], isLoading: bomLoading, error: bomError } = useQuery({
     queryKey: erpKeys.articleBOM(id),
     queryFn: () => api.get<{ bom: BOMEntry[] }>(`/v1/erp/stock/articles/${id}/bom`),
     select: (d) => d.bom,
     enabled: !!id,
   });
 
+  const isLoading = articleLoading || bomLoading;
+  const error = articleError || bomError;
+
   if (error)
     return <ErrorState message="Error cargando detalle del artículo" onRetry={() => window.location.reload()} />;
-
-  const article = articles.find((a) => a.id === id);
 
   return (
     <div className="flex-1 overflow-y-auto">
