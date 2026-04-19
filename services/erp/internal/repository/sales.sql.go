@@ -445,6 +445,31 @@ func (q *Queries) ListPriceLists(ctx context.Context, tenantID string) ([]ErpPri
 	return items, nil
 }
 
+const getPriceList = `-- name: GetPriceList :one
+SELECT id, tenant_id, name, currency_id, valid_from, valid_until, active
+FROM erp_price_lists WHERE id = $1 AND tenant_id = $2
+`
+
+type GetPriceListParams struct {
+	ID       pgtype.UUID `json:"id"`
+	TenantID string      `json:"tenant_id"`
+}
+
+func (q *Queries) GetPriceList(ctx context.Context, arg GetPriceListParams) (ErpPriceList, error) {
+	row := q.db.QueryRow(ctx, getPriceList, arg.ID, arg.TenantID)
+	var i ErpPriceList
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.Name,
+		&i.CurrencyID,
+		&i.ValidFrom,
+		&i.ValidUntil,
+		&i.Active,
+	)
+	return i, err
+}
+
 const listQuotationLines = `-- name: ListQuotationLines :many
 SELECT ql.id, ql.tenant_id, ql.quotation_id, ql.article_id, ql.description,
        ql.quantity, ql.unit_price, ql.sort_order, ql.metadata

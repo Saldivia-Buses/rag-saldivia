@@ -60,6 +60,8 @@ export const erpKeys = {
   cashRegisters: () =>
     [...erpKeys.all, "treasury", "cash-registers"] as const,
   priceLists: () => [...erpKeys.all, "sales", "price-lists"] as const,
+  priceList: (id: string) =>
+    [...erpKeys.all, "sales", "price-lists", id] as const,
   supplierScorecards: (params?: Record<string, string>) =>
     [...erpKeys.all, "quality", "scorecards", params] as const,
   // 2.0.17

@@ -63,6 +63,10 @@ UPDATE erp_orders SET status = $3 WHERE id = $1 AND tenant_id = $2;
 SELECT id, tenant_id, name, currency_id, valid_from, valid_until, active
 FROM erp_price_lists WHERE tenant_id = $1 ORDER BY name;
 
+-- name: GetPriceList :one
+SELECT id, tenant_id, name, currency_id, valid_from, valid_until, active
+FROM erp_price_lists WHERE id = $1 AND tenant_id = $2;
+
 -- name: CreatePriceList :one
 INSERT INTO erp_price_lists (tenant_id, name, currency_id, valid_from, valid_until)
 VALUES ($1, $2, $3, $4, $5)

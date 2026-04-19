@@ -64,6 +64,13 @@ func (m *mockSalesService) ListPriceLists(_ context.Context, _ string) ([]reposi
 	return m.priceLists, m.err
 }
 
+func (m *mockSalesService) GetPriceList(_ context.Context, _ pgtype.UUID, _ string) (*service.PriceListDetail, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+	return nil, errors.New("not implemented in mock")
+}
+
 // --- helpers ---
 
 func setupSalesRouter(mock SalesService) *chi.Mux {

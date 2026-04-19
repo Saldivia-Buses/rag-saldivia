@@ -400,6 +400,22 @@ export interface PriceList {
   active: boolean;
 }
 
+export interface PriceListItem {
+  id: string;
+  tenant_id: string;
+  price_list_id: string;
+  article_id: string | null;
+  description: string | null;
+  price: number | null;
+  article_code: string | null;
+  article_name: string | null;
+}
+
+export interface PriceListDetail {
+  price_list: PriceList;
+  items: PriceListItem[];
+}
+
 export interface SupplierScorecard {
   id: string;
   tenant_id: string;

@@ -182,3 +182,23 @@ func (s *Sales) UpdateOrderStatus(ctx context.Context, id pgtype.UUID, tenantID,
 func (s *Sales) ListPriceLists(ctx context.Context, tenantID string) ([]repository.ErpPriceList, error) {
 	return s.repo.ListPriceLists(ctx, tenantID)
 }
+
+// PriceListDetail bundles a price list with its items.
+type PriceListDetail struct {
+	PriceList repository.ErpPriceList            `json:"price_list"`
+	Items     []repository.ListPriceListItemsRow `json:"items"`
+}
+
+func (s *Sales) GetPriceList(ctx context.Context, id pgtype.UUID, tenantID string) (*PriceListDetail, error) {
+	pl, err := s.repo.GetPriceList(ctx, repository.GetPriceListParams{ID: id, TenantID: tenantID})
+	if err != nil {
+		return nil, fmt.Errorf("get price list: %w", err)
+	}
+	items, err := s.repo.ListPriceListItems(ctx, repository.ListPriceListItemsParams{
+		PriceListID: id, TenantID: tenantID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("list price list items: %w", err)
+	}
+	return &PriceListDetail{PriceList: pl, Items: items}, nil
+}
