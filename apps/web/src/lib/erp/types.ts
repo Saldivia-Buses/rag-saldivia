@@ -83,6 +83,71 @@ export interface BankBalance {
   balance: number;
 }
 
+// Invoice notes (REG_MOVIMIENTO_OBS parity — Phase 1 §UI)
+export interface InvoiceNote {
+  id: string;
+  tenant_id: string;
+  legacy_id: number;
+  observation_date: string | null;
+  observation_time: string | null;
+  observation: string;
+  invoice_id: string | null;
+  invoice_legacy_id: number;
+  login: string;
+  contact_legacy_id: number;
+  source_table: string;
+  system_code: string;
+  movement_date: string | null;
+  account_code: number;
+  concept_code: number;
+  movement_voucher_class: number;
+  movement_no: number;
+  created_at: string;
+}
+
+// Entity credit ratings (REG_CUENTA_CALIFICACION parity — Phase 1 §UI)
+export interface EntityCreditRating {
+  id: string;
+  tenant_id: string;
+  legacy_id: number;
+  entity_id: string | null;
+  entity_legacy_id: number;
+  rating: string; // A | B | C | X | '-'
+  rated_at: string | null;
+  reference: string;
+  created_at: string;
+  entity_name: string | null;
+  entity_type: string | null;
+}
+
+// Archived cheque history (CARCHEHI parity — Phase 1 §UI)
+export interface CheckHistoryEntry {
+  id: string;
+  tenant_id: string;
+  legacy_id: number;
+  legacy_carint: number;
+  check_type: number;
+  number: string;
+  bank_name: string;
+  amount: number;
+  operation_date: string | null;
+  credited_at: string | null;
+  returned_at: string | null;
+  issue_date: string | null;
+  description: string;
+  observation: string;
+  reference: string;
+  owner_ident: string;
+  accredited: number;
+  entity_legacy_code: number;
+  entity_id: string | null;
+  movement_no: number;
+  pay_no: number;
+  received_no: number;
+  branch: number;
+  created_at: string;
+}
+
 // Bank-import staging rows (BCS_IMPORTACION parity — Phase 1 §UI)
 export interface BankImport {
   id: string;

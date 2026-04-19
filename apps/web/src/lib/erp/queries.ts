@@ -3,6 +3,8 @@ export const erpKeys = {
   catalogs: (type?: string) => [...erpKeys.all, "catalogs", { type }] as const,
   entities: (type?: string, search?: string) =>
     [...erpKeys.all, "entities", { type, search }] as const,
+  creditRatings: (params?: Record<string, string>) =>
+    [...erpKeys.all, "entities", "credit-ratings", params] as const,
   accounts: () => [...erpKeys.all, "accounts"] as const,
   entries: (params?: Record<string, string>) =>
     [...erpKeys.all, "entries", params] as const,
@@ -24,6 +26,8 @@ export const erpKeys = {
   invoice: (id: string) =>
     [...erpKeys.all, "invoicing", "invoices", id] as const,
   withholdings: () => [...erpKeys.all, "invoicing", "withholdings"] as const,
+  invoiceNotes: (params?: Record<string, string>) =>
+    [...erpKeys.all, "invoicing", "invoice-notes", params] as const,
   treasuryMovements: () =>
     [...erpKeys.all, "treasury", "movements"] as const,
   treasuryBalance: () =>
@@ -32,6 +36,8 @@ export const erpKeys = {
   checks: () => [...erpKeys.all, "treasury", "checks"] as const,
   bankImports: (params?: Record<string, string>) =>
     [...erpKeys.all, "treasury", "imports", params] as const,
+  checkHistory: (params?: Record<string, string>) =>
+    [...erpKeys.all, "treasury", "check-history", params] as const,
   receipts: (type?: string) =>
     [...erpKeys.all, "treasury", "receipts", { type }] as const,
   accountBalances: () =>

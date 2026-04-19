@@ -144,6 +144,9 @@ func (m *mockTreasuryService) ListBankImports(_ context.Context, _ string, _, _ 
 func (m *mockTreasuryService) UpdateBankImportProcessed(_ context.Context, _ service.UpdateBankImportRequest) error {
 	return m.err
 }
+func (m *mockTreasuryService) ListCheckHistory(_ context.Context, _ string, _ pgtype.UUID, _, _ pgtype.Date, _, _ int) ([]repository.ErpCheckHistory, error) {
+	return nil, m.err
+}
 
 // --- helpers ---
 

@@ -28,6 +28,7 @@ type EntitiesService interface {
 	AddContact(ctx context.Context, tenantID string, entityID pgtype.UUID, contactType, label, value, userID, ip string, metadata []byte) (repository.ErpEntityContact, error)
 	AddNote(ctx context.Context, tenantID string, entityID pgtype.UUID, userID, noteType, body, ip string) (repository.ErpEntityNote, error)
 	AddDocument(ctx context.Context, tenantID string, entityID pgtype.UUID, name, docType, fileKey, userID, ip string) (repository.ErpEntityDocument, error)
+	ListCreditRatings(ctx context.Context, tenantID string, entityFilter pgtype.UUID, ratingFilter string, limit, offset int) ([]repository.ListEntityCreditRatingsRow, error)
 }
 
 // hashTaxID returns a SHA-256 hex hash of a tax ID for searchable storage.
@@ -53,6 +54,7 @@ func (h *Entities) Routes(authWrite func(http.Handler) http.Handler) chi.Router 
 	r.Group(func(r chi.Router) {
 		r.Use(sdamw.RequirePermission("erp.entities.read"))
 		r.Get("/", h.List)
+		r.Get("/credit-ratings", h.ListCreditRatings)
 		r.Get("/{id}", h.Get)
 	})
 
@@ -102,6 +104,28 @@ func (h *Entities) List(w http.ResponseWriter, r *http.Request) {
 		"page":      p.Page,
 		"page_size": p.PageSize,
 	})
+}
+
+// ListCreditRatings returns entity credit rating history.
+// Query params: entity_id (UUID, optional), rating (A|B|C|X|'-', optional),
+// page, page_size. Parity: compras/calificacion_prov.xml.
+func (h *Entities) ListCreditRatings(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	p := pagination.Parse(r)
+	q := r.URL.Query()
+
+	entityFilter := optUUID(ptrStr(q.Get("entity_id")))
+	ratingFilter := q.Get("rating")
+
+	ratings, err := h.svc.ListCreditRatings(r.Context(), slug,
+		entityFilter, ratingFilter, p.Limit(), p.Offset())
+	if err != nil {
+		erperrors.WriteError(w, r, erperrors.Internal(err))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{"ratings": ratings})
 }
 
 // Get returns an entity with contacts, documents, notes, relations.

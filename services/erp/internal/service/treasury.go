@@ -1017,6 +1017,21 @@ func datesClose(a, b pgtype.Date, days int) bool {
 }
 
 // ============================================================
+// Check history (CARCHEHI parity)
+// ============================================================
+
+func (s *Treasury) ListCheckHistory(ctx context.Context, tenantID string, entityFilter pgtype.UUID, dateFrom, dateTo pgtype.Date, limit, offset int) ([]repository.ErpCheckHistory, error) {
+	return s.repo.ListCheckHistory(ctx, repository.ListCheckHistoryParams{
+		TenantID:     tenantID,
+		Limit:        int32(limit),
+		Offset:       int32(offset),
+		EntityFilter: entityFilter,
+		DateFrom:     dateFrom,
+		DateTo:       dateTo,
+	})
+}
+
+// ============================================================
 // Bank imports (bcs_importacion parity)
 // ============================================================
 

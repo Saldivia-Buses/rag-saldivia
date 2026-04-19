@@ -565,3 +565,16 @@ func (s *Invoicing) CreateWithholding(ctx context.Context, p repository.CreateWi
 	})
 	return w, nil
 }
+
+// ListInvoiceNotes returns free-text invoice notes (REG_MOVIMIENTO_OBS).
+// Parity: clientes/qry/regmovim_obs_qry.xml.
+func (s *Invoicing) ListInvoiceNotes(ctx context.Context, tenantID string, invoiceFilter pgtype.UUID, dateFrom, dateTo pgtype.Date, limit, offset int) ([]repository.ErpInvoiceNote, error) {
+	return s.repo.ListInvoiceNotes(ctx, repository.ListInvoiceNotesParams{
+		TenantID:      tenantID,
+		Limit:         int32(limit),
+		Offset:        int32(offset),
+		InvoiceFilter: invoiceFilter,
+		DateFrom:      dateFrom,
+		DateTo:        dateTo,
+	})
+}
