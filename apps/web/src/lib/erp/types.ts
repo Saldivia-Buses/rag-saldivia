@@ -486,6 +486,29 @@ export interface MaintenancePlan {
   active: boolean;
 }
 
+export interface StockArticle {
+  id: string;
+  code: string;
+  name: string;
+  article_type: string;
+  min_stock: number;
+  avg_cost: number;
+  active: boolean;
+}
+
+export interface BOMEntry {
+  id: string;
+  tenant_id: string;
+  parent_id: string;
+  child_id: string;
+  quantity: number | null;
+  unit_id: string | null;
+  sort_order: number;
+  notes: string;
+  child_code: string;
+  child_name: string;
+}
+
 export interface SupplierScorecard {
   id: string;
   tenant_id: string;
