@@ -172,6 +172,9 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
       "/administracion/reclamos",
       "/administracion/tesoreria/importaciones",
       "/administracion/tesoreria/cartera-historica",
+      "/administracion/almacen",
+      "/administracion/almacen/movimientos",
+      "/administracion/almacen/costos",
       "/administracion/sugerencias",
     ],
     subnav: [
@@ -182,6 +185,8 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
       { path: "/administracion/reclamos", label: "Reclamos de pagos" },
       { path: "/administracion/tesoreria/importaciones", label: "Importaciones bancarias" },
       { path: "/administracion/tesoreria/cartera-historica", label: "Cheques históricos" },
+      { path: "/administracion/almacen/movimientos", label: "Movimientos de stock" },
+      { path: "/administracion/almacen/costos", label: "Costos de artículos" },
       { path: "/administracion/sugerencias", label: "Sugerencias" },
     ],
   },
