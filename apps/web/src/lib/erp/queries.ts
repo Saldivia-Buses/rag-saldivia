@@ -3,6 +3,10 @@ export const erpKeys = {
   catalogs: (type?: string) => [...erpKeys.all, "catalogs", { type }] as const,
   entities: (type?: string, search?: string) =>
     [...erpKeys.all, "entities", { type, search }] as const,
+  entity: (id: string) =>
+    [...erpKeys.all, "entities", id] as const,
+  supplierDemerits: (supplierId: string) =>
+    [...erpKeys.all, "purchasing", "suppliers", supplierId, "demerits"] as const,
   creditRatings: (params?: Record<string, string>) =>
     [...erpKeys.all, "entities", "credit-ratings", params] as const,
   accounts: () => [...erpKeys.all, "accounts"] as const,

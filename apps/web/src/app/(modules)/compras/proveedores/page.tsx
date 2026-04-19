@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { erpKeys } from "@/lib/erp/queries";
+import type { Entity } from "@/lib/erp/types";
 import { ErrorState } from "@/components/erp/error-state";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 export default function ComprasProveedoresPage() {
   const { data: entities = [], isLoading, error } = useQuery({
     queryKey: erpKeys.entities("supplier"),
-    queryFn: () => api.get<{ entities: any[]; total: number }>("/v1/erp/entities?type=supplier&page_size=100"),
+    queryFn: () => api.get<{ entities: Entity[]; total: number }>("/v1/erp/entities?type=supplier&page_size=100"),
     select: (d) => d.entities,
   });
 
@@ -33,9 +35,13 @@ export default function ComprasProveedoresPage() {
               <TableHead className="w-24">Estado</TableHead>
             </TableRow></TableHeader>
             <TableBody>
-              {entities.map((e: any) => (
+              {entities.map((e) => (
                 <TableRow key={e.id}>
-                  <TableCell className="font-mono text-sm">{e.code}</TableCell>
+                  <TableCell className="font-mono text-sm">
+                    <Link href={`/compras/proveedores/${e.id}`} className="hover:underline">
+                      {e.code}
+                    </Link>
+                  </TableCell>
                   <TableCell className="text-sm font-medium">{e.name}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{e.email || "\u2014"}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{e.phone || "\u2014"}</TableCell>

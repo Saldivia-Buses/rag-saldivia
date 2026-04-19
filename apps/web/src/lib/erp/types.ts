@@ -540,6 +540,67 @@ export interface QCInspection {
   receipt_number?: string;
 }
 
+export interface Entity {
+  id: string;
+  tenant_id: string;
+  type: string;
+  code: string;
+  name: string;
+  tax_id_hash?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  active: boolean;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface EntityContact {
+  id: string;
+  tenant_id: string;
+  entity_id: string;
+  name: string;
+  role?: string;
+  email?: string | null;
+  phone?: string | null;
+  primary: boolean;
+}
+
+export interface EntityNote {
+  id: string;
+  tenant_id: string;
+  entity_id: string;
+  user_id: string;
+  note: string;
+  created_at: string;
+}
+
+export interface EntityDocument {
+  id: string;
+  tenant_id: string;
+  entity_id: string;
+  doc_type: string;
+  filename: string;
+  created_at: string;
+}
+
+export interface EntityDetail {
+  entity: Entity;
+  contacts: EntityContact[];
+  documents: EntityDocument[];
+  notes: EntityNote[];
+  relations: unknown[];
+}
+
+export interface SupplierDemerit {
+  id: string;
+  tenant_id: string;
+  supplier_id: string;
+  inspection_id: string | null;
+  points: number;
+  reason: string;
+  created_at: string;
+}
+
 export interface SalesOrder {
   id: string;
   tenant_id: string;
