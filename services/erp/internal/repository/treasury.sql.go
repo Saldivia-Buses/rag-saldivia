@@ -1513,3 +1513,75 @@ func (q *Queries) ListBankImports(ctx context.Context, arg ListBankImportsParams
 	}
 	return items, nil
 }
+
+const listCheckHistory = `-- name: ListCheckHistory :many
+SELECT id, tenant_id, legacy_id,
+       legacy_carint, legacy_siscod, legacy_succod,
+       check_type, number, bank_name, amount,
+       operation_date, credited_at, returned_at,
+       altered_at, deposited_at, issue_date,
+       description, observation, reference,
+       owner_ident, owner_mark, accredited,
+       entity_legacy_code, entity_id,
+       movement_no, movement_register, movement_voucher_class,
+       portfolio_id, branch, system_code,
+       concept_code, operator_code, operator_class,
+       plan_id, pay_no, received_no, check_counter,
+       account_balance_ref, process_code, circuit_code,
+       bcs_no, cash_plan, created_at
+FROM erp_check_history
+WHERE tenant_id = $1
+  AND ($4::UUID IS NULL OR entity_id = $4::UUID)
+  AND ($5::DATE IS NULL OR operation_date >= $5::DATE)
+  AND ($6::DATE IS NULL OR operation_date <= $6::DATE)
+ORDER BY operation_date DESC NULLS LAST, legacy_id DESC
+LIMIT $2 OFFSET $3
+`
+
+type ListCheckHistoryParams struct {
+	TenantID     string      `json:"tenant_id"`
+	Limit        int32       `json:"limit"`
+	Offset       int32       `json:"offset"`
+	EntityFilter pgtype.UUID `json:"entity_filter"`
+	DateFrom     pgtype.Date `json:"date_from"`
+	DateTo       pgtype.Date `json:"date_to"`
+}
+
+// Archived cheque history (CARCHEHI), sister of erp_checks.
+func (q *Queries) ListCheckHistory(ctx context.Context, arg ListCheckHistoryParams) ([]ErpCheckHistory, error) {
+	rows, err := q.db.Query(ctx, listCheckHistory,
+		arg.TenantID, arg.Limit, arg.Offset,
+		arg.EntityFilter, arg.DateFrom, arg.DateTo,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ErpCheckHistory{}
+	for rows.Next() {
+		var i ErpCheckHistory
+		if err := rows.Scan(
+			&i.ID, &i.TenantID, &i.LegacyID,
+			&i.LegacyCarint, &i.LegacySiscod, &i.LegacySuccod,
+			&i.CheckType, &i.Number, &i.BankName, &i.Amount,
+			&i.OperationDate, &i.CreditedAt, &i.ReturnedAt,
+			&i.AlteredAt, &i.DepositedAt, &i.IssueDate,
+			&i.Description, &i.Observation, &i.Reference,
+			&i.OwnerIdent, &i.OwnerMark, &i.Accredited,
+			&i.EntityLegacyCode, &i.EntityID,
+			&i.MovementNo, &i.MovementRegister, &i.MovementVoucherClass,
+			&i.PortfolioID, &i.Branch, &i.SystemCode,
+			&i.ConceptCode, &i.OperatorCode, &i.OperatorClass,
+			&i.PlanID, &i.PayNo, &i.ReceivedNo, &i.CheckCounter,
+			&i.AccountBalanceRef, &i.ProcessCode, &i.CircuitCode,
+			&i.BcsNo, &i.CashPlan, &i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

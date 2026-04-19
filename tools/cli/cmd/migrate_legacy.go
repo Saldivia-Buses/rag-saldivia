@@ -501,6 +501,20 @@ func registerMigrators(orch *migration.Orchestrator, mysqlDB *sql.DB, tenantID s
 		migration.NewWithholdingIIBBMigrator(mysqlDB, tenantID),
 	)
 
+	// Phase 8c: Pareto tail Grupo A (2.0.11) — REG_CUENTA_CALIFICACION +
+	// REG_MOVIMIENTO_OBS + CARCHEHI (~237 K rows combined). All three
+	// resolve against indexes built earlier:
+	//   - EntityCreditRating → ResolveEntityFlexible (id_regcuenta cache,
+	//     nro_cuenta fallback) — both populated by Phase 2 hooks.
+	//   - InvoiceNote → ResolveRegMovim (Phase 6 IVACOMPRAS hook).
+	//   - CheckHistory → ResolveEntityFlexible via ctacod.
+	// No new hooks needed; indexes are ready by this phase.
+	orch.RegisterMigrators(
+		migration.NewEntityCreditRatingMigrator(mysqlDB, tenantID),
+		migration.NewInvoiceNoteMigrator(mysqlDB, tenantID),
+		migration.NewCheckHistoryMigrator(mysqlDB, tenantID),
+	)
+
 	// Before the BOM history phase: seed ghost articles for orphan pieza_ids
 	// so the 2.5M+ rows whose STKPIEZA parent no longer exists can still land
 	// in SDA. See rescue.go for rationale + empirical numbers.

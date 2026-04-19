@@ -34,6 +34,43 @@ Scrape-anchored accounting: 305 business tables remain with about
 sub-100 K tables where bulk waivers or quick migrators close the
 remaining coverage.
 
+**2.0.11 deltas** (Pareto tail Grupo A — current-accounts / treasury):
+
+1. **Pareto #11 — REG_MOVIMIENTO_OBS (72,737 rows live, scrape 72,737)**
+   migrated via `NewInvoiceNoteMigrator` → new table `erp_invoice_notes`
+   (migration `077`). Free-text notes attached to `REG_MOVIMIENTOS`;
+   Histrix stores one row per note with `longtext` body, the operator
+   login, and denormalised movement keys (`ctacod`, `concod`, `movnpv`,
+   `movnro`, `siscod`, `movfec`). Resolution: `invoice_id` via the
+   existing Phase 6 `BuildRegMovimIndex` (IVACOMPRAS/IVAVENTAS). Rows
+   whose `regmovim_id` is zero or misses the index land with
+   `invoice_id NULL` and `invoice_legacy_id` preserved — the note is
+   still useful for audit even when the parent is missing. Zero-dates
+   (`fec_observacion`, `movfec`) pass through as `NULL` via `SafeDate`.
+
+2. **Pareto #12 — REG_CUENTA_CALIFICACION (136,064 rows live, scrape
+   58,960 — +131 %)** migrated via `NewEntityCreditRatingMigrator` →
+   new table `erp_entity_credit_ratings` (migration `077`). Customer /
+   supplier credit-rating history, one row per rating event. Resolution:
+   `entity_id` via `ResolveEntityFlexible` on `regcuenta_id`
+   (id_regcuenta first, `nro_cuenta` fallback) — the same resolver
+   bound against the Phase 2 REG_CUENTA cache + nro_cuenta index.
+
+3. **Pareto #16 — CARCHEHI (28,763 rows live, scrape 26,882)** migrated
+   via `NewCheckHistoryMigrator` → new table `erp_check_history`
+   (migration `077`). Archived-check history (sister of `CARCHEQU` /
+   `erp_checks`). Composite PK (`carint`, `siscod`, `succod`) hashed
+   via `hashCode("CARCHEHI:<carint>:<siscod>:<succod>")` into `legacy_id`
+   so the idempotency UNIQUE `(tenant_id, legacy_id)` holds on re-runs.
+   35 raw columns preserved (bank name, amounts, all six date columns
+   with zero-dates nulled, operator class, portfolio id, and the
+   `movnro + regmin` composite pointer at `REG_MOVIMIENTOS`).
+   Resolution: `entity_id` via `ResolveEntityFlexible` on `ctacod`.
+
+Combined Grupo A delivery: **237,564 rows across 3 tables**, all three
+resolving against indexes already built by prior phases (entity cache,
+nro_cuenta index, `BuildRegMovimIndex`). No new after-table hooks.
+
 **2.0.10 deltas** (Pareto #3 + Pareto #4 in one PR):
 
 1. **Pareto #3 — CTBREGIS** (**604,579 rows live** — table still growing;
@@ -205,12 +242,12 @@ Row volume in the uncovered bucket is extremely concentrated:
 | 8 | ~~STK_COSTO_HIST~~ — **migrated 2.0.10** (103,799 live) | ~~95,217~~ | — |
 | 9 | ~~BCS_IMPORTACION~~ — **migrated 2.0.10** (91,959 live) | ~~84,492~~ | — |
 | 10 | EGX300EPE | 79,040 | 90.6 % |
-| 11 | REG_MOVIMIENTO_OBS | 72,737 | 91.8 % |
-| 12 | REG_CUENTA_CALIFICACION | 58,960 | 92.8 % |
+| 11 | ~~REG_MOVIMIENTO_OBS~~ — **migrated 2.0.11** (72,737 live) | ~~72,737~~ | — |
+| 12 | ~~REG_CUENTA_CALIFICACION~~ — **migrated 2.0.11** (136,064 live, +131 %) | ~~58,960~~ | — |
 | 13 | TEL_LOG | 34,885 | 93.3 % |
 | 14 | COTIZOPMOVIM | 28,626 | 93.8 % |
 | 15 | STK_COSTO_REPOSICION_HIST | 28,515 | 94.3 % |
-| 16 | CARCHEHI | 26,882 | 94.7 % |
+| 16 | ~~CARCHEHI~~ — **migrated 2.0.11** (28,763 live) | ~~26,882~~ | — |
 | 17 | ACCESORIOS_COCHE | 19,671 | 95.0 % |
 | 18 | ~~PRODUCTO_ATRIBUTO_HOMOLOGACION~~ — **migrated 2.0.10** (47,189 live) | ~~17,558~~ | — |
 | 19 | EGX_300 | 15,702 | 95.6 % |
@@ -247,10 +284,10 @@ Aggregating the top-30 by the prefix convention:
 | Product attrs | PRODUCTO_ATRIB_VALORES, PRODUCTO_ATRIBUTO_HOMOLOGACION | 171,393 |
 | Production controls | PROD_CONTROL_HOMOLOG, PROD_PATH_REGISTRO, CONTROLCALIDAD | 124,228 |
 | Industrial (EGX) | EGX300EPE, EGX_300 | 94,742 |
-| Current accounts / customer CRM | REG_MOVIMIENTO_OBS, REG_CUENTA_CALIFICACION | 131,697 |
+| ~~Current accounts / customer CRM~~ — **migrated 2.0.11** (208,801 live) | ~~REG_MOVIMIENTO_OBS, REG_CUENTA_CALIFICACION~~ | ~~131,697~~ |
 | Telephony log | TEL_LOG | 34,885 |
 | Sales quote movements | COTIZOPMOVIM | 28,626 |
-| Treasury check history | CARCHEHI | 26,882 |
+| ~~Treasury check history~~ — **migrated 2.0.11** (28,763 live) | ~~CARCHEHI~~ | ~~26,882~~ |
 | Vehicle accessories | ACCESORIOS_COCHE | 19,671 |
 | Customer claims | RECLAMOPAGOS | 15,463 |
 | Calendar | CALENDAR | 10,951 |

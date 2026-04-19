@@ -94,3 +94,36 @@ func PaymentAllocationLineReader(db *sql.DB) *GenericReader {
 			"regmin, ctacoddes, fecha, nroimp, saldo_original, regmovim_id, regmovim0_id",
 	}
 }
+
+// EntityCreditRatingReader — REG_CUENTA_CALIFICACION (136,064 rows live,
+// scrape 58,960, +131 %). Customer / supplier credit rating history, one
+// row per rating event. FK regcuenta_id → REG_CUENTA(id_regcuenta) — a
+// straight entity-domain resolve via ResolveOptional. Pareto tail Grupo A
+// rank 1 (post-2.0.10). Targets erp_entity_credit_ratings.
+func EntityCreditRatingReader(db *sql.DB) *GenericReader {
+	return &GenericReader{
+		DB:         db,
+		Table:      "REG_CUENTA_CALIFICACION",
+		Target:     "erp_entity_credit_ratings",
+		DomainName: "current_account",
+		PKColumn:   "id_regcalificacion",
+		Columns: "id_regcalificacion, regcuenta_id, calificacion, " +
+			"fecha_calificacion, referencia_calificacion",
+	}
+}
+
+// InvoiceNoteReader — REG_MOVIMIENTO_OBS (72,737 rows live, scrape 72,737).
+// Per-invoice free-text notes attached to REG_MOVIMIENTOS. FK regmovim_id
+// resolves via BuildRegMovimIndex (Phase 6). Targets erp_invoice_notes.
+func InvoiceNoteReader(db *sql.DB) *GenericReader {
+	return &GenericReader{
+		DB:         db,
+		Table:      "REG_MOVIMIENTO_OBS",
+		Target:     "erp_invoice_notes",
+		DomainName: "current_account",
+		PKColumn:   "id_regmovimientoobs",
+		Columns: "id_regmovimientoobs, fec_observacion, hora_observacion, " +
+			"observacion, regmovim_id, login, gencontacto_id, tabla_origen, " +
+			"siscod, movfec, ctacod, concod, movnpv, movnro",
+	}
+}
