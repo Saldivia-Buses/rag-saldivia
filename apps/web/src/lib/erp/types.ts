@@ -147,6 +147,7 @@ export interface QCInspection {
 
 // Current Accounts
 export interface EntityBalance {
+  entity_id: string;
   entity_name: string;
   entity_type: string;
   direction: string;

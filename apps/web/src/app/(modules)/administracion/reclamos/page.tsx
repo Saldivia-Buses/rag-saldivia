@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { api } from "@/lib/api/client";
 import { erpKeys } from "@/lib/erp/queries";
-import { fmtDateShort } from "@/lib/erp/format";
-import type { EntitySearchResult, PaymentComplaint } from "@/lib/erp/types";
+import { fmtDateShort, fmtMoney } from "@/lib/erp/format";
+import type { EntityBalance, EntitySearchResult, PaymentComplaint } from "@/lib/erp/types";
 import { permissionErrorToast } from "@/lib/erp/permission-messages";
 import { ErrorState } from "@/components/erp/error-state";
 import { EntityPicker } from "@/components/erp/entity-picker";
@@ -48,6 +48,20 @@ export default function ReclamosPage() {
       ),
     select: (d) => d.complaints,
   });
+
+  // Saldo por proveedor — parity con reclamopagos_ing.xml (SUM(saldo_movimiento))
+  const { data: balances = [] } = useQuery({
+    queryKey: [...erpKeys.accountBalances(), "payable"],
+    queryFn: () =>
+      api.get<{ balances: EntityBalance[] }>("/v1/erp/accounts/balances?direction=payable"),
+    select: (d) => d.balances,
+  });
+
+  const balanceByEntityId = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const b of balances) m.set(b.entity_id, b.open_balance);
+    return m;
+  }, [balances]);
 
   const createMutation = useMutation({
     mutationFn: (data: {
@@ -202,6 +216,7 @@ export default function ReclamosPage() {
               <TableRow>
                 <TableHead className="w-[110px]">Fecha</TableHead>
                 <TableHead className="w-[130px]">Proveedor (cod.)</TableHead>
+                <TableHead className="w-[120px] text-right">Saldo</TableHead>
                 <TableHead>Observación</TableHead>
                 <TableHead className="w-[110px]">Estado</TableHead>
                 <TableHead className="w-[110px]">Login</TableHead>
@@ -211,14 +226,14 @@ export default function ReclamosPage() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={6}>
+                  <TableCell colSpan={7}>
                     <Skeleton className="h-32 w-full" />
                   </TableCell>
                 </TableRow>
               )}
               {!isLoading && complaints.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-20 text-center text-sm text-muted-foreground">
+                  <TableCell colSpan={7} className="h-20 text-center text-sm text-muted-foreground">
                     Sin reclamos en esta vista.
                   </TableCell>
                 </TableRow>
@@ -227,6 +242,9 @@ export default function ReclamosPage() {
                 <TableRow key={c.id} className={c.status_flag === 0 ? "bg-amber-50/40 dark:bg-amber-950/20" : ""}>
                   <TableCell className="text-sm">{c.complaint_date ? fmtDateShort(c.complaint_date) : "—"}</TableCell>
                   <TableCell className="text-sm font-mono">{c.entity_legacy_code || "—"}</TableCell>
+                  <TableCell className="text-right font-mono text-sm">
+                    {c.entity_id ? fmtMoney(balanceByEntityId.get(c.entity_id) ?? null) : "—"}
+                  </TableCell>
                   <TableCell className="max-w-[420px] whitespace-pre-wrap text-sm">{c.observation || "—"}</TableCell>
                   <TableCell>
                     {c.status_flag === 1 ? (
