@@ -461,6 +461,31 @@ export interface QuotationDetail {
   options: QuotationOption[];
 }
 
+export interface MaintenanceAsset {
+  id: string;
+  tenant_id: string;
+  code: string;
+  name: string;
+  asset_type: string;
+  unit_id: string | null;
+  location: string;
+  active: boolean;
+  created_at: string;
+}
+
+export interface MaintenancePlan {
+  id: string;
+  tenant_id: string;
+  asset_id: string;
+  name: string;
+  frequency_days: number | null;
+  frequency_km: number | null;
+  frequency_hours: number | null;
+  last_done: string | null;
+  next_due: string | null;
+  active: boolean;
+}
+
 export interface SupplierScorecard {
   id: string;
   tenant_id: string;

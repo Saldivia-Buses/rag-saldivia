@@ -86,6 +86,8 @@ export const erpKeys = {
     [...erpKeys.all, "tools", "list", params] as const,
   maintenanceAssets: () =>
     [...erpKeys.all, "maintenance", "assets"] as const,
+  maintenancePlans: (assetId: string) =>
+    [...erpKeys.all, "maintenance", "assets", assetId, "plans"] as const,
   treasuryMovements: () =>
     [...erpKeys.all, "treasury", "movements"] as const,
   treasuryBalance: () =>
