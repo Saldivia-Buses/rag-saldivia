@@ -248,6 +248,14 @@ WHERE tenant_id = $1
 ORDER BY movement_date DESC NULLS LAST, legacy_id DESC
 LIMIT $2 OFFSET $3;
 
+-- name: UpdateBankImportProcessed :execrows
+-- Mark or unmark a bank-import row as processed, optionally linking it
+-- to a treasury movement. Mirrors bcsmovim_importacion_auto_mov_ins.xml
+-- (the per-row reconciliation toggle in Histrix).
+UPDATE erp_bank_imports
+SET processed = $3, treasury_movement_id = $4
+WHERE id = $1 AND tenant_id = $2;
+
 -- ─── Check history (CARCHEHI migrated — 2.0.11) ───
 
 -- name: ListCheckHistory :many

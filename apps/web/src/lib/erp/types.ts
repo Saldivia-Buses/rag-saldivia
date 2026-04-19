@@ -83,6 +83,31 @@ export interface BankBalance {
   balance: number;
 }
 
+// Bank-import staging rows (BCS_IMPORTACION parity — Phase 1 §UI)
+export interface BankImport {
+  id: string;
+  tenant_id: string;
+  legacy_id: number;
+  movement_date: string | null;
+  concept_name: string;
+  movement_no: number;
+  amount: number;
+  debit: number;
+  credit: number;
+  balance: number;
+  movement_code: string;
+  treasury_movement_id: string | null;
+  treasury_legacy_id: number;
+  imported_at: string | null;
+  account_number: number;
+  account_entity_id: string | null;
+  processed: number; // 0 = pendiente, 1 = procesado, 2 = anulado
+  comments: string;
+  internal_no: number;
+  branch: string;
+  created_at: string;
+}
+
 // Invoicing
 export interface Invoice {
   id: string;
@@ -147,6 +172,7 @@ export interface QCInspection {
 
 // Current Accounts
 export interface EntityBalance {
+  entity_id: string;
   entity_name: string;
   entity_type: string;
   direction: string;
@@ -159,6 +185,17 @@ export interface OverdueInvoice {
   due_date: string;
   amount: number;
   balance: number;
+}
+
+// Entity search (picker) — subset of ListEntitiesRow used by UI pickers.
+export interface EntitySearchResult {
+  id: string;
+  type: string;
+  code: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  active: boolean;
 }
 
 // Payment Complaints (RECLAMOPAGOS parity — Phase 1 §UI)

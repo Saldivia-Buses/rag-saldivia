@@ -1015,3 +1015,66 @@ func datesClose(a, b pgtype.Date, days int) bool {
 	}
 	return diff.Hours()/24 <= float64(days)
 }
+
+// ============================================================
+// Bank imports (bcs_importacion parity)
+// ============================================================
+
+func (s *Treasury) ListBankImports(ctx context.Context, tenantID string, accountFilter, processedFilter int32, dateFrom, dateTo pgtype.Date, limit, offset int) ([]repository.ErpBankImport, error) {
+	return s.repo.ListBankImports(ctx, repository.ListBankImportsParams{
+		TenantID:        tenantID,
+		Limit:           int32(limit),
+		Offset:          int32(offset),
+		AccountFilter:   accountFilter,
+		ProcessedFilter: processedFilter,
+		DateFrom:        dateFrom,
+		DateTo:          dateTo,
+	})
+}
+
+// UpdateBankImportRequest is the input for UpdateBankImportProcessed.
+type UpdateBankImportRequest struct {
+	ID                 pgtype.UUID
+	TenantID           string
+	Processed          int32
+	TreasuryMovementID pgtype.UUID
+	UserID             string
+	IP                 string
+}
+
+// UpdateBankImportProcessed toggles the processed flag on a bank-import
+// staging row and optionally links / unlinks a treasury movement.
+// Parity: bancos_local/bcsmovim_importacion_auto_mov_ins.xml.
+func (s *Treasury) UpdateBankImportProcessed(ctx context.Context, req UpdateBankImportRequest) error {
+	rows, err := s.repo.UpdateBankImportProcessed(ctx, repository.UpdateBankImportProcessedParams{
+		ID:                 req.ID,
+		TenantID:           req.TenantID,
+		Processed:          req.Processed,
+		TreasuryMovementID: req.TreasuryMovementID,
+	})
+	if err != nil {
+		return fmt.Errorf("update bank import: %w", err)
+	}
+	if rows == 0 {
+		return fmt.Errorf("bank import not found")
+	}
+	idStr := uuidStr(req.ID)
+	if err := s.audit.WriteStrict(ctx, audit.Entry{
+		TenantID: req.TenantID, UserID: req.UserID,
+		Action:   "erp.bank_imports.processed_changed",
+		Resource: idStr,
+		Details: map[string]any{
+			"processed":            req.Processed,
+			"treasury_movement_id": uuidStr(req.TreasuryMovementID),
+		},
+		IP: req.IP,
+	}); err != nil {
+		return fmt.Errorf("strict audit failed, aborting: %w", err)
+	}
+	s.publisher.Broadcast(req.TenantID, "erp_bank_imports", map[string]any{
+		"action":    "processed_changed",
+		"id":        idStr,
+		"processed": req.Processed,
+	})
+	return nil
+}

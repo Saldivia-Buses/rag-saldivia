@@ -1514,6 +1514,31 @@ func (q *Queries) ListBankImports(ctx context.Context, arg ListBankImportsParams
 	return items, nil
 }
 
+const updateBankImportProcessed = `-- name: UpdateBankImportProcessed :execrows
+UPDATE erp_bank_imports
+SET processed = $3, treasury_movement_id = $4
+WHERE id = $1 AND tenant_id = $2
+`
+
+type UpdateBankImportProcessedParams struct {
+	ID                 pgtype.UUID `json:"id"`
+	TenantID           string      `json:"tenant_id"`
+	Processed          int32       `json:"processed"`
+	TreasuryMovementID pgtype.UUID `json:"treasury_movement_id"`
+}
+
+// Mark or unmark a bank-import row as processed, optionally linking it
+// to a treasury movement. Mirrors bcsmovim_importacion_auto_mov_ins.xml.
+func (q *Queries) UpdateBankImportProcessed(ctx context.Context, arg UpdateBankImportProcessedParams) (int64, error) {
+	result, err := q.db.Exec(ctx, updateBankImportProcessed,
+		arg.ID, arg.TenantID, arg.Processed, arg.TreasuryMovementID,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const listCheckHistory = `-- name: ListCheckHistory :many
 SELECT id, tenant_id, legacy_id,
        legacy_carint, legacy_siscod, legacy_succod,
