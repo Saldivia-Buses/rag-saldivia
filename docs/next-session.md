@@ -1,222 +1,213 @@
-# Next session — Phase 1 §Data migration: cleanup del long tail (BCS_IMPORTACION + friends)
+# Next session — Cerrar Phase 1 §Data migration
 
-La sesión anterior (2.0.10) cerró Paretos #3, #4, #5, #6, #7, #8 y #18 en un PR:
+**Goal**: dejar ADR 027 §Phase 1 §Data migration ✅ en esta sesión.
+Hoy estamos a **~80 % covered** (119 tablas, ~15 M filas). El long tail
+son ~295 tablas de las cuales las 10 más grandes suman ~564 K filas
+live — el resto (~285) tienen <15 K cada una y son candidatas a
+waiver bulk. Plan = 2-3 migradores cortos + W-007 + strike.
 
-- **CTBREGIS** (604,579) → `erp_accounting_registers` (071).
-- **HERRAMIENTAS** (389,253) + **HERRMOVS** (11,680) → `erp_tools` +
-  `erp_tool_movements` (072). Discovery: ledger de inventario
-  serializado + ledger de préstamos (NO workshop tools catalog).
-- **STKINSPR** (189,863) → `erp_article_costs` (073). Discovery:
-  per-supplier cost ledger (NOT stock inspection).
-- **PRODUCTO_* cluster** (405,805 total) → 6 tablas `erp_product_*` (074).
-  Cierra Pareto #6 y #18.
-- **PROD_CONTROL_HOMOLOG** (403,028 live — scrape decía 105K, +282 %
-  growth) + **STK_COSTO_HIST** (103,799 live) → `erp_production_
-  inspection_homologations` + `erp_article_cost_history` (075).
-  Cierra Pareto #7 y #8.
-- **BCS_IMPORTACION** (91,959 live) → `erp_bank_imports` (076).
-  Cierra rank #9 del Pareto original — import bancario staging.
+## Cierre ciclo 2.0.10 — completado 2026-04-19
 
-**6 commits, +2,199,966 filas migradas, 8 ranks del Pareto cerrados
-en un PR. Cobertura total post-PR: ~80 %.**
-
-Post-2.0.10 el gap quedó en **296 tablas**, ~200 K filas scrape-anchored
-(~1 % del total Histrix). Las 118 tablas cubiertas son ~80 % del
-volumen total por live COUNT(*). Caveat: las estimates de
-`information_schema.table_rows` subestiman bastante — los live counts
-que hicimos validar llegan 10-50 % por encima del scrape. Ver
-`feedback_live_count_vs_scrape_estimate`.
-
-Arrancás con PR de 2.0.10 **mergeable** al cerrar la sesión. Si no se
-mergea solo, cerrar el ciclo (ver §"Pre-work si 2.0.10 sigue abierto"
-abajo).
+- PR #157 squash-merged como `cd13b7f8` en main.
+- Tag `v2.0.10` pushed, GitHub release publicada.
+- Workstation `srv-ia-01` sincronizada en `cd13b7f8`.
+- Todos los tests + build + lint verdes antes y después del merge.
 
 ## Final goal (ADR 026 — no se pierde de vista)
 
 SDA reemplaza Histrix. El empleado abre SDA y:
 
-1. Tiene UI moderna cubriendo **todo** lo que Histrix hacía (1:1 parity,
-   mejor UX).
-2. Tiene chat donde el agente es su representante — cap parity chat ↔ UI.
-3. Arma su dashboard personal (no hay dashboard global).
-4. Arma sus rutinas personales.
-5. Detrás, agentes hoardean data: mail ingest, WhatsApp interno,
-   tree-RAG con ACL por colección.
+1. UI moderna cubriendo **todo** lo que Histrix hacía (1:1 parity).
+2. Chat donde el agente es su representante — cap parity chat ↔ UI.
+3. Dashboard personal + rutinas personales.
+4. Agentes background: mail, WhatsApp, tree-RAG con ACL.
 
-## Estado Phase 1 §Data migration (post-2.0.10)
+## Estado post-2.0.10 (probado live 2026-04-19)
 
-| Segment | Tablas | Filas (live donde medido, scrape si no) |
+| Segment | Tablas | Filas (live donde medido) |
 |---|---:|---:|
-| Histrix total | 675 | 18.94 M (scrape estimate) |
-| Cubiertas | 118 | ≈ 15.07 M (**~80 %**) |
+| Histrix total | 675 | 18.94 M (scrape) |
+| Cubiertas | 119 | ≈ 15.16 M (**~80 %**) |
 | Waiver masivo (W-004/005/006) | 261 | 3.91 M |
-| **Gap remaining** | **296** | **≈ 200 K scrape** (~1 %) |
+| **Gap remaining** | **295** | **≈ 115 K** (scrape) |
 
-**Top uncovered post-2.0.10** (scrape values — live puede ser +20-50 %):
+Scrape subestima — live counts son +20-50 % más en promedio. Ver
+`feedback_live_count_vs_scrape_estimate.md`.
 
-| Rank | Tabla | Rows (scrape) |
-|---:|---|---:|
-| 1 | **EGX300EPE** | 79,040 |
-| 2 | REG_MOVIMIENTO_OBS | 72,737 |
-| 3 | REG_CUENTA_CALIFICACION | 58,960 |
-| 4 | TEL_LOG | 34,885 |
-| 5 | COTIZOPMOVIM | 28,626 |
-| 6 | STK_COSTO_REPOSICION_HIST | 28,515 |
-| 7 | CARCHEHI | 26,882 |
-| 8 | ACCESORIOS_COCHE | 19,671 |
-| 9 | EGX_300 | 15,702 |
-| 10 | RECLAMOPAGOS | 15,463 |
+## El long tail probado live (2026-04-19)
 
-Estos 10 suman ~380 K filas scraped (~250-500 K live estimate). El
-resto son 285 tablas con <15 K filas cada una — candidatas para bulk
-waiver W-007 o cierre rápido con migrator genérico.
+Shape + live count de las 10 tablas más grandes del gap post-2.0.10,
+con domain classification + target SDA sugerido:
 
-Reproducer completo al final de `docs/parity/data-migration.md`.
+### Grupo A — Current-accounts / treasury (~237 K live)
 
-## Pre-work si 2.0.10 sigue abierto
+| Tabla | Live | Scrape | Shape clave |
+|---|---:|---:|---|
+| **REG_CUENTA_CALIFICACION** | **136,064** | 58,960 (+131 %) | `id_regcalificacion` AI PRI, `regcuenta_id` FK, `calificacion` VARCHAR(40), `fecha_calificacion` DATETIME, `referencia_calificacion` |
+| **REG_MOVIMIENTO_OBS** | **72,737** | 72,737 | `id_regmovimientoobs` AI PRI, `fec_observacion`, `hora_observacion`, `observacion` LONGTEXT, `regmovim_id` FK, `login`, `tabla_origen`, `ctacod` |
+| **CARCHEHI** | **28,763** | 26,882 | composite PK (`carint`, `siscod`, `succod`); 35-col cheque-historia: `carimp`, `carfec`, `carbco`, `carnro`, `cartip`, `ctacod`, `movnro`, `fecha_emision`, `cartera_id` |
 
-Antes de cortar 2.0.11:
+**Target SDA**:
+- `erp_entity_credit_ratings` — REG_CUENTA_CALIFICACION. FK
+  `regcuenta_id → erp_entities` via ResolveEntityFlexible. Trivial.
+- `erp_invoice_notes` — REG_MOVIMIENTO_OBS. FK `regmovim_id` via
+  `ResolveRegMovim` (Phase 6 index). Preserve observation longtext.
+- `erp_check_history` — CARCHEHI. Composite PK → hashCode() for
+  legacy_id. FK `ctacod` via entity resolver. Migración con el
+  mayor número de columnas del grupo pero shape limpio.
+
+### Grupo B — Stock / production extensions (~176 K live)
+
+| Tabla | Live | Scrape | Shape clave |
+|---|---:|---:|---|
+| **STK_COSTO_REPOSICION_HIST** | **109,123** | 28,515 (+282 %) | `id_costoreposicion_hist` AI PRI, `costoreposicion_id`, `regcuenta_id` FK, `moneda_id`, `cotizacion` DEC(14,4), `costo_proveedor`, `origen`, `incoterm_id`, `gasto_importacion`, `flete_local_ars`, `modificado` TIMESTAMP, `descuento_1/_2` |
+| **ACCESORIOS_COCHE** | **37,909** | 19,671 (+93 %) | `id_accesorio` AI PRI, `nrofab` MUL, `artcod`, `artdes` LONGTEXT, `fecha`, `cotizacion_id`, `estado`, `ficha_id`, `precio_adicional`, `cantidad`, `aprobado`, `precio_unitario`, `prdseccion_id`, `muestra_fv/_ft`, `fc_estado_acc_id` |
+| **COTIZOPMOVIM** | **28,573** | 28,626 | `idCotiz` MUL, `idSeccion`, `descripcion`, `idMovim` AI PRI |
+
+**Target SDA**:
+- `erp_article_replacement_cost_history` — hermana de
+  `erp_article_cost_history` (075). Extiende ese dominio con la shape
+  más rica (moneda, origen, incoterm). FK `regcuenta_id` via entity.
+- `erp_unit_accessories` — ACCESORIOS_COCHE. Asocia a producción
+  unit (`nrofab`) + artículo (`artcod` → default-sub lookup) +
+  cotización / ficha. Preservar longtext description.
+- `erp_quotation_section_items` — COTIZOPMOVIM. Simple. Resolvr
+  `idCotiz` contra cotizaciones ya migradas.
+
+### Grupo C — Industrial telemetry (~95 K live)
+
+| Tabla | Live | Scrape | Shape clave |
+|---|---:|---:|---|
+| **EGX300EPE** | **79,376** | 79,040 | `insertkey` PRI VARCHAR(200); `id_nave` + `id_csv` + `date_time` DATETIME + 8 columnas DECIMAL(10,3) (potencia_activa/aparente/reactiva, demanda_*, intensidades) |
+| **EGX_300** | **15,992** | 15,702 | `id_nave` INT(1), `id_csv` INT, `date` DATETIME, `intensidad1/2/3` DEC(10,3). Sin PK declarada (tabla vieja). |
+
+**Decision point**: ambas tablas son **lecturas del medidor
+Schneider PowerLogic EGX300** (contador eléctrico). Son time-series
+de energía industrial — datos históricos, no operacionales para la
+ERP. **Dos opciones**:
+
+- **(A)** Migrar a `erp_power_meter_readings` (single table, columna
+  `meter_model` discriminando EGX300EPE vs EGX_300). ~95 K rows.
+- **(B)** **Waive via W-008** — telemetría industrial, no business
+  data. No hay XML-form Histrix que las consulte operacionalmente
+  (verificar con `grep`). Revisit cuando haya una UI de monitoreo
+  industrial (Phase 3+ si llega).
+
+Recomendado **B** — no tiene sentido migrar 100 K filas de sensor
+histórico a la ERP. Waiver corto, strike.
+
+### Grupo D — Misc (~50 K live)
+
+| Tabla | Live | Scrape | Notes |
+|---|---:|---:|---|
+| **TEL_LOG** | **34,885** | 34,885 | Log de llamadas VoIP — `fecha`, `extension`, `numero`, `duracion`. Idem EGX: telemetría, no business. **Waive**. |
+| **RECLAMOPAGOS** | **15,463** | 15,463 | Reclamos de pagos — ctacod + observacion longtext. Pequeño pero business-relevant. `erp_payment_complaints` si cabe, sino waive. |
+
+### Long tail restante (~285 tablas < 15K cada una)
+
+**W-007 "sub-15K-row long tail"** bulk waiver. Same shape as W-006
+(zero-row) y W-004 (HTX infra). Scope: todas las tablas de
+`.intranet-scrape/db-tables.txt` con `table_rows < 15000`, que no
+estén en (a) los 3 waivers existentes, (b) los migradores ya
+registrados, (c) los migradores de 2.0.11. Row total: ≤ ~200 K.
+
+**Rationale**: estas tablas son el long-tail estadístico — cada una
+<15K filas individualmente, colectivamente <200K. El costo de migrar
+(un migrator custom por cada una) excede ampliamente el valor. La
+política default es: si cualquier Phase 1 UI pide una de esas
+tablas, strike del waiver y escribir el migrator entonces.
+
+## Plan de trabajo 2.0.11
+
+### Pre-work
 
 ```bash
-gh pr checks <NRO>          # tu PR 2.0.10
-gh pr view <NRO> --json mergeable,state
+# 1. Cut branch
+git checkout -b 2.0.11 main
 
-# Post-merge en main:
-git checkout main && git pull origin main
-git tag v2.0.10 && git push origin v2.0.10
-gh release create v2.0.10 --title "..." --notes-file <...>
+# 2. Bump CLAUDE.md
+sed -i 's/Working:\*\* `2.0.10`/Working:\*\* `2.0.11`/' CLAUDE.md
+git commit -am "chore: bump working branch 2.0.10 → 2.0.11
 
-# Workstation drift (srv-ia-01):
-ssh sistemas@srv-ia-01 "cd /opt/saldivia/repo && git pull origin main"
-# Verificar: git rev-parse origin/main == git rev-parse HEAD en workstation.
+[incluir el resumen del ciclo 2.0.10 + plan 2.0.11]
+
+Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ```
 
-Memoria: `feedback_version_tagging.md`. Release body incluye ambas
-sections: Pareto #3 CTBREGIS + Pareto #4 HERRAMIENTAS/HERRMOVS.
+### Commits planeados
 
-## Tarea principal — long tail cleanup: BCS_IMPORTACION + friends
+1. **Pareto tail Grupo A** (migración 077 — current-accounts/treasury,
+   ~237 K filas):
+   - `erp_entity_credit_ratings` + `erp_invoice_notes` + `erp_check_history`
+   - Reader en `current_accounts.go` o `treasury.go`
+   - Migrator con entity + regmovim resolvers (ambos ya construidos)
+   - sqlc queries + hand-patch
 
-**Skills primarios:** `htx-parity` + `migration-health` + `database` +
-`backend-go`.
+2. **Pareto tail Grupo B** (migración 078 — stock/production
+   extensions, ~176 K filas):
+   - `erp_article_replacement_cost_history` (extends erp_article_cost_history)
+   - `erp_unit_accessories` + `erp_quotation_section_items`
+   - Reader en `stock_extended.go` + `production_extended.go`
+   - sqlc queries + hand-patch
 
-### Contexto
+3. **Waiver W-007 + W-008** (no migración):
+   - `docs/parity/waivers.md` — W-007 long-tail <15K, W-008 EGX+TEL_LOG
+     industrial telemetry
+   - Lista pinned en `docs/parity/data-migration.md` (top-of-repo
+     reproducer regenera)
+   - Strike de ranks correspondientes en el Pareto
 
-El top-5 del Pareto original ya cerró. Los 10 siguientes suman ~450 K
-filas scraped, probablemente 200-400 K live. Cada uno es un
-migrator sencillo (3-6 columnas), similar shape a los de 2.0.10.
+4. **Optional — RECLAMOPAGOS migrator** si hay tiempo (migración 079,
+   15 K filas): `erp_payment_complaints`.
 
-### Candidatos
+### Cierre esperado
 
-- **BCS_IMPORTACION** (84,492 scrape) — BCS = banco-caja-sucursal.
-  Probablemente importaciones de transacciones bancarias.
-- **EGX300EPE** / **EGX_300** (~95 K combinados) — dos tablas con
-  prefix EGX, desconocido sin XML scrape.
-- **REG_MOVIMIENTO_OBS** (72,737) — observaciones sobre registros de
-  movimientos. Simple join a movements.
-- **REG_CUENTA_CALIFICACION** (58,960) — calificaciones de cuentas
-  corrientes (clientes/proveedores).
-- **TEL_LOG** (34,885) — log de telefonía.
-- **COTIZOPMOVIM** (28,626) — cotización-operación-movimiento.
-- **STK_COSTO_REPOSICION_HIST** (28,515) — historia costos reposición
-  (hermana de STK_COSTO_HIST migrada en 2.0.10).
-- **CARCHEHI** (26,882) — carbanco-cheque-historia (treasury).
-- **ACCESORIOS_COCHE** (19,671) — accesorios de coches.
+Post-2.0.11:
+- Covered tables: 119 → ~125
+- Gap tables: 295 → ≤ 10 (o 0 con W-007)
+- Covered row share: 80 % → ~82 %
+- Phase 1 §Data migration: **✅ cerrada** en ADR 027
 
-### Estrategia
+## Trampas heredadas
 
-Agrupar por dominio para minimizar churn:
-- **Accounting/treasury**: BCS_IMPORTACION + CARCHEHI (~111 K combinadas)
-- **Current accounts**: REG_MOVIMIENTO_OBS + REG_CUENTA_CALIFICACION
-  + COTIZOPMOVIM (~160 K)
-- **Stock history**: STK_COSTO_REPOSICION_HIST (~28 K) — mimetic con
-  el pattern de STK_COSTO_HIST hecho en 2.0.10
-- **Misc**: EGX tables (investigate), TEL_LOG, ACCESORIOS_COCHE
-
-Cada grupo = 1 migración nueva con 1-3 tablas. ~3-5 commits en total.
-
-### Arranque
-
-```bash
-# Bulk probe: shape + count + sample de todas
-for TBL in BCS_IMPORTACION EGX300EPE EGX_300 REG_MOVIMIENTO_OBS \
-  REG_CUENTA_CALIFICACION TEL_LOG COTIZOPMOVIM \
-  STK_COSTO_REPOSICION_HIST CARCHEHI ACCESORIOS_COCHE; do
-  echo "-- $TBL --"
-  echo "DESCRIBE $TBL; SELECT COUNT(*) FROM $TBL; SELECT * FROM $TBL LIMIT 3;"
-done > /tmp/work/tail_probe.sql
-# Then run via docker+sshpass pattern.
-```
-
-Al cerrar el long tail, el gap baja a ~286 tablas con <15 K filas —
-eligible para bulk waiver W-007.
-
-## Trampas conocidas (heredadas de 2.0.10)
-
-- **sqlc drift** — el pattern del hand-patch sigue vigente: editá la
-  query `.sql`, regenerá, extraé SOLO los blocks nuevos, revertí con
-  `git checkout services/erp/internal/repository/`, appendeá a mano.
-  Memoria `feedback_sqlc_version_drift`.
-
-- **Live count vs scrape estimate** — el Pareto usa
-  `information_schema.table_rows` (estimate). CTBREGIS en 2.0.10
-  creció 5.7 % vs scrape; HERRAMIENTAS creció 73 %. Confirmá
-  COUNT(*) live antes de escribir la Phase 0 invariant en el commit.
-  Memoria `feedback_live_count_vs_scrape_estimate`.
-
-- **Phase 0 invariants** — religion. `rows_read = rows_written +
-  rows_skipped + rows_duplicate` **y** NO completar con
-  `rows_written=0` sobre `rows_read>0`. `migration-health` skill.
-
-- **Lint errcheck pre-existente** en `pkg/server/healthcheck*.go` (3
-  errores desde 2.0.7, `cb2f444c`). CI pasa sin ellos. No bloquean.
-
-- **Cold-start migrations** — tres bugs latentes surface sólo en silo
-  fresco (psql `:'var'`, cross-DB INSERT, LANGUAGE sql forward-ref).
+- **Live count vs scrape** — ya documentado en `feedback_live_count_vs_scrape_estimate`.
+  Ya probado live en 2.0.10 — valores reales están en este documento.
+- **sqlc drift** — editar `.sql` + hand-patch `.sql.go`/`models.go`
+  quirúrgicamente. Memoria `feedback_sqlc_version_drift`.
+- **Phase 0 invariants** — `rows_read = rows_written + rows_skipped +
+  rows_duplicate`. Si un migrator tiene rows_written=0 sobre rows_read>0
+  es un BUG.
+- **Cold-start migrations** — tres bugs latentes en silo fresco.
   Memoria `feedback_migration_cold_start`.
-
 - **Numeración migration** — 2.0.10 dejó `076`. Next libre: **077**.
-
-- **Histrix access requiere VPN activa en Windows**. Pattern
-  docker+sshpass en `reference_histrix_access.md`. Passwords:
-  workstation `sistemas/Saldivia01!`, Histrix
-  `sistemas/SaldiviaAdmin02` + DB `root/m2450e`.
-
-- **Tailscale SSH re-auth** para la workstation — el session start
-  puede pedir re-auth via URL (`https://login.tailscale.com/a/...`).
-  No bloquea el trabajo de migración (MySQL queries van por WireGuard),
-  sólo el drift check post-merge.
-
-- **No hardcodear `tenant_id`** — ADR 022 silo.
+- **Histrix access** — VPN Windows + docker+sshpass pattern
+  (`reference_histrix_access.md`). Contraseñas en la memoria.
+- **Tailscale SSH re-auth** — workstation a veces pide re-auth
+  (URL en `https://login.tailscale.com/a/...`). No bloquea trabajo
+  de MySQL que va por WireGuard.
 
 ## Fuera de scope
 
-- **Phase 1 §UI parity** — sub-order ADR 027 dice "Data migration → UI
-  parity". Las pages esperan detrás del data.
+- **Phase 1 §UI parity** — ADR 027 sub-order dice Data → UI. Las
+  pages esperan detrás del data.
 - **Phase 2+ (chat, prompts jerárquicos, tree-RAG, ACL)** —
-  desbloqueado pero no es prioridad top-down mientras quede Phase 1
-  gap abierto.
-- **Extensión columnas** — shape mínima es OK; extender cuando una UI
-  lo pida.
+  desbloqueado pero no es top-down prioridad mientras quede Phase 1
+  abierta.
+- **End-to-end dry-run contra saldivia tenant** — ops task, no session
+  task. El migrador queda shipped en el PR; la validación live la
+  hace la siguiente cutover rehearsal.
 
-## Cierre esperado
+## Post-PR cierre ciclo
 
-- **Mínimo** (BCS_IMPORTACION + CARCHEHI solo): +111 K filas cubiertas,
-  gap baja a 294 tablas / ≈ 90 K filas scrape.
-- **Ideal** (long-tail top-10 cerrado): ~450 K filas cubiertas, gap
-  baja a 286 tablas pequeñas (<15 K cada una) — candidatas para bulk
-  waiver W-007 "long tail < 15K rows" similar a W-006. Cumulative
-  coverage **~83 %** live, con Phase 1 §Data migration prácticamente
-  cerrada modulo waivers.
+```bash
+gh pr create --base main --head 2.0.11 --title "..." --body "..."
+# Post-merge:
+git checkout main && git pull origin main
+git tag v2.0.11 && git push origin v2.0.11
+gh release create v2.0.11 --title "..." --notes "..."
+ssh sistemas@srv-ia-01 "cd /opt/saldivia/repo && git pull origin main"
+```
 
-Post-PR: `gh pr create --base main --head 2.0.11` y tras merge,
-`git pull` en la workstation para volver a cerrar drift + tag +
-release.
-
-## Working branch
-
-Antes de código: cortar `2.0.11` desde `main` **post-merge de 2.0.10**
-y bumpear `CLAUDE.md` ("Working: 2.0.10" → "Working: 2.0.11") con
-`chore: bump working branch 2.0.10 → 2.0.11` (pattern `348f02f4`).
-
-Si 2.0.10 sigue abierto cuando arrancás, NO cortes 2.0.11 encima —
-primero cerrá el ciclo (ver §"Pre-work si 2.0.10 sigue abierto").
+Memoria `feedback_version_tagging.md`. Release body incluye:
+- Resumen de grupos migrados (A/B + waivers W-007/W-008).
+- Phase 1 §Data migration = ✅ done → Phase 1 §UI parity desbloqueada.
