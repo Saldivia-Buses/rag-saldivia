@@ -80,6 +80,10 @@ func (m *mockStockService) ListBOM(_ context.Context, _ string, _ pgtype.UUID) (
 	return m.bom, m.err
 }
 
+func (m *mockStockService) ListArticleCosts(_ context.Context, _ string, _ pgtype.UUID, _ string, _, _ int) ([]repository.ListArticleCostsRow, error) {
+	return nil, m.err
+}
+
 // --- helpers ---
 
 func setupStockRouter(mock StockService) *chi.Mux {

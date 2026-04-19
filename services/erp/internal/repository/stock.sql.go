@@ -696,41 +696,72 @@ func (q *Queries) UpsertStockLevel(ctx context.Context, arg UpsertStockLevelPara
 }
 
 const listArticleCosts = `-- name: ListArticleCosts :many
-SELECT id, tenant_id, legacy_id, article_code, article_id, subsystem_code,
-       cost, percentage_1, percentage_2, percentage_3,
-       supplier_article_code, supplier_code, supplier_entity_id,
-       invoice_date, last_update_date,
-       movement_no, movement_post, movement_date, recalc_flag, created_at
-FROM erp_article_costs
-WHERE tenant_id = $1 AND article_id = $2
-ORDER BY last_update_date DESC NULLS LAST, supplier_code
-LIMIT $3 OFFSET $4
+SELECT ac.id, ac.tenant_id, ac.legacy_id, ac.article_code, ac.article_id,
+       ac.subsystem_code, ac.cost, ac.percentage_1, ac.percentage_2,
+       ac.percentage_3, ac.supplier_article_code, ac.supplier_code,
+       ac.supplier_entity_id, ac.invoice_date, ac.last_update_date,
+       ac.movement_no, ac.movement_post, ac.movement_date, ac.recalc_flag,
+       ac.created_at,
+       a.name AS article_name, e.name AS supplier_name
+FROM erp_article_costs ac
+LEFT JOIN erp_articles a ON a.id = ac.article_id AND a.tenant_id = ac.tenant_id
+LEFT JOIN erp_entities e ON e.id = ac.supplier_entity_id AND e.tenant_id = ac.tenant_id
+WHERE ac.tenant_id = $1
+  AND ($4::UUID IS NULL OR ac.article_id = $4::UUID)
+  AND ($5::TEXT = '' OR ac.supplier_code = $5::TEXT)
+ORDER BY ac.last_update_date DESC NULLS LAST, ac.supplier_code
+LIMIT $2 OFFSET $3
 `
 
 type ListArticleCostsParams struct {
-	TenantID  string      `json:"tenant_id"`
-	ArticleID pgtype.UUID `json:"article_id"`
-	Limit     int32       `json:"limit"`
-	Offset    int32       `json:"offset"`
+	TenantID       string      `json:"tenant_id"`
+	Limit          int32       `json:"limit"`
+	Offset         int32       `json:"offset"`
+	ArticleFilter  pgtype.UUID `json:"article_filter"`
+	SupplierFilter string      `json:"supplier_filter"`
 }
 
-// Per-supplier cost ledger for a single article. The migrated STKINSPR
-// rows carry one entry per (article, supplier) pair with the last update
-// date.
-func (q *Queries) ListArticleCosts(ctx context.Context, arg ListArticleCostsParams) ([]ErpArticleCost, error) {
+type ListArticleCostsRow struct {
+	ID                  pgtype.UUID        `json:"id"`
+	TenantID            string             `json:"tenant_id"`
+	LegacyID            int64              `json:"legacy_id"`
+	ArticleCode         string             `json:"article_code"`
+	ArticleID           pgtype.UUID        `json:"article_id"`
+	SubsystemCode       string             `json:"subsystem_code"`
+	Cost                pgtype.Numeric     `json:"cost"`
+	Percentage1         pgtype.Numeric     `json:"percentage_1"`
+	Percentage2         pgtype.Numeric     `json:"percentage_2"`
+	Percentage3         pgtype.Numeric     `json:"percentage_3"`
+	SupplierArticleCode string             `json:"supplier_article_code"`
+	SupplierCode        string             `json:"supplier_code"`
+	SupplierEntityID    pgtype.UUID        `json:"supplier_entity_id"`
+	InvoiceDate         pgtype.Date        `json:"invoice_date"`
+	LastUpdateDate      pgtype.Date        `json:"last_update_date"`
+	MovementNo          int32              `json:"movement_no"`
+	MovementPost        int32              `json:"movement_post"`
+	MovementDate        pgtype.Date        `json:"movement_date"`
+	RecalcFlag          int16              `json:"recalc_flag"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+	ArticleName         pgtype.Text        `json:"article_name"`
+	SupplierName        pgtype.Text        `json:"supplier_name"`
+}
+
+// Per-supplier cost ledger with optional article / supplier filters.
+func (q *Queries) ListArticleCosts(ctx context.Context, arg ListArticleCostsParams) ([]ListArticleCostsRow, error) {
 	rows, err := q.db.Query(ctx, listArticleCosts,
 		arg.TenantID,
-		arg.ArticleID,
 		arg.Limit,
 		arg.Offset,
+		arg.ArticleFilter,
+		arg.SupplierFilter,
 	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ErpArticleCost{}
+	items := []ListArticleCostsRow{}
 	for rows.Next() {
-		var i ErpArticleCost
+		var i ListArticleCostsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.TenantID,
@@ -752,6 +783,8 @@ func (q *Queries) ListArticleCosts(ctx context.Context, arg ListArticleCostsPara
 			&i.MovementDate,
 			&i.RecalcFlag,
 			&i.CreatedAt,
+			&i.ArticleName,
+			&i.SupplierName,
 		); err != nil {
 			return nil, err
 		}

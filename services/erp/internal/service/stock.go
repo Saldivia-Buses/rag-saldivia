@@ -225,6 +225,18 @@ func (s *Stock) ListBOM(ctx context.Context, tenantID string, parentID pgtype.UU
 	return s.repo.ListBOM(ctx, repository.ListBOMParams{TenantID: tenantID, ParentID: parentID})
 }
 
+// ListArticleCosts returns the per-supplier cost ledger with optional
+// article / supplier filters. Parity: Histrix stock/costos/.
+func (s *Stock) ListArticleCosts(ctx context.Context, tenantID string, articleFilter pgtype.UUID, supplierFilter string, limit, offset int) ([]repository.ListArticleCostsRow, error) {
+	return s.repo.ListArticleCosts(ctx, repository.ListArticleCostsParams{
+		TenantID:       tenantID,
+		Limit:          int32(limit),
+		Offset:         int32(offset),
+		ArticleFilter:  articleFilter,
+		SupplierFilter: supplierFilter,
+	})
+}
+
 func pgNumericNeg(s string) pgtype.Numeric {
 	var n pgtype.Numeric
 	if s == "" {

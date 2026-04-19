@@ -147,6 +147,10 @@ func (m *mockQualityService) CreateActionTask(_ context.Context, _ repository.Cr
 	return m.task, nil
 }
 
+func (m *mockQualityService) ListIndicators(_ context.Context, _, _, _ string) ([]repository.ErpQualityIndicator, error) {
+	return nil, m.err
+}
+
 func (m *mockQualityService) CompleteActionTask(_ context.Context, _ pgtype.UUID, _, _, _ string) error {
 	return m.err
 }

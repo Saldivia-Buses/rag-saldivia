@@ -10,14 +10,14 @@ Unit of work is the **cluster** — one Histrix area/form group maps to
 one SDA route. A cluster is "covered" when the SDA page delivers the
 same operational surface as the Histrix form(s) it replaces.
 
-## Totals (2026-04-19, post-2.0.14)
+## Totals (2026-04-19, post-2.0.15)
 
 | Segment | Count |
 |---|---:|
 | Histrix XML-forms in `.intranet-scrape/xml-forms/` | ~4,500 files |
 | Histrix top-level forms (area/form groups) | 434 |
-| SDA `page.tsx` routes shipped | 71 |
-| **SDA pages explicitly tracked as XML-form parity** | **5** (this file) |
+| SDA `page.tsx` routes shipped | 77 |
+| **SDA pages explicitly tracked as XML-form parity** | **11** (this file) |
 | XML-form waivers (§UI) | **1** (W-009, see `waivers.md`) |
 
 The 67 existing SDA pages cover the ERP admin surface structurally
@@ -63,6 +63,98 @@ operational surface the three XML-forms describe.
   and renders the supplier's open balance next to each complaint row,
   matching the `SUM(saldo_movimiento)` group-by of
   `reclamopagos_ing.xml`.
+
+### Cluster: Auditorías de calidad (2.0.15)
+
+**SDA page:** `apps/web/src/app/(modules)/calidad/auditorias/page.tsx`
+→ `/calidad/auditorias`.
+
+**Covers Histrix XML-forms:** auditoría-list views under the Histrix
+calidad / control de calidad area (read-only).
+
+**Data dependency:** `erp_audits`. Backend: existing
+`GET /v1/erp/quality/audits` (shipped previously, just not wired to
+UI until now).
+
+Columns: número / fecha / tipo / alcance / puntaje / estado (badge).
+
+### Cluster: Documentos controlados (2.0.15)
+
+**SDA page:** `apps/web/src/app/(modules)/calidad/documentos-controlados/page.tsx`
+→ `/calidad/documentos-controlados`.
+
+**Covers Histrix XML-forms:** `calidad2/cal_registros.xml` —
+documentos controlados del SGC.
+
+**Data dependency:** `erp_controlled_documents`. Backend: existing
+`GET /v1/erp/quality/documents`.
+
+Columns: código / título / revisión / fecha aprobación / badge
+estado. Status tabs: Aprobados / Borradores / Obsoletos / Todos.
+
+### Cluster: Planes de acción (2.0.15)
+
+**SDA page:** `apps/web/src/app/(modules)/calidad/planes-accion/page.tsx`
+→ `/calidad/planes-accion`.
+
+**Covers Histrix XML-forms:** `calidad2/cal_plan_accion_total_listado.xml`
+— listado de planes de acción.
+
+**Data dependency:** `erp_quality_action_plans`
+(`ListActionPlansRow`). Backend: existing
+`GET /v1/erp/quality/action-plans`.
+
+Columns: descripción / inicio planificado / fecha objetivo / cierre
+/ badge estado. Status tabs: Abiertos / En curso / Cerrados / Todos.
+
+### Cluster: Indicadores de calidad (2.0.15)
+
+**SDA page:** `apps/web/src/app/(modules)/calidad/indicadores/page.tsx`
+→ `/calidad/indicadores`.
+
+**Covers Histrix XML-forms:** `calidad2/programas_qry.xml` —
+indicadores / KPIs por período.
+
+**Data dependency:** `erp_quality_indicators`. Backend added in
+2.0.15: `GET /v1/erp/quality/indicators` (new handler on top of the
+existing sqlc query).
+
+Columns: período / indicador / valor / objetivo / cumplimiento
+(badge OK / Bajo). Período-range filter defaults to the current year.
+
+### Cluster: Movimientos de stock (2.0.15)
+
+**SDA page:** `apps/web/src/app/(modules)/administracion/almacen/movimientos/page.tsx`
+→ `/administracion/almacen/movimientos`.
+
+**Covers Histrix XML-forms:** `stock/qry/stkmovimientos_qry.xml` —
+movimientos de stock por artículo / almacén.
+
+**Data dependency:** `erp_stock_movements`. Backend: existing
+`GET /v1/erp/stock/movements` (handler already took `article_id` as
+optional; no backend change needed).
+
+Columns: fecha / cód. art. / artículo / tipo (badge) / cantidad /
+costo unit. / notas. Type tabs: Todos / Ingresos / Egresos /
+Transferencias.
+
+### Cluster: Costos de artículos (2.0.15)
+
+**SDA page:** `apps/web/src/app/(modules)/administracion/almacen/costos/page.tsx`
+→ `/administracion/almacen/costos`.
+
+**Covers Histrix XML-forms:** `stock/costos/` — ledger de costos por
+proveedor.
+
+**Data dependency:** `erp_article_costs` (STKINSPR, 189,863 rows
+live). Backend added in 2.0.15: the sqlc query was generalized from
+a single-article shape to optional article / supplier filters with
+LEFT JOINs on `erp_articles` + `erp_entities` (ships article_name +
+supplier_name). New endpoint
+`GET /v1/erp/stock/article-costs?article_id=&supplier_code=&page=&page_size=`.
+
+Columns: cód. art. / artículo / cód. prov. / proveedor / costo /
+últ. actualización / fecha factura.
 
 ### Cluster: Notas de comprobantes (2.0.14)
 
