@@ -37,7 +37,7 @@ type TreasuryService interface {
 	GetReceipt(ctx context.Context, tenantID string, id pgtype.UUID) (*service.ReceiptDetail, error)
 	CreateReceipt(ctx context.Context, tenantID string, inp service.ReceiptInput, userID, ip string) (*service.ReceiptDetail, error)
 	VoidReceipt(ctx context.Context, tenantID string, receiptID pgtype.UUID, userID, ip string) error
-	ListReconciliations(ctx context.Context, tenantID string) ([]repository.ListReconciliationsRow, error)
+	ListReconciliations(ctx context.Context, tenantID string, bankAccountID pgtype.UUID) ([]repository.ListReconciliationsRow, error)
 	GetReconciliation(ctx context.Context, tenantID string, id pgtype.UUID) (*service.ReconciliationDetail, error)
 	CreateReconciliation(ctx context.Context, tenantID string, bankAccountID pgtype.UUID, period string, statementBalance, bookBalance string, userID, ip string) (repository.ErpBankReconciliation, error)
 	ImportStatementLines(ctx context.Context, tenantID string, reconID pgtype.UUID, lines []service.StatementLineInput) (int, error)
@@ -533,7 +533,16 @@ func (h *Treasury) VoidReceiptH(w http.ResponseWriter, r *http.Request) {
 
 func (h *Treasury) ListReconciliations(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
-	recons, err := h.svc.ListReconciliations(r.Context(), slug)
+	var bankAccountID pgtype.UUID
+	if s := r.URL.Query().Get("bank_account_id"); s != "" {
+		id, err := parseUUID(s)
+		if err != nil {
+			erperrors.WriteError(w, r, erperrors.InvalidID("bank_account_id"))
+			return
+		}
+		bankAccountID = id
+	}
+	recons, err := h.svc.ListReconciliations(r.Context(), slug, bankAccountID)
 	if err != nil {
 		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return

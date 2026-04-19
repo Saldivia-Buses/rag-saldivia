@@ -23,10 +23,12 @@ export default function BankAccountDetailPage() {
   });
 
   const reconciliationsQ = useQuery({
-    queryKey: erpKeys.bankReconciliations(),
+    queryKey: [...erpKeys.all, "treasury", "reconciliations", { bank_account_id: id }] as const,
     queryFn: () =>
-      api.get<{ reconciliations: BankReconciliation[] }>("/v1/erp/treasury/reconciliations"),
-    select: (d) => d.reconciliations.filter((rec) => rec.bank_account_id === id),
+      api.get<{ reconciliations: BankReconciliation[] }>(
+        `/v1/erp/treasury/reconciliations?bank_account_id=${id}`,
+      ),
+    select: (d) => d.reconciliations,
     enabled: !!id,
   });
 

@@ -120,7 +120,7 @@ func (m *mockTreasuryService) CreateReceipt(_ context.Context, _ string, _ servi
 func (m *mockTreasuryService) VoidReceipt(_ context.Context, _ string, _ pgtype.UUID, _, _ string) error {
 	return m.err
 }
-func (m *mockTreasuryService) ListReconciliations(_ context.Context, _ string) ([]repository.ListReconciliationsRow, error) {
+func (m *mockTreasuryService) ListReconciliations(_ context.Context, _ string, _ pgtype.UUID) ([]repository.ListReconciliationsRow, error) {
 	return m.reconciliations, m.err
 }
 func (m *mockTreasuryService) GetReconciliation(_ context.Context, _ string, _ pgtype.UUID) (*service.ReconciliationDetail, error) {

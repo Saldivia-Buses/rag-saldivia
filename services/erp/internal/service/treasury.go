@@ -212,8 +212,11 @@ func (s *Treasury) CreateCashCount(ctx context.Context, p repository.CreateCashC
 // Reconciliation (Plan 18 Fase 1)
 // ============================================================
 
-func (s *Treasury) ListReconciliations(ctx context.Context, tenantID string) ([]repository.ListReconciliationsRow, error) {
-	return s.repo.ListReconciliations(ctx, tenantID)
+func (s *Treasury) ListReconciliations(ctx context.Context, tenantID string, bankAccountID pgtype.UUID) ([]repository.ListReconciliationsRow, error) {
+	return s.repo.ListReconciliations(ctx, repository.ListReconciliationsParams{
+		TenantID:      tenantID,
+		BankAccountID: bankAccountID,
+	})
 }
 
 func (s *Treasury) CreateReconciliation(ctx context.Context, tenantID string, bankAccountID pgtype.UUID, period string, statementBalance, bookBalance string, userID, ip string) (repository.ErpBankReconciliation, error) {

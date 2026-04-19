@@ -1128,8 +1128,14 @@ SELECT r.id, r.tenant_id, r.bank_account_id, r.period, r.statement_balance,
 FROM erp_bank_reconciliations r
 JOIN erp_bank_accounts ba ON ba.id = r.bank_account_id
 WHERE r.tenant_id = $1
+  AND ($2::UUID IS NULL OR r.bank_account_id = $2::UUID)
 ORDER BY r.period DESC, ba.bank_name
 `
+
+type ListReconciliationsParams struct {
+	TenantID      string      `json:"tenant_id"`
+	BankAccountID pgtype.UUID `json:"bank_account_id"`
+}
 
 type ListReconciliationsRow struct {
 	ID               pgtype.UUID        `json:"id"`
@@ -1145,8 +1151,8 @@ type ListReconciliationsRow struct {
 	AccountNumber    string             `json:"account_number"`
 }
 
-func (q *Queries) ListReconciliations(ctx context.Context, tenantID string) ([]ListReconciliationsRow, error) {
-	rows, err := q.db.Query(ctx, listReconciliations, tenantID)
+func (q *Queries) ListReconciliations(ctx context.Context, arg ListReconciliationsParams) ([]ListReconciliationsRow, error) {
+	rows, err := q.db.Query(ctx, listReconciliations, arg.TenantID, arg.BankAccountID)
 	if err != nil {
 		return nil, err
 	}

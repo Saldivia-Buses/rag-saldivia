@@ -112,6 +112,7 @@ SELECT r.id, r.tenant_id, r.bank_account_id, r.period, r.statement_balance,
 FROM erp_bank_reconciliations r
 JOIN erp_bank_accounts ba ON ba.id = r.bank_account_id
 WHERE r.tenant_id = $1
+  AND ($2::UUID IS NULL OR r.bank_account_id = $2::UUID)
 ORDER BY r.period DESC, ba.bank_name;
 
 -- name: CreateStatementLine :one
