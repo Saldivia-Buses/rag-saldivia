@@ -72,6 +72,9 @@ func (m *mockAdminService) ListProductAttributes(_ context.Context, _ string, _ 
 func (m *mockAdminService) ListTools(_ context.Context, _ string, _ int32, _ string, _, _ int) ([]repository.ErpTool, error) {
 	return nil, m.err
 }
+func (m *mockAdminService) GetTool(_ context.Context, _ pgtype.UUID, _ string) (repository.ErpTool, error) {
+	return repository.ErpTool{}, m.err
+}
 
 // --- helpers ---
 

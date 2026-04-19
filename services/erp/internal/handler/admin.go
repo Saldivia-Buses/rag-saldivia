@@ -27,6 +27,7 @@ type AdminService interface {
 	ListProducts(ctx context.Context, tenantID string, limit, offset int) ([]repository.ErpProduct, error)
 	ListProductAttributes(ctx context.Context, tenantID string, activeOnly bool) ([]repository.ErpProductAttribute, error)
 	ListTools(ctx context.Context, tenantID string, statusFilter int32, articleFilter string, limit, offset int) ([]repository.ErpTool, error)
+	GetTool(ctx context.Context, id pgtype.UUID, tenantID string) (repository.ErpTool, error)
 }
 
 type Admin struct{ svc AdminService }
@@ -44,6 +45,7 @@ func (h *Admin) Routes(authWrite func(http.Handler) http.Handler) chi.Router {
 		r.Get("/products", h.ListProductsH)
 		r.Get("/product-attributes", h.ListProductAttributesH)
 		r.Get("/tools", h.ListToolsH)
+		r.Get("/tools/{id}", h.GetToolH)
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(authWrite)
@@ -200,4 +202,19 @@ func (h *Admin) ListToolsH(w http.ResponseWriter, r *http.Request) {
 	if err != nil { erperrors.WriteError(w, r, erperrors.Internal(err)); return }
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"tools": tools})
+}
+
+func (h *Admin) GetToolH(w http.ResponseWriter, r *http.Request) {
+	id, err := parseUUID(chi.URLParam(r, "id"))
+	if err != nil {
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
+		return
+	}
+	tool, err := h.svc.GetTool(r.Context(), id, tenantSlug(r))
+	if err != nil {
+		erperrors.WriteError(w, r, erperrors.NotFound("tool"))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(tool)
 }

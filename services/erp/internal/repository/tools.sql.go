@@ -85,6 +85,53 @@ func (q *Queries) ListTools(ctx context.Context, arg ListToolsParams) ([]ErpTool
 	return items, nil
 }
 
+const getTool = `-- name: GetTool :one
+SELECT id, tenant_id, legacy_id, code, article_code, article_id,
+       inventory_code, name, characteristic, group_code, tool_type,
+       status_code, purchase_order_no, purchase_order_date,
+       delivery_note_date, delivery_note_post, delivery_note_no,
+       supplier_code, pending_oc, observation, manufacture_no,
+       generated_at, created_at
+FROM erp_tools
+WHERE id = $1 AND tenant_id = $2
+`
+
+type GetToolParams struct {
+	ID       pgtype.UUID `json:"id"`
+	TenantID string      `json:"tenant_id"`
+}
+
+func (q *Queries) GetTool(ctx context.Context, arg GetToolParams) (ErpTool, error) {
+	row := q.db.QueryRow(ctx, getTool, arg.ID, arg.TenantID)
+	var i ErpTool
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.LegacyID,
+		&i.Code,
+		&i.ArticleCode,
+		&i.ArticleID,
+		&i.InventoryCode,
+		&i.Name,
+		&i.Characteristic,
+		&i.GroupCode,
+		&i.ToolType,
+		&i.StatusCode,
+		&i.PurchaseOrderNo,
+		&i.PurchaseOrderDate,
+		&i.DeliveryNoteDate,
+		&i.DeliveryNotePost,
+		&i.DeliveryNoteNo,
+		&i.SupplierCode,
+		&i.PendingOc,
+		&i.Observation,
+		&i.ManufactureNo,
+		&i.GeneratedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const listToolMovements = `-- name: ListToolMovements :many
 SELECT id, tenant_id, legacy_id, tool_id, tool_code, user_code,
        quantity, movement_date, concept_code, created_at
