@@ -161,6 +161,17 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
   },
 
   // ── Soporte ──────────────────────────────────────────────
+  ventas: {
+    id: "ventas",
+    nav: { label: "Ventas", icon: FileText, path: "/ventas", position: 39 },
+    routes: [
+      "/ventas",
+      "/ventas/cotizaciones",
+    ],
+    subnav: [
+      { path: "/ventas/cotizaciones", label: "Cotizaciones" },
+    ],
+  },
   compras: {
     id: "compras",
     nav: { label: "Compras", icon: ShoppingCart, path: "/compras", position: 40 },

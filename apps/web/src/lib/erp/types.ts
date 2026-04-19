@@ -416,6 +416,39 @@ export interface PriceListDetail {
   items: PriceListItem[];
 }
 
+export interface Quotation {
+  id: string;
+  tenant_id: string;
+  number: string;
+  date: string | null;
+  customer_id: string | null;
+  status: string;
+  currency_id: string | null;
+  total: number | null;
+  valid_until: string | null;
+  notes: string;
+  user_id: string;
+  created_at: string;
+  customer_name?: string;
+}
+
+export interface QuotationLine {
+  id: string;
+  tenant_id: string;
+  quotation_id: string;
+  article_id: string | null;
+  description: string;
+  quantity: number | null;
+  unit_price: number | null;
+  sort_order: number;
+  metadata?: string | null;
+}
+
+export interface QuotationDetail {
+  quotation: Quotation;
+  lines: QuotationLine[];
+}
+
 export interface SupplierScorecard {
   id: string;
   tenant_id: string;
