@@ -43,6 +43,8 @@ type QualityService interface {
 	CompleteActionTask(ctx context.Context, id pgtype.UUID, tenantID, userID, ip string) error
 	// Indicators
 	ListIndicators(ctx context.Context, tenantID, periodFrom, periodTo string) ([]repository.ErpQualityIndicator, error)
+	// Supplier Scorecards
+	ListSupplierScorecards(ctx context.Context, tenantID string, limit, offset int) ([]repository.ListSupplierScorecardsRow, error)
 }
 
 type Quality struct{ svc QualityService }
@@ -64,6 +66,7 @@ func (h *Quality) Routes(authWrite func(http.Handler) http.Handler) chi.Router {
 		r.Get("/action-plans/{id}", h.GetActionPlan)
 		r.Get("/action-plans/{id}/tasks", h.ListActionTasks)
 		r.Get("/indicators", h.ListIndicators)
+		r.Get("/supplier-scorecards", h.ListSupplierScorecards)
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(authWrite)
@@ -539,6 +542,20 @@ func numericFromFloat(f float64) pgtype.Numeric {
 	var n pgtype.Numeric
 	_ = n.Scan(fmt.Sprintf("%.2f", f))
 	return n
+}
+
+// ListSupplierScorecards returns supplier quality scorecards.
+// Parity: compras/demeritos / calificacion_prov period-aggregated view.
+func (h *Quality) ListSupplierScorecards(w http.ResponseWriter, r *http.Request) {
+	p := pagination.Parse(r)
+	cards, err := h.svc.ListSupplierScorecards(r.Context(), tenantSlug(r), p.Limit(), p.Offset())
+	if err != nil {
+		erperrors.WriteError(w, r, erperrors.Internal(err))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{"scorecards": cards})
 }
 
 // ListIndicators returns quality KPI rows in a period range.
