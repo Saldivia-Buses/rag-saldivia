@@ -83,6 +83,28 @@ export interface BankBalance {
   balance: number;
 }
 
+// Invoice notes (REG_MOVIMIENTO_OBS parity — Phase 1 §UI)
+export interface InvoiceNote {
+  id: string;
+  tenant_id: string;
+  legacy_id: number;
+  observation_date: string | null;
+  observation_time: string | null;
+  observation: string;
+  invoice_id: string | null;
+  invoice_legacy_id: number;
+  login: string;
+  contact_legacy_id: number;
+  source_table: string;
+  system_code: string;
+  movement_date: string | null;
+  account_code: number;
+  concept_code: number;
+  movement_voucher_class: number;
+  movement_no: number;
+  created_at: string;
+}
+
 // Entity credit ratings (REG_CUENTA_CALIFICACION parity — Phase 1 §UI)
 export interface EntityCreditRating {
   id: string;

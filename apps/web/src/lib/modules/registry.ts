@@ -158,6 +158,7 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
     routes: [
       "/administracion",
       "/administracion/facturacion",
+      "/administracion/facturacion/notas",
       "/administracion/pagos",
       "/administracion/contable",
       "/administracion/reclamos",
@@ -167,6 +168,7 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
     ],
     subnav: [
       { path: "/administracion/facturacion", label: "Facturación" },
+      { path: "/administracion/facturacion/notas", label: "Notas de comprobantes" },
       { path: "/administracion/pagos", label: "Pagos" },
       { path: "/administracion/contable", label: "Contabilidad" },
       { path: "/administracion/reclamos", label: "Reclamos de pagos" },

@@ -73,6 +73,10 @@ func (m *mockInvoicingService) VoidInvoice(_ context.Context, _ pgtype.UUID, _, 
 	return m.voidResult, m.err
 }
 
+func (m *mockInvoicingService) ListInvoiceNotes(_ context.Context, _ string, _ pgtype.UUID, _, _ pgtype.Date, _, _ int) ([]repository.ErpInvoiceNote, error) {
+	return nil, m.err
+}
+
 // --- helpers ---
 
 func setupInvoicingRouter(mock *mockInvoicingService) *chi.Mux {

@@ -64,6 +64,41 @@ operational surface the three XML-forms describe.
   matching the `SUM(saldo_movimiento)` group-by of
   `reclamopagos_ing.xml`.
 
+### Cluster: Notas de comprobantes (2.0.14)
+
+**SDA page:** `apps/web/src/app/(modules)/administracion/facturacion/notas/page.tsx`
+→ `/administracion/facturacion/notas` (Administración → Notas de
+comprobantes).
+
+**Covers Histrix XML-forms:**
+- `clientes/qry/regmovim_obs_qry.xml` — abm-mini that backs the
+  "Observaciones" helper inside each REG_MOVIMIENTOS row. The SDA
+  page exposes the same data as a standalone list (subsistema /
+  comprobante / observación / usuario), read-only. Write/edit stays
+  in Histrix for now — the form requires GEN_TIPO_CONTACTOS which is
+  not migrated.
+
+**Data dependency:** `erp_invoice_notes` (migration `077`, shipped in
+2.0.11; REG_MOVIMIENTO_OBS → 72,737 rows live).
+
+**Backend endpoints added (scoped under `/v1/erp/invoicing`):**
+- `GET /invoice-notes?invoice_id=&date_from=&date_to=&page=&page_size=`
+
+Permission: `erp.invoicing.read`. Read-only. The sqlc query already
+supported optional invoice + date filters from the original 2.0.11
+migration PR.
+
+**Notable gaps vs Histrix:**
+- Create / edit: the Histrix form is an abm-mini (insert/update/
+  delete). SDA defers the write path — the picker for
+  GEN_TIPO_CONTACTOS (tipo_contacto) and the invoice-picker both need
+  separate work. Tracked as follow-up, not waived.
+- Drill-down to the source comprobante: Histrix links
+  `regmovim_id` back into `cc_notas_venta.xml`. SDA shows
+  `movement_voucher_class-movement_no` as a label; deep link into
+  facturación will land when facturación has an `/invoices/[id]`
+  route.
+
 ### Cluster: Calificaciones de cuentas (2.0.14)
 
 **SDA page:** `apps/web/src/app/(modules)/compras/calificaciones/page.tsx`

@@ -26,6 +26,7 @@ type InvoicingService interface {
 	CreateWithholding(ctx context.Context, p repository.CreateWithholdingParams, userID, ip string) (repository.ErpWithholding, error)
 	VoidPreview(ctx context.Context, id pgtype.UUID, tenantID string) (*service.VoidPreviewResult, error)
 	VoidInvoice(ctx context.Context, id pgtype.UUID, tenantID, reason, userID, ip string) (*service.VoidResult, error)
+	ListInvoiceNotes(ctx context.Context, tenantID string, invoiceFilter pgtype.UUID, dateFrom, dateTo pgtype.Date, limit, offset int) ([]repository.ErpInvoiceNote, error)
 }
 
 type Invoicing struct{ svc InvoicingService }
@@ -40,6 +41,7 @@ func (h *Invoicing) Routes(authWrite func(http.Handler) http.Handler) chi.Router
 		r.Get("/invoices/{id}", h.GetInvoice)
 		r.Get("/tax-book", h.GetTaxBook)
 		r.Get("/withholdings", h.ListWithholdings)
+		r.Get("/invoice-notes", h.ListInvoiceNotesH)
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(authWrite)
@@ -288,4 +290,27 @@ func (h *Invoicing) VoidInvoice(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(result)
+}
+
+// ListInvoiceNotesH returns free-text invoice notes (REG_MOVIMIENTO_OBS).
+// Query params: invoice_id (UUID, optional), date_from, date_to, page,
+// page_size. Parity: clientes/qry/regmovim_obs_qry.xml.
+func (h *Invoicing) ListInvoiceNotesH(w http.ResponseWriter, r *http.Request) {
+	slug := tenantSlug(r)
+	p := pagination.Parse(r)
+	q := r.URL.Query()
+
+	invoiceFilter := optUUID(ptrStr(q.Get("invoice_id")))
+
+	notes, err := h.svc.ListInvoiceNotes(r.Context(), slug,
+		invoiceFilter,
+		pgDate(q.Get("date_from")), pgDate(q.Get("date_to")),
+		p.Limit(), p.Offset())
+	if err != nil {
+		erperrors.WriteError(w, r, erperrors.Internal(err))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{"notes": notes})
 }

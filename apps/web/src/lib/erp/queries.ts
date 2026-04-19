@@ -26,6 +26,8 @@ export const erpKeys = {
   invoice: (id: string) =>
     [...erpKeys.all, "invoicing", "invoices", id] as const,
   withholdings: () => [...erpKeys.all, "invoicing", "withholdings"] as const,
+  invoiceNotes: (params?: Record<string, string>) =>
+    [...erpKeys.all, "invoicing", "invoice-notes", params] as const,
   treasuryMovements: () =>
     [...erpKeys.all, "treasury", "movements"] as const,
   treasuryBalance: () =>
