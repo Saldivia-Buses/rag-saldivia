@@ -18,6 +18,7 @@ import (
 // MaintenanceService is the interface the Maintenance handler depends on.
 type MaintenanceService interface {
 	ListAssets(ctx context.Context, tenantID, assetType string, activeOnly bool) ([]repository.ErpMaintenanceAsset, error)
+	GetAsset(ctx context.Context, id pgtype.UUID, tenantID string) (repository.ErpMaintenanceAsset, error)
 	CreateAsset(ctx context.Context, p repository.CreateMaintenanceAssetParams, userID, ip string) (repository.ErpMaintenanceAsset, error)
 	ListPlans(ctx context.Context, tenantID string, assetID pgtype.UUID) ([]repository.ErpMaintenancePlan, error)
 	CreatePlan(ctx context.Context, p repository.CreateMaintenancePlanParams, userID, ip string) (repository.ErpMaintenancePlan, error)
@@ -38,6 +39,7 @@ func (h *Maintenance) Routes(authWrite func(http.Handler) http.Handler) chi.Rout
 	r.Group(func(r chi.Router) {
 		r.Use(sdamw.RequirePermission("erp.maintenance.read"))
 		r.Get("/assets", h.ListAssets)
+		r.Get("/assets/{id}", h.GetAsset)
 		r.Get("/assets/{id}/plans", h.ListPlans)
 		r.Get("/work-orders", h.ListWorkOrders)
 		r.Get("/work-orders/{id}", h.GetWorkOrder)
@@ -62,6 +64,21 @@ func (h *Maintenance) ListAssets(w http.ResponseWriter, r *http.Request) {
 	if err != nil { erperrors.WriteError(w, r, erperrors.Internal(err)); return }
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"assets": assets})
+}
+
+func (h *Maintenance) GetAsset(w http.ResponseWriter, r *http.Request) {
+	id, err := parseUUID(chi.URLParam(r, "id"))
+	if err != nil {
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
+		return
+	}
+	asset, err := h.svc.GetAsset(r.Context(), id, tenantSlug(r))
+	if err != nil {
+		erperrors.WriteError(w, r, erperrors.NotFound("asset"))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(asset)
 }
 
 func (h *Maintenance) CreateAsset(w http.ResponseWriter, r *http.Request) {

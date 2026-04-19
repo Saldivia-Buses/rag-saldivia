@@ -24,13 +24,13 @@ export default function EquipoDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params.id;
 
-  const { data: assets = [] } = useQuery({
-    queryKey: erpKeys.maintenanceAssets(),
-    queryFn: () => api.get<{ assets: MaintenanceAsset[] }>("/v1/erp/maintenance/assets"),
-    select: (d) => d.assets,
+  const { data: asset, isLoading: assetLoading, error: assetError } = useQuery({
+    queryKey: erpKeys.maintenanceAsset(id),
+    queryFn: () => api.get<MaintenanceAsset>(`/v1/erp/maintenance/assets/${id}`),
+    enabled: !!id,
   });
 
-  const { data: plans = [], isLoading, error } = useQuery({
+  const { data: plans = [], isLoading: plansLoading, error: plansError } = useQuery({
     queryKey: erpKeys.maintenancePlans(id),
     queryFn: () =>
       api.get<{ plans: MaintenancePlan[] }>(`/v1/erp/maintenance/assets/${id}/plans`),
@@ -38,10 +38,11 @@ export default function EquipoDetailPage() {
     enabled: !!id,
   });
 
-  if (error)
-    return <ErrorState message="Error cargando planes del equipo" onRetry={() => window.location.reload()} />;
+  const isLoading = assetLoading || plansLoading;
+  const error = assetError || plansError;
 
-  const asset = assets.find((a) => a.id === id);
+  if (error)
+    return <ErrorState message="Error cargando equipo" onRetry={() => window.location.reload()} />;
 
   return (
     <div className="flex-1 overflow-y-auto">

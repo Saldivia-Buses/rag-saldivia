@@ -373,6 +373,35 @@ func (q *Queries) ListMaintenanceAssets(ctx context.Context, arg ListMaintenance
 	return items, nil
 }
 
+const getMaintenanceAsset = `-- name: GetMaintenanceAsset :one
+SELECT id, tenant_id, code, name, asset_type, unit_id, location, metadata, active, created_at
+FROM erp_maintenance_assets
+WHERE id = $1 AND tenant_id = $2
+`
+
+type GetMaintenanceAssetParams struct {
+	ID       pgtype.UUID `json:"id"`
+	TenantID string      `json:"tenant_id"`
+}
+
+func (q *Queries) GetMaintenanceAsset(ctx context.Context, arg GetMaintenanceAssetParams) (ErpMaintenanceAsset, error) {
+	row := q.db.QueryRow(ctx, getMaintenanceAsset, arg.ID, arg.TenantID)
+	var i ErpMaintenanceAsset
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.Code,
+		&i.Name,
+		&i.AssetType,
+		&i.UnitID,
+		&i.Location,
+		&i.Metadata,
+		&i.Active,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const listMaintenancePlans = `-- name: ListMaintenancePlans :many
 SELECT id, tenant_id, asset_id, name, frequency_days, frequency_km, frequency_hours,
        last_done, next_due, active
