@@ -28,6 +28,18 @@ export const erpKeys = {
   withholdings: () => [...erpKeys.all, "invoicing", "withholdings"] as const,
   invoiceNotes: (params?: Record<string, string>) =>
     [...erpKeys.all, "invoicing", "invoice-notes", params] as const,
+  qualityAudits: (params?: Record<string, string>) =>
+    [...erpKeys.all, "quality", "audits", params] as const,
+  controlledDocuments: (params?: Record<string, string>) =>
+    [...erpKeys.all, "quality", "documents", params] as const,
+  actionPlans: (params?: Record<string, string>) =>
+    [...erpKeys.all, "quality", "action-plans", params] as const,
+  qualityIndicators: (params?: Record<string, string>) =>
+    [...erpKeys.all, "quality", "indicators", params] as const,
+  stockMovements: (params?: Record<string, string>) =>
+    [...erpKeys.all, "stock", "movements", params] as const,
+  articleCosts: (params?: Record<string, string>) =>
+    [...erpKeys.all, "stock", "article-costs", params] as const,
   treasuryMovements: () =>
     [...erpKeys.all, "treasury", "movements"] as const,
   treasuryBalance: () =>

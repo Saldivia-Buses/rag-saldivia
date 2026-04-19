@@ -83,6 +83,107 @@ export interface BankBalance {
   balance: number;
 }
 
+// Quality audits (erp_audits — Phase 1 §UI)
+export interface QualityAudit {
+  id: string;
+  tenant_id: string;
+  number: string;
+  date: string | null;
+  audit_type: string;
+  scope: string;
+  lead_auditor_id: string | null;
+  status: string;
+  score: number | null;
+  notes: string;
+  created_at: string;
+}
+
+// Controlled documents (erp_controlled_documents — Phase 1 §UI)
+export interface ControlledDocument {
+  id: string;
+  tenant_id: string;
+  code: string;
+  title: string;
+  revision: number;
+  doc_type_id: string | null;
+  file_key: string;
+  approved_by: string | null;
+  approved_at: string | null;
+  status: string;
+  created_at: string;
+}
+
+// Quality action plans (erp_quality_action_plans — Phase 1 §UI)
+export interface ActionPlan {
+  id: string;
+  tenant_id: string;
+  nonconformity_id: string | null;
+  responsible_id: string | null;
+  section_id: string | null;
+  description: string;
+  planned_start: string | null;
+  target_date: string | null;
+  closed_date: string | null;
+  time_savings_hours: number | null;
+  cost_savings: number | null;
+  status: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Quality indicators (erp_quality_indicators — Phase 1 §UI)
+export interface QualityIndicator {
+  id: string;
+  tenant_id: string;
+  period: string;
+  indicator_type: string;
+  value: number | null;
+  target: number | null;
+  created_at: string;
+}
+
+// Stock movement row (erp_stock_movements — Phase 1 §UI)
+export interface StockMovement {
+  id: string;
+  tenant_id: string;
+  article_id: string;
+  article_code: string | null;
+  article_name: string | null;
+  warehouse_id: string | null;
+  warehouse_name: string | null;
+  movement_type: string;
+  quantity: number;
+  unit_cost: number | null;
+  reference_type: string;
+  reference_id: string | null;
+  movement_date: string | null;
+  user_id: string;
+  notes: string;
+  created_at: string;
+}
+
+// Article cost row (erp_article_costs — Phase 1 §UI)
+export interface ArticleCost {
+  id: string;
+  tenant_id: string;
+  article_id: string;
+  cost: number;
+  percentage_1: number | null;
+  percentage_2: number | null;
+  percentage_3: number | null;
+  supplier_article_code: string;
+  supplier_code: string;
+  supplier_entity_id: string | null;
+  invoice_date: string | null;
+  last_update_date: string | null;
+  movement_no: number;
+  movement_post: number;
+  movement_date: string | null;
+  recalc_flag: number;
+  created_at: string;
+}
+
 // Invoice notes (REG_MOVIMIENTO_OBS parity — Phase 1 §UI)
 export interface InvoiceNote {
   id: string;
