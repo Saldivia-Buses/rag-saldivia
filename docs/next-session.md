@@ -6,18 +6,23 @@ detail pages nuevas filtran client-side, lo que no escala), sumar los
 paths — el siguiente gran eje Phase 1 ahora que §UI parity read-only
 se está agotando.
 
-Target: **12 clusters**. Mix esperado:
-- 3 filter endpoints (reconciliations by bank_account, cash-counts
-  by cash_register, entries by cost_center) + consumidor frontend
-  enriquecido.
-- 5 nuevos `[id]` (herramienta, supplier scorecard, chasis modelo
-  con nomenclature-fix, GetArticle direct, GetAsset direct) con
-  backend lift tipo GetPriceList. Los dos últimos cierran la deuda
-  de 2.0.18 #7/#8.
-- 2 empty modules con backend listo (`/compras/abastecimiento`,
-  `/compras/comex`) — pickup rápido.
-- 2 scouts de write path (notas de entidad, rating de crédito)
-  con audit + NATS.
+Target: **20 clusters**. Mix base:
+- **~5 filter endpoints** (3 confirmados: reconciliations / cash-
+  counts / entries; 2-3 TBD desde Explore 6 scan de detail pages
+  con `.filter(client-side)` pattern).
+- **~6 nuevos `[id]`** con backend lift (GetTool, GetAsset,
+  GetChassisModel, GetCarroceriaModel, GetScorecard + 1-2 TBD
+  desde Explore 5). Los 2 chassis son entidades distintas (tablas
+  `erp_chassis_models` + `erp_carroceria_models`), no rename.
+- **~3 direct-endpoint swaps** (GetArticle confirmado — backend
+  ya existe, solo swap frontend list-cache → direct; 2 TBD desde
+  Explore 6 barriendo `pageSize=500` patterns).
+- **~4 write scouts** (entity note, credit rating, supplier
+  demerit confirmados; 1-2 TBD desde Explore 7). Pattern ref:
+  `CreateTenant` (auditor.Write + publisher.Notify).
+
+Total esperado (7 Explores paralelos): 4 cerrados, 3 corriendo
+para cerrar el mix antes de codear.
 
 ## Cierre 2.0.20 (6 clusters + backend lift)
 
@@ -61,90 +66,153 @@ SDA reemplaza Histrix. Empleado abre SDA y:
 
 ## Plan de trabajo 2.0.21
 
-### Pre-work
+### Pre-work — DONE
 
-```bash
-git checkout -b 2.0.21 main
-sed -i 's/Working:\*\* `2.0.20`/Working:\*\* `2.0.21`/' CLAUDE.md
-git commit -am "chore: bump working branch 2.0.20 → 2.0.21"
+```
+c2e78981 docs: 2.0.21 plan — expand target a 12 clusters (después 20)
+44267dd0 chore: bump working branch 2.0.20 → 2.0.21
 ```
 
-### Investigación inicial (agente Explore)
+Branch `2.0.21` cortado desde `main` (HEAD `7f25b8d3`). Linter mods
+(CLAUDE.md dup block, .gitignore, .claude/settings.json) stasheados
+como `linter mods pre-2.0.21` — pop al post-merge.
 
-Verificar antes de shipear:
+### Investigación (7 Explore agents en paralelo)
 
-1. **Filter endpoints**: para cada uno de los 3 list endpoints
-   (reconciliations, cash-counts, journal-entries), confirmar dónde
-   vive el query/handler, si ya hay filter params por query string,
-   y cuál sería el minimal patch (similar al `vehicle_id` filter
-   que ya existe en ListIncidents).
-2. **GetTool / GetChassisModel / GetScorecard**: confirmar la tabla
-   (sólo lista o hay schema para detail con related rows), y dónde
-   vive la list page de cada uno en `apps/web/src/app/`.
-3. **GetArticle / GetAsset direct endpoints**: revisar cómo
-   `products/[id]` y `assets/[id]` hoy hitean list cache; confirmar
-   que el schema soporta fetch por PK y que el handler actual no
-   está reusable con minor patch.
-4. **Empty modules abastecimiento / comex**: confirmar que el
-   backend expone `ListSupplies` / `ListComex` (o nombre
-   equivalente), y listar los campos para diseñar columna
-   + filtros.
-5. **Write path scout** — elegir UN cluster pequeño que ya tenga
-   list + detail y añada write. Candidatos:
-   - Entity credit rating (`/compras/calificacion-proveedores`):
-     POST nuevo rating. Form simple (rating + referencia + fecha).
-   - Entity notes en proveedor/cliente detail: POST nota desde
-     la ficha. Requiere text area + botón. El endpoint
-     `POST /v1/erp/entities/{id}/notes` ya existe.
-   - Reclamos pagos: ya hay list + detail embebido. Add create.
+**4 cerrados**:
 
-### Batches propuestos
+1. **Filter endpoints** ✅ — handlers confirmados en `services/erp/internal/handler/`:
+   - `ListReconciliations` treasury.go:534, sqlc `treasury.sql.go:1148`.
+   - `ListCashCounts` treasury.go:395, sqlc `treasury.sql.go:846`.
+   - `ListEntries` accounting.go:214, sqlc `accounting.sql.go:843`.
+   - Pattern `ListIncidents` usa cast condicional
+     `($N::UUID IS NULL OR col = $N)`, no COALESCE.
+   - Red flag: cost-center `[id]/page.tsx` **no tiene sección
+     entries** — cluster #3 requiere agregar UI consumer también.
+
+2. **[id] nuevos** ✅ — 5 targets mapeados:
+   - `GetArticle` **YA EXISTE** (stock.go:42) — es solo swap frontend.
+   - `GetTool` / `GetAsset` / `GetScorecard`: falta sqlc+handler+page.
+   - Chasis: DOS tablas distintas `erp_chassis_models` (motor,
+     tracción) y `erp_carroceria_models` (carrocería, peso ejes).
+     Split en 2 clusters.
+
+3. **Empty modules abastecimiento/comex** ❌ — **ya shipeados**.
+   Frontend 293+260 líneas, backend + registry. Batch 3 original
+   muerto; reemplazado por direct swaps + write scouts.
+
+4. **Write scouts** ✅ — 3 candidatos con pattern reference
+   (`CreateTenant` en `services/app/internal/core/platform/`):
+   - POST entity note (A): endpoint NO existe; tabla
+     `erp_entity_notes` existe; frontend detail proveedor
+     ya tiene lugar obvio para textarea.
+   - POST credit rating (B): endpoint NO existe; tabla
+     `erp_credit_ratings` existe; requiere EntityPicker + enum.
+   - POST reclamo pago (C): NO hay página frontend — DESCARTAR,
+     L cost.
+
+**3 corriendo**:
+
+5. **Más `[id]`** (Explore 5) — barriendo warehouse / maintenance /
+   manufacturing / hr / sales / quality / accounting para encontrar
+   ≥ 7 candidatos backend-lift pattern.
+6. **Filter + direct swaps** (Explore 6) — barriendo
+   `apps/web/.../[id]/page.tsx` por `.filter(x => x.fk === id)` y
+   por `pageSize=500`. Buscar 2-3 de cada.
+7. **Write POSTs adicionales** (Explore 7) — scanning entity
+   contacts / asset assignments / work order updates / odometer
+   readings / price list lines / quotation lines. Buscar ≥ 5.
+
+### Batches finales (20 clusters post-Explore × 7)
 
 **Batch 1 — Filter endpoints + detail enrichment** (3 clusters):
 
-1. `ListReconciliations?bank_account_id=` — consumir en
-   cuenta-bancaria detail para reemplazar filter client-side.
-2. `ListCashCounts?cash_register_id=` — consumir en caja detail.
-3. `ListEntries?cost_center_id=` — consumir en centro-costo
-   detail para mostrar asientos imputados al CC.
+1. `ListReconciliations?bank_account_id=` — handler+sqlc patch
+   + cuenta-bancaria detail consume.
+2. `ListCashCounts?cash_register_id=` — handler+sqlc patch + caja
+   detail consume.
+3. `ListEntries?cost_center_id=` — handler+sqlc patch **+ agregar
+   sección "Asientos imputados" en centro-costo detail** (la UI
+   consumer no existe aún).
 
-**Batch 2 — Nuevos `[id]` con backend lift** (5 clusters):
+**Batch 2 — Nuevos `[id]` con backend lift** (9 clusters):
 
-4. Herramienta detail — GetTool + historial de uso (si hay
-   movement table relacionada).
-5. Supplier scorecard detail — GetScorecard + métricas históricas
-   del proveedor.
-6. Chasis modelo detail — primero resolver nomenclature (renombrar
-   uno de los dos para que match), luego GetChassisModel + BOM.
-7. GetArticle direct endpoint + consumidor — cierra deuda 2.0.18
-   cluster #8 (hoy usa list cache).
-8. GetAsset direct endpoint + consumidor — cierra deuda 2.0.18
-   cluster #7 (hoy usa list cache).
+4. **GetTool** — sqlc `GetTool` (falta) + handler + [id] page +
+   historial via `erp_tool_movements`.
+5. **GetAsset (maintenance)** — sqlc `GetMaintenanceAsset` (falta)
+   + handler + [id] page + `erp_maintenance_plans`
+   + `erp_work_orders` relacionados.
+6. **GetChassisModel** — sqlc `GetChassisModel` (falta) + handler
+   `{id}` + [id] page. Tabla `erp_chassis_models` (motor/tracción).
+7. **GetCarroceriaModel** — sqlc `GetCarroceriaModel` (falta) +
+   handler `{id}` + [id] page + `erp_carroceria_bom`. Tabla
+   `erp_carroceria_models` (carrocería/peso ejes). NOTA: son DOS
+   entidades distintas, no rename.
+8. **GetScorecard** — sqlc `GetSupplierScorecard` (falta) + handler
+   + [id] page + métricas históricas por proveedor.
+9. **GetInspection (QC compras)** — sqlc ✓ existe; solo handler
+   + [id] page + `erp_inspection_results`.
+10. **GetUnit (manufacturing units)** — sqlc ✓ existe; solo handler
+    + [id] page + `erp_unit_controls`.
+11. **GetActionPlan (calidad)** — sqlc ✓ existe; solo handler
+    + [id] page + `erp_action_tasks` + assignments.
+12. **GetNC (quality non-conformity)** — sqlc ✓ existe; solo handler
+    + [id] page + `erp_action_plans` + findings.
 
-**Batch 3 — Empty modules con backend listo** (2 clusters):
+**Batch 3 — Direct-endpoint swap** (1 cluster):
 
-9. `/compras/abastecimiento` — backend ya expone endpoints; pegar
-   página list + filtros.
-10. `/compras/comex` — backend ya expone endpoints; pegar página
-    list + filtros.
+13. **GetArticle direct** — backend `GET /v1/erp/stock/articles/{id}`
+    YA EXISTE (stock.go:42). Solo swap frontend:
+    `articulos/[id]/page.tsx` de `list.find(a => a.id === id)` a
+    `useQuery(erpKeys.stockArticle(id))`. Cierra deuda 2.0.18 #8.
+    Costo XS.
 
-**Batch 4 — Write path scout** (2 clusters):
+**Batch 4 — Write scouts** (7 clusters, pattern ref `CreateTenant`):
 
-11. Add note from entity detail (proveedor o cliente) — textarea +
-    POST + audit + NATS event.
-12. Create credit rating desde calificacion-proveedores — form
-    simple + POST + audit.
+14. **POST entity note** — handler+service+auditor+publisher+frontend
+    textarea en proveedor/cliente detail. Tabla `erp_entity_notes`
+    existe.
+15. **POST entity contact** — handler `AddContact` YA EXISTE
+    (entities.go:297). Solo frontend: formulario compacto + dropdown
+    type (phone/email/address/bank_account) en proveedor detail.
+    Costo XS.
+16. **POST inventory movement** — handler `CreateMovement` YA EXISTE
+    (stock.go:200). Solo frontend: botón "+ Movimiento" en warehouse
+    o articulos detail + modal con `movement_type` enum. Costo XS.
+17. **POST credit rating** — handler+service+auditor+publisher+frontend
+    modal con EntityPicker + enum A|B|C|X + reference + fecha.
+18. **POST supplier demerit** — handler+service+auditor+publisher+
+    frontend desde scorecard contexto. Tabla `erp_supplier_demerits`.
+19. **POST invoice note** — handler+service+auditor+publisher+frontend
+    sección "Observaciones" en invoice detail. Tabla
+    `erp_invoice_notes`.
+20. **POST work_order_part** — handler+service+auditor+publisher+
+    frontend sección "Partes" en work order detail. Tabla
+    `erp_work_order_parts`.
 
 ### Cierre esperado
 
-- 12 clusters nuevos → total ≥ 66.
+- 20 clusters nuevos → total ≥ 74.
 - Los 3 filter endpoints de 2.0.20 cerrados (detail pages sin
   filter client-side).
-- Deuda 2.0.18 (#7/#8) cerrada via GetAsset / GetArticle direct.
-- Empty modules `/compras/abastecimiento` + `/compras/comex`
-  vacíos cerrados.
-- Primer write path post-2.0.11 shipeado (aunque sea uno chico).
+- Deuda 2.0.18 (#7/#8) cerrada: #7 via GetAsset cluster completo,
+  #8 via GetArticle direct swap.
+- 6 nuevos `[id]` en calidad/manufacturing/compras (inspection,
+  unit, action plan, NC, scorecard, tool).
+- 7 write paths shipeados — el expansion post-2.0.11 arranca acá.
+- 2 "frontend-only" write clusters (contact, movement) validan
+  handlers write existentes sin frontend consumer.
 - Phase 0 gates verdes.
+
+### Pool NO shipeado (remaining candidates para 2.0.22+)
+
+- **GetWarehouse** — requiere sqlc `GetWarehouse` creation (falta).
+- **GetAudit (calidad)** — requiere sqlc `GetAudit` creation.
+- **POST payment_complaint** — requiere crear módulo
+  `/reclamos-pagos` entero. Large.
+- **POST accounting_entry_line** — requiere lógica doble-entrada
+  contable. Large.
+- **Direct swap centros-costo parent** — niche hierarchical lookup.
 
 ## Candidatos para sesiones futuras (lookahead — NO 2.0.21)
 
