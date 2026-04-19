@@ -540,6 +540,20 @@ export interface QCInspection {
   receipt_number?: string;
 }
 
+export interface FuelLog {
+  id: string;
+  tenant_id: string;
+  asset_id: string | null;
+  date: string | null;
+  liters: number | null;
+  km_reading: number | null;
+  cost: number | null;
+  user_id: string;
+  created_at: string;
+  asset_code?: string;
+  asset_name?: string;
+}
+
 export interface StockArticle {
   id: string;
   code: string;

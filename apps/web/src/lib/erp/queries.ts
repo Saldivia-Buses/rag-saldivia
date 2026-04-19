@@ -123,6 +123,8 @@ export const erpKeys = {
     [...erpKeys.all, "maintenance", "work-orders", { status }] as const,
   workOrder: (id: string) =>
     [...erpKeys.all, "maintenance", "work-orders", id] as const,
+  fuelLogs: (assetId?: string) =>
+    [...erpKeys.all, "maintenance", "fuel-logs", { assetId }] as const,
   analytics: (domain: string, report: string, params?: Record<string, string>) =>
     [...erpKeys.all, "analytics", domain, report, params] as const,
   dashboardKPIs: () => [...erpKeys.all, "analytics", "dashboard", "kpis"] as const,
