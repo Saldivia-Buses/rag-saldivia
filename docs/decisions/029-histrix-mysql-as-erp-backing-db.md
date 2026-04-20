@@ -147,24 +147,33 @@ The migrator section of ADR 026 ("zero-loss migration verifiable
 end-to-end") becomes "one-shot mysqldump | mysql restore", which
 is trivially verifiable.
 
-### Phased rollout
+### Rollout — big bang allowed
 
-1. **Phase A — infra**: add `mysql:8` service to
-   `deploy/docker-compose.dev.yml`. Restore the Histrix dump into
-   it. Verify ERP service can connect.
-2. **Phase B — first read path**: rewrite one ERP query (entities)
-   to hit MySQL. Frontend page works. Validate.
-3. **Phase C — bulk read paths**: PR per area (compras, ventas,
-   …). sqlc with mysql engine.
-4. **Phase D — write paths**: invoicing, treasury, etc. hit MySQL.
-5. **Phase E — drop SDA Postgres ERP tables**: after all paths
-   migrated. Single migration. The Postgres instance survives for
-   platform/chat/collections/suggestions.
-6. **Phase F — delete the migrator**: `tools/cli/internal/migration/*`
-   and related code is removed. Power off the Histrix server.
+Same context as ADR 028: **no real users on prod**, dev-grade state.
+The refactor doesn't need coexistence between Postgres ERP tables
+and MySQL.
 
-Each phase is independently shippable. Phase A is hours; Phases
-B-D are weeks of mechanical refactor.
+Single big PR:
+
+1. Add `histrix-mysql` to `docker-compose.dev.yml`. Restore the
+   Histrix dump into it (Histrix legacy server stays on, untouched —
+   we only `mysqldump --single-transaction`).
+2. sqlc engine = mysql for the entire `services/erp/db/queries/*.sql`.
+   Regenerate Go bindings.
+3. ERP service connection swaps from pgx to go-sql-driver/mysql.
+4. Drop all SDA Postgres ERP tables in a single migration (data was
+   never operational).
+5. Delete `tools/cli/internal/migration/*` and the migrator service.
+
+Postgres survives in the silo for SDA-native tables (platform, chat,
+collections, suggestions, audit_log).
+
+Histrix legacy server **stays on** as fallback — power-off is a
+separate ADR once SDA covers 100% UX. ADR 029 is just the data
+ownership move.
+
+If something breaks after merge, fix forward (no downtime concerns
+because no users are disrupted).
 
 ### Priority
 

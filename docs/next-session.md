@@ -1,20 +1,18 @@
-# Next session — 2.0.22: foundations for ADR 028 + ADR 029
+# Next session — 2.0.22: ADR 028 + ADR 029, big bang
 
 **Pivote crítico** (post 2026-04-20): el cutover prod a tenant
 `saldivia` con DB migrada del Histrix bench expuso **7 bugs en
-cascada**. La causa raíz: doble tenancy (silo + en código). Decisión:
-**eliminar tenancy del código** (ADR 028) y **usar la MySQL de
-Histrix dentro del container** como backing del ERP de SDA (ADR 029).
+cascada**. Causa raíz: doble tenancy (silo + en código).
 
-Histrix server **NO se apaga** todavía — sigue corriendo como
-fallback operacional. Lo que hacemos es **copiar su DB de manera
-segura** (como backup) y conectar SDA a esa copia. Eventualmente,
-cuando SDA cubra 100% de UX, vendrá el power-off — pero en otra ADR.
+**Decisión tomada**: eliminar tenancy del código (ADR 028) Y usar la
+MySQL de Histrix dentro del container como backing del ERP de SDA
+(ADR 029). Power-off de Histrix legacy server NO en este ciclo —
+solo copiamos su DB como backup, server queda intacto.
 
-Esta sesión NO toca la prod actual de saldivia (sigue con Postgres
-+ tenant_id renombrado a `saldivia` que el rename masivo dejó OK).
-Esta sesión empieza el **camino de migración estructural**: Phase A
-de ADR 028 + Phase A de ADR 029, ambas non-breaking.
+**Habilitador clave**: prod en realidad es dev-grade. Cero usuarios
+reales operando, cero data operacional ingresada. Eso permite
+**cambios destructivos sin coexistencia ni backward-compat**. Los
+ADRs ya reflejan esto: rollout big bang, no phased.
 
 ## Estado al cierre 2.0.21 (2026-04-20)
 
@@ -23,144 +21,151 @@ de ADR 028 + Phase A de ADR 029, ambas non-breaking.
 - `2.0.22` con ADR 028 + ADR 029 + este next-session.
 
 **Prod en `srv-ia-01`**:
-- Tenant `saldivia` apuntando a `sda_tenant_saldivia_bench`.
-- Data: 23M rows ERP, todas con `tenant_id='saldivia'` (rename masivo
-  ejecutado al cierre, eliminó la divergencia `saldivia_bench`).
+- Tenant `saldivia` apuntando a `sda_tenant_saldivia_bench`
+  (Postgres con data renombrada de `saldivia_bench` → `saldivia`).
 - Login: `enzosaldivia@gmail.com / saldivia-prod-2026!`.
-- Acceso: `http://srv-ia-01` (vía Tailscale + Traefik).
-- Sidebar: muestra "Sugerencias y bugs" + módulos top-level
-  (Tesorería, Clientes, Estadísticas, etc.).
+- URL: `http://srv-ia-01` (Tailscale + Traefik).
 
-**Bugs documentados en `docs/parity/`**:
-- Phase 0: 15 FK orphans en bench (migrator) — irrelevante post-029.
-- Phase 4: E2E suite specs requieren rewrite per-cluster (htmlFor a11y).
-- Phase 5: type-vs-schema audit clean.
-- Phase 6: RequirePerm gating per-cluster pendiente.
-- Phase 7: PrefetchLink + Lighthouse CI per-cluster pendiente.
-- Phase 9: error handling clean.
+**Bugs documentados en `docs/parity/`** (resueltos por 028+029 o
+diferidos a sesiones de UI):
+- Phase 0: 15 FK orphans en bench → muere con ADR 029 (no migrator).
+- Phase 4: E2E selectors per-cluster → diferido.
+- Phase 6: RequirePerm gating per-cluster → diferido.
+- Phase 7: PrefetchLink + Lighthouse CI → diferido.
+- Cookie `sda_refresh` Secure en HTTP → fix junto con cleanup auth.
 
 ## Goal de esta sesión
 
-Foundation work: ADR 028 (eliminate tenancy) Phase A + ADR 029
-(Histrix MySQL as backing) Phase A + Phase B. **No breaking changes
-en prod**. Prod sigue funcionando con Postgres durante toda la
-sesión; el camino de MySQL se construye en paralelo.
+**Mergear ADR 028 + ADR 029 enteros, big bang.** Sin coexistencia,
+sin migrations cuidadosas. Si algo se rompe, fix forward.
 
-## Phase A — ADR 028 foundations
+Al cierre:
+- Cero columnas `tenant_id` en el schema.
+- Cero `WHERE tenant_id = $1` en queries sqlc.
+- JWT sin `tid`/`slug`. Middleware sin cross-validation. Traefik sin
+  header injection. Frontend sin `NEXT_PUBLIC_TENANT_SLUG` ni
+  `getTenantSlug()`.
+- ERP entero contra `histrix-mysql` (mysql:8 en docker-compose),
+  sqlc engine=mysql, driver go-sql-driver/mysql.
+- Postgres del silo solo para platform/chat/collections/suggestions/
+  audit_log.
+- Migrator borrado (`tools/cli/internal/migration/*`).
+- Histrix legacy server intacto (fallback operacional, power-off en
+  ADR futura).
 
-Non-breaking. Sólo prepara el terreno.
+## Plan de trabajo
 
-1. **Code-review rule**: agregar a `.claude/skills/backend-go/SKILL.md`:
-   *"NUEVAS sqlc queries NO incluyen `tenant_id` en SELECT/INSERT/
-   WHERE. NUEVAS tablas NO declaran columna `tenant_id`. Refactor de
-   queries existentes va en su propio commit por área."*
-2. **Listar queries afectadas**: script que enumere todas las
-   `WHERE tenant_id` en `services/*/db/queries/*.sql` y produzca un
-   tracking sheet en `docs/parity/2026-04-XX-adr028-query-inventory.md`.
-3. **Refactor PRIMERA query (entities)**: PR que drop `tenant_id` de
-   `services/erp/db/queries/entities.sql`. Regenerar sqlc. Update
-   handler para no pasar tenantID. Tests verdes. Smoke en prod local.
-   Pattern: cada cluster siguiente sigue este shape.
+### Bloque 1 — ADR 028 (eliminate tenancy)
 
-## Phase A — ADR 029 foundations (paralelo)
+1. **Drop columns** + drop FK constraints derived from `tenant_id`:
+   single migration `db/tenant/migrations/NNN_drop_tenant_id.up.sql`.
+2. **sqlc queries**: bulk find+replace de `WHERE tenant_id = $1`
+   (y los `, $2`/`$3` siguientes que se descalcan). sqlc regen.
+3. **Handlers**: drop el primer arg `tenantID` de cada llamada
+   service.
+4. **JWT**: editar `pkg/jwt/jwt.go` para no firmar/leer `tid`/`slug`.
+   Tests del paquete.
+5. **Middleware**: drop líneas 95-118 de `pkg/middleware/auth.go`
+   (cross-validation, X-Tenant-* headers, tenant.WithInfo).
+6. **Traefik**: borrar el headers middleware injecting X-Tenant-Slug
+   de `deploy/traefik/dynamic/{dev,prod}.yml`.
+7. **Frontend**: drop `NEXT_PUBLIC_TENANT_SLUG`, `getTenantSlug()`,
+   `tenantId/tenantSlug` de `AuthUser` y AuthStore. Drop el build-arg
+   en `apps/web/Dockerfile` y compose.
+8. **Tests**: actualizar fixtures (sqlc-generated test models pierden
+   TenantID). Update auth integration tests.
+9. **Smoke**: login en prod → ver entities → hacer una mutation
+   simple. Verificar todo OK.
 
-Infra. NO toca código backend todavía. **Histrix server se queda
-intacto, solo copiamos su DB como backup.**
+### Bloque 2 — ADR 029 (MySQL Histrix inside container)
 
-1. **Agregar `histrix-mysql` (mysql:8)** a `deploy/docker-compose.dev.yml`:
+1. **Backup-grade dump del Histrix legacy** (server queda intacto):
+   - Memorias `reference_db_saldivia` + `reference_histrix_access`.
+   - VPN + SSH `sistemas@172.22.100.99`.
+   - `mysqldump --single-transaction --routines --triggers --events
+     --hex-blob saldivia > histrix-saldivia.sql`.
+   - scp a `srv-ia-01:/opt/saldivia/dumps/`.
+   - Documento `docs/runbook/histrix-mysql-backup.md` con el
+     procedimiento exacto + frecuencia recomendada.
+2. **`histrix-mysql` container**: agregar a
+   `deploy/docker-compose.dev.yml`:
    ```yaml
    histrix-mysql:
      image: mysql:8
      environment:
-       MYSQL_ROOT_PASSWORD: <generated>
+       MYSQL_ROOT_PASSWORD: ${HISTRIX_MYSQL_ROOT_PASSWORD}
        MYSQL_DATABASE: histrix
      volumes:
        - histrix_mysql_data:/var/lib/mysql
      healthcheck:
        test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
    ```
-2. **Backup-grade dump desde Histrix legacy**:
-   - VPN + SSH al server Histrix (`sistemas@172.22.100.99`).
-   - Memorias relevantes: `reference_db_saldivia` y
-     `reference_histrix_access`.
-   - `mysqldump --single-transaction --routines --triggers --events
-     --hex-blob` del schema `saldivia` entero.
-   - scp a workstation `srv-ia-01`.
-   - **Histrix server queda intacto** — no se modifica nada del
-     server legacy; es read-only safe (`--single-transaction`).
-   - Documentar el procedimiento exacto en
-     `docs/runbook/histrix-mysql-backup.md` para que sea repetible.
-3. **Restore en `histrix-mysql`** del workstation. Verifica que
-   `mysql -e "SELECT COUNT(*) FROM <tabla>"` devuelve los counts
-   esperados.
-4. **Conectividad**: el container `erp` puede `mysql -h histrix-mysql
-   -u sda` y leer. Test simple. NO refactor de queries todavía.
+3. **Restore** el dump en `histrix-mysql`.
+4. **sqlc**: cambiar engine a `mysql` para `services/erp/db/queries/`.
+   Regenerar bindings (van a romper compilación — esperado).
+5. **Driver**: reemplazar `pgx` con `go-sql-driver/mysql` en el
+   ERP service. SQL syntax adjustments (LIMIT/OFFSET, RETURNING,
+   etc.).
+6. **Drop SDA Postgres ERP tables** en single migration. Migration
+   trivial (DROP TABLE x N).
+7. **Delete** `tools/cli/internal/migration/*` y el comando
+   relacionado en `tools/cli/sda`.
+8. **Smoke**: login → ver entities (ahora desde MySQL) → match con
+   data Histrix.
 
-## Phase B — ADR 029 first read path
+### Cierre
 
-Una vez Phase A está estable.
+1. PR a main (admin merge si la branch protection sigue activa).
+2. Tag `v2.0.22` + GitHub release con nota destacando que el cycle
+   eliminó la tenancy interna y movió ERP a MySQL.
+3. Deploy workstation: `git pull && docker compose up -d --build`.
+4. Smoke test del user.
 
-1. **sqlc engine = mysql** para una query específica de prueba (la
-   más simple, ej. listar marcas de chasis).
-2. **ERP service**: agregar conexión MySQL paralela (sin reemplazar
-   Postgres). Una query nueva hits MySQL.
-3. **Frontend**: la página correspondiente (ej.
-   `/ingenieria/producto/chasis-marcas`) recibe data desde MySQL.
-4. **Validar parity**: la misma data via UI Histrix vs SDA → idéntica.
-5. **Documentar el patrón** para que cada cluster siguiente sea
-   refactor mecánico.
+## Out of scope
 
-## Out of scope esta sesión
-
-- **Apagar Histrix server**. Sigue corriendo intacto.
-- **Drop columnas `tenant_id` en data**. Eso es Phase C de ADR 028,
-  va en cycle posterior.
-- **Refactor masivo de queries**. Sólo entities (Phase A 028) +
-  chasis-marcas (Phase B 029) como pilots.
-- **Delete del migrator**. Esa es Phase F de ADR 029, sólo cuando
-  TODO el ERP esté en MySQL.
-- **Phase 8 (a11y), 10 (polish), 12 (trampas)** del plan 2.0.21.
-  Esos quedan para sesiones de UI dedicadas — no son foundation.
-- **Sync continuo Histrix legacy ↔ histrix-mysql container**. Por
-  ahora dump+restore one-shot. Sync strategy queda como open
-  question hasta que SDA empiece a escribir.
+- **Power-off Histrix legacy server**. Sigue corriendo. ADR
+  separada cuando SDA cubra 100% UX.
+- **Sync continuo Histrix legacy ↔ histrix-mysql container**.
+  Por ahora dump+restore one-shot. Ongoing sync es problema futuro
+  (cuando empecemos a escribir a MySQL desde SDA, hay que decidir
+  si Histrix legacy sigue siendo source of truth o si SDA lo es).
+- **Phase 4/8/10 del plan 2.0.21** (E2E selectors, a11y htmlFor,
+  polish loop). Esos son sesiones de UI dedicadas — no foundation.
+- **Refactor del sidebar6 hardcoded** → `MODULE_REGISTRY` como
+  fuente de verdad. Pendiente, no bloquea 028+029.
 
 ## Trampas heredadas (recordar)
 
 - **Cookie `sda_refresh` con flag `Secure`**: en HTTP el browser la
-  rechaza → loop logout en boot. Fix: `Secure` condicional al
-  `SDA_ENV != production`.
-- **Sidebar6 tiene navigation hardcoded** — `MODULE_REGISTRY` no es
-  fuente de verdad. Pendiente de unificar.
-- **Migration changes verifican `read = written + skipped`**: para
-  ADR 029 esto se elimina porque no hay migrator. Pero dejar la
-  regla en `migration-health` skill apuntando a "obsoleto post-029".
+  rechaza → loop logout en boot. Fix de paso al editar auth handler:
+  `Secure` condicional al `SDA_ENV == production`.
 - **Tag + release por ciclo**: cerrar 2.0.22 con `v2.0.22`.
 - **Linter mods stasheados**: pop al final si quedaron pendientes.
+- **`docker-compose.dev.yml` POSTGRES_TENANT_URL**: ya es
+  env-driven (`${SDA_POSTGRES_TENANT_URL:-...}`) — al eliminar
+  tenancy esa env queda obsoleta.
 
 ## Done checklist
 
-- ADR 028 Phase A merged: code-review rule + query inventory + entities
-  refactor (sin tenant_id, tests verdes).
-- ADR 029 Phase A merged: `histrix-mysql` container + dump+restore
-  documentado + erp container puede leer MySQL.
-- ADR 029 Phase B merged: una query SDA hits MySQL, una página
-  frontend muestra data desde ahí.
-- Documentos de runbook escritos.
-- Prod sigue funcionando (Postgres + saldivia, intacta).
-- Tag `v2.0.22` + GitHub release + deploy a workstation.
+- ADR 028 mergeado: cero `tenant_id` en code/schema/JWT/middleware/
+  Traefik/frontend.
+- ADR 029 mergeado: `histrix-mysql` container + ERP contra MySQL +
+  Postgres ERP tables dropeadas + migrator deleted.
+- Histrix legacy server intacto y reachable (fallback).
+- Runbook `docs/runbook/histrix-mysql-backup.md` escrito.
+- Prod operable end-to-end con la nueva arquitectura.
+- Tag `v2.0.22` + release + deploy workstation.
 
 ## Candidatos sesiones futuras (2.0.23+)
 
 | Orden | Tema | Pre-req |
 |---:|---|---|
-| 1 | ADR 028 Phase B: refactor de queries por área (ERP) | 028 Phase A |
-| 2 | ADR 029 Phase B-D: bulk read paths + write paths | 029 Phase A |
-| 3 | ADR 028 Phase C: drop columnas tenant_id | 028 Phase B |
-| 4 | ADR 028 Phase D-E: JWT cleanup + frontend cleanup | 028 Phase C |
-| 5 | ADR 029 Phase E-F: drop SDA Postgres ERP tables + delete migrator | 029 Phase D |
-| 6 | Power-off Histrix legacy server | 029 Phase F + parity 100% |
-| 7 | Phase 4 follow-up: E2E selector rewrite per-cluster | independiente |
-| 8 | Phase 8 (a11y htmlFor sweep) | independiente |
-| 9 | Phase 10 (polish loop por cluster) | Phase 8/9 done |
-| 10 | Lighthouse CI ≥95 | infra ready |
+| 1 | Sync strategy histrix-mysql ↔ Histrix legacy (continuous?) | 029 mergeado |
+| 2 | Cookie Secure + auth hardening cross-protocol | 028 done |
+| 3 | Refactor sidebar6 → usar MODULE_REGISTRY | independiente |
+| 4 | Phase 4 follow-up: E2E selector rewrite per-cluster | independiente |
+| 5 | Phase 8 (a11y htmlFor sweep) | independiente |
+| 6 | Phase 10 (polish loop por cluster) | Phase 4/8 |
+| 7 | Lighthouse CI ≥95 | infra ready |
+| 8 | Apply RequirePerm + PrefetchLink en pages restantes | 028 done |
+| 9 | Power-off Histrix legacy server | parity 100% + sync stable |

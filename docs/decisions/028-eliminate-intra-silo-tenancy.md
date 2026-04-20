@@ -98,26 +98,28 @@ Concretely:
 - **`platform.tenants` becomes write-only from the deploy side.**
   Code doesn't read it. Documented in ADR 022 amendment if needed.
 
-### Phased rollout (mandatory)
+### Rollout — big bang allowed
 
-This is a multi-PR refactor. Order:
+There are **no real users on prod** (the saldivia silo is dev-grade,
+no operational data being entered yet). That removes the need for a
+phased migration with coexistence/backward-compat. The refactor is a
+single bigger PR that:
 
-1. **Phase A — non-breaking**: stop writing/checking tenant_id in
-   *new* code. Tag a code-review rule.
-2. **Phase B — query refactor**: PR per ERP module
-   (entities, articles, invoices, …) drops the WHERE clause and
-   the parameter. sqlc regenerated. Tests updated. Each PR is
-   independently mergeable and revertible.
-3. **Phase C — schema drop**: once all queries are clean, a single
-   migration drops the columns. Per-tenant timing (one silo at a
-   time).
-4. **Phase D — JWT and middleware**: drop `tid`/`slug` claims and
-   the cross-validation. Drop Traefik header injection.
-5. **Phase E — frontend cleanup**: remove `NEXT_PUBLIC_TENANT_SLUG`,
-   `getTenantSlug()`, `auth.user.tenantId`, `auth.user.tenantSlug`.
+- Drops every `WHERE tenant_id` from queries and regenerates sqlc.
+- Drops every `tenant_id` column from the schema (single migration).
+- Drops `tid`/`slug` from the JWT.
+- Drops the cross-validation in `pkg/middleware/auth.go`.
+- Drops `X-Tenant-Slug` from Traefik dynamic configs.
+- Drops `NEXT_PUBLIC_TENANT_SLUG` / `getTenantSlug()` / tenant
+  fields from `AuthUser` and the auth store.
 
-Each phase is independently shippable. Phases A → C are the
-load-bearing ones; D and E are pure cleanup.
+Tests get updated in the same PR. CI verifies. Merge → done.
+
+If something breaks in prod after merge, we fix forward without
+downtime concerns (no users to disrupt). This is the **explicit
+trade-off** of the dev-grade-prod state — leverage it now while it
+holds, document it in this ADR, and stop using "phased rollout"
+language in plans that don't need it.
 
 ### Priority
 
