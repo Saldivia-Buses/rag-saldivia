@@ -20,7 +20,6 @@ import {
   ShieldCheck,
   MessageSquare,
   FileText,
-  Database,
   BusFront,
   Landmark,
   Contact,
@@ -125,6 +124,7 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
       "/ingenieria/producto/atributos",
       "/ingenieria/producto/chasis-marcas",
       "/ingenieria/producto/chasis-modelos",
+      "/ingenieria/producto/carroceria-modelos",
       "/ingenieria/desarrollo",
       "/ingenieria/definicion",
       "/ingenieria/legal",
@@ -150,16 +150,15 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
       "/mantenimiento/correctivo",
       "/mantenimiento/equipos",
       "/mantenimiento/combustible",
+      "/mantenimiento/ordenes-trabajo",
       "/mantenimiento/taller/vehiculos",
       "/mantenimiento/taller/incidentes",
-      "/mantenimiento/activos",
     ],
     subnav: [
       { path: "/mantenimiento/preventivo", label: "Preventivo" },
       { path: "/mantenimiento/correctivo", label: "Correctivo" },
       { path: "/mantenimiento/equipos", label: "Equipos" },
       { path: "/mantenimiento/combustible", label: "Combustible" },
-      { path: "/mantenimiento/activos", label: "Activos" },
       { path: "/mantenimiento/taller/vehiculos", label: "Vehículos de clientes" },
       { path: "/mantenimiento/taller/incidentes", label: "Incidentes vehiculares" },
     ],
@@ -214,10 +213,13 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
       "/administracion/facturacion/notas",
       "/administracion/pagos",
       "/administracion/contable",
+      "/administracion/contable/cuentas",
+      "/administracion/contable/centros-costo",
       "/administracion/reclamos",
       "/administracion/comunicaciones",
       "/administracion/calendario",
       "/administracion/encuestas",
+      "/administracion/catalogos",
       "/administracion/almacen",
       "/administracion/almacen/herramientas",
       "/administracion/almacen/movimientos",
@@ -230,10 +232,13 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
       { path: "/administracion/facturacion/notas", label: "Notas de comprobantes" },
       { path: "/administracion/pagos", label: "Pagos" },
       { path: "/administracion/contable", label: "Contabilidad" },
+      { path: "/administracion/contable/cuentas", label: "Plan de cuentas" },
+      { path: "/administracion/contable/centros-costo", label: "Centros de costo" },
       { path: "/administracion/reclamos", label: "Reclamos de pagos" },
       { path: "/administracion/comunicaciones", label: "Comunicaciones" },
       { path: "/administracion/calendario", label: "Calendario" },
       { path: "/administracion/encuestas", label: "Encuestas" },
+      { path: "/administracion/catalogos", label: "Catálogos del sistema" },
       { path: "/administracion/almacen/movimientos", label: "Movimientos de stock" },
       { path: "/administracion/almacen/costos", label: "Costos de artículos" },
       { path: "/administracion/almacen/bodegas", label: "Bodegas" },
@@ -316,18 +321,14 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
 
 /**
  * Core nav items — always visible, not module-dependent.
+ *
+ * Chat (agente) and Colecciones (tree-RAG) son Phase 2 de ADR 026.
+ * Hasta que existan las pages bajo /chat y /collections, las entries
+ * quedan fuera del sidebar para evitar 404 al click.
  */
-export const CORE_NAV_ITEMS = [
-  {
-    label: "Chat",
-    icon: MessageSquare,
-    path: "/chat",
-    position: 0,
-  },
-  {
-    label: "Colecciones",
-    icon: Database,
-    path: "/collections",
-    position: 10,
-  },
-];
+export const CORE_NAV_ITEMS: {
+  label: string;
+  icon: LucideIcon;
+  path: string;
+  position: number;
+}[] = [];
