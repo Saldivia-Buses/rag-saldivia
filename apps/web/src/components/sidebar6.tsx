@@ -12,6 +12,7 @@ import {
   Settings,
   User,
   Database,
+  Megaphone,
 } from "lucide-react";
 import { useAuthStore } from "@/lib/auth/store";
 
@@ -186,6 +187,7 @@ function useSidebarData(): SidebarData {
     // /documents page does not exist yet — re-add the entry once apps/web/src/app/(core)/documents/page.tsx lands.
     { label: "Colecciones", icon: Database, href: "/collections" },
     { label: "Notificaciones", icon: Bell, href: "/notifications" },
+    { label: "Sugerencias y bugs", icon: Megaphone, href: "/administracion/sugerencias" },
   ];
 
   const navGroups: NavGroup[] = [
