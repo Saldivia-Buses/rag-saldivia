@@ -37,6 +37,16 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // Dev-only proxy: when NEXT_PUBLIC_API_URL is empty (set by `make dev-frontend`),
+  // browser fetches go to localhost:3000. Rewrite /v1/erp/* to sda-erp:8013 and
+  // /v1/* (everything else) to sda-app:8020 so relative API calls resolve in dev.
+  async rewrites() {
+    if (process.env.NODE_ENV !== "development") return [];
+    return [
+      { source: "/v1/erp/:path*", destination: "http://localhost:8013/v1/erp/:path*" },
+      { source: "/v1/:path*", destination: "http://localhost:8020/v1/:path*" },
+    ];
+  },
 };
 
 export default nextConfig;
