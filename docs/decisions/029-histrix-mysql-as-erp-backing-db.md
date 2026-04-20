@@ -68,10 +68,14 @@ native schema; SDA reads and writes via standard MySQL queries.
                 └────────────────────────────────────────────┘
 ```
 
-The Histrix legacy server (`172.22.100.99`) eventually powers off
-once the dump has been imported into the in-container MySQL.
-ADR 026's "Histrix powers off" is preserved — it's the *server* that
-powers off, not the *data*.
+**Histrix server stays on.** The legacy server (`172.22.100.99`)
+keeps running for an indefinite transition period. The in-container
+MySQL is a **safe copy** (think: backup we happen to read from), not
+a replacement of the legacy host. Histrix continues to be the
+operational fallback while SDA's UI parity is built out. The
+"Histrix powers off" promise from ADR 026 stays true — but it
+happens **later**, once SDA covers 100% of Histrix UX. This ADR
+just changes where SDA reads from; it does not retire Histrix.
 
 ## Consequences
 
@@ -90,10 +94,18 @@ powers off, not the *data*.
 - **One source of truth.** No drift between SDA Postgres and Histrix
   MySQL because there is no SDA Postgres for ERP data anymore.
 - **Cutover from current state**: dump MySQL once from the legacy
-  server, restore into the in-container MySQL, point ERP service at
-  it. Done. No ongoing sync.
-- **Histrix server powers off.** The legacy hardware is freed; the
-  data lives in the silo container.
+  server (treat as backup), restore into the in-container MySQL,
+  point ERP service at it. Done.
+- **Histrix server keeps running** as fallback while SDA UI parity
+  is built. Power-off comes later, in its own ADR.
+
+### Ongoing sync (open question)
+
+Whether the in-container MySQL stays in lockstep with Histrix
+(continuous replication) or accepts that they diverge once SDA
+starts writing is **deliberately unanswered**. Initial cutover is
+one-shot dump+restore. Sync strategy goes in a follow-up ADR once
+the first SDA write hits MySQL.
 
 ### Negative
 
