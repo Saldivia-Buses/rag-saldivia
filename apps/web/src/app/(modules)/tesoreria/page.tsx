@@ -268,7 +268,7 @@ export default function TesoreriaPage() {
                   {receipts.map((r) => (
                     <TableRow key={r.id}>
                       <TableCell className="font-mono text-sm">
-                        <Link href={`/administracion/tesoreria/recibos/${r.id}`} className="hover:underline">
+                        <Link href={`/tesoreria/recibos/${r.id}`} className="hover:underline">
                           {r.number}
                         </Link>
                       </TableCell>

@@ -72,7 +72,7 @@ export default function ReconciliacionesPage() {
                 <TableRow key={r.id}>
                   <TableCell className="font-mono text-sm">
                     <Link
-                      href={`/administracion/tesoreria/reconciliaciones/${r.id}`}
+                      href={`/tesoreria/reconciliaciones/${r.id}`}
                       className="hover:underline"
                     >
                       {r.period}

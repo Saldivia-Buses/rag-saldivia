@@ -42,7 +42,7 @@ export default function BankAccountDetailPage() {
     <div className="flex-1 overflow-y-auto">
       <div className="mx-auto w-full max-w-5xl px-6 py-8 sm:px-8">
         <Link
-          href="/administracion/tesoreria/cuentas-bancarias"
+          href="/tesoreria/cuentas-bancarias"
           className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" /> Volver a cuentas bancarias

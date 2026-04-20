@@ -60,7 +60,7 @@ export default function CuentasBancariasPage() {
               {accounts.map((a) => (
                 <TableRow key={a.id}>
                   <TableCell className="text-sm font-medium">
-                    <Link href={`/administracion/tesoreria/cuentas-bancarias/${a.id}`} className="hover:underline">
+                    <Link href={`/tesoreria/cuentas-bancarias/${a.id}`} className="hover:underline">
                       {a.bank_name}
                     </Link>
                   </TableCell>

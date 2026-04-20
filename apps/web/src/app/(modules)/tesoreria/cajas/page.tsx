@@ -56,7 +56,7 @@ export default function CajasPage() {
               {registers.map((r) => (
                 <TableRow key={r.id}>
                   <TableCell className="text-sm font-medium">
-                    <Link href={`/administracion/tesoreria/cajas/${r.id}`} className="hover:underline">
+                    <Link href={`/tesoreria/cajas/${r.id}`} className="hover:underline">
                       {r.name}
                     </Link>
                   </TableCell>
