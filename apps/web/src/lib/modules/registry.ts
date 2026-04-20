@@ -23,6 +23,8 @@ import {
   Database,
   BusFront,
   Landmark,
+  Contact,
+  BarChart3,
   type LucideIcon,
 } from "lucide-react";
 
@@ -164,6 +166,11 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
   },
 
   // ── Soporte ──────────────────────────────────────────────
+  clientes: {
+    id: "clientes",
+    nav: { label: "Clientes", icon: Contact, path: "/clientes", position: 38 },
+    routes: ["/clientes"],
+  },
   ventas: {
     id: "ventas",
     nav: { label: "Ventas", icon: FileText, path: "/ventas", position: 39 },

@@ -150,7 +150,7 @@ export default function ClientesPage() {
               {entities.map((e) => (
                 <TableRow key={e.id}>
                   <TableCell className="font-mono text-sm">
-                    <Link href={`/administracion/clientes/${e.id}`} className="hover:underline">
+                    <Link href={`/clientes/${e.id}`} className="hover:underline">
                       {e.code}
                     </Link>
                   </TableCell>
