@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { erpKeys } from "@/lib/erp/queries";
 import { fmtDateShort } from "@/lib/erp/format";
-import type { StockMovement } from "@/lib/erp/types";
+import type { StockArticle, StockMovement, Warehouse } from "@/lib/erp/types";
 import { ErrorState } from "@/components/erp/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -38,6 +39,9 @@ const movementVariant: Record<string, "default" | "secondary" | "destructive" | 
   adjustment: "default",
   inventory: "outline",
 };
+
+const MOVEMENT_TYPES = ["in", "out", "transfer", "adjustment"] as const;
+type MovementType = (typeof MOVEMENT_TYPES)[number];
 
 export default function MovimientosStockPage() {
   const [tab, setTab] = useState<TypeTab>("all");
@@ -70,6 +74,8 @@ export default function MovimientosStockPage() {
             Historial de ingresos, egresos, transferencias y ajustes por artículo (erp_stock_movements).
           </p>
         </div>
+
+        <NewMovementForm />
 
         <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="grid gap-1.5">
@@ -148,5 +154,182 @@ export default function MovimientosStockPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function NewMovementForm() {
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [articleId, setArticleId] = useState("");
+  const [warehouseId, setWarehouseId] = useState("");
+  const [type, setType] = useState<MovementType>("in");
+  const [quantity, setQuantity] = useState("");
+  const [unitCost, setUnitCost] = useState("");
+  const [notes, setNotes] = useState("");
+
+  const { data: articles = [] } = useQuery({
+    queryKey: erpKeys.stockArticles({ page_size: "200" }),
+    queryFn: () =>
+      api.get<{ articles: StockArticle[] }>("/v1/erp/stock/articles?page_size=200"),
+    select: (d) => d.articles,
+    enabled: open,
+  });
+
+  const { data: warehouses = [] } = useQuery({
+    queryKey: erpKeys.warehouses(),
+    queryFn: () => api.get<{ warehouses: Warehouse[] }>("/v1/erp/stock/warehouses"),
+    select: (d) => d.warehouses,
+    enabled: open,
+  });
+
+  const mutation = useMutation({
+    mutationFn: (body: {
+      article_id: string;
+      warehouse_id: string;
+      movement_type: string;
+      quantity: string;
+      unit_cost: string;
+      notes: string;
+    }) => api.post<StockMovement>("/v1/erp/stock/movements", body),
+    onSuccess: () => {
+      setArticleId("");
+      setWarehouseId("");
+      setQuantity("");
+      setUnitCost("");
+      setNotes("");
+      setOpen(false);
+      qc.invalidateQueries({ queryKey: [...erpKeys.all, "stock"] });
+    },
+  });
+
+  if (!open) {
+    return (
+      <div className="mb-6">
+        <Button type="button" onClick={() => setOpen(true)}>
+          + Nuevo movimiento
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <form
+      className="mb-6 rounded-xl border border-border/40 bg-card p-4"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!articleId || !warehouseId || !quantity.trim()) return;
+        mutation.mutate({
+          article_id: articleId,
+          warehouse_id: warehouseId,
+          movement_type: type,
+          quantity: quantity.trim(),
+          unit_cost: unitCost.trim(),
+          notes: notes.trim(),
+        });
+      }}
+    >
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="text-sm font-medium">Nuevo movimiento</h3>
+        <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)}>
+          Cancelar
+        </Button>
+      </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="grid gap-1.5">
+          <Label className="text-xs">Artículo</Label>
+          <select
+            className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+            value={articleId}
+            onChange={(e) => setArticleId(e.target.value)}
+            required
+            disabled={mutation.isPending}
+          >
+            <option value="">Seleccionar…</option>
+            {articles.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.code} · {a.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="grid gap-1.5">
+          <Label className="text-xs">Depósito</Label>
+          <select
+            className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+            value={warehouseId}
+            onChange={(e) => setWarehouseId(e.target.value)}
+            required
+            disabled={mutation.isPending}
+          >
+            <option value="">Seleccionar…</option>
+            {warehouses.map((w) => (
+              <option key={w.id} value={w.id}>
+                {w.code} · {w.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="grid gap-1.5">
+          <Label className="text-xs">Tipo</Label>
+          <select
+            className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+            value={type}
+            onChange={(e) => setType(e.target.value as MovementType)}
+            disabled={mutation.isPending}
+          >
+            {MOVEMENT_TYPES.map((t) => (
+              <option key={t} value={t}>
+                {movementLabel[t]}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="grid gap-1.5">
+          <Label className="text-xs">Cantidad</Label>
+          <Input
+            type="number"
+            step="0.0001"
+            placeholder="0.00"
+            value={quantity}
+            onChange={(e) => setQuantity(e.target.value)}
+            required
+            disabled={mutation.isPending}
+          />
+        </div>
+        <div className="grid gap-1.5">
+          <Label className="text-xs">Costo unitario (opcional)</Label>
+          <Input
+            type="number"
+            step="0.0001"
+            placeholder="0.00"
+            value={unitCost}
+            onChange={(e) => setUnitCost(e.target.value)}
+            disabled={mutation.isPending}
+          />
+        </div>
+        <div className="grid gap-1.5">
+          <Label className="text-xs">Notas (opcional)</Label>
+          <Input
+            placeholder="..."
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            disabled={mutation.isPending}
+          />
+        </div>
+      </div>
+      <div className="mt-3 flex items-center justify-between">
+        {mutation.isError ? (
+          <p className="text-xs text-destructive">Error al guardar movimiento.</p>
+        ) : (
+          <span />
+        )}
+        <Button
+          type="submit"
+          disabled={mutation.isPending || !articleId || !warehouseId || !quantity.trim()}
+        >
+          {mutation.isPending ? "Guardando…" : "Registrar movimiento"}
+        </Button>
+      </div>
+    </form>
   );
 }

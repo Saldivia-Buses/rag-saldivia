@@ -91,11 +91,16 @@ WHERE id = $1 AND tenant_id = $2 AND status = 'open';
 -- name: ListJournalEntries :many
 SELECT id, tenant_id, number, date, fiscal_year_id, concept, entry_type,
        reference_type, reference_id, user_id, status, created_at
-FROM erp_journal_entries
+FROM erp_journal_entries e
 WHERE tenant_id = $1
   AND (sqlc.arg(date_from)::DATE IS NULL OR date >= sqlc.arg(date_from)::DATE)
   AND (sqlc.arg(date_to)::DATE IS NULL OR date <= sqlc.arg(date_to)::DATE)
   AND (sqlc.arg(status_filter)::TEXT = '' OR status = sqlc.arg(status_filter)::TEXT)
+  AND (sqlc.arg(cost_center_id)::UUID IS NULL OR EXISTS (
+        SELECT 1 FROM erp_journal_lines l
+        WHERE l.entry_id = e.id
+          AND l.cost_center_id = sqlc.arg(cost_center_id)::UUID
+      ))
 ORDER BY date DESC, number DESC
 LIMIT $2 OFFSET $3;
 

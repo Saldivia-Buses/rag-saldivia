@@ -23,6 +23,9 @@ type ManufacturingService interface {
 	ListChassisModels(ctx context.Context, tenantID, brandFilter string) ([]repository.ListChassisModelsRow, error)
 	ListCarroceriaModels(ctx context.Context, tenantID string) ([]repository.ErpCarroceriaModel, error)
 	CreateCarroceriaModel(ctx context.Context, p repository.CreateCarroceriaModelParams, userID, ip string) (repository.ErpCarroceriaModel, error)
+	// Detail getters
+	GetCarroceriaModel(ctx context.Context, id pgtype.UUID, tenantID string) (repository.ErpCarroceriaModel, error)
+	GetChassisModel(ctx context.Context, id pgtype.UUID, tenantID string) (repository.GetChassisModelRow, error)
 	// BOM
 	GetCarroceriaBOM(ctx context.Context, tenantID string, modelID pgtype.UUID) ([]repository.GetCarroceriaBOMRow, error)
 	AddBOMItem(ctx context.Context, p repository.AddBOMItemParams, userID, ip string) (repository.ErpCarroceriaBom, error)
@@ -63,7 +66,9 @@ func (h *Manufacturing) Routes(authWrite func(http.Handler) http.Handler) chi.Ro
 		r.Use(sdamw.RequirePermission("erp.manufacturing.read"))
 		r.Get("/chassis-brands", h.ListChassisBrands)
 		r.Get("/chassis-models", h.ListChassisModels)
+		r.Get("/chassis-models/{id}", h.GetChassisModel)
 		r.Get("/carroceria-models", h.ListCarroceriaModels)
+		r.Get("/carroceria-models/{id}", h.GetCarroceriaModel)
 		r.Get("/carroceria-models/{id}/bom", h.GetCarroceriaBOM)
 		r.Get("/units", h.ListUnits)
 		r.Get("/units/{id}", h.GetUnit)
@@ -138,6 +143,36 @@ func (h *Manufacturing) ListCarroceriaModels(w http.ResponseWriter, r *http.Requ
 	}
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"carroceria_models": models})
+}
+
+func (h *Manufacturing) GetChassisModel(w http.ResponseWriter, r *http.Request) {
+	id, err := parseUUID(chi.URLParam(r, "id"))
+	if err != nil {
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
+		return
+	}
+	model, err := h.svc.GetChassisModel(r.Context(), id, tenantSlug(r))
+	if err != nil {
+		erperrors.WriteError(w, r, erperrors.NotFound("chassis_model"))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(model)
+}
+
+func (h *Manufacturing) GetCarroceriaModel(w http.ResponseWriter, r *http.Request) {
+	id, err := parseUUID(chi.URLParam(r, "id"))
+	if err != nil {
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
+		return
+	}
+	model, err := h.svc.GetCarroceriaModel(r.Context(), id, tenantSlug(r))
+	if err != nil {
+		erperrors.WriteError(w, r, erperrors.NotFound("carroceria_model"))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(model)
 }
 
 func (h *Manufacturing) GetCarroceriaBOM(w http.ResponseWriter, r *http.Request) {

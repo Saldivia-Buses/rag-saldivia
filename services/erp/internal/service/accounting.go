@@ -478,10 +478,10 @@ type EntryDetail struct {
 }
 
 // ListEntries returns paginated journal entries.
-func (s *Accounting) ListEntries(ctx context.Context, tenantID string, dateFrom, dateTo pgtype.Date, status string, limit, offset int) ([]repository.ListJournalEntriesRow, error) {
+func (s *Accounting) ListEntries(ctx context.Context, tenantID string, dateFrom, dateTo pgtype.Date, status string, costCenterID pgtype.UUID, limit, offset int) ([]repository.ListJournalEntriesRow, error) {
 	return s.repo.ListJournalEntries(ctx, repository.ListJournalEntriesParams{
 		TenantID: tenantID, DateFrom: dateFrom, DateTo: dateTo,
-		StatusFilter: status, Limit: int32(limit), Offset: int32(offset),
+		StatusFilter: status, CostCenterID: costCenterID, Limit: int32(limit), Offset: int32(offset),
 	})
 }
 

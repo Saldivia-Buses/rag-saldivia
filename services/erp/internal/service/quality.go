@@ -204,3 +204,8 @@ func (s *Quality) ListSupplierScorecards(ctx context.Context, tenantID string, l
 		Offset:   int32(offset),
 	})
 }
+
+// GetSupplierScorecard returns a single scorecard by ID, scoped to tenant.
+func (s *Quality) GetSupplierScorecard(ctx context.Context, id pgtype.UUID, tenantID string) (repository.GetSupplierScorecardRow, error) {
+	return s.repo.GetSupplierScorecard(ctx, repository.GetSupplierScorecardParams{ID: id, TenantID: tenantID})
+}

@@ -834,17 +834,21 @@ func (q *Queries) GetCashRegister(ctx context.Context, arg GetCashRegisterParams
 
 const listCashCounts = `-- name: ListCashCounts :many
 SELECT id, tenant_id, cash_register_id, date, expected, counted, difference, user_id, notes, created_at
-FROM erp_cash_counts WHERE tenant_id = $1 ORDER BY date DESC LIMIT $2 OFFSET $3
+FROM erp_cash_counts
+WHERE tenant_id = $1
+  AND ($2::UUID IS NULL OR cash_register_id = $2::UUID)
+ORDER BY date DESC LIMIT $3 OFFSET $4
 `
 
 type ListCashCountsParams struct {
-	TenantID string `json:"tenant_id"`
-	Limit    int32  `json:"limit"`
-	Offset   int32  `json:"offset"`
+	TenantID       string      `json:"tenant_id"`
+	CashRegisterID pgtype.UUID `json:"cash_register_id"`
+	Limit          int32       `json:"limit"`
+	Offset         int32       `json:"offset"`
 }
 
 func (q *Queries) ListCashCounts(ctx context.Context, arg ListCashCountsParams) ([]ErpCashCount, error) {
-	rows, err := q.db.Query(ctx, listCashCounts, arg.TenantID, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listCashCounts, arg.TenantID, arg.CashRegisterID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -1128,8 +1132,14 @@ SELECT r.id, r.tenant_id, r.bank_account_id, r.period, r.statement_balance,
 FROM erp_bank_reconciliations r
 JOIN erp_bank_accounts ba ON ba.id = r.bank_account_id
 WHERE r.tenant_id = $1
+  AND ($2::UUID IS NULL OR r.bank_account_id = $2::UUID)
 ORDER BY r.period DESC, ba.bank_name
 `
+
+type ListReconciliationsParams struct {
+	TenantID      string      `json:"tenant_id"`
+	BankAccountID pgtype.UUID `json:"bank_account_id"`
+}
 
 type ListReconciliationsRow struct {
 	ID               pgtype.UUID        `json:"id"`
@@ -1145,8 +1155,8 @@ type ListReconciliationsRow struct {
 	AccountNumber    string             `json:"account_number"`
 }
 
-func (q *Queries) ListReconciliations(ctx context.Context, tenantID string) ([]ListReconciliationsRow, error) {
-	rows, err := q.db.Query(ctx, listReconciliations, tenantID)
+func (q *Queries) ListReconciliations(ctx context.Context, arg ListReconciliationsParams) ([]ListReconciliationsRow, error) {
+	rows, err := q.db.Query(ctx, listReconciliations, arg.TenantID, arg.BankAccountID)
 	if err != nil {
 		return nil, err
 	}

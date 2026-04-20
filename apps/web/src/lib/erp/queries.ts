@@ -19,6 +19,8 @@ export const erpKeys = {
   fiscalYears: () => [...erpKeys.all, "fiscal-years"] as const,
   stockArticles: (params?: Record<string, string>) =>
     [...erpKeys.all, "stock", "articles", params] as const,
+  stockArticle: (id: string) =>
+    [...erpKeys.all, "stock", "articles", id] as const,
   stockLevels: () => [...erpKeys.all, "stock", "levels"] as const,
   articleBOM: (articleId: string) =>
     [...erpKeys.all, "stock", "articles", articleId, "bom"] as const,
@@ -102,6 +104,8 @@ export const erpKeys = {
     [...erpKeys.all, "tools", "list", params] as const,
   maintenanceAssets: () =>
     [...erpKeys.all, "maintenance", "assets"] as const,
+  maintenanceAsset: (id: string) =>
+    [...erpKeys.all, "maintenance", "assets", id] as const,
   maintenancePlans: (assetId: string) =>
     [...erpKeys.all, "maintenance", "assets", assetId, "plans"] as const,
   treasuryMovements: () =>

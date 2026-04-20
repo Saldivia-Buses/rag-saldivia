@@ -93,7 +93,7 @@ func (m *mockAccountingService) CloseFiscalYear(_ context.Context, _ string, _ p
 	return m.closeResult, m.err
 }
 
-func (m *mockAccountingService) ListEntries(_ context.Context, _ string, _, _ pgtype.Date, _ string, _, _ int) ([]repository.ListJournalEntriesRow, error) {
+func (m *mockAccountingService) ListEntries(_ context.Context, _ string, _, _ pgtype.Date, _ string, _ pgtype.UUID, _, _ int) ([]repository.ListJournalEntriesRow, error) {
 	return m.entries, m.err
 }
 

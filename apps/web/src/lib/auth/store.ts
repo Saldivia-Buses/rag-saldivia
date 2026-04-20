@@ -15,22 +15,36 @@ export interface AuthUser {
   role: string;
   tenantId: string;
   tenantSlug: string;
+  perms: string[];
 }
 
 interface AuthState {
-  // State
   user: AuthUser | null;
   accessToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
 
-  // Actions
   setAccessToken: (token: string) => void;
   clearAuth: () => void;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   fetchMe: () => Promise<void>;
   refresh: () => Promise<boolean>;
+}
+
+function decodeJwtPerms(token: string): string[] {
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return [];
+    const padded = payload + "=".repeat((4 - (payload.length % 4)) % 4);
+    const json = atob(padded.replace(/-/g, "+").replace(/_/g, "/"));
+    const claims = JSON.parse(json) as { perms?: unknown };
+    return Array.isArray(claims.perms)
+      ? claims.perms.filter((p): p is string => typeof p === "string")
+      : [];
+  } catch {
+    return [];
+  }
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -83,6 +97,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         tenant_slug: string;
       }>("/v1/auth/me");
 
+      const token = get().accessToken;
+      const perms = token ? decodeJwtPerms(token) : [];
+
       set({
         user: {
           id: user.id,
@@ -91,6 +108,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           role: user.role,
           tenantId: user.tenant_id,
           tenantSlug: user.tenant_slug,
+          perms,
         },
         isAuthenticated: true,
         isLoading: false,
@@ -111,6 +129,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         { skipAuth: true },
       );
       set({ accessToken: data.access_token });
+      const currentUser = get().user;
+      if (currentUser) {
+        set({ user: { ...currentUser, perms: decodeJwtPerms(data.access_token) } });
+      }
       return true;
     } catch {
       get().clearAuth();

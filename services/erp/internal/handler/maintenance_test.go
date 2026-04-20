@@ -34,6 +34,13 @@ func (m *mockMaintenanceService) ListAssets(_ context.Context, _, _ string, _ bo
 	return m.assets, m.err
 }
 
+func (m *mockMaintenanceService) GetAsset(_ context.Context, _ pgtype.UUID, _ string) (repository.ErpMaintenanceAsset, error) {
+	if m.err != nil {
+		return repository.ErpMaintenanceAsset{}, m.err
+	}
+	return m.asset, nil
+}
+
 func (m *mockMaintenanceService) CreateAsset(_ context.Context, _ repository.CreateMaintenanceAssetParams, _, _ string) (repository.ErpMaintenanceAsset, error) {
 	if m.err != nil {
 		return repository.ErpMaintenanceAsset{}, m.err

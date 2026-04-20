@@ -20,8 +20,10 @@ import {
   ShieldCheck,
   MessageSquare,
   FileText,
-  Database,
   BusFront,
+  Landmark,
+  Contact,
+  BarChart3,
   type LucideIcon,
 } from "lucide-react";
 
@@ -122,6 +124,7 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
       "/ingenieria/producto/atributos",
       "/ingenieria/producto/chasis-marcas",
       "/ingenieria/producto/chasis-modelos",
+      "/ingenieria/producto/carroceria-modelos",
       "/ingenieria/desarrollo",
       "/ingenieria/definicion",
       "/ingenieria/legal",
@@ -147,22 +150,26 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
       "/mantenimiento/correctivo",
       "/mantenimiento/equipos",
       "/mantenimiento/combustible",
+      "/mantenimiento/ordenes-trabajo",
       "/mantenimiento/taller/vehiculos",
       "/mantenimiento/taller/incidentes",
-      "/mantenimiento/activos",
     ],
     subnav: [
       { path: "/mantenimiento/preventivo", label: "Preventivo" },
       { path: "/mantenimiento/correctivo", label: "Correctivo" },
       { path: "/mantenimiento/equipos", label: "Equipos" },
       { path: "/mantenimiento/combustible", label: "Combustible" },
-      { path: "/mantenimiento/activos", label: "Activos" },
       { path: "/mantenimiento/taller/vehiculos", label: "Vehículos de clientes" },
       { path: "/mantenimiento/taller/incidentes", label: "Incidentes vehiculares" },
     ],
   },
 
   // ── Soporte ──────────────────────────────────────────────
+  clientes: {
+    id: "clientes",
+    nav: { label: "Clientes", icon: Contact, path: "/clientes", position: 38 },
+    routes: ["/clientes"],
+  },
   ventas: {
     id: "ventas",
     nav: { label: "Ventas", icon: FileText, path: "/ventas", position: 39 },
@@ -206,16 +213,13 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
       "/administracion/facturacion/notas",
       "/administracion/pagos",
       "/administracion/contable",
+      "/administracion/contable/cuentas",
+      "/administracion/contable/centros-costo",
       "/administracion/reclamos",
-      "/administracion/tesoreria/importaciones",
-      "/administracion/tesoreria/cartera-historica",
-      "/administracion/tesoreria/reconciliaciones",
-      "/administracion/tesoreria/recuentos",
-      "/administracion/tesoreria/cuentas-bancarias",
-      "/administracion/tesoreria/cajas",
       "/administracion/comunicaciones",
       "/administracion/calendario",
       "/administracion/encuestas",
+      "/administracion/catalogos",
       "/administracion/almacen",
       "/administracion/almacen/herramientas",
       "/administracion/almacen/movimientos",
@@ -228,16 +232,13 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
       { path: "/administracion/facturacion/notas", label: "Notas de comprobantes" },
       { path: "/administracion/pagos", label: "Pagos" },
       { path: "/administracion/contable", label: "Contabilidad" },
+      { path: "/administracion/contable/cuentas", label: "Plan de cuentas" },
+      { path: "/administracion/contable/centros-costo", label: "Centros de costo" },
       { path: "/administracion/reclamos", label: "Reclamos de pagos" },
-      { path: "/administracion/tesoreria/importaciones", label: "Importaciones bancarias" },
-      { path: "/administracion/tesoreria/cartera-historica", label: "Cheques históricos" },
-      { path: "/administracion/tesoreria/reconciliaciones", label: "Reconciliaciones" },
-      { path: "/administracion/tesoreria/recuentos", label: "Recuentos de caja" },
-      { path: "/administracion/tesoreria/cuentas-bancarias", label: "Cuentas bancarias" },
-      { path: "/administracion/tesoreria/cajas", label: "Cajas" },
       { path: "/administracion/comunicaciones", label: "Comunicaciones" },
       { path: "/administracion/calendario", label: "Calendario" },
       { path: "/administracion/encuestas", label: "Encuestas" },
+      { path: "/administracion/catalogos", label: "Catálogos del sistema" },
       { path: "/administracion/almacen/movimientos", label: "Movimientos de stock" },
       { path: "/administracion/almacen/costos", label: "Costos de artículos" },
       { path: "/administracion/almacen/bodegas", label: "Bodegas" },
@@ -245,9 +246,32 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
       { path: "/administracion/sugerencias", label: "Sugerencias" },
     ],
   },
+  tesoreria: {
+    id: "tesoreria",
+    nav: { label: "Tesorería", icon: Landmark, path: "/tesoreria", position: 42 },
+    routes: [
+      "/tesoreria",
+      "/tesoreria/cuentas-bancarias",
+      "/tesoreria/cajas",
+      "/tesoreria/reconciliaciones",
+      "/tesoreria/recuentos",
+      "/tesoreria/importaciones",
+      "/tesoreria/cartera-historica",
+      "/tesoreria/recibos",
+    ],
+    subnav: [
+      { path: "/tesoreria/cuentas-bancarias", label: "Cuentas bancarias" },
+      { path: "/tesoreria/cajas", label: "Cajas" },
+      { path: "/tesoreria/reconciliaciones", label: "Reconciliaciones" },
+      { path: "/tesoreria/recuentos", label: "Recuentos de caja" },
+      { path: "/tesoreria/importaciones", label: "Importaciones bancarias" },
+      { path: "/tesoreria/cartera-historica", label: "Cheques históricos" },
+      { path: "/tesoreria/recibos", label: "Recibos" },
+    ],
+  },
   rrhh: {
     id: "rrhh",
-    nav: { label: "RRHH", icon: Users, path: "/rrhh", position: 42 },
+    nav: { label: "RRHH", icon: Users, path: "/rrhh", position: 43 },
     routes: [
       "/rrhh",
       "/rrhh/legajos",
@@ -264,7 +288,7 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
   },
   seguridad: {
     id: "seguridad",
-    nav: { label: "Higiene y Seguridad", icon: ShieldCheck, path: "/seguridad", position: 43 },
+    nav: { label: "Higiene y Seguridad", icon: ShieldCheck, path: "/seguridad", position: 44 },
     routes: [
       "/seguridad",
       "/seguridad/inspecciones",
@@ -283,6 +307,11 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
   },
 
   // ── Inteligencia ─────────────────────────────────────────
+  estadisticas: {
+    id: "estadisticas",
+    nav: { label: "Estadísticas", icon: BarChart3, path: "/estadisticas", position: 90 },
+    routes: ["/estadisticas"],
+  },
   feedback: {
     id: "feedback",
     nav: { label: "Calidad IA", icon: MessageSquare, path: "/feedback", position: 91 },
@@ -292,18 +321,14 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
 
 /**
  * Core nav items — always visible, not module-dependent.
+ *
+ * Chat (agente) and Colecciones (tree-RAG) son Phase 2 de ADR 026.
+ * Hasta que existan las pages bajo /chat y /collections, las entries
+ * quedan fuera del sidebar para evitar 404 al click.
  */
-export const CORE_NAV_ITEMS = [
-  {
-    label: "Chat",
-    icon: MessageSquare,
-    path: "/chat",
-    position: 0,
-  },
-  {
-    label: "Colecciones",
-    icon: Database,
-    path: "/collections",
-    position: 10,
-  },
-];
+export const CORE_NAV_ITEMS: {
+  label: string;
+  icon: LucideIcon;
+  path: string;
+  position: number;
+}[] = [];

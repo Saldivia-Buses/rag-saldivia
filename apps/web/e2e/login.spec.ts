@@ -1,9 +1,9 @@
 import { test, expect } from "@playwright/test";
+import { TEST_EMAIL, TEST_PASSWORD } from "./helpers/auth";
 
 test.describe("Login", () => {
   test("redirects to /login when not authenticated", async ({ page }) => {
     await page.goto("/chat");
-    // AuthInitializer redirects unauthenticated users via window.location.href
     await page.waitForURL(/\/login/, { timeout: 10_000 });
     await expect(page).toHaveURL(/\/login/);
   });
@@ -13,14 +13,12 @@ test.describe("Login", () => {
   }) => {
     await page.goto("/login");
 
-    // Fill the login form — inputs have id="email" and id="password"
-    await page.locator("#email").fill("admin@sda.local");
-    await page.locator("#password").fill("admin123");
+    await page.locator("#email").fill(TEST_EMAIL);
+    await page.locator("#password").fill(TEST_PASSWORD);
     await page.locator('button[type="submit"]').click();
 
-    // After login, the component does window.location.href = "/dashboard"
-    await page.waitForURL(/\/dashboard/, { timeout: 15_000 });
-    await expect(page).toHaveURL(/\/dashboard/);
+    await page.waitForURL(/\/inicio/, { timeout: 15_000 });
+    await expect(page).toHaveURL(/\/inicio/);
   });
 
   test("login with invalid credentials shows error", async ({ page }) => {

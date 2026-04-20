@@ -61,6 +61,11 @@ func (s *Manufacturing) ListChassisModels(ctx context.Context, tenantID, brandFi
 	})
 }
 
+// GetChassisModel returns a chassis model by ID, scoped to tenant.
+func (s *Manufacturing) GetChassisModel(ctx context.Context, id pgtype.UUID, tenantID string) (repository.GetChassisModelRow, error) {
+	return s.repo.GetChassisModel(ctx, repository.GetChassisModelParams{ID: id, TenantID: tenantID})
+}
+
 // ─── Carroceria Models ─────────────────────────────────────────────────────────
 
 // ListCarroceriaModels returns all active carroceria models for a tenant.

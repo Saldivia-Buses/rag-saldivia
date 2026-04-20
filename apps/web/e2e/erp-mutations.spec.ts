@@ -1,77 +1,61 @@
 /**
  * ERP mutation tests — create actions.
  *
- * These tests require the app to be running against a test tenant
- * with a seeded database. They are skipped by default and can be
- * run when the full stack is available.
- *
- * To run: set environment variable E2E_MUTATIONS=1
- *   E2E_MUTATIONS=1 npx playwright test erp-mutations
+ * Run against the local app with TENANT_SLUG=test (saldivia bench
+ * mirror): all create tests execute every run, no skip flag. Each
+ * test verifies the row exists after creation (toast alone is not
+ * evidence).
  */
 
 import { test, expect } from "@playwright/test";
 import { login } from "./helpers/auth";
 
-const MUTATIONS_ENABLED = !!process.env.E2E_MUTATIONS;
-
 test.describe("ERP Mutations", () => {
   test.beforeEach(async ({ page }) => {
-    if (!MUTATIONS_ENABLED) {
-      test.skip(
-        true,
-        "Skipped: set E2E_MUTATIONS=1 to run mutations against a seeded test tenant",
-      );
-    }
     await login(page);
   });
 
   // ── Catálogos ────────────────────────────────────────────────────────────
 
-  test("catalogos — can create a new catalog entry", async ({ page }) => {
+  test("catalogos — create + readback", async ({ page }) => {
     await page.goto("/administracion/catalogos");
     await page.waitForLoadState("networkidle");
 
-    // Heading confirms we are on the right page
     await expect(
       page.getByRole("heading", { name: "Catálogos" }),
     ).toBeVisible({ timeout: 15_000 });
 
-    // Open the create dialog
     await page.getByRole("button", { name: /Nueva entrada/i }).click();
-
-    // Dialog title
     await expect(
       page.getByRole("heading", { name: "Nueva entrada de catálogo" }),
     ).toBeVisible({ timeout: 5_000 });
 
-    // Fill in type, code, name
     const unique = Date.now().toString().slice(-6);
     await page.getByLabel("Tipo").fill("test_e2e");
     await page.getByLabel("Código").fill(`E2E-${unique}`);
     await page.getByLabel("Nombre").fill(`Test entrada ${unique}`);
 
-    // Submit
+    const postReq = page.waitForRequest((req) =>
+      req.method() === "POST" && /\/v1\/erp\/.*catalog/i.test(req.url()),
+    );
     await page.getByRole("button", { name: /^Crear$/ }).click();
+    await postReq;
 
-    // Toast confirm
     await expect(page.locator("text=Entrada creada exitosamente")).toBeVisible({
       timeout: 10_000,
     });
-
-    // Dialog should close
     await expect(
       page.getByRole("heading", { name: "Nueva entrada de catálogo" }),
     ).not.toBeVisible({ timeout: 5_000 });
 
-    // The new entry appears in the list (search for the unique code)
-    await expect(
-      page.locator(`text=E2E-${unique}`),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator(`text=E2E-${unique}`)).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   // ── Almacén ──────────────────────────────────────────────────────────────
 
-  test("almacen — can create a new article", async ({ page }) => {
+  test("almacen — create article + readback", async ({ page }) => {
     await page.goto("/administracion/almacen");
     await page.waitForLoadState("networkidle");
 
@@ -80,34 +64,35 @@ test.describe("ERP Mutations", () => {
     ).toBeVisible({ timeout: 15_000 });
 
     await page.getByRole("button", { name: /Nuevo artículo/i }).click();
-
-    // Dialog
     await expect(
       page.getByRole("heading", { name: /Nuevo artículo/i }),
     ).toBeVisible({ timeout: 5_000 });
 
     const unique = Date.now().toString().slice(-6);
-    await page.getByLabel("Código").fill(`ART-${unique}`);
+    const code = `ART-${unique}`;
+    await page.getByLabel("Código").fill(code);
     await page.getByLabel("Nombre").fill(`Artículo E2E ${unique}`);
 
-    // Submit form (button text is "Crear")
+    const postReq = page.waitForRequest((req) =>
+      req.method() === "POST" && /\/v1\/erp\/.*articles?/i.test(req.url()),
+    );
     await page.getByRole("button", { name: /^Crear$/ }).click();
+    await postReq;
 
-    // Success toast
     await expect(
       page.locator("text=Artículo creado exitosamente"),
     ).toBeVisible({ timeout: 10_000 });
-
-    // Dialog closes
     await expect(
       page.getByRole("heading", { name: /Nuevo artículo/i }),
     ).not.toBeVisible({ timeout: 5_000 });
+
+    await expect(page.locator(`text=${code}`)).toBeVisible({ timeout: 10_000 });
   });
 
   // ── Tesorería — movimiento ────────────────────────────────────────────────
 
-  test("tesoreria — can register a new movement", async ({ page }) => {
-    await page.goto("/administracion/tesoreria");
+  test("tesoreria — register movement + readback", async ({ page }) => {
+    await page.goto("/tesoreria");
     await page.waitForLoadState("networkidle");
 
     await expect(
@@ -115,20 +100,25 @@ test.describe("ERP Mutations", () => {
     ).toBeVisible({ timeout: 15_000 });
 
     await page.getByRole("button", { name: /Nuevo movimiento/i }).click();
-
     await expect(
       page.getByRole("heading", { name: "Nuevo movimiento" }),
     ).toBeVisible({ timeout: 5_000 });
 
     const unique = Date.now().toString().slice(-6);
-    await page.getByLabel("Número").fill(`MOV-${unique}`);
+    const number = `MOV-${unique}`;
+    await page.getByLabel("Número").fill(number);
     await page.getByLabel("Monto").fill("1000");
 
+    const postReq = page.waitForRequest((req) =>
+      req.method() === "POST" && /\/v1\/erp\/treasury\/movements?/i.test(req.url()),
+    );
     await page.getByRole("button", { name: /Registrar/ }).click();
+    await postReq;
 
-    await expect(
-      page.locator("text=Movimiento registrado"),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("text=Movimiento registrado")).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(page.locator(`text=${number}`)).toBeVisible({ timeout: 10_000 });
   });
 
   // ── Contabilidad — asiento ────────────────────────────────────────────────
@@ -164,7 +154,7 @@ test.describe("ERP Mutations", () => {
   // ── Calidad — No Conformidad ─────────────────────────────────────────────
 
   test("calidad — can open NC creation dialog and cancel", async ({ page }) => {
-    await page.goto("/administracion/calidad");
+    await page.goto("/calidad/no-conformidades");
     await page.waitForLoadState("networkidle");
 
     await page.getByRole("button", { name: /Nueva NC/i }).click();

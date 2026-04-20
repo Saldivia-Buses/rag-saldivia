@@ -19,6 +19,16 @@ WHERE tenant_id = $1
 ORDER BY name, code
 LIMIT $2 OFFSET $3;
 
+-- name: GetTool :one
+SELECT id, tenant_id, legacy_id, code, article_code, article_id,
+       inventory_code, name, characteristic, group_code, tool_type,
+       status_code, purchase_order_no, purchase_order_date,
+       delivery_note_date, delivery_note_post, delivery_note_no,
+       supplier_code, pending_oc, observation, manufacture_no,
+       generated_at, created_at
+FROM erp_tools
+WHERE id = $1 AND tenant_id = $2;
+
 -- name: ListToolMovements :many
 -- Lending ledger for a single tool (by tool_id). Returns the movement
 -- history most-recent first; tool_id nullable so orphan movements are

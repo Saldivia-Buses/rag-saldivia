@@ -1,13 +1,12 @@
 import { type Page } from "@playwright/test";
 
-/**
- * Logs in via the UI and waits for redirect to an authenticated page.
- * Reusable across all test files that need an authenticated session.
- */
+export const TEST_EMAIL = process.env.TEST_EMAIL ?? "e2e@sda.local";
+export const TEST_PASSWORD = process.env.TEST_PASSWORD ?? "e2e-saldivia-2026!";
+
 export async function login(
   page: Page,
-  email = "admin@sda.local",
-  password = "admin123",
+  email = TEST_EMAIL,
+  password = TEST_PASSWORD,
 ) {
   await page.goto("/login");
 
@@ -15,6 +14,5 @@ export async function login(
   await page.locator("#password").fill(password);
   await page.locator('button[type="submit"]').click();
 
-  // After login, the app redirects to /dashboard
-  await page.waitForURL(/\/dashboard/, { timeout: 15_000 });
+  await page.waitForURL(/\/inicio/, { timeout: 15_000 });
 }

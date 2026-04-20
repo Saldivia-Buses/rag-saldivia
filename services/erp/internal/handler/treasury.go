@@ -31,13 +31,13 @@ type TreasuryService interface {
 	CreateCheck(ctx context.Context, p repository.CreateCheckParams, userID, ip string) (repository.ErpCheck, error)
 	UpdateCheckStatus(ctx context.Context, id pgtype.UUID, tenantID, newStatus, userID, ip string) error
 	GetBalance(ctx context.Context, tenantID string) ([]repository.GetTreasuryBalanceRow, error)
-	ListCashCounts(ctx context.Context, tenantID string, limit, offset int) ([]repository.ErpCashCount, error)
+	ListCashCounts(ctx context.Context, tenantID string, cashRegisterID pgtype.UUID, limit, offset int) ([]repository.ErpCashCount, error)
 	CreateCashCount(ctx context.Context, p repository.CreateCashCountParams, ip string) (repository.ErpCashCount, error)
 	ListReceipts(ctx context.Context, tenantID, typeFilter string, dateFrom, dateTo pgtype.Date, limit, offset int) ([]repository.ListReceiptsRow, error)
 	GetReceipt(ctx context.Context, tenantID string, id pgtype.UUID) (*service.ReceiptDetail, error)
 	CreateReceipt(ctx context.Context, tenantID string, inp service.ReceiptInput, userID, ip string) (*service.ReceiptDetail, error)
 	VoidReceipt(ctx context.Context, tenantID string, receiptID pgtype.UUID, userID, ip string) error
-	ListReconciliations(ctx context.Context, tenantID string) ([]repository.ListReconciliationsRow, error)
+	ListReconciliations(ctx context.Context, tenantID string, bankAccountID pgtype.UUID) ([]repository.ListReconciliationsRow, error)
 	GetReconciliation(ctx context.Context, tenantID string, id pgtype.UUID) (*service.ReconciliationDetail, error)
 	CreateReconciliation(ctx context.Context, tenantID string, bankAccountID pgtype.UUID, period string, statementBalance, bookBalance string, userID, ip string) (repository.ErpBankReconciliation, error)
 	ImportStatementLines(ctx context.Context, tenantID string, reconID pgtype.UUID, lines []service.StatementLineInput) (int, error)
@@ -395,7 +395,16 @@ func (h *Treasury) GetBalance(w http.ResponseWriter, r *http.Request) {
 func (h *Treasury) ListCashCounts(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	p := pagination.Parse(r)
-	counts, err := h.svc.ListCashCounts(r.Context(), slug, p.Limit(), p.Offset())
+	var cashRegisterID pgtype.UUID
+	if s := r.URL.Query().Get("cash_register_id"); s != "" {
+		id, err := parseUUID(s)
+		if err != nil {
+			erperrors.WriteError(w, r, erperrors.InvalidID("cash_register_id"))
+			return
+		}
+		cashRegisterID = id
+	}
+	counts, err := h.svc.ListCashCounts(r.Context(), slug, cashRegisterID, p.Limit(), p.Offset())
 	if err != nil {
 		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
@@ -533,7 +542,16 @@ func (h *Treasury) VoidReceiptH(w http.ResponseWriter, r *http.Request) {
 
 func (h *Treasury) ListReconciliations(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
-	recons, err := h.svc.ListReconciliations(r.Context(), slug)
+	var bankAccountID pgtype.UUID
+	if s := r.URL.Query().Get("bank_account_id"); s != "" {
+		id, err := parseUUID(s)
+		if err != nil {
+			erperrors.WriteError(w, r, erperrors.InvalidID("bank_account_id"))
+			return
+		}
+		bankAccountID = id
+	}
+	recons, err := h.svc.ListReconciliations(r.Context(), slug, bankAccountID)
 	if err != nil {
 		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return

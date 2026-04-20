@@ -6,10 +6,12 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { erpKeys } from "@/lib/erp/queries";
-import type { CostCenter } from "@/lib/erp/types";
+import { fmtDate } from "@/lib/erp/format";
+import type { CostCenter, JournalEntry } from "@/lib/erp/types";
 import { ErrorState } from "@/components/erp/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export default function CostCenterDetailPage() {
   const params = useParams<{ id: string }>();
@@ -29,11 +31,22 @@ export default function CostCenterDetailPage() {
     enabled: !!id,
   });
 
+  const entriesQ = useQuery({
+    queryKey: [...erpKeys.all, "entries", { cost_center_id: id, page_size: "100" }] as const,
+    queryFn: () =>
+      api.get<{ entries: JournalEntry[] }>(
+        `/v1/erp/accounting/entries?cost_center_id=${id}&page_size=100`,
+      ),
+    select: (d) => d.entries,
+    enabled: !!id,
+  });
+
   if (centerQ.error)
     return <ErrorState message="Error cargando centro de costo" onRetry={() => window.location.reload()} />;
 
   const center = centerQ.data;
   const siblings = siblingsQ.data ?? [];
+  const entries = entriesQ.data ?? [];
   const parent = center?.id
     ? siblings.find((s) => s.id === (center as unknown as { parent_id?: string }).parent_id)
     : null;
@@ -65,14 +78,54 @@ export default function CostCenterDetailPage() {
               </Badge>
             </div>
 
-            <div className="rounded-xl border border-border/40 bg-card px-4 py-3 text-sm">
-              <p className="text-muted-foreground">
-                Los asientos contables pueden imputarse a este centro de costo desde la solapa
-                Diario de <Link href="/administracion/contable" className="underline">contable</Link>.
-                El detalle de asientos por centro está pendiente de un filtro backend
-                (<span className="font-mono">entries?cost_center_id=</span>) — seguimiento en
-                la próxima sesión.
-              </p>
+            <h2 className="mb-3 text-sm font-medium text-muted-foreground">
+              Asientos imputados ({entries.length})
+            </h2>
+            <div className="overflow-hidden rounded-xl border border-border/40 bg-card">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[110px]">Fecha</TableHead>
+                    <TableHead className="w-[120px]">Número</TableHead>
+                    <TableHead>Concepto</TableHead>
+                    <TableHead className="w-[100px]">Tipo</TableHead>
+                    <TableHead className="w-[110px]">Estado</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {entriesQ.isLoading && (
+                    <TableRow>
+                      <TableCell colSpan={5}>
+                        <Skeleton className="h-24 w-full" />
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {!entriesQ.isLoading && entries.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-20 text-center text-sm text-muted-foreground">
+                        Sin asientos imputados a este centro de costo.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {entries.map((e) => (
+                    <TableRow key={e.id}>
+                      <TableCell className="font-mono text-xs">{fmtDate(e.date)}</TableCell>
+                      <TableCell className="font-mono text-sm">
+                        <Link href={`/administracion/contable/asientos/${e.id}`} className="hover:underline">
+                          {e.number}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="max-w-[320px] truncate text-sm">{e.concept}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{e.entry_type}</TableCell>
+                      <TableCell>
+                        <Badge variant={e.status === "posted" ? "default" : "outline"}>
+                          {e.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           </>
         )}

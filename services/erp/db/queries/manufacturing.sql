@@ -24,6 +24,14 @@ WHERE cm.tenant_id = $1
   AND cm.active = true
 ORDER BY cb.name, cm.description;
 
+-- name: GetChassisModel :one
+SELECT cm.id, cm.tenant_id, cm.brand_id, cm.model_code, cm.description,
+       cm.traction, cm.engine_location, cm.active, cm.created_at, cm.updated_at,
+       cb.name AS brand_name
+FROM erp_chassis_models cm
+JOIN erp_chassis_brands cb ON cb.id = cm.brand_id AND cb.tenant_id = cm.tenant_id
+WHERE cm.id = $1 AND cm.tenant_id = $2;
+
 -- ─── Carroceria Models ─────────────────────────────────────────────────────────
 
 -- name: ListCarroceriaModels :many

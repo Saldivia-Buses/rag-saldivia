@@ -45,6 +45,7 @@ type QualityService interface {
 	ListIndicators(ctx context.Context, tenantID, periodFrom, periodTo string) ([]repository.ErpQualityIndicator, error)
 	// Supplier Scorecards
 	ListSupplierScorecards(ctx context.Context, tenantID string, limit, offset int) ([]repository.ListSupplierScorecardsRow, error)
+	GetSupplierScorecard(ctx context.Context, id pgtype.UUID, tenantID string) (repository.GetSupplierScorecardRow, error)
 }
 
 type Quality struct{ svc QualityService }
@@ -67,6 +68,7 @@ func (h *Quality) Routes(authWrite func(http.Handler) http.Handler) chi.Router {
 		r.Get("/action-plans/{id}/tasks", h.ListActionTasks)
 		r.Get("/indicators", h.ListIndicators)
 		r.Get("/supplier-scorecards", h.ListSupplierScorecards)
+		r.Get("/supplier-scorecards/{id}", h.GetSupplierScorecard)
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(authWrite)
@@ -556,6 +558,22 @@ func (h *Quality) ListSupplierScorecards(w http.ResponseWriter, r *http.Request)
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"scorecards": cards})
+}
+
+// GetSupplierScorecard returns a single scorecard by ID.
+func (h *Quality) GetSupplierScorecard(w http.ResponseWriter, r *http.Request) {
+	id, err := parseUUID(chi.URLParam(r, "id"))
+	if err != nil {
+		erperrors.WriteError(w, r, erperrors.InvalidID(chi.URLParam(r, "id")))
+		return
+	}
+	card, err := h.svc.GetSupplierScorecard(r.Context(), id, tenantSlug(r))
+	if err != nil {
+		erperrors.WriteError(w, r, erperrors.NotFound("scorecard"))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(card)
 }
 
 // ListIndicators returns quality KPI rows in a period range.

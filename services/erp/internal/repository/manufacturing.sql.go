@@ -1302,6 +1302,53 @@ func (q *Queries) ListChassisModels(ctx context.Context, arg ListChassisModelsPa
 	return items, nil
 }
 
+const getChassisModel = `-- name: GetChassisModel :one
+SELECT cm.id, cm.tenant_id, cm.brand_id, cm.model_code, cm.description,
+       cm.traction, cm.engine_location, cm.active, cm.created_at, cm.updated_at,
+       cb.name AS brand_name
+FROM erp_chassis_models cm
+JOIN erp_chassis_brands cb ON cb.id = cm.brand_id AND cb.tenant_id = cm.tenant_id
+WHERE cm.id = $1 AND cm.tenant_id = $2
+`
+
+type GetChassisModelParams struct {
+	ID       pgtype.UUID `json:"id"`
+	TenantID string      `json:"tenant_id"`
+}
+
+type GetChassisModelRow struct {
+	ID             pgtype.UUID        `json:"id"`
+	TenantID       string             `json:"tenant_id"`
+	BrandID        pgtype.UUID        `json:"brand_id"`
+	ModelCode      string             `json:"model_code"`
+	Description    string             `json:"description"`
+	Traction       string             `json:"traction"`
+	EngineLocation string             `json:"engine_location"`
+	Active         bool               `json:"active"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
+	BrandName      string             `json:"brand_name"`
+}
+
+func (q *Queries) GetChassisModel(ctx context.Context, arg GetChassisModelParams) (GetChassisModelRow, error) {
+	row := q.db.QueryRow(ctx, getChassisModel, arg.ID, arg.TenantID)
+	var i GetChassisModelRow
+	err := row.Scan(
+		&i.ID,
+		&i.TenantID,
+		&i.BrandID,
+		&i.ModelCode,
+		&i.Description,
+		&i.Traction,
+		&i.EngineLocation,
+		&i.Active,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.BrandName,
+	)
+	return i, err
+}
+
 const listControlCausals = `-- name: ListControlCausals :many
 
 SELECT id, tenant_id, code, description, causal_type, active, created_at, updated_at

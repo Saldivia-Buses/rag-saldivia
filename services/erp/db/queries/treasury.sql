@@ -68,7 +68,10 @@ WHERE id = $1 AND tenant_id = $2;
 
 -- name: ListCashCounts :many
 SELECT id, tenant_id, cash_register_id, date, expected, counted, difference, user_id, notes, created_at
-FROM erp_cash_counts WHERE tenant_id = $1 ORDER BY date DESC LIMIT $2 OFFSET $3;
+FROM erp_cash_counts
+WHERE tenant_id = $1
+  AND ($2::UUID IS NULL OR cash_register_id = $2::UUID)
+ORDER BY date DESC LIMIT $3 OFFSET $4;
 
 -- name: CreateCashCount :one
 INSERT INTO erp_cash_counts (tenant_id, cash_register_id, date, expected, counted, difference, user_id, notes)
@@ -112,6 +115,7 @@ SELECT r.id, r.tenant_id, r.bank_account_id, r.period, r.statement_balance,
 FROM erp_bank_reconciliations r
 JOIN erp_bank_accounts ba ON ba.id = r.bank_account_id
 WHERE r.tenant_id = $1
+  AND ($2::UUID IS NULL OR r.bank_account_id = $2::UUID)
 ORDER BY r.period DESC, ba.bank_name;
 
 -- name: CreateStatementLine :one

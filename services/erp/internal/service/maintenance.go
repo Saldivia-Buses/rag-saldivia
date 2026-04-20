@@ -27,6 +27,10 @@ func (s *Maintenance) ListAssets(ctx context.Context, tenantID, assetType string
 	})
 }
 
+func (s *Maintenance) GetAsset(ctx context.Context, id pgtype.UUID, tenantID string) (repository.ErpMaintenanceAsset, error) {
+	return s.repo.GetMaintenanceAsset(ctx, repository.GetMaintenanceAssetParams{ID: id, TenantID: tenantID})
+}
+
 var validAssetTypes = map[string]bool{"vehicle": true, "machine": true, "tool": true, "facility": true}
 
 func (s *Maintenance) CreateAsset(ctx context.Context, p repository.CreateMaintenanceAssetParams, userID, ip string) (repository.ErpMaintenanceAsset, error) {

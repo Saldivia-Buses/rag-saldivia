@@ -558,11 +558,11 @@ export interface EntityContact {
   id: string;
   tenant_id: string;
   entity_id: string;
-  name: string;
-  role?: string;
-  email?: string | null;
-  phone?: string | null;
-  primary: boolean;
+  type: string;
+  label: string;
+  value: string;
+  metadata?: Record<string, unknown> | null;
+  created_at: string;
 }
 
 export interface EntityNote {
@@ -570,7 +570,8 @@ export interface EntityNote {
   tenant_id: string;
   entity_id: string;
   user_id: string;
-  note: string;
+  type: string;
+  body: string;
   created_at: string;
 }
 

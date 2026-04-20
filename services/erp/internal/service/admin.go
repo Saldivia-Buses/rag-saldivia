@@ -101,3 +101,7 @@ func (s *Admin) ListTools(ctx context.Context, tenantID string, statusFilter int
 		ArticleFilter: articleFilter,
 	})
 }
+
+func (s *Admin) GetTool(ctx context.Context, id pgtype.UUID, tenantID string) (repository.ErpTool, error) {
+	return s.repo.GetTool(ctx, repository.GetToolParams{ID: id, TenantID: tenantID})
+}

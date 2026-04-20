@@ -154,6 +154,9 @@ func (m *mockQualityService) ListIndicators(_ context.Context, _, _, _ string) (
 func (m *mockQualityService) ListSupplierScorecards(_ context.Context, _ string, _, _ int) ([]repository.ListSupplierScorecardsRow, error) {
 	return nil, m.err
 }
+func (m *mockQualityService) GetSupplierScorecard(_ context.Context, _ pgtype.UUID, _ string) (repository.GetSupplierScorecardRow, error) {
+	return repository.GetSupplierScorecardRow{}, m.err
+}
 
 func (m *mockQualityService) CompleteActionTask(_ context.Context, _ pgtype.UUID, _, _, _ string) error {
 	return m.err

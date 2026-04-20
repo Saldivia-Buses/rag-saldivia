@@ -5,6 +5,11 @@ FROM erp_maintenance_assets WHERE tenant_id = $1
   AND (sqlc.arg(type_filter)::TEXT = '' OR asset_type = sqlc.arg(type_filter)::TEXT)
 ORDER BY code;
 
+-- name: GetMaintenanceAsset :one
+SELECT id, tenant_id, code, name, asset_type, unit_id, location, metadata, active, created_at
+FROM erp_maintenance_assets
+WHERE id = $1 AND tenant_id = $2;
+
 -- name: CreateMaintenanceAsset :one
 INSERT INTO erp_maintenance_assets (tenant_id, code, name, asset_type, unit_id, location, metadata)
 VALUES ($1, $2, $3, $4, $5, $6, $7)

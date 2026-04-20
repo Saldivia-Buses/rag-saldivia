@@ -27,7 +27,7 @@ type AccountingService interface {
 	SetFiscalYearResultAccount(ctx context.Context, tenantID string, yearID, accountID pgtype.UUID, userID, ip string) error
 	PreviewClose(ctx context.Context, tenantID string, yearID pgtype.UUID) (*service.PreviewCloseResult, error)
 	CloseFiscalYear(ctx context.Context, tenantID string, yearID pgtype.UUID, userID, ip string) (*service.CloseResult, error)
-	ListEntries(ctx context.Context, tenantID string, dateFrom, dateTo pgtype.Date, status string, limit, offset int) ([]repository.ListJournalEntriesRow, error)
+	ListEntries(ctx context.Context, tenantID string, dateFrom, dateTo pgtype.Date, status string, costCenterID pgtype.UUID, limit, offset int) ([]repository.ListJournalEntriesRow, error)
 	GetEntry(ctx context.Context, id pgtype.UUID, tenantID string) (*service.EntryDetail, error)
 	CreateEntry(ctx context.Context, req service.CreateEntryRequest) (*service.EntryDetail, error)
 	PostEntry(ctx context.Context, id pgtype.UUID, tenantID, userID, ip string) error
@@ -217,8 +217,17 @@ func (h *Accounting) ListEntries(w http.ResponseWriter, r *http.Request) {
 	status := r.URL.Query().Get("status")
 	dateFrom := pgDate(r.URL.Query().Get("date_from"))
 	dateTo := pgDate(r.URL.Query().Get("date_to"))
+	var costCenterID pgtype.UUID
+	if s := r.URL.Query().Get("cost_center_id"); s != "" {
+		id, err := parseUUID(s)
+		if err != nil {
+			erperrors.WriteError(w, r, erperrors.InvalidID("cost_center_id"))
+			return
+		}
+		costCenterID = id
+	}
 
-	entries, err := h.svc.ListEntries(r.Context(), slug, dateFrom, dateTo, status, p.Limit(), p.Offset())
+	entries, err := h.svc.ListEntries(r.Context(), slug, dateFrom, dateTo, status, costCenterID, p.Limit(), p.Offset())
 	if err != nil {
 		erperrors.WriteError(w, r, erperrors.Internal(err))
 		return
