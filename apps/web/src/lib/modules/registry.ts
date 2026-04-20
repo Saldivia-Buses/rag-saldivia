@@ -302,6 +302,11 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
   },
 
   // ── Inteligencia ─────────────────────────────────────────
+  estadisticas: {
+    id: "estadisticas",
+    nav: { label: "Estadísticas", icon: BarChart3, path: "/estadisticas", position: 90 },
+    routes: ["/estadisticas"],
+  },
   feedback: {
     id: "feedback",
     nav: { label: "Calidad IA", icon: MessageSquare, path: "/feedback", position: 91 },
