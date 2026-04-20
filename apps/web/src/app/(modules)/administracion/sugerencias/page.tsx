@@ -191,13 +191,44 @@ function DetailPanel({ suggestion, responses, onRespond, isSending }: { suggesti
   );
 }
 
+const TIPOS = [
+  { value: "bug", label: "Bug — algo no funciona" },
+  { value: "error", label: "Error — vi un mensaje raro" },
+  { value: "sugerencia", label: "Sugerencia — mejora a la app" },
+  { value: "comentario", label: "Comentario — feedback general" },
+];
+
 function CreateForm({ onSubmit, isPending }: { onSubmit: (origin: string, body: string) => void; isPending: boolean }) {
-  const [origin, setOrigin] = useState(""); const [body, setBody] = useState("");
+  const [origin, setOrigin] = useState("sugerencia");
+  const [body, setBody] = useState("");
   return (
     <form onSubmit={(e) => { e.preventDefault(); if (body.trim()) onSubmit(origin, body); }} className="flex flex-col gap-4">
-      <div><Label htmlFor="origin">Área / Origen</Label><Input id="origin" placeholder="Ej: Producción, Administración..." value={origin} onChange={(e) => setOrigin(e.target.value)} /></div>
-      <div><Label htmlFor="body">Sugerencia</Label><Textarea id="body" placeholder="Escribí tu sugerencia..." value={body} onChange={(e) => setBody(e.target.value)} className="min-h-[100px]" /></div>
-      <Button type="submit" disabled={!body.trim() || isPending}>{isPending ? "Enviando..." : "Enviar sugerencia"}</Button>
+      <div>
+        <Label htmlFor="origin">Tipo</Label>
+        <select
+          id="origin"
+          value={origin}
+          onChange={(e) => setOrigin(e.target.value)}
+          className="border-input bg-background mt-1.5 h-9 w-full rounded-md border px-3 text-sm"
+        >
+          {TIPOS.map((t) => (
+            <option key={t.value} value={t.value}>{t.label}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <Label htmlFor="body">Mensaje</Label>
+        <Textarea
+          id="body"
+          placeholder="Contá qué pasó (incluí pasos para reproducirlo si es un bug, o detalles del cambio que pedís)..."
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          className="mt-1.5 min-h-[120px]"
+        />
+      </div>
+      <Button type="submit" disabled={!body.trim() || isPending}>
+        {isPending ? "Enviando..." : "Enviar"}
+      </Button>
     </form>
   );
 }

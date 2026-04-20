@@ -24,6 +24,7 @@ import {
   Landmark,
   Contact,
   BarChart3,
+  Megaphone,
   type LucideIcon,
 } from "lucide-react";
 
@@ -322,13 +323,19 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
 /**
  * Core nav items — always visible, not module-dependent.
  *
- * Chat (agente) and Colecciones (tree-RAG) son Phase 2 de ADR 026.
- * Hasta que existan las pages bajo /chat y /collections, las entries
- * quedan fuera del sidebar para evitar 404 al click.
+ * Chat (agente) y Colecciones (tree-RAG) son Phase 2 de ADR 026 —
+ * sus entries vuelven cuando existan las pages bajo /chat y /collections.
  */
 export const CORE_NAV_ITEMS: {
   label: string;
   icon: LucideIcon;
   path: string;
   position: number;
-}[] = [];
+}[] = [
+  {
+    label: "Sugerencias y bugs",
+    icon: Megaphone,
+    path: "/administracion/sugerencias",
+    position: 99,
+  },
+];
