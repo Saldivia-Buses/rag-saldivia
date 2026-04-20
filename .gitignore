@@ -119,3 +119,5 @@ firecrawl/
 .firecrawl/
 .claude/settings.local.json
 deploy/frontdoor/frontdoor
+# Added by code-review-graph
+.code-review-graph/
