@@ -1,273 +1,202 @@
-# Next session — 2.0.21: follow-up filters + remaining [id] + write paths scout
+# Next session — 2.0.21 quality close: DB migrada + E2E + polish loop
 
-**Goal**: cerrar los filtros backend deferidos en 2.0.20 (las tres
-detail pages nuevas filtran client-side, lo que no escala), sumar los
-`[id]` restantes con pequeño backend lift, y empezar a explorar write
-paths — el siguiente gran eje Phase 1 ahora que §UI parity read-only
-se está agotando.
+**Pivot crítico** (post 2026-04-20): después de shipear 15 clusters
+en 2.0.21 sin polish profundo, el usuario reportó que "fallan casi
+todos en un montón de puntos". El target de 20 clusters/sesión queda
+**subordinado a calidad**: un cluster sin E2E pasando + sin probarse
+contra DB migrada NO cuenta como shipeado. Build verde + typecheck
+verde no es evidencia suficiente.
 
-Target: **20 clusters**. Mix base:
-- **~5 filter endpoints** (3 confirmados: reconciliations / cash-
-  counts / entries; 2-3 TBD desde Explore 6 scan de detail pages
-  con `.filter(client-side)` pattern).
-- **~6 nuevos `[id]`** con backend lift (GetTool, GetAsset,
-  GetChassisModel, GetCarroceriaModel, GetScorecard + 1-2 TBD
-  desde Explore 5). Los 2 chassis son entidades distintas (tablas
-  `erp_chassis_models` + `erp_carroceria_models`), no rename.
-- **~3 direct-endpoint swaps** (GetArticle confirmado — backend
-  ya existe, solo swap frontend list-cache → direct; 2 TBD desde
-  Explore 6 barriendo `pageSize=500` patterns).
-- **~4 write scouts** (entity note, credit rating, supplier
-  demerit confirmados; 1-2 TBD desde Explore 7). Pattern ref:
-  `CreateTenant` (auditor.Write + publisher.Notify).
+Esta sesión NO suma clusters nuevos. Cierra 2.0.21 con E2E coverage
+real + polish loop antes del PR.
 
-Total esperado (7 Explores paralelos): 4 cerrados, 3 corriendo
-para cerrar el mix antes de codear.
+## Estado al cierre de la sesión anterior (2026-04-20)
 
-## Cierre 2.0.20 (6 clusters + backend lift)
+**Branch**: `2.0.21` (no merged), 18 commits sobre `main`:
+- 15 § clusters shipped (1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16).
+- 3 docs (plan inicial + scale a 12 + scale a 20).
+- 1 chore: bump working branch.
+- 1 chore: `next.config.ts` rewrites para que `make dev-frontend`
+  funcione en local sin Traefik (fix descubierto durante intento de
+  testing — login pegaba a Next.js en vez de backend → "Error
+  interno").
 
-| Ciclo | Clusters nuevos | Backend adds | Tag | PR |
-|---|---:|---|---|---:|
-| 2.0.20 | 6 | GetBankAccount, GetCashRegister, GetCostCenter | v2.0.20 | #167 |
+**Deferred (NO entran en 2.0.21)**: clusters 17-20 (POST credit
+rating, supplier demerit, invoice note, work_order_part). Vuelven
+sólo después de que 1-16 estén pulidos.
 
-Totales post-2.0.20: **54 clusters** en `ui-parity.md`, **124 `page.tsx`**
-shipped, `[id]` en 9 módulos, 1 waiver (W-009).
+**Linter mods stasheados**: `git stash list` muestra "linter mods
+pre-2.0.21" (CLAUDE.md dup block + .gitignore + .claude/settings.json).
+Pop al post-merge final.
 
-Workstation `srv-ia-01` sincronizada en `08ac9de3`.
+**Phase 0 incident encontrado y fixeado durante boot**:
+- Redis container estaba healthy en docker pero `Connection reset
+  by peer` desde el host — restart resolvió.
+- Postgres tenant `dev` tenía outbox-drainer en loop con
+  "current transaction is aborted" (SQLSTATE 25P02). Restart de
+  postgres lo limpió pero la tabla `outbox` puede tener basura.
+  Confirmar antes de cargar tenant migrado.
 
-## Final goal (ADR 026 — no se pierde de vista)
+## Goal
 
-SDA reemplaza Histrix. Empleado abre SDA y:
+Cerrar 2.0.21 con la 1ra release que tiene **E2E suite verde
+contra DB migrada con data real**. Es el primer ciclo donde se
+acepta un PR sólo si reproduce el flujo del usuario, no sólo
+compila.
 
-1. UI moderna cubriendo **todo** lo que Histrix hacía (1:1 parity).
-2. Chat-agente como representante — cap parity chat ↔ UI.
-3. Dashboard personal + rutinas personales.
-4. Agentes background: mail, WhatsApp, tree-RAG con ACL.
+## Phase 1 — DB migrada local (Phase 0 prerequisite)
 
-## Estado post-2.0.20
+Path A (preferido): `pg_dump` desde workstation `srv-ia-01`
+(`172.22.100.23`). Memoria `infrastructure-access` cubre VPN +
+SSH + creds.
 
-- **Entity symmetry completa**: proveedor/cliente/empleado tienen
-  todos `[id]/page.tsx` contra `GetEntity`. El patrón de "layer role-
-  specific data sobre la ficha base" quedó probado: demeritos para
-  supplier, asistencia para employee, contactos/notas para customer.
-- **`[id]` pattern** vive en 9 módulos (se sumaron entities +
-  treasury/CC). Las 3 pages nuevas de tesorería/contabilidad filtran
-  related data client-side porque los list endpoints no aceptan los
-  filtros. Es deuda concreta a cerrar.
-- **Herramientas, chasis modelo, supplier scorecard, quality
-  indicator**: siguen sin detail endpoint. Cada uno requiere `GetX`
-  pequeño + frontend page — mismo patrón que 2.0.20 clusters 4-6.
-- **Deuda explícita** heredada (sin abrir aún):
-  - Admin Tier B refactor (2.0.17 — products/tools handler split).
-  - `GetAsset` / `GetArticle` endpoints dedicados (2.0.18 clusters
-    #7/#8 usan list cache).
-  - Chasis modelo nomenclature: frontend dice "chasis-modelos",
-    backend expone "carroceria-models" — resolver antes de shipear.
+Pasos:
+1. Confirmar VPN activa.
+2. SSH a workstation: identificar el container Postgres + nombre
+   de DB del tenant migrado (probablemente `tenant_saldivia` o
+   similar — verificar en runtime).
+3. `pg_dump --format=custom --no-owner --no-acl --exclude-schema=audit ...`
+   — dump del tenant migrado. **Excluir** audit schema y
+   row-level-security policies para no romper el restore local.
+4. `scp` el dump a local.
+5. En local: crear `tenant_test` DB en el deploy postgres
+   (`deploy-postgres-1`). `pg_restore` el dump.
+6. Registrar el tenant en `platform.tenants` para que SDA lo
+   reconozca.
+7. Crear un user de prueba con role admin (o reusar uno existente
+   del dump si las creds son recuperables).
 
-## Plan de trabajo 2.0.21
+Path B (fallback si VPN no anda): `sda migrate-legacy --mysql-dsn=...
+--pg-dsn=... --tenant=test` desde el tunnel a Histrix MySQL. Más
+lento (~2.6M rows en la tabla #1 del Pareto), pero valida el
+migrator de paso. Usa memoria `histrix_access` para el tunnel.
 
-### Pre-work — DONE
+## Phase 2 — E2E baseline run
 
-```
-c2e78981 docs: 2.0.21 plan — expand target a 12 clusters (después 20)
-44267dd0 chore: bump working branch 2.0.20 → 2.0.21
-```
+`apps/web/e2e/` tiene **5 specs ya escritos**: login, erp-mutations,
+erp-navigation, modules-accessibility, settings, chat. Playwright
+1.59 instalado.
 
-Branch `2.0.21` cortado desde `main` (HEAD `7f25b8d3`). Linter mods
-(CLAUDE.md dup block, .gitignore, .claude/settings.json) stasheados
-como `linter mods pre-2.0.21` — pop al post-merge.
+Pasos:
+1. `cd apps/web && bunx playwright install` — descargar browsers.
+2. `bunx playwright test` contra el dev local (con DB migrada
+   activa).
+3. Reporte de fails: agrupar por root cause (UI rota, validación
+   ausente, error msg malo, race condition, etc.).
+4. Triage: cada fail = ticket implícito. Priorizar por bloqueante
+   vs cosmético.
 
-### Investigación (7 Explore agents en paralelo)
+**Importante**: no suprimir fails ni skipear tests. Si un test
+existente está mal escrito, fixearlo. Si un cluster shipped no
+pasa el spec, eso es un bug del cluster — fixear el cluster.
 
-**4 cerrados**:
+## Phase 3 — E2E coverage para los 15 clusters de 2.0.21
 
-1. **Filter endpoints** ✅ — handlers confirmados en `services/erp/internal/handler/`:
-   - `ListReconciliations` treasury.go:534, sqlc `treasury.sql.go:1148`.
-   - `ListCashCounts` treasury.go:395, sqlc `treasury.sql.go:846`.
-   - `ListEntries` accounting.go:214, sqlc `accounting.sql.go:843`.
-   - Pattern `ListIncidents` usa cast condicional
-     `($N::UUID IS NULL OR col = $N)`, no COALESCE.
-   - Red flag: cost-center `[id]/page.tsx` **no tiene sección
-     entries** — cluster #3 requiere agregar UI consumer también.
+Los specs existentes cubren el módulo ERP general pero no los
+clusters específicos del ciclo. Agregar:
 
-2. **[id] nuevos** ✅ — 5 targets mapeados:
-   - `GetArticle` **YA EXISTE** (stock.go:42) — es solo swap frontend.
-   - `GetTool` / `GetAsset` / `GetScorecard`: falta sqlc+handler+page.
-   - Chasis: DOS tablas distintas `erp_chassis_models` (motor,
-     tracción) y `erp_carroceria_models` (carrocería, peso ejes).
-     Split en 2 clusters.
+| Cluster | Spec a agregar |
+|---|---|
+| 1 — filter reconciliations | `e2e/treasury-reconciliations.spec.ts`: navegar a cuenta-bancaria detail, verificar Network call con `?bank_account_id=` |
+| 2 — filter cash-counts | `e2e/treasury-cash-counts.spec.ts`: ídem para caja detail |
+| 3 — filter entries + UI consumer | `e2e/accounting-cost-center.spec.ts`: ver sección "Asientos imputados" |
+| 4 — GetTool detail | `e2e/almacen-tool-detail.spec.ts`: ficha + historial |
+| 5 — GetAsset detail | `e2e/maintenance-asset-detail.spec.ts`: planes |
+| 6 — GetChassisModel | `e2e/manufacturing-chassis-model.spec.ts` |
+| 7 — GetCarroceriaModel + BOM | `e2e/manufacturing-carroceria-model.spec.ts` |
+| 8 — GetScorecard | `e2e/quality-scorecard.spec.ts`: badge color |
+| 10 — GetUnit | `e2e/manufacturing-unit-detail.spec.ts`: pending controls |
+| 11 — GetActionPlan | `e2e/quality-action-plan.spec.ts` |
+| 12 — GetNC | `e2e/quality-nc.spec.ts` |
+| 13 — GetArticle direct | extender `erp-navigation.spec.ts`: assert single fetch |
+| 14 — POST entity note | extender `erp-mutations.spec.ts`: textarea → submit → re-fetch |
+| 15 — POST entity contact | ídem cluster 14 |
+| 16 — POST inventory movement | extender `erp-mutations.spec.ts`: pickers + submit |
 
-3. **Empty modules abastecimiento/comex** ❌ — **ya shipeados**.
-   Frontend 293+260 líneas, backend + registry. Batch 3 original
-   muerto; reemplazado por direct swaps + write scouts.
+Cada spec debe cubrir: **happy path + 1 error path + 1 empty
+state**. No optar por "smoke test que sólo verifica que la página
+carga" — eso ya está en `erp-navigation.spec.ts`.
 
-4. **Write scouts** ✅ — 3 candidatos con pattern reference
-   (`CreateTenant` en `services/app/internal/core/platform/`):
-   - POST entity note (A): endpoint NO existe; tabla
-     `erp_entity_notes` existe; frontend detail proveedor
-     ya tiene lugar obvio para textarea.
-   - POST credit rating (B): endpoint NO existe; tabla
-     `erp_credit_ratings` existe; requiere EntityPicker + enum.
-   - POST reclamo pago (C): NO hay página frontend — DESCARTAR,
-     L cost.
+## Phase 4 — Polish loop por cluster
 
-**3 corriendo**:
+Criteria que cada cluster debe cumplir antes de marcarse "done"
+(memoria `feedback_quality_over_quantity`):
 
-5. **Más `[id]`** (Explore 5) — barriendo warehouse / maintenance /
-   manufacturing / hr / sales / quality / accounting para encontrar
-   ≥ 7 candidatos backend-lift pattern.
-6. **Filter + direct swaps** (Explore 6) — barriendo
-   `apps/web/.../[id]/page.tsx` por `.filter(x => x.fk === id)` y
-   por `pageSize=500`. Buscar 2-3 de cada.
-7. **Write POSTs adicionales** (Explore 7) — scanning entity
-   contacts / asset assignments / work order updates / odometer
-   readings / price list lines / quotation lines. Buscar ≥ 5.
+- **Validación de form**: required, formato (UUID/email/numérico),
+  rangos. Mensajes en español, claros.
+- **Defaults inteligentes**: fecha = hoy, tipo = más común,
+  unidad = "und" para movements, etc.
+- **Submit deshabilitado** mientras inválido o `isPending`.
+- **Mensaje de error post-fail** claro, no "Error interno". Distinguir
+  401 / 403 / 422 / 5xx.
+- **Empty state explicativo** ("Sin notas registradas — usá el form
+  abajo para crear la primera"), no sólo "Sin datos".
+- **Confirmación destructiva** para delete / override / irreversible.
+- **Loading state visible** (skeleton, spinner, disabled state).
 
-### Batches finales (20 clusters post-Explore × 7)
+Para cada cluster que falla algún criterio: fix + nuevo commit
+dentro de `2.0.21`. Empujar el spec primero (TDD), después fix.
 
-**Batch 1 — Filter endpoints + detail enrichment** (3 clusters):
+## Phase 5 — Cierre 2.0.21
 
-1. `ListReconciliations?bank_account_id=` — handler+sqlc patch
-   + cuenta-bancaria detail consume.
-2. `ListCashCounts?cash_register_id=` — handler+sqlc patch + caja
-   detail consume.
-3. `ListEntries?cost_center_id=` — handler+sqlc patch **+ agregar
-   sección "Asientos imputados" en centro-costo detail** (la UI
-   consumer no existe aún).
-
-**Batch 2 — Nuevos `[id]` con backend lift** (9 clusters):
-
-4. **GetTool** — sqlc `GetTool` (falta) + handler + [id] page +
-   historial via `erp_tool_movements`.
-5. **GetAsset (maintenance)** — sqlc `GetMaintenanceAsset` (falta)
-   + handler + [id] page + `erp_maintenance_plans`
-   + `erp_work_orders` relacionados.
-6. **GetChassisModel** — sqlc `GetChassisModel` (falta) + handler
-   `{id}` + [id] page. Tabla `erp_chassis_models` (motor/tracción).
-7. **GetCarroceriaModel** — sqlc `GetCarroceriaModel` (falta) +
-   handler `{id}` + [id] page + `erp_carroceria_bom`. Tabla
-   `erp_carroceria_models` (carrocería/peso ejes). NOTA: son DOS
-   entidades distintas, no rename.
-8. **GetScorecard** — sqlc `GetSupplierScorecard` (falta) + handler
-   + [id] page + métricas históricas por proveedor.
-9. **GetInspection (QC compras)** — sqlc ✓ existe; solo handler
-   + [id] page + `erp_inspection_results`.
-10. **GetUnit (manufacturing units)** — sqlc ✓ existe; solo handler
-    + [id] page + `erp_unit_controls`.
-11. **GetActionPlan (calidad)** — sqlc ✓ existe; solo handler
-    + [id] page + `erp_action_tasks` + assignments.
-12. **GetNC (quality non-conformity)** — sqlc ✓ existe; solo handler
-    + [id] page + `erp_action_plans` + findings.
-
-**Batch 3 — Direct-endpoint swap** (1 cluster):
-
-13. **GetArticle direct** — backend `GET /v1/erp/stock/articles/{id}`
-    YA EXISTE (stock.go:42). Solo swap frontend:
-    `articulos/[id]/page.tsx` de `list.find(a => a.id === id)` a
-    `useQuery(erpKeys.stockArticle(id))`. Cierra deuda 2.0.18 #8.
-    Costo XS.
-
-**Batch 4 — Write scouts** (7 clusters, pattern ref `CreateTenant`):
-
-14. **POST entity note** — handler+service+auditor+publisher+frontend
-    textarea en proveedor/cliente detail. Tabla `erp_entity_notes`
-    existe.
-15. **POST entity contact** — handler `AddContact` YA EXISTE
-    (entities.go:297). Solo frontend: formulario compacto + dropdown
-    type (phone/email/address/bank_account) en proveedor detail.
-    Costo XS.
-16. **POST inventory movement** — handler `CreateMovement` YA EXISTE
-    (stock.go:200). Solo frontend: botón "+ Movimiento" en warehouse
-    o articulos detail + modal con `movement_type` enum. Costo XS.
-17. **POST credit rating** — handler+service+auditor+publisher+frontend
-    modal con EntityPicker + enum A|B|C|X + reference + fecha.
-18. **POST supplier demerit** — handler+service+auditor+publisher+
-    frontend desde scorecard contexto. Tabla `erp_supplier_demerits`.
-19. **POST invoice note** — handler+service+auditor+publisher+frontend
-    sección "Observaciones" en invoice detail. Tabla
-    `erp_invoice_notes`.
-20. **POST work_order_part** — handler+service+auditor+publisher+
-    frontend sección "Partes" en work order detail. Tabla
-    `erp_work_order_parts`.
-
-### Cierre esperado
-
-- 20 clusters nuevos → total ≥ 74.
-- Los 3 filter endpoints de 2.0.20 cerrados (detail pages sin
-  filter client-side).
-- Deuda 2.0.18 (#7/#8) cerrada: #7 via GetAsset cluster completo,
-  #8 via GetArticle direct swap.
-- 6 nuevos `[id]` en calidad/manufacturing/compras (inspection,
-  unit, action plan, NC, scorecard, tool).
-- 7 write paths shipeados — el expansion post-2.0.11 arranca acá.
-- 2 "frontend-only" write clusters (contact, movement) validan
-  handlers write existentes sin frontend consumer.
-- Phase 0 gates verdes.
-
-### Pool NO shipeado (remaining candidates para 2.0.22+)
-
-- **GetWarehouse** — requiere sqlc `GetWarehouse` creation (falta).
-- **GetAudit (calidad)** — requiere sqlc `GetAudit` creation.
-- **POST payment_complaint** — requiere crear módulo
-  `/reclamos-pagos` entero. Large.
-- **POST accounting_entry_line** — requiere lógica doble-entrada
-  contable. Large.
-- **Direct swap centros-costo parent** — niche hierarchical lookup.
-
-## Candidatos para sesiones futuras (lookahead — NO 2.0.21)
-
-| Orden | Tema | Notas |
-|---:|---|---|
-| 1 | **Write paths masivos** en clusters read-only | Expansión post-scout: create/update en reclamos, importaciones, calificaciones. Entity pickers, validación, NATS + audit estandarizado. |
-| 2 | **Reports** (Phase 1 §Reports parity) | Libro IVA, mayor contable, tax-book. Eje separado de §UI parity. |
-| 3 | **Seamless-day cutover test** | Phase 1 gating final. |
-| 4 | **Admin Tier B refactor** | Deuda de 2.0.17 — products/tools a handlers dedicados. |
-
-## Trampas heredadas (mismas que 2.0.18/19/20)
-
-- **Agents hallucinate**: verificar con grep antes de construir.
-  Pre-check cada endpoint claim del agente. El reporte de Explore
-  de 2.0.20 fue preciso — el pattern (citar ruta chi + handler line
-  + list page path) funcionó y hay que replicarlo.
-- **sqlc regen drift**: `make sqlc-erp` con v1.30.0 reescribe 14
-  archivos por diff de formatter. Editar generated code a mano —
-  2.0.20 validó otra vez el pattern con GetBankAccount/Cash/CC.
-- **Mock interfaces must track**: cada nuevo método en la interfaz
-  del handler rompe `accounting_test.go` / `treasury_test.go`. En
-  2.0.20 se detectó post-commit (build falla, no test falla) — hay
-  que correr `make test` antes del PR.
-- **Pre-existing lint warnings**: file-upload.tsx tiene ~500 errores
-  desde main. Ignorable.
-- **apps/web registry**: agregar nueva ruta top-level en
-  `src/lib/modules/registry.ts`, NO sólo crear la carpeta.
-- **Pre-existing linter-modified files** (CLAUDE.md, .gitignore,
-  .claude/settings.json): se tocan entre sesiones fuera del commit.
-  Stash antes de `git checkout main` post-merge. Ya surgió en 2.0.20.
-- **Branch protection requires CI**: `gh pr merge 2.0.N` sin `--auto`
-  falla si status checks no pasaron. Usar `--auto --squash
-  --delete-branch` para queue, o esperar que CI termine.
-- **Nested git repos**: `apps/web/.git` es repo separado. Usar
-  `git -C /home/enzo/rag-saldivia` para outer.
-- **cwd persiste entre Bash calls**: volver con rutas absolutas.
-
-## Fuera de scope 2.0.21
-
-- **Phase 2+** (chat agent, prompts jerárquicos, tree-RAG, ACL).
-- **ADR 027 §UI parity row 1 tick**: requiere cubrir ~4,500 forms.
-- **W-009 file-upload** (bulk CSV/XLS bank import): sigue waived.
-- **Write paths masivos**: sólo el scout de 1-2 clusters. La
-  expansión full vuelve cuando §UI parity read-only esté agotada.
-
-## Post-PR cierre ciclo
+**Sólo cuando**:
+- Todos los E2E (existentes + nuevos) pasan contra DB migrada.
+- Manual smoke por área (compras, tesorería, contabilidad,
+  almacén, mantenimiento, manufactura, calidad, ingeniería) hecho
+  por el usuario con el tenant migrado.
+- Ningún cluster shipped tiene un fail en el polish criteria
+  documentado en este doc.
 
 ```bash
 gh pr create --base main --head 2.0.21 --title "..." --body "..."
-gh pr merge 2.0.21 --squash --auto --delete-branch   # auto-merge on CI green
+gh pr merge 2.0.21 --squash --auto --delete-branch
 # Post-merge:
 git stash push -m "linter mods" -- CLAUDE.md .gitignore .claude/settings.json
 git checkout main && git pull origin main
 git stash pop
 git tag v2.0.21 && git push origin v2.0.21
 gh release create v2.0.21 --title "..." --notes "..."
-ssh sistemas@srv-ia-01 "cd /opt/saldivia/repo && git pull origin main"
+ssh sistemas@srv-ia-01 "cd /opt/saldivia/repo && git pull origin main && docker compose up -d --build"
 ```
+
+## Fuera de scope
+
+- **Clusters 17-20** (write scouts deferred): vuelven en 2.0.22
+  como primera tanda *con* E2E desde el commit inicial.
+- **Cualquier cluster nuevo** mientras 1-16 no estén polished.
+- **Refactor estructural** (admin Tier B, fusion ERP). Sigue siendo
+  ADR 027 territory para sesiones futuras.
+- **Phase 2+** (chat agent, prompts jerárquicos, tree-RAG, ACL).
+
+## Trampas heredadas / pre-existing
+
+- **Redis local crash silencioso** — si `make dev-services` muere
+  por "redis is required for token revocation", `docker restart
+  deploy-redis-1`. Worth investigar root cause.
+- **Postgres outbox-drainer aborted state** — el tenant `dev` puede
+  necesitar `TRUNCATE outbox` antes de iniciar otra vez. Confirmar
+  que el `dev` tenant no se corrompa al cargar tenant migrado en
+  paralelo.
+- **NEXT_PUBLIC_API_URL** se inyecta vacío por `make dev-frontend`
+  por diseño — el fix `next.config.ts` (commit `chore(dev)`) ya
+  agrega rewrites condicionales. **Verificar** que no rompa el
+  build de producción (CI debería detectarlo).
+- **Mock interfaces must track**: cada nuevo método agregado al
+  handler interface rompe `*_test.go` mocks. Validado otra vez
+  durante 2.0.21.
+- **sqlc regen drift**: editar generated `*.sql.go` a mano (memoria
+  `sqlc_version_drift`).
+- **cwd persiste entre Bash calls**: usar rutas absolutas o
+  `git -C /home/enzo/rag-saldivia`.
+- **Linter mods stasheados** (`linter mods pre-2.0.21`): pop al
+  post-merge final, NO antes.
+
+## Candidatos sesiones futuras (2.0.22+)
+
+| Orden | Tema | Pre-req |
+|---:|---|---|
+| 1 | **Write scouts 17-20 con E2E desde día 1** | 2.0.21 cerrado |
+| 2 | **Reports** (Libro IVA, mayor contable, tax-book) | 2.0.21 cerrado |
+| 3 | **Seamless-day cutover test** (Phase 1 gating final) | E2E coverage estable |
+| 4 | **Admin Tier B refactor** (deuda 2.0.17) | scope independiente |
+| 5 | **Bulk write paths** (create/update masivo en clusters scouted) | scout de 2.0.22 validado |
