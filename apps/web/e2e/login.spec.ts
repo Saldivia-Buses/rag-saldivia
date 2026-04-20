@@ -17,8 +17,8 @@ test.describe("Login", () => {
     await page.locator("#password").fill(TEST_PASSWORD);
     await page.locator('button[type="submit"]').click();
 
-    await page.waitForURL(/\/dashboard/, { timeout: 15_000 });
-    await expect(page).toHaveURL(/\/dashboard/);
+    await page.waitForURL(/\/inicio/, { timeout: 15_000 });
+    await expect(page).toHaveURL(/\/inicio/);
   });
 
   test("login with invalid credentials shows error", async ({ page }) => {

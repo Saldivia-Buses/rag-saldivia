@@ -14,5 +14,5 @@ export async function login(
   await page.locator("#password").fill(password);
   await page.locator('button[type="submit"]').click();
 
-  await page.waitForURL(/\/dashboard/, { timeout: 15_000 });
+  await page.waitForURL(/\/inicio/, { timeout: 15_000 });
 }
