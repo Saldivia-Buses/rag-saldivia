@@ -10,6 +10,7 @@ import { fmtMoney, fmtDateShort } from "@/lib/erp/format";
 import { permissionErrorToast } from "@/lib/erp/permission-messages";
 import type { TreasuryMovement, Check, BankBalance, Reconciliation, Receipt } from "@/lib/erp/types";
 import { ErrorState } from "@/components/erp/error-state";
+import { RequirePerm } from "@/components/auth/require-perm";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -116,9 +117,11 @@ export default function TesoreriaPage() {
             <h1 className="text-xl font-semibold tracking-tight">Tesorería</h1>
             <p className="text-sm text-muted-foreground mt-0.5">Movimientos, cheques y saldos bancarios</p>
           </div>
-          <Button size="sm" onClick={() => setMovementOpen(true)}>
-            <PlusIcon className="size-4 mr-1.5" />Nuevo movimiento
-          </Button>
+          <RequirePerm perm="erp.treasury.write">
+            <Button size="sm" onClick={() => setMovementOpen(true)}>
+              <PlusIcon className="size-4 mr-1.5" />Nuevo movimiento
+            </Button>
+          </RequirePerm>
         </div>
 
         <div className="grid grid-cols-3 gap-3 mb-6">
