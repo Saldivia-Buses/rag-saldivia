@@ -35,7 +35,7 @@ import { api } from "@/lib/api/client";
 
 <PrefetchLink
   href={`/tesoreria/cajas/${row.id}`}
-  prefetch={() => ({
+  prefetchQuery={() => ({
     queryKey: erpKeys.cashRegister(row.id),
     queryFn: () => api.get(`/v1/erp/treasury/cash-registers/${row.id}`),
   })}

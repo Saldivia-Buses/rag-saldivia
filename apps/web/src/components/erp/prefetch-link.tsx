@@ -8,14 +8,14 @@ import {
 } from "@tanstack/react-query";
 
 interface PrefetchLinkProps<TData>
-  extends Omit<LinkProps, "onMouseEnter" | "onFocus" | "onTouchStart"> {
-  prefetch: () => FetchQueryOptions<TData>;
+  extends Omit<LinkProps, "onMouseEnter" | "onFocus" | "onTouchStart" | "prefetch"> {
+  prefetchQuery: () => FetchQueryOptions<TData>;
   children: React.ReactNode;
   className?: string;
 }
 
 export function PrefetchLink<TData>({
-  prefetch,
+  prefetchQuery,
   children,
   className,
   ...linkProps
@@ -26,7 +26,7 @@ export function PrefetchLink<TData>({
   const trigger = () => {
     if (prefetched.current) return;
     prefetched.current = true;
-    queryClient.prefetchQuery(prefetch());
+    queryClient.prefetchQuery(prefetchQuery());
   };
 
   return (
