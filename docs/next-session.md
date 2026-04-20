@@ -118,14 +118,16 @@ TTFB / TTI / CLS / LCP. Lighthouse ≥ 95 en todas las pages de
 
 ## Phase 1 — DB migrada local (Phase 0 prerequisite)
 
-Path A (preferido): `pg_dump` desde workstation `srv-ia-01`
-(`172.22.100.23`). Memoria `infrastructure-access` cubre VPN +
-SSH + creds.
+Path A (preferido): `pg_dump` desde workstation `srv-ia-01`.
+Memoria `reference_workstation_ssh` — usar `ssh sistemas@srv-ia-01`
+vía Tailscale (`100.119.11.46`), **NO** la IP corporativa
+`172.22.100.23`. La key local ya está autorizada.
 
 Pasos:
-1. Confirmar VPN activa.
-2. SSH a workstation: identificar el container Postgres + nombre
-   de DB del tenant migrado (probablemente `tenant_saldivia`).
+1. Confirmar Tailscale activo (`tailscale status` debe mostrar
+   `srv-ia-01`).
+2. `ssh sistemas@srv-ia-01`: identificar el container Postgres +
+   nombre de DB del tenant migrado (probablemente `tenant_saldivia`).
 3. `pg_dump --format=custom --no-owner --no-acl
    --exclude-schema=audit ...` — dump del tenant migrado.
 4. `scp` el dump a local.
@@ -156,10 +158,15 @@ Pasos:
    **rutas huérfanas** (no se llega desde la UI).
 4. **Para cada huérfana**: decidir → agregar al sidebar / mover
    bajo otro parent / borrar si es dead code.
-5. **Verificar coherencia con Histrix**: cada area de Histrix
-   debería tener su contraparte SDA. `.intranet-scrape/xml-forms/`
-   tiene 99 area form-groups — el sidebar debería reflejar las que
-   tienen rutas SDA listas.
+5. **Histrix es el north star de IA** (memoria
+   `feedback_histrix_north_star_for_ia`): toda decisión de
+   sidebar/jerarquía/agrupación espeja `.intranet-scrape/xml-forms/`
+   (99 area form-groups, ~4,500 XML-forms). SDA reemplaza a
+   Histrix, NO reinventa. Si una página hoy vive bajo el padre
+   equivocado, el padre correcto se determina mirando el form-group
+   de Histrix correspondiente, no por intuición de UX moderno. El
+   sidebar SDA refleja las áreas que tienen rutas listas y
+   mantiene **misma agrupación** que la intranet legacy.
 6. **Resolver paths inconsistentes**:
    - Tesorería: ¿va bajo `/administracion/tesoreria/*` o
      `/tesoreria/*`? Decidir y mover. Hoy está bajo
