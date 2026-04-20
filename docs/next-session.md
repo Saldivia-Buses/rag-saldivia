@@ -81,6 +81,41 @@ error handling no-genérico, formularios ergonómicos. Es el primer
 ciclo donde se acepta merge sólo si el usuario puede operar la app
 contra DB migrada con datos reales sin tropezarse.
 
+## North star — McMaster-Carr velocity, mejor UI
+
+Memoria `feedback_mcmaster_velocity_target` es el benchmark
+explícito. El estándar:
+
+- **Page load < 300ms** click → first paint útil.
+- **Cero waterfalls** de fetch — paralelizar `useQuery`s, prefetch
+  en hover.
+- **Filtros instantáneos** — sin spinners visibles para acciones
+  < 200ms.
+- **Búsqueda predictiva** mientras tipeás, no presioná-Enter.
+- **Drill-down sin perder contexto** — filtros + scroll position
+  preservados al volver desde detail.
+- **Soporte teclado total** — `/` focus búsqueda, `Esc` cierra,
+  flechas navegan tablas, Enter abre detail.
+- **Optimistic UI** en mutations frecuentes (notas, contactos,
+  movimientos).
+- **Prefetch en hover** sobre rows clicables.
+- **Tablas densas pero legibles** — tabular-nums, sticky header,
+  filas cliqueables enteras.
+- **UI estéticamente mejor que McMaster** — McMaster es funcional
+  pero austero (años '90). SDA = velocidad McMaster + estética
+  contemporánea (shadcn / Inter / dark mode pulido).
+
+**Performance budget**: cada PR debe demostrar que no empeora
+TTFB / TTI / CLS / LCP. Lighthouse ≥ 95 en todas las pages de
+`(modules)/**`.
+
+**Anti-patterns explícitos**:
+- "Loading…" placeholder genérico.
+- `pageSize=500` con filter client-side.
+- Modales sobre modales.
+- Confirmaciones para acciones reversibles.
+- Re-render del shell al navegar tabs internos.
+
 ## Phase 1 — DB migrada local (Phase 0 prerequisite)
 
 Path A (preferido): `pg_dump` desde workstation `srv-ia-01`
@@ -245,23 +280,45 @@ Pasos:
    que lea del JWT/auth store. Si NO lo hay, hide el botón.
 4. Tests: spec por permiso (user sin perm → botón no visible).
 
-## Phase 7 — Performance audit
+## Phase 7 — Performance audit (McMaster-grade)
 
-Findings actuales:
-- `cluster 13 GetArticle` cierra deuda 2.0.18: el frontend cargaba
-  500 articles para mostrar 1. Hay que asumir que **hay más
-  patterns así** en otras pages.
+Norte: page load <300ms, cero waterfalls, prefetch en hover,
+optimistic UI. Memoria `feedback_mcmaster_velocity_target`.
 
 Pasos:
-1. `grep -rE "page_size=(500|200|100)" apps/web/src/` → cada match
-   es un candidato a swap por endpoint directo.
-2. `useQuery` con keys que NO se invalidan correctamente al mutar
-   → leak de stale cache. Audit.
-3. `enabled: !!id` debería ser estándar en queries dependientes —
-   verificar que ninguna query corre antes de tener el ID.
-4. **N+1 patterns**: pages que hacen un query por row de la lista.
-   Ejemplo: si lista de proveedores hace `useQuery(supplierDemerits)`
-   por cada uno → bug.
+1. **Lighthouse baseline**: correr Lighthouse sobre cada page de
+   `(modules)/**`. Anotar TTFB / TTI / CLS / LCP. Cualquier page
+   con score < 95 va a la lista de fixes.
+2. **`grep -rE "page_size=(500|200|100)" apps/web/src/`** → cada
+   match es swap obligatorio (endpoint directo o pagination
+   server-side).
+3. **Waterfall audit**: cada `[id]/page.tsx` con >1 `useQuery` →
+   verificar que se disparan en paralelo (no en cascada via
+   `enabled` chain). Si hay cascada legítima, considerar mover el
+   join al backend.
+4. **Prefetch en hover**: implementar handler global en `<Link>`
+   para list rows. `onMouseEnter` → `queryClient.prefetchQuery`.
+   Patrón reusable.
+5. **Optimistic UI** en clusters 14, 15, 16 (notas, contactos,
+   movimientos). Mutation con `onMutate` que actualiza la cache
+   antes del response, `onError` revierte con explicación.
+6. **Cache invalidation audit**: cada mutation debe invalidar
+   queries afectadas. Bug: si crear contacto no invalida la entity
+   query, el contador no se actualiza.
+7. **`enabled: !!id`** debe ser estándar en queries dependientes.
+   Buscar queries que corran sin gate.
+8. **N+1 patterns**: pages que hacen un query por row de la lista.
+9. **Búsqueda predictiva**: cada filtro/búsqueda con debounce
+   ~150ms + resultados parciales. No esperar Enter.
+10. **Soporte teclado**: implementar atajos globales (`/` busca,
+    `Esc` cierra, `g+l` jumplist). Tab order coherente. Tabla con
+    flechas + Enter para abrir detail.
+11. **Drill-down sin perder contexto**: al volver de detail a list,
+    filtros y scroll position se preservan. Usar URL params para
+    state.
+12. **Tablas densas**: revisar padding, tipografía. Sticky header.
+    Filas enteras cliqueables (no sólo el primer celda). Tabular-
+    nums en columnas numéricas.
 
 ## Phase 8 — Accessibility (a11y)
 
@@ -320,7 +377,10 @@ dentro de `2.0.21`. TDD: spec primero, después fix.
 - Mock data eliminado del repo (audit con grep verde).
 - Type drift cero contra `models.go`.
 - Permisos UI respetados (ningún botón visible sin la perm).
-- Performance: ningún `page_size>=100` que se pueda evitar.
+- Performance: Lighthouse ≥ 95 en todas las pages de `(modules)/**`.
+  Ningún `page_size>=100` que se pueda evitar. Prefetch en hover
+  sobre rows. Optimistic UI en mutations frecuentes. Cero
+  waterfalls de fetch en detail pages.
 - A11y: axe-core verde en todas las pages de `(modules)/**`.
 - Error handling: cero "Error interno" residuales.
 - Manual smoke por área (compras, tesorería, contabilidad,
